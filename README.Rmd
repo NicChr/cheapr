@@ -1,0 +1,154 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# cheapr
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+In cheapr, 'cheap' means fast and memory-efficient, and that's exactly 
+the philosophy that cheapr aims to follow.
+
+## Installation
+
+You can install the development version of cheapr like so:
+
+``` r
+remotes::install_github("NicChr/cheapr")
+```
+
+## Last-observation carried forward (minor optimisation)
+
+Here is an example of a minor optimisation we can add to 
+`vctrs::vec_fill_missing` to return x if x has zero or only `NA` values.
+
+```{r example}
+library(cheapr)
+library(vctrs)
+library(bench)
+
+na_locf <- function(x){
+  if (num_na(x) %in% c(0, vec_size(x))){
+    x
+  } else {
+    vec_fill_missing(x, direction = "down")
+  }
+}
+
+x <- rep(NA, 10^6)
+mark(na_locf(x), vec_fill_missing(x, direction = "down"))
+```
+
+All the `NA` handling functions in cheapr can make use of multiple cores 
+on your machine using openMP.
+
+```{r}
+# 1 core by default
+mark(num_na(x))
+# 4 cores
+options(cheapr.cores = 4)
+mark(num_na(x))
+```
+
+## Efficient NA counts by row/col
+
+```{r}
+m <- matrix(x, ncol = 10^3)
+# Number of NA values by row
+mark(row_na_counts(m), 
+     rowSums(is.na(m)))
+# Number of NA values by col
+mark(col_na_counts(m), 
+     colSums(is.na(m)))
+```
+
+## Greatest common divisor and smallest common multiple
+
+```{r}
+gcd2(5, 25)
+scm2(5, 6)
+
+gcd(seq(5, 25, by = 5))
+scm(seq(5, 25, by = 5))
+
+x <- seq(1L, 1000000L, 1L)
+mark(gcd(x))
+x <- seq(0, 10^6, 0.5)
+mark(gcd(x))
+```
+
+## 'Cheaper' Base R alternatives
+
+### which
+
+```{r}
+# which()
+x <- rep(TRUE, 10^6)
+mark(cheapr_which = which_(x),
+     base_which = which(x))
+x <- rep(FALSE, 10^6)
+mark(cheapr_which = which_(x),
+     base_which = which(x))
+x <- c(rep(TRUE, 5e05), rep(FALSE, 1e06))
+mark(cheapr_which = which_(x),
+     base_which = which(x))
+x <- c(rep(FALSE, 5e05), rep(TRUE, 1e06))
+mark(cheapr_which = which_(x),
+     base_which = which(x))
+x <- sample(c(TRUE, FALSE), 10^6, TRUE)
+x[sample.int(10^6, 10^4)] <- NA
+mark(cheapr_which = which_(x),
+     base_which = which(x))
+```
+
+### factor
+
+```{r}
+# factor()
+x <- sample(seq(-10^3, 10^3, 0.01))
+y <- do.call(paste0, expand.grid(letters, letters, letters, letters))
+mark(cheapr_factor = factor_(x), 
+     base_factor = factor(x))
+mark(base_factor = factor_(x, order = FALSE), 
+     base_factor = factor(x, levels = unique(x)))
+mark(cheapr_factor = factor_(y), 
+     base_factor = factor(y))
+mark(base_factor = factor_(y, order = FALSE), 
+     base_factor = factor(y, levels = unique(y)))
+```
+
+### intersect & setdiff
+
+```{r}
+# intersect() & setdiff()
+x <- sample.int(10^6, 10^5, TRUE)
+y <- sample.int(10^6, 10^5, TRUE)
+mark(cheapr_intersect = intersect_(x, y, dups = FALSE),
+     base_intersect = intersect(x, y))
+mark(cheapr_setdiff = setdiff_(x, y, dups = FALSE),
+     base_setdiff = setdiff(x, y))
+```
+
+### cut.default
+
+```{r}
+# cut.default()
+x <- rnorm(10^7)
+b <- seq(0, max(x), 0.2)
+mark(cheapr_cut = cut_numeric(x, b), 
+     base_cut = cut(x, b))
+```
+
+

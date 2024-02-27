@@ -1,0 +1,9 @@
+^cheapr.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.Rmd$
+^README-.*\.png$
+^\.github$
+^cran-comments\.md$
+^CRAN-SUBMISSION$
+^.*\.Rproj$
