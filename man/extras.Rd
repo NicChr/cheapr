@@ -6,6 +6,8 @@
 \alias{setdiff_}
 \alias{intersect_}
 \alias{cut_numeric}
+\alias{\%in_\%}
+\alias{\%!in_\%}
 \title{Extra utilities}
 \usage{
 enframe_(x, name = "name", value = "value")
@@ -26,6 +28,10 @@ cut_numeric(
   ordered_result = FALSE,
   ...
 )
+
+x \%in_\% table
+
+x \%!in_\% table
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -51,6 +57,8 @@ cut_numeric(
 \item{ordered_result}{See \code{?cut}.}
 
 \item{...}{See \code{?cut}.}
+
+\item{table}{See \code{?collapse::fmatch}}
 }
 \description{
 Extra utilities

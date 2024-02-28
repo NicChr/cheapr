@@ -16,10 +16,11 @@ knitr::opts_chunk$set(
 # cheapr
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/NicChr/cheapr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/NicChr/cheapr/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-In cheapr, 'cheap' means fast and memory-efficient, and that's exactly 
-the philosophy that cheapr aims to follow.
+In cheapr, 'cheap' means fast and memory-efficient, and that's exactly the philosophy that cheapr aims to follow.
 
 ## Installation
 
@@ -31,8 +32,9 @@ remotes::install_github("NicChr/cheapr")
 
 ## Last-observation carried forward (minor optimisation)
 
-Here is an example of a minor optimisation we can add to 
-`vctrs::vec_fill_missing` to return x if x has zero or only `NA` values.
+`num_na()` is a useful function to efficiently return the number of `NA` values and can be used in a variety of problems.
+
+Here is an example of a minor optimisation we can add to `vctrs::vec_fill_missing` to return x if x has zero or only `NA` values.
 
 ```{r example}
 library(cheapr)
@@ -51,8 +53,7 @@ x <- rep(NA, 10^6)
 mark(na_locf(x), vec_fill_missing(x, direction = "down"))
 ```
 
-All the `NA` handling functions in cheapr can make use of multiple cores 
-on your machine using openMP.
+All the `NA` handling functions in cheapr can make use of multiple cores on your machine using openMP.
 
 ```{r}
 # 1 core by default
@@ -88,6 +89,47 @@ mark(gcd(x))
 x <- seq(0, 10^6, 0.5)
 mark(gcd(x))
 ```
+
+## Creating many sequences
+
+As an example, to create 3 sequences with different increments, \
+the usual approach might be to use lapply to loop through the increment values together with `seq()`
+
+```{r}
+# Base R
+increments <- c(1, 0.5, 0.1)
+start <- 1
+end <- 5
+unlist(lapply(increments, \(x) seq(start, end, x)))
+  
+```
+
+In cheapr you can use `seq_()` which accepts vector arguments.
+
+```{r}
+seq_(start, end, increments)
+```
+
+Use `add_id = TRUE` to label the individual sequences.
+
+```{r}
+seq_(start, end, increments, add_id = TRUE)
+```
+
+If you know the sizes of your sequences beforehand, use `sequence_()`
+
+```{r}
+seq_sizes <- c(3, 5, 10)
+sequence_(seq_sizes, from = 0, by = 1/3, add_id = TRUE) |> 
+  enframe_()
+```
+
+You can also calculate the sequence sizes using `seq_size()`
+
+```{r}
+seq_size(start, end, increments)
+```
+
 
 ## 'Cheaper' Base R alternatives
 
@@ -141,6 +183,16 @@ mark(cheapr_setdiff = setdiff_(x, y, dups = FALSE),
      base_setdiff = setdiff(x, y))
 ```
 
+### `%in_` and `!%in_%`
+
+```{r}
+mark(cheapr = x %in_% y,
+     base = x %in% y)
+mark(cheapr = x %!in_% y,
+     base = !x %in% y)
+```
+
+
 ### cut.default
 
 ```{r}
@@ -150,5 +202,3 @@ b <- seq(0, max(x), 0.2)
 mark(cheapr_cut = cut_numeric(x, b), 
      base_cut = cut(x, b))
 ```
-
-

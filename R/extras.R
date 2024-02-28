@@ -11,6 +11,7 @@
 #' @param right See `?cut`.
 #' @param dig.lab See `?cut`.
 #' @param ordered_result See `?cut`.
+#' @param table See `?collapse::fmatch`
 #' @param ... See `?cut`.
 #'
 #' @details
@@ -139,4 +140,20 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
     class(code) <- c(if (ordered_result) "ordered" else character(0), "factor")
   }
   code
+}
+#' @export
+#' @rdname extras
+`%in_%` <- function(x, table){
+  collapse::fmatch(x, table, overid = 2L, nomatch = 0L) > 0L
+  # out <- logical(length(x))
+  # out[which_not_na(collapse::fmatch(x, table, overid = 2L))] <- TRUE
+  # out
+}
+#' @export
+#' @rdname extras
+`%!in_%` <- function(x, table){
+  is.na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
+  # out <- logical(length(x))
+  # out[which_na(collapse::fmatch(x, table, overid = 2L))] <- TRUE
+  # out
 }
