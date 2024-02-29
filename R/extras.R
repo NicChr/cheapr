@@ -153,7 +153,4 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
 #' @rdname extras
 `%!in_%` <- function(x, table){
   is.na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
-  # out <- logical(length(x))
-  # out[which_na(collapse::fmatch(x, table, overid = 2L))] <- TRUE
-  # out
 }

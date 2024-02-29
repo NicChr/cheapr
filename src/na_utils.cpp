@@ -792,3 +792,104 @@ SEXP cpp_matrix_missing_col(SEXP x, double threshold, bool threshold_is_prop){
     return out;
   }
 }
+
+// SEXP cpp_matrix_row_sums(SEXP x, bool na_rm){
+//   if (!Rf_isMatrix(x)){
+//     Rf_error("x must be a matrix");
+//   }
+//   int num_row = Rf_nrows(x);
+//   R_xlen_t n = Rf_xlength(x);
+//   SEXP out = Rf_protect(Rf_allocVector(REALSXP, num_row));
+//   double *p_out = REAL(out);
+//   memset(p_out, 0.0, num_row * sizeof(double));
+//   switch ( TYPEOF(x) ){
+//   case LGLSXP:
+//   case INTSXP: {
+//     int *p_x = INTEGER(x);
+//     if (na_rm){
+//       for (R_xlen_t i = 0; i < n; ++i){
+//         if (p_x[i] != NA_INTEGER){
+//           p_out[i % num_row] += p_x[i];
+//         }
+//       }
+//     } else {
+//       for (R_xlen_t i = 0; i < n; ++i){
+//         p_out[i % num_row] += p_x[i];
+//       }
+//     }
+//     break;
+//   }
+//   case REALSXP: {
+//     double *p_x = REAL(x);
+//     if (na_rm){
+//       for (R_xlen_t i = 0; i < n; ++i){
+//         if (p_x[i] == p_x[i]){
+//           p_out[i % num_row] += p_x[i];
+//         }
+//       }
+//     } else {
+//       for (R_xlen_t i = 0; i < n; ++i){
+//         p_out[i % num_row] += p_x[i];
+//       }
+//     }
+//     break;
+//   }
+//   default: {
+//     Rf_unprotect(1);
+//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+//   }
+//   }
+//   Rf_unprotect(1);
+//   return out;
+// }
+//
+// SEXP cpp_matrix_col_sums(SEXP x, bool na_rm){
+//   if (!Rf_isMatrix(x)){
+//     Rf_error("x must be a matrix");
+//   }
+//   int num_row = Rf_nrows(x);
+//   int num_col = Rf_ncols(x);
+//   R_xlen_t n = Rf_xlength(x);
+//   SEXP out = Rf_protect(Rf_allocVector(REALSXP, num_col));
+//   double *p_out = REAL(out);
+//   memset(p_out, 0.0, num_col * sizeof(double));
+//   switch ( TYPEOF(x) ){
+//   case LGLSXP:
+//   case INTSXP: {
+//     int *p_x = INTEGER(x);
+//     if (na_rm){
+//       for (R_xlen_t i = 0; i < n; ++i){
+//         if (p_x[i] != NA_INTEGER){
+//           p_out[int_div(i, num_row)] += p_x[i];
+//         }
+//       }
+//     } else {
+//       for (R_xlen_t i = 0; i < n; ++i){
+//         p_out[int_div(i, num_row)] += p_x[i];
+//       }
+//     }
+//     break;
+//   }
+//   case REALSXP: {
+//     double *p_x = REAL(x);
+//     if (na_rm){
+//       for (R_xlen_t i = 0; i < n; ++i){
+//         if (p_x[i] == p_x[i]){
+//           p_out[int_div(i, num_row)] += p_x[i];
+//         }
+//       }
+//     } else {
+//       for (R_xlen_t i = 0; i < n; ++i){
+//         p_out[int_div(i, num_row)] += p_x[i];
+//       }
+//     }
+//     break;
+//   }
+//   default: {
+//     Rf_unprotect(1);
+//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+//   }
+//   }
+//   Rf_unprotect(1);
+//   return out;
+// }
