@@ -1,4 +1,6 @@
 * This is a new submission.
+* After CRAN feedback I have amended the description and added a value tag to 
+the extras Rd file.
 
 ## Test environments
 - R-hub windows-x86_64-devel (r-devel)
@@ -15,6 +17,8 @@
 
 ❯ On windows-x86_64-devel (r-devel)
   checking for non-standard things in the check directory ... NOTE
+  Found the following files/directories:
+    ''NULL''
 
 ❯ On windows-x86_64-devel (r-devel)
   checking for detritus in the temp directory ... NOTE
@@ -32,7 +36,7 @@
   Skipping checking HTML validation: no command 'tidy' found
 
 ❯ On fedora-clang-devel (r-devel)
-  checking CRAN incoming feasibility ... [6s/19s] NOTE
+  checking CRAN incoming feasibility ... [6s/22s] NOTE
   Maintainer: ‘Nick Christofides <nick.christofides.r@gmail.com>’
   
   New submission
