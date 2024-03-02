@@ -36,7 +36,7 @@ Default is \code{TRUE}.}
 \item{ordered}{Should the result be an ordered factor?}
 }
 \value{
-A \code{factor}.
+A \code{factor} or \code{character} in the case of \code{used_levels} and \code{unused_levels}.
 }
 \description{
 A fast version of \code{factor()} using the collapse package.

@@ -37,7 +37,7 @@ col_any_na(x)
 Number or location of \code{NA} values.
 }
 \description{
-\code{num_na(x)} is a faster and more \code{sum(is.na(x))}. \cr
+\code{num_na(x)} is a faster and more efficient \code{sum(is.na(x))}. \cr
 \code{which_na(x)} is a more efficient \code{which(is.na(x))} \cr
 \code{which_not_na(x)} is a more efficient \code{which(!is.na(x))} \cr
 \code{row_na_counts(x)} is a more efficient \code{rowSums(is.na(x))} \cr

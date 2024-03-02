@@ -1,12 +1,14 @@
 Package: cheapr
 Title: Simple Functions to Save Time and Memory
-Version: 0.1.0.9000
+Version: 0.1.0
 Authors@R: 
     person("Nick", "Christofides", , "nick.christofides.r@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-9743-7342"))
 Maintainer: Nick Christofides <nick.christofides.r@gmail.com>
-Description: A set of functions written mostly in 'C++', designed to be
-    both memory-efficient and fast, saving time and memory.
+Description: Fast and memory-efficient (or 'cheap') tools to facilitate
+    efficient programming, saving time and memory. It aims to provide
+    'cheaper' alternatives to common base R functions, as well as some
+    additional functions.
 License: MIT + file LICENSE
 Depends:
     R (>= 3.5.0)

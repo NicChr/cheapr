@@ -8,7 +8,7 @@
 #' and `unused_levels()` which returns the unused levels of a factor.
 #'
 #' @returns
-#' A `factor`.
+#' A `factor` or `character` in the case of `used_levels` and `unused_levels`.
 #'
 #' @param x A vector.
 #' @param levels Optional factor levels.

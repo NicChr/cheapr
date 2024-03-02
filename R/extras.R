@@ -14,6 +14,18 @@
 #' @param table See `?collapse::fmatch`
 #' @param ... See `?cut`.
 #'
+#' @returns
+#' `enframe()_` converts a vector to a data frame. \cr
+#' `deframe()_` converts a 1-2 column data frame to a vector. \cr
+#' `intersect_()` returns a vector of common values between `x` and `y`. \cr
+#' `setdiff_()` returns a vector of values in `x` but not `y`. \cr
+#' `cut_numeric()` places values of a numeric vector into buckets, defined
+#' through the `breaks` argument and returns a factor unless `labels = FALSE`,
+#' in which case an integer vector of break indices is returned. \cr
+#' `%in_%` and `%!in_%` both return a logical vector signifying if the values of
+#' `x` exist or don't exist in `table` respectively.
+#'
+#'
 #' @details
 #' `intersect_()` and `setdiff_()` are faster and more efficient
 #' alternatives to `intersect()` and `setdiff()` respectively. \cr
@@ -22,40 +34,6 @@
 #' `cut_numeric()` is a faster and more efficient alternative to
 #' `cut.default()`.
 #'
-#' @export
-#' @rdname extras
-enframe_ <- function(x, name = "name", value = "value"){
-  if (inherits(x, "data.frame")) {
-    x <- unclass(x)
-    attr(x, "row.names") <- NULL
-  }
-  x_nms <- names(x)
-  x <- unname(x)
-  if (is.null(x_nms)) {
-    out <- list(x)
-    names(out) <- value
-  }
-  else {
-    out <- list(x_nms, x)
-    names(out) <- c(name, value)
-  }
-  attr(out, "class") <- c("tbl_df", "tbl", "data.frame")
-  attr(out, "row.names") <- .set_row_names(length(x))
-  out
-}
-#' @export
-#' @rdname extras
-deframe_ <- function(x){
-  ncol <- length(names(x))
-  if (!(inherits(x, "data.frame") && ncol %in% (1:2))) {
-    stop("`x` must be a 1 or 2 col data frame")
-  }
-  out <- .subset2(x, ncol)
-  if (ncol == 2) {
-    names(out) <- as.character(.subset2(x, 1L))
-  }
-  out
-}
 #' @export
 #' @rdname extras
 setdiff_ <- function(x, y, dups = TRUE){
@@ -153,4 +131,38 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
 #' @rdname extras
 `%!in_%` <- function(x, table){
   is.na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
+}
+#' @export
+#' @rdname extras
+enframe_ <- function(x, name = "name", value = "value"){
+  if (inherits(x, "data.frame")) {
+    x <- unclass(x)
+    attr(x, "row.names") <- NULL
+  }
+  x_nms <- names(x)
+  x <- unname(x)
+  if (is.null(x_nms)) {
+    out <- list(x)
+    names(out) <- value
+  }
+  else {
+    out <- list(x_nms, x)
+    names(out) <- c(name, value)
+  }
+  attr(out, "class") <- c("tbl_df", "tbl", "data.frame")
+  attr(out, "row.names") <- .set_row_names(length(x))
+  out
+}
+#' @export
+#' @rdname extras
+deframe_ <- function(x){
+  ncol <- length(names(x))
+  if (!(inherits(x, "data.frame") && ncol %in% (1:2))) {
+    stop("`x` must be a 1 or 2 col data frame")
+  }
+  out <- .subset2(x, ncol)
+  if (ncol == 2) {
+    names(out) <- as.character(.subset2(x, 1L))
+  }
+  out
 }

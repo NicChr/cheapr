@@ -1,7 +1,7 @@
 #' Efficient functions for dealing with missing values.
 #'
 #' @description
-#' `num_na(x)` is a faster and more `sum(is.na(x))`. \cr
+#' `num_na(x)` is a faster and more efficient `sum(is.na(x))`. \cr
 #' `which_na(x)` is a more efficient `which(is.na(x))` \cr
 #' `which_not_na(x)` is a more efficient `which(!is.na(x))` \cr
 #' `row_na_counts(x)` is a more efficient `rowSums(is.na(x))` \cr

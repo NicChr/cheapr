@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/NicChr/cheapr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/NicChr/cheapr/actions/workflows/R-CMD-check.yaml)
+
 <!-- badges: end -->
 
 In cheapr, 'cheap' means fast and memory-efficient, and that's exactly the philosophy that cheapr aims to follow.
@@ -48,8 +49,9 @@ na_locf <- function(x){
     vec_fill_missing(x, direction = "down")
   }
 }
-
 x <- rep(NA, 10^6)
+identical(x, na_locf(x))
+mark(na_locf(x), vec_fill_missing(x, direction = "down"))
 mark(na_locf(x), vec_fill_missing(x, direction = "down"))
 ```
 
@@ -57,10 +59,10 @@ All the `NA` handling functions in cheapr can make use of multiple cores on your
 
 ```{r}
 # 1 core by default
-mark(num_na(x))
+mark(num_na(x), sum(is.na(x)))
 # 4 cores
 options(cheapr.cores = 4)
-mark(num_na(x))
+mark(num_na(x), sum(is.na(x)))
 ```
 
 ## Efficient NA counts by row/col
@@ -92,7 +94,7 @@ mark(gcd(x))
 
 ## Creating many sequences
 
-As an example, to create 3 sequences with different increments, \
+As an example, to create 3 sequences with different increments,\
 the usual approach might be to use lapply to loop through the increment values together with `seq()`
 
 ```{r}
@@ -129,7 +131,6 @@ You can also calculate the sequence sizes using `seq_size()`
 ```{r}
 seq_size(start, end, increments)
 ```
-
 
 ## 'Cheaper' Base R alternatives
 
@@ -191,7 +192,6 @@ mark(cheapr = x %in_% y,
 mark(cheapr = x %!in_% y,
      base = !x %in% y)
 ```
-
 
 ### cut.default
 
