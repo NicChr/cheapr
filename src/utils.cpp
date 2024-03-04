@@ -15,58 +15,8 @@ int num_cores(){
   }
 }
 
-[[cpp11::register]]
-R_xlen_t cpp_vector_size(SEXP x){
-  if (Rf_isFrame(x)){
-    return Rf_xlength(Rf_getAttrib(x, R_RowNamesSymbol));
-  } else if (Rf_isVectorList(x)){
-    if (Rf_inherits(x, "vctrs_rcrd")){
-      return cpp_vector_size(VECTOR_ELT(x, 0));
-    } else {
-      // return Rf_xlength(x);
-      int n = Rf_length(x);
-      if (n == 0){
-        return 0;
-      } else {
-        R_xlen_t init = cpp_vector_size(VECTOR_ELT(x, 0));
-        for (int i = 1; i < n; ++i) {
-          if (cpp_vector_size(VECTOR_ELT(x, i)) != init){
-            Rf_error("All list elements must be of equal length");
-          }
-        }
-        return init;
-      }
-    }
-  } else {
-    return Rf_xlength(x);
-  }
-}
-
-[[cpp11::register]]
-int cpp_vector_width(SEXP x){
-  if (Rf_isFrame(x)){
-    return Rf_length(Rf_getAttrib(x, R_NamesSymbol));
-  } else if (Rf_isVectorList(x)){
-    if (Rf_inherits(x, "vctrs_rcrd")){
-      return Rf_length(x);
-    } else {
-      int n = Rf_length(x);
-      if (n == 0){
-        return 0;
-      } else {
-        const SEXP *p_x = VECTOR_PTR_RO(x);
-        R_xlen_t init = cpp_vector_size(p_x[0]);
-        for (int i = 1; i < n; ++i) {
-          if (cpp_vector_size(p_x[i]) != init){
-            Rf_error("All list elements must be of equal length");
-          }
-        }
-        return n;
-      }
-    }
-  } else {
-    return 0;
-  }
+R_xlen_t cpp_df_nrow(SEXP x){
+  return Rf_xlength(Rf_getAttrib(x, R_RowNamesSymbol));
 }
 
 // Potentially useful for rolling calculations

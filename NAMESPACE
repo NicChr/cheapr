@@ -2,6 +2,8 @@
 
 export("%!in_%")
 export("%in_%")
+export(all_na)
+export(any_na)
 export(col_all_na)
 export(col_any_na)
 export(col_na_counts)

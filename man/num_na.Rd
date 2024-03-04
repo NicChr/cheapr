@@ -4,6 +4,8 @@
 \alias{num_na}
 \alias{which_na}
 \alias{which_not_na}
+\alias{any_na}
+\alias{all_na}
 \alias{row_na_counts}
 \alias{col_na_counts}
 \alias{row_all_na}
@@ -17,6 +19,10 @@ num_na(x)
 which_na(x)
 
 which_not_na(x)
+
+any_na(x)
+
+all_na(x)
 
 row_na_counts(x)
 
@@ -50,12 +56,16 @@ The \code{col_} variants are the same, but operate by-column.
 \details{
 These functions are designed primarily for programmers, to increase the speed
 and memory-efficiency of \code{NA} handling. \cr
-All these functions can be parallelised through \code{options(cheapr.cores)}. \cr
-When \code{x} is a data frame, \code{num_na}, \code{which_na} and \code{which_not_na} define a
-missing value as an empty row with only \code{NA} values across all columns.
-To get the number of \code{NA} values across an entire data frame,
-use \code{sum(col_na_counts(data))}. \cr
-To replicate \code{complete.cases(x)}, use \code{!row_any_na(x)}.
+Most of these functions can be parallelised through \code{options(cheapr.cores)}. \cr
+When \code{x} is a list, \code{num_na}, \code{any_na} and \code{all_na} will recurse through a
+potentially nested list for \code{NA} values. \cr
+\subsection{Common use-cases}{
+
+To replicate \code{complete.cases(x)}, use \code{!row_any_na(x)}. \cr
+To find rows with any empty values,
+use \code{which_(row_any_na(df))}. \cr
+To find empty rows use \code{which_(row_all_na(df))}.
+}
 }
 \examples{
 library(cheapr)
@@ -76,13 +86,13 @@ col_nas
 
 df <- airquality[, 1:2]
 
-# Number of empty rows
+# Number of NAs in data
 num_na(df)
 # Which rows are empty?
-which_na(df)
-df[which_na(df), ]
+row_na <- row_all_na(df)
+df[which_(row_na), ]
 
 # Removing the empty rows
-df[which_not_na(df), ]
+df[which_(row_na, invert = TRUE), ]
 
 }

@@ -26,9 +26,9 @@ allv2 <- function(x, value){
   }
   collapse::allv(x, value)
 }
-any_na <- function(x){
-  num_na(x) > 0
-}
-all_na <- function(x){
-  num_na(x) == cpp_vector_size(x)
-}
+# any_na <- function(x){
+#   num_na(x) > 0
+# }
+# all_na <- function(x){
+#   num_na(x) == cpp_vector_size(x)
+# }

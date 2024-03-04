@@ -48,24 +48,24 @@ extern "C" SEXP _cheapr_cpp_lcm2_vectorised(SEXP x, SEXP y, SEXP tol, SEXP na_rm
   END_CPP11
 }
 // na_utils.cpp
-SEXP cpp_row_na_counts(SEXP x);
-extern "C" SEXP _cheapr_cpp_row_na_counts(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_row_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// na_utils.cpp
-SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
-extern "C" SEXP _cheapr_cpp_missing_row(SEXP x, SEXP threshold, SEXP threshold_is_prop) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_missing_row(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(threshold), cpp11::as_cpp<cpp11::decay_t<bool>>(threshold_is_prop)));
-  END_CPP11
-}
-// na_utils.cpp
 SEXP cpp_num_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_num_na(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_num_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// na_utils.cpp
+bool cpp_any_na(SEXP x);
+extern "C" SEXP _cheapr_cpp_any_na(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_any_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// na_utils.cpp
+bool cpp_all_na(SEXP x, bool return_true_on_empty);
+extern "C" SEXP _cheapr_cpp_all_na(SEXP x, SEXP return_true_on_empty) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_all_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(return_true_on_empty)));
   END_CPP11
 }
 // na_utils.cpp
@@ -80,6 +80,34 @@ SEXP cpp_which_not_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_which_not_na(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_which_not_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// na_utils.cpp
+SEXP cpp_row_na_counts(SEXP x);
+extern "C" SEXP _cheapr_cpp_row_na_counts(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_row_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// na_utils.cpp
+SEXP cpp_col_na_counts(SEXP x);
+extern "C" SEXP _cheapr_cpp_col_na_counts(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// na_utils.cpp
+SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
+extern "C" SEXP _cheapr_cpp_missing_row(SEXP x, SEXP threshold, SEXP threshold_is_prop) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_missing_row(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(threshold), cpp11::as_cpp<cpp11::decay_t<bool>>(threshold_is_prop)));
+  END_CPP11
+}
+// na_utils.cpp
+SEXP cpp_missing_col(SEXP x, double threshold, bool threshold_is_prop);
+extern "C" SEXP _cheapr_cpp_missing_col(SEXP x, SEXP threshold, SEXP threshold_is_prop) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_missing_col(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(threshold), cpp11::as_cpp<cpp11::decay_t<bool>>(threshold_is_prop)));
   END_CPP11
 }
 // na_utils.cpp
@@ -145,20 +173,6 @@ extern "C" SEXP _cheapr_cpp_lead_sequence(SEXP size, SEXP k, SEXP partial) {
     return cpp11::as_sexp(cpp_lead_sequence(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size), cpp11::as_cpp<cpp11::decay_t<double>>(k), cpp11::as_cpp<cpp11::decay_t<bool>>(partial)));
   END_CPP11
 }
-// utils.cpp
-R_xlen_t cpp_vector_size(SEXP x);
-extern "C" SEXP _cheapr_cpp_vector_size(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_vector_size(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// utils.cpp
-int cpp_vector_width(SEXP x);
-extern "C" SEXP _cheapr_cpp_vector_width(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_vector_width(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -169,6 +183,9 @@ extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
+    {"_cheapr_cpp_all_na",               (DL_FUNC) &_cheapr_cpp_all_na,               2},
+    {"_cheapr_cpp_any_na",               (DL_FUNC) &_cheapr_cpp_any_na,               1},
+    {"_cheapr_cpp_col_na_counts",        (DL_FUNC) &_cheapr_cpp_col_na_counts,        1},
     {"_cheapr_cpp_dbl_sequence",         (DL_FUNC) &_cheapr_cpp_dbl_sequence,         3},
     {"_cheapr_cpp_gcd",                  (DL_FUNC) &_cheapr_cpp_gcd,                  5},
     {"_cheapr_cpp_gcd2",                 (DL_FUNC) &_cheapr_cpp_gcd2,                 4},
@@ -183,11 +200,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_matrix_missing_col",   (DL_FUNC) &_cheapr_cpp_matrix_missing_col,   3},
     {"_cheapr_cpp_matrix_missing_row",   (DL_FUNC) &_cheapr_cpp_matrix_missing_row,   3},
     {"_cheapr_cpp_matrix_row_na_counts", (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts, 1},
+    {"_cheapr_cpp_missing_col",          (DL_FUNC) &_cheapr_cpp_missing_col,          3},
     {"_cheapr_cpp_missing_row",          (DL_FUNC) &_cheapr_cpp_missing_row,          3},
     {"_cheapr_cpp_num_na",               (DL_FUNC) &_cheapr_cpp_num_na,               1},
     {"_cheapr_cpp_row_na_counts",        (DL_FUNC) &_cheapr_cpp_row_na_counts,        1},
-    {"_cheapr_cpp_vector_size",          (DL_FUNC) &_cheapr_cpp_vector_size,          1},
-    {"_cheapr_cpp_vector_width",         (DL_FUNC) &_cheapr_cpp_vector_width,         1},
     {"_cheapr_cpp_which_",               (DL_FUNC) &_cheapr_cpp_which_,               2},
     {"_cheapr_cpp_which_na",             (DL_FUNC) &_cheapr_cpp_which_na,             1},
     {"_cheapr_cpp_which_not_na",         (DL_FUNC) &_cheapr_cpp_which_not_na,         1},

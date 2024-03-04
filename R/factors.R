@@ -44,11 +44,11 @@ factor_ <- function(x = integer(), levels = NULL, order = TRUE,
   } else {
     lvls <- levels
   }
-  if (na_exclude && anyNA(lvls)){
+  if (na_exclude && any_na(lvls)){
     if (order && is.null(levels)){
       lvls <- lvls[seq_len(length(lvls) - 1L)]
     } else {
-      lvls <- lvls[cpp_which_not_na(lvls)]
+      lvls <- lvls[which_not_na(lvls)]
     }
   }
   out <- collapse::fmatch(x, lvls, overid = 2L)

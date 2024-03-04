@@ -33,12 +33,11 @@
 // #define SAFE_PARALLEL_FOR_SIMD
 // #endif
 
-R_xlen_t cpp_vector_size(SEXP x);
-int cpp_vector_width(SEXP x);
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
 R_xlen_t count_true(int *px, R_xlen_t n);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 int int_div(int x, int y);
+R_xlen_t cpp_df_nrow(SEXP x);
 
 #endif
