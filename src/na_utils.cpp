@@ -593,10 +593,10 @@ SEXP cpp_row_na_counts(SEXP x){
     case INTSXP: {
       int *p_xj = INTEGER(p_x[j]);
 #pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for
-// #pragma omp for simd
+// #pragma omp for
+#pragma omp for simd
       for (R_xlen_t i = 0; i < num_row; ++i){
-#pragma omp atomic
+// #pragma omp atomic
         p_n_empty[i] += (p_xj[i] == NA_INTEGER);
       }
       break;
@@ -604,10 +604,10 @@ SEXP cpp_row_na_counts(SEXP x){
     case REALSXP: {
       double *p_xj = REAL(p_x[j]);
 #pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for
-// #pragma omp for simd
+// #pragma omp for
+#pragma omp for simd
       for (R_xlen_t i = 0; i < num_row; ++i){
-#pragma omp atomic
+// #pragma omp atomic
         p_n_empty[i] += (p_xj[i] != p_xj[i]);
       }
       break;
@@ -615,10 +615,10 @@ SEXP cpp_row_na_counts(SEXP x){
     case STRSXP: {
       SEXP *p_xj = STRING_PTR(p_x[j]);
 #pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for
-// #pragma omp for simd
+// #pragma omp for
+#pragma omp for simd
       for (R_xlen_t i = 0; i < num_row; ++i){
-#pragma omp atomic
+// #pragma omp atomic
         p_n_empty[i] += (p_xj[i] == NA_STRING);
       }
       break;
@@ -629,10 +629,10 @@ SEXP cpp_row_na_counts(SEXP x){
     case CPLXSXP: {
       Rcomplex *p_xj = COMPLEX(p_x[j]);
 #pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for
-// #pragma omp for simd
+// #pragma omp for
+#pragma omp for simd
       for (R_xlen_t i = 0; i < num_row; ++i){
-#pragma omp atomic
+// #pragma omp atomic
         p_n_empty[i] += (p_xj[i]).r != (p_xj[i]).r || (p_xj[i]).i != (p_xj[i]).i;
       }
       break;
@@ -977,40 +977,19 @@ SEXP cpp_matrix_missing_row(SEXP x, double threshold, bool threshold_is_prop){
   }
   int n_rows = Rf_nrows(x);
   int n_cols = Rf_ncols(x);
-  // R_xlen_t curr_row;
   int over_threshold;
   int col_threshold = cpp_clean_threshold(threshold, threshold_is_prop, n_cols);
-  // R_xlen_t n = Rf_xlength(x);
-  // Special case when there are 0 cols
-  if (n_cols == 0){
-    SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n_rows));
-    int *p_out = INTEGER(out);
-    memset(p_out, 0, n_rows * sizeof(int));
-    Rf_unprotect(1);
-    return out;
-    // All rows always have >= 0 empty values
-  } else if (col_threshold <= 0){
-    SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n_rows));
-    int *p_out = INTEGER(out);
+  SEXP out = Rf_protect(cpp_matrix_row_na_counts(x));
+  int *p_out = INTEGER(out);
 #pragma omp for simd
-    for (R_xlen_t i = 0; i < n_rows; ++i){
-      p_out[i] = 1;
-    }
-    Rf_unprotect(1);
-    return out;
-  } else {
-    SEXP out = Rf_protect(cpp_matrix_row_na_counts(x));
-    int *p_out = INTEGER(out);
-#pragma omp for simd
-    for (int i = 0; i < n_rows; ++i){
-      // curr_row = i % n_rows;
-      over_threshold = (p_out[i] - col_threshold + 1) >= 1;
-      p_out[i] = over_threshold;
-    }
-    SET_TYPEOF(out, LGLSXP);
-    Rf_unprotect(1);
-    return out;
+  for (int i = 0; i < n_rows; ++i){
+    // curr_row = i % n_rows;
+    over_threshold = (p_out[i] - col_threshold + 1) >= 1;
+    p_out[i] = over_threshold;
   }
+  SET_TYPEOF(out, LGLSXP);
+  Rf_unprotect(1);
+  return out;
 }
 
 [[cpp11::register]]
@@ -1025,33 +1004,14 @@ SEXP cpp_matrix_missing_col(SEXP x, double threshold, bool threshold_is_prop){
   int n_cols = Rf_ncols(x);
   int over_threshold;
   int row_threshold = cpp_clean_threshold(threshold, threshold_is_prop, n_rows);
-  // Special case when there are 0 rows
-  if (n_rows == 0){
-    SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n_cols));
-    int *p_out = INTEGER(out);
-    memset(p_out, 0, n_cols * sizeof(int));
-    Rf_unprotect(1);
-    return out;
-    // All cols always have >= 0 empty values
-  } else if (row_threshold <= 0){
-    SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n_cols));
-    int *p_out = INTEGER(out);
+  SEXP out = Rf_protect(cpp_matrix_col_na_counts(x));
+  int *p_out = INTEGER(out);
 #pragma omp for simd
-    for (R_xlen_t i = 0; i < n_cols; ++i){
-      p_out[i] = 1;
-    }
-    Rf_unprotect(1);
-    return out;
-  } else {
-    SEXP out = Rf_protect(cpp_matrix_col_na_counts(x));
-    int *p_out = INTEGER(out);
-#pragma omp for simd
-    for (int i = 0; i < n_cols; ++i){
-      over_threshold = (p_out[i] - row_threshold + 1) >= 1;
-      p_out[i] = over_threshold;
-    }
-    SET_TYPEOF(out, LGLSXP);
-    Rf_unprotect(1);
-    return out;
+  for (int i = 0; i < n_cols; ++i){
+    over_threshold = (p_out[i] - row_threshold + 1) >= 1;
+    p_out[i] = over_threshold;
   }
+  SET_TYPEOF(out, LGLSXP);
+  Rf_unprotect(1);
+  return out;
 }
