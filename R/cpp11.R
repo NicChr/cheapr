@@ -24,6 +24,10 @@ cpp_lcm2_vectorised <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_lcm2_vectorised`, x, y, tol, na_rm)
 }
 
+na_count <- function(x) {
+  .Call(`_cheapr_na_count`, x)
+}
+
 cpp_num_na <- function(x) {
   .Call(`_cheapr_cpp_num_na`, x)
 }

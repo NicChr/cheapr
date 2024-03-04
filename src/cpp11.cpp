@@ -48,6 +48,13 @@ extern "C" SEXP _cheapr_cpp_lcm2_vectorised(SEXP x, SEXP y, SEXP tol, SEXP na_rm
   END_CPP11
 }
 // na_utils.cpp
+R_xlen_t na_count(SEXP x);
+extern "C" SEXP _cheapr_na_count(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(na_count(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// na_utils.cpp
 SEXP cpp_num_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_num_na(SEXP x) {
   BEGIN_CPP11
@@ -208,6 +215,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_na",             (DL_FUNC) &_cheapr_cpp_which_na,             1},
     {"_cheapr_cpp_which_not_na",         (DL_FUNC) &_cheapr_cpp_which_not_na,         1},
     {"_cheapr_cpp_window_sequence",      (DL_FUNC) &_cheapr_cpp_window_sequence,      4},
+    {"_cheapr_na_count",                 (DL_FUNC) &_cheapr_na_count,                 1},
     {NULL, NULL, 0}
 };
 }

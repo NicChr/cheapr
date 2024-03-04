@@ -72,7 +72,7 @@ any_na <- cpp_any_na
 #' @rdname num_na
 #' @export
 all_na <- function(x){
-  cpp_all_na(x, TRUE)
+  .Call(`_cheapr_cpp_all_na`, x, TRUE)
 }
 #' @rdname num_na
 #' @export

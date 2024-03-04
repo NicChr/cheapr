@@ -140,3 +140,46 @@ test_that("different classes", {
   expect_identical(all_na(a3), allNA(a3))
   expect_identical(all_na(a4), allNA(a4))
 })
+
+test_that("multiple cores", {
+  options(cheapr.cores = 2)
+  set.seed(42)
+  a1 <- fill_with_na(1:10^5, 10)
+  a2 <- as.double(a1)
+  a3 <- as.character(a1)
+  a4 <- complex(real = fill_with_na(1:10^5, 10),
+                imaginary = fill_with_na(1:10^5, 10))
+  l <- list(a1, list(a1, a2), list(a1, a2, a3), list(a1, a2, a3, a4))
+
+  allNA <- function(x){
+    all(is.na(x))
+  }
+
+  expect_identical(num_na(a1), sum(is.na(a1)))
+  expect_identical(num_na(a2), sum(is.na(a2)))
+  expect_identical(num_na(a3), sum(is.na(a3)))
+  expect_identical(num_na(a4), sum(is.na(a4)))
+
+  expect_identical(num_na(l), sum(is.na(unlist(l))))
+
+  expect_identical(which_na(a1), which(is.na(a1)))
+  expect_identical(which_na(a2), which(is.na(a2)))
+  expect_identical(which_na(a3), which(is.na(a3)))
+  expect_identical(which_na(a4), which(is.na(a4)))
+
+  expect_identical(which_not_na(a1), which(!is.na(a1)))
+  expect_identical(which_not_na(a2), which(!is.na(a2)))
+  expect_identical(which_not_na(a3), which(!is.na(a3)))
+  expect_identical(which_not_na(a4), which(!is.na(a4)))
+
+  expect_identical(any_na(a1), anyNA(a1))
+  expect_identical(any_na(a2), anyNA(a2))
+  expect_identical(any_na(a3), anyNA(a3))
+  expect_identical(any_na(a4), anyNA(a4))
+
+  expect_identical(all_na(a1), allNA(a1))
+  expect_identical(all_na(a2), allNA(a2))
+  expect_identical(all_na(a3), allNA(a3))
+  expect_identical(all_na(a4), allNA(a4))
+  options(cheapr.cores = 1)
+})

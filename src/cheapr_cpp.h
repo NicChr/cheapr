@@ -39,5 +39,8 @@ R_xlen_t count_true(int *px, R_xlen_t n);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 int int_div(int x, int y);
 R_xlen_t cpp_df_nrow(SEXP x);
+R_xlen_t cpp_unnested_length(SEXP x);
+SEXP xlen_to_r(R_xlen_t x);
+bool list_has_list(SEXP x);
 
 #endif
