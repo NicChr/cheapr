@@ -18,6 +18,11 @@
 #' When `x` is a list, `num_na`, `any_na` and `all_na` will recurse through a
 #' potentially nested list for `NA` values. \cr
 #'
+#'
+#' For the functions that operate on data frames like `row_na_counts`,
+#' if `x` contains a list-variable, an element of that list is considered to be
+#' `NA` when all nested elements of that list-element contain `NA` values.
+#'
 #' ### Common use-cases
 #' To replicate `complete.cases(x)`, use `!row_any_na(x)`. \cr
 #' To find rows with any empty values,

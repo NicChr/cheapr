@@ -59,6 +59,10 @@ and memory-efficiency of \code{NA} handling. \cr
 Most of these functions can be parallelised through \code{options(cheapr.cores)}. \cr
 When \code{x} is a list, \code{num_na}, \code{any_na} and \code{all_na} will recurse through a
 potentially nested list for \code{NA} values. \cr
+
+For the functions that operate on data frames like \code{row_na_counts},
+if \code{x} contains a list-variable, an element of that list is considered to be
+\code{NA} when all nested elements of that list-element contain \code{NA} values.
 \subsection{Common use-cases}{
 
 To replicate \code{complete.cases(x)}, use \code{!row_any_na(x)}. \cr

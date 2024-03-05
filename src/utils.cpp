@@ -35,9 +35,11 @@ R_xlen_t cpp_unnested_length(SEXP x){
   return out;
 }
 
-// SEXP cpp_r_unnested_length(SEXP x){
-//   return xlen_to_r(cpp_unnested_length(x));
-// }
+[[cpp11::register]]
+SEXP cpp_r_unnested_length(SEXP x){
+  return xlen_to_r(cpp_unnested_length(x));
+}
+
 //
 // bool list_has_list(SEXP x){
 //   Rf_protect(x = Rf_coerceVector(x, VECSXP));

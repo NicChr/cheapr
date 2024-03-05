@@ -23,7 +23,8 @@
 #' through the `breaks` argument and returns a factor unless `labels = FALSE`,
 #' in which case an integer vector of break indices is returned. \cr
 #' `%in_%` and `%!in_%` both return a logical vector signifying if the values of
-#' `x` exist or don't exist in `table` respectively.
+#' `x` exist or don't exist in `table` respectively. \cr
+#' `unlisted_length()` is an alternative to `length(unlist(x))`.
 #'
 #'
 #' @details
@@ -165,4 +166,9 @@ deframe_ <- function(x){
     names(out) <- as.character(.subset2(x, 1L))
   }
   out
+}
+#' @export
+#' @rdname extras
+unlisted_length <- function(x){
+  cpp_r_unnested_length(x)
 }

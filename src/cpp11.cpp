@@ -180,6 +180,13 @@ extern "C" SEXP _cheapr_cpp_lead_sequence(SEXP size, SEXP k, SEXP partial) {
     return cpp11::as_sexp(cpp_lead_sequence(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size), cpp11::as_cpp<cpp11::decay_t<double>>(k), cpp11::as_cpp<cpp11::decay_t<bool>>(partial)));
   END_CPP11
 }
+// utils.cpp
+SEXP cpp_r_unnested_length(SEXP x);
+extern "C" SEXP _cheapr_cpp_r_unnested_length(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_r_unnested_length(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -210,6 +217,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_missing_col",          (DL_FUNC) &_cheapr_cpp_missing_col,          3},
     {"_cheapr_cpp_missing_row",          (DL_FUNC) &_cheapr_cpp_missing_row,          3},
     {"_cheapr_cpp_num_na",               (DL_FUNC) &_cheapr_cpp_num_na,               1},
+    {"_cheapr_cpp_r_unnested_length",    (DL_FUNC) &_cheapr_cpp_r_unnested_length,    1},
     {"_cheapr_cpp_row_na_counts",        (DL_FUNC) &_cheapr_cpp_row_na_counts,        1},
     {"_cheapr_cpp_which_",               (DL_FUNC) &_cheapr_cpp_which_,               2},
     {"_cheapr_cpp_which_na",             (DL_FUNC) &_cheapr_cpp_which_na,             1},

@@ -110,6 +110,8 @@ bool cpp_any_na(SEXP x){
   switch ( TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
+    // The commented-out code is a way to
+    // do a pseudo while-loop in openMP
     // volatile bool flag = false;
     int *p_x = INTEGER(x);
 // #pragma omp parallel for num_threads(num_cores()) shared(flag)
@@ -246,7 +248,6 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty){
 
 [[cpp11::register]]
 SEXP cpp_which_na(SEXP x){
-  // R_xlen_t n = cpp_vector_size(x);
   R_xlen_t n = Rf_xlength(x);
   bool is_short = (n <= integer_max_);
   if (n == 0){
@@ -258,7 +259,6 @@ SEXP cpp_which_na(SEXP x){
   case LGLSXP:
   case INTSXP: {
     R_xlen_t count = na_count(x);
-    // R_xlen_t count = Rf_asReal(Rf_protect(cpp_num_na(x)));
     int *p_x = INTEGER(x);
     if (is_short){
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, count));
@@ -288,7 +288,6 @@ SEXP cpp_which_na(SEXP x){
   }
   case REALSXP: {
     R_xlen_t count = na_count(x);
-    // R_xlen_t count = Rf_asReal(Rf_protect(cpp_num_na(x)));
     double *p_x = REAL(x);
     if (is_short){
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, count));
@@ -353,7 +352,6 @@ SEXP cpp_which_na(SEXP x){
   }
   case CPLXSXP: {
     R_xlen_t count = na_count(x);
-    // R_xlen_t count = Rf_asReal(Rf_protect(cpp_num_na(x)));
     Rcomplex *p_x = COMPLEX(x);
     if (is_short){
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, count));
@@ -396,7 +394,6 @@ SEXP cpp_which_na(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_which_not_na(SEXP x){
-  // R_xlen_t n = cpp_vector_size(x);
   R_xlen_t n = Rf_xlength(x);
   bool is_short = (n <= integer_max_);
   if (n == 0){
@@ -408,7 +405,6 @@ SEXP cpp_which_not_na(SEXP x){
   case LGLSXP:
   case INTSXP: {
     R_xlen_t count = na_count(x);
-    // R_xlen_t count = Rf_asReal(Rf_protect(cpp_num_na(x)));
     int *p_x = INTEGER(x);
     if (is_short){
       int out_size = n - count;
@@ -440,7 +436,6 @@ SEXP cpp_which_not_na(SEXP x){
   }
   case REALSXP: {
     R_xlen_t count = na_count(x);
-    // R_xlen_t count = Rf_asReal(Rf_protect(cpp_num_na(x)));
     double *p_x = REAL(x);
     if (is_short){
       int out_size = n - count;
@@ -472,7 +467,6 @@ SEXP cpp_which_not_na(SEXP x){
   }
   case STRSXP: {
     R_xlen_t count = na_count(x);
-    // R_xlen_t count = Rf_asReal(Rf_protect(cpp_num_na(x)));
     SEXP *p_x = STRING_PTR(x);
     if (is_short){
       int out_size = n - count;
@@ -523,7 +517,6 @@ SEXP cpp_which_not_na(SEXP x){
   }
   case CPLXSXP: {
     R_xlen_t count = na_count(x);
-    // R_xlen_t count = Rf_asReal(Rf_protect(cpp_num_na(x)));
     Rcomplex *p_x = COMPLEX(x);
     if (is_short){
       int out_size = n - count;
@@ -568,9 +561,6 @@ SEXP cpp_which_not_na(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_row_na_counts(SEXP x){
-  // if (!Rf_isVectorList(x)){
-  //   Rf_error("x must be a data frame");
-  // }
   if (!Rf_isFrame(x)){
     Rf_error("x must be a data frame");
   }
@@ -583,10 +573,7 @@ SEXP cpp_row_na_counts(SEXP x){
   int *p_n_empty = INTEGER(n_empty);
   memset(p_n_empty, 0, num_row * sizeof(int));
   int do_parallel = num_row >= 100000;
-  // int do_parallel_overall = do_parallel && !list_has_list(x);
-  // int do_parallel_separately = do_parallel && !do_parallel_overall;
   int n_cores = do_parallel ? num_cores() : 1;
-// #pragma omp parallel num_threads(n_cores) if(do_parallel_overall)
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case LGLSXP:
@@ -655,9 +642,7 @@ SEXP cpp_row_na_counts(SEXP x){
     }
       const SEXP *p_xj = VECTOR_PTR_RO(p_x[j]);
       for (R_xlen_t i = 0; i < num_row; ++i){
-        // all_na = cpp_all_na(p_xj[i], false);
         p_n_empty[i] += cpp_all_na(p_xj[i], false);
-      // p_n_empty[i] += cpp_all_na(VECTOR_ELT(p_x[j], i), false);
     }
       break;
     }
@@ -701,7 +686,6 @@ SEXP cpp_col_na_counts(SEXP x){
     }
     default: {
       p_out[j] = na_count(p_x[j]);
-      // p_out[j] = Rf_asInteger(Rf_protect(cpp_num_na(p_x[j])));
       break;
     }
     }
@@ -739,20 +723,15 @@ R_xlen_t cpp_clean_threshold(double threshold, bool threshold_is_prop, R_xlen_t 
 
 [[cpp11::register]]
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop){
-  // if (!Rf_isVectorList(x)){
-  //   Rf_error("x must be a data frame");
-  // }
   if (!Rf_isFrame(x)){
     Rf_error("x must be a data frame");
   }
   if (threshold != threshold){
     Rf_error("threshold cannot be NA");
   }
-  int n_cols = Rf_length(x);
-  // int n_cols = cpp_vector_width(x);
-  int over_threshold;
   R_xlen_t n_rows = cpp_df_nrow(x);
-  // R_xlen_t n_rows = cpp_vector_size(x);
+  int n_cols = Rf_length(x);
+  int over_threshold;
   int col_threshold = cpp_clean_threshold(threshold, threshold_is_prop, n_cols);
   // Special case when there are 0 cols
   if (n_cols == 0){
@@ -787,20 +766,15 @@ SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop){
 
 [[cpp11::register]]
 SEXP cpp_missing_col(SEXP x, double threshold, bool threshold_is_prop){
-  // if (!Rf_isVectorList(x)){
-  //   Rf_error("x must be a data frame");
-  // }
   if (!Rf_isFrame(x)){
     Rf_error("x must be a data frame");
   }
   if (threshold != threshold){
     Rf_error("threshold cannot be NA");
   }
-  int n_cols = Rf_length(x);
-  // int n_cols = cpp_vector_width(x);
-  int over_threshold;
   R_xlen_t n_rows = cpp_df_nrow(x);
-  // R_xlen_t n_rows = cpp_vector_size(x);
+  int n_cols = Rf_length(x);
+  int over_threshold;
   int row_threshold = cpp_clean_threshold(threshold, threshold_is_prop, n_rows);
   // Special case when there are 0 rows
   if (n_rows == 0){
@@ -834,7 +808,7 @@ SEXP cpp_missing_col(SEXP x, double threshold, bool threshold_is_prop){
 }
 
 // Matrix methods
-// The method for matrices is substantially different so can be its own function
+// The methods for matrices are substantially different
 
 [[cpp11::register]]
 SEXP cpp_matrix_row_na_counts(SEXP x){
@@ -906,7 +880,6 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   int num_row = Rf_nrows(x);
   int num_col = Rf_ncols(x);
   R_xlen_t n = Rf_xlength(x);
-  // int curr_col;
   SEXP out = Rf_protect(Rf_allocVector(INTSXP, num_col));
   int *p_out = INTEGER(out);
   memset(p_out, 0, num_col * sizeof(int));
@@ -919,7 +892,6 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
     int *p_x = INTEGER(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
-      // curr_col = i / num_row;
 #pragma omp atomic
       p_out[int_div(i, num_row)] += (p_x[i] == NA_INTEGER);
     }
@@ -929,7 +901,6 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
     double *p_x = REAL(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
-      // curr_col = i / num_row;
 #pragma omp atomic
       p_out[int_div(i, num_row)] += (p_x[i] != p_x[i]);
     }
@@ -939,7 +910,6 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
     SEXP *p_x = STRING_PTR(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
-      // curr_col = i / num_row;
 #pragma omp atomic
       p_out[int_div(i, num_row)] += (p_x[i] == NA_STRING);
     }
@@ -952,7 +922,6 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
     Rcomplex *p_x = COMPLEX(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
-      // curr_col = i / num_row;
 #pragma omp atomic
       p_out[int_div(i, num_row)] += (p_x[i]).r != (p_x[i]).r || (p_x[i]).i != (p_x[i]).i;
     }
@@ -983,7 +952,6 @@ SEXP cpp_matrix_missing_row(SEXP x, double threshold, bool threshold_is_prop){
   int *p_out = INTEGER(out);
 #pragma omp for simd
   for (int i = 0; i < n_rows; ++i){
-    // curr_row = i % n_rows;
     over_threshold = (p_out[i] - col_threshold + 1) >= 1;
     p_out[i] = over_threshold;
   }

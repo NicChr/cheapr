@@ -100,6 +100,10 @@ cpp_lead_sequence <- function(size, k, partial) {
   .Call(`_cheapr_cpp_lead_sequence`, size, k, partial)
 }
 
+cpp_r_unnested_length <- function(x) {
+  .Call(`_cheapr_cpp_r_unnested_length`, x)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }
