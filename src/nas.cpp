@@ -559,6 +559,94 @@ SEXP cpp_which_not_na(SEXP x){
   }
 }
 
+// A parallelised version of `is.na()`
+// lists are handled differently in that each element
+// must contain only NA in all nested elements to be regarded as NA
+
+// SEXP cpp_is_na(SEXP x){
+//   R_xlen_t n = Rf_xlength(x);
+//   bool do_parallel = n >= 100000;
+//   int n_cores = do_parallel ? num_cores() : 1;
+//   SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n));
+//   int *p_out = LOGICAL(out);
+//   R_xlen_t i;
+//   switch ( TYPEOF(x) ){
+//   case LGLSXP:
+//   case INTSXP: {
+//     int *p_x = INTEGER(x);
+//     if (do_parallel){
+// #pragma omp parallel for simd num_threads(n_cores)
+//       for (i = 0; i < n; ++i){
+//         p_out[i] = (p_x[i] == NA_INTEGER);
+//       }
+//     } else {
+//       for (i = 0; i < n; ++i){
+//         p_out[i] = (p_x[i] == NA_INTEGER);
+//       }
+//     }
+//     break;
+//   }
+//   case REALSXP: {
+//     double *p_x = REAL(x);
+//     if (do_parallel){
+// #pragma omp parallel for simd num_threads(n_cores)
+//       for (i = 0; i < n; ++i){
+//         p_out[i] = (p_x[i] != p_x[i]);
+//       }
+//     } else {
+//       for (i = 0; i < n; ++i){
+//         p_out[i] = (p_x[i] != p_x[i]);
+//       }
+//     }
+//     break;
+//   }
+//   case STRSXP: {
+//     SEXP *p_x = STRING_PTR(x);
+//     if (do_parallel){
+// #pragma omp parallel for simd num_threads(n_cores)
+//       for (i = 0; i < n; ++i){
+//         p_out[i] = (p_x[i] == NA_STRING);
+//       }
+//     } else {
+//       for (i = 0; i < n; ++i){
+//         p_out[i] = (p_x[i] == NA_STRING);
+//       }
+//     }
+//     break;
+//   }
+//   case RAWSXP: {
+//     break;
+//   }
+//   case CPLXSXP: {
+//     Rcomplex *p_x = COMPLEX(x);
+//     if (do_parallel){
+// #pragma omp parallel for simd num_threads(n_cores)
+//       for (i = 0; i < n; ++i){
+//         p_out[i] = ( ((p_x[i]).r != (p_x[i]).r) || ((p_x[i]).i != (p_x[i]).i) );
+//       }
+//     } else {
+//       for (i = 0; i < n; ++i){
+//         p_out[i] = ( ((p_x[i]).r != (p_x[i]).r) || ((p_x[i]).i != (p_x[i]).i) );
+//       }
+//     }
+//     break;
+//   }
+//   case VECSXP: {
+//     const SEXP *p_x = VECTOR_PTR_RO(x);
+//     for (i = 0; i < n; ++i){
+//       p_out[i] = cpp_all_na(p_x[i], false);
+//     }
+//     break;
+//   }
+//   default: {
+//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+//     break;
+//   }
+//   }
+//   Rf_unprotect(1);
+//   return out;
+// }
+
 [[cpp11::register]]
 SEXP cpp_row_na_counts(SEXP x){
   if (!Rf_isFrame(x)){
@@ -637,7 +725,7 @@ SEXP cpp_row_na_counts(SEXP x){
       ++n_protections;
       SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
       Rf_unprotect(n_protections);
-      Rf_error("list variable %s has length (%d) not equal to number of rows (%d)",
+      Rf_error("list variable %s has length (%ld) not equal to number of rows (%ld)",
                CHAR(STRING_ELT(names, j)), Rf_xlength(p_x[j]), num_row);
     }
       const SEXP *p_xj = VECTOR_PTR_RO(p_x[j]);
@@ -676,7 +764,7 @@ SEXP cpp_col_na_counts(SEXP x){
       ++n_protections;
       SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
       Rf_unprotect(n_protections);
-      Rf_error("list variable %s has length (%d) not equal to number of rows (%d)",
+      Rf_error("list variable %s has length (%ld) not equal to number of rows (%ld)",
                CHAR(STRING_ELT(names, j)), Rf_xlength(p_x[j]), num_row);
     }
       for (R_xlen_t i = 0; i < num_row; ++i){
