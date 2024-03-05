@@ -183,3 +183,112 @@ test_that("multiple cores", {
   expect_identical(all_na(a4), allNA(a4))
   options(cheapr.cores = 1)
 })
+
+test_that("lists", {
+
+  # NA counts of empty row/col data frames
+  expect_identical(
+    row_na_counts(data.frame(row.names = 1:100)),
+    integer(100)
+  )
+  expect_identical(
+    row_na_counts(data.frame(x = 1:100,
+                             y = rnorm(100))[0, , drop = FALSE]),
+    integer()
+  )
+  expect_identical(
+    col_na_counts(data.frame(row.names = 1:100)),
+    integer()
+  )
+  expect_identical(
+    col_na_counts(data.frame(x = 1:100,
+                             y = rnorm(100))[0, , drop = FALSE]),
+    integer(2)
+  )
+  # any NA empty row/col data frames
+  expect_identical(
+    row_any_na(data.frame(row.names = 1:100)),
+    logical(100)
+  )
+  expect_identical(
+    row_any_na(data.frame(x = rep(NA, 100),
+                             y = rnorm(100))[0, , drop = FALSE]),
+    logical(0)
+  )
+  expect_identical(
+    col_any_na(data.frame(row.names = 1:100)),
+    logical(0)
+  )
+  expect_identical(
+    col_any_na(data.frame(x = rep(NA, 100),
+                             y = rep(NA, 100))[0, , drop = FALSE]),
+    logical(2)
+  )
+
+  # all NA empty row/col data frames
+  expect_identical(
+    row_all_na(data.frame(row.names = 1:100)),
+    logical(100)
+  )
+  expect_identical(
+    row_all_na(data.frame(x = rep(NA, 100),
+                          y = rep(NA, 100))[0, , drop = FALSE]),
+    logical(0)
+  )
+  expect_identical(
+    col_all_na(data.frame(row.names = 1:100)),
+    logical(0)
+  )
+  expect_identical(
+    col_all_na(data.frame(x = rep(NA, 100),
+                          y = rep(NA, 100))[0, , drop = FALSE]),
+    logical(2)
+  )
+
+  x <- list(1, 1:5, NA, list(1:10, list(c(2, NA, NA))))
+  expect_identical(num_na(x), 3L)
+  expect_true(any_na(x))
+  expect_false(all_na(x))
+
+  df <- list(x = list(1, 1:5, NA, list(NA, NA), integer()), y = rep(NA, 5))
+  attributes(df) <- list(class = "data.frame",
+                         row.names = c(NA_integer_, -5),
+                         names = as.character(names(df)))
+  df
+  expect_identical(
+    row_na_counts(df),
+    vapply(df$x, function(x) (sum(is.na(unlist(x))) > 0L) + 1L, 0L)
+  )
+  expect_identical(
+    col_na_counts(df),
+    c(2L, 5L)
+  )
+
+  ## Triggering parallel code
+  options(cheapr.cores = 2)
+  set.seed(912389)
+  df <- list(a = as.list(fill_with_na(sample(letters, 10^5 + 1, TRUE), n = 10^4)),
+             b = fill_with_na(rnorm(10^5 + 1), 10^3),
+             c = fill_with_na(sample.int(100, 10^5 + 1, TRUE), 10^3),
+             d = complex(real = fill_with_na(sample.int(100, 10^5 + 1, TRUE), 10^3),
+                         imaginary = fill_with_na(sample.int(100, 10^5 + 1, TRUE), 10^3)),
+             e = fill_with_na(sample(letters, 10^5 + 1, TRUE), n = 10^4))
+
+  attributes(df) <- list(class = "data.frame",
+                         row.names = c(NA_integer_, -as.integer(10^5 + 1)),
+                         names = as.character(names(df)))
+  expect_identical(
+    row_na_counts(df),
+    # Add 1 every time ALL unlist elements are NA
+    vapply(df$a, function(x) (sum(is.na(unlist(x))) > 0L), 0L) +
+      is.na(df$b) +
+      is.na(df$c) +
+      is.na(df$d) +
+      is.na(df$e)
+  )
+  expect_identical(
+    col_na_counts(df),
+    c(10000L, 1000L, 1000L, sum(is.na(df$d)), 10000L)
+  )
+  options(cheapr.cores = 1)
+})
