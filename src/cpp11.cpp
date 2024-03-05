@@ -47,98 +47,98 @@ extern "C" SEXP _cheapr_cpp_lcm2_vectorised(SEXP x, SEXP y, SEXP tol, SEXP na_rm
     return cpp11::as_sexp(cpp_lcm2_vectorised(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y), cpp11::as_cpp<cpp11::decay_t<double>>(tol), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 R_xlen_t na_count(SEXP x);
 extern "C" SEXP _cheapr_na_count(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(na_count(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_num_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_num_na(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_num_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 bool cpp_any_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_any_na(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_any_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 bool cpp_all_na(SEXP x, bool return_true_on_empty);
 extern "C" SEXP _cheapr_cpp_all_na(SEXP x, SEXP return_true_on_empty) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_all_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(return_true_on_empty)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_which_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_which_na(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_which_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_which_not_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_which_not_na(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_which_not_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_row_na_counts(SEXP x);
 extern "C" SEXP _cheapr_cpp_row_na_counts(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_row_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_col_na_counts(SEXP x);
 extern "C" SEXP _cheapr_cpp_col_na_counts(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 extern "C" SEXP _cheapr_cpp_missing_row(SEXP x, SEXP threshold, SEXP threshold_is_prop) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_missing_row(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(threshold), cpp11::as_cpp<cpp11::decay_t<bool>>(threshold_is_prop)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_missing_col(SEXP x, double threshold, bool threshold_is_prop);
 extern "C" SEXP _cheapr_cpp_missing_col(SEXP x, SEXP threshold, SEXP threshold_is_prop) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_missing_col(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(threshold), cpp11::as_cpp<cpp11::decay_t<bool>>(threshold_is_prop)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_matrix_row_na_counts(SEXP x);
 extern "C" SEXP _cheapr_cpp_matrix_row_na_counts(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_matrix_row_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_matrix_col_na_counts(SEXP x);
 extern "C" SEXP _cheapr_cpp_matrix_col_na_counts(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_matrix_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_matrix_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 extern "C" SEXP _cheapr_cpp_matrix_missing_row(SEXP x, SEXP threshold, SEXP threshold_is_prop) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_matrix_missing_row(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(threshold), cpp11::as_cpp<cpp11::decay_t<bool>>(threshold_is_prop)));
   END_CPP11
 }
-// na_utils.cpp
+// nas.cpp
 SEXP cpp_matrix_missing_col(SEXP x, double threshold, bool threshold_is_prop);
 extern "C" SEXP _cheapr_cpp_matrix_missing_col(SEXP x, SEXP threshold, SEXP threshold_is_prop) {
   BEGIN_CPP11
