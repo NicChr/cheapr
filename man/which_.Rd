@@ -33,7 +33,7 @@ mark(which_(FALSE), which(FALSE))
 mark(which_(logical()), which(logical()))
 mark(which_(x), which(x), iterations = 20)
 mark(base = which(is.na(match(x, TRUE))),
-     collapse = collapse::whichNA(collapse::fmatch(x, TRUE, overid = 2L)),
+     collapse = collapse::whichv(x, TRUE, invert = TRUE),
      cheapr = which_(x, invert = TRUE),
      iterations = 20)
 

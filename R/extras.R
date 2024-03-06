@@ -24,7 +24,6 @@
 #' in which case an integer vector of break indices is returned. \cr
 #' `%in_%` and `%!in_%` both return a logical vector signifying if the values of
 #' `x` exist or don't exist in `table` respectively. \cr
-#' `unlisted_length()` is an alternative to `length(unlist(x))`.
 #'
 #'
 #' @details
@@ -43,7 +42,7 @@ setdiff_ <- function(x, y, dups = TRUE){
   }
   i <- which_na(collapse::fmatch(x, y, overid = 2L))
   if (inherits(x, "data.frame")){
-    x[i, ]
+    x[i, , drop = FALSE]
   } else {
     x[i]
   }
@@ -56,7 +55,7 @@ intersect_ <- function(x, y, dups = TRUE){
   }
   i <- which_not_na(collapse::fmatch(x, y, overid = 2L))
   if (inherits(x, "data.frame")){
-    x[i, ]
+    x[i, , drop = FALSE]
   } else {
     x[i]
   }
@@ -131,7 +130,7 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
 #' @export
 #' @rdname extras
 `%!in_%` <- function(x, table){
-  is.na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
+  cpp_is_na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
 }
 #' @export
 #' @rdname extras
@@ -167,8 +166,4 @@ deframe_ <- function(x){
   }
   out
 }
-#' @export
-#' @rdname extras
-unlisted_length <- function(x){
-  cpp_r_unnested_length(x)
-}
+

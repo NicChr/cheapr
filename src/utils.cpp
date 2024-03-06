@@ -6,6 +6,10 @@ int int_div(int x, int y){
   return x / y;
 }
 
+R_xlen_t cpp_vec_length(SEXP x){
+  return Rf_inherits(x, "vctrs_rcrd") ? cpp_vec_length(VECTOR_ELT(x, 0)) : Rf_xlength(x);
+}
+
 int num_cores(){
   int out = Rf_asInteger(Rf_GetOption1(Rf_installChar(Rf_mkChar("cheapr.cores"))));
   if (out >= 1){
@@ -39,6 +43,57 @@ R_xlen_t cpp_unnested_length(SEXP x){
 SEXP cpp_r_unnested_length(SEXP x){
   return xlen_to_r(cpp_unnested_length(x));
 }
+
+[[cpp11::register]]
+SEXP cpp_lengths(SEXP x) {
+  R_xlen_t n = Rf_xlength(x);
+  SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+  int *p_out = INTEGER(out);
+  if (!Rf_isVectorList(x)){
+    for (R_xlen_t i = 0; i < n; ++i) {
+      p_out[i] = 1;
+    }
+    Rf_unprotect(1);
+    return out;
+  } else {
+    const SEXP* p_x = VECTOR_PTR_RO(x);
+    for (R_xlen_t i = 0; i < n; ++i) {
+      p_out[i] = cpp_vec_length(p_x[i]);
+    }
+    Rf_unprotect(1);
+    return out;
+  }
+}
+
+[[cpp11::register]]
+SEXP cpp_new_list(R_xlen_t size, SEXP default_value) {
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, size));
+  if (!Rf_isNull(default_value)){
+    for (R_xlen_t i = 0; i < size; ++i) {
+      SET_VECTOR_ELT(out, i, default_value);
+    }
+  }
+  Rf_unprotect(1);
+  return out;
+}
+
+// bool cpp_is_list_df_like(SEXP x){
+//   if (!Rf_isVectorList(x)){
+//     Rf_error("x must be a list.");
+//   }
+//   if (Rf_isFrame(x)) return true;
+//   R_xlen_t n = Rf_xlength(x);
+//   bool out = true;
+//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//   R_xlen_t init = cpp_vec_length(p_x[0]);
+//   for (R_xlen_t i = 1; i < n; ++i) {
+//     if (cpp_vec_length(p_x[i]) != init){
+//      out = false;
+//       break;
+//     }
+//   }
+//   return out;
+// }
 
 //
 // bool list_has_list(SEXP x){

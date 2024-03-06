@@ -41,6 +41,6 @@ int int_div(int x, int y);
 R_xlen_t cpp_df_nrow(SEXP x);
 R_xlen_t cpp_unnested_length(SEXP x);
 SEXP xlen_to_r(R_xlen_t x);
-bool list_has_list(SEXP x);
+R_xlen_t cpp_vec_length(SEXP x);
 
 #endif

@@ -87,6 +87,16 @@ test_that("different classes", {
     all(is.na(x))
   }
 
+  expect_identical(is_na(a10), is.na(a10))
+  expect_identical(is_na(a20), is.na(a20))
+  expect_identical(is_na(a30), is.na(a30))
+  expect_identical(is_na(a40), is.na(a40))
+
+  expect_identical(is_na(a1), is.na(a1))
+  expect_identical(is_na(a2), is.na(a2))
+  expect_identical(is_na(a3), is.na(a3))
+  expect_identical(is_na(a4), is.na(a4))
+
   expect_identical(num_na(a10), sum(is.na(a10)))
   expect_identical(num_na(a20), sum(is.na(a20)))
   expect_identical(num_na(a30), sum(is.na(a30)))
@@ -154,6 +164,10 @@ test_that("multiple cores", {
   allNA <- function(x){
     all(is.na(x))
   }
+  expect_identical(is_na(a1), is.na(a1))
+  expect_identical(is_na(a2), is.na(a2))
+  expect_identical(is_na(a3), is.na(a3))
+  expect_identical(is_na(a4), is.na(a4))
 
   expect_identical(num_na(a1), sum(is.na(a1)))
   expect_identical(num_na(a2), sum(is.na(a2)))

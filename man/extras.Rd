@@ -8,7 +8,6 @@
 \alias{\%!in_\%}
 \alias{enframe_}
 \alias{deframe_}
-\alias{unlisted_length}
 \title{Extra utilities}
 \usage{
 setdiff_(x, y, dups = TRUE)
@@ -33,8 +32,6 @@ x \%!in_\% table
 enframe_(x, name = "name", value = "value")
 
 deframe_(x)
-
-unlisted_length(x)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -73,7 +70,6 @@ through the \code{breaks} argument and returns a factor unless \code{labels = FA
 in which case an integer vector of break indices is returned. \cr
 \verb{\%in_\%} and \verb{\%!in_\%} both return a logical vector signifying if the values of
 \code{x} exist or don't exist in \code{table} respectively. \cr
-\code{unlisted_length()} is an alternative to \code{length(unlist(x))}.
 }
 \description{
 Extra utilities

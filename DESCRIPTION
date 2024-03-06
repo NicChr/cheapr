@@ -10,6 +10,7 @@ Description: Fast and memory-efficient (or 'cheap') tools to facilitate
     'cheaper' alternatives to common base R functions, as well as some
     additional functions.
 License: MIT + file LICENSE
+BugReports: https://github.com/NicChr/cheapr/issues
 Depends:
     R (>= 3.5.0)
 Imports:

@@ -54,7 +54,7 @@ factor_ <- function(x = integer(), levels = NULL, order = TRUE,
   out <- collapse::fmatch(x, lvls, overid = 2L)
   fct_lvls <- as.character(lvls)
   if (inherits(x, "POSIXt") && collapse::any_duplicated(fct_lvls)){
-    fct_lvls <- paste(fct_lvls, as.POSIXlt(x)$zone)
+    fct_lvls <- paste(fct_lvls, as.POSIXlt(lvls)$zone)
   }
   attr(out, "levels") <- fct_lvls
   class(out) <- c(if (ordered) "ordered" else character(),

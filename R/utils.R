@@ -26,9 +26,71 @@ allv2 <- function(x, value){
   }
   collapse::allv(x, value)
 }
+vctrs_rcrd_as_df <- function(x){
+  out <- unclass(x)
+  attr(out, "row.names") <- .set_row_names(length(out[[1L]]))
+  class(out) <- "data.frame"
+  out
+}
+list_as_df <- function(x){
+  out <- unclass(x)
+  if (length(out) == 0) {
+    N <- 0L
+  } else {
+    N <- length(out[[1L]])
+  }
+  attr(out, "row.names") <- .set_row_names(N)
+  class(out) <- "data.frame"
+  out
+}
+as.character.vctrs_rcrd <- function(x, ...){
+  format(x, ...)
+}
+# Does rcrd fields have rcrds in them?
+is_nested_rcrd <- function(x){
+  out <- FALSE
+  for (i in seq_along(unclass(x))){
+    if (inherits(.subset2(x, i), "vctrs_rcrd")){
+      out <- TRUE
+      break
+    }
+  }
+  out
+}
+funique.vctrs_rcrd <- function(x, sort = FALSE, ...){
+  out <- unique(x, ...)
+  if (sort){
+    out <- sort(out)
+  }
+  out
+}
+funique.POSIXlt <- function(x, ...){
+  out <- collapse::funique(list_as_df(x), ...)
+  out <- unclass(out)
+  attributes(out) <- attributes(x)
+  out
+}
+# funique.vctrs_rcrd <- function(x, sort = FALSE, method = "auto",
+#                                decreasing = FALSE, na.last = TRUE, ...){
+#   # if (is_nested_rcrd(x)){
+#   #  return(unique(x, ...))
+#   # }
+#   cl <- class(x)
+#   out <- collapse::funique(unclass(x), sort = sort, method = method,
+#                            decreasing = decreasing, na.last = na.last)
+#   class(out) <- cl
+#   out
+# }
+# safe_unique <- function(x, ...){
+#   out <- tryCatch(collapse::funique(x, ...), error = function(e) return(".r.error"))
+#   if (length(out) == 1 && out == ".r.error"){
+#     out <- unique(x, ...)
+#   }
+#   out
+# }
 # any_na <- function(x){
 #   num_na(x) > 0
 # }
 # all_na <- function(x){
-#   num_na(x) == cpp_vector_size(x)
+#   num_na(x) == unlisted_length(x)
 # }

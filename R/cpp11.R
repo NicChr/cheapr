@@ -24,10 +24,6 @@ cpp_lcm2_vectorised <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_lcm2_vectorised`, x, y, tol, na_rm)
 }
 
-na_count <- function(x) {
-  .Call(`_cheapr_na_count`, x)
-}
-
 cpp_num_na <- function(x) {
   .Call(`_cheapr_cpp_num_na`, x)
 }
@@ -46,6 +42,10 @@ cpp_which_na <- function(x) {
 
 cpp_which_not_na <- function(x) {
   .Call(`_cheapr_cpp_which_not_na`, x)
+}
+
+cpp_is_na <- function(x) {
+  .Call(`_cheapr_cpp_is_na`, x)
 }
 
 cpp_row_na_counts <- function(x) {
@@ -102,6 +102,14 @@ cpp_lead_sequence <- function(size, k, partial) {
 
 cpp_r_unnested_length <- function(x) {
   .Call(`_cheapr_cpp_r_unnested_length`, x)
+}
+
+cpp_lengths <- function(x) {
+  .Call(`_cheapr_cpp_lengths`, x)
+}
+
+cpp_new_list <- function(size, default_value) {
+  .Call(`_cheapr_cpp_new_list`, size, default_value)
 }
 
 cpp_which_ <- function(x, invert) {
