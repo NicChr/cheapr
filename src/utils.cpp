@@ -28,14 +28,15 @@ R_xlen_t cpp_df_nrow(SEXP x){
 }
 
 R_xlen_t cpp_unnested_length(SEXP x){
-  Rf_protect(x = Rf_coerceVector(x, VECSXP));
+  if (!Rf_isVectorList(x)){
+    return Rf_xlength(x);
+  }
   const SEXP *p_x = VECTOR_PTR_RO(x);
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t out = 0;
   for (R_xlen_t i = 0; i < n; ++i){
    out += Rf_isVectorList(p_x[i]) ? cpp_unnested_length(p_x[i]) : Rf_xlength(p_x[i]);
   }
-  Rf_unprotect(1);
   return out;
 }
 

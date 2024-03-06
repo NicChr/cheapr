@@ -780,17 +780,19 @@ SEXP cpp_row_na_counts(SEXP x){
       //     p_n_empty[k] += p_is_empty_nested[k];
       //   }
       // } else {
-        if (Rf_xlength(p_x[j]) != num_row){
-          ++n_protections;
-          SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
-          Rf_unprotect(n_protections);
-          Rf_error("list variable %s has length (%lld) not equal to number of rows (%lld)",
-                   CHAR(STRING_ELT(names, j)), Rf_xlength(p_x[j]), num_row);
-        }
-        const SEXP *p_xj = VECTOR_PTR_RO(p_x[j]);
-        for (R_xlen_t i = 0; i < num_row; ++i){
-          p_n_empty[i] += cpp_all_na(p_xj[i], false);
-        }
+      if (Rf_xlength(p_x[j]) != num_row){
+      int int_nrows = num_row;
+      int element_length = Rf_xlength(p_x[j]);
+      ++n_protections;
+      SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
+      Rf_unprotect(n_protections);
+      Rf_error("list variable %s has length (%d) not equal to number of rows (%d)",
+               CHAR(STRING_ELT(names, j)), element_length, int_nrows);
+    }
+      const SEXP *p_xj = VECTOR_PTR_RO(p_x[j]);
+      for (R_xlen_t i = 0; i < num_row; ++i){
+        p_n_empty[i] += cpp_all_na(p_xj[i], false);
+      }
       // }
       break;
     }
@@ -820,27 +822,29 @@ SEXP cpp_col_na_counts(SEXP x){
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
-    //   if (Rf_inherits(p_x[j], "vctrs_rcrd")){
-    //   SEXP rcrd_df = Rf_protect(cpp11::package("cheapr")["vctrs_rcrd_as_df"](p_x[j]));
-    //   ++n_protections;
-    //   SEXP is_empty_nested = Rf_protect(cpp_missing_row(rcrd_df, 1, true));
-    //   ++n_protections;
-    //   int *p_is_empty_nested = LOGICAL(is_empty_nested);
-    //   for (R_xlen_t k = 0; k < num_row; ++k){
-    //     p_out[j] += p_is_empty_nested[k];
-    //   }
-    // } else {
+      //   if (Rf_inherits(p_x[j], "vctrs_rcrd")){
+      //   SEXP rcrd_df = Rf_protect(cpp11::package("cheapr")["vctrs_rcrd_as_df"](p_x[j]));
+      //   ++n_protections;
+      //   SEXP is_empty_nested = Rf_protect(cpp_missing_row(rcrd_df, 1, true));
+      //   ++n_protections;
+      //   int *p_is_empty_nested = LOGICAL(is_empty_nested);
+      //   for (R_xlen_t k = 0; k < num_row; ++k){
+      //     p_out[j] += p_is_empty_nested[k];
+      //   }
+      // } else {
       if (Rf_xlength(p_x[j]) != num_row){
-        ++n_protections;
-        SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
-        Rf_unprotect(n_protections);
-        Rf_error("list variable %s has length (%lld) not equal to number of rows (%lld)",
-                 CHAR(STRING_ELT(names, j)), Rf_xlength(p_x[j]), num_row);
-      }
+      int int_nrows = num_row;
+      int element_length = Rf_xlength(p_x[j]);
+      ++n_protections;
+      SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
+      Rf_unprotect(n_protections);
+      Rf_error("list variable %s has length (%d) not equal to number of rows (%d)",
+               CHAR(STRING_ELT(names, j)), element_length, int_nrows);
+    }
       for (R_xlen_t i = 0; i < num_row; ++i){
         p_out[j] += cpp_all_na(VECTOR_ELT(p_x[j], i), false);
       }
-    // }
+      // }
       break;
     }
     default: {
