@@ -1,4 +1,6 @@
-# cheapr 0.2.0
+# cheapr (Development version)
+
+* More support has been added for all objects with an `is.na` method.
 
 * `is_na` has been added as an S3 generic function which is parallelised and  internally falls back
 on `is.na` if there are no suitable methods.
