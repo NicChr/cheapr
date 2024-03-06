@@ -2,6 +2,10 @@
 % Please edit documentation in R/nas.R
 \name{is_na}
 \alias{is_na}
+\alias{is_na.default}
+\alias{is_na.POSIXlt}
+\alias{is_na.vctrs_rcrd}
+\alias{is_na.data.frame}
 \alias{num_na}
 \alias{which_na}
 \alias{which_not_na}
@@ -16,6 +20,14 @@
 \title{Efficient functions for dealing with missing values.}
 \usage{
 is_na(x)
+
+\method{is_na}{default}(x)
+
+\method{is_na}{POSIXlt}(x)
+
+\method{is_na}{vctrs_rcrd}(x)
+
+\method{is_na}{data.frame}(x)
 
 num_na(x)
 

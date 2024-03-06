@@ -7,9 +7,26 @@ int int_div(int x, int y){
 }
 
 R_xlen_t cpp_vec_length(SEXP x){
-  return Rf_inherits(x, "vctrs_rcrd") ? cpp_vec_length(VECTOR_ELT(x, 0)) : Rf_xlength(x);
-}
+  if (Rf_isFrame(x)){
+    return cpp_df_nrow(x);
 
+    // Is x a list?
+  } else if (Rf_isVectorList(x)){
+    if (Rf_inherits(x, "vctrs_rcrd")){
+      return cpp_vec_length(VECTOR_ELT(x, 0));
+    } else if (Rf_inherits(x, "POSIXlt")){
+      return Rf_xlength(VECTOR_ELT(x, 0));
+    } else if (Rf_isObject(x)){
+      return Rf_asReal(cpp11::package("base")["length"](x));
+    } else {
+      return Rf_xlength(x);
+    }
+    // Catch-all
+  } else {
+    return Rf_xlength(x);
+  }
+  // return Rf_inherits(x, "vctrs_rcrd") ? cpp_vec_length(VECTOR_ELT(x, 0)) : Rf_xlength(x);
+}
 int num_cores(){
   int out = Rf_asInteger(Rf_GetOption1(Rf_installChar(Rf_mkChar("cheapr.cores"))));
   if (out >= 1){
@@ -82,18 +99,21 @@ SEXP cpp_new_list(R_xlen_t size, SEXP default_value) {
 //   if (!Rf_isVectorList(x)){
 //     Rf_error("x must be a list.");
 //   }
-//   if (Rf_isFrame(x)) return true;
-//   R_xlen_t n = Rf_xlength(x);
-//   bool out = true;
-//   const SEXP *p_x = VECTOR_PTR_RO(x);
-//   R_xlen_t init = cpp_vec_length(p_x[0]);
-//   for (R_xlen_t i = 1; i < n; ++i) {
-//     if (cpp_vec_length(p_x[i]) != init){
-//      out = false;
-//       break;
-//     }
-//   }
-//   return out;
+//   return Rf_isFrame(x) ||
+//     Rf_inherits(x, "vctrs_rcrd") ||
+//     Rf_inherits(x, "POSIXlt");
+//   // if (Rf_isFrame(x)) return true;
+//   // R_xlen_t n = Rf_xlength(x);
+//   // bool out = true;
+//   // const SEXP *p_x = VECTOR_PTR_RO(x);
+//   // R_xlen_t init = cpp_vec_length(p_x[0]);
+//   // for (R_xlen_t i = 1; i < n; ++i) {
+//   //   if (cpp_vec_length(p_x[i]) != init){
+//   //    out = false;
+//   //     break;
+//   //   }
+//   // }
+//   // return out;
 // }
 
 //

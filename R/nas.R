@@ -76,17 +76,25 @@
 is_na <- function(x){
   UseMethod("is_na")
 }
+#' @rdname is_na
 #' @export
 is_na.default <- function(x){
   .Call(`_cheapr_cpp_is_na`, x)
 }
+#' @rdname is_na
 #' @export
 is_na.POSIXlt <- function(x){
   row_any_na(list_as_df(unclass(x)[1:8]))
 }
+#' @rdname is_na
 #' @export
 is_na.vctrs_rcrd <- function(x){
   row_all_na(list_as_df(x))
+}
+#' @rdname is_na
+#' @export
+is_na.data.frame <- function(x){
+  row_all_na(x)
 }
 #' @rdname is_na
 #' @export
