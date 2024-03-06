@@ -26,12 +26,6 @@ allv2 <- function(x, value){
   }
   collapse::allv(x, value)
 }
-vctrs_rcrd_as_df <- function(x){
-  out <- unclass(x)
-  attr(out, "row.names") <- .set_row_names(length(out[[1L]]))
-  class(out) <- "data.frame"
-  out
-}
 list_as_df <- function(x){
   out <- unclass(x)
   if (length(out) == 0) {
