@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.2.0
 
 * `is_na` has been added as an S3 generic function which is parallelised and  internally falls back
 on `is.na` if there are no suitable methods.
