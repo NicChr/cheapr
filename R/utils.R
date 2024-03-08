@@ -27,7 +27,7 @@ allv2 <- function(x, value){
   collapse::allv(x, value)
 }
 list_as_df <- function(x){
-  out <- unclass(x)
+  out <- cpp_list_rm_null(x)
   if (length(out) == 0) {
     N <- 0L
   } else {
@@ -36,6 +36,10 @@ list_as_df <- function(x){
   attr(out, "row.names") <- .set_row_names(N)
   class(out) <- "data.frame"
   out
+}
+df_as_tbl <- function(x){
+  class(x) <- c("tbl_df", "tbl", "data.frame")
+  x
 }
 as.character.vctrs_rcrd <- function(x, ...){
   format(x, ...)
@@ -64,17 +68,50 @@ funique.POSIXlt <- function(x, ...){
   attributes(out) <- attributes(x)
   out
 }
-# funique.vctrs_rcrd <- function(x, sort = FALSE, method = "auto",
-#                                decreasing = FALSE, na.last = TRUE, ...){
-#   # if (is_nested_rcrd(x)){
-#   #  return(unique(x, ...))
-#   # }
-#   cl <- class(x)
-#   out <- collapse::funique(unclass(x), sort = sort, method = method,
-#                            decreasing = decreasing, na.last = na.last)
-#   class(out) <- cl
-#   out
-# }
+check_length <- function(x, n){
+  if (length(x) != n){
+    stop(paste(deparse1(substitute(x)), "must have length ", n))
+  }
+}
+check_is_df <- function(x){
+  if (!inherits(x, "data.frame")){
+    stop(paste(deparse1(substitute(x)), "must be a data frame."))
+  }
+}
+df_add_cols <- function(data, cols){
+  nms <- names(cols)
+  if (is.null(nms)){
+    stop("cols must be a named list")
+  }
+  for (i in seq_along(cols)){
+    data[[nms[i]]] <- cols[[i]]
+  }
+  data
+}
+which_in <- function(x, table){
+  which_not_na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
+}
+which_not_in <- function(x, table){
+  which_na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
+}
+df_select <- function(x, i){
+  attrs <- attributes(x)
+  out <- cpp_list_rm_null(unclass(x)[i])
+  attrs[["names"]] <- attr(out, "names")
+  attrs[["row.names"]] <- .row_names_info(x, type = 0L)
+  attributes(out) <- attrs
+  out
+}
+na_rm <- function(x){
+  n_na <- num_na(x)
+  if (n_na == unlisted_length(x)){
+    x[0L]
+  } else if (n_na == 0){
+    x
+  } else {
+    x[which_not_na(x)]
+  }
+}
 # safe_unique <- function(x, ...){
 #   out <- tryCatch(collapse::funique(x, ...), error = function(e) return(".r.error"))
 #   if (length(out) == 1 && out == ".r.error"){

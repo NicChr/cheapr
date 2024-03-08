@@ -95,6 +95,39 @@ SEXP cpp_new_list(R_xlen_t size, SEXP default_value) {
   return out;
 }
 
+// Remove NULL elements from list
+
+[[cpp11::register]]
+SEXP cpp_list_rm_null(SEXP l) {
+  Rf_protect(l = Rf_coerceVector(l, VECSXP));
+  const SEXP *p_l = VECTOR_PTR_RO(l);
+  int n = Rf_length(l);
+  SEXP keep = Rf_protect(Rf_allocVector(LGLSXP, n));
+  int *p_keep = LOGICAL(keep);
+  for (int i = 0; i < n; ++i) {
+    p_keep[i] = !Rf_isNull(p_l[i]);
+  }
+  SEXP which_keep = Rf_protect(cpp_which_(keep, false));
+  int *p_which_keep = INTEGER(which_keep);
+  int n_out = Rf_length(which_keep);
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_out));
+  SEXP names = Rf_protect(Rf_duplicate(Rf_getAttrib(l, R_NamesSymbol)));
+  SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_out));
+  if (!Rf_isNull(names)){
+    for (int j = 0; j < n_out; ++j) {
+      SET_STRING_ELT(out_names, j, STRING_ELT(names, p_which_keep[j] - 1));
+      SET_VECTOR_ELT(out, j, p_l[p_which_keep[j] - 1]);
+    }
+    Rf_setAttrib(out, R_NamesSymbol, out_names);
+  } else {
+    for (int j = 0; j < n_out; ++j) {
+      SET_VECTOR_ELT(out, j, p_l[p_which_keep[j] - 1]);
+    }
+  }
+  Rf_unprotect(6);
+  return out;
+}
+
 // bool cpp_is_list_df_like(SEXP x){
 //   if (!Rf_isVectorList(x)){
 //     Rf_error("x must be a list.");

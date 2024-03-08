@@ -112,6 +112,10 @@ cpp_new_list <- function(size, default_value) {
   .Call(`_cheapr_cpp_new_list`, size, default_value)
 }
 
+cpp_list_rm_null <- function(l) {
+  .Call(`_cheapr_cpp_list_rm_null`, l)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

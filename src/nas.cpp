@@ -79,10 +79,17 @@ R_xlen_t na_count(SEXP x){
     // ++n_protections;
     // int *p_is_empty = LOGICAL(is_empty);
     // count = count_true(p_is_empty, num_row);
+    // if (recursive){
     const SEXP *p_x = VECTOR_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       count += na_count(p_x[i]);
     }
+  // } else {
+  //   SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
+  //   ++n_protections;
+  //   int *p_is_missing = LOGICAL(is_missing);
+  //   count = count_true(p_is_missing, Rf_xlength(is_missing));
+  // }
     break;
   }
   default: {
