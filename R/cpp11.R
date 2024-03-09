@@ -24,16 +24,16 @@ cpp_lcm2_vectorised <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_lcm2_vectorised`, x, y, tol, na_rm)
 }
 
-cpp_num_na <- function(x) {
-  .Call(`_cheapr_cpp_num_na`, x)
+cpp_num_na <- function(x, recursive) {
+  .Call(`_cheapr_cpp_num_na`, x, recursive)
 }
 
-cpp_any_na <- function(x) {
-  .Call(`_cheapr_cpp_any_na`, x)
+cpp_any_na <- function(x, recursive) {
+  .Call(`_cheapr_cpp_any_na`, x, recursive)
 }
 
-cpp_all_na <- function(x, return_true_on_empty) {
-  .Call(`_cheapr_cpp_all_na`, x, return_true_on_empty)
+cpp_all_na <- function(x, return_true_on_empty, recursive) {
+  .Call(`_cheapr_cpp_all_na`, x, return_true_on_empty, recursive)
 }
 
 cpp_which_na <- function(x) {

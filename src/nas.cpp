@@ -2,7 +2,7 @@
 #include <cpp11.hpp>
 #include <Rinternals.h>
 
-R_xlen_t na_count(SEXP x){
+R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
   int n_protections = 0;
@@ -82,18 +82,18 @@ R_xlen_t na_count(SEXP x){
     // if (recursive){
     const SEXP *p_x = VECTOR_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
-      count += na_count(p_x[i]);
+      count += na_count(p_x[i], true);
     }
   // } else {
-  //   SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
-  //   ++n_protections;
-  //   int *p_is_missing = LOGICAL(is_missing);
-  //   count = count_true(p_is_missing, Rf_xlength(is_missing));
+  if (recursive) break;
   // }
-    break;
+    // break;
   }
   default: {
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
+    ++n_protections;
+    int *p_is_missing = LOGICAL(is_missing);
+    count = count_true(p_is_missing, Rf_xlength(is_missing));
     break;
   }
   }
@@ -102,12 +102,13 @@ R_xlen_t na_count(SEXP x){
 }
 
 [[cpp11::register]]
-SEXP cpp_num_na(SEXP x){
-  return xlen_to_r(na_count(x));
+SEXP cpp_num_na(SEXP x, bool recursive){
+  return xlen_to_r(na_count(x, recursive));
 }
 
 [[cpp11::register]]
-bool cpp_any_na(SEXP x){
+bool cpp_any_na(SEXP x, bool recursive){
+  int n_protections = 0;
   R_xlen_t n = Rf_xlength(x);
   bool out = false;
   if (n == 0){
@@ -120,7 +121,7 @@ bool cpp_any_na(SEXP x){
     // do a pseudo while-loop in openMP
     // volatile bool flag = false;
     int *p_x = INTEGER(x);
-// #pragma omp parallel for num_threads(num_cores()) shared(flag)
+    // #pragma omp parallel for num_threads(num_cores()) shared(flag)
     for (R_xlen_t i = 0; i < n; ++i){
       // if (flag) continue;
       if (p_x[i] == NA_INTEGER){
@@ -166,21 +167,27 @@ bool cpp_any_na(SEXP x){
   }
   case VECSXP: {
     for (int i = 0; i < n; ++i){
-    out = cpp_any_na(VECTOR_ELT(x, i));
-    if (out) break;
-  }
-    break;
+      out = cpp_any_na(VECTOR_ELT(x, i), true);
+      if (out) break;
+    }
+    if (recursive) break;
   }
   default: {
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
+    ++n_protections;
+    SEXP any_missing = Rf_protect(cpp11::package("base")["any"](is_missing));
+    ++n_protections;
+    out = Rf_asLogical(any_missing);
     break;
   }
   }
+  Rf_unprotect(n_protections);
   return out;
 }
 
 [[cpp11::register]]
-bool cpp_all_na(SEXP x, bool return_true_on_empty){
+bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
+  int n_protections = 0;
   R_xlen_t n = Rf_xlength(x);
   bool out = true;
   if (n == 0){
@@ -237,16 +244,21 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty){
   }
   case VECSXP: {
     for (int i = 0; i < n; ++i){
-    out = cpp_all_na(VECTOR_ELT(x, i), return_true_on_empty);
-    if (!out) break;
-  }
-    break;
+      out = cpp_all_na(VECTOR_ELT(x, i), return_true_on_empty, true);
+      if (!out) break;
+    }
+    if (recursive) break;
   }
   default: {
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
+    ++n_protections;
+    SEXP all_missing = Rf_protect(cpp11::package("base")["all"](is_missing));
+    ++n_protections;
+    out = Rf_asLogical(all_missing);
     break;
   }
   }
+  Rf_unprotect(n_protections);
   return out;
 }
 
@@ -264,7 +276,7 @@ SEXP cpp_which_na(SEXP x){
   switch ( TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
-    R_xlen_t count = na_count(x);
+    R_xlen_t count = na_count(x, true);
     int *p_x = INTEGER(x);
     if (is_short){
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, count));
@@ -293,7 +305,7 @@ SEXP cpp_which_na(SEXP x){
     }
   }
   case REALSXP: {
-    R_xlen_t count = na_count(x);
+    R_xlen_t count = na_count(x, true);
     double *p_x = REAL(x);
     if (is_short){
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, count));
@@ -322,7 +334,7 @@ SEXP cpp_which_na(SEXP x){
     }
   }
   case STRSXP: {
-    R_xlen_t count = na_count(x);
+    R_xlen_t count = na_count(x, true);
     SEXP *p_x = STRING_PTR(x);
     if (is_short){
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, count));
@@ -356,7 +368,7 @@ SEXP cpp_which_na(SEXP x){
     return out;
   }
   case CPLXSXP: {
-    R_xlen_t count = na_count(x);
+    R_xlen_t count = na_count(x, true);
     Rcomplex *p_x = COMPLEX(x);
     if (is_short){
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, count));
@@ -385,7 +397,10 @@ SEXP cpp_which_na(SEXP x){
     }
   }
   default: {
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
+    SEXP out = Rf_protect(cpp_which_(is_missing, false));
+    Rf_unprotect(2);
+    return out;
     break;
   }
   }
@@ -403,7 +418,7 @@ SEXP cpp_which_not_na(SEXP x){
   switch ( TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
-    R_xlen_t count = na_count(x);
+    R_xlen_t count = na_count(x, true);
     int *p_x = INTEGER(x);
     if (is_short){
       int out_size = n - count;
@@ -434,7 +449,7 @@ SEXP cpp_which_not_na(SEXP x){
     }
   }
   case REALSXP: {
-    R_xlen_t count = na_count(x);
+    R_xlen_t count = na_count(x, true);
     double *p_x = REAL(x);
     if (is_short){
       int out_size = n - count;
@@ -465,7 +480,7 @@ SEXP cpp_which_not_na(SEXP x){
     }
   }
   case STRSXP: {
-    R_xlen_t count = na_count(x);
+    R_xlen_t count = na_count(x, true);
     SEXP *p_x = STRING_PTR(x);
     if (is_short){
       int out_size = n - count;
@@ -515,7 +530,7 @@ SEXP cpp_which_not_na(SEXP x){
   }
   }
   case CPLXSXP: {
-    R_xlen_t count = na_count(x);
+    R_xlen_t count = na_count(x, true);
     Rcomplex *p_x = COMPLEX(x);
     if (is_short){
       int out_size = n - count;
@@ -546,7 +561,10 @@ SEXP cpp_which_not_na(SEXP x){
     }
   }
   default: {
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
+    SEXP out = Rf_protect(cpp_which_(is_missing, true));
+    Rf_unprotect(2);
+    return out;
     break;
   }
   }
@@ -650,7 +668,7 @@ SEXP cpp_is_na(SEXP x){
     int *p_out = LOGICAL(out);
     const SEXP *p_x = VECTOR_PTR_RO(x);
     for (i = 0; i < n; ++i){
-      p_out[i] = cpp_all_na(p_x[i], false);
+      p_out[i] = cpp_all_na(p_x[i], false, true);
     }
     Rf_unprotect(1);
     return out;
@@ -749,7 +767,7 @@ SEXP cpp_row_na_counts(SEXP x){
     } else {
       const SEXP *p_xj = VECTOR_PTR_RO(p_x[j]);
       for (R_xlen_t i = 0; i < num_row; ++i){
-        p_n_empty[i] += cpp_all_na(p_xj[i], false);
+        p_n_empty[i] += cpp_all_na(p_xj[i], false, true);
       }
     }
     break;
@@ -825,7 +843,7 @@ SEXP cpp_col_na_counts(SEXP x){
       }
     } else {
       for (R_xlen_t i = 0; i < num_row; ++i){
-        p_out[j] += cpp_all_na(VECTOR_ELT(p_x[j], i), false);
+        p_out[j] += cpp_all_na(VECTOR_ELT(p_x[j], i), false, true);
       }
     }
     break;
@@ -856,7 +874,7 @@ SEXP cpp_col_na_counts(SEXP x){
     // break;
     // }
     default: {
-      p_out[j] = na_count(p_x[j]);
+      p_out[j] = na_count(p_x[j], false);
       break;
     }
     }

@@ -1,5 +1,10 @@
 # cheapr (Development version)
 
+* New function `overview` as a cheaper alternative to `summary`.
+
+* All of the `NA` handling functions now fall back to using `is.na` if an appropriate
+method cannot be found.
+
 * More support has been added for all objects with an `is.na` method.
 
 * `is_na` has been added as an S3 generic function which is parallelised and  internally falls back

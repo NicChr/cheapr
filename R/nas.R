@@ -16,19 +16,12 @@
 #' These functions are designed primarily for programmers, to increase the speed
 #' and memory-efficiency of `NA` handling. \cr
 #' Most of these functions can be parallelised through `options(cheapr.cores)`. \cr
-#' When `x` is a list, `num_na`, `any_na` and `all_na` will recurse through a
-#' potentially nested list for `NA` values. \cr
-#'
-#'
-#' For the functions that operate on data frames like `row_na_counts`,
-#' if `x` contains a list-variable, an element of that list is considered to be
-#' `NA` when all nested elements of that list-element contain `NA` values.
 #'
 #' ### Common use-cases
 #' To replicate `complete.cases(x)`, use `!row_any_na(x)`. \cr
 #' To find rows with any empty values,
 #' use `which_(row_any_na(df))`. \cr
-#' To find empty rows use `which_(row_all_na(df))`.
+#' To find empty rows use `which_(row_all_na(df))` or `which_na(df)`.
 #'
 #' ### `is_na`
 #' `is_na` Is an S3 generic function. It will internally fall back on
@@ -38,7 +31,23 @@
 #' objects that simply converts it to a data frame and then calls `row_all_na()`.
 #' There is also a `POSIXlt` method for `is_na` that is much faster than `is.na`.
 #'
+#' ### Lists
+#' When `x` is a list, `num_na`, `any_na` and `all_na` will recursively search
+#' the list for `NA` values. If `recursive = F` then `is_na()` is used to
+#' find `NA` values. \cr
+#' `is_na` differs to `is.na` in 2 ways:
+#' * List elements are counted as `NA` if either that value is `NA`, or
+#' if it's a list, then all values of that list are `NA`.
+#' * When called on a data frame, it returns `TRUE` for empty rows that contain
+#' only `NA` values.
+#'
 #' @param x A vector, matrix or data frame.
+#' @param recursive Should the function be applied recursively to lists?
+#' The default is `TRUE`. Setting this to `TRUE` is actually much cheaper because
+#' when `FALSE`, the other `NA` functions rely on calling `is_na()`,
+#' therefore allocating a vector. This is so that alternative objects with
+#' `is.na` methods can be supported.
+#'
 #'
 #' @returns
 #' Number or location of `NA` values.
@@ -98,8 +107,8 @@ is_na.data.frame <- function(x){
 }
 #' @rdname is_na
 #' @export
-num_na <- function(x){
-  .Call(`_cheapr_cpp_num_na`, x)
+num_na <- function(x, recursive = TRUE){
+  .Call(`_cheapr_cpp_num_na`, x, recursive)
 }
 #' @rdname is_na
 #' @export
@@ -113,13 +122,13 @@ which_not_na <- function(x){
 }
 #' @rdname is_na
 #' @export
-any_na <- function(x){
-  .Call(`_cheapr_cpp_any_na`, x)
+any_na <- function(x, recursive = TRUE){
+  .Call(`_cheapr_cpp_any_na`, x, recursive)
 }
 #' @rdname is_na
 #' @export
-all_na <- function(x){
-  .Call(`_cheapr_cpp_all_na`, x, TRUE)
+all_na <- function(x, recursive = TRUE){
+  .Call(`_cheapr_cpp_all_na`, x, TRUE, recursive)
 }
 #' @rdname is_na
 #' @export

@@ -102,14 +102,13 @@ df_select <- function(x, i){
   attributes(out) <- attrs
   out
 }
-na_rm <- function(x){
-  n_na <- num_na(x)
-  if (n_na == unlisted_length(x)){
-    x[0L]
-  } else if (n_na == 0){
-    x
-  } else {
-    x[which_not_na(x)]
+tzone <- function(x){
+  out <- attr(x, "tzone")
+  if (is.null(out)) {
+    ""
+  }
+  else {
+    out[[1]]
   }
 }
 # safe_unique <- function(x, ...){

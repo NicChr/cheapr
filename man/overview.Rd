@@ -2,9 +2,33 @@
 % Please edit documentation in R/overview.R
 \name{overview}
 \alias{overview}
+\alias{overview.default}
+\alias{overview.logical}
+\alias{overview.numeric}
+\alias{overview.character}
+\alias{overview.factor}
+\alias{overview.Date}
+\alias{overview.POSIXt}
+\alias{overview.data.frame}
 \title{An alternative to \code{summary()} inspired by the skimr package}
 \usage{
 overview(x, hist = FALSE)
+
+\method{overview}{default}(x, hist = FALSE)
+
+\method{overview}{logical}(x, hist = FALSE)
+
+\method{overview}{numeric}(x, hist = FALSE)
+
+\method{overview}{character}(x, hist = FALSE)
+
+\method{overview}{factor}(x, hist = FALSE)
+
+\method{overview}{Date}(x, hist = FALSE)
+
+\method{overview}{POSIXt}(x, hist = FALSE)
+
+\method{overview}{data.frame}(x, hist = FALSE)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -13,7 +37,8 @@ overview(x, hist = FALSE)
 }
 \value{
 \code{overview(x)} returns a 1-row data frame unless
-\code{x} is a data frame, in which a list of data frames is returned.
+\code{x} is a data frame, in which case an object of class "overview" is returned,
+Under the hood this is just a a list of data frames.
 Key summary statistics are reported in each data frame.
 }
 \description{

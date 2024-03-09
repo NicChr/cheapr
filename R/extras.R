@@ -24,7 +24,8 @@
 #' in which case an integer vector of break indices is returned. \cr
 #' `%in_%` and `%!in_%` both return a logical vector signifying if the values of
 #' `x` exist or don't exist in `table` respectively. \cr
-#'
+#' `na_rm()` is a convenience function that removes `NA` values and
+#' works only on vectors. For more advanced `NA` handling, see `?is_na`.
 #'
 #' @details
 #' `intersect_()` and `setdiff_()` are faster and more efficient
@@ -166,4 +167,18 @@ deframe_ <- function(x){
   }
   out
 }
-
+#' @export
+#' @rdname extras
+na_rm <- function(x){
+  if (is.data.frame(x)){
+    stop("x must be a vector")
+  }
+  n_na <- num_na(x, recursive = FALSE)
+  if (n_na == length(x)){
+    x[0L]
+  } else if (n_na == 0){
+    x
+  } else {
+    x[which_not_na(x)]
+  }
+}

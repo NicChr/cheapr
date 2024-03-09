@@ -29,15 +29,15 @@ is_na(x)
 
 \method{is_na}{data.frame}(x)
 
-num_na(x)
+num_na(x, recursive = TRUE)
 
 which_na(x)
 
 which_not_na(x)
 
-any_na(x)
+any_na(x, recursive = TRUE)
 
-all_na(x)
+all_na(x, recursive = TRUE)
 
 row_na_counts(x)
 
@@ -53,6 +53,12 @@ col_any_na(x)
 }
 \arguments{
 \item{x}{A vector, matrix or data frame.}
+
+\item{recursive}{Should the function be applied recursively to lists?
+The default is \code{TRUE}. Setting this to \code{TRUE} is actually much cheaper because
+when \code{FALSE}, the other \code{NA} functions rely on calling \code{is_na()},
+therefore allocating a vector. This is so that alternative objects with
+\code{is.na} methods can be supported.}
 }
 \value{
 Number or location of \code{NA} values.
@@ -73,18 +79,12 @@ The \code{col_} variants are the same, but operate by-column.
 These functions are designed primarily for programmers, to increase the speed
 and memory-efficiency of \code{NA} handling. \cr
 Most of these functions can be parallelised through \code{options(cheapr.cores)}. \cr
-When \code{x} is a list, \code{num_na}, \code{any_na} and \code{all_na} will recurse through a
-potentially nested list for \code{NA} values. \cr
-
-For the functions that operate on data frames like \code{row_na_counts},
-if \code{x} contains a list-variable, an element of that list is considered to be
-\code{NA} when all nested elements of that list-element contain \code{NA} values.
 \subsection{Common use-cases}{
 
 To replicate \code{complete.cases(x)}, use \code{!row_any_na(x)}. \cr
 To find rows with any empty values,
 use \code{which_(row_any_na(df))}. \cr
-To find empty rows use \code{which_(row_all_na(df))}.
+To find empty rows use \code{which_(row_all_na(df))} or \code{which_na(df)}.
 }
 
 \subsection{\code{is_na}}{
@@ -95,6 +95,20 @@ Alternatively you can write your own \code{is_na} method.
 For example there is a method for \code{vctrs_rcrd}
 objects that simply converts it to a data frame and then calls \code{row_all_na()}.
 There is also a \code{POSIXlt} method for \code{is_na} that is much faster than \code{is.na}.
+}
+
+\subsection{Lists}{
+
+When \code{x} is a list, \code{num_na}, \code{any_na} and \code{all_na} will recursively search
+the list for \code{NA} values. If \code{recursive = F} then \code{is_na()} is used to
+find \code{NA} values. \cr
+\code{is_na} differs to \code{is.na} in 2 ways:
+\itemize{
+\item List elements are counted as \code{NA} if either that value is \code{NA}, or
+if it's a list, then all values of that list are \code{NA}.
+\item When called on a data frame, it returns \code{TRUE} for empty rows that contain
+only \code{NA} values.
+}
 }
 }
 \examples{
