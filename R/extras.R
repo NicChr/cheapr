@@ -173,8 +173,8 @@ na_rm <- function(x){
   if (is.data.frame(x)){
     stop("x must be a vector")
   }
-  n_na <- num_na(x, recursive = FALSE)
-  if (n_na == length(x)){
+  n_na <- num_na(x, recursive = TRUE)
+  if (n_na == unlisted_length(x)){
     x[0L]
   } else if (n_na == 0){
     x

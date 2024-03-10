@@ -323,6 +323,20 @@ print.overview <- function(x, max = NULL, ...){
   }
   if (nrow(x$datetime)){
     x$datetime$p_complete <- pretty_num(round(x$datetime$p_complete, 2))
+    # An overview list contains a 'min' & 'max' variable of date-times
+    # This is UTC because R can't handle a date-time with multiple time-zones
+    # And so we want to print it in local-time
+    datetime_chr_min <- character(nrow(x$datetime))
+    datetime_chr_max <- character(nrow(x$datetime))
+    mins <- x[["datetime"]][["min"]]
+    maxs <- x[["datetime"]][["max"]]
+    tzones <- x[["datetime"]][["tzone"]]
+    for (i in seq_len(nrow(x$datetime))){
+      datetime_chr_min[i] <- format(mins[i], tz = tzones[i])
+      datetime_chr_max[i] <- format(maxs[i], tz = tzones[i])
+    }
+    x$datetime$min <- datetime_chr_min
+    x$datetime$max <- datetime_chr_max
     cat("\n----- Date-times -----\n")
     print(x$datetime)
   }
