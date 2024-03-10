@@ -181,6 +181,13 @@ extern "C" SEXP _cheapr_cpp_lead_sequence(SEXP size, SEXP k, SEXP partial) {
   END_CPP11
 }
 // utils.cpp
+R_xlen_t cpp_vec_length(SEXP x);
+extern "C" SEXP _cheapr_cpp_vec_length(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_vec_length(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// utils.cpp
 SEXP cpp_r_unnested_length(SEXP x);
 extern "C" SEXP _cheapr_cpp_r_unnested_length(SEXP x) {
   BEGIN_CPP11
@@ -244,6 +251,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_num_na",               (DL_FUNC) &_cheapr_cpp_num_na,               2},
     {"_cheapr_cpp_r_unnested_length",    (DL_FUNC) &_cheapr_cpp_r_unnested_length,    1},
     {"_cheapr_cpp_row_na_counts",        (DL_FUNC) &_cheapr_cpp_row_na_counts,        1},
+    {"_cheapr_cpp_vec_length",           (DL_FUNC) &_cheapr_cpp_vec_length,           1},
     {"_cheapr_cpp_which_",               (DL_FUNC) &_cheapr_cpp_which_,               2},
     {"_cheapr_cpp_which_na",             (DL_FUNC) &_cheapr_cpp_which_na,             1},
     {"_cheapr_cpp_which_not_na",         (DL_FUNC) &_cheapr_cpp_which_not_na,         1},

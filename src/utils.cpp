@@ -6,10 +6,10 @@ int int_div(int x, int y){
   return x / y;
 }
 
+[[cpp11::register]]
 R_xlen_t cpp_vec_length(SEXP x){
   if (Rf_isFrame(x)){
     return cpp_df_nrow(x);
-
     // Is x a list?
   } else if (Rf_isVectorList(x)){
     if (Rf_inherits(x, "vctrs_rcrd")){
@@ -25,7 +25,6 @@ R_xlen_t cpp_vec_length(SEXP x){
   } else {
     return Rf_xlength(x);
   }
-  // return Rf_inherits(x, "vctrs_rcrd") ? cpp_vec_length(VECTOR_ELT(x, 0)) : Rf_xlength(x);
 }
 int num_cores(){
   int out = Rf_asInteger(Rf_GetOption1(Rf_installChar(Rf_mkChar("cheapr.cores"))));
