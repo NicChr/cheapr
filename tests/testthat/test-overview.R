@@ -8,4 +8,5 @@ test_that("overview", {
   expect_snapshot(overview(iris2, hist = TRUE))
   expect_snapshot(overview(warpbreaks, hist = TRUE))
   expect_snapshot(overview(ToothGrowth, hist = TRUE))
+  expect_snapshot(overview(EuStockMarkets, hist = TRUE))
 })

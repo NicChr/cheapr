@@ -43,7 +43,8 @@ library(vctrs)
 library(bench)
 
 na_locf <- function(x){
-  if (num_na(x) %in% c(0, vec_size(x))){
+  # num_na is recursive so we compare it to unlisted length
+  if (num_na(x) %in% c(0, unlisted_length(x))){
     x
   } else {
     vec_fill_missing(x, direction = "down")
@@ -76,6 +77,63 @@ mark(row_na_counts(m),
 mark(col_na_counts(m), 
      colSums(is.na(m)))
 ```
+
+`is_na` is a multi-threaded alternative to `is.na` 
+
+```{r}
+x <- rnorm(10^6)
+x[sample.int(10^6, 10^5)] <- NA
+mark(is.na(x), is_na(x))
+
+### posixlt method is much faster
+hours <- as.POSIXlt(seq.int(0, length.out = 10^6, by = 3600),
+                    tz = "UTC")
+hours[sample.int(10^6, 10^5)] <- NA
+
+mark(is.na(hours), is_na(hours))
+```
+
+It differs in 2 regards:
+
+* List elements are regarded as `NA` when either that element is an `NA` value 
+or it is a list containing only `NA` values.
+* For data frames, `is_na` returns a logical vector where `TRUE` defines an empty 
+row of only `NA` values.
+
+```{r}
+# List example
+is.na(list(NA, list(NA, NA), 10))
+is_na(list(NA, list(NA, NA), 10))
+
+# Data frame example
+df <- data.frame(x = c(1, NA, 3),
+                 y = c(NA, NA, NA))
+df
+is_na(df)
+is_na(df)
+# The below identity should hold
+identical(is_na(df), row_na_counts(df) == ncol(df))
+```
+
+`is_na` and all the `NA` handling functions fall back on calling `is.na()` if no 
+suitable method is found. This means that custom objects like vctrs rcrds and
+more are supported.
+
+## Cheap data frame summaries with `overview`
+
+Inspired by the excellent skimr package, `overview()` is a cheaper alternative
+designed for larger data.
+
+```{r}
+df <- data.frame(
+  x = sample.int(100, 10^7, TRUE),
+  y = factor_(sample(LETTERS, 10^7, TRUE)),
+  z = rnorm(10^7)
+)
+overview(df, hist = TRUE)
+mark(overview(df))
+```
+
 
 ## Greatest common divisor and smallest common multiple
 

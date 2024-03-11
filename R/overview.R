@@ -21,56 +21,49 @@ overview <- function(x, hist = FALSE){
 #' @export
 overview.default <- function(x, hist = FALSE){
   out <- overview(list_as_df(list(x = x)), hist = hist)$other
-  names(out)[1] <- "length"
-  out[[1]] <- length(x)
   out
 }
 #' @rdname overview
 #' @export
 overview.logical <- function(x, hist = FALSE){
   out <- overview(list_as_df(list(x = as.logical(x))), hist = hist)$logical
-  names(out)[1] <- "length"
-  out[[1]] <- length(x)
   out
 }
 #' @rdname overview
 #' @export
 overview.numeric <- function(x, hist = FALSE){
   out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist)$numeric
-  names(out)[1] <- "length"
-  out[[1]] <- length(x)
   out
 }
 #' @rdname overview
 #' @export
 overview.character <- function(x, hist = FALSE){
   out <- overview(list_as_df(list(x = as.character(x))), hist = hist)$categorical
-  names(out)[1] <- "length"
-  out[[1]] <- length(x)
   out
 }
 #' @rdname overview
 #' @export
 overview.factor <- function(x, hist = FALSE){
   out <- overview(list_as_df(list(x = as.factor(x))), hist = hist)$categorical
-  names(out)[1] <- "length"
-  out[[1]] <- length(x)
   out
 }
 #' @rdname overview
 #' @export
 overview.Date <- function(x, hist = FALSE){
   out <- overview(list_as_df(list(x = as.Date(x))), hist = hist)$date
-  names(out)[1] <- "length"
-  out[[1]] <- length(x)
   out
 }
 #' @rdname overview
 #' @export
 overview.POSIXt <- function(x, hist = FALSE){
   out <- overview(list_as_df(list(x = as.POSIXct(x))), hist = hist)$datetime
-  names(out)[1] <- "length"
-  out[[1]] <- length(x)
+  out[[2]] <- utils::tail(class(x), n = 1)
+  out
+}
+#' @rdname overview
+#' @export
+overview.ts <- function(x, hist = FALSE){
+  out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist)$numeric
   out[[2]] <- utils::tail(class(x), n = 1)
   out
 }
@@ -96,18 +89,10 @@ overview.data.frame <- function(x, hist = FALSE){
                                                             c("integer", "numeric")), FALSE)]
   date_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "Date"), FALSE)]
   datetime_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "POSIXt"),  FALSE)]
+  ts_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "ts"),  FALSE)]
   cat_vars <- data_nms[vapply(skim_df, is.factor, FALSE)]
   other_vars <- setdiff_(data_nms, c(lgl_vars, num_vars, date_vars,
-                                     datetime_vars, cat_vars))
-  # if (length(other_vars) > 0) {
-  #   warning(paste0("Unsure how to calculate summaries for these variables: \n",
-  #                  paste(other_vars, collapse = "\n")), "\n\nFalling back to character")
-  #   for (var in other_vars) {
-  #     skim_df[[var]] <- factor_(as.character(skim_df[[var]]), ordered = TRUE)
-  #   }
-  #   cat_vars <- c(cat_vars, other_vars)
-  #   cat_vars <- data_nms[sort(match(cat_vars, data_nms))]
-  # }
+                                     datetime_vars, ts_vars, cat_vars))
 
 # Logical -----------------------------------------------------------------
 
@@ -220,6 +205,22 @@ overview.data.frame <- function(x, hist = FALSE){
     }
   }
 
+  # Time-Series -----------------------------------------------------------------
+
+  ts_data <- df_select(skim_df, ts_vars)
+  which_ts <- which_in(out[["col"]], ts_vars)
+  ts_out <- out[which_ts, , drop = FALSE]
+  if (N > 0L && length(which_ts) > 0) {
+    ts_overviews <- new_list(nrow(ts_out))
+    for (i in seq_along(ts_overviews)){
+      ts_overviews[[i]] <- overview(ts_data[[ts_out[["col"]][i]]], hist = hist)
+      if (length(attr(ts_overviews[[i]], "row.names")) > 1){
+        ts_overviews[[i]][["col"]] <- paste0(ts_out[["col"]][i], "_",
+                                             ts_overviews[[i]][["col"]])
+      }
+    }
+    ts_out <- collapse::rowbind(ts_overviews)
+  }
 
 # Categorical -------------------------------------------------------------
 
@@ -277,6 +278,7 @@ overview.data.frame <- function(x, hist = FALSE){
     numeric = num_out,
     date = date_out,
     datetime = datetime_out,
+    time_series = ts_out,
     categorical = cat_out,
     other = other_out
   )
@@ -339,6 +341,19 @@ print.overview <- function(x, max = NULL, ...){
     x$datetime$max <- datetime_chr_max
     cat("\n----- Date-times -----\n")
     print(x$datetime)
+  }
+  if (nrow(x$time_series)){
+    x$time_series$p_complete <- pretty_num(round(x$time_series$p_complete, 2))
+    x$time_series$mean <- pretty_num(round(x$time_series$mean, 2))
+    x$time_series$p0 <- pretty_num(round(x$time_series$p0, 2))
+    x$time_series$p25 <- pretty_num(round(x$time_series$p25, 2))
+    x$time_series$p50 <- pretty_num(round(x$time_series$p50, 2))
+    x$time_series$p75 <- pretty_num(round(x$time_series$p75, 2))
+    x$time_series$p100 <- pretty_num(round(x$time_series$p100, 2))
+    x$time_series$iqr <- pretty_num(round(x$time_series$iqr, 2))
+    x$time_series$sd <- pretty_num(round(x$time_series$sd, 2))
+    cat("\n----- Time-Series -----\n")
+    print(x$time_series)
   }
   if (nrow(x$categorical)){
     x$categorical$p_complete <- pretty_num(round(x$categorical$p_complete, 2))

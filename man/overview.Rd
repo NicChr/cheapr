@@ -9,6 +9,7 @@
 \alias{overview.factor}
 \alias{overview.Date}
 \alias{overview.POSIXt}
+\alias{overview.ts}
 \alias{overview.data.frame}
 \title{An alternative to \code{summary()} inspired by the skimr package}
 \usage{
@@ -27,6 +28,8 @@ overview(x, hist = FALSE)
 \method{overview}{Date}(x, hist = FALSE)
 
 \method{overview}{POSIXt}(x, hist = FALSE)
+
+\method{overview}{ts}(x, hist = FALSE)
 
 \method{overview}{data.frame}(x, hist = FALSE)
 }

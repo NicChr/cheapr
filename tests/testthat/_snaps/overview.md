@@ -109,3 +109,19 @@
          col  class n_missing p_complete n_unique n_levels min max
       2 supp factor         0          1        2        2  OJ  VC
 
+---
+
+    Code
+      overview(EuStockMarkets, hist = TRUE)
+    Output
+         col class n_missing p_complete n_unique     mean      p0      p25      p50
+      1  DAX array         0          1     1774 2530.657 1402.34 1744.102 2140.565
+      2  SMI array         0          1     1725 3376.224 1587.40 2165.625 2796.350
+      3  CAC array         0          1     1617 2227.828 1611.00 1875.150 1992.300
+      4 FTSE array         0          1     1729 3565.643 2281.00 2843.150 3246.600
+             p75    p100      iqr        sd  hist
+      1 2722.367 6186.09  978.265 1084.7927 ▇▂▂▁▁
+      2 3812.425 8412.00 1646.800 1663.0265 ▇▃▁▁▁
+      3 2274.350 4388.50  399.200  580.3142 ▇▂▁▁▁
+      4 3993.575 6179.00 1150.425  976.7155 ▇▇▂▂▂
+
