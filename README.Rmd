@@ -242,7 +242,7 @@ mark(cheapr_setdiff = setdiff_(x, y, dups = FALSE),
      base_setdiff = setdiff(x, y))
 ```
 
-### `%in_%` and `!%in_%`
+### `%in_%` and `%!in_%`
 
 ```{r}
 mark(cheapr = x %in_% y,

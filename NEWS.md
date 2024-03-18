@@ -1,4 +1,6 @@
-# cheapr 0.3.0
+# cheapr (Development version)
+
+# cheapr 0.3.0 (18-Mar-2024)
 
 * New function `overview` as a cheaper alternative to `summary`.
 
