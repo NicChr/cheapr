@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.3.0
 
 * New function `overview` as a cheaper alternative to `summary`.
 
@@ -6,6 +6,8 @@
 method cannot be found.
 
 * More support has been added for all objects with an `is.na` method.
+
+# cheapr 0.2.0 (06-Mar-2024)
 
 * `is_na` has been added as an S3 generic function which is parallelised and  internally falls back
 on `is.na` if there are no suitable methods.

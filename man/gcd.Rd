@@ -99,7 +99,7 @@ scm2(15, 25)
 gcd(c(0, 5, 25))
 mark(gcd(c(0, 5, 25)))
 
-x <- rnorm(10^6)
+x <- rnorm(10^5)
 gcd(x)
 gcd(x, round = FALSE)
 mark(gcd(x))
