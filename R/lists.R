@@ -34,14 +34,10 @@
 #' vctrs::new_list_of(l, ptype = integer())[1:5]
 #' @export
 #' @rdname lists
-lengths_ <- function(x){
-  cpp_lengths(x)
-}
+lengths_ <- cpp_lengths
 #' @export
 #' @rdname lists
-unlisted_length <- function(x){
-  cpp_r_unnested_length(x)
-}
+unlisted_length <- cpp_r_unnested_length
 #' @export
 #' @rdname lists
 new_list <- function(length = 0L, default = NULL){

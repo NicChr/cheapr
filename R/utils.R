@@ -26,17 +26,9 @@ allv2 <- function(x, value){
   }
   collapse::allv(x, value)
 }
-list_as_df <- function(x){
-  out <- cpp_list_rm_null(x)
-  if (length(out) == 0) {
-    N <- 0L
-  } else {
-    N <- length(out[[1L]])
-  }
-  attr(out, "row.names") <- .set_row_names(N)
-  class(out) <- "data.frame"
-  out
-}
+
+list_as_df <- cpp_list_as_df
+
 df_as_tbl <- function(x){
   class(x) <- c("tbl_df", "tbl", "data.frame")
   x

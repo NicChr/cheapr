@@ -101,67 +101,144 @@ SEXP cpp_list_rm_null(SEXP l) {
   Rf_protect(l = Rf_coerceVector(l, VECSXP));
   const SEXP *p_l = VECTOR_PTR_RO(l);
   int n = Rf_length(l);
-  SEXP keep = Rf_protect(Rf_allocVector(LGLSXP, n));
-  int *p_keep = LOGICAL(keep);
+  int n_null = 0;
   for (int i = 0; i < n; ++i) {
-    p_keep[i] = !Rf_isNull(p_l[i]);
+    n_null += (p_l[i] == R_NilValue);
   }
-  SEXP which_keep = Rf_protect(cpp_which_(keep, false));
-  int *p_which_keep = INTEGER(which_keep);
-  int n_out = Rf_length(which_keep);
-  SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_out));
+  int n_keep = n - n_null;
+  int whichj = 0;
+  int j = 0;
+  SEXP keep = Rf_protect(Rf_allocVector(INTSXP, n_keep));
+  int *p_keep = INTEGER(keep);
+  while (whichj < n_keep){
+    p_keep[whichj] = j + 1;
+    whichj += (p_l[j] != R_NilValue);
+    ++j;
+  }
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_keep));
   SEXP names = Rf_protect(Rf_duplicate(Rf_getAttrib(l, R_NamesSymbol)));
-  SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_out));
-  if (!Rf_isNull(names)){
-    for (int j = 0; j < n_out; ++j) {
-      SET_STRING_ELT(out_names, j, STRING_ELT(names, p_which_keep[j] - 1));
-      SET_VECTOR_ELT(out, j, p_l[p_which_keep[j] - 1]);
+  bool has_names = !Rf_isNull(names);
+  if (has_names){
+    SEXP *p_names = STRING_PTR(names);
+    SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_keep));
+    for (int k = 0; k < n_keep; ++k) {
+      SET_STRING_ELT(out_names, k, p_names[p_keep[k] - 1]);
+      SET_VECTOR_ELT(out, k, p_l[p_keep[k] - 1]);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);
+    Rf_unprotect(5);
+    return out;
   } else {
-    for (int j = 0; j < n_out; ++j) {
-      SET_VECTOR_ELT(out, j, p_l[p_which_keep[j] - 1]);
+    for (int k = 0; k < n_keep; ++k) {
+      SET_VECTOR_ELT(out, k, p_l[p_keep[k] - 1]);
     }
+    Rf_unprotect(4);
+    return out;
   }
-  Rf_unprotect(6);
-  return out;
 }
 
-// bool cpp_is_list_df_like(SEXP x){
-//   if (!Rf_isVectorList(x)){
-//     Rf_error("x must be a list.");
-//   }
-//   return Rf_isFrame(x) ||
-//     Rf_inherits(x, "vctrs_rcrd") ||
-//     Rf_inherits(x, "POSIXlt");
-//   // if (Rf_isFrame(x)) return true;
-//   // R_xlen_t n = Rf_xlength(x);
-//   // bool out = true;
-//   // const SEXP *p_x = VECTOR_PTR_RO(x);
-//   // R_xlen_t init = cpp_vec_length(p_x[0]);
-//   // for (R_xlen_t i = 1; i < n; ++i) {
-//   //   if (cpp_vec_length(p_x[i]) != init){
-//   //    out = false;
-//   //     break;
-//   //   }
-//   // }
-//   // return out;
-// }
+[[cpp11::register]]
+SEXP cpp_list_as_df(SEXP x) {
+  SEXP out = Rf_protect(cpp_list_rm_null(x));
+  int N; // Number of rows
+  if (Rf_length(out) == 0){
+    N = 0;
+  } else {
+    N = cpp_vec_length(VECTOR_ELT(out, 0));
+  }
+  SEXP df_str = Rf_protect(Rf_allocVector(STRSXP, 1));
+  SET_STRING_ELT(df_str, 0, Rf_mkChar("data.frame"));
+  if (N > 0){
+    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
+    INTEGER(row_names)[0] = NA_INTEGER;
+    INTEGER(row_names)[1] = -N;
+    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+    Rf_classgets(out, df_str);
+    Rf_unprotect(3);
+    return out;
+  } else {
+    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0));
+    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+    Rf_classgets(out, df_str);
+    Rf_unprotect(3);
+    return out;
+  }
+}
 
-//
-// bool list_has_list(SEXP x){
-//   Rf_protect(x = Rf_coerceVector(x, VECSXP));
-//   const SEXP *p_x = VECTOR_PTR_RO(x);
-//   R_xlen_t n = Rf_xlength(x);
-//   bool out = false;
-//   for (R_xlen_t i = 0; i < n; ++i){
-//     if (Rf_isVectorList(p_x[i])){
-//       out = true;
-//       break;
-//     }
+// SEXP cpp_unlist(SEXP x, SEXP ptype) {
+//   if (!Rf_isVectorList(x)){
+//     Rf_error("x must be a list");
 //   }
-//   Rf_unprotect(1);
-//   return out;
+//   int n_protections = 0;
+//   R_xlen_t n = Rf_xlength(x);
+//   R_xlen_t N = cpp_unnested_length(x);
+//   R_xlen_t m;
+//   R_xlen_t k = 0;
+//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//   switch ( TYPEOF(ptype) ){
+//   case LGLSXP: {
+//     ++n_protections;
+//     SEXP out = Rf_protect(Rf_allocVector(LGLSXP, N));
+//     int *p_out = LOGICAL(out);
+//     for (R_xlen_t i = 0; i < n; ++i) {
+//       m = Rf_xlength(p_x[i]);
+//       int *p_xj = LOGICAL(p_x[i]);
+//       for (R_xlen_t j = 0; j < m; ++j) {
+//         p_out[k] = p_xj[j];
+//         ++k;
+//       }
+//     }
+//     Rf_unprotect(n_protections);
+//     return out;
+//   }
+//   case INTSXP: {
+//     ++n_protections;
+//     SEXP out = Rf_protect(Rf_allocVector(INTSXP, N));
+//     int *p_out = INTEGER(out);
+//     for (R_xlen_t i = 0; i < n; ++i) {
+//       m = Rf_xlength(p_x[i]);
+//       int *p_xj = INTEGER(p_x[i]);
+//       for (R_xlen_t j = 0; j < m; ++j) {
+//         p_out[k] = p_xj[j];
+//         ++k;
+//       }
+//     }
+//     Rf_unprotect(n_protections);
+//     return out;
+//   }
+//   case REALSXP: {
+//     ++n_protections;
+//     SEXP out = Rf_protect(Rf_allocVector(REALSXP, N));
+//     double *p_out = REAL(out);
+//     for (R_xlen_t i = 0; i < n; ++i) {
+//       m = Rf_xlength(p_x[i]);
+//       double *p_xj = REAL(p_x[i]);
+//       for (R_xlen_t j = 0; j < m; ++j) {
+//         p_out[k] = p_xj[j];
+//         ++k;
+//       }
+//     }
+//     Rf_unprotect(n_protections);
+//     return out;
+//   }
+//   case STRSXP: {
+//     ++n_protections;
+//     SEXP out = Rf_protect(Rf_allocVector(STRSXP, N));
+//     for (R_xlen_t i = 0; i < n; ++i) {
+//       m = Rf_xlength(p_x[i]);
+//       SEXP *p_xj = STRING_PTR(p_x[i]);
+//       for (R_xlen_t j = 0; j < m; ++j) {
+//         SET_STRING_ELT(out, k, p_xj[j]);
+//         ++k;
+//       }
+//     }
+//     Rf_unprotect(n_protections);
+//     return out;
+//   }
+//   default: {
+//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(ptype)));
+//   }
+//   }
 // }
 
 // Potentially useful for rolling calculations

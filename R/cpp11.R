@@ -120,6 +120,10 @@ cpp_list_rm_null <- function(l) {
   .Call(`_cheapr_cpp_list_rm_null`, l)
 }
 
+cpp_list_as_df <- function(x) {
+  .Call(`_cheapr_cpp_list_as_df`, x)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }
