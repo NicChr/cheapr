@@ -43,7 +43,6 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
   int increment;
   int seq_size;
   double seq_end;
-  int int_max = integer_max_;
   if (size_n > 0){
     int *p_size = INTEGER(size);
     int *p_from = INTEGER(from);
@@ -55,8 +54,8 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
       start = p_from[fj];
       increment = p_by[bj];
       // Throw error if integer overflow
-      seq_end = start + (increment * (std::fmax(seq_size - 1, 0)));
-      if (std::fabs(seq_end) > int_max){
+      seq_end = ( (std::fmax(seq_size - 1, 0.0)) * increment ) + start;
+      if (std::fabs(seq_end) > integer_max_){
         Rf_unprotect(1);
         Rf_error("Integer overflow value of %g in sequence %d", seq_end, j + 1);
       }
@@ -130,6 +129,78 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
   }
   Rf_unprotect(1);
   return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_sequence(SEXP size, SEXP from, SEXP by) {
+  int size_n = Rf_length(size);
+  int from_n = Rf_length(from);
+  int by_n = Rf_length(by);
+  switch (TYPEOF(from)){
+  case INTSXP: {
+    switch (TYPEOF(by)){
+  case INTSXP: {
+    int n = std::max(std::max(size_n, from_n), by_n);
+    double seq_end;
+    bool out_is_integer = true;
+    int *p_size = INTEGER(size);
+    int *p_from = INTEGER(from);
+    int *p_by = INTEGER(by);
+
+    // Checking that the sequence values are integers
+    // Only do the loop if vectors are not zero-length
+    if (size_n > 0 && from_n > 0 && by_n > 0){
+      for (int i = 0; i < n; ++i){
+        seq_end = (std::fmax(p_size[i % size_n], 0.0) * p_by[i % by_n]) * p_from[i % from_n];
+        if (seq_end > integer_max_){
+          out_is_integer = false;
+          break;
+        }
+      }
+    }
+    // If all sequence values are < 2^31 then we can safely use cpp_int_sequence
+    if (out_is_integer){
+      return cpp_int_sequence(size, from, by);
+    } else {
+      Rf_protect(from = Rf_coerceVector(from, REALSXP));
+      Rf_protect(by = Rf_coerceVector(by, REALSXP));
+      SEXP out = Rf_protect(cpp_dbl_sequence(size, from, by));
+      Rf_unprotect(3);
+      return out;
+    }
+  }
+  case REALSXP: {
+    Rf_protect(from = Rf_coerceVector(from, REALSXP));
+    SEXP out = Rf_protect(cpp_dbl_sequence(size, from, by));
+    Rf_unprotect(2);
+    return out;
+  }
+  default: {
+    Rf_error("by must have type integer or double in %s", __func__);
+  }
+  }
+    break;
+  }
+  case REALSXP: {
+    switch (TYPEOF(by)){
+  case INTSXP: {
+    Rf_protect(by = Rf_coerceVector(by, REALSXP));
+    SEXP out = Rf_protect(cpp_dbl_sequence(size, from, by));
+    Rf_unprotect(2);
+    return out;
+  }
+  case REALSXP: {
+    return cpp_dbl_sequence(size, from, by);
+  }
+  default: {
+    Rf_error("by must have type integer or double in %s", __func__);
+  }
+  }
+  }
+  default: {
+    Rf_error("from must have type integer or double in %s", __func__);
+  }
+  }
 }
 
 [[cpp11::register]]

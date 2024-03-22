@@ -1,5 +1,10 @@
 # cheapr (Development version)
 
+* `sequence_` has been optimised and rewritten in C++. It now only checks for
+integer overflow when both `from` and `by` are integer vectors.
+
+* The internal function `list_as_df` has been rewritten in C++.
+
 # cheapr 0.3.0 (18-Mar-2024)
 
 * New function `overview` as a cheaper alternative to `summary`.

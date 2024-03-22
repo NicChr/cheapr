@@ -88,6 +88,10 @@ cpp_dbl_sequence <- function(size, from, by) {
   .Call(`_cheapr_cpp_dbl_sequence`, size, from, by)
 }
 
+cpp_sequence <- function(size, from, by) {
+  .Call(`_cheapr_cpp_sequence`, size, from, by)
+}
+
 cpp_window_sequence <- function(size, k, partial, ascending) {
   .Call(`_cheapr_cpp_window_sequence`, size, k, partial, ascending)
 }

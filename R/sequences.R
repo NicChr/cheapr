@@ -83,17 +83,7 @@
 #' @rdname sequences
 #' @export
 sequence_ <- function(size, from = 1L, by = 1L, add_id = FALSE){
-  # Sequence end values
-  # If these cant be integers, then we need to work with doubles
-  seq_ends <- unclass(from) + (by * (pmax.int(size - 1L, 0L)))
-  out_maybe_int <- all_integerable(seq_ends)
-  # If from/by are integers and all sequence values < 2^31 then use sequence
-  out_is_int <- is.integer(from) && is.integer(by) && out_maybe_int
-  if (out_is_int){
-    out <- integer_sequence(size, from = from, by = by)
-  } else {
-    out <- double_sequence(size, from = from, by = by)
-  }
+  out <- cpp_sequence(as.integer(size), from, by)
   if (add_id){
     names(out) <- seq_id(size)
   }
