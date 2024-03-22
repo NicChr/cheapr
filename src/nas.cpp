@@ -6,13 +6,12 @@ R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
   int n_protections = 0;
-  // This nicely handles NULL and avoids loop too
-  if (n == 0){
-    return count;
-  }
   bool do_parallel = n >= 100000;
   int n_cores = do_parallel ? num_cores() : 1;
   switch ( TYPEOF(x) ){
+  case NILSXP: {
+    return count;
+  }
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
@@ -111,10 +110,10 @@ bool cpp_any_na(SEXP x, bool recursive){
   int n_protections = 0;
   R_xlen_t n = Rf_xlength(x);
   bool out = false;
-  if (n == 0){
+  switch ( TYPEOF(x) ){
+  case NILSXP: {
     return out;
   }
-  switch ( TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
     // The commented-out code is a way to
@@ -268,12 +267,12 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
 SEXP cpp_which_na(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   bool is_short = (n <= integer_max_);
-  if (n == 0){
+  switch ( TYPEOF(x) ){
+  case NILSXP: {
     SEXP out = Rf_protect(Rf_allocVector(INTSXP, 0));
     Rf_unprotect(1);
     return out;
   }
-  switch ( TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
     R_xlen_t count = na_count(x, true);
@@ -410,12 +409,12 @@ SEXP cpp_which_na(SEXP x){
 SEXP cpp_which_not_na(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   bool is_short = (n <= integer_max_);
-  if (n == 0){
+  switch ( TYPEOF(x) ){
+  case NILSXP: {
     SEXP out = Rf_protect(Rf_allocVector(INTSXP, 0));
     Rf_unprotect(1);
     return out;
   }
-  switch ( TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
     R_xlen_t count = na_count(x, true);
