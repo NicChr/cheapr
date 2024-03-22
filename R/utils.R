@@ -30,8 +30,9 @@ allv2 <- function(x, value){
 list_as_df <- cpp_list_as_df
 
 df_as_tbl <- function(x){
-  class(x) <- c("tbl_df", "tbl", "data.frame")
-  x
+  out <- list_as_df(x)
+  class(out) <- c("tbl_df", "tbl", "data.frame")
+  out
 }
 as.character.vctrs_rcrd <- function(x, ...){
   format(x, ...)
