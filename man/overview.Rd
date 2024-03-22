@@ -13,37 +13,61 @@
 \alias{overview.data.frame}
 \title{An alternative to \code{summary()} inspired by the skimr package}
 \usage{
-overview(x, hist = FALSE)
+overview(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{default}(x, hist = FALSE)
+\method{overview}{default}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{logical}(x, hist = FALSE)
+\method{overview}{logical}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{numeric}(x, hist = FALSE)
+\method{overview}{numeric}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{character}(x, hist = FALSE)
+\method{overview}{character}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{factor}(x, hist = FALSE)
+\method{overview}{factor}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{Date}(x, hist = FALSE)
+\method{overview}{Date}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{POSIXt}(x, hist = FALSE)
+\method{overview}{POSIXt}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{ts}(x, hist = FALSE)
+\method{overview}{ts}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{data.frame}(x, hist = FALSE)
+\method{overview}{data.frame}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 }
 \arguments{
 \item{x}{A vector or data frame.}
 
 \item{hist}{Should in-line histograms be returned? Default is \code{FALSE}.}
+
+\item{digits}{How many decimal places should the summary statistics be
+printed as? Default is 2.}
 }
 \value{
-\code{overview(x)} returns a 1-row data frame unless
-\code{x} is a data frame, in which case an object of class "overview" is returned,
-Under the hood this is just a a list of data frames.
+An object of class "overview".
+Under the hood this is just a list of data frames.
 Key summary statistics are reported in each data frame.
 }
 \description{
 A cheaper \code{summary()} function, designed for larger data.
+}
+\details{
+No rounding of statistics is done except in printing which can be controlled
+either through the \code{digits} argument in \code{overview()}, or by setting the
+option \code{options(cheapr.digits)}. \cr
+To access the underlying data, for example the numeric summary,
+just use \verb{$numeric}, e.g. \code{overview(rnorm(30))$numeric}.
+}
+\examples{
+library(cheapr)
+overview(iris)
+
+# With histograms
+overview(airquality, hist = TRUE)
+
+# Round to 0 decimal places
+overview(airquality, digits = 0)
+
+# We can set an option for all overviews
+options(cheapr.digits = 1)
+overview(rnorm(100))
+options(cheapr.digits = 2) # The default
 }

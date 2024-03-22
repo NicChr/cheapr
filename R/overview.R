@@ -5,71 +5,112 @@
 #'
 #' @param x A vector or data frame.
 #' @param hist Should in-line histograms be returned? Default is `FALSE`.
+#' @param digits How many decimal places should the summary statistics be
+#' printed as? Default is 2.
 #'
 #' @returns
-#' `overview(x)` returns a 1-row data frame unless
-#' `x` is a data frame, in which case an object of class "overview" is returned,
-#' Under the hood this is just a a list of data frames.
+#' An object of class "overview".
+#' Under the hood this is just a list of data frames.
 #' Key summary statistics are reported in each data frame.
 #'
+#' @details
+#' No rounding of statistics is done except in printing which can be controlled
+#' either through the `digits` argument in `overview()`, or by setting the
+#' option `options(cheapr.digits)`. \cr
+#' To access the underlying data, for example the numeric summary,
+#' just use `$numeric`, e.g. `overview(rnorm(30))$numeric`.
+#'
+#' @examples
+#' library(cheapr)
+#' overview(iris)
+#'
+#' # With histograms
+#' overview(airquality, hist = TRUE)
+#'
+#' # Round to 0 decimal places
+#' overview(airquality, digits = 0)
+#'
+#' # We can set an option for all overviews
+#' options(cheapr.digits = 1)
+#' overview(rnorm(100))
+#' options(cheapr.digits = 2) # The default
 #' @rdname overview
 #' @export
-overview <- function(x, hist = FALSE){
+overview <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
  UseMethod("overview")
 }
 #' @rdname overview
 #' @export
-overview.default <- function(x, hist = FALSE){
-  out <- overview(list_as_df(list(x = x)), hist = hist)$other
+overview.default <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
+  overview(list_as_df(list(x = x)), hist = hist)
+  # out <- overview(list_as_df(list(x = x)), hist = hist)$other
+  # out
+}
+#' @rdname overview
+#' @export
+overview.logical <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
+  overview(list_as_df(list(x = as.logical(x))), hist = hist)
+  # out <- overview(list_as_df(list(x = as.logical(x))), hist = hist)$logical
+  # out
+}
+#' @rdname overview
+#' @export
+overview.numeric <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
+  out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist)
+  out$cols <- NA_integer_
+  out
+  # out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist)$numeric
+  # out
+}
+#' @rdname overview
+#' @export
+overview.character <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
+  out <- overview(list_as_df(list(x = as.character(x))), hist = hist)
+  out$cols <- NA_integer_
+  out
+  # out <- overview(list_as_df(list(x = as.character(x))), hist = hist)$categorical
+  # out
+}
+#' @rdname overview
+#' @export
+overview.factor <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
+  out <- overview(list_as_df(list(x = as.factor(x))), hist = hist)
+  out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.logical <- function(x, hist = FALSE){
-  out <- overview(list_as_df(list(x = as.logical(x))), hist = hist)$logical
+overview.Date <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
+  out <- overview(list_as_df(list(x = as.Date(x))), hist = hist)
+  out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.numeric <- function(x, hist = FALSE){
-  out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist)$numeric
+overview.POSIXt <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
+  out <- overview(list_as_df(list(x = as.POSIXct(x))), hist = hist)
+  out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.character <- function(x, hist = FALSE){
-  out <- overview(list_as_df(list(x = as.character(x))), hist = hist)$categorical
+overview.ts <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
+  out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist)
+  out$numeric$class <- class(x)[1]
   out
 }
 #' @rdname overview
 #' @export
-overview.factor <- function(x, hist = FALSE){
-  out <- overview(list_as_df(list(x = as.factor(x))), hist = hist)$categorical
-  out
-}
-#' @rdname overview
-#' @export
-overview.Date <- function(x, hist = FALSE){
-  out <- overview(list_as_df(list(x = as.Date(x))), hist = hist)$date
-  out
-}
-#' @rdname overview
-#' @export
-overview.POSIXt <- function(x, hist = FALSE){
-  out <- overview(list_as_df(list(x = as.POSIXct(x))), hist = hist)$datetime
-  out[[2]] <- utils::tail(class(x), n = 1)
-  out
-}
-#' @rdname overview
-#' @export
-overview.ts <- function(x, hist = FALSE){
-  out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist)$numeric
-  out[[2]] <- utils::tail(class(x), n = 1)
-  out
-}
-#' @rdname overview
-#' @export
-overview.data.frame <- function(x, hist = FALSE){
+overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  options(cheapr.digits = digits)
   check_is_df(x)
   N <- nrow(x)
   num_cols <- ncol(x)
@@ -273,7 +314,7 @@ overview.data.frame <- function(x, hist = FALSE){
   }
 
   out <- list(
-    nrow = N, ncol = num_cols,
+    obs = N, cols = num_cols,
     logical = lgl_out,
     numeric = num_out,
     date = date_out,
@@ -286,14 +327,14 @@ overview.data.frame <- function(x, hist = FALSE){
   out
 }
 #' @export
-print.overview <- function(x, max = NULL, ...){
+print.overview <- function(x, max = NULL, digits = getOption("cheapr.digits", 2), ...){
   # max_rows <- getOption("tibble.print_max", 20)
   # max_cols <- getOption("tibble.width", NULL)
   # max_extra_cols <- getOption("tibble.max_extra_cols", 100)
   # options(tibble.print_max = 10)
   # options(tibble.width = 100)
   # options(tibble.max_extra_cols = 10)
-  cat(paste("rows:", x$nrow, "cols:", x$ncol), "\n")
+  cat(paste("obs:", x$obs, "cols:", x$cols), "\n")
   # for (data_type in names(x)[-(1:2)]){
   #   if (nrow(x[[data_type]])){
   #     cat(paste("\n-----", data_type, "-----\n"))
@@ -301,30 +342,30 @@ print.overview <- function(x, max = NULL, ...){
   #   }
   # }
   if (nrow(x$logical)){
-    x$logical$p_complete <- pretty_num(round(x$logical$p_complete, 2))
+    x$logical$p_complete <- pretty_num(round(x$logical$p_complete, digits))
     cat("\n----- Logical -----\n")
     print(x$logical)
   }
   if (nrow(x$numeric)){
-    x$numeric$p_complete <- pretty_num(round(x$numeric$p_complete, 2))
-    x$numeric$mean <- pretty_num(round(x$numeric$mean, 2))
-    x$numeric$p0 <- pretty_num(round(x$numeric$p0, 2))
-    x$numeric$p25 <- pretty_num(round(x$numeric$p25, 2))
-    x$numeric$p50 <- pretty_num(round(x$numeric$p50, 2))
-    x$numeric$p75 <- pretty_num(round(x$numeric$p75, 2))
-    x$numeric$p100 <- pretty_num(round(x$numeric$p100, 2))
-    x$numeric$iqr <- pretty_num(round(x$numeric$iqr, 2))
-    x$numeric$sd <- pretty_num(round(x$numeric$sd, 2))
+    x$numeric$p_complete <- pretty_num(round(x$numeric$p_complete, digits))
+    x$numeric$mean <- pretty_num(round(x$numeric$mean, digits))
+    x$numeric$p0 <- pretty_num(round(x$numeric$p0, digits))
+    x$numeric$p25 <- pretty_num(round(x$numeric$p25, digits))
+    x$numeric$p50 <- pretty_num(round(x$numeric$p50, digits))
+    x$numeric$p75 <- pretty_num(round(x$numeric$p75, digits))
+    x$numeric$p100 <- pretty_num(round(x$numeric$p100, digits))
+    x$numeric$iqr <- pretty_num(round(x$numeric$iqr, digits))
+    x$numeric$sd <- pretty_num(round(x$numeric$sd, digits))
     cat("\n----- Numeric -----\n")
     print(x$numeric)
   }
   if (nrow(x$date)){
-    x$date$p_complete <- pretty_num(round(x$date$p_complete, 2))
+    x$date$p_complete <- pretty_num(round(x$date$p_complete, digits))
     cat("\n----- Dates -----\n")
     print(x$date)
   }
   if (nrow(x$datetime)){
-    x$datetime$p_complete <- pretty_num(round(x$datetime$p_complete, 2))
+    x$datetime$p_complete <- pretty_num(round(x$datetime$p_complete, digits))
     # An overview list contains a 'min' & 'max' variable of date-times
     # This is UTC because R can't handle a date-time with multiple time-zones
     # And so we want to print it in local-time
@@ -343,25 +384,25 @@ print.overview <- function(x, max = NULL, ...){
     print(x$datetime)
   }
   if (nrow(x$time_series)){
-    x$time_series$p_complete <- pretty_num(round(x$time_series$p_complete, 2))
-    x$time_series$mean <- pretty_num(round(x$time_series$mean, 2))
-    x$time_series$p0 <- pretty_num(round(x$time_series$p0, 2))
-    x$time_series$p25 <- pretty_num(round(x$time_series$p25, 2))
-    x$time_series$p50 <- pretty_num(round(x$time_series$p50, 2))
-    x$time_series$p75 <- pretty_num(round(x$time_series$p75, 2))
-    x$time_series$p100 <- pretty_num(round(x$time_series$p100, 2))
-    x$time_series$iqr <- pretty_num(round(x$time_series$iqr, 2))
-    x$time_series$sd <- pretty_num(round(x$time_series$sd, 2))
+    x$time_series$p_complete <- pretty_num(round(x$time_series$p_complete, digits))
+    x$time_series$mean <- pretty_num(round(x$time_series$mean, digits))
+    x$time_series$p0 <- pretty_num(round(x$time_series$p0, digits))
+    x$time_series$p25 <- pretty_num(round(x$time_series$p25, digits))
+    x$time_series$p50 <- pretty_num(round(x$time_series$p50, digits))
+    x$time_series$p75 <- pretty_num(round(x$time_series$p75, digits))
+    x$time_series$p100 <- pretty_num(round(x$time_series$p100, digits))
+    x$time_series$iqr <- pretty_num(round(x$time_series$iqr, digits))
+    x$time_series$sd <- pretty_num(round(x$time_series$sd, digits))
     cat("\n----- Time-Series -----\n")
     print(x$time_series)
   }
   if (nrow(x$categorical)){
-    x$categorical$p_complete <- pretty_num(round(x$categorical$p_complete, 2))
+    x$categorical$p_complete <- pretty_num(round(x$categorical$p_complete, digits))
     cat("\n----- Categorical -----\n")
     print(x$categorical)
   }
   if (nrow(x$other)){
-    x$other$p_complete <- pretty_num(round(x$other$p_complete, 2))
+    x$other$p_complete <- pretty_num(round(x$other$p_complete, digits))
     cat("\n----- Other -----\n")
     print(x$other)
   }
