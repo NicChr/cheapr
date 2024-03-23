@@ -96,9 +96,14 @@ overview.POSIXt <- function(x, hist = FALSE, digits = getOption("cheapr.digits",
 overview.ts <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
   options(cheapr.digits = digits)
   out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist)
-  out$numeric$class <- class(x)[1]
+  out$time_series <- out$numeric
+  out$numeric <- out$numeric[0, , drop = FALSE]
+  out$time_series$class <- class(x)[1]
   out
 }
+#' @rdname overview
+#' @export
+overview.zoo <- overview.ts
 #' @rdname overview
 #' @export
 overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
@@ -122,7 +127,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
                                                             c("integer", "numeric")), FALSE)]
   date_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "Date"), FALSE)]
   datetime_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "POSIXt"),  FALSE)]
-  ts_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "ts"),  FALSE)]
+  ts_vars <- data_nms[vapply(skim_df, function(x) inherits(x, c("ts", "zoo")),  FALSE)]
   cat_vars <- data_nms[vapply(skim_df, is.factor, FALSE)]
   other_vars <- setdiff_(data_nms, c(lgl_vars, num_vars, date_vars,
                                      datetime_vars, ts_vars, cat_vars))
@@ -234,7 +239,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
     datetime_out$min <- .POSIXct(datetime_out$min, tz = "UTC")
     datetime_out$max <- .POSIXct(datetime_out$max, tz = "UTC")
     for (i in seq_len(nrow(datetime_out))){
-      datetime_out[["tzone"]][i] <- tzone(x[[datetime_out[["col"]][i]]])
+      datetime_out[["tzone"]][i] <- tzone(skim_df[[datetime_out[["col"]][i]]])
     }
   }
 
@@ -246,10 +251,12 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   if (N > 0L && length(which_ts) > 0) {
     ts_overviews <- new_list(nrow(ts_out))
     for (i in seq_along(ts_overviews)){
-      ts_overviews[[i]] <- overview(ts_data[[ts_out[["col"]][i]]], hist = hist)$numeric
+      ts_overviews[[i]] <- overview(ts_data[[ts_out[["col"]][i]]], hist = hist)$time_series
       if (length(attr(ts_overviews[[i]], "row.names")) > 1){
         ts_overviews[[i]][["col"]] <- paste0(ts_out[["col"]][i], "_",
                                              ts_overviews[[i]][["col"]])
+      } else {
+        ts_overviews[[i]][["col"]] <- ts_vars[i]
       }
     }
     ts_out <- collapse::rowbind(ts_overviews)
@@ -278,7 +285,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
     cat_out$max <- as.character(cat_out$max)
     for (i in seq_len(nrow(cat_out))){
       if (cat_out[["class"]][i] == "factor"){
-        cat_out[["n_levels"]][i] <- length(levels(x[[cat_out[["col"]][i]]]))
+        cat_out[["n_levels"]][i] <- length(levels(skim_df[[cat_out[["col"]][i]]]))
       }
     }
   }
@@ -372,7 +379,7 @@ print.overview <- function(x, max = NULL, digits = getOption("cheapr.digits", 2)
     }
     x$datetime$min <- datetime_chr_min
     x$datetime$max <- datetime_chr_max
-    cat("\n----- Date-times -----\n")
+    cat("\n----- Date-Times -----\n")
     print(x$datetime)
   }
   if (nrow(x$time_series)){

@@ -10,6 +10,7 @@
 \alias{overview.Date}
 \alias{overview.POSIXt}
 \alias{overview.ts}
+\alias{overview.zoo}
 \alias{overview.data.frame}
 \title{An alternative to \code{summary()} inspired by the skimr package}
 \usage{
@@ -30,6 +31,8 @@ overview(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 \method{overview}{POSIXt}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
 \method{overview}{ts}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+
+\method{overview}{zoo}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
 \method{overview}{data.frame}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 }
