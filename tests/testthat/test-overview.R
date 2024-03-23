@@ -1,4 +1,5 @@
 test_that("overview", {
+  options(cheapr.digits = 2)
   expect_snapshot(overview(airquality, hist = FALSE))
   iris2 <- iris
   iris2$large <- iris2$Sepal.Length >= 6
@@ -8,5 +9,7 @@ test_that("overview", {
   expect_snapshot(overview(iris2, hist = FALSE))
   expect_snapshot(overview(warpbreaks, hist = FALSE))
   expect_snapshot(overview(ToothGrowth, hist = FALSE))
+  expect_identical(overview(ts(1:10))$numeric,
+                   overview(data.frame(x = ts(1:10)))$time_series)
   # expect_snapshot(overview(EuStockMarkets, hist = TRUE))
 })

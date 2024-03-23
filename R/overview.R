@@ -44,16 +44,12 @@ overview <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
 overview.default <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
   options(cheapr.digits = digits)
   overview(list_as_df(list(x = x)), hist = hist)
-  # out <- overview(list_as_df(list(x = x)), hist = hist)$other
-  # out
 }
 #' @rdname overview
 #' @export
 overview.logical <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
   options(cheapr.digits = digits)
   overview(list_as_df(list(x = as.logical(x))), hist = hist)
-  # out <- overview(list_as_df(list(x = as.logical(x))), hist = hist)$logical
-  # out
 }
 #' @rdname overview
 #' @export
@@ -62,8 +58,6 @@ overview.numeric <- function(x, hist = FALSE, digits = getOption("cheapr.digits"
   out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist)
   out$cols <- NA_integer_
   out
-  # out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist)$numeric
-  # out
 }
 #' @rdname overview
 #' @export
@@ -72,8 +66,6 @@ overview.character <- function(x, hist = FALSE, digits = getOption("cheapr.digit
   out <- overview(list_as_df(list(x = as.character(x))), hist = hist)
   out$cols <- NA_integer_
   out
-  # out <- overview(list_as_df(list(x = as.character(x))), hist = hist)$categorical
-  # out
 }
 #' @rdname overview
 #' @export
@@ -254,7 +246,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   if (N > 0L && length(which_ts) > 0) {
     ts_overviews <- new_list(nrow(ts_out))
     for (i in seq_along(ts_overviews)){
-      ts_overviews[[i]] <- overview(ts_data[[ts_out[["col"]][i]]], hist = hist)
+      ts_overviews[[i]] <- overview(ts_data[[ts_out[["col"]][i]]], hist = hist)$numeric
       if (length(attr(ts_overviews[[i]], "row.names")) > 1){
         ts_overviews[[i]][["col"]] <- paste0(ts_out[["col"]][i], "_",
                                              ts_overviews[[i]][["col"]])
@@ -334,7 +326,7 @@ print.overview <- function(x, max = NULL, digits = getOption("cheapr.digits", 2)
   # options(tibble.print_max = 10)
   # options(tibble.width = 100)
   # options(tibble.max_extra_cols = 10)
-  cat(paste("obs:", x$obs, "cols:", x$cols), "\n")
+  cat(paste("obs:", x$obs, "\ncols:", x$cols), "\n")
   # for (data_type in names(x)[-(1:2)]){
   #   if (nrow(x[[data_type]])){
   #     cat(paste("\n-----", data_type, "-----\n"))

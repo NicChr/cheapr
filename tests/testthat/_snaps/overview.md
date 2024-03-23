@@ -3,7 +3,8 @@
     Code
       overview(airquality, hist = FALSE)
     Output
-      obs: 153 cols: 6 
+      obs: 153 
+      cols: 6 
       
       ----- Numeric -----
             col   class n_missing p_complete n_unique   mean  p0    p25  p50    p75
@@ -26,7 +27,8 @@
     Code
       overview(iris, hist = FALSE)
     Output
-      obs: 150 cols: 5 
+      obs: 150 
+      cols: 5 
       
       ----- Numeric -----
                  col   class n_missing p_complete n_unique mean  p0 p25  p50 p75 p100
@@ -49,7 +51,8 @@
     Code
       overview(iris2, hist = FALSE)
     Output
-      obs: 100 cols: 7 
+      obs: 100 
+      cols: 7 
       
       ----- Logical -----
           col   class n_missing p_complete n_true n_false p_true
@@ -77,7 +80,8 @@
     Code
       overview(warpbreaks, hist = FALSE)
     Output
-      obs: 54 cols: 3 
+      obs: 54 
+      cols: 3 
       
       ----- Numeric -----
            col   class n_missing p_complete n_unique  mean p0   p25 p50 p75 p100
@@ -95,7 +99,8 @@
     Code
       overview(ToothGrowth, hist = FALSE)
     Output
-      obs: 60 cols: 3 
+      obs: 60 
+      cols: 3 
       
       ----- Numeric -----
          col   class n_missing p_complete n_unique  mean  p0   p25   p50   p75 p100
