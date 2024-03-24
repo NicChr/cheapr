@@ -9,25 +9,24 @@
 \alias{sset.sf}
 \title{Cheaper subset}
 \usage{
-sset(x, i = 0, ...)
+sset(x, ...)
 
-\method{sset}{data.frame}(x, i = 0, j = seq_along(x), ...)
+\method{sset}{data.frame}(x, i, j = seq_along(x), ...)
 
-\method{sset}{tbl_df}(x, i = 0, j = seq_along(x), ...)
+\method{sset}{tbl_df}(x, i, j = seq_along(x), ...)
 
-\method{sset}{POSIXlt}(x, i = 0, ...)
+\method{sset}{POSIXlt}(x, i, ...)
 
-\method{sset}{data.table}(x, i = 0, j = seq_along(x), ...)
+\method{sset}{data.table}(x, i, j = seq_along(x), ...)
 
-\method{sset}{sf}(x, i = 0, j = seq_along(x), ...)
+\method{sset}{sf}(x, i, j = seq_along(x), ...)
 }
 \arguments{
 \item{x}{Vector or data frame.}
 
-\item{i}{A logical or vector of indices. \cr
-The default is 0 which differs to \code{[}.}
-
 \item{...}{Further parameters passed to \code{[}.}
+
+\item{i}{A logical or vector of indices. \cr}
 
 \item{j}{Column indices, names or logical vector.}
 }
@@ -44,6 +43,19 @@ You can either write methods for \code{sset} or \code{[}. \cr
 \examples{
 library(cheapr)
 library(bench)
+
+# Selecting columns
+sset(airquality, j = "Temp")
+sset(airquality, j = 1:2)
+
+# Selecting rows
+sset(iris, 1:5)
+
+# Rows and columns
+sset(iris, 1:5, 1:5)
+sset(iris, iris$Sepal.Length > 7, c("Species", "Sepal.Length"))
+
+# Cnmparison against base
 x <- rnorm(10^4)
 
 mark(x[1:10^3], sset(x, 1:10^3))

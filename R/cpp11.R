@@ -128,6 +128,10 @@ cpp_list_as_df <- function(x) {
   .Call(`_cheapr_cpp_list_as_df`, x)
 }
 
+cpp_set_rm_attributes <- function(x) {
+  .Call(`_cheapr_cpp_set_rm_attributes`, x)
+}
+
 cpp_set_copy_attributes <- function(target, source, attrs) {
   .Call(`_cheapr_cpp_set_copy_attributes`, target, source, attrs)
 }

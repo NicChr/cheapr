@@ -76,14 +76,6 @@ which_in <- function(x, table){
 which_not_in <- function(x, table){
   which_na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
 }
-df_select <- function(x, i){
-  attrs <- attributes(x)
-  out <- cpp_list_rm_null(unclass(x)[i])
-  attrs[["names"]] <- attr(out, "names")
-  attrs[["row.names"]] <- .row_names_info(x, type = 0L)
-  attributes(out) <- attrs
-  out
-}
 tzone <- function(x){
   out <- attr(x, "tzone")
   if (is.null(out)) {
@@ -92,33 +84,6 @@ tzone <- function(x){
   else {
     out[[1]]
   }
-}
-
-# Efficient data frame subset
-# With the exception of which_() this is surprisingly all base R...
-# It relies on sset which falls back on `[` when no method is found.
-df_subset <- function(x, i = 0, j = seq_along(x)){
-  nrows <- length(attr(x, "row.names"))
-  if (is.logical(i)){
-    check_length(i, nrows)
-    i <- which_(i)
-  }
-  l <- as.list(
-    df_select(x, j)
-  )
-  if (length(l) == 0){
-    out <- list_as_df(l)
-    attr(out, "row.names") <- .set_row_names(
-      length(
-        seq_len(nrows)[i]
-      )
-    )
-  } else {
-    out <- list_as_df(
-      lapply(l, sset, i)
-    )
-  }
-  out
 }
 
 # safe_unique <- function(x, ...){

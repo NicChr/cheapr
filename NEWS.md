@@ -1,5 +1,8 @@
 # cheapr (Development version)
 
+* New function `sset` to consistently subset data frame rows and vectors in 
+general.
+
 * `overview` now always returns an object of class "overview". It also returns
 the number of observations instead of rows so that it makes sense 
 for vector summaries as well as data frame summaries.

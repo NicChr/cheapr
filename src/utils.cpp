@@ -165,6 +165,21 @@ SEXP cpp_list_as_df(SEXP x) {
   }
 }
 
+// Remove attributes in-place
+
+[[cpp11::register]]
+SEXP cpp_set_rm_attributes(SEXP x){
+  SEXP attrs = Rf_protect(cpp11::package("base")["attributes"](x));
+  SEXP names = Rf_protect(Rf_getAttrib(attrs, R_NamesSymbol));
+  int n = Rf_length(attrs);
+  for (int i = 0; i < n; ++i){
+    SEXP attrib_nm = Rf_protect(Rf_install(CHAR(STRING_ELT(names, i))));
+    Rf_setAttrib(x, attrib_nm, R_NilValue);
+  }
+  Rf_unprotect(n + 2);
+  return x;
+}
+
 // Copy specified attributes (character vector of names)
 // from source to target (by reference)
 // Use with extreme care as it modifies target in-place
