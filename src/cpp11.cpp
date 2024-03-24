@@ -229,6 +229,13 @@ extern "C" SEXP _cheapr_cpp_list_as_df(SEXP x) {
     return cpp11::as_sexp(cpp_list_as_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// utils.cpp
+SEXP cpp_set_copy_attributes(SEXP target, SEXP source, SEXP attrs);
+extern "C" SEXP _cheapr_cpp_set_copy_attributes(SEXP target, SEXP source, SEXP attrs) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_copy_attributes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(target), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(attrs)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -267,6 +274,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_r_unnested_length",    (DL_FUNC) &_cheapr_cpp_r_unnested_length,    1},
     {"_cheapr_cpp_row_na_counts",        (DL_FUNC) &_cheapr_cpp_row_na_counts,        1},
     {"_cheapr_cpp_sequence",             (DL_FUNC) &_cheapr_cpp_sequence,             3},
+    {"_cheapr_cpp_set_copy_attributes",  (DL_FUNC) &_cheapr_cpp_set_copy_attributes,  3},
     {"_cheapr_cpp_vec_length",           (DL_FUNC) &_cheapr_cpp_vec_length,           1},
     {"_cheapr_cpp_which_",               (DL_FUNC) &_cheapr_cpp_which_,               2},
     {"_cheapr_cpp_which_na",             (DL_FUNC) &_cheapr_cpp_which_na,             1},

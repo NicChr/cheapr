@@ -41,12 +41,7 @@ setdiff_ <- function(x, y, dups = TRUE){
   if (!dups){
     x <- collapse::funique(x)
   }
-  i <- which_na(collapse::fmatch(x, y, overid = 2L))
-  if (inherits(x, "data.frame")){
-    x[i, , drop = FALSE]
-  } else {
-    x[i]
-  }
+  sset(x, which_not_in(x, y))
 }
 #' @export
 #' @rdname extras
@@ -54,12 +49,7 @@ intersect_ <- function(x, y, dups = TRUE){
   if (!dups){
     x <- collapse::funique(x)
   }
-  i <- which_not_na(collapse::fmatch(x, y, overid = 2L))
-  if (inherits(x, "data.frame")){
-    x[i, , drop = FALSE]
-  } else {
-    x[i]
-  }
+  sset(x, which_in(x, y))
 }
 #' @export
 #' @rdname extras

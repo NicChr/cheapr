@@ -44,7 +44,7 @@
       
       ----- Categorical -----
             col  class n_missing p_complete n_unique n_levels    min       max
-      5 Species factor         0          1        3        3 setosa virginica
+      1 Species factor         0          1        3        3 setosa virginica
 
 ---
 
@@ -56,7 +56,7 @@
       
       ----- Logical -----
           col   class n_missing p_complete n_true n_false p_true
-      6 large logical         0          1     24      76   0.24
+      1 large logical         0          1     24      76   0.24
       
       ----- Numeric -----
                  col   class n_missing p_complete n_unique mean  p0 p25  p50  p75
@@ -72,8 +72,8 @@
       
       ----- Categorical -----
              col     class n_missing p_complete n_unique n_levels    min        max
-      5  Species    factor         0          1        2        3 setosa versicolor
-      7 Species2 character         0          1        2       NA setosa versicolor
+      1  Species    factor         0          1        2        3 setosa versicolor
+      2 Species2 character         0          1        2       NA setosa versicolor
 
 ---
 
@@ -91,8 +91,8 @@
       
       ----- Categorical -----
             col  class n_missing p_complete n_unique n_levels min max
-      2    wool factor         0          1        2        2   A   B
-      3 tension factor         0          1        3        3   L   H
+      1    wool factor         0          1        2        2   A   B
+      2 tension factor         0          1        3        3   L   H
 
 ---
 
@@ -105,14 +105,14 @@
       ----- Numeric -----
          col   class n_missing p_complete n_unique  mean  p0   p25   p50   p75 p100
       1  len numeric         0          1       43 18.81 4.2 13.07 19.25 25.27 33.9
-      3 dose numeric         0          1        3  1.17 0.5   0.5     1     2    2
+      2 dose numeric         0          1        3  1.17 0.5   0.5     1     2    2
          iqr   sd
       1 12.2 7.65
-      3  1.5 0.63
+      2  1.5 0.63
       
       ----- Categorical -----
          col  class n_missing p_complete n_unique n_levels min max
-      2 supp factor         0          1        2        2  OJ  VC
+      1 supp factor         0          1        2        2  OJ  VC
 
 ---
 

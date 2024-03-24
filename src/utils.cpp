@@ -165,6 +165,24 @@ SEXP cpp_list_as_df(SEXP x) {
   }
 }
 
+// Copy specified attributes (character vector of names)
+// from source to target (by reference)
+// Use with extreme care as it modifies target in-place
+// If you use it, make absolutely sure that target is not pointed to by other
+// objects as it will modify the attributes of those objects too
+
+[[cpp11::register]]
+SEXP cpp_set_copy_attributes(SEXP target, SEXP source, SEXP attrs){
+  SEXP *p_attrs = STRING_PTR(attrs);
+  int n_attrs = Rf_length(attrs);
+  for (int i = 0; i < n_attrs; ++i){
+    SEXP attrib_nm = Rf_protect(Rf_install(CHAR(p_attrs[i])));
+    Rf_setAttrib(target, attrib_nm, Rf_getAttrib(source, attrib_nm));
+  }
+  Rf_unprotect(n_attrs);
+  return target;
+}
+
 // SEXP cpp_unlist(SEXP x, SEXP ptype) {
 //   if (!Rf_isVectorList(x)){
 //     Rf_error("x must be a list");

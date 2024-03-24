@@ -37,17 +37,6 @@ df_as_tbl <- function(x){
 as.character.vctrs_rcrd <- function(x, ...){
   format(x, ...)
 }
-# Does rcrd fields have rcrds in them?
-is_nested_rcrd <- function(x){
-  out <- FALSE
-  for (i in seq_along(unclass(x))){
-    if (inherits(.subset2(x, i), "vctrs_rcrd")){
-      out <- TRUE
-      break
-    }
-  }
-  out
-}
 funique.vctrs_rcrd <- function(x, sort = FALSE, ...){
   out <- unique(x, ...)
   if (sort){
@@ -63,7 +52,7 @@ funique.POSIXlt <- function(x, ...){
 }
 check_length <- function(x, n){
   if (length(x) != n){
-    stop(paste(deparse1(substitute(x)), "must have length ", n))
+    stop(paste(deparse1(substitute(x)), "must have length", n))
   }
 }
 check_is_df <- function(x){
@@ -104,16 +93,38 @@ tzone <- function(x){
     out[[1]]
   }
 }
+
+# Efficient data frame subset
+# With the exception of which_() this is surprisingly all base R...
+# It relies on sset which falls back on `[` when no method is found.
+df_subset <- function(x, i = 0, j = seq_along(x)){
+  nrows <- length(attr(x, "row.names"))
+  if (is.logical(i)){
+    check_length(i, nrows)
+    i <- which_(i)
+  }
+  l <- as.list(
+    df_select(x, j)
+  )
+  if (length(l) == 0){
+    out <- list_as_df(l)
+    attr(out, "row.names") <- .set_row_names(
+      length(
+        seq_len(nrows)[i]
+      )
+    )
+  } else {
+    out <- list_as_df(
+      lapply(l, sset, i)
+    )
+  }
+  out
+}
+
 # safe_unique <- function(x, ...){
 #   out <- tryCatch(collapse::funique(x, ...), error = function(e) return(".r.error"))
 #   if (length(out) == 1 && out == ".r.error"){
 #     out <- unique(x, ...)
 #   }
 #   out
-# }
-# any_na <- function(x){
-#   num_na(x) > 0
-# }
-# all_na <- function(x){
-#   num_na(x) == unlisted_length(x)
 # }

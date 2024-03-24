@@ -97,7 +97,7 @@ overview.ts <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
   options(cheapr.digits = digits)
   out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist)
   out$time_series <- out$numeric
-  out$numeric <- out$numeric[0, , drop = FALSE]
+  out$numeric <- sset(out$numeric, 0)
   out$time_series$class <- class(x)[1]
   out
 }
@@ -136,7 +136,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
 
   lgl_data <- df_select(skim_df, lgl_vars)
   which_lgl <- which_in(out[["col"]], lgl_vars)
-  lgl_out <- out[which_lgl, , drop = FALSE]
+  lgl_out <- sset(out, which_lgl)
   value_size <- min(length(which_lgl), 1L)
   lgl_out <- df_add_cols(lgl_out, list(n_missing = NA_integer_[value_size]))
   lgl_out <- df_add_cols(lgl_out, list(p_complete = NA_real_[value_size]))
@@ -155,7 +155,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
 
   num_data <- df_select(skim_df, num_vars)
   which_num <- which_in(out[["col"]], num_vars)
-  num_out <- out[which_num, , drop = FALSE]
+  num_out <- sset(out, which_num)
   value_size <- min(length(which_num), 1L)
   num_out <- df_add_cols(num_out, list(n_missing = NA_integer_[value_size]))
   num_out <- df_add_cols(num_out, list(p_complete = NA_real_[value_size]))
@@ -197,7 +197,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
 
   date_data <- df_select(skim_df, date_vars)
   which_date <- which_in(out[["col"]], date_vars)
-  date_out <- out[which_date, , drop = FALSE]
+  date_out <- sset(out, which_date)
   value_size <- min(length(which_date), 1L)
   date_out <- df_add_cols(date_out, list(n_missing = NA_integer_[value_size]))
   date_out <- df_add_cols(date_out, list(p_complete = NA_real_[value_size]))
@@ -221,7 +221,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   datetime_data <- df_select(skim_df, datetime_vars)
   datetime_data <- transform_all(datetime_data, as.POSIXct)
   which_datetime <- which_in(out[["col"]], datetime_vars)
-  datetime_out <- out[which_datetime, , drop = FALSE]
+  datetime_out <- sset(out, which_datetime)
   value_size <- min(length(which_datetime), 1L)
   datetime_out <- df_add_cols(datetime_out, list(n_missing = NA_integer_[value_size]))
   datetime_out <- df_add_cols(datetime_out, list(p_complete = NA_real_[value_size]))
@@ -247,7 +247,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
 
   ts_data <- df_select(skim_df, ts_vars)
   which_ts <- which_in(out[["col"]], ts_vars)
-  ts_out <- out[which_ts, , drop = FALSE]
+  ts_out <- sset(out, which_ts)
   if (N > 0L && length(which_ts) > 0) {
     ts_overviews <- new_list(nrow(ts_out))
     for (i in seq_along(ts_overviews)){
@@ -266,7 +266,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
 
   cat_data <- df_select(skim_df, cat_vars)
   which_cat <- which_in(out[["col"]], cat_vars)
-  cat_out <- out[which_cat, , drop = FALSE]
+  cat_out <- sset(out, which_cat)
   value_size <- min(length(which_cat), 1L)
   cat_out <- df_add_cols(cat_out, list(n_missing = NA_integer_[value_size]))
   cat_out <- df_add_cols(cat_out, list(p_complete = NA_real_[value_size]))
@@ -294,7 +294,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
 
   other_data <- df_select(skim_df, other_vars)
   which_other <- which_in(out[["col"]], other_vars)
-  other_out <- out[which_other, , drop = FALSE]
+  other_out <- sset(out, which_other)
   value_size <- min(length(which_other), 1L)
   other_out <- df_add_cols(other_out, list(n_missing = NA_integer_[value_size]))
   other_out <- df_add_cols(other_out, list(p_complete = NA_real_[value_size]))
@@ -434,7 +434,7 @@ transform_all <- function(data, .fn){
   data
 }
 summarise_all <- function(data, .fn, size = 1){
-  out <- data[seq_len(size), , drop = FALSE]
+  out <- sset(data, seq_len(size))
   attr(out, "row.names") <- .set_row_names(size)
   for (col in names(out)){
     out[[col]] <- .fn(data[[col]])
