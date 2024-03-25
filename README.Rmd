@@ -135,6 +135,22 @@ overview(df, hist = TRUE)
 mark(overview(df))
 ```
 
+## Cheaper and consistent subsetting with `sset`
+
+```{r}
+sset(iris, 1:5)
+sset(iris, 1:5, j = "Species")
+
+# sset always returns a data frame when input is a data frame
+
+sset(iris, 1, 1) # data frame
+iris[1, 1] # not a data frame
+
+x <- sample.int(10^6, 10^4, TRUE)
+y <- sample.int(10^6, 10^4, TRUE)
+mark(sset(x, x %in_% y), sset(x, x %in% y), x[x %in% y])
+```
+
 
 ## Greatest common divisor and smallest common multiple
 

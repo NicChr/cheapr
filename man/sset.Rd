@@ -55,7 +55,7 @@ sset(iris, 1:5)
 sset(iris, 1:5, 1:5)
 sset(iris, iris$Sepal.Length > 7, c("Species", "Sepal.Length"))
 
-# Cnmparison against base
+# Comparison against base
 x <- rnorm(10^4)
 
 mark(x[1:10^3], sset(x, 1:10^3))

@@ -30,7 +30,7 @@
 #' sset(iris, 1:5, 1:5)
 #' sset(iris, iris$Sepal.Length > 7, c("Species", "Sepal.Length"))
 #'
-#' # Cnmparison against base
+#' # Comparison against base
 #' x <- rnorm(10^4)
 #'
 #' mark(x[1:10^3], sset(x, 1:10^3))
@@ -99,9 +99,16 @@ sset.sf <- function(x, i, j = seq_along(x), ...){
   class(out) <- class(x)
   out
 }
-df_select <- function(x, i){
+df_select <- function(x, j){
+  if (is.logical(j)){
+    check_length(j, length(x))
+    j <- which_(j)
+  }
+  if (is.character(j)){
+    j <- collapse::fmatch(j, names(x), overid = 2L)
+  }
   attrs <- attributes(x)
-  out <- cpp_list_rm_null(unclass(x)[i])
+  out <- cpp_list_rm_null(unclass(x)[j])
   attrs[["names"]] <- attr(out, "names")
   attrs[["row.names"]] <- .row_names_info(x, type = 0L)
   attributes(out) <- attrs
