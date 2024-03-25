@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.4.0
 
 * New function `sset` to consistently subset data frame rows and vectors in 
 general.

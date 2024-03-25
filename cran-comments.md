@@ -1,4 +1,4 @@
-* Updated to version 0.3.0
+* Updated to version 0.4.0
 
 ## Test environments
 - R-hub windows-x86_64-devel (r-devel)
