@@ -50,7 +50,7 @@ sset <- function(x, ...){
 #' @export
 sset.default <- function(x, i, ...){
   if (!missing(i) && is.logical(i)){
-    check_length(i, length(x))
+    # check_length(i, length(x))
     i <- which_(i)
   }
   x[i, ...]
