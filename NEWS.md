@@ -1,5 +1,17 @@
 # cheapr (Development version)
 
+* 'overview' objects gain an additional list element "print_digits" which 
+is passed to the print method in order to correctly round the summary statistics 
+without affecting the 'cheapr.digits' option globally.
+
+* `factor_` and `na_rm` now handle data frames.
+
+* A bug in `sset.data.table` that caused further set calculations to produce 
+warnings has been fixed.
+
+* `is_na.POSIXlt` and `sset.POSIXlt` have been rewritten to handle unbalanced 
+'POSIXlt' objects.
+
 # cheapr 0.4.0
 
 * New function `sset` to consistently subset data frame rows and vectors in 
