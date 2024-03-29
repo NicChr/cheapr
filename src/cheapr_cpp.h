@@ -42,6 +42,6 @@ R_xlen_t cpp_df_nrow(SEXP x);
 R_xlen_t cpp_unnested_length(SEXP x);
 SEXP xlen_to_r(R_xlen_t x);
 R_xlen_t cpp_vec_length(SEXP x);
-SEXP cpp_obj_address(SEXP x);
+SEXP r_address(SEXP x);
 
 #endif

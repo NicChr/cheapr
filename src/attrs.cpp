@@ -24,43 +24,44 @@ SEXP cpp_set_rm_attributes(SEXP x){
 [[cpp11::register]]
 SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
   int n_protect;
-  Rf_protect(x = x);
-  Rf_protect(which = which);
-  Rf_protect(value = value);
-  SEXP attr_char = Rf_protect(Rf_install(CHAR(STRING_ELT(which, 0))));
-  if (cpp_obj_address(x) == cpp_obj_address(value)){
-    Rf_protect(value = Rf_duplicate(value));
+  SEXP x2 = Rf_protect(x);
+  SEXP which2 = Rf_protect(which);
+  SEXP value2 = Rf_protect(value);
+  SEXP attr_char = Rf_protect(Rf_install(CHAR(STRING_ELT(which2, 0))));
+  if (r_address(x2) == r_address(value2)){
+    Rf_protect(value2 = Rf_duplicate(value2));
     n_protect = 5;
   } else {
     n_protect = 4;
   }
-  Rf_setAttrib(x, attr_char, value);
+  Rf_setAttrib(x2, attr_char, value2);
   Rf_unprotect(n_protect);
-  return x;
+  return x2;
 }
 
 [[cpp11::register]]
 SEXP cpp_set_rm_attr(SEXP x, SEXP which) {
-  Rf_protect(x = x);
-  Rf_protect(which = which);
-  SEXP attr_char = Rf_protect(Rf_installChar(STRING_ELT(which, 0)));
-  Rf_setAttrib(x, attr_char, R_NilValue);
+  SEXP x2 = Rf_protect(x);
+  SEXP which2 = Rf_protect(which);
+  SEXP attr_char = Rf_protect(Rf_installChar(STRING_ELT(which2, 0)));
+  Rf_setAttrib(x2, attr_char, R_NilValue);
   Rf_unprotect(3);
-  return x;
+  return x2;
 }
 
 // Set attributes of x in-place, when add = F, attrs of x are first removed
 
 [[cpp11::register]]
 SEXP cpp_set_attributes(SEXP x, SEXP attributes, bool add) {
-  int n_protect;
-  if (add){
-    Rf_protect(x = x);
-  } else {
-    Rf_protect(x = cpp_set_rm_attributes(x));
+  int n_protect = 0;
+  SEXP x2 = Rf_protect(x);
+  ++n_protect;
+  if (!add){
+    Rf_protect(x2 = cpp_set_rm_attributes(x2));
+    ++n_protect;
   }
   SEXP names = Rf_protect(Rf_getAttrib(attributes, R_NamesSymbol));
-  n_protect = 2;
+  ++n_protect;
   if (!Rf_isVectorList(attributes) || Rf_isNull(names)){
     Rf_unprotect(n_protect);
     Rf_error("attributes must be a named list");
@@ -71,7 +72,7 @@ SEXP cpp_set_attributes(SEXP x, SEXP attributes, bool add) {
   for (int i = 0; i < n; ++i){
     SEXP attr_nm = Rf_protect(Rf_installChar(p_names[i]));
     ++n_protect;
-    if (cpp_obj_address(x) == cpp_obj_address(p_attributes[i])){
+    if (r_address(x) == r_address(p_attributes[i])){
       SEXP dup_attr = Rf_protect(Rf_duplicate(p_attributes[i]));
       ++n_protect;
       Rf_setAttrib(x, attr_nm, dup_attr);

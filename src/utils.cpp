@@ -170,7 +170,7 @@ SEXP cpp_list_as_df(SEXP x) {
   }
 }
 
-SEXP cpp_obj_address(SEXP x) {
+SEXP r_address(SEXP x) {
   static char buf[1000];
   snprintf(buf, 1000, "%p", (void*) x);
   return Rf_mkChar(buf);
