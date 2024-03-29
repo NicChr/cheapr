@@ -140,7 +140,7 @@ enframe_ <- function(x, name = "name", value = "value"){
     out <- list(x_nms, x)
     names(out) <- c(name, value)
   }
-  attr(out, "class") <- c("tbl_df", "tbl", "data.frame")
+  class(out) <- c("tbl_df", "tbl", "data.frame")
   attr(out, "row.names") <- .set_row_names(length(x))
   out
 }
@@ -160,15 +160,12 @@ deframe_ <- function(x){
 #' @export
 #' @rdname extras
 na_rm <- function(x){
-  if (is.data.frame(x)){
-    stop("x must be a vector")
-  }
   n_na <- num_na(x, recursive = TRUE)
   if (n_na == unlisted_length(x)){
-    x[0L]
+    sset(x, 0L)
   } else if (n_na == 0){
     x
   } else {
-    x[which_not_na(x)]
+    sset(x, which_not_na(x))
   }
 }

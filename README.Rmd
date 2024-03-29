@@ -239,11 +239,11 @@ x <- sample(seq(-10^3, 10^3, 0.01))
 y <- do.call(paste0, expand.grid(letters, letters, letters, letters))
 mark(cheapr_factor = factor_(x), 
      base_factor = factor(x))
-mark(base_factor = factor_(x, order = FALSE), 
+mark(cheapr_factor = factor_(x, order = FALSE), 
      base_factor = factor(x, levels = unique(x)))
 mark(cheapr_factor = factor_(y), 
      base_factor = factor(y))
-mark(base_factor = factor_(y, order = FALSE), 
+mark(cheapr_factor = factor_(y, order = FALSE), 
      base_factor = factor(y, levels = unique(y)))
 ```
 

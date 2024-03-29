@@ -22,6 +22,7 @@
 #' To find rows with any empty values,
 #' use `which_(row_any_na(df))`. \cr
 #' To find empty rows use `which_(row_all_na(df))` or `which_na(df)`.
+#' To drop empty rows use `na_rm(df)` or `sset(df, which_(row_all_na(df), TRUE))`.
 #'
 #' ### `is_na`
 #' `is_na` Is an S3 generic function. It will internally fall back on
@@ -93,7 +94,9 @@ is_na.default <- function(x){
 #' @rdname is_na
 #' @export
 is_na.POSIXlt <- function(x){
-  row_any_na(list_as_df(unclass(x)[1:8]))
+  row_any_na(list_as_df(do.call(recycle, unclass(x)[
+    c("sec", "min", "hour", "mday",
+      "mon", "year", "wday", "yday")])))
 }
 #' @rdname is_na
 #' @export

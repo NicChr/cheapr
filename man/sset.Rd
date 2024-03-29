@@ -15,7 +15,7 @@ sset(x, ...)
 
 \method{sset}{tbl_df}(x, i, j = seq_along(x), ...)
 
-\method{sset}{POSIXlt}(x, i, ...)
+\method{sset}{POSIXlt}(x, i, j, ...)
 
 \method{sset}{data.table}(x, i, j = seq_along(x), ...)
 
@@ -39,6 +39,13 @@ enhanced data frames like tibbles, data.tables and sf.
 \code{sset} is an S3 generic.
 You can either write methods for \code{sset} or \code{[}. \cr
 \code{sset} will fall back on using \code{[} when no suitable method is found.
+
+To get into more detail, using \code{sset()} on a data frame, a new
+list is always allocated through \code{cheapr:::cpp_new_list()}.
+For data.tables, if \code{i} is missing, then a deep copy is made.
+When \code{i} is a logical vector, it is not recycled, so it is good practice to
+make sure the logical vector
+matches the length of x, or if x has rows, the number of rows of x.
 }
 \examples{
 library(cheapr)

@@ -37,65 +37,57 @@
 #' @rdname overview
 #' @export
 overview <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
- UseMethod("overview")
+  UseMethod("overview")
 }
 #' @rdname overview
 #' @export
 overview.default <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
-  overview(list_as_df(list(x = x)), hist = hist)
+  overview(list_as_df(list(x = x)), hist = hist, digits = digits)
 }
 #' @rdname overview
 #' @export
 overview.logical <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
-  overview(list_as_df(list(x = as.logical(x))), hist = hist)
+  overview(list_as_df(list(x = as.logical(x))), hist = hist, digits = digits)
 }
 #' @rdname overview
 #' @export
 overview.numeric <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
-  out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist)
+  out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.character <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
-  out <- overview(list_as_df(list(x = as.character(x))), hist = hist)
+  out <- overview(list_as_df(list(x = as.character(x))), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.factor <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
-  out <- overview(list_as_df(list(x = as.factor(x))), hist = hist)
+  out <- overview(list_as_df(list(x = as.factor(x))), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.Date <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
-  out <- overview(list_as_df(list(x = as.Date(x))), hist = hist)
+  out <- overview(list_as_df(list(x = as.Date(x))), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.POSIXt <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
-  out <- overview(list_as_df(list(x = as.POSIXct(x))), hist = hist)
+  out <- overview(list_as_df(list(x = as.POSIXct(x))), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.ts <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
-  out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist)
+  out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist, digits = digits)
   out$time_series <- out$numeric
   out$numeric <- sset(out$numeric, 0)
   out$time_series$class <- class(x)[1]
@@ -107,13 +99,12 @@ overview.zoo <- overview.ts
 #' @rdname overview
 #' @export
 overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  options(cheapr.digits = digits)
   check_is_df(x)
   N <- nrow(x)
   num_cols <- ncol(x)
   skim_df <- x
   data_nms <- names(skim_df)
-  col_classes <- vapply(skim_df, function(x) utils::tail(class(x), n = 1), "")
+  col_classes <- vapply(skim_df, function(x) sset(class(x), length(class(x))), "")
   out <- list_as_df(enframe_(col_classes, name = "col", value = "class"))
   chr_vars <- data_nms[vapply(skim_df, is.character, FALSE,
                               USE.NAMES = FALSE)]
@@ -251,7 +242,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   if (N > 0L && length(which_ts) > 0) {
     ts_overviews <- new_list(nrow(ts_out))
     for (i in seq_along(ts_overviews)){
-      ts_overviews[[i]] <- overview(ts_data[[ts_out[["col"]][i]]], hist = hist)$time_series
+      ts_overviews[[i]] <- overview(ts_data[[ts_out[["col"]][i]]], hist = hist, digits = digits)$time_series
       if (length(attr(ts_overviews[[i]], "row.names")) > 1){
         ts_overviews[[i]][["col"]] <- paste0(ts_out[["col"]][i], "_",
                                              ts_overviews[[i]][["col"]])
@@ -314,6 +305,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
 
   out <- list(
     obs = N, cols = num_cols,
+    print_digits = digits,
     logical = lgl_out,
     numeric = num_out,
     date = date_out,
@@ -326,45 +318,37 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   out
 }
 #' @export
-print.overview <- function(x, max = NULL, digits = getOption("cheapr.digits", 2), ...){
-  # max_rows <- getOption("tibble.print_max", 20)
-  # max_cols <- getOption("tibble.width", NULL)
-  # max_extra_cols <- getOption("tibble.max_extra_cols", 100)
-  # options(tibble.print_max = 10)
-  # options(tibble.width = 100)
-  # options(tibble.max_extra_cols = 10)
+print.overview <- function(x, max = NULL, ...){
+  digits <- x[["print_digits"]]
+  pretty_round <- function(x, decimal_digits = digits, ...){
+    pretty_num(round(x, digits = decimal_digits), ...)
+  }
   cat(paste("obs:", x$obs, "\ncols:", x$cols), "\n")
-  # for (data_type in names(x)[-(1:2)]){
-  #   if (nrow(x[[data_type]])){
-  #     cat(paste("\n-----", data_type, "-----\n"))
-  #     print(x[[data_type]])
-  #   }
-  # }
   if (nrow(x$logical)){
-    x$logical$p_complete <- pretty_num(round(x$logical$p_complete, digits))
+    x$logical$p_complete <- pretty_round(x$logical$p_complete)
     cat("\n----- Logical -----\n")
     print(x$logical)
   }
   if (nrow(x$numeric)){
-    x$numeric$p_complete <- pretty_num(round(x$numeric$p_complete, digits))
-    x$numeric$mean <- pretty_num(round(x$numeric$mean, digits))
-    x$numeric$p0 <- pretty_num(round(x$numeric$p0, digits))
-    x$numeric$p25 <- pretty_num(round(x$numeric$p25, digits))
-    x$numeric$p50 <- pretty_num(round(x$numeric$p50, digits))
-    x$numeric$p75 <- pretty_num(round(x$numeric$p75, digits))
-    x$numeric$p100 <- pretty_num(round(x$numeric$p100, digits))
-    x$numeric$iqr <- pretty_num(round(x$numeric$iqr, digits))
-    x$numeric$sd <- pretty_num(round(x$numeric$sd, digits))
+    x$numeric$p_complete <- pretty_round(x$numeric$p_complete)
+    x$numeric$mean <- pretty_round(x$numeric$mean)
+    x$numeric$p0 <- pretty_round(x$numeric$p0)
+    x$numeric$p25 <- pretty_round(x$numeric$p25)
+    x$numeric$p50 <- pretty_round(x$numeric$p50)
+    x$numeric$p75 <- pretty_round(x$numeric$p75)
+    x$numeric$p100 <- pretty_round(x$numeric$p100)
+    x$numeric$iqr <- pretty_round(x$numeric$iqr)
+    x$numeric$sd <- pretty_round(x$numeric$sd)
     cat("\n----- Numeric -----\n")
     print(x$numeric)
   }
   if (nrow(x$date)){
-    x$date$p_complete <- pretty_num(round(x$date$p_complete, digits))
+    x$date$p_complete <- pretty_round(x$date$p_complete)
     cat("\n----- Dates -----\n")
     print(x$date)
   }
   if (nrow(x$datetime)){
-    x$datetime$p_complete <- pretty_num(round(x$datetime$p_complete, digits))
+    x$datetime$p_complete <- pretty_round(x$datetime$p_complete)
     # An overview list contains a 'min' & 'max' variable of date-times
     # This is UTC because R can't handle a date-time with multiple time-zones
     # And so we want to print it in local-time
@@ -383,33 +367,31 @@ print.overview <- function(x, max = NULL, digits = getOption("cheapr.digits", 2)
     print(x$datetime)
   }
   if (nrow(x$time_series)){
-    x$time_series$p_complete <- pretty_num(round(x$time_series$p_complete, digits))
-    x$time_series$mean <- pretty_num(round(x$time_series$mean, digits))
-    x$time_series$p0 <- pretty_num(round(x$time_series$p0, digits))
-    x$time_series$p25 <- pretty_num(round(x$time_series$p25, digits))
-    x$time_series$p50 <- pretty_num(round(x$time_series$p50, digits))
-    x$time_series$p75 <- pretty_num(round(x$time_series$p75, digits))
-    x$time_series$p100 <- pretty_num(round(x$time_series$p100, digits))
-    x$time_series$iqr <- pretty_num(round(x$time_series$iqr, digits))
-    x$time_series$sd <- pretty_num(round(x$time_series$sd, digits))
+    x$time_series$p_complete <- pretty_round(x$time_series$p_complete)
+    x$time_series$mean <- pretty_round(x$time_series$mean)
+    x$time_series$p0 <- pretty_round(x$time_series$p0)
+    x$time_series$p25 <- pretty_round(x$time_series$p25)
+    x$time_series$p50 <- pretty_round(x$time_series$p50)
+    x$time_series$p75 <- pretty_round(x$time_series$p75)
+    x$time_series$p100 <- pretty_round(x$time_series$p100)
+    x$time_series$iqr <- pretty_round(x$time_series$iqr)
+    x$time_series$sd <- pretty_round(x$time_series$sd)
     cat("\n----- Time-Series -----\n")
     print(x$time_series)
   }
   if (nrow(x$categorical)){
-    x$categorical$p_complete <- pretty_num(round(x$categorical$p_complete, digits))
+    x$categorical$p_complete <- pretty_round(x$categorical$p_complete)
     cat("\n----- Categorical -----\n")
     print(x$categorical)
   }
   if (nrow(x$other)){
-    x$other$p_complete <- pretty_num(round(x$other$p_complete, digits))
+    x$other$p_complete <- pretty_round(x$other$p_complete)
     cat("\n----- Other -----\n")
     print(x$other)
   }
-  # options(tibble.print_max = max_rows)
-  # options(tibble.width = max_cols)
-  # options(tibble.max_extra_cols = max_extra_cols)
   invisible(x)
 }
+
 ### Helpers
 
 n_unique <- function(x, na_rm = FALSE){
@@ -419,13 +401,16 @@ n_unique <- function(x, na_rm = FALSE){
   }
   out
 }
-prop_complete <- function(x, recursive = TRUE){
+prop_missing <- function(x, recursive = TRUE){
   if (recursive){
     N <- unlisted_length(x)
   } else {
-    N <- length(x)
+    N <- cpp_vec_length(x)
   }
-  1 - (num_na(x, recursive = recursive) / N)
+  num_na(x, recursive = recursive) / N
+}
+prop_complete <- function(x, recursive = TRUE){
+  1 - prop_missing(x, recursive = recursive)
 }
 transform_all <- function(data, .fn){
   for (col in names(data)){
@@ -435,14 +420,14 @@ transform_all <- function(data, .fn){
 }
 summarise_all <- function(data, .fn, size = 1){
   out <- sset(data, seq_len(size))
-  attr(out, "row.names") <- .set_row_names(size)
+  out <- cpp_set_add_attr(out, "row.names", .set_row_names(size))
   for (col in names(out)){
     out[[col]] <- .fn(data[[col]])
   }
   out
 }
 pluck_row <- function(data, i = 1){
-  unlist(data[i, ], recursive = FALSE)
+  unlist(sset(data, i), recursive = FALSE)
 }
 
 # Taken from skimr::skim with modifications

@@ -108,29 +108,34 @@ SEXP cpp_list_rm_null(SEXP l) {
   int n_keep = n - n_null;
   int whichj = 0;
   int j = 0;
+
+  // Which list elements should we keep?
+
   SEXP keep = Rf_protect(Rf_allocVector(INTSXP, n_keep));
   int *p_keep = INTEGER(keep);
   while (whichj < n_keep){
-    p_keep[whichj] = j + 1;
-    whichj += (p_l[j] != R_NilValue);
-    ++j;
+    p_keep[whichj] = j;
+    whichj += (p_l[j++] != R_NilValue);
   }
+
+  // Subset on both the list and names of the list
+
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_keep));
-  SEXP names = Rf_protect(Rf_duplicate(Rf_getAttrib(l, R_NamesSymbol)));
+  SEXP names = Rf_protect(Rf_getAttrib(l, R_NamesSymbol));
   bool has_names = !Rf_isNull(names);
   if (has_names){
     SEXP *p_names = STRING_PTR(names);
     SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_keep));
     for (int k = 0; k < n_keep; ++k) {
-      SET_STRING_ELT(out_names, k, p_names[p_keep[k] - 1]);
-      SET_VECTOR_ELT(out, k, p_l[p_keep[k] - 1]);
+      SET_STRING_ELT(out_names, k, p_names[p_keep[k]]);
+      SET_VECTOR_ELT(out, k, p_l[p_keep[k]]);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);
     Rf_unprotect(5);
     return out;
   } else {
     for (int k = 0; k < n_keep; ++k) {
-      SET_VECTOR_ELT(out, k, p_l[p_keep[k] - 1]);
+      SET_VECTOR_ELT(out, k, p_l[p_keep[k]]);
     }
     Rf_unprotect(4);
     return out;
@@ -165,114 +170,11 @@ SEXP cpp_list_as_df(SEXP x) {
   }
 }
 
-// Remove attributes in-place
-
-[[cpp11::register]]
-SEXP cpp_set_rm_attributes(SEXP x){
-  SEXP attrs = Rf_protect(cpp11::package("base")["attributes"](x));
-  SEXP names = Rf_protect(Rf_getAttrib(attrs, R_NamesSymbol));
-  int n = Rf_length(attrs);
-  for (int i = 0; i < n; ++i){
-    SEXP attrib_nm = Rf_protect(Rf_install(CHAR(STRING_ELT(names, i))));
-    Rf_setAttrib(x, attrib_nm, R_NilValue);
-  }
-  Rf_unprotect(n + 2);
-  return x;
+SEXP cpp_obj_address(SEXP x) {
+  static char buf[1000];
+  snprintf(buf, 1000, "%p", (void*) x);
+  return Rf_mkChar(buf);
 }
-
-// Copy specified attributes (character vector of names)
-// from source to target (by reference)
-// Use with extreme care as it modifies target in-place
-// If you use it, make absolutely sure that target is not pointed to by other
-// objects as it will modify the attributes of those objects too
-
-[[cpp11::register]]
-SEXP cpp_set_copy_attributes(SEXP target, SEXP source, SEXP attrs){
-  SEXP *p_attrs = STRING_PTR(attrs);
-  int n_attrs = Rf_length(attrs);
-  for (int i = 0; i < n_attrs; ++i){
-    SEXP attrib_nm = Rf_protect(Rf_install(CHAR(p_attrs[i])));
-    Rf_setAttrib(target, attrib_nm, Rf_getAttrib(source, attrib_nm));
-  }
-  Rf_unprotect(n_attrs);
-  return target;
-}
-
-// SEXP cpp_unlist(SEXP x, SEXP ptype) {
-//   if (!Rf_isVectorList(x)){
-//     Rf_error("x must be a list");
-//   }
-//   int n_protections = 0;
-//   R_xlen_t n = Rf_xlength(x);
-//   R_xlen_t N = cpp_unnested_length(x);
-//   R_xlen_t m;
-//   R_xlen_t k = 0;
-//   const SEXP *p_x = VECTOR_PTR_RO(x);
-//   switch ( TYPEOF(ptype) ){
-//   case LGLSXP: {
-//     ++n_protections;
-//     SEXP out = Rf_protect(Rf_allocVector(LGLSXP, N));
-//     int *p_out = LOGICAL(out);
-//     for (R_xlen_t i = 0; i < n; ++i) {
-//       m = Rf_xlength(p_x[i]);
-//       int *p_xj = LOGICAL(p_x[i]);
-//       for (R_xlen_t j = 0; j < m; ++j) {
-//         p_out[k] = p_xj[j];
-//         ++k;
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   case INTSXP: {
-//     ++n_protections;
-//     SEXP out = Rf_protect(Rf_allocVector(INTSXP, N));
-//     int *p_out = INTEGER(out);
-//     for (R_xlen_t i = 0; i < n; ++i) {
-//       m = Rf_xlength(p_x[i]);
-//       int *p_xj = INTEGER(p_x[i]);
-//       for (R_xlen_t j = 0; j < m; ++j) {
-//         p_out[k] = p_xj[j];
-//         ++k;
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   case REALSXP: {
-//     ++n_protections;
-//     SEXP out = Rf_protect(Rf_allocVector(REALSXP, N));
-//     double *p_out = REAL(out);
-//     for (R_xlen_t i = 0; i < n; ++i) {
-//       m = Rf_xlength(p_x[i]);
-//       double *p_xj = REAL(p_x[i]);
-//       for (R_xlen_t j = 0; j < m; ++j) {
-//         p_out[k] = p_xj[j];
-//         ++k;
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   case STRSXP: {
-//     ++n_protections;
-//     SEXP out = Rf_protect(Rf_allocVector(STRSXP, N));
-//     for (R_xlen_t i = 0; i < n; ++i) {
-//       m = Rf_xlength(p_x[i]);
-//       SEXP *p_xj = STRING_PTR(p_x[i]);
-//       for (R_xlen_t j = 0; j < m; ++j) {
-//         SET_STRING_ELT(out, k, p_xj[j]);
-//         ++k;
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   default: {
-//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(ptype)));
-//   }
-//   }
-// }
 
 // Potentially useful for rolling calculations
 // Computes the rolling number of true values in a given

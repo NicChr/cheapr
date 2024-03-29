@@ -86,6 +86,28 @@ tzone <- function(x){
   }
 }
 
+# Recycle arguments
+recycle <- function (..., length = NULL){
+  out <- cpp_list_rm_null(list(...))
+  lens <- lengths_(out)
+  uniq_lens <- collapse::fnunique(lens)
+  if (is.null(length)) {
+    if (length(lens)) {
+      N <- max(lens)
+    }
+    else {
+      N <- 0L
+    }
+  }
+  else {
+    N <- length
+  }
+  N <- N * (!collapse::anyv(lens, 0L))
+  recycle <- which_(lens != N)
+  out[recycle] <- lapply(out[recycle], rep_len, N)
+  out
+}
+
 # safe_unique <- function(x, ...){
 #   out <- tryCatch(collapse::funique(x, ...), error = function(e) return(".r.error"))
 #   if (length(out) == 1 && out == ".r.error"){

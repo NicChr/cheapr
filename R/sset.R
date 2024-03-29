@@ -15,6 +15,13 @@
 #' You can either write methods for `sset` or `[`. \cr
 #' `sset` will fall back on using `[` when no suitable method is found.
 #'
+#' To get into more detail, using `sset()` on a data frame, a new
+#' list is always allocated through `cheapr:::cpp_new_list()`.
+#' For data.tables, if `i` is missing, then a deep copy is made.
+#' When `i` is a logical vector, it is not recycled, so it is good practice to
+#' make sure the logical vector
+#' matches the length of x, or if x has rows, the number of rows of x.
+#'
 #' @examples
 #' library(cheapr)
 #' library(bench)
@@ -50,7 +57,6 @@ sset <- function(x, ...){
 #' @export
 sset.default <- function(x, i, ...){
   if (!missing(i) && is.logical(i)){
-    # check_length(i, length(x))
     i <- which_(i)
   }
   x[i, ...]
@@ -69,35 +75,52 @@ sset.tbl_df <- function(x, i, j = seq_along(x), ...){
 }
 #' @rdname sset
 #' @export
-sset.POSIXlt <- function(x, i, ...){
-  out <- df_subset(list_as_df(x), i)
-  cpp_set_copy_attributes(
-    cpp_set_rm_attributes(out), x, names(attributes(x))
-  )
+sset.POSIXlt <- function(x, i, j, ...){
+  missingi <- missing(i)
+  missingj <- missing(j)
+  if (n_unique(lengths_(unclass(x))) > 1){
+    out <- balancePOSIXlt(x, fill.only = FALSE, classed = FALSE)
+  } else {
+    out <- unclass(x)
+  }
+  if (missingj){
+    j <- seq_along(out)
+  }
+  out <- df_subset(list_as_df(out), i, j)
+  cpp_set_rm_attr(out, "row.names")
+  if (missingj){
+    cpp_set_add_attr(out, "class", class(x))
+  }
+  cpp_set_add_attr(out, "tzone", attr(x, "tzone"))
+  cpp_set_add_attr(out, "balanced", TRUE)
 }
 #' @rdname sset
 #' @export
 sset.data.table <- function(x, i, j = seq_along(x), ...){
-  # This is to ensure that a copy is made basically
-  # More efficient to use data.table::copy()
-  if (missing(i)){
-    i <- seq_len(nrow(x))
-  }
   out <- df_subset(x, i, j)
-  cpp_set_copy_attributes(
-    out, x, c("class", ".internal.selfref")
-  )
+  cpp_set_attributes(out, list(class = class(x),
+                               .internal.selfref = attributes(x)[[".internal.selfref"]]),
+                     add = TRUE)
+  dt_alloc <- tryCatch(get("setalloccol",
+                           asNamespace("data.table"),
+                           inherits = FALSE),
+                       error = function(e) return(".r.error"))
+  # Reserve sufficient space as data.table::truelength(out) at this point is 0
+  if (is.character(dt_alloc) && length(dt_alloc) == 1 && dt_alloc == ".r.error"){
+    out <- collapse::qDT(out)
+  } else {
+    dt_alloc(out, n = getOption("datatable.alloccol", 1024L))
+  }
+  out
 }
 #' @rdname sset
 #' @export
 sset.sf <- function(x, i, j = seq_along(x), ...){
   out <- df_subset(x, i, j)
-  source_nms <- names(attributes(x))
-  invisible(
-    cpp_set_copy_attributes(out, x, setdiff_(source_nms, c("names", "row.names", "class")))
-  )
-  class(out) <- class(x)
-  out
+  source_attrs <- attributes(x)
+  source_nms <- names(source_attrs)
+  attrs_to_keep <- source_attrs[setdiff_(source_nms, c("names", "row.names"))]
+  cpp_set_attributes(out, attrs_to_keep, add = TRUE)
 }
 df_select <- function(x, j){
   if (is.logical(j)){
@@ -111,8 +134,7 @@ df_select <- function(x, j){
   out <- cpp_list_rm_null(unclass(x)[j])
   attrs[["names"]] <- attr(out, "names")
   attrs[["row.names"]] <- .row_names_info(x, type = 0L)
-  attributes(out) <- attrs
-  out
+  cpp_set_attributes(out, attrs, add = FALSE)
 }
 
 # Efficient data frame subset
@@ -146,4 +168,8 @@ df_subset <- function(x, i, j = seq_along(x)){
     }
   }
   out
+}
+# Turn negative indices to positives
+neg_indices_to_pos <- function(n, exclude){
+  which_not_in(seq_len(n), abs(exclude))
 }

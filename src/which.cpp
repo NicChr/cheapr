@@ -43,8 +43,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       R_xlen_t i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += !(p_x[i] == TRUE);
-        ++i;
+        whichi += (p_x[i++] != TRUE);
       }
       Rf_unprotect(1);
       return out;
@@ -57,8 +56,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       int i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += !(p_x[i] == TRUE);
-        ++i;
+        whichi += (p_x[i++] != TRUE);
       }
       Rf_unprotect(1);
       return out;
@@ -72,8 +70,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       R_xlen_t i = 0;
       while (whichi < size){
         p_out[whichi] = i + 1;
-        whichi += (p_x[i] == TRUE);
-        ++i;
+        whichi += (p_x[i++] == TRUE);
       }
       Rf_unprotect(1);
       return out;
@@ -85,11 +82,53 @@ SEXP cpp_which_(SEXP x, bool invert){
       int i = 0;
       while (whichi < size){
         p_out[whichi] = i + 1;
-        whichi += (p_x[i] == TRUE);
-        ++i;
+        whichi += (p_x[i++] == TRUE);
       }
       Rf_unprotect(1);
       return out;
     }
   }
 }
+
+// 2 more which() alternatives
+// list cpp_which2(SEXP x){
+//   int n = Rf_xlength(x);
+//   int *p_x = LOGICAL(x);
+//   // std::vector<int> out;
+//   // out.reserve(n);
+//   // for (int i = 0; i < n; ++i){
+//   //   if (p_x[i] == TRUE){
+//   //     out.push_back(i + 1);
+//   //   }
+//   // }
+//   int k = 0;
+//   std::vector<int> out(n);
+//   for (int i = 0; i < n; ++i){
+//     if (p_x[i] == TRUE){
+//       out[k++] = i + 1;
+//     } else {
+//       out.pop_back();
+//     }
+//   }
+//   return writable::list({
+//     "out"_nm = out
+//   });
+// }
+//
+// SEXP cpp_which3(SEXP x){
+//   int n = Rf_xlength(x);
+//   int *p_x = LOGICAL(x);
+//   int size = 0;
+//   int j;
+//   for (j = 0; j < n; ++j) size += (p_x[j] == TRUE);
+//   SEXP out = Rf_protect(Rf_allocVector(INTSXP, size));
+//   int *p_out = INTEGER(out);
+//   int k = 0;
+//   for (int i = 0; i < j; ++i){
+//     if (p_x[i] == TRUE){
+//       p_out[k++] = i + 1;
+//     }
+//   }
+//   Rf_unprotect(1);
+//   return out;
+// }

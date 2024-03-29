@@ -46,13 +46,17 @@ factor_ <- function(x = integer(), levels = NULL, order = TRUE,
   }
   if (na_exclude && any_na(lvls)){
     if (order && is.null(levels)){
-      lvls <- lvls[seq_len(length(lvls) - 1L)]
+      lvls <- sset(lvls, seq_len(cpp_vec_length(lvls) - 1L))
     } else {
-      lvls <- lvls[which_not_na(lvls)]
+      lvls <- na_rm(lvls)
     }
   }
   out <- collapse::fmatch(x, lvls, overid = 2L)
-  fct_lvls <- as.character(lvls)
+  if (inherits(lvls, "data.frame")){
+    fct_lvls <- do.call(paste, c(lvls, list(sep = "_")))
+  } else {
+    fct_lvls <- as.character(lvls)
+  }
   if (inherits(x, "POSIXt") && collapse::any_duplicated(fct_lvls)){
     fct_lvls <- paste(fct_lvls, as.POSIXlt(lvls)$zone)
   }
