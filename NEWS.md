@@ -1,5 +1,7 @@
 # cheapr (Development version)
 
+* Setting `recursive` to false should now be faster.
+
 * 'overview' objects gain an additional list element "print_digits" which 
 is passed to the print method in order to correctly round the summary statistics 
 without affecting the 'cheapr.digits' option globally.
