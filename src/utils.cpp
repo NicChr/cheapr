@@ -51,7 +51,7 @@ R_xlen_t cpp_unnested_length(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t out = 0;
   for (R_xlen_t i = 0; i < n; ++i){
-   out += Rf_isVectorList(p_x[i]) ? cpp_unnested_length(p_x[i]) : Rf_xlength(p_x[i]);
+    out += Rf_isVectorList(p_x[i]) ? cpp_unnested_length(p_x[i]) : Rf_xlength(p_x[i]);
   }
   return out;
 }
@@ -260,6 +260,8 @@ SEXP r_address(SEXP x) {
 //   return out;
 // }
 
+// An index is valid if it is positive, NA and not out-of-bounds.
+
 [[cpp11::register]]
 SEXP cpp_index_is_valid(SEXP indices, int n){
   if (!Rf_isInteger(indices)){
@@ -271,10 +273,12 @@ SEXP cpp_index_is_valid(SEXP indices, int n){
   int *p_out = LOGICAL(out);
   bool do_parallel = size >= 100000;
   int n_cores = do_parallel ? num_cores() : 1;
+  // unsigned int rng = n;
 #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
   for (int i = 0; i < size; ++i){
     int xi = p_indices[i];
     p_out[i] = (xi == NA_INTEGER) || (xi > 0 && xi <= n);
+    // p_out[i] = (xi == NA_INTEGER) || unsigned(xi) <= rng;
   }
   Rf_unprotect(1);
   return out;

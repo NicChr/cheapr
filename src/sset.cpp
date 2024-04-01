@@ -232,6 +232,81 @@
 //   }
 // }
 
+// Altrep utils
+
+bool is_altrep(SEXP x){
+  return ALTREP(x);
+}
+SEXP alt_class(SEXP x){
+  if (is_altrep(x)){
+    SEXP alt_attribs = Rf_protect(Rf_coerceVector(ATTRIB(ALTREP_CLASS(x)), VECSXP));
+    SEXP out = Rf_protect(Rf_coerceVector(VECTOR_ELT(alt_attribs, 0), STRSXP));
+    Rf_unprotect(2);
+    return out;
+  } else {
+    return R_NilValue;
+  }
+}
+SEXP alt_pkg(SEXP x){
+  if (is_altrep(x)){
+    SEXP alt_attribs = Rf_protect(Rf_coerceVector(ATTRIB(ALTREP_CLASS(x)), VECSXP));
+    SEXP out = Rf_protect(Rf_coerceVector(VECTOR_ELT(alt_attribs, 1), STRSXP));
+    Rf_unprotect(2);
+    return out;
+  } else {
+    return R_NilValue;
+  }
+}
+SEXP alt_data1(SEXP x){
+  if (is_altrep(x)){
+    return R_altrep_data1(x);
+  } else {
+    return R_NilValue;
+  }
+}
+bool is_alt_int_seq(SEXP x){
+  if (!is_altrep(x)) return false;
+  SEXP alt_class_nm = Rf_protect(alt_class(x));
+  SEXP alt_pkg_nm = Rf_protect(alt_pkg(x));
+  SEXP intseq_char = Rf_protect(Rf_mkChar("compact_intseq"));
+  SEXP base_char = Rf_protect(Rf_mkChar("base"));
+  bool out = STRING_ELT(alt_class_nm, 0) == intseq_char &&
+    STRING_ELT(alt_pkg_nm, 0) == base_char;
+  Rf_unprotect(4);
+  return out;
+}
+double alt_int_seq_start(SEXP x){
+  if (!is_alt_int_seq(x)){
+    Rf_error("x must be an altrep compact_intseq");
+  }
+  SEXP alt_data = Rf_protect(Rf_coerceVector(alt_data1(x), REALSXP));
+  double out = REAL(alt_data)[1];
+  Rf_unprotect(1);
+  return out;
+}
+double alt_int_seq_increment(SEXP x){
+  if (!is_alt_int_seq(x)){
+    Rf_error("x must be an altrep compact_intseq");
+  }
+  SEXP alt_data = Rf_protect(Rf_coerceVector(alt_data1(x), REALSXP));
+  double out = REAL(alt_data)[2];
+  Rf_unprotect(1);
+  return out;
+}
+
+double alt_int_seq_end(SEXP x){
+  if (!is_alt_int_seq(x)){
+    Rf_error("x must be an altrep compact_intseq");
+  }
+  SEXP alt_data = Rf_protect(Rf_coerceVector(alt_data1(x), REALSXP));
+  double alt_size = REAL(alt_data)[0];
+  double alt_from = REAL(alt_data)[1];
+  double alt_increment = REAL(alt_data)[2];
+  double out = (std::fmax(alt_size - 1.0, 0.0) * alt_increment) + alt_from;
+  Rf_unprotect(1);
+  return out;
+}
+
 // Subset with no checks, indices vector must be pre-curated
 [[cpp11::register]]
 SEXP cpp_simple_sset(SEXP x, SEXP indices){
@@ -259,7 +334,7 @@ SEXP cpp_simple_sset(SEXP x, SEXP indices){
     ++n_protections;
     int *__restrict__ p_out = LOGICAL(out);
     if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) private(i)
+#pragma omp parallel for simd num_threads(n_cores)
       SIMPLE_SSET;
     } else {
 #pragma omp for simd
@@ -274,7 +349,7 @@ SEXP cpp_simple_sset(SEXP x, SEXP indices){
     ++n_protections;
     int *__restrict__ p_out = INTEGER(out);
     if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) private(i)
+#pragma omp parallel for simd num_threads(n_cores)
       SIMPLE_SSET;
     } else {
 #pragma omp for simd
@@ -289,7 +364,7 @@ SEXP cpp_simple_sset(SEXP x, SEXP indices){
     ++n_protections;
     double *__restrict__ p_out = REAL(out);
     if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) private(i)
+#pragma omp parallel for simd num_threads(n_cores)
       SIMPLE_SSET;
     } else {
 #pragma omp for simd
@@ -302,6 +377,7 @@ SEXP cpp_simple_sset(SEXP x, SEXP indices){
     SEXP *p_x = STRING_PTR(x);
     SEXP out = Rf_protect(Rf_allocVector(STRSXP, out_size));
     ++n_protections;
+#pragma omp for simd
     for (i = 0; i < n; ++i){
       SET_STRING_ELT(out, i, p_x[pi[i] - 1]);
     }
@@ -360,36 +436,49 @@ SEXP cpp_df_sset(SEXP x, SEXP indices){
   int na_count = 0;
   bool do_parallel = n >= 10000;
   int n_cores = do_parallel ? num_cores() : 1;
-
   // Counting the number of:
   // Zeroes
   // Out-of-bounds indices
   // Positive indices
   // From this we can also work out the number of negatives
 
-  if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
-    for (int j = 0; j < n; ++j){
-      zero_count += (pi[j] == 0);
-      pos_count += (pi[j] > 0);
-      oob_count += (std::abs(pi[j]) > xn);
-      na_count += (pi[j] == NA_INTEGER);
-    }
+  // If indices is a special type of ALTREP compact int sequence, we can infer
+  // this information
+  if (is_alt_int_seq(indices) &&
+      std::fabs(alt_int_seq_increment(indices)) == 1.0 &&
+      alt_int_seq_start(indices) > 0 &&
+      alt_int_seq_start(indices) <= xn &&
+      alt_int_seq_end(indices) > 0 &&
+      alt_int_seq_end(indices) <= xn){
+    zero_count = 0;
+    na_count = 0;
+    oob_count = 0;
+    pos_count = n;
   } else {
+    if (do_parallel){
+#pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
+      for (int j = 0; j < n; ++j){
+        zero_count += (pi[j] == 0);
+        pos_count += (pi[j] > 0);
+        oob_count += (std::abs(pi[j]) > xn);
+        na_count += (pi[j] == NA_INTEGER);
+      }
+    } else {
 #pragma omp for simd
-    for (int j = 0; j < n; ++j){
-      zero_count += (pi[j] == 0);
-      pos_count += (pi[j] > 0);
-      oob_count += (std::abs(pi[j]) > xn);
-      na_count += (pi[j] == NA_INTEGER);
+      for (int j = 0; j < n; ++j){
+        zero_count += (pi[j] == 0);
+        pos_count += (pi[j] > 0);
+        oob_count += (std::abs(pi[j]) > xn);
+        na_count += (pi[j] == NA_INTEGER);
+      }
     }
   }
-  bool neg_count = n - pos_count - zero_count - na_count;
-  if ( (pos_count + zero_count) > 0 && neg_count > 0){
+  int neg_count = n - pos_count - zero_count - na_count;
+  if ( (pos_count > 0 && neg_count > 0) ||
+       (neg_count > 0 && na_count > 0)){
     Rf_error("Cannot mix positive and negative indices");
   }
   bool simple_sset = zero_count == 0 && oob_count == 0 && na_count == 0 && pos_count == n;
-
   cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 
   // Convert negative index vector to positive
@@ -418,15 +507,15 @@ SEXP cpp_df_sset(SEXP x, SEXP indices){
     }
     // If index vector is clean except for existence of zeroes
   } else if (zero_count > 0 && oob_count == 0 && na_count == 0){
-      SEXP indices2 = Rf_protect(cpp11::package("cheapr")["clean_indices"](indices, xn));
-      ++n_protections;
-      for (int j = 0; j < ncols; ++j){
-        if (Rf_isObject(p_x[j])){
-          SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
-        } else {
-          SET_VECTOR_ELT(out, j, cpp_simple_sset(p_x[j], indices2));
-        }
+    SEXP indices2 = Rf_protect(cpp11::package("cheapr")["clean_indices"](indices, xn));
+    ++n_protections;
+    for (int j = 0; j < ncols; ++j){
+      if (Rf_isObject(p_x[j])){
+        SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
+      } else {
+        SET_VECTOR_ELT(out, j, cpp_simple_sset(p_x[j], indices2));
       }
+    }
   } else {
     for (int j = 0; j < ncols; ++j){
       SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));

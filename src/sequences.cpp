@@ -151,7 +151,7 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by) {
     // Only do the loop if vectors are not zero-length
     if (size_n > 0 && from_n > 0 && by_n > 0){
       for (int i = 0; i < n; ++i){
-        seq_end = (std::fmax(p_size[i % size_n], 0.0) * p_by[i % by_n]) * p_from[i % from_n];
+        seq_end = (std::fmax(p_size[i % size_n] - 1.0, 0.0) * p_by[i % by_n]) + p_from[i % from_n];
         if (seq_end > integer_max_){
           out_is_integer = false;
           break;
