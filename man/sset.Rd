@@ -42,10 +42,13 @@ You can either write methods for \code{sset} or \code{[}. \cr
 
 To get into more detail, using \code{sset()} on a data frame, a new
 list is always allocated through \code{cheapr:::cpp_new_list()}.
-For data.tables, if \code{i} is missing, then a deep copy is made.
-When \code{i} is a logical vector, it is not recycled, so it is good practice to
-make sure the logical vector
-matches the length of x, or if x has rows, the number of rows of x.
+\subsection{Difference to base R}{
+
+When \code{i} is a logical vector, it is passed directly to \code{which_()}. \cr
+This means that \code{NA} values are ignored and this also means that \code{i}
+is not recycled, so it is good practice to make sure the logical vector
+matches the length of x. To return \code{NA} values, use \code{x[NA_integer_]}.
+}
 }
 \examples{
 library(cheapr)

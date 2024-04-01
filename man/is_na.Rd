@@ -52,7 +52,7 @@ row_any_na(x)
 col_any_na(x)
 }
 \arguments{
-\item{x}{A vector, matrix or data frame.}
+\item{x}{A vector, list, data frame or matrix.}
 
 \item{recursive}{Should the function be applied recursively to lists?
 The default is \code{TRUE}. Setting this to \code{TRUE} is actually much cheaper because

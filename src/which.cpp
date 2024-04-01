@@ -8,22 +8,14 @@
 // Count the number of true values
 
 R_xlen_t count_true(int *px, R_xlen_t n){
-  if (n > integer_max_){
-    R_xlen_t size = 0;
-    R_xlen_t N = n;
+  R_xlen_t size = 0;
+  if (n >= 100000){
 #pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
-    for (R_xlen_t j = 0; j < N; ++j) size += (px[j] == TRUE);
-    return size;
-  } else if (n < 100000){
-    int size = 0;
-    int N = n;
-    for (int j = 0; j < N; ++j) size += (px[j] == TRUE);
+    for (R_xlen_t j = 0; j < n; ++j) size += (px[j] == TRUE);
     return size;
   } else {
-    int size = 0;
-    int N = n;
-#pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
-    for (int j = 0; j < N; ++j) size += (px[j] == TRUE);
+#pragma omp for simd
+    for (R_xlen_t j = 0; j < n; ++j) size += (px[j] == TRUE);
     return size;
   }
 }

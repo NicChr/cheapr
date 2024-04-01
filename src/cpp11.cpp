@@ -27,10 +27,10 @@ extern "C" SEXP _cheapr_cpp_set_rm_attr(SEXP x, SEXP which) {
   END_CPP11
 }
 // attrs.cpp
-SEXP cpp_set_attributes(SEXP x, SEXP attributes, bool add);
-extern "C" SEXP _cheapr_cpp_set_attributes(SEXP x, SEXP attributes, SEXP add) {
+SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
+extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_set_attributes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(attributes), cpp11::as_cpp<cpp11::decay_t<bool>>(add)));
+    return cpp11::as_sexp(cpp_set_add_attributes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(attributes), cpp11::as_cpp<cpp11::decay_t<bool>>(add)));
   END_CPP11
 }
 // gcd.cpp
@@ -97,6 +97,13 @@ extern "C" SEXP _cheapr_cpp_all_na(SEXP x, SEXP return_true_on_empty, SEXP recur
   END_CPP11
 }
 // nas.cpp
+SEXP cpp_is_na(SEXP x);
+extern "C" SEXP _cheapr_cpp_is_na(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_is_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// nas.cpp
 SEXP cpp_which_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_which_na(SEXP x) {
   BEGIN_CPP11
@@ -108,13 +115,6 @@ SEXP cpp_which_not_na(SEXP x);
 extern "C" SEXP _cheapr_cpp_which_not_na(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_which_not_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// nas.cpp
-SEXP cpp_is_na(SEXP x);
-extern "C" SEXP _cheapr_cpp_is_na(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_is_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // nas.cpp
@@ -173,6 +173,13 @@ extern "C" SEXP _cheapr_cpp_matrix_missing_col(SEXP x, SEXP threshold, SEXP thre
     return cpp11::as_sexp(cpp_matrix_missing_col(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(threshold), cpp11::as_cpp<cpp11::decay_t<bool>>(threshold_is_prop)));
   END_CPP11
 }
+// nas.cpp
+SEXP cpp_count_val(SEXP x, SEXP value, bool recursive);
+extern "C" SEXP _cheapr_cpp_count_val(SEXP x, SEXP value, SEXP recursive) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_count_val(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
+  END_CPP11
+}
 // sequences.cpp
 SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by);
 extern "C" SEXP _cheapr_cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
@@ -216,10 +223,17 @@ extern "C" SEXP _cheapr_cpp_lead_sequence(SEXP size, SEXP k, SEXP partial) {
   END_CPP11
 }
 // sset.cpp
-SEXP cpp_sset(SEXP x, SEXP indices);
-extern "C" SEXP _cheapr_cpp_sset(SEXP x, SEXP indices) {
+SEXP cpp_simple_sset(SEXP x, SEXP indices);
+extern "C" SEXP _cheapr_cpp_simple_sset(SEXP x, SEXP indices) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_sset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
+    return cpp11::as_sexp(cpp_simple_sset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
+  END_CPP11
+}
+// sset.cpp
+SEXP cpp_df_sset(SEXP x, SEXP indices);
+extern "C" SEXP _cheapr_cpp_df_sset(SEXP x, SEXP indices) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_df_sset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
   END_CPP11
 }
 // utils.cpp
@@ -264,6 +278,13 @@ extern "C" SEXP _cheapr_cpp_list_as_df(SEXP x) {
     return cpp11::as_sexp(cpp_list_as_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// utils.cpp
+SEXP cpp_index_is_valid(SEXP indices, int n);
+extern "C" SEXP _cheapr_cpp_index_is_valid(SEXP indices, SEXP n) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_index_is_valid(cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<int>>(n)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -277,10 +298,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_all_na",               (DL_FUNC) &_cheapr_cpp_all_na,               3},
     {"_cheapr_cpp_any_na",               (DL_FUNC) &_cheapr_cpp_any_na,               2},
     {"_cheapr_cpp_col_na_counts",        (DL_FUNC) &_cheapr_cpp_col_na_counts,        1},
+    {"_cheapr_cpp_count_val",            (DL_FUNC) &_cheapr_cpp_count_val,            3},
     {"_cheapr_cpp_dbl_sequence",         (DL_FUNC) &_cheapr_cpp_dbl_sequence,         3},
+    {"_cheapr_cpp_df_sset",              (DL_FUNC) &_cheapr_cpp_df_sset,              2},
     {"_cheapr_cpp_gcd",                  (DL_FUNC) &_cheapr_cpp_gcd,                  5},
     {"_cheapr_cpp_gcd2",                 (DL_FUNC) &_cheapr_cpp_gcd2,                 4},
     {"_cheapr_cpp_gcd2_vectorised",      (DL_FUNC) &_cheapr_cpp_gcd2_vectorised,      4},
+    {"_cheapr_cpp_index_is_valid",       (DL_FUNC) &_cheapr_cpp_index_is_valid,       2},
     {"_cheapr_cpp_int_sequence",         (DL_FUNC) &_cheapr_cpp_int_sequence,         3},
     {"_cheapr_cpp_is_na",                (DL_FUNC) &_cheapr_cpp_is_na,                1},
     {"_cheapr_cpp_lag_sequence",         (DL_FUNC) &_cheapr_cpp_lag_sequence,         3},
@@ -303,10 +327,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_row_na_counts",        (DL_FUNC) &_cheapr_cpp_row_na_counts,        1},
     {"_cheapr_cpp_sequence",             (DL_FUNC) &_cheapr_cpp_sequence,             3},
     {"_cheapr_cpp_set_add_attr",         (DL_FUNC) &_cheapr_cpp_set_add_attr,         3},
-    {"_cheapr_cpp_set_attributes",       (DL_FUNC) &_cheapr_cpp_set_attributes,       3},
+    {"_cheapr_cpp_set_add_attributes",   (DL_FUNC) &_cheapr_cpp_set_add_attributes,   3},
     {"_cheapr_cpp_set_rm_attr",          (DL_FUNC) &_cheapr_cpp_set_rm_attr,          2},
     {"_cheapr_cpp_set_rm_attributes",    (DL_FUNC) &_cheapr_cpp_set_rm_attributes,    1},
-    {"_cheapr_cpp_sset",                 (DL_FUNC) &_cheapr_cpp_sset,                 2},
+    {"_cheapr_cpp_simple_sset",          (DL_FUNC) &_cheapr_cpp_simple_sset,          2},
     {"_cheapr_cpp_vec_length",           (DL_FUNC) &_cheapr_cpp_vec_length,           1},
     {"_cheapr_cpp_which_",               (DL_FUNC) &_cheapr_cpp_which_,               2},
     {"_cheapr_cpp_which_na",             (DL_FUNC) &_cheapr_cpp_which_na,             1},

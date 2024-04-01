@@ -203,3 +203,79 @@ SEXP r_address(SEXP x) {
 //   Rf_unprotect(1);
 //   return out;
 // }
+
+// For use in sset
+// SEXP cpp_set_reverse_sign(SEXP x){
+//   SEXP out = Rf_protect(x);
+//   int n = Rf_length(x);
+//   int *p_out = INTEGER(out);
+//   for (int i = 0; i < n; ++i){
+//     if (p_out[i] != NA_INTEGER){
+//       p_out[i] = -p_out[i];
+//     }
+//   }
+//   Rf_unprotect(1);
+//   return out;
+// }
+
+// Would use data.table as it is very efficient, but would require extra dependency
+// Here x must be an integer vector
+
+// SEXP cpp_between(SEXP x, SEXP lower, SEXP upper){
+//   int *p_x = INTEGER(x);
+//   int n = Rf_length(x);
+//   if (Rf_length(lower) != 1){
+//     Rf_error("lower must be of length 1");
+//   }
+//   if (Rf_length(upper) != 1){
+//     Rf_error("upper must be of length 1");
+//   }
+//   Rf_protect(lower = Rf_coerceVector(lower, INTSXP));
+//   Rf_protect(upper = Rf_coerceVector(upper, INTSXP));
+//   int lo = Rf_asInteger(lower);
+//   int hi = Rf_asInteger(upper);
+//   if (hi < lo){
+//     int hi2 = hi;
+//     hi = lo;
+//     lo = hi2;
+//   }
+//   SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n));
+//   int *p_out = LOGICAL(out);
+//   bool do_parallel = n >= 100000;
+//   int n_cores = do_parallel ? num_cores() : 1;
+//   if (lo == NA_INTEGER || hi == NA_INTEGER){
+// #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
+//     for (int i = 0; i < n; ++i){
+//       p_out[i] = NA_LOGICAL;
+//     }
+//   } else {
+//     unsigned int rng = hi - lo;
+// #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
+//     for (int i = 0; i < n; ++i){
+//       int xi = p_x[i];
+//       p_out[i] = (xi != NA_INTEGER) ? unsigned(xi - lo) <= rng : NA_LOGICAL;
+//     }
+//   }
+//   Rf_unprotect(3);
+//   return out;
+// }
+
+[[cpp11::register]]
+SEXP cpp_index_is_valid(SEXP indices, int n){
+  if (!Rf_isInteger(indices)){
+    Rf_error("indices vector must be an integer vector");
+  }
+  int *p_indices = INTEGER(indices);
+  int size = Rf_length(indices);
+  SEXP out = Rf_protect(Rf_allocVector(LGLSXP, size));
+  int *p_out = LOGICAL(out);
+  bool do_parallel = size >= 100000;
+  int n_cores = do_parallel ? num_cores() : 1;
+#pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
+  for (int i = 0; i < size; ++i){
+    int xi = p_indices[i];
+    p_out[i] = (xi == NA_INTEGER) || (xi > 0 && xi <= n);
+  }
+  Rf_unprotect(1);
+  return out;
+}

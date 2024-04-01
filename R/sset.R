@@ -17,10 +17,13 @@
 #'
 #' To get into more detail, using `sset()` on a data frame, a new
 #' list is always allocated through `cheapr:::cpp_new_list()`.
-#' For data.tables, if `i` is missing, then a deep copy is made.
-#' When `i` is a logical vector, it is not recycled, so it is good practice to
-#' make sure the logical vector
-#' matches the length of x, or if x has rows, the number of rows of x.
+#'
+#' ### Difference to base R
+#'
+#' When `i` is a logical vector, it is passed directly to `which_()`. \cr
+#' This means that `NA` values are ignored and this also means that `i`
+#' is not recycled, so it is good practice to make sure the logical vector
+#' matches the length of x. To return `NA` values, use `x[NA_integer_]`.
 #'
 #' @examples
 #' library(cheapr)
@@ -98,7 +101,7 @@ sset.POSIXlt <- function(x, i, j, ...){
 #' @export
 sset.data.table <- function(x, i, j = seq_along(x), ...){
   out <- df_subset(x, i, j)
-  cpp_set_attributes(out, list(class = class(x),
+  cpp_set_add_attributes(out, list(class = class(x),
                                .internal.selfref = attributes(x)[[".internal.selfref"]]),
                      add = TRUE)
   dt_alloc <- tryCatch(get("setalloccol",
@@ -120,7 +123,7 @@ sset.sf <- function(x, i, j = seq_along(x), ...){
   source_attrs <- attributes(x)
   source_nms <- names(source_attrs)
   attrs_to_keep <- source_attrs[setdiff_(source_nms, c("names", "row.names"))]
-  cpp_set_attributes(out, attrs_to_keep, add = TRUE)
+  cpp_set_add_attributes(out, attrs_to_keep, add = TRUE)
 }
 df_select <- function(x, j){
   if (is.logical(j)){
@@ -134,7 +137,7 @@ df_select <- function(x, j){
   out <- cpp_list_rm_null(unclass(x)[j])
   attrs[["names"]] <- attr(out, "names")
   attrs[["row.names"]] <- .row_names_info(x, type = 0L)
-  cpp_set_attributes(out, attrs, add = FALSE)
+  cpp_set_add_attributes(out, attrs, add = FALSE)
 }
 
 # Efficient data frame subset
@@ -155,6 +158,7 @@ df_subset <- function(x, i, j = seq_along(x)){
   ### Subset rows
 
   if (!missingi){
+    i <- as.integer(i)
     if (length(out) == 0){
       attr(out, "row.names") <- .set_row_names(
         length(
@@ -162,14 +166,31 @@ df_subset <- function(x, i, j = seq_along(x)){
         )
       )
     } else {
-      out <- list_as_df(
-        lapply(out, sset, i)
-      )
+      out <- cpp_df_sset(out, i)
+      # out <- list_as_df(
+      #   lapply(out, sset, i)
+      # )
     }
   }
   out
 }
 # Turn negative indices to positives
-neg_indices_to_pos <- function(n, exclude){
-  which_not_in(seq_len(n), abs(exclude))
+neg_indices_to_pos <- function(exclude, n){
+  if (n == 0){
+    integer()
+  } else {
+    which_not_in(seq.int(from = -1L, to = -n, by = -1L), exclude)
+  }
+  # out <- which_not_in(seq_len(n), cpp_set_reverse_sign(exclude))
+  # exclude <- cpp_set_reverse_sign(exclude)
+  # out
+  # which_not_in(seq_len(n), abs(exclude))
+}
+clean_indices <- function(indices, n){
+  valid <- cpp_index_is_valid(indices, n)
+  if (count_val(valid, TRUE) == length(indices)){
+    indices
+  } else {
+    indices[which_(valid)]
+  }
 }

@@ -42,7 +42,7 @@
 #' * When called on a data frame, it returns `TRUE` for empty rows that contain
 #' only `NA` values.
 #'
-#' @param x A vector, matrix or data frame.
+#' @param x A vector, list, data frame or matrix.
 #' @param recursive Should the function be applied recursively to lists?
 #' The default is `TRUE`. Setting this to `TRUE` is actually much cheaper because
 #' when `FALSE`, the other `NA` functions rely on calling `is_na()`,

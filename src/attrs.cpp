@@ -52,7 +52,7 @@ SEXP cpp_set_rm_attr(SEXP x, SEXP which) {
 // Set attributes of x in-place, when add = F, attrs of x are first removed
 
 [[cpp11::register]]
-SEXP cpp_set_attributes(SEXP x, SEXP attributes, bool add) {
+SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
   int n_protect = 0;
   SEXP x2 = Rf_protect(x);
   ++n_protect;

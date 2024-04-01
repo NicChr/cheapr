@@ -12,8 +12,8 @@ cpp_set_rm_attr <- function(x, which) {
   .Call(`_cheapr_cpp_set_rm_attr`, x, which)
 }
 
-cpp_set_attributes <- function(x, attributes, add) {
-  .Call(`_cheapr_cpp_set_attributes`, x, attributes, add)
+cpp_set_add_attributes <- function(x, attributes, add) {
+  .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
 cpp_gcd2 <- function(x, y, tol, na_rm) {
@@ -52,16 +52,16 @@ cpp_all_na <- function(x, return_true_on_empty, recursive) {
   .Call(`_cheapr_cpp_all_na`, x, return_true_on_empty, recursive)
 }
 
+cpp_is_na <- function(x) {
+  .Call(`_cheapr_cpp_is_na`, x)
+}
+
 cpp_which_na <- function(x) {
   .Call(`_cheapr_cpp_which_na`, x)
 }
 
 cpp_which_not_na <- function(x) {
   .Call(`_cheapr_cpp_which_not_na`, x)
-}
-
-cpp_is_na <- function(x) {
-  .Call(`_cheapr_cpp_is_na`, x)
 }
 
 cpp_row_na_counts <- function(x) {
@@ -96,6 +96,10 @@ cpp_matrix_missing_col <- function(x, threshold, threshold_is_prop) {
   .Call(`_cheapr_cpp_matrix_missing_col`, x, threshold, threshold_is_prop)
 }
 
+cpp_count_val <- function(x, value, recursive) {
+  .Call(`_cheapr_cpp_count_val`, x, value, recursive)
+}
+
 cpp_int_sequence <- function(size, from, by) {
   .Call(`_cheapr_cpp_int_sequence`, size, from, by)
 }
@@ -120,8 +124,12 @@ cpp_lead_sequence <- function(size, k, partial) {
   .Call(`_cheapr_cpp_lead_sequence`, size, k, partial)
 }
 
-cpp_sset <- function(x, indices) {
-  .Call(`_cheapr_cpp_sset`, x, indices)
+cpp_simple_sset <- function(x, indices) {
+  .Call(`_cheapr_cpp_simple_sset`, x, indices)
+}
+
+cpp_df_sset <- function(x, indices) {
+  .Call(`_cheapr_cpp_df_sset`, x, indices)
 }
 
 cpp_vec_length <- function(x) {
@@ -146,6 +154,10 @@ cpp_list_rm_null <- function(l) {
 
 cpp_list_as_df <- function(x) {
   .Call(`_cheapr_cpp_list_as_df`, x)
+}
+
+cpp_index_is_valid <- function(indices, n) {
+  .Call(`_cheapr_cpp_index_is_valid`, indices, n)
 }
 
 cpp_which_ <- function(x, invert) {
