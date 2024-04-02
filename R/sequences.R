@@ -132,6 +132,12 @@ seq_size <- function(from, to, by = 1L){
     trunc(size + 1e-10) + 1
   }
 }
+# seq_start <- function(size, to, by = 1L){
+#   to - (pmax(size - 1L, 0L) * by)
+# }
+# seq_end <- function(size, from, by = 1L){
+#   from + (pmax(size - 1L, 0L) * by)
+# }
 #' @rdname sequences
 #' @export
 window_sequence <- function(size, k, partial = TRUE, ascending = TRUE, add_id = FALSE) {

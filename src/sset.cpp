@@ -460,7 +460,7 @@ SEXP cpp_df_sset(SEXP x, SEXP indices){
       for (int j = 0; j < n; ++j){
         zero_count += (pi[j] == 0);
         pos_count += (pi[j] > 0);
-        oob_count += (std::abs(pi[j]) > xn);
+        oob_count += (std::fabs(pi[j]) > xn);
         na_count += (pi[j] == NA_INTEGER);
       }
     } else {
@@ -468,7 +468,7 @@ SEXP cpp_df_sset(SEXP x, SEXP indices){
       for (int j = 0; j < n; ++j){
         zero_count += (pi[j] == 0);
         pos_count += (pi[j] > 0);
-        oob_count += (std::abs(pi[j]) > xn);
+        oob_count += (std::fabs(pi[j]) > xn);
         na_count += (pi[j] == NA_INTEGER);
       }
     }
