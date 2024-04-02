@@ -13,6 +13,13 @@ test_that("subsetting", {
   f <- .POSIXct(b)
   g <- as.POSIXlt(f)
   h <- as.factor(c)
+  # i <- as.list(a)
+  i <- vector("list", 10^3)
+  for (k in seq_along(i)){
+    i[[k]] <- c(a[k], b[k])
+  }
+  i
+  j <- vapply(sample(letters, 10^3, TRUE), charToRaw, raw(1))
 
   i1 <- sample.int(10^3)
   i2 <- sample.int(100, 10^4, TRUE)
@@ -25,17 +32,23 @@ test_that("subsetting", {
   i6 <- 0L
   i7 <- NA_integer_
   i8 <- sample.int(10^3, 10^5, TRUE)
+  i9 <- 3:10^3
+  i10 <- 1e03:3
   # i7 <- NA # This doesn't match
   # i8 <- NA_integer_
 
-  objs_to_test <- letters[1:8]
-  ind_to_test <- paste0("i", 1:8)
+  objs_to_test <- letters[1:10]
+  ind_to_test <- paste0("i", 1:10)
 
   for (obj in objs_to_test){
-    assign(obj, fill_with_na(get(obj), n = 111))
+    if (!is.raw(get(obj))){
+      assign(obj, fill_with_na(get(obj), n = 111))
+    }
   }
 
   df <- data.frame(a, b, c, d, e, f, g, h)
+  df$i <- i
+  df$j <- j
 
   test_df <- expand.grid(objs_to_test, ind_to_test, stringsAsFactors = FALSE)
   names(test_df) <- c("obj", "ind")
