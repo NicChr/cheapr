@@ -292,6 +292,13 @@ extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
     return cpp11::as_sexp(cpp_which_(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(invert)));
   END_CPP11
 }
+// which.cpp
+SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
+extern "C" SEXP _cheapr_cpp_which_val(SEXP x, SEXP value, SEXP invert) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_which_val(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value), cpp11::as_cpp<cpp11::decay_t<bool>>(invert)));
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
@@ -335,6 +342,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_",               (DL_FUNC) &_cheapr_cpp_which_,               2},
     {"_cheapr_cpp_which_na",             (DL_FUNC) &_cheapr_cpp_which_na,             1},
     {"_cheapr_cpp_which_not_na",         (DL_FUNC) &_cheapr_cpp_which_not_na,         1},
+    {"_cheapr_cpp_which_val",            (DL_FUNC) &_cheapr_cpp_which_val,            3},
     {"_cheapr_cpp_window_sequence",      (DL_FUNC) &_cheapr_cpp_window_sequence,      4},
     {NULL, NULL, 0}
 };

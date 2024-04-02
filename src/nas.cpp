@@ -1215,9 +1215,6 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
 #pragma omp for simd
       VAL_COUNT(val)
     }
-    if (val != val){
-      count = n - count;
-    }
     break;
   }
   case STRSXP: {

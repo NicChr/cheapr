@@ -507,7 +507,9 @@ SEXP cpp_df_sset(SEXP x, SEXP indices){
     }
     // If index vector is clean except for existence of zeroes
   } else if (zero_count > 0 && oob_count == 0 && na_count == 0){
-    SEXP indices2 = Rf_protect(cpp11::package("cheapr")["clean_indices"](indices, xn));
+    SEXP r_zero = Rf_protect(Rf_ScalarInteger(0));
+    ++n_protections;
+    SEXP indices2 = Rf_protect(cpp11::package("cheapr")["val_rm"](indices, r_zero));
     ++n_protections;
     for (int j = 0; j < ncols; ++j){
       if (Rf_isObject(p_x[j])){

@@ -163,3 +163,7 @@ cpp_index_is_valid <- function(indices, n) {
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }
+
+cpp_which_val <- function(x, value, invert) {
+  .Call(`_cheapr_cpp_which_val`, x, value, invert)
+}

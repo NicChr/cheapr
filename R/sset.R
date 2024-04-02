@@ -194,3 +194,14 @@ clean_indices <- function(indices, n){
     indices[which_(valid)]
   }
 }
+# Efficient function to remove a value from a vector
+val_rm <- function(x, value){
+  n_vals <- count_val(x, value, recursive = TRUE)
+  if (n_vals == unlisted_length(x)){
+    sset(x, 0L)
+  } else if (n_vals == 0){
+    x
+  } else {
+    sset(x, cpp_which_val(x, value, invert = TRUE))
+  }
+}
