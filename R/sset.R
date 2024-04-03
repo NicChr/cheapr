@@ -179,29 +179,9 @@ neg_indices_to_pos <- function(exclude, n){
   if (n == 0){
     integer()
   } else {
-    which_not_in(seq.int(from = -1L, to = -n, by = -1L), exclude)
-  }
-  # out <- which_not_in(seq_len(n), cpp_set_reverse_sign(exclude))
-  # exclude <- cpp_set_reverse_sign(exclude)
-  # out
-  # which_not_in(seq_len(n), abs(exclude))
-}
-clean_indices <- function(indices, n){
-  valid <- cpp_index_is_valid(indices, n)
-  if (count_val(valid, TRUE) == length(indices)){
-    indices
-  } else {
-    indices[which_(valid)]
-  }
-}
-# Efficient function to remove a value from a vector
-val_rm <- function(x, value){
-  n_vals <- count_val(x, value, recursive = TRUE)
-  if (n_vals == unlisted_length(x)){
-    sset(x, 0L)
-  } else if (n_vals == 0){
-    x
-  } else {
-    sset(x, cpp_which_val(x, value, invert = TRUE))
+    which_not_in(
+      seq.int(from = -1L, to = -as.integer(n), by = -1L),
+      as.integer(exclude)
+    )
   }
 }
