@@ -244,10 +244,10 @@ extern "C" SEXP _cheapr_cpp_sset_simple(SEXP x, SEXP indices) {
   END_CPP11
 }
 // sset.cpp
-SEXP cpp_sset_range(SEXP x, int from, int to, int by);
+SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by);
 extern "C" SEXP _cheapr_cpp_sset_range(SEXP x, SEXP from, SEXP to, SEXP by) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_sset_range(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(from), cpp11::as_cpp<cpp11::decay_t<int>>(to), cpp11::as_cpp<cpp11::decay_t<int>>(by)));
+    return cpp11::as_sexp(cpp_sset_range(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(from), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(to), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(by)));
   END_CPP11
 }
 // sset.cpp

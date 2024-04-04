@@ -433,8 +433,8 @@ default: {
 // Also works with negative-indexing
 
 [[cpp11::register]]
-SEXP cpp_sset_range(SEXP x, int from, int to, int by){
-  int n = Rf_length(x);
+SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
+  R_xlen_t n = Rf_xlength(x);
   if (by != 1 && by != -1){
     Rf_error("by increment must be 1 or -1");
   }
@@ -445,9 +445,9 @@ SEXP cpp_sset_range(SEXP x, int from, int to, int by){
   if ( (from > to && by > 0) || (from < to && by < 0)){
     Rf_error("Wrong increment sign in by arg");
   }
-  int istart = from;
-  int iend = to;
-  int out_size, istart1, istart2, iend1, iend2;
+  R_xlen_t istart = from;
+  R_xlen_t iend = to;
+  R_xlen_t out_size, istart1, istart2, iend1, iend2;
   bool double_loop = false;
   // Negative indexing is complicated
   // Because there are 7 scenarios...
@@ -534,22 +534,22 @@ case LGLSXP: {
   if (double_loop){
 #pragma omp parallel num_threads(n_cores) if (do_parallel)
 #pragma omp for simd
-    for (int i = istart1 - 1; i < iend1; ++i){
+    for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       p_out[i - istart1 + 1] = i < n ? p_x[i] : NA_LOGICAL;
     }
 #pragma omp for simd
-    for (int i = istart2 - 1; i < iend2; ++i){
+    for (R_xlen_t i = istart2 - 1; i < iend2; ++i){
       p_out[i - istart2 + 1] = i < n ? p_x[i] : NA_LOGICAL;
     }
   } else {
     if (by > 0){
 #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
-      for (int i = istart - 1; i < iend; ++i){
+      for (R_xlen_t i = istart - 1; i < iend; ++i){
         p_out[i - istart + 1] = i < n ? p_x[i] : NA_LOGICAL;
       }
     } else {
 #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
-      for (int i = istart - 1; i >= iend - 1; --i){
+      for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         p_out[istart - i - 1] = i < n ? p_x[i] : NA_LOGICAL;
       }
     }
@@ -564,22 +564,22 @@ case INTSXP: {
   if (double_loop){
 #pragma omp parallel num_threads(n_cores) if (do_parallel)
 #pragma omp for simd
-    for (int i = istart1 - 1; i < iend1; ++i){
+    for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       p_out[i - istart1 + 1] = i < n ? p_x[i] : NA_INTEGER;
     }
 #pragma omp for simd
-    for (int i = istart2 - 1; i < iend2; ++i){
+    for (R_xlen_t i = istart2 - 1; i < iend2; ++i){
       p_out[i - istart2 + 1] = i < n ? p_x[i] : NA_INTEGER;
     }
   } else {
     if (by > 0){
 #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
-      for (int i = istart - 1; i < iend; ++i){
+      for (R_xlen_t i = istart - 1; i < iend; ++i){
         p_out[i - istart + 1] = i < n ? p_x[i] : NA_INTEGER;
       }
     } else {
 #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
-      for (int i = istart - 1; i >= iend - 1; --i){
+      for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         p_out[istart - i - 1] = i < n ? p_x[i] : NA_INTEGER;
       }
     }
@@ -594,11 +594,11 @@ case REALSXP: {
   if (double_loop){
 #pragma omp parallel num_threads(n_cores) if (do_parallel)
 #pragma omp for simd
-    for (int i = istart1 - 1; i < iend1; ++i){
+    for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       p_out[i - istart1 + 1] = i < n ? p_x[i] : NA_REAL;
     }
 #pragma omp for simd
-    for (int i = istart2 - 1; i < iend2; ++i){
+    for (R_xlen_t i = istart2 - 1; i < iend2; ++i){
       p_out[i - istart2 + 1] = i < n ? p_x[i] : NA_REAL;
     }
   } else {
@@ -609,7 +609,7 @@ case REALSXP: {
       }
     } else {
 #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
-      for (int i = istart - 1; i >= iend - 1; --i){
+      for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         p_out[istart - i - 1] = i < n ? p_x[i] : NA_REAL;
       }
     }
@@ -621,7 +621,7 @@ case STRSXP: {
   SEXP *p_x = STRING_PTR(x);
   SEXP out = Rf_protect(Rf_allocVector(STRSXP, out_size));
   if (double_loop){
-    for (int i = istart1 - 1; i < iend1; ++i){
+    for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
     }
     for (int j = istart2 - 1; j < iend2; ++j){
@@ -629,11 +629,11 @@ case STRSXP: {
     }
   } else {
     if (by > 0){
-      for (int i = istart - 1; i < iend; ++i){
+      for (R_xlen_t i = istart - 1; i < iend; ++i){
         SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
       }
     } else {
-      for (int i = istart - 1; i >= iend - 1; --i){
+      for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
       }
     }
@@ -650,19 +650,19 @@ case CPLXSXP: {
   p_na_complex[0].r = NA_REAL;
   Rcomplex na_complex = Rf_asComplex(na_complex_sexp);
   if (double_loop){
-    for (int i = istart1 - 1; i < iend1; ++i){
+    for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
     }
-    for (int j = istart2 - 1; j < iend2; ++j){
+    for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
       SET_COMPLEX_ELT(out, k++, j < n ? p_x[j] : na_complex);
     }
   } else {
     if (by > 0){
-      for (int i = istart - 1; i < iend; ++i){
+      for (R_xlen_t i = istart - 1; i < iend; ++i){
         SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
       }
     } else {
-      for (int i = istart - 1; i >= iend - 1; --i){
+      for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
       }
     }
@@ -674,19 +674,19 @@ case RAWSXP: {
   Rbyte *p_x = RAW(x);
   SEXP out = Rf_protect(Rf_allocVector(RAWSXP, out_size));
   if (double_loop){
-    for (int i = istart1 - 1; i < iend1; ++i){
+    for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
     }
-    for (int j = istart2 - 1; j < iend2; ++j){
+    for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
       SET_RAW_ELT(out, k++, j < n ? p_x[j] : 0);
     }
   } else {
     if (by > 0){
-      for (int i = istart - 1; i < iend; ++i){
+      for (R_xlen_t i = istart - 1; i < iend; ++i){
         SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
       }
     } else {
-      for (int i = istart - 1; i >= iend - 1; --i){
+      for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
       }
     }
@@ -698,19 +698,19 @@ case VECSXP: {
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, out_size));
   if (double_loop){
-    for (int i = istart1 - 1; i < iend1; ++i){
+    for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       if (i < n) SET_VECTOR_ELT(out, k++, p_x[i]);
     }
-    for (int j = istart2 - 1; j < iend2; ++j){
+    for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
       if (j < n) SET_VECTOR_ELT(out, k++, p_x[j]);
     }
   } else {
     if (by > 0){
-      for (int i = istart - 1; i < iend; ++i){
+      for (R_xlen_t i = istart - 1; i < iend; ++i){
         if (i < n) SET_VECTOR_ELT(out, k++, p_x[i]);
       }
     } else {
-      for (int i = istart - 1; i >= iend - 1; --i){
+      for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         if (i < n) SET_VECTOR_ELT(out, k++, p_x[i]);
       }
     }
