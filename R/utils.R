@@ -107,11 +107,22 @@ recycle <- function (..., length = NULL){
   out[recycle] <- lapply(out[recycle], rep_len, N)
   out
 }
+n_dots <- function(...){
+  nargs()
+}
+set_attr <- cpp_set_add_attr
+set_attrs <- cpp_set_add_attributes
+set_rm_attr <- cpp_set_rm_attr
+set_rm_attrs <- cpp_set_rm_attributes
 
-# safe_unique <- function(x, ...){
-#   out <- tryCatch(collapse::funique(x, ...), error = function(e) return(".r.error"))
-#   if (length(out) == 1 && out == ".r.error"){
-#     out <- unique(x, ...)
-#   }
-#   out
-# }
+balance_posixlt <- function(x){
+  balance_pos <- tryCatch(get("balancePOSIXlt",
+                              asNamespace("base"),
+                              inherits = FALSE),
+                          error = function(e) return(".r.error"))
+  if (is.character(balance_pos) && length(balance_pos) == 1 && balance_pos == ".r.error"){
+    unclass(x)
+  } else {
+    balance_pos(x, fill.only = FALSE, classed = FALSE)
+  }
+}

@@ -62,8 +62,36 @@ sset.default <- function(x, i, ...){
   if (!missing(i) && is.logical(i)){
     i <- which_(i)
   }
-  x[i, ...]
+  # The below line will handle a special but common
+  # case of subsetting with a fairly large altrep int sequence
+  # For non-classed objects
+  if (!is.object(x) && !missing(i) &&
+      is.null(attr(x, "names")) &&
+      is_alt_int_seq(i) && n_dots(...) == 0){
+    int_seq_data <- alt_data1(i)
+    size <- int_seq_data[[1L]]
+    from <- int_seq_data[[2L]]
+    by <- int_seq_data[[3L]]
+    to <- from + (max(size - 1L, 0L) * by)
+    cpp_sset_range(x, from, to, by)
+  } else {
+    x[i, ...]
+  }
 }
+# sset.Date <- function(x, i, ...){
+#   # old_class <- oldClass(x)
+#   # set_rm_attr(x, "class")
+#   # on.exit({invisible(set_attr(x, "class", old_class))})
+#   # out <- sset.default(x, i, ...)
+#   # set_attr(out, "class", old_class)
+#   # out <- sset.default(unclass(x), i, ...)
+#   # cls <- oldClass(x)
+#   # class(x) <- NULL
+#   # out <- NextMethod("sset")
+#   # set_attr(out, "class", cls)
+#   out <- sset.default(unclass(x), i, ...)
+#   set_attr(out, "class", oldClass(x))
+# }
 #' @rdname sset
 #' @export
 sset.data.frame <- function(x, i, j = seq_along(x), ...){
@@ -82,7 +110,7 @@ sset.POSIXlt <- function(x, i, j, ...){
   missingi <- missing(i)
   missingj <- missing(j)
   if (n_unique(lengths_(unclass(x))) > 1){
-    out <- balancePOSIXlt(x, fill.only = FALSE, classed = FALSE)
+    out <- balance_posixlt(x)
   } else {
     out <- unclass(x)
   }
@@ -90,20 +118,21 @@ sset.POSIXlt <- function(x, i, j, ...){
     j <- seq_along(out)
   }
   out <- df_subset(list_as_df(out), i, j)
-  cpp_set_rm_attr(out, "row.names")
+  set_rm_attr(out, "row.names")
   if (missingj){
-    cpp_set_add_attr(out, "class", class(x))
+    set_attr(out, "class", class(x))
   }
-  cpp_set_add_attr(out, "tzone", attr(x, "tzone"))
-  cpp_set_add_attr(out, "balanced", TRUE)
+  set_attr(out, "tzone", attr(x, "tzone"))
+  set_attr(out, "balanced", TRUE)
 }
 #' @rdname sset
 #' @export
 sset.data.table <- function(x, i, j = seq_along(x), ...){
   out <- df_subset(x, i, j)
-  cpp_set_add_attributes(out, list(class = class(x),
-                               .internal.selfref = attributes(x)[[".internal.selfref"]]),
-                     add = TRUE)
+  set_attrs(out, list(
+    class = class(x),
+    .internal.selfref = attributes(x)[[".internal.selfref"]]
+  ), add = TRUE)
   dt_alloc <- tryCatch(get("setalloccol",
                            asNamespace("data.table"),
                            inherits = FALSE),
@@ -123,7 +152,7 @@ sset.sf <- function(x, i, j = seq_along(x), ...){
   source_attrs <- attributes(x)
   source_nms <- names(source_attrs)
   attrs_to_keep <- source_attrs[setdiff_(source_nms, c("names", "row.names"))]
-  cpp_set_add_attributes(out, attrs_to_keep, add = TRUE)
+  set_attrs(out, attrs_to_keep, add = TRUE)
 }
 df_select <- function(x, j){
   if (is.logical(j)){
@@ -137,7 +166,7 @@ df_select <- function(x, j){
   out <- cpp_list_rm_null(unclass(x)[j])
   attrs[["names"]] <- attr(out, "names")
   attrs[["row.names"]] <- .row_names_info(x, type = 0L)
-  cpp_set_add_attributes(out, attrs, add = FALSE)
+  set_attrs(out, attrs, add = FALSE)
 }
 
 # Efficient data frame subset
@@ -166,7 +195,7 @@ df_subset <- function(x, i, j = seq_along(x)){
         )
       )
     } else {
-      out <- cpp_df_sset(out, i)
+      out <- cpp_sset_df(out, i)
       # out <- list_as_df(
       #   lapply(out, sset, i)
       # )

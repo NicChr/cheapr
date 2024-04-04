@@ -1,5 +1,13 @@
 # cheapr (Development version)
 
+* `sset` now has an internal range-based subset method for 
+'ALTREP' integer sequences made using  `:` for example.
+
+* New function `count_val` as a cheaper alternative to e.g. `sum(x == val)`.
+
+* Negative indexing in `sset` has been improved. 
+It is also now partially parallelised.
+
 * Setting `recursive` to false should now be faster.
 
 * 'overview' objects gain an additional list element "print_digits" which 

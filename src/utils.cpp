@@ -146,7 +146,9 @@ SEXP cpp_list_rm_null(SEXP l) {
 SEXP cpp_list_as_df(SEXP x) {
   SEXP out = Rf_protect(cpp_list_rm_null(x));
   int N; // Number of rows
-  if (Rf_length(out) == 0){
+  if (Rf_inherits(x, "data.frame")){
+    N = cpp_df_nrow(x);
+  } else if (Rf_length(out) == 0){
     N = 0;
   } else {
     N = cpp_vec_length(VECTOR_ELT(out, 0));
@@ -259,27 +261,3 @@ SEXP r_address(SEXP x) {
 //   Rf_unprotect(3);
 //   return out;
 // }
-
-// An index is valid if it is positive, NA and not out-of-bounds.
-
-[[cpp11::register]]
-SEXP cpp_index_is_valid(SEXP indices, int n){
-  if (!Rf_isInteger(indices)){
-    Rf_error("indices vector must be an integer vector");
-  }
-  int *p_indices = INTEGER(indices);
-  int size = Rf_length(indices);
-  SEXP out = Rf_protect(Rf_allocVector(LGLSXP, size));
-  int *p_out = LOGICAL(out);
-  bool do_parallel = size >= 100000;
-  int n_cores = do_parallel ? num_cores() : 1;
-  // unsigned int rng = n;
-#pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
-  for (int i = 0; i < size; ++i){
-    int xi = p_indices[i];
-    p_out[i] = (xi == NA_INTEGER) || (xi > 0 && xi <= n);
-    // p_out[i] = (xi == NA_INTEGER) || unsigned(xi) <= rng;
-  }
-  Rf_unprotect(1);
-  return out;
-}

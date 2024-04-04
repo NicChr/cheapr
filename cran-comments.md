@@ -1,4 +1,4 @@
-* Updated to version 0.4.0
+* Updated to version 0.5.0
 
 ## Test environments
 - R-hub windows-x86_64-devel (r-devel)
@@ -22,4 +22,3 @@
   Skipping checking HTML validation: no command 'tidy' found
 
 0 errors ✔ | 0 warnings ✔ | 3 notes ✖
-

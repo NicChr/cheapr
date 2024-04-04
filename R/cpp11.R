@@ -124,12 +124,24 @@ cpp_lead_sequence <- function(size, k, partial) {
   .Call(`_cheapr_cpp_lead_sequence`, size, k, partial)
 }
 
-cpp_simple_sset <- function(x, indices) {
-  .Call(`_cheapr_cpp_simple_sset`, x, indices)
+alt_data1 <- function(x) {
+  .Call(`_cheapr_alt_data1`, x)
 }
 
-cpp_df_sset <- function(x, indices) {
-  .Call(`_cheapr_cpp_df_sset`, x, indices)
+is_alt_int_seq <- function(x) {
+  .Call(`_cheapr_is_alt_int_seq`, x)
+}
+
+cpp_sset_simple <- function(x, indices) {
+  .Call(`_cheapr_cpp_sset_simple`, x, indices)
+}
+
+cpp_sset_range <- function(x, from, to, by) {
+  .Call(`_cheapr_cpp_sset_range`, x, from, to, by)
+}
+
+cpp_sset_df <- function(x, indices) {
+  .Call(`_cheapr_cpp_sset_df`, x, indices)
 }
 
 cpp_vec_length <- function(x) {
@@ -154,10 +166,6 @@ cpp_list_rm_null <- function(l) {
 
 cpp_list_as_df <- function(x) {
   .Call(`_cheapr_cpp_list_as_df`, x)
-}
-
-cpp_index_is_valid <- function(indices, n) {
-  .Call(`_cheapr_cpp_index_is_valid`, indices, n)
 }
 
 cpp_which_ <- function(x, invert) {
