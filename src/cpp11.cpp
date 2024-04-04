@@ -237,13 +237,6 @@ extern "C" SEXP _cheapr_is_alt_int_seq(SEXP x) {
   END_CPP11
 }
 // sset.cpp
-SEXP cpp_sset_simple(SEXP x, SEXP indices);
-extern "C" SEXP _cheapr_cpp_sset_simple(SEXP x, SEXP indices) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_sset_simple(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
-  END_CPP11
-}
-// sset.cpp
 SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by);
 extern "C" SEXP _cheapr_cpp_sset_range(SEXP x, SEXP from, SEXP to, SEXP by) {
   BEGIN_CPP11
@@ -352,7 +345,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_rm_attributes",    (DL_FUNC) &_cheapr_cpp_set_rm_attributes,    1},
     {"_cheapr_cpp_sset_df",              (DL_FUNC) &_cheapr_cpp_sset_df,              2},
     {"_cheapr_cpp_sset_range",           (DL_FUNC) &_cheapr_cpp_sset_range,           4},
-    {"_cheapr_cpp_sset_simple",          (DL_FUNC) &_cheapr_cpp_sset_simple,          2},
     {"_cheapr_cpp_vec_length",           (DL_FUNC) &_cheapr_cpp_vec_length,           1},
     {"_cheapr_cpp_which_",               (DL_FUNC) &_cheapr_cpp_which_,               2},
     {"_cheapr_cpp_which_na",             (DL_FUNC) &_cheapr_cpp_which_na,             1},

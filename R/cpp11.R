@@ -132,10 +132,6 @@ is_alt_int_seq <- function(x) {
   .Call(`_cheapr_is_alt_int_seq`, x)
 }
 
-cpp_sset_simple <- function(x, indices) {
-  .Call(`_cheapr_cpp_sset_simple`, x, indices)
-}
-
 cpp_sset_range <- function(x, from, to, by) {
   .Call(`_cheapr_cpp_sset_range`, x, from, to, by)
 }

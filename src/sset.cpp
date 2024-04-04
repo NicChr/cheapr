@@ -310,7 +310,7 @@ double alt_int_seq_end(SEXP x){
 }
 
 // Subset with no checks, indices vector must be pre-curated
-[[cpp11::register]]
+
 SEXP cpp_sset_simple(SEXP x, SEXP indices){
   int *pi = INTEGER(indices);
   int n = Rf_xlength(indices);
@@ -621,18 +621,22 @@ case STRSXP: {
   SEXP *p_x = STRING_PTR(x);
   SEXP out = Rf_protect(Rf_allocVector(STRSXP, out_size));
   if (double_loop){
+#pragma omp for simd
     for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
     }
+#pragma omp for simd
     for (int j = istart2 - 1; j < iend2; ++j){
       SET_STRING_ELT(out, k++, j < n ? p_x[j] : NA_STRING);
     }
   } else {
     if (by > 0){
+#pragma omp for simd
       for (R_xlen_t i = istart - 1; i < iend; ++i){
         SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
       }
     } else {
+#pragma omp for simd
       for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
       }
@@ -650,18 +654,22 @@ case CPLXSXP: {
   p_na_complex[0].r = NA_REAL;
   Rcomplex na_complex = Rf_asComplex(na_complex_sexp);
   if (double_loop){
+#pragma omp for simd
     for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
     }
+#pragma omp for simd
     for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
       SET_COMPLEX_ELT(out, k++, j < n ? p_x[j] : na_complex);
     }
   } else {
     if (by > 0){
+#pragma omp for simd
       for (R_xlen_t i = istart - 1; i < iend; ++i){
         SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
       }
     } else {
+#pragma omp for simd
       for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
       }
@@ -674,18 +682,22 @@ case RAWSXP: {
   Rbyte *p_x = RAW(x);
   SEXP out = Rf_protect(Rf_allocVector(RAWSXP, out_size));
   if (double_loop){
+#pragma omp for simd
     for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
     }
+#pragma omp for simd
     for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
       SET_RAW_ELT(out, k++, j < n ? p_x[j] : 0);
     }
   } else {
     if (by > 0){
+#pragma omp for simd
       for (R_xlen_t i = istart - 1; i < iend; ++i){
         SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
       }
     } else {
+#pragma omp for simd
       for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
       }
@@ -698,18 +710,22 @@ case VECSXP: {
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, out_size));
   if (double_loop){
+#pragma omp for simd
     for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
       if (i < n) SET_VECTOR_ELT(out, k++, p_x[i]);
     }
+#pragma omp for simd
     for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
       if (j < n) SET_VECTOR_ELT(out, k++, p_x[j]);
     }
   } else {
     if (by > 0){
+#pragma omp for simd
       for (R_xlen_t i = istart - 1; i < iend; ++i){
         if (i < n) SET_VECTOR_ELT(out, k++, p_x[i]);
       }
     } else {
+#pragma omp for simd
       for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
         if (i < n) SET_VECTOR_ELT(out, k++, p_x[i]);
       }
@@ -737,25 +753,36 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   int na_count = 0;
   bool do_parallel = n >= 10000;
   int n_cores = do_parallel ? num_cores() : 1;
+  cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols));
+  ++n_protections;
   // Counting the number of:
   // Zeroes
   // Out-of-bounds indices
   // Positive indices
   // From this we can also work out the number of negatives
 
-  // If indices is a special type of ALTREP compact int sequence, we can infer
-  // this information
-  if (is_alt_int_seq(indices) &&
-      std::fabs(alt_int_seq_increment(indices)) == 1.0 &&
-      alt_int_seq_start(indices) > 0 &&
-      alt_int_seq_start(indices) <= xn &&
-      alt_int_seq_end(indices) > 0 &&
-      alt_int_seq_end(indices) <= xn){
-    zero_count = 0;
-    na_count = 0;
-    oob_count = 0;
-    pos_count = n;
+  // If indices is a special type of ALTREP compact int sequence, we can
+  // Use a range-based subset instead
+  if (is_alt_int_seq(indices)){
+
+    // ALTREP integer sequence method
+
+    int start = alt_int_seq_start(indices);
+    int end = alt_int_seq_end(indices);
+    int increment = alt_int_seq_increment(indices);
+      for (int j = 0; j < ncols; ++j){
+        if (Rf_isObject(p_x[j])){
+          SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
+        } else {
+          SET_VECTOR_ELT(out, j, cpp_sset_range(p_x[j], start, end, increment));
+        }
+      }
   } else {
+
+    // Usual method
+
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
       for (int j = 0; j < n; ++j){
@@ -773,19 +800,12 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
         na_count += (pi[j] == NA_INTEGER);
       }
     }
-  }
   int neg_count = n - pos_count - zero_count - na_count;
   if ( (pos_count > 0 && neg_count > 0) ||
        (neg_count > 0 && na_count > 0)){
     Rf_error("Cannot mix positive and negative indices");
   }
   bool simple_sset = zero_count == 0 && oob_count == 0 && na_count == 0 && pos_count == n;
-  cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
-
-  // Convert negative index vector to positive
-  const SEXP *p_x = VECTOR_PTR_RO(x);
-  SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols));
-  ++n_protections;
   // Index vector is clean, we can use fast subset
   if (simple_sset){
     for (int j = 0; j < ncols; ++j){
@@ -823,6 +843,8 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     for (int j = 0; j < ncols; ++j){
       SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
     }
+  }
+
   }
   SEXP names = Rf_protect(Rf_duplicate(Rf_getAttrib(x, R_NamesSymbol)));
   ++n_protections;
