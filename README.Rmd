@@ -151,6 +151,21 @@ y <- sample.int(10^6, 10^4, TRUE)
 mark(sset(x, x %in_% y), sset(x, x %in% y), x[x %in% y])
 ```
 
+`sset` uses an internal range-based subset when `i` is an ALTREP integer sequence
+of the form m:n.
+
+```{r}
+mark(sset(df, 0:10^5), df[0:10^5, , drop = FALSE])
+```
+
+It also accepts negative indexes
+
+```{r}
+mark(sset(df, -10^4:0), 
+     df[-10^4:0, , drop = FALSE],
+     check = FALSE) # The only difference is the row names
+```
+
 
 ## Greatest common divisor and smallest common multiple
 

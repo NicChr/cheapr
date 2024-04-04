@@ -1,5 +1,8 @@
 # cheapr (Development version)
 
+* `sset` is now parallelised when `i` is an 'ALTREP'
+compact integer sequence, e.g. `sset(x, 1:10)`.
+
 * `sset` now has an internal range-based subset method for 
 'ALTREP' integer sequences made using  `:` for example.
 
