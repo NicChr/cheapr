@@ -2,6 +2,9 @@
 % Please edit documentation in R/sset.R
 \name{sset}
 \alias{sset}
+\alias{sset.Date}
+\alias{sset.POSIXct}
+\alias{sset.factor}
 \alias{sset.data.frame}
 \alias{sset.tbl_df}
 \alias{sset.POSIXlt}
@@ -10,6 +13,12 @@
 \title{Cheaper subset}
 \usage{
 sset(x, ...)
+
+\method{sset}{Date}(x, i, ...)
+
+\method{sset}{POSIXct}(x, i, ...)
+
+\method{sset}{factor}(x, i, ...)
 
 \method{sset}{data.frame}(x, i, j = seq_along(x), ...)
 

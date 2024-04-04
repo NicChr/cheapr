@@ -53,7 +53,6 @@ test_that("subsetting", {
   test_df <- expand.grid(objs_to_test, ind_to_test, stringsAsFactors = FALSE)
   names(test_df) <- c("obj", "ind")
 
-
   for (i in seq_len(nrow(test_df))){
     r_obj <- get(test_df$obj[i])
     r_ind <- get(test_df$ind[i])
@@ -97,3 +96,12 @@ test_that("subsetting", {
     base_sset(empty_df, 0:20, 1:ncol(empty_df), drop = FALSE)
   )
 })
+
+# test_that("fatal error", {
+#   set.seed(43)
+#   i <- as.integer(sample(seq(0, 1000, 100), 10^6, TRUE))
+#   x <- flights$day
+#   # x <- sample.int(30, 100000, TRUE)
+#   cpp_sset(x, -i)
+# }
+# )

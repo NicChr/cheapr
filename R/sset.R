@@ -68,30 +68,76 @@ sset.default <- function(x, i, ...){
   if (!is.object(x) && !missing(i) &&
       is.null(attr(x, "names")) &&
       is_alt_int_seq(i) && n_dots(...) == 0){
-    int_seq_data <- alt_data1(i)
-    size <- int_seq_data[[1L]]
-    from <- int_seq_data[[2L]]
-    by <- int_seq_data[[3L]]
-    to <- from + (max(size - 1L, 0L) * by)
-    cpp_sset_range(x, from, to, by)
+    int_seq_data <- altrep_int_seq_data(i)
+    cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
   } else {
     x[i, ...]
   }
 }
-# sset.Date <- function(x, i, ...){
-#   # old_class <- oldClass(x)
-#   # set_rm_attr(x, "class")
-#   # on.exit({invisible(set_attr(x, "class", old_class))})
-#   # out <- sset.default(x, i, ...)
-#   # set_attr(out, "class", old_class)
-#   # out <- sset.default(unclass(x), i, ...)
-#   # cls <- oldClass(x)
-#   # class(x) <- NULL
-#   # out <- NextMethod("sset")
-#   # set_attr(out, "class", cls)
-#   out <- sset.default(unclass(x), i, ...)
-#   set_attr(out, "class", oldClass(x))
-# }
+#' @rdname sset
+#' @export
+sset.Date <- function(x, i, ...){
+  # old_class <- oldClass(x)
+  # set_rm_attr(x, "class")
+  # on.exit({invisible(set_attr(x, "class", old_class))})
+  # out <- sset.default(x, i, ...)
+  # set_attr(out, "class", old_class)
+  # out <- sset.default(unclass(x), i, ...)
+  # cls <- oldClass(x)
+  # class(x) <- NULL
+  # out <- NextMethod("sset")
+  # set_attr(out, "class", cls)
+
+
+  # out <- sset.default(unclass(x), i, ...)
+  # set_attr(out, "class", oldClass(x))
+  if (!missing(i) && is.logical(i)){
+    i <- which_(i)
+  }
+  if (!missing(i) &&
+      is.null(attr(x, "names")) &&
+      is_alt_int_seq(i) && n_dots(...) == 0){
+    int_seq_data <- altrep_int_seq_data(i)
+    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    set_attr(out, "class", oldClass(x))
+  } else {
+    x[i, ...]
+  }
+}
+#' @rdname sset
+#' @export
+sset.POSIXct <- function(x, i, ...){
+  if (!missing(i) && is.logical(i)){
+    i <- which_(i)
+  }
+  if (!missing(i) &&
+      is.null(attr(x, "names")) &&
+      is_alt_int_seq(i) && n_dots(...) == 0){
+    int_seq_data <- altrep_int_seq_data(i)
+    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    set_attr(out, "tzone", attr(x, "tzone"))
+    set_attr(out, "class", oldClass(x))
+  } else {
+    x[i, ...]
+  }
+}
+#' @rdname sset
+#' @export
+sset.factor <- function(x, i, ...){
+  if (!missing(i) && is.logical(i)){
+    i <- which_(i)
+  }
+  if (!missing(i) &&
+      is.null(attr(x, "names")) &&
+      is_alt_int_seq(i) && n_dots(...) == 0){
+    int_seq_data <- altrep_int_seq_data(i)
+    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    set_attr(out, "levels", attr(x, "levels"))
+    set_attr(out, "class", oldClass(x))
+  } else {
+    x[i, ...]
+  }
+}
 #' @rdname sset
 #' @export
 sset.data.frame <- function(x, i, j = seq_along(x), ...){
