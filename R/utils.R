@@ -128,10 +128,16 @@ balance_posixlt <- function(x){
 }
 
 altrep_int_seq_data <- function(x){
-  int_seq_data <- alt_data1(x)
-  size <- int_seq_data[[1L]]
-  from <- int_seq_data[[2L]]
-  by <- int_seq_data[[3L]]
-  to <- from + (max(size - 1L, 0L) * by)
-  list(from = from, to = to, by = by, size = size)
+  if (!is_alt_int_seq(x)){
+    NULL
+  } else {
+    int_seq_data <- alt_data1(x)
+    size <- int_seq_data[[1L]]
+    from <- int_seq_data[[2L]]
+    by <- int_seq_data[[3L]]
+    to <- from + (max(size - 1L, 0L) * by)
+    list(from = from, to = to, by = by, size = size,
+         long = !all(abs(c(from, to)) <= .Machine$integer.max))
+  }
+
 }

@@ -69,7 +69,11 @@ sset.default <- function(x, i, ...){
       is.null(attr(x, "names")) &&
       is_alt_int_seq(i) && n_dots(...) == 0){
     int_seq_data <- altrep_int_seq_data(i)
-    cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    if (length(x) > .Machine$integer.max || int_seq_data[["long"]]){
+      x[i, ...]
+    } else {
+      cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    }
   } else {
     x[i, ...]
   }
@@ -98,8 +102,13 @@ sset.Date <- function(x, i, ...){
       is.null(attr(x, "names")) &&
       is_alt_int_seq(i) && n_dots(...) == 0){
     int_seq_data <- altrep_int_seq_data(i)
-    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
-    set_attr(out, "class", oldClass(x))
+    if (length(x) > .Machine$integer.max || int_seq_data[["long"]]){
+      x[i, ...]
+    } else {
+      out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+      set_attr(out, "class", oldClass(x))
+    }
+
   } else {
     x[i, ...]
   }
@@ -114,9 +123,13 @@ sset.POSIXct <- function(x, i, ...){
       is.null(attr(x, "names")) &&
       is_alt_int_seq(i) && n_dots(...) == 0){
     int_seq_data <- altrep_int_seq_data(i)
-    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
-    set_attr(out, "tzone", attr(x, "tzone"))
-    set_attr(out, "class", oldClass(x))
+    if (length(x) > .Machine$integer.max || int_seq_data[["long"]]){
+      x[i, ...]
+    } else {
+      out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+      set_attr(out, "tzone", attr(x, "tzone"))
+      set_attr(out, "class", oldClass(x))
+    }
   } else {
     x[i, ...]
   }
@@ -131,9 +144,13 @@ sset.factor <- function(x, i, ...){
       is.null(attr(x, "names")) &&
       is_alt_int_seq(i) && n_dots(...) == 0){
     int_seq_data <- altrep_int_seq_data(i)
-    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
-    set_attr(out, "levels", attr(x, "levels"))
-    set_attr(out, "class", oldClass(x))
+    if (int_seq_data[["long"]]){
+      x[i, ...]
+    } else {
+      out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+      set_attr(out, "levels", attr(x, "levels"))
+      set_attr(out, "class", oldClass(x))
+    }
   } else {
     x[i, ...]
   }
