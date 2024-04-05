@@ -20,6 +20,7 @@ test_that("subsetting", {
   }
   i
   j <- vapply(sample(letters, 10^3, TRUE), charToRaw, raw(1))
+  k <- a > 0
 
   i1 <- sample.int(10^3)
   i2 <- sample.int(100, 10^4, TRUE)
@@ -34,11 +35,26 @@ test_that("subsetting", {
   i8 <- sample.int(10^3, 10^5, TRUE)
   i9 <- 3:10^3
   i10 <- 1e03:3
+  i11 <- 1:10^3
+  i12 <- 11:500
+  i12 <- 1:333
+  i13 <- 2e03:11
+  i14 <- 1e03:1
+  i15 <- 450:1
+  i16 <- -1:-200
+  i17 <- -200:-1
+  i18 <- 0:-233
+  i19 <- -233:0
+  i20 <- -255:-555
+  i21 <- -500:-3000
+  i22 <- -2000:-3000
+  i23 <- 2000:3000
+
   # i7 <- NA # This doesn't match
   # i8 <- NA_integer_
 
   objs_to_test <- letters[1:10]
-  ind_to_test <- paste0("i", 1:10)
+  ind_to_test <- paste0("i", 1:23)
 
   for (obj in objs_to_test){
     if (!is.raw(get(obj))){
@@ -52,7 +68,7 @@ test_that("subsetting", {
 
   test_df <- expand.grid(objs_to_test, ind_to_test, stringsAsFactors = FALSE)
   names(test_df) <- c("obj", "ind")
-
+  # test_df <- test_df |> dplyr::filter(obj != "g")
   for (i in seq_len(nrow(test_df))){
     r_obj <- get(test_df$obj[i])
     r_ind <- get(test_df$ind[i])
