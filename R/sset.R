@@ -16,7 +16,7 @@
 #' `sset` will fall back on using `[` when no suitable method is found.
 #'
 #' To get into more detail, using `sset()` on a data frame, a new
-#' list is always allocated through `cheapr:::cpp_new_list()`.
+#' list is always allocated through `new_list()`.
 #'
 #' ### Difference to base R
 #'
@@ -24,6 +24,13 @@
 #' This means that `NA` values are ignored and this also means that `i`
 #' is not recycled, so it is good practice to make sure the logical vector
 #' matches the length of x. To return `NA` values, use `x[NA_integer_]`.
+#'
+#' ### ALTREP range subsetting
+#'
+#' When `i` is an ALTREP compact integer sequence which can be commonly created
+#' using e.g. `1:10` or using `seq_len`, `seq_along` and `seq.int`,
+#' `sset` internally uses a range-based subsetting which is faster and doesn't
+#' allocate `i` into memory.
 #'
 #' @examples
 #' library(cheapr)

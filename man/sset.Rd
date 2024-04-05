@@ -50,13 +50,21 @@ You can either write methods for \code{sset} or \code{[}. \cr
 \code{sset} will fall back on using \code{[} when no suitable method is found.
 
 To get into more detail, using \code{sset()} on a data frame, a new
-list is always allocated through \code{cheapr:::cpp_new_list()}.
+list is always allocated through \code{new_list()}.
 \subsection{Difference to base R}{
 
 When \code{i} is a logical vector, it is passed directly to \code{which_()}. \cr
 This means that \code{NA} values are ignored and this also means that \code{i}
 is not recycled, so it is good practice to make sure the logical vector
 matches the length of x. To return \code{NA} values, use \code{x[NA_integer_]}.
+}
+
+\subsection{ALTREP range subsetting}{
+
+When \code{i} is an ALTREP compact integer sequence which can be commonly created
+using e.g. \code{1:10} or using \code{seq_len}, \code{seq_along} and \code{seq.int},
+\code{sset} internally uses a range-based subsetting which is faster and doesn't
+allocate \code{i} into memory.
 }
 }
 \examples{

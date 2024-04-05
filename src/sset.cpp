@@ -250,7 +250,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     }
     // We first switch them
     if (istart < iend){
-      int iend_temp = iend;
+      R_xlen_t iend_temp = iend;
       iend = istart;
       istart = iend_temp;
     }
@@ -393,7 +393,7 @@ case REALSXP: {
   } else {
     if (by > 0){
 #pragma omp parallel for simd num_threads(n_cores) if (do_parallel)
-      for (int i = istart - 1; i < iend; ++i){
+      for (R_xlen_t i = istart - 1; i < iend; ++i){
         p_out[i - istart + 1] = i < n ? p_x[i] : NA_REAL;
       }
     } else {
@@ -415,7 +415,7 @@ case STRSXP: {
       SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
     }
 #pragma omp for simd
-    for (int j = istart2 - 1; j < iend2; ++j){
+    for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
       SET_STRING_ELT(out, k++, j < n ? p_x[j] : NA_STRING);
     }
   } else {
