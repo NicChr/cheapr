@@ -237,6 +237,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   // Scenario 6: m:kE{-m > 1 & -k < N} - Everything but middle chunk of vector
 
   if (istart == 0 && iend == 0){
+    istart = 1;
+    iend = 0;
+    by = 1;
     out_size = 0;
   } else if (istart < 0 || iend < 0){
     if (istart == 0){
@@ -267,7 +270,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       out_size = n;
       // Scenario 3
     } else if (istart == -1 && iend == -n){
-      istart = n;
+      istart = n + 1;
       iend = n;
       by = 1;
       out_size = 0;

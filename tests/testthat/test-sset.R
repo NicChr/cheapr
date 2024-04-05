@@ -49,12 +49,14 @@ test_that("subsetting", {
   i21 <- -500:-3000
   i22 <- -2000:-3000
   i23 <- 2000:3000
+  i24 <- -1:-1000
+  i25 <- -111:-1000
 
   # i7 <- NA # This doesn't match
   # i8 <- NA_integer_
 
   objs_to_test <- letters[1:10]
-  ind_to_test <- paste0("i", 1:23)
+  ind_to_test <- paste0("i", 1:25)
 
   for (obj in objs_to_test){
     if (!is.raw(get(obj))){
@@ -65,6 +67,7 @@ test_that("subsetting", {
   df <- data.frame(a, b, c, d, e, f, g, h)
   df$i <- i
   df$j <- j
+  df$k <- k
 
   test_df <- expand.grid(objs_to_test, ind_to_test, stringsAsFactors = FALSE)
   names(test_df) <- c("obj", "ind")
@@ -111,6 +114,30 @@ test_that("subsetting", {
     sset(empty_df, 0:20),
     base_sset(empty_df, 0:20, 1:ncol(empty_df), drop = FALSE)
   )
+})
+
+test_that("errors", {
+  expect_null(sset(NULL))
+  expect_null(sset(NULL, 1:10))
+  expect_error(sset(iris$Sepal.Length, c(-5, 5)))
+  expect_error(sset(iris$Sepal.Length, 10:-10))
+  expect_error(sset(globalenv()))
+})
+
+test_that("misc", {
+  expect_identical(
+    cpp_sset_range(10:1, 3, 0, -1),
+    rev(cpp_sset_range(10:1, 0, 3, 1))
+  )
+  expect_identical(cpp_sset_range(1:10, 0, 0, 1), integer())
+  expect_identical(cpp_sset_range(integer(), 0, 0, 1), integer())
+  expect_identical(cpp_sset_range(letters, 0, 0, 1), character())
+  expect_identical(cpp_sset_range(as.list(letters), 0, 0, 1), list())
+  expect_identical(cpp_sset_range(as.list(letters)[0], 0, 0, -1), list())
+  expect_identical(cpp_sset_range(letters[0], 0, 0, -1), character())
+  expect_error(cpp_sset_range(letters, 1, 10, 2))
+  expect_error(cpp_sset_range(letters, 1, 10, -1))
+  expect_error(cpp_sset_range(global(), 1, 10, 1))
 })
 
 # test_that("fatal error", {
