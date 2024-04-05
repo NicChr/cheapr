@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.5.0
 
 * `sset` is now parallelised when `i` is an 'ALTREP'
 compact integer sequence, e.g. `sset(x, 1:10)`.
