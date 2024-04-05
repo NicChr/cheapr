@@ -4,233 +4,8 @@
 // #include <vector>
 // using namespace cpp11;
 
-// SEXP cpp_sset(SEXP x, SEXP indices){
-//   int *pi = INTEGER(indices);
-//   int xn = Rf_xlength(x);
-//   int n = Rf_xlength(indices);
-//   int n_protections = 0;
-//   int zero_count = 0;
-//   int pos_count = 0;
-//   int oob_count = 0;
-//   int na_count = 0;
-//   int out_size;
-//   bool do_parallel = n >= 10000;
-//   int n_cores = do_parallel ? num_cores() : 1;
-//   do_parallel = do_parallel && n_cores > 1;
-//
-//   // Counting the number of:
-//   // Zeroes
-//   // Out-of-bounds indices
-//   // Positive indices
-//   // From this we can also work out the number of negatives
-//
-//   if (do_parallel){
-// #pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
-//     for (int j = 0; j < n; ++j){
-//       zero_count += pi[j] == 0;
-//       pos_count += pi[j] > 0;
-//       na_count += pi[j] == NA_INTEGER;
-//       oob_count += std::abs(pi[j]) > xn;
-//     }
-//   } else {
-// #pragma omp for simd
-//     for (int j = 0; j < n; ++j){
-//       zero_count += (pi[j] == 0);
-//       pos_count += (pi[j] > 0);
-//       na_count += pi[j] == NA_INTEGER;
-//       oob_count += (std::abs(pi[j]) > xn);
-//     }
-//   }
-//   bool neg_count = n - pos_count - zero_count - na_count;
-//   if ( (pos_count + zero_count) > 0 && neg_count > 0){
-//     Rf_error("Cannot mix positive and negative indices");
-//   }
-//   bool simple_sset = zero_count == 0 && oob_count == 0 && na_count == 0 && pos_count == n;
-//
-//   // Convert negative index vector to positive
-//
-//   if (neg_count > 0){
-//     SEXP indices2 = Rf_protect(cpp11::package("cheapr")["neg_indices_to_pos"](indices, xn));
-//     ++n_protections;
-//     int *pi2 = INTEGER(indices2);
-//     pi = pi2;
-//     out_size = Rf_xlength(indices2);
-//     n = out_size;
-//     simple_sset = true;
-//   } else {
-//     out_size = n - zero_count;
-//   }
-//   switch ( TYPEOF(x) ){
-//   int i;
-//   case NILSXP: {
-//     return R_NilValue;
-//   }
-//   case LGLSXP: {
-//     int *p_x = LOGICAL(x);
-//     SEXP out = Rf_protect(Rf_allocVector(LGLSXP, out_size));
-//     ++n_protections;
-//     zero_count = 0;
-//     int *p_out = LOGICAL(out);
-//     if (simple_sset){
-//       if (do_parallel){
-// #pragma omp parallel for simd num_threads(n_cores) private(i)
-//         for (i = 0; i < n; ++i){
-//           p_out[i] = p_x[pi[i] - 1];
-//         }
-//       } else {
-// #pragma omp for simd
-//         for (i = 0; i < n; ++i){
-//           p_out[i] = p_x[pi[i] - 1];
-//         }
-//       }
-//     } else {
-//       for (i = 0; i < n; ++i){
-//         if (pi[i] == 0){
-//           ++zero_count;
-//         } else {
-//           p_out[i - zero_count] = (pi[i] <= xn && pi[i] != NA_INTEGER) ? p_x[pi[i] - 1] : NA_LOGICAL;
-//         }
-//         // p_out[i - zero_count] = (pi[i] <= xn) ? p_x[pi[i] - 1] : NA_LOGICAL;
-//         // p_out[i - ( pi[i] == 0 ? zero_count++ : zero_count)] = (pi[i] > 0 && pi[i] <= xn) ? p_x[pi[i] - 1] : NA_INTEGER;
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   case INTSXP: {
-//     int *p_x = INTEGER(x);
-//     SEXP out = Rf_protect(Rf_allocVector(INTSXP, out_size));
-//     ++n_protections;
-//     zero_count = 0;
-//     int *p_out = INTEGER(out);
-//     if (simple_sset){
-//       if (do_parallel){
-// #pragma omp parallel for simd num_threads(n_cores) private(i)
-//         for (i = 0; i < n; ++i){
-//           p_out[i] = p_x[pi[i] - 1];
-//         }
-//       } else {
-// #pragma omp for simd
-//         for (i = 0; i < n; ++i){
-//           p_out[i] = p_x[pi[i] - 1];
-//         }
-//       }
-//     } else {
-//       for (i = 0; i < n; ++i){
-//         if (pi[i] == 0){
-//           ++zero_count;
-//         } else {
-//           p_out[i - zero_count] = (pi[i] <= xn && pi[i] != NA_INTEGER) ? p_x[pi[i] - 1] : NA_INTEGER;
-//         }
-//         // p_out[i - zero_count] = (pi[i] <= xn) ? p_x[pi[i] - 1] : NA_INTEGER;
-//         // p_out[i - ( pi[i] == 0 ? zero_count++ : zero_count)] = (pi[i] > 0 && pi[i] <= xn) ? p_x[pi[i] - 1] : NA_INTEGER;
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   case REALSXP: {
-//     double *p_x = REAL(x);
-//     SEXP out = Rf_protect(Rf_allocVector(REALSXP, out_size));
-//     ++n_protections;
-//     zero_count = 0;
-//     double *p_out = REAL(out);
-//     if (simple_sset){
-//       if (do_parallel){
-// #pragma omp parallel for simd num_threads(n_cores) private(i)
-//         for (i = 0; i < n; ++i){
-//           p_out[i] = p_x[pi[i] - 1];
-//         }
-//       } else {
-// #pragma omp for simd
-//         for (i = 0; i < n; ++i){
-//           p_out[i] = p_x[pi[i] - 1];
-//         }
-//       }
-//     } else {
-//       for (i = 0; i < n; ++i){
-//         if (pi[i] == 0){
-//           ++zero_count;
-//         } else {
-//           p_out[i - zero_count] = (pi[i] <= xn && pi[i] != NA_INTEGER) ? p_x[pi[i] - 1] : NA_REAL;
-//         }
-//         // p_out[i - ( pi[i] == 0 ? zero_count++ : zero_count)] = (pi[i] > 0 && pi[i] <= xn) ? p_x[pi[i] - 1] : NA_REAL;
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   case STRSXP: {
-//     SEXP *p_x = STRING_PTR(x);
-//     SEXP out = Rf_protect(Rf_allocVector(STRSXP, out_size));
-//     ++n_protections;
-//     zero_count = 0;
-//     if (simple_sset){
-//       for (i = 0; i < n; ++i){
-//         SET_STRING_ELT(out, i, p_x[pi[i] - 1]);
-//       }
-//     } else {
-//       for (i = 0; i < n; ++i){
-//         if (pi[i] == 0){
-//           ++zero_count;
-//         } else {
-//           SET_STRING_ELT(out, i - zero_count,
-//                          (pi[i] <= xn && pi[i] != NA_INTEGER) ? p_x[pi[i] - 1] : NA_STRING);
-//         }
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   case RAWSXP: {
-//     Rbyte *p_x = RAW(x);
-//     SEXP out = Rf_protect(Rf_allocVector(RAWSXP, out_size));
-//     ++n_protections;
-//     zero_count = 0;
-//     if (simple_sset){
-//       for (i = 0; i < n; ++i){
-//         SET_RAW_ELT(out, i, p_x[pi[i] - 1]);
-//       }
-//     } else {
-//       for (i = 0; i < n; ++i){
-//         if (pi[i] == 0){
-//           ++zero_count;
-//         } else {
-//           SET_RAW_ELT(out, i - zero_count,
-//                       (pi[i] <= xn && pi[i] != NA_INTEGER) ? p_x[pi[i] - 1] : 0);
-//         }
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   case VECSXP: {
-//     const SEXP *p_x = VECTOR_PTR_RO(x);
-//     SEXP out = Rf_protect(Rf_allocVector(VECSXP, out_size));
-//     ++n_protections;
-//     zero_count = 0;
-//     if (simple_sset){
-//       for (i = 0; i < n; ++i){
-//         SET_VECTOR_ELT(out, i, p_x[pi[i] - 1]);
-//       }
-//     } else {
-//       for (i = 0; i < n; ++i){
-//         if (pi[i] == 0){
-//           ++zero_count;
-//         } else {
-//           SET_VECTOR_ELT(out, i - zero_count,
-//                          (pi[i] <= xn && pi[i] != NA_INTEGER) ? p_x[pi[i] - 1] : R_NilValue);
-//         }
-//       }
-//     }
-//     Rf_unprotect(n_protections);
-//     return out;
-//   }
-//   default: {
-//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-//   }
-//   }
-// }
+// Subsetting vectors and data frames
+// Includes a unique optimisation on range subsetting
 
 // Altrep utils
 
@@ -355,8 +130,8 @@ case INTSXP: {
     SIMPLE_SSET;
   } else {
 #pragma omp for simd
-SIMPLE_SSET;
-}
+    SIMPLE_SSET;
+  }
   for (i = 0; i < n; ++i){
     p_out[i] = p_x[pi[i] - 1];
   }
@@ -450,13 +225,17 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   R_xlen_t out_size, istart1, istart2, iend1, iend2, diff;
   bool double_loop = false;
   // Negative indexing is complicated
-  // Because there are 7 scenarios...
-  // Scenario 1 and 2 are out-of-bound scenarios
-  // Scenario 3 (prob jsut falls back to scenario 5): n:n - We just exclude x[n]
-  // Scenario 4: -1:length(x) - We return an empty vector
-  // Scenario 5: -1:nE{x:x< length(x)} - We subset from n+1:length(x)
-  // Scenario 6: m:nE{n = length(x)} - We subset from m:length(x)
-  // Scenario 7: m:kE{m > 1 & k < length(x)} - This requires 2 loops
+
+  // Assuming N = length(x)
+  // Because there are 6 scenarios...
+
+  // Scenario 1: abs(m) <= N but abs(n) > N
+  // Scenario 2: both abs(m) & abs(n) > N
+  // Scenario 3: -1:-N (Empty vector result)
+  // Scenario 4: -1:mE{m:-m < N} - We subset from n+1:N
+  // Scenario 5: k:NE{k:-k < N}
+  // Scenario 6: m:kE{-m > 1 & -k < N} - Everything but middle chunk of vector
+
   if (istart == 0 && iend == 0){
     out_size = 0;
   } else if (istart < 0 || iend < 0){
@@ -473,35 +252,39 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       istart = iend_temp;
     }
     // Out-of-bounds adjustments
+
+    // Scenario 1
     if (std::abs(istart) <= n && std::abs(iend) > n){
       iend = std::abs(istart) - 1;
       istart = 1;
       by = 1;
       out_size = (iend - istart) + 1;
+      // Scenario 2
     } else if (std::abs(istart) > n && std::abs(iend) > n){
       istart = 1;
       iend  = n;
       by = 1;
       out_size = n;
+      // Scenario 3
     } else if (istart == -1 && iend == -n){
       istart = n;
       iend = n;
       by = 1;
       out_size = 0;
-      // Scenario 3
+      // Scenario 4
     } else if (istart == -1 && std::abs(iend) < n){
       istart = std::abs(iend) + 1;
       iend = n;
       by = 1;
       out_size = (iend - istart) + 1;
-      // Scenario 4
+      // Scenario 5
     } else if (std::abs(istart) < n && std::abs(iend) == n){
       iend = std::abs(istart) - 1;
       istart = 1;
       by = 1;
       out_size = (iend - istart) + 1;
     } else {
-      // Scenario 7
+      // Scenario 6
       double_loop = true;
       istart1 = 1;
       iend1 = std::abs(istart) - 1;
@@ -509,14 +292,6 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       iend2 = n;
       by = 1;
       out_size = (iend1 - istart1) + (iend2 - istart2) + 2;
-      // SEXP out = Rf_protect(Rf_allocVector(VECSXP, 5));
-      // SET_VECTOR_ELT(out, 0, Rf_ScalarInteger(istart1));
-      // SET_VECTOR_ELT(out, 1, Rf_ScalarInteger(iend1));
-      // SET_VECTOR_ELT(out, 2, Rf_ScalarInteger(istart2));
-      // SET_VECTOR_ELT(out, 3, Rf_ScalarInteger(iend2));
-      // SET_VECTOR_ELT(out, 4, Rf_ScalarInteger(out_size));
-      // Rf_unprotect(1);
-      // return out;
     }
   } else {
     if (istart == 0){
