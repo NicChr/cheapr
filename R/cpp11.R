@@ -128,8 +128,12 @@ alt_data1 <- function(x) {
   .Call(`_cheapr_alt_data1`, x)
 }
 
-is_alt_int_seq <- function(x) {
-  .Call(`_cheapr_is_alt_int_seq`, x)
+is_alt_compact_seq <- function(x) {
+  .Call(`_cheapr_is_alt_compact_seq`, x)
+}
+
+alt_compact_seq_data <- function(x) {
+  .Call(`_cheapr_alt_compact_seq_data`, x)
 }
 
 cpp_sset_range <- function(x, from, to, by) {

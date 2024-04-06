@@ -230,10 +230,17 @@ extern "C" SEXP _cheapr_alt_data1(SEXP x) {
   END_CPP11
 }
 // sset.cpp
-bool is_alt_int_seq(SEXP x);
-extern "C" SEXP _cheapr_is_alt_int_seq(SEXP x) {
+bool is_alt_compact_seq(SEXP x);
+extern "C" SEXP _cheapr_is_alt_compact_seq(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(is_alt_int_seq(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(is_alt_compact_seq(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// sset.cpp
+SEXP alt_compact_seq_data(SEXP x);
+extern "C" SEXP _cheapr_alt_compact_seq_data(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(alt_compact_seq_data(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // sset.cpp
@@ -309,6 +316,7 @@ extern "C" SEXP _cheapr_cpp_which_val(SEXP x, SEXP value, SEXP invert) {
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
+    {"_cheapr_alt_compact_seq_data",     (DL_FUNC) &_cheapr_alt_compact_seq_data,     1},
     {"_cheapr_alt_data1",                (DL_FUNC) &_cheapr_alt_data1,                1},
     {"_cheapr_cpp_all_na",               (DL_FUNC) &_cheapr_cpp_all_na,               3},
     {"_cheapr_cpp_any_na",               (DL_FUNC) &_cheapr_cpp_any_na,               2},
@@ -351,7 +359,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",         (DL_FUNC) &_cheapr_cpp_which_not_na,         1},
     {"_cheapr_cpp_which_val",            (DL_FUNC) &_cheapr_cpp_which_val,            3},
     {"_cheapr_cpp_window_sequence",      (DL_FUNC) &_cheapr_cpp_window_sequence,      4},
-    {"_cheapr_is_alt_int_seq",           (DL_FUNC) &_cheapr_is_alt_int_seq,           1},
+    {"_cheapr_is_alt_compact_seq",       (DL_FUNC) &_cheapr_is_alt_compact_seq,       1},
     {NULL, NULL, 0}
 };
 }

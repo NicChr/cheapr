@@ -41,46 +41,42 @@ SEXP alt_data1(SEXP x){
   }
 }
 [[cpp11::register]]
-bool is_alt_int_seq(SEXP x){
+bool is_alt_compact_seq(SEXP x){
   if (!is_altrep(x)) return false;
   SEXP alt_class_nm = Rf_protect(alt_class(x));
   SEXP alt_pkg_nm = Rf_protect(alt_pkg(x));
   SEXP intseq_char = Rf_protect(Rf_mkChar("compact_intseq"));
+  SEXP realseq_char = Rf_protect(Rf_mkChar("compact_realseq"));
   SEXP base_char = Rf_protect(Rf_mkChar("base"));
-  bool out = STRING_ELT(alt_class_nm, 0) == intseq_char &&
+  bool out = (STRING_ELT(alt_class_nm, 0) == intseq_char ||
+              STRING_ELT(alt_class_nm, 0) == realseq_char) &&
     STRING_ELT(alt_pkg_nm, 0) == base_char;
-  Rf_unprotect(4);
-  return out;
-}
-double alt_int_seq_start(SEXP x){
-  if (!is_alt_int_seq(x)){
-    Rf_error("x must be an altrep compact_intseq");
-  }
-  SEXP alt_data = Rf_protect(Rf_coerceVector(alt_data1(x), REALSXP));
-  double out = REAL(alt_data)[1];
-  Rf_unprotect(1);
-  return out;
-}
-double alt_int_seq_increment(SEXP x){
-  if (!is_alt_int_seq(x)){
-    Rf_error("x must be an altrep compact_intseq");
-  }
-  SEXP alt_data = Rf_protect(Rf_coerceVector(alt_data1(x), REALSXP));
-  double out = REAL(alt_data)[2];
-  Rf_unprotect(1);
+  Rf_unprotect(5);
   return out;
 }
 
-double alt_int_seq_end(SEXP x){
-  if (!is_alt_int_seq(x)){
+[[cpp11::register]]
+SEXP alt_compact_seq_data(SEXP x){
+  if (!is_alt_compact_seq(x)){
     Rf_error("x must be an altrep compact_intseq");
   }
   SEXP alt_data = Rf_protect(Rf_coerceVector(alt_data1(x), REALSXP));
   double alt_size = REAL(alt_data)[0];
   double alt_from = REAL(alt_data)[1];
-  double alt_increment = REAL(alt_data)[2];
-  double out = (std::fmax(alt_size - 1.0, 0.0) * alt_increment) + alt_from;
-  Rf_unprotect(1);
+  double alt_by = REAL(alt_data)[2];
+  double alt_to = (std::fmax(alt_size - 1.0, 0.0) * alt_by) + alt_from;
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, 4));
+  SET_VECTOR_ELT(out, 0, Rf_ScalarReal(alt_from));
+  SET_VECTOR_ELT(out, 1, Rf_ScalarReal(alt_to));
+  SET_VECTOR_ELT(out, 2, Rf_ScalarReal(alt_by));
+  SET_VECTOR_ELT(out, 3, Rf_ScalarReal(alt_size));
+  SEXP names = Rf_protect(Rf_allocVector(STRSXP, 4));
+  SET_STRING_ELT(names, 0, Rf_mkChar("from"));
+  SET_STRING_ELT(names, 1, Rf_mkChar("to"));
+  SET_STRING_ELT(names, 2, Rf_mkChar("by"));
+  SET_STRING_ELT(names, 3, Rf_mkChar("size"));
+  Rf_setAttrib(out, R_NamesSymbol, names);
+  Rf_unprotect(3);
   return out;
 }
 
@@ -566,18 +562,20 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
 
   // If indices is a special type of ALTREP compact int sequence, we can
   // Use a range-based subset instead
-  if (is_alt_int_seq(indices)){
+  if (is_alt_compact_seq(indices)){
 
     // ALTREP integer sequence method
 
-    int start = alt_int_seq_start(indices);
-    int end = alt_int_seq_end(indices);
-    int increment = alt_int_seq_increment(indices);
+    SEXP seq_data = Rf_protect(alt_compact_seq_data(indices));
+    ++n_protections;
+    R_xlen_t from = Rf_asReal(VECTOR_ELT(seq_data, 0));
+    R_xlen_t to = Rf_asReal(VECTOR_ELT(seq_data, 1));
+    R_xlen_t by = Rf_asReal(VECTOR_ELT(seq_data, 2));
       for (int j = 0; j < ncols; ++j){
         if (Rf_isObject(p_x[j])){
           SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
         } else {
-          SET_VECTOR_ELT(out, j, cpp_sset_range(p_x[j], start, end, increment));
+          SET_VECTOR_ELT(out, j, cpp_sset_range(p_x[j], from, to, by));
         }
       }
   } else {
@@ -657,7 +655,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
 }
 
 // SEXP cpp_sset(SEXP x, SEXP indices){
-//   if (!Rf_isObject(x) && Rf_isNull(Rf_getAttrib(x, R_NamesSymbol)) && is_alt_int_seq(indices)){
+//   if (!Rf_isObject(x) && Rf_isNull(Rf_getAttrib(x, R_NamesSymbol)) && is_alt_compact_seq(indices)){
 //     SEXP int_seq_data = Rf_protect(Rf_coerceVector(alt_data1(indices), INTSXP));
 //     int size = INTEGER(int_seq_data)[0];
 //     int from = INTEGER(int_seq_data)[1];

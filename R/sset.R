@@ -74,8 +74,8 @@ sset.default <- function(x, i, ...){
   # For non-classed objects
   if (!is.object(x) && !missing(i) &&
       is.null(attr(x, "names")) &&
-      is_alt_int_seq(i) && n_dots(...) == 0){
-    int_seq_data <- altrep_int_seq_data(i)
+      is_alt_compact_seq(i) && n_dots(...) == 0){
+    int_seq_data <- alt_compact_seq_data(i)
     cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
   } else {
     x[i, ...]
@@ -103,8 +103,8 @@ sset.Date <- function(x, i, ...){
   }
   if (!missing(i) &&
       is.null(attr(x, "names")) &&
-      is_alt_int_seq(i) && n_dots(...) == 0){
-    int_seq_data <- altrep_int_seq_data(i)
+      is_alt_compact_seq(i) && n_dots(...) == 0){
+    int_seq_data <- alt_compact_seq_data(i)
     out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
     set_attr(out, "class", oldClass(x))
 
@@ -120,8 +120,8 @@ sset.POSIXct <- function(x, i, ...){
   }
   if (!missing(i) &&
       is.null(attr(x, "names")) &&
-      is_alt_int_seq(i) && n_dots(...) == 0){
-    int_seq_data <- altrep_int_seq_data(i)
+      is_alt_compact_seq(i) && n_dots(...) == 0){
+    int_seq_data <- alt_compact_seq_data(i)
     out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
     set_attr(out, "tzone", attr(x, "tzone"))
     set_attr(out, "class", oldClass(x))
@@ -137,8 +137,8 @@ sset.factor <- function(x, i, ...){
   }
   if (!missing(i) &&
       is.null(attr(x, "names")) &&
-      is_alt_int_seq(i) && n_dots(...) == 0){
-    int_seq_data <- altrep_int_seq_data(i)
+      is_alt_compact_seq(i) && n_dots(...) == 0){
+    int_seq_data <- alt_compact_seq_data(i)
     out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
     set_attr(out, "levels", attr(x, "levels"))
     set_attr(out, "class", oldClass(x))
@@ -248,7 +248,7 @@ df_subset <- function(x, i, j = seq_along(x)){
           seq_len(nrows)[i]
         )
       )
-    # } else if (is_alt_int_seq(i)){
+    # } else if (is_alt_compact_seq(i)){
     #   out <- list_as_df(
     #     lapply(out, sset, i)
     #   )
