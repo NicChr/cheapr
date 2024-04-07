@@ -222,6 +222,13 @@ extern "C" SEXP _cheapr_cpp_lead_sequence(SEXP size, SEXP k, SEXP partial) {
     return cpp11::as_sexp(cpp_lead_sequence(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size), cpp11::as_cpp<cpp11::decay_t<double>>(k), cpp11::as_cpp<cpp11::decay_t<bool>>(partial)));
   END_CPP11
 }
+// sequences.cpp
+SEXP cpp_sequence_id(SEXP size);
+extern "C" SEXP _cheapr_cpp_sequence_id(SEXP size) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_sequence_id(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size)));
+  END_CPP11
+}
 // sset.cpp
 SEXP alt_data1(SEXP x);
 extern "C" SEXP _cheapr_alt_data1(SEXP x) {
@@ -347,6 +354,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_r_unnested_length",    (DL_FUNC) &_cheapr_cpp_r_unnested_length,    1},
     {"_cheapr_cpp_row_na_counts",        (DL_FUNC) &_cheapr_cpp_row_na_counts,        1},
     {"_cheapr_cpp_sequence",             (DL_FUNC) &_cheapr_cpp_sequence,             3},
+    {"_cheapr_cpp_sequence_id",          (DL_FUNC) &_cheapr_cpp_sequence_id,          1},
     {"_cheapr_cpp_set_add_attr",         (DL_FUNC) &_cheapr_cpp_set_add_attr,         3},
     {"_cheapr_cpp_set_add_attributes",   (DL_FUNC) &_cheapr_cpp_set_add_attributes,   3},
     {"_cheapr_cpp_set_rm_attr",          (DL_FUNC) &_cheapr_cpp_set_rm_attr,          2},

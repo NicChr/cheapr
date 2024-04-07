@@ -359,3 +359,26 @@ SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
   Rf_unprotect(2);
   return out;
 }
+[[cpp11::register]]
+SEXP cpp_sequence_id(SEXP size){
+  int size_n = Rf_length(size);
+  SEXP size_sexp = Rf_protect(Rf_coerceVector(size, INTSXP));
+  if (r_min(size_sexp) < 0){
+    Rf_unprotect(1);
+    Rf_error("size must be a vector of non-negative integers");
+  }
+  R_xlen_t N = r_sum(size_sexp, false);
+  SEXP out = Rf_protect(Rf_allocVector(INTSXP, N));
+  int *p_out = INTEGER(out);
+  int *p_size = INTEGER(size_sexp);
+  R_xlen_t k = 0;
+  int seq_size;
+  for (int i = 0; i < size_n; ++i){
+    seq_size = p_size[i];
+    for (int j = 0; j < seq_size; ++j){
+      p_out[k++] = i + 1;
+    }
+  }
+  Rf_unprotect(2);
+  return out;
+}

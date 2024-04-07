@@ -99,9 +99,10 @@ double_sequence <- function(size, from = 1, by = 1){
 }
 #' @rdname sequences
 #' @export
-seq_id <- function(size){
-  rep.int(seq_along(size), times = size)
-}
+seq_id <- cpp_sequence_id
+# Alternative base R way of defining seq_id
+# rep.int(seq_along(size), times = size)
+
 #' @rdname sequences
 #' @export
 seq_ <- function(from = 1L, to = 1L, by = 1L, add_id = FALSE){
@@ -116,7 +117,8 @@ seq_size <- function(from, to, by = 1L){
     size <- del
   } else {
     size <- del / by
-    size[collapse::whichv(del, 0)] <- 0
+    # size[collapse::whichv(del, 0)] <- 0
+    size[cpp_which_val(del, 0, invert = FALSE)] <- 0
   }
   size_rng <- collapse::frange(size, na.rm = TRUE)
   if (isTRUE(any(size_rng < 0))){
@@ -132,12 +134,18 @@ seq_size <- function(from, to, by = 1L){
     trunc(size + 1e-10) + 1
   }
 }
-# seq_start <- function(size, to, by = 1L){
-#   to - (pmax(size - 1L, 0L) * by)
-# }
-# seq_end <- function(size, from, by = 1L){
-#   from + (pmax(size - 1L, 0L) * by)
-# }
+seq_from <- function(size, to, by = 1L){
+  to - (pmax(size - 1L, 0L) * by)
+}
+seq_to <- function(size, from, by = 1L){
+  from + (pmax(size - 1L, 0L) * by)
+}
+seq_by <- function(size, from, to){
+  del <- as.double((to - from))
+  out <- del / pmax.int(size - 1L, 0L)
+  out[cpp_which_val(del, 0, invert = FALSE)] <- 0
+  out
+}
 #' @rdname sequences
 #' @export
 window_sequence <- function(size, k, partial = TRUE, ascending = TRUE, add_id = FALSE) {

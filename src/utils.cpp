@@ -153,8 +153,7 @@ SEXP cpp_list_as_df(SEXP x) {
   } else {
     N = cpp_vec_length(VECTOR_ELT(out, 0));
   }
-  SEXP df_str = Rf_protect(Rf_allocVector(STRSXP, 1));
-  SET_STRING_ELT(df_str, 0, Rf_mkChar("data.frame"));
+  SEXP df_str = Rf_protect(Rf_ScalarString(Rf_mkChar("data.frame")));
   if (N > 0){
     SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
     INTEGER(row_names)[0] = NA_INTEGER;

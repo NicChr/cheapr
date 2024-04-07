@@ -1179,7 +1179,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
 
   SEXP val_is_na = Rf_protect(cpp_is_na(value));
   ++n_protections;
-  if (Rf_asLogical(val_is_na)){
+  if (Rf_length(val_is_na) == 1 && Rf_asLogical(val_is_na)){
     Rf_unprotect(1);
     return na_count(x, recursive);
   }
@@ -1192,6 +1192,10 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case INTSXP: {
     Rf_protect(value = Rf_coerceVector(value, INTSXP));
     ++n_protections;
+    if (Rf_length(value) != 1){
+      Rf_unprotect(n_protections);
+      Rf_error("value must be of length 1");
+    }
     int val = Rf_asInteger(value);
     int *p_x = INTEGER(x);
     if (do_parallel){
@@ -1206,6 +1210,10 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case REALSXP: {
     Rf_protect(value = Rf_coerceVector(value, REALSXP));
     ++n_protections;
+    if (Rf_length(value) != 1){
+      Rf_unprotect(n_protections);
+      Rf_error("value must be of length 1");
+    }
     double val = Rf_asReal(value);
     double *p_x = REAL(x);
     if (do_parallel){
@@ -1220,6 +1228,10 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case STRSXP: {
     Rf_protect(value = Rf_coerceVector(value, STRSXP));
     ++n_protections;
+    if (Rf_length(value) != 1){
+      Rf_unprotect(n_protections);
+      Rf_error("value must be of length 1");
+    }
     SEXP val = Rf_protect(Rf_asChar(value));
     ++n_protections;
     SEXP *p_x = STRING_PTR(x);
