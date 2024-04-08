@@ -20,15 +20,15 @@ sset(x, ...)
 
 \method{sset}{factor}(x, i, ...)
 
-\method{sset}{data.frame}(x, i, j = seq_along(x), ...)
+\method{sset}{data.frame}(x, i, j, ...)
 
-\method{sset}{tbl_df}(x, i, j = seq_along(x), ...)
+\method{sset}{tbl_df}(x, i, j, ...)
 
 \method{sset}{POSIXlt}(x, i, j, ...)
 
-\method{sset}{data.table}(x, i, j = seq_along(x), ...)
+\method{sset}{data.table}(x, i, j, ...)
 
-\method{sset}{sf}(x, i, j = seq_along(x), ...)
+\method{sset}{sf}(x, i, j, ...)
 }
 \arguments{
 \item{x}{Vector or data frame.}

@@ -148,12 +148,12 @@ sset.factor <- function(x, i, ...){
 }
 #' @rdname sset
 #' @export
-sset.data.frame <- function(x, i, j = seq_along(x), ...){
+sset.data.frame <- function(x, i, j, ...){
   df_subset(x, i, j)
 }
 #' @rdname sset
 #' @export
-sset.tbl_df <- function(x, i, j = seq_along(x), ...){
+sset.tbl_df <- function(x, i, j, ...){
   out <- df_subset(x, i, j)
   class(out) <- c("tbl_df", "tbl", "data.frame")
   out
@@ -181,7 +181,7 @@ sset.POSIXlt <- function(x, i, j, ...){
 }
 #' @rdname sset
 #' @export
-sset.data.table <- function(x, i, j = seq_along(x), ...){
+sset.data.table <- function(x, i, j, ...){
   out <- df_subset(x, i, j)
   set_attrs(out, list(
     class = class(x),
@@ -201,7 +201,7 @@ sset.data.table <- function(x, i, j = seq_along(x), ...){
 }
 #' @rdname sset
 #' @export
-sset.sf <- function(x, i, j = seq_along(x), ...){
+sset.sf <- function(x, i, j, ...){
   out <- df_subset(x, i, j)
   source_attrs <- attributes(x)
   source_nms <- names(source_attrs)
@@ -209,25 +209,32 @@ sset.sf <- function(x, i, j = seq_along(x), ...){
   set_attrs(out, attrs_to_keep, add = TRUE)
 }
 df_select <- function(x, j){
-  if (is.logical(j)){
+  j_exists <- !missing(j)
+  if (j_exists && is.logical(j)){
     check_length(j, length(x))
     j <- which_(j)
   }
-  if (is.character(j)){
+  if (j_exists && is.character(j)){
     j <- collapse::fmatch(j, names(x), overid = 2L)
   }
   attrs <- attributes(x)
-  out <- cpp_list_rm_null(unclass(x)[j])
+  if (j_exists){
+    out <- cpp_list_rm_null(.subset(x, j))
+  } else {
+    out <- cpp_list_rm_null(x)
+  }
+  # Neater but not as efficient for dfs with many cols
+  # out <- cpp_list_rm_null(unclass(x)[j])
   attrs[["names"]] <- attr(out, "names")
   attrs[["row.names"]] <- .row_names_info(x, type = 0L)
   set_attrs(out, attrs, add = FALSE)
 }
 
 # Efficient data frame subset
-# With the exception of which_() this is surprisingly all base R...
 # It relies on sset which falls back on `[` when no method is found.
-df_subset <- function(x, i, j = seq_along(x)){
+df_subset <- function(x, i, j){
   missingi <- missing(i)
+  missingj <- missing(j)
   nrows <- length(attr(x, "row.names"))
   if (!missingi && is.logical(i)){
     check_length(i, nrows)
@@ -235,8 +242,13 @@ df_subset <- function(x, i, j = seq_along(x)){
   }
 
   ### Subset columns
-
-  out <- df_select(x, j)
+  # If j arg is missing, we want to still create a shallow copy
+  # Which we do through df_select()
+  if (!missingj || (missingi && missingj)){
+    out <- df_select(x, j)
+  } else {
+    out <- x
+  }
 
   ### Subset rows
 

@@ -205,20 +205,6 @@ SEXP r_address(SEXP x) {
 //   return out;
 // }
 
-// For use in sset
-// SEXP cpp_set_reverse_sign(SEXP x){
-//   SEXP out = Rf_protect(x);
-//   int n = Rf_length(x);
-//   int *p_out = INTEGER(out);
-//   for (int i = 0; i < n; ++i){
-//     if (p_out[i] != NA_INTEGER){
-//       p_out[i] = -p_out[i];
-//     }
-//   }
-//   Rf_unprotect(1);
-//   return out;
-// }
-
 // Would use data.table as it is very efficient, but would require extra dependency
 // Here x must be an integer vector
 

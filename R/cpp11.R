@@ -128,10 +128,6 @@ cpp_sequence_id <- function(size) {
   .Call(`_cheapr_cpp_sequence_id`, size)
 }
 
-alt_data1 <- function(x) {
-  .Call(`_cheapr_alt_data1`, x)
-}
-
 is_alt_compact_seq <- function(x) {
   .Call(`_cheapr_is_alt_compact_seq`, x)
 }

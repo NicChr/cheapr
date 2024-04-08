@@ -230,13 +230,6 @@ extern "C" SEXP _cheapr_cpp_sequence_id(SEXP size) {
   END_CPP11
 }
 // sset.cpp
-SEXP alt_data1(SEXP x);
-extern "C" SEXP _cheapr_alt_data1(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(alt_data1(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// sset.cpp
 bool is_alt_compact_seq(SEXP x);
 extern "C" SEXP _cheapr_is_alt_compact_seq(SEXP x) {
   BEGIN_CPP11
@@ -324,7 +317,6 @@ extern "C" SEXP _cheapr_cpp_which_val(SEXP x, SEXP value, SEXP invert) {
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_alt_compact_seq_data",     (DL_FUNC) &_cheapr_alt_compact_seq_data,     1},
-    {"_cheapr_alt_data1",                (DL_FUNC) &_cheapr_alt_data1,                1},
     {"_cheapr_cpp_all_na",               (DL_FUNC) &_cheapr_cpp_all_na,               3},
     {"_cheapr_cpp_any_na",               (DL_FUNC) &_cheapr_cpp_any_na,               2},
     {"_cheapr_cpp_col_na_counts",        (DL_FUNC) &_cheapr_cpp_col_na_counts,        1},
