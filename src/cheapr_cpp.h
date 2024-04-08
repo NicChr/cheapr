@@ -5,6 +5,7 @@
 #define cheapr_cpp_funs
 
 #define R_NO_REMAP
+#define VECTOR_PTR(x) ((SEXP *) DATAPTR(x))
 #define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
 
 #ifdef _OPENMP

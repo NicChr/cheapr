@@ -646,6 +646,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols));
+  SEXP *p_out = VECTOR_PTR(out);
   ++n_protections;
   // Counting the number of:
   // Zeroes
@@ -666,9 +667,11 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     R_xlen_t by = REAL(seq_data)[2];
     for (int j = 0; j < ncols; ++j){
       if (Rf_isObject(p_x[j])){
-        SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
+        p_out[j] = cheapr_sset(p_x[j], indices);
+        // SET_VECTOR_ELT(out, j, );
       } else {
-        SET_VECTOR_ELT(out, j, cpp_sset_range(p_x[j], from, to, by));
+        p_out[j] = cpp_sset_range(p_x[j], from, to, by);
+        // SET_VECTOR_ELT(out, j, cpp_sset_range(p_x[j], from, to, by));
       }
     }
     out_size = get_alt_final_sset_size(xn, from, to, by);
@@ -704,9 +707,11 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     if (simple_sset){
       for (int j = 0; j < ncols; ++j){
         if (Rf_isObject(p_x[j])){
-          SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
+          p_out[j] = cheapr_sset(p_x[j], indices);
+          // SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
         } else {
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi, out_size, n_cores));
+          p_out[j] = cpp_sset_unsafe(p_x[j], pi, out_size, n_cores);
+          // SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi, out_size, n_cores));
         }
       }
       // Negative indexing
@@ -717,9 +722,11 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       int *pi2 = INTEGER(indices2);
       for (int j = 0; j < ncols; ++j){
         if (Rf_isObject(p_x[j])){
-          SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
+          p_out[j] = cheapr_sset(p_x[j], indices2);
+          // SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
         } else {
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores));
+          p_out[j] = cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores);
+          // SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores));
         }
       }
       // If index vector is clean except for existence of zeroes
@@ -731,14 +738,17 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       int *pi2 = INTEGER(indices2);
       for (int j = 0; j < ncols; ++j){
         if (Rf_isObject(p_x[j])){
-          SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
+          p_out[j] = cheapr_sset(p_x[j], indices2);
+          // SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
         } else {
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores));
+          p_out[j] = cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores);
+          // SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores));
         }
       }
     } else {
       for (int j = 0; j < ncols; ++j){
-        SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
+        p_out[j] = cheapr_sset(p_x[j], indices);
+        // SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
       }
     }
   }
