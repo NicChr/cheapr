@@ -249,25 +249,9 @@ df_subset <- function(x, i, j){
   } else {
     out <- x
   }
-
   ### Subset rows
-
   if (!missingi){
-    i <- as.integer(i)
-    if (length(out) == 0){
-      attr(out, "row.names") <- .set_row_names(
-        length(
-          seq_len(nrows)[i]
-        )
-      )
-    # } else if (is_alt_compact_seq(i)){
-    #   out <- list_as_df(
-    #     lapply(out, sset, i)
-    #   )
-    # } else {
-    } else {
-      out <- cpp_sset_df(out, i)
-    }
+    out <- cpp_sset_df(out, as.integer(i))
   }
   out
 }

@@ -77,120 +77,111 @@ SEXP alt_compact_seq_data(SEXP x){
 
 // Subset with no checks, indices vector must be pre-curated
 
-SEXP cpp_sset_unsafe(SEXP x, SEXP indices){
-  int *pi = INTEGER(indices);
-  int n = Rf_length(indices);
-  int n_protections = 0;
-  bool do_parallel = n >= 100000;
-  int n_cores = do_parallel ? num_cores() : 1;
+SEXP cpp_sset_unsafe(SEXP x, int *pind, int n, int n_cores){
+  bool do_parallel = n_cores > 1;
+  switch ( TYPEOF(x) ){
 
-#define SIMPLE_SSET                                            \
-  for (i = 0; i < n; ++i){                                     \
-    p_out[i] = p_x[pi[i] - 1];                                 \
+  case NILSXP: {
+    return R_NilValue;
   }
-
-switch ( TYPEOF(x) ){
-
-int i;
-case NILSXP: {
-  return R_NilValue;
-}
-case LGLSXP: {
-  int *p_x = LOGICAL(x);
-  SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n));
-  ++n_protections;
-  int *p_out = LOGICAL(out);
-  if (do_parallel){
-    OMP_PARALLEL_FOR_SIMD
-    SIMPLE_SSET;
-  } else {
+  case LGLSXP: {
+    int *p_x = LOGICAL(x);
+    SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n));
+    int *p_out = LOGICAL(out);
+    if (do_parallel){
+      OMP_PARALLEL_FOR_SIMD
+      for (int i = 0; i < n; ++i){
+        p_out[i] = p_x[pind[i] - 1];
+      }
+    } else {
+      OMP_FOR_SIMD
+      for (int i = 0; i < n; ++i){
+        p_out[i] = p_x[pind[i] - 1];
+      }
+    }
+    Rf_unprotect(1);
+    return out;
+  }
+  case INTSXP: {
+    int *p_x = INTEGER(x);
+    SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+    int *p_out = INTEGER(out);
+    if (do_parallel){
+      OMP_PARALLEL_FOR_SIMD
+      for (int i = 0; i < n; ++i){
+        p_out[i] = p_x[pind[i] - 1];
+      }
+    } else {
+      OMP_FOR_SIMD
+      for (int i = 0; i < n; ++i){
+        p_out[i] = p_x[pind[i] - 1];
+      }
+    }
+    Rf_unprotect(1);
+    return out;
+  }
+  case REALSXP: {
+    double *p_x = REAL(x);
+    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
+    double *p_out = REAL(out);
+    if (do_parallel){
+      OMP_PARALLEL_FOR_SIMD
+      for (int i = 0; i < n; ++i){
+        p_out[i] = p_x[pind[i] - 1];
+      }
+    } else {
+      OMP_FOR_SIMD
+      for (int i = 0; i < n; ++i){
+        p_out[i] = p_x[pind[i] - 1];
+      }
+    }
+    Rf_unprotect(1);
+    return out;
+  }
+  case STRSXP: {
+    SEXP *p_x = STRING_PTR(x);
+    SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
     OMP_FOR_SIMD
-    SIMPLE_SSET;
+    for (int i = 0; i < n; ++i){
+      SET_STRING_ELT(out, i, p_x[pind[i] - 1]);
+    }
+    Rf_unprotect(1);
+    return out;
   }
-  Rf_unprotect(n_protections);
-  return out;
-}
-case INTSXP: {
-  int *p_x = INTEGER(x);
-  SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
-  ++n_protections;
-  int *p_out = INTEGER(out);
-  if (do_parallel){
-    OMP_PARALLEL_FOR_SIMD
-    SIMPLE_SSET;
-  } else {
+  case CPLXSXP: {
+    Rcomplex *p_x = COMPLEX(x);
+    SEXP out = Rf_protect(Rf_allocVector(CPLXSXP, n));
     OMP_FOR_SIMD
-    SIMPLE_SSET;
+    for (int i = 0; i < n; ++i){
+      SET_COMPLEX_ELT(out, i, p_x[pind[i] - 1]);
+    }
+    Rf_unprotect(1);
+    return out;
   }
-  for (i = 0; i < n; ++i){
-    p_out[i] = p_x[pi[i] - 1];
-  }
-  Rf_unprotect(n_protections);
-  return out;
-}
-case REALSXP: {
-  double *p_x = REAL(x);
-  SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
-  ++n_protections;
-  double *p_out = REAL(out);
-  if (do_parallel){
-    OMP_PARALLEL_FOR_SIMD
-    SIMPLE_SSET;
-  } else {
+  case RAWSXP: {
+    Rbyte *p_x = RAW(x);
+    SEXP out = Rf_protect(Rf_allocVector(RAWSXP, n));
     OMP_FOR_SIMD
-    SIMPLE_SSET;
+    for (int i = 0; i < n; ++i){
+      SET_RAW_ELT(out, i, p_x[pind[i] - 1]);
+    }
+    Rf_unprotect(1);
+    return out;
   }
-  Rf_unprotect(n_protections);
-  return out;
-}
-case STRSXP: {
-  SEXP *p_x = STRING_PTR(x);
-  SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
-  ++n_protections;
-  OMP_FOR_SIMD
-  for (i = 0; i < n; ++i){
-    SET_STRING_ELT(out, i, p_x[pi[i] - 1]);
+  case VECSXP: {
+    const SEXP *p_x = VECTOR_PTR_RO(x);
+    SEXP out = Rf_protect(Rf_allocVector(VECSXP, n));
+    OMP_FOR_SIMD
+    for (int i = 0; i < n; ++i){
+      SET_VECTOR_ELT(out, i, p_x[pind[i] - 1]);
+    }
+    Rf_unprotect(1);
+    return out;
   }
-  Rf_unprotect(n_protections);
-  return out;
-}
-case CPLXSXP: {
-  Rcomplex *p_x = COMPLEX(x);
-  SEXP out = Rf_protect(Rf_allocVector(CPLXSXP, n));
-  ++n_protections;
-  OMP_FOR_SIMD
-  for (i = 0; i < n; ++i){
-    SET_COMPLEX_ELT(out, i, p_x[pi[i] - 1]);
+  default: {
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
-  Rf_unprotect(n_protections);
-  return out;
-}
-case RAWSXP: {
-  Rbyte *p_x = RAW(x);
-  SEXP out = Rf_protect(Rf_allocVector(RAWSXP, n));
-  ++n_protections;
-  OMP_FOR_SIMD
-  for (i = 0; i < n; ++i){
-    SET_RAW_ELT(out, i, p_x[pi[i] - 1]);
   }
-  Rf_unprotect(n_protections);
-  return out;
-}
-case VECSXP: {
-  const SEXP *p_x = VECTOR_PTR_RO(x);
-  SEXP out = Rf_protect(Rf_allocVector(VECSXP, n));
-  ++n_protections;
-  OMP_FOR_SIMD
-  for (i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, p_x[pi[i] - 1]);
-  }
-  Rf_unprotect(n_protections);
-  return out;
-}
-default: {
-  Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-}
-}
 }
 
 // A range-based subset method
@@ -576,6 +567,69 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
 }
 
+// Helper to convert altrep sequences into the final subsetted length
+R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_t by){
+  R_xlen_t istart = from;
+  R_xlen_t iend = to;
+  R_xlen_t out;
+  if (istart == 0 && iend == 0){
+    out = 0;
+  } else if (istart < 0 || iend < 0){
+    if (istart == 0){
+      istart = -1;
+    }
+    if (iend == 0){
+      iend = -1;
+    }
+    // We first switch them
+    if (istart < iend){
+      R_xlen_t iend_temp = iend;
+      iend = istart;
+      istart = iend_temp;
+    }
+    // Out-of-bounds adjustments
+
+    // Scenario 1
+    if (std::abs(istart) <= n && std::abs(iend) > n){
+      iend = std::abs(istart) - 1;
+      istart = 1;
+      out = (iend - istart) + 1;
+      // Scenario 2
+    } else if (std::abs(istart) > n && std::abs(iend) > n){
+      out = n;
+      // Scenario 3
+    } else if (istart == -1 && iend == -n){
+      out = 0;
+      // Scenario 4
+    } else if (istart == -1 && std::abs(iend) < n){
+      istart = std::abs(iend) + 1;
+      iend = n;
+      out = (iend - istart) + 1;
+      // Scenario 5
+    } else if (std::abs(istart) < n && std::abs(iend) == n){
+      iend = std::abs(istart) - 1;
+      istart = 1;
+      out = (iend - istart) + 1;
+    } else {
+      // Scenario 6
+      R_xlen_t istart1 = 1;
+      R_xlen_t iend1 = std::abs(istart) - 1;
+      R_xlen_t istart2 = std::abs(iend) + 1;
+      R_xlen_t iend2 = n;
+      out = (iend1 - istart1) + (iend2 - istart2) + 2;
+    }
+  } else {
+    if (istart == 0){
+      istart = 1;
+    }
+    if (iend == 0){
+      iend = 1;
+    }
+    out = ((iend - istart) * by) + 1;
+  }
+  return out;
+}
+
 [[cpp11::register]]
 SEXP cpp_sset_df(SEXP x, SEXP indices){
   int xn = cpp_df_nrow(x);
@@ -586,6 +640,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   int pos_count = 0;
   int oob_count = 0;
   int na_count = 0;
+  int out_size;
   bool do_parallel = n >= 10000;
   int n_cores = do_parallel ? num_cores() : 1;
   cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
@@ -611,17 +666,12 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     R_xlen_t by = REAL(seq_data)[2];
     for (int j = 0; j < ncols; ++j){
       if (Rf_isObject(p_x[j])){
-        // SEXP df_var = Rf_protect(cheapr_sset(p_x[j], indices));
-        // ++n_protections;
-        // SET_VECTOR_ELT(out, j, df_var);
         SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
       } else {
-        // SEXP df_var = Rf_protect(cpp_sset_range(p_x[j], from, to, by));
-        // ++n_protections;
-        // SET_VECTOR_ELT(out, j, df_var);
         SET_VECTOR_ELT(out, j, cpp_sset_range(p_x[j], from, to, by));
       }
     }
+    out_size = get_alt_final_sset_size(xn, from, to, by);
   } else {
     int *pi = INTEGER(indices);
     // Usual method
@@ -649,36 +699,27 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       Rf_error("Cannot mix positive and negative indices");
     }
     bool simple_sset = zero_count == 0 && oob_count == 0 && na_count == 0 && pos_count == n;
+    out_size = na_count + pos_count;
     // Index vector is clean, we can use fast subset
     if (simple_sset){
       for (int j = 0; j < ncols; ++j){
         if (Rf_isObject(p_x[j])){
-          // SEXP df_var = Rf_protect(cheapr_sset(p_x[j], indices));
-          // ++n_protections;
-          // SET_VECTOR_ELT(out, j, df_var);
           SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
         } else {
-          // SEXP df_var = Rf_protect(cpp_sset_unsafe(p_x[j], indices));
-          // ++n_protections;
-          // SET_VECTOR_ELT(out, j, df_var);
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], indices));
+          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi, out_size, n_cores));
         }
       }
       // Negative indexing
     } else if (neg_count > 0){
       SEXP indices2 = Rf_protect(cpp11::package("cheapr")["neg_indices_to_pos"](indices, xn));
       ++n_protections;
+      out_size = Rf_length(indices2);
+      int *pi2 = INTEGER(indices2);
       for (int j = 0; j < ncols; ++j){
         if (Rf_isObject(p_x[j])){
-          // SEXP df_var = Rf_protect(cheapr_sset(p_x[j], indices2));
-          // ++n_protections;
-          // SET_VECTOR_ELT(out, j, df_var);
           SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
         } else {
-          // SEXP df_var = Rf_protect(cpp_sset_unsafe(p_x[j], indices2));
-          // ++n_protections;
-          // SET_VECTOR_ELT(out, j, df_var);
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], indices2));
+          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores));
         }
       }
       // If index vector is clean except for existence of zeroes
@@ -687,24 +728,16 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       ++n_protections;
       SEXP indices2 = Rf_protect(cpp11::package("cheapr")["val_rm"](indices, r_zero));
       ++n_protections;
+      int *pi2 = INTEGER(indices2);
       for (int j = 0; j < ncols; ++j){
         if (Rf_isObject(p_x[j])){
-          // SEXP df_var = Rf_protect(cheapr_sset(p_x[j], indices2));
-          // ++n_protections;
-          // SET_VECTOR_ELT(out, j, df_var);
           SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
         } else {
-          // SEXP df_var = Rf_protect(cpp_sset_unsafe(p_x[j], indices2));
-          // ++n_protections;
-          // SET_VECTOR_ELT(out, j, df_var);
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], indices2));
+          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores));
         }
       }
     } else {
       for (int j = 0; j < ncols; ++j){
-        // SEXP df_var = Rf_protect(cheapr_sset(p_x[j], indices));
-        // ++n_protections;
-        // SET_VECTOR_ELT(out, j, df_var);
         SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
       }
     }
@@ -714,28 +747,20 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   Rf_setAttrib(out, R_NamesSymbol, names);
 
   // list to data frame object
-
-  int N; // Number of rows
-  if (Rf_length(out) == 0){
-    N = 0;
-  } else {
-    N = cpp_vec_length(VECTOR_ELT(out, 0));
-  }
   SEXP df_str = Rf_protect(Rf_ScalarString(Rf_mkChar("data.frame")));
   ++n_protections;
-  if (N > 0){
+  if (out_size > 0){
     SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
     ++n_protections;
     INTEGER(row_names)[0] = NA_INTEGER;
-    INTEGER(row_names)[1] = -N;
+    INTEGER(row_names)[1] = -out_size;
     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-    Rf_classgets(out, df_str);
   } else {
     SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0));
     ++n_protections;
     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-    Rf_classgets(out, df_str);
   }
+  Rf_classgets(out, df_str);
   // Basically cpp_list_as_df() creates a shallow copy and we don't want that
   // Rf_protect(out = cpp_list_as_df(out));
   // ++n_protections;

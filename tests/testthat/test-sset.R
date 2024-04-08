@@ -95,6 +95,11 @@ test_that("subsetting", {
     )
   }
 
+  expect_identical(
+    sset(df, 0),
+    base_sset(df, 0, 1:ncol(df), drop = FALSE)
+  )
+
   empty_df <- df[0, , drop = FALSE]
 
   expect_identical(
