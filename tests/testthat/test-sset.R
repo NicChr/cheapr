@@ -95,9 +95,21 @@ test_that("subsetting", {
     )
   }
 
+  # Subsetting no rows
   expect_identical(
     sset(df, 0),
     base_sset(df, 0, 1:ncol(df), drop = FALSE)
+  )
+
+  # Subsetting data frame with 0 cols
+  expect_identical(
+    sset(df, 10:0, j = 0),
+    base_sset(df, 10:1, 0, drop = FALSE)
+  )
+
+  expect_identical(
+    sset(df, 0, 0),
+    base_sset(df, 0, 0, drop = FALSE)
   )
 
   empty_df <- df[0, , drop = FALSE]
