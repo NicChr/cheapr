@@ -646,8 +646,8 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols));
-  SEXP *p_out = VECTOR_PTR(out);
   ++n_protections;
+  SEXP *p_out = VECTOR_PTR(out);
   // Counting the number of:
   // Zeroes
   // Out-of-bounds indices
