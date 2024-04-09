@@ -29,3 +29,6 @@ val_rm <- function(x, value){
     sset(x, cpp_which_val(x, value, invert = TRUE))
   }
 }
+which_val <- function(x, value, invert = FALSE){
+  .Call(`_cheapr_cpp_which_val`, x, value, invert)
+}

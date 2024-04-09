@@ -67,6 +67,7 @@ sset <- function(x, ...){
 #' @export
 sset.default <- function(x, i, ...){
   if (!missing(i) && is.logical(i)){
+    check_length(i, length(x))
     i <- which_(i)
   }
   # The below line will handle a special but common
@@ -105,6 +106,7 @@ sset.Date <- function(x, i, ...){
   # out <- sset.default(unclass(x), i, ...)
   # set_attr(out, "class", oldClass(x))
   if (!missing(i) && is.logical(i)){
+    check_length(i, length(x))
     i <- which_(i)
   }
   if (!missing(i) &&
@@ -127,6 +129,7 @@ sset.Date <- function(x, i, ...){
 #' @export
 sset.POSIXct <- function(x, i, ...){
   if (!missing(i) && is.logical(i)){
+    check_length(i, length(x))
     i <- which_(i)
   }
   if (!missing(i) &&
@@ -149,6 +152,7 @@ sset.POSIXct <- function(x, i, ...){
 #' @export
 sset.factor <- function(x, i, ...){
   if (!missing(i) && is.logical(i)){
+    check_length(i, length(x))
     i <- which_(i)
   }
   if (!missing(i) &&

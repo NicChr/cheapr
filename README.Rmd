@@ -166,6 +166,28 @@ mark(sset(df, -10^4:0),
      check = FALSE) # The only difference is the row names
 ```
 
+The biggest difference between `sset` and `[` is the way logical vectors are handled.
+The two main differences when `i` is a logical vector are:
+
+* `NA` values are ignored, only the locations of `TRUE` values are used.
+* `i` must be the same length as `x` and is not recycled.
+
+
+```{r,error=TRUE}
+# Examples with NAs
+x <- c(1, 5, NA, NA, -5)
+x[x > 0]
+sset(x, x > 0)
+
+# Example with length(i) < length(x)
+sset(x, TRUE)
+
+# This is equivalent 
+x[TRUE]
+# to..
+sset(x)
+```
+
 
 ## Greatest common divisor and smallest common multiple
 
