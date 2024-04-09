@@ -284,7 +284,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     if (iend == 0){
       iend = 1;
     }
-    out_size = ((iend - istart) * by) + 1;
+    out_size = ((iend - istart) / by) + 1;
   }
   bool do_parallel = out_size >= 100000;
   int n_cores = do_parallel ? num_cores() : 1;
@@ -626,7 +626,7 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
     if (iend == 0){
       iend = 1;
     }
-    out = ((iend - istart) * by) + 1;
+    out = ((iend - istart) / by) + 1;
   }
   return out;
 }
@@ -667,13 +667,37 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     R_xlen_t to = REAL(seq_data)[1];
     R_xlen_t by = REAL(seq_data)[2];
     for (int j = 0; j < ncols; ++j){
-      if (Rf_isObject(p_x[j])){
-        // p_out[j] = cheapr_sset(p_x[j], indices);
-        SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
+      SEXP df_var = Rf_protect(p_x[j]);
+      if (!Rf_isObject(df_var) ||
+          Rf_inherits(df_var, "Date") ||
+          Rf_inherits(df_var, "POSIXct") ||
+          Rf_inherits(df_var, "factor")){
+        SEXP list_var = Rf_protect(cpp_sset_range(df_var, from, to, by));
+        Rf_copyMostAttrib(df_var, list_var);
+        int has_names = Rf_getAttrib(df_var, R_NamesSymbol) != R_NilValue;
+        if (has_names){
+          SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+          SEXP new_names = Rf_protect(cpp_sset_range(
+            old_names, from, to, by)
+          );
+          Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+        }
+        // R_PreserveObject(list_var);
+        // p_out[j] = list_var; // Unsafe?  (test this by running sset(iris, 1:10^7))
+
+        SET_VECTOR_ELT(out, j, list_var);
+
+        // We un-protect below the original df variables, as well as
+        // old and new names
+        // Once they are added to the data frame, they are protected
+        // If we didn't do this we would easily reach the protection stack limit
+        // of 10,000
+        Rf_unprotect(1 + (has_names * 2));
       } else {
-        // p_out[j] = cpp_sset_range(p_x[j], from, to, by);
-        SET_VECTOR_ELT(out, j, cpp_sset_range(p_x[j], from, to, by));
+        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
       }
+      // Unprotecting new data frame variable
+      Rf_unprotect(1);
     }
     out_size = get_alt_final_sset_size(xn, from, to, by);
   } else {
@@ -707,13 +731,27 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     // Index vector is clean, we can use fast subset
     if (simple_sset){
       for (int j = 0; j < ncols; ++j){
-        if (Rf_isObject(p_x[j])){
-          // p_out[j] = cheapr_sset(p_x[j], indices);
-          SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
+        SEXP df_var = Rf_protect(p_x[j]);
+        if (!Rf_isObject(df_var) ||
+            Rf_inherits(df_var, "Date") ||
+            Rf_inherits(df_var, "POSIXct") ||
+            Rf_inherits(df_var, "factor")){
+          SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, pi, out_size, n_cores));
+          Rf_copyMostAttrib(df_var, list_var);
+          int has_names = Rf_getAttrib(df_var, R_NamesSymbol) != R_NilValue;
+          if (has_names){
+            SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+            SEXP new_names = Rf_protect(cpp_sset_unsafe(
+              old_names, pi, out_size, n_cores
+            ));
+            Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+          }
+          SET_VECTOR_ELT(out, j, list_var);
+          Rf_unprotect(1 + (has_names * 2));
         } else {
-          // p_out[j] = cpp_sset_unsafe(p_x[j], pi, out_size, n_cores);
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi, out_size, n_cores));
+          SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
         }
+        Rf_unprotect(1);
       }
       // Negative indexing
     } else if (neg_count > 0){
@@ -722,13 +760,27 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       out_size = Rf_length(indices2);
       int *pi2 = INTEGER(indices2);
       for (int j = 0; j < ncols; ++j){
-        if (Rf_isObject(p_x[j])){
-          // p_out[j] = cheapr_sset(p_x[j], indices2);
-          SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
+        SEXP df_var = Rf_protect(p_x[j]);
+        if (!Rf_isObject(df_var) ||
+            Rf_inherits(df_var, "Date") ||
+            Rf_inherits(df_var, "POSIXct") ||
+            Rf_inherits(df_var, "factor")){
+          SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, pi2, out_size, n_cores));
+          Rf_copyMostAttrib(df_var, list_var);
+          int has_names = Rf_getAttrib(df_var, R_NamesSymbol) != R_NilValue;
+          if (has_names){
+            SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+            SEXP new_names = Rf_protect(cpp_sset_unsafe(
+              old_names, pi2, out_size, n_cores
+            ));
+            Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+          }
+          SET_VECTOR_ELT(out, j, list_var);
+          Rf_unprotect(1 + (has_names * 2));
         } else {
-          // p_out[j] = cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores);
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores));
+          SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices2));
         }
+        Rf_unprotect(1);
       }
       // If index vector is clean except for existence of zeroes
     } else if (zero_count > 0 && oob_count == 0 && na_count == 0){
@@ -738,18 +790,33 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       ++n_protections;
       int *pi2 = INTEGER(indices2);
       for (int j = 0; j < ncols; ++j){
-        if (Rf_isObject(p_x[j])){
-          // p_out[j] = cheapr_sset(p_x[j], indices2);
-          SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices2));
+        SEXP df_var = Rf_protect(p_x[j]);
+        if (!Rf_isObject(df_var) ||
+            Rf_inherits(df_var, "Date") ||
+            Rf_inherits(df_var, "POSIXct") ||
+            Rf_inherits(df_var, "factor")){
+          SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, pi2, out_size, n_cores));
+          Rf_copyMostAttrib(df_var, list_var);
+          int has_names = Rf_getAttrib(df_var, R_NamesSymbol) != R_NilValue;
+          if (has_names){
+            SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+            SEXP new_names = Rf_protect(cpp_sset_unsafe(
+              old_names, pi2, out_size, n_cores
+            ));
+            Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+          }
+          SET_VECTOR_ELT(out, j, list_var);
+          Rf_unprotect(1 + (has_names * 2));
         } else {
-          // p_out[j] = cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores);
-          SET_VECTOR_ELT(out, j, cpp_sset_unsafe(p_x[j], pi2, out_size, n_cores));
+          SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices2));
         }
+        Rf_unprotect(1);
       }
     } else {
       for (int j = 0; j < ncols; ++j){
-        // p_out[j] = cheapr_sset(p_x[j], indices);
-        SET_VECTOR_ELT(out, j, cheapr_sset(p_x[j], indices));
+        SEXP df_var = Rf_protect(p_x[j]);
+        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+        Rf_unprotect(1);
       }
     }
   }
@@ -772,12 +839,214 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   }
   Rf_classgets(out, df_str);
-  // Basically cpp_list_as_df() creates a shallow copy and we don't want that
-  // Rf_protect(out = cpp_list_as_df(out));
-  // ++n_protections;
   Rf_unprotect(n_protections);
   return out;
 }
+
+// SEXP cpp_sset_df(SEXP x, SEXP indices){
+//   int xn = cpp_df_nrow(x);
+//   int ncols = Rf_length(x);
+//   int n = Rf_length(indices);
+//   int n_protections = 0;
+//   int zero_count = 0;
+//   int pos_count = 0;
+//   int oob_count = 0;
+//   int na_count = 0;
+//   int out_size;
+//   bool do_parallel = n >= 10000;
+//   int n_cores = do_parallel ? num_cores() : 1;
+//   cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
+//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//   SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols));
+//   ++n_protections;
+//   // SEXP *p_out = VECTOR_PTR(out);
+//   // Counting the number of:
+//   // Zeroes
+//   // Out-of-bounds indices
+//   // Positive indices
+//   // From this we can also work out the number of negatives
+//
+//   // If indices is a special type of ALTREP compact int sequence, we can
+//   // Use a range-based subset instead
+//   if (is_alt_compact_seq(indices)){
+//
+//     // ALTREP integer sequence method
+//
+//     SEXP seq_data = Rf_protect(alt_compact_seq_data(indices));
+//     ++n_protections;
+//     R_xlen_t from = REAL(seq_data)[0];
+//     R_xlen_t to = REAL(seq_data)[1];
+//     R_xlen_t by = REAL(seq_data)[2];
+//     for (int j = 0; j < ncols; ++j){
+//       SEXP df_var = Rf_protect(p_x[j]);
+//       if (!Rf_isObject(df_var) ||
+//           Rf_inherits(df_var, "Date") ||
+//           Rf_inherits(df_var, "POSIXct") ||
+//           Rf_inherits(df_var, "factor")){
+//         SEXP list_var = Rf_protect(cpp_sset_range(df_var, from, to, by));
+//         Rf_copyMostAttrib(df_var, list_var);
+//         int has_names = Rf_getAttrib(df_var, R_NamesSymbol) != R_NilValue;
+//         if (has_names){
+//           SEXP new_names = Rf_protect(cpp_sset_range(
+//             Rf_getAttrib(df_var, R_NamesSymbol), from, to, by)
+//           );
+//           Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+//         }
+//         SET_VECTOR_ELT(out, j, list_var);
+//
+//         // We un-protect below the original and new df variables, as well as names
+//         // Once they are added to the data frame, they are protected
+//         // If we didn't do this we would easily reach the protection stack limit
+//         // of 10,000
+//         Rf_unprotect(1 + has_names);
+//       } else {
+//         SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+//       }
+//       Rf_unprotect(1);
+//     }
+//     out_size = get_alt_final_sset_size(xn, from, to, by);
+//   } else {
+//     int *pi = INTEGER(indices);
+//     // Usual method
+//
+//     if (do_parallel){
+// #pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
+//       for (int j = 0; j < n; ++j){
+//         zero_count += (pi[j] == 0);
+//         pos_count += (pi[j] > 0);
+//         oob_count += (std::fabs(pi[j]) > xn);
+//         na_count += (pi[j] == NA_INTEGER);
+//       }
+//     } else {
+//       OMP_FOR_SIMD
+//       for (int j = 0; j < n; ++j){
+//         zero_count += (pi[j] == 0);
+//         pos_count += (pi[j] > 0);
+//         oob_count += (std::fabs(pi[j]) > xn);
+//         na_count += (pi[j] == NA_INTEGER);
+//       }
+//     }
+//     int neg_count = n - pos_count - zero_count - na_count;
+//     if ( (pos_count > 0 && neg_count > 0) ||
+//          (neg_count > 0 && na_count > 0)){
+//       Rf_error("Cannot mix positive and negative indices");
+//     }
+//     bool simple_sset = zero_count == 0 && oob_count == 0 && na_count == 0 && pos_count == n;
+//     out_size = na_count + pos_count;
+//     // Index vector is clean, we can use fast subset
+//     if (simple_sset){
+//       for (int j = 0; j < ncols; ++j){
+//         SEXP df_var = Rf_protect(p_x[j]);
+//         if (!Rf_isObject(df_var) ||
+//             Rf_inherits(df_var, "Date") ||
+//             Rf_inherits(df_var, "POSIXct") ||
+//             Rf_inherits(df_var, "factor")){
+//           SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, pi, out_size, n_cores));
+//           Rf_copyMostAttrib(df_var, list_var);
+//           int has_names = Rf_getAttrib(df_var, R_NamesSymbol) != R_NilValue;
+//           if (has_names){
+//             SEXP new_names = Rf_protect(cpp_sset_unsafe(
+//               Rf_getAttrib(df_var, R_NamesSymbol), pi, out_size, n_cores
+//             ));
+//             Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+//           }
+//           SET_VECTOR_ELT(out, j, list_var);
+//           Rf_unprotect(1 + has_names);
+//         } else {
+//           SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+//         }
+//         Rf_unprotect(1);
+//       }
+//       // Negative indexing
+//     } else if (neg_count > 0){
+//       SEXP indices2 = Rf_protect(cpp11::package("cheapr")["neg_indices_to_pos"](indices, xn));
+//       ++n_protections;
+//       out_size = Rf_length(indices2);
+//       int *pi2 = INTEGER(indices2);
+//       for (int j = 0; j < ncols; ++j){
+//         SEXP df_var = Rf_protect(p_x[j]);
+//         if (!Rf_isObject(df_var) ||
+//             Rf_inherits(df_var, "Date") ||
+//             Rf_inherits(df_var, "POSIXct") ||
+//             Rf_inherits(df_var, "factor")){
+//           SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, pi2, out_size, n_cores));
+//           Rf_copyMostAttrib(df_var, list_var);
+//           int has_names = Rf_getAttrib(df_var, R_NamesSymbol) != R_NilValue;
+//           if (has_names){
+//             SEXP new_names = Rf_protect(cpp_sset_unsafe(
+//               Rf_getAttrib(df_var, R_NamesSymbol), pi2, out_size, n_cores
+//             ));
+//             Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+//           }
+//           SET_VECTOR_ELT(out, j, list_var);
+//           Rf_unprotect(1 + has_names);
+//         } else {
+//           SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices2));
+//         }
+//         Rf_unprotect(1);
+//       }
+//       // If index vector is clean except for existence of zeroes
+//     } else if (zero_count > 0 && oob_count == 0 && na_count == 0){
+//       SEXP r_zero = Rf_protect(Rf_ScalarInteger(0));
+//       ++n_protections;
+//       SEXP indices2 = Rf_protect(cpp11::package("cheapr")["val_rm"](indices, r_zero));
+//       ++n_protections;
+//       int *pi2 = INTEGER(indices2);
+//       for (int j = 0; j < ncols; ++j){
+//         SEXP df_var = Rf_protect(p_x[j]);
+//         if (!Rf_isObject(df_var) ||
+//             Rf_inherits(df_var, "Date") ||
+//             Rf_inherits(df_var, "POSIXct") ||
+//             Rf_inherits(df_var, "factor")){
+//           SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, pi2, out_size, n_cores));
+//           Rf_copyMostAttrib(df_var, list_var);
+//           int has_names = Rf_getAttrib(df_var, R_NamesSymbol) != R_NilValue;
+//           if (has_names){
+//             SEXP new_names = Rf_protect(cpp_sset_unsafe(
+//               Rf_getAttrib(df_var, R_NamesSymbol), pi2, out_size, n_cores
+//             ));
+//             Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+//           }
+//           SET_VECTOR_ELT(out, j, list_var);
+//           Rf_unprotect(1 + has_names);
+//         } else {
+//           SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices2));
+//         }
+//         Rf_unprotect(1);
+//       }
+//     } else {
+//       for (int j = 0; j < ncols; ++j){
+//         SEXP df_var = Rf_protect(p_x[j]);
+//         SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+//         Rf_unprotect(1);
+//       }
+//     }
+//   }
+//   SEXP names = Rf_protect(Rf_duplicate(Rf_getAttrib(x, R_NamesSymbol)));
+//   ++n_protections;
+//   Rf_setAttrib(out, R_NamesSymbol, names);
+//
+//   // list to data frame object
+//   SEXP df_str = Rf_protect(Rf_ScalarString(Rf_mkChar("data.frame")));
+//   ++n_protections;
+//   if (out_size > 0){
+//     SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
+//     ++n_protections;
+//     INTEGER(row_names)[0] = NA_INTEGER;
+//     INTEGER(row_names)[1] = -out_size;
+//     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+//   } else {
+//     SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0));
+//     ++n_protections;
+//     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+//   }
+//   Rf_classgets(out, df_str);
+//   // Basically cpp_list_as_df() creates a shallow copy and we don't want that
+//   // Rf_protect(out = cpp_list_as_df(out));
+//   // ++n_protections;
+//   Rf_unprotect(n_protections);
+//   return out;
+// }
 
 // SEXP cpp_sset(SEXP x, SEXP indices){
 //   if (!Rf_isObject(x) && Rf_isNull(Rf_getAttrib(x, R_NamesSymbol)) && is_alt_compact_seq(indices)){

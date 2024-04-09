@@ -126,3 +126,6 @@ balance_posixlt <- function(x){
     balance_pos(x, fill.only = FALSE, classed = FALSE)
   }
 }
+cpp_list_rm_null <- function(x, always_shallow_copy = TRUE){
+  cpp_drop_null(x, always_shallow_copy)
+}

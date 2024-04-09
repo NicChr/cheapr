@@ -27,12 +27,10 @@ R_xlen_t cpp_vec_length(SEXP x){
   }
 }
 int num_cores(){
-  int out = Rf_asInteger(Rf_GetOption1(Rf_installChar(Rf_mkChar("cheapr.cores"))));
-  if (out >= 1){
-    return out;
-  } else {
-    return 1;
-  }
+  SEXP num_cores = Rf_protect(Rf_GetOption1(Rf_installChar(Rf_mkChar("cheapr.cores"))));
+  int out = Rf_asInteger(num_cores);
+  Rf_unprotect(1);
+  return out >= 1 ? out : 1;
 }
 
 SEXP xlen_to_r(R_xlen_t x){
@@ -97,13 +95,17 @@ SEXP cpp_new_list(R_xlen_t size, SEXP default_value) {
 // Remove NULL elements from list
 
 [[cpp11::register]]
-SEXP cpp_list_rm_null(SEXP l) {
+SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
   Rf_protect(l = Rf_coerceVector(l, VECSXP));
   const SEXP *p_l = VECTOR_PTR_RO(l);
   int n = Rf_length(l);
   int n_null = 0;
   for (int i = 0; i < n; ++i) {
     n_null += (p_l[i] == R_NilValue);
+  }
+  if (n_null == 0 && !always_shallow_copy){
+    Rf_unprotect(1);
+    return l;
   }
   int n_keep = n - n_null;
   int whichj = 0;
@@ -144,7 +146,7 @@ SEXP cpp_list_rm_null(SEXP l) {
 
 [[cpp11::register]]
 SEXP cpp_list_as_df(SEXP x) {
-  SEXP out = Rf_protect(cpp_list_rm_null(x));
+  SEXP out = Rf_protect(cpp_drop_null(x, true));
   int N; // Number of rows
   if (Rf_inherits(x, "data.frame")){
     N = cpp_df_nrow(x);

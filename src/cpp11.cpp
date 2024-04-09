@@ -286,10 +286,10 @@ extern "C" SEXP _cheapr_cpp_new_list(SEXP size, SEXP default_value) {
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_list_rm_null(SEXP l);
-extern "C" SEXP _cheapr_cpp_list_rm_null(SEXP l) {
+SEXP cpp_drop_null(SEXP l, bool always_shallow_copy);
+extern "C" SEXP _cheapr_cpp_drop_null(SEXP l, SEXP always_shallow_copy) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_list_rm_null(cpp11::as_cpp<cpp11::decay_t<SEXP>>(l)));
+    return cpp11::as_sexp(cpp_drop_null(cpp11::as_cpp<cpp11::decay_t<SEXP>>(l), cpp11::as_cpp<cpp11::decay_t<bool>>(always_shallow_copy)));
   END_CPP11
 }
 // utils.cpp
@@ -322,6 +322,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_col_na_counts",        (DL_FUNC) &_cheapr_cpp_col_na_counts,        1},
     {"_cheapr_cpp_count_val",            (DL_FUNC) &_cheapr_cpp_count_val,            3},
     {"_cheapr_cpp_dbl_sequence",         (DL_FUNC) &_cheapr_cpp_dbl_sequence,         3},
+    {"_cheapr_cpp_drop_null",            (DL_FUNC) &_cheapr_cpp_drop_null,            2},
     {"_cheapr_cpp_gcd",                  (DL_FUNC) &_cheapr_cpp_gcd,                  5},
     {"_cheapr_cpp_gcd2",                 (DL_FUNC) &_cheapr_cpp_gcd2,                 4},
     {"_cheapr_cpp_gcd2_vectorised",      (DL_FUNC) &_cheapr_cpp_gcd2_vectorised,      4},
@@ -334,7 +335,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_lead_sequence",        (DL_FUNC) &_cheapr_cpp_lead_sequence,        3},
     {"_cheapr_cpp_lengths",              (DL_FUNC) &_cheapr_cpp_lengths,              1},
     {"_cheapr_cpp_list_as_df",           (DL_FUNC) &_cheapr_cpp_list_as_df,           1},
-    {"_cheapr_cpp_list_rm_null",         (DL_FUNC) &_cheapr_cpp_list_rm_null,         1},
     {"_cheapr_cpp_matrix_col_na_counts", (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts, 1},
     {"_cheapr_cpp_matrix_missing_col",   (DL_FUNC) &_cheapr_cpp_matrix_missing_col,   3},
     {"_cheapr_cpp_matrix_missing_row",   (DL_FUNC) &_cheapr_cpp_matrix_missing_row,   3},

@@ -160,8 +160,8 @@ cpp_new_list <- function(size, default_value) {
   .Call(`_cheapr_cpp_new_list`, size, default_value)
 }
 
-cpp_list_rm_null <- function(l) {
-  .Call(`_cheapr_cpp_list_rm_null`, l)
+cpp_drop_null <- function(l, always_shallow_copy) {
+  .Call(`_cheapr_cpp_drop_null`, l, always_shallow_copy)
 }
 
 cpp_list_as_df <- function(x) {

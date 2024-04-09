@@ -73,10 +73,16 @@ sset.default <- function(x, i, ...){
   # case of subsetting with a fairly large altrep int sequence
   # For non-classed objects
   if (!is.object(x) && !missing(i) &&
-      is.null(attr(x, "names")) &&
       is_alt_compact_seq(i) && n_dots(...) == 0){
     int_seq_data <- alt_compact_seq_data(i)
-    cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    from <- int_seq_data[[1]]
+    to <- int_seq_data[[2]]
+    by <- int_seq_data[[3]]
+    out <- cpp_sset_range(x, from, to, by)
+    if (!is.null(names(x))){
+      names(out) <- cpp_sset_range(names(x), from, to, by)
+    }
+    out
   } else {
     x[i, ...]
   }
@@ -102,10 +108,15 @@ sset.Date <- function(x, i, ...){
     i <- which_(i)
   }
   if (!missing(i) &&
-      is.null(attr(x, "names")) &&
       is_alt_compact_seq(i) && n_dots(...) == 0){
     int_seq_data <- alt_compact_seq_data(i)
-    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    from <- int_seq_data[[1]]
+    to <- int_seq_data[[2]]
+    by <- int_seq_data[[3]]
+    out <- cpp_sset_range(x, from, to, by)
+    if (!is.null(names(x))){
+      set_attr(out, "names", cpp_sset_range(names(x), from, to, by))
+    }
     set_attr(out, "class", oldClass(x))
 
   } else {
@@ -119,10 +130,15 @@ sset.POSIXct <- function(x, i, ...){
     i <- which_(i)
   }
   if (!missing(i) &&
-      is.null(attr(x, "names")) &&
       is_alt_compact_seq(i) && n_dots(...) == 0){
     int_seq_data <- alt_compact_seq_data(i)
-    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    from <- int_seq_data[[1]]
+    to <- int_seq_data[[2]]
+    by <- int_seq_data[[3]]
+    out <- cpp_sset_range(x, from, to, by)
+    if (!is.null(names(x))){
+      set_attr(out, "names", cpp_sset_range(names(x), from, to, by))
+    }
     set_attr(out, "tzone", attr(x, "tzone"))
     set_attr(out, "class", oldClass(x))
   } else {
@@ -136,10 +152,15 @@ sset.factor <- function(x, i, ...){
     i <- which_(i)
   }
   if (!missing(i) &&
-      is.null(attr(x, "names")) &&
       is_alt_compact_seq(i) && n_dots(...) == 0){
     int_seq_data <- alt_compact_seq_data(i)
-    out <- cpp_sset_range(x, int_seq_data[[1L]], int_seq_data[[2L]], int_seq_data[[3L]])
+    from <- int_seq_data[[1]]
+    to <- int_seq_data[[2]]
+    by <- int_seq_data[[3]]
+    out <- cpp_sset_range(x, from, to, by)
+    if (!is.null(names(x))){
+      set_attr(out, "names", cpp_sset_range(names(x), from, to, by))
+    }
     set_attr(out, "levels", attr(x, "levels"))
     set_attr(out, "class", oldClass(x))
   } else {
@@ -172,9 +193,9 @@ sset.POSIXlt <- function(x, i, j, ...){
     j <- seq_along(out)
   }
   out <- df_subset(list_as_df(out), i, j)
-  set_rm_attr(out, "row.names")
   if (missingj){
     set_attr(out, "class", class(x))
+    set_rm_attr(out, "row.names")
   }
   set_attr(out, "tzone", attr(x, "tzone"))
   set_attr(out, "balanced", TRUE)
@@ -219,7 +240,7 @@ df_select <- function(x, j){
   }
   attrs <- attributes(x)
   if (j_exists){
-    out <- cpp_list_rm_null(.subset(x, j))
+    out <- cpp_list_rm_null(.subset(x, j), always_shallow_copy = FALSE)
   } else {
     out <- cpp_list_rm_null(x)
   }
