@@ -26,6 +26,7 @@ R_xlen_t cpp_vec_length(SEXP x){
     return Rf_xlength(x);
   }
 }
+
 int num_cores(){
   SEXP num_cores = Rf_protect(Rf_GetOption1(Rf_installChar(Rf_mkChar("cheapr.cores"))));
   int out = Rf_asInteger(num_cores);

@@ -23,8 +23,8 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
   int size_n = Rf_length(size);
   int from_n = Rf_length(from);
   int by_n = Rf_length(by);
-  if (from_n <= 0 || by_n <= 0){
-    Rf_error("from and by must both have length >= 0");
+  if (size_n > 0 && (from_n <= 0 || by_n <= 0)){
+    Rf_error("from and by must both have length > 0");
   }
   double out_size = r_sum(size, false);
   double min_size = r_min(size);
@@ -84,7 +84,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
   int from_n = Rf_length(from);
   int by_n = Rf_length(by);
   if (size_n > 0 && (from_n <= 0 || by_n <= 0)){
-    Rf_error("from and by must both have length >= 0");
+    Rf_error("from and by must both have length > 0");
   }
   // To recycle we would need to do sum * remainder of the sum over n
   double out_size = r_sum(size, false);
