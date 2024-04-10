@@ -128,6 +128,42 @@ cpp_sequence_id <- function(size) {
   .Call(`_cheapr_cpp_sequence_id`, size)
 }
 
+cpp_set_abs <- function(x) {
+  .Call(`_cheapr_cpp_set_abs`, x)
+}
+
+cpp_set_floor <- function(x) {
+  .Call(`_cheapr_cpp_set_floor`, x)
+}
+
+cpp_set_ceiling <- function(x) {
+  .Call(`_cheapr_cpp_set_ceiling`, x)
+}
+
+cpp_set_trunc <- function(x) {
+  .Call(`_cheapr_cpp_set_trunc`, x)
+}
+
+cpp_set_round <- function(x, digits) {
+  .Call(`_cheapr_cpp_set_round`, x, digits)
+}
+
+cpp_set_change_sign <- function(x) {
+  .Call(`_cheapr_cpp_set_change_sign`, x)
+}
+
+cpp_set_exp <- function(x) {
+  .Call(`_cheapr_cpp_set_exp`, x)
+}
+
+cpp_set_sqrt <- function(x) {
+  .Call(`_cheapr_cpp_set_sqrt`, x)
+}
+
+cpp_set_log <- function(x, base) {
+  .Call(`_cheapr_cpp_set_log`, x, base)
+}
+
 is_alt_compact_seq <- function(x) {
   .Call(`_cheapr_is_alt_compact_seq`, x)
 }

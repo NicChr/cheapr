@@ -1,5 +1,7 @@
 # cheapr (Development version)
 
+* New maths functions that transform data by reference.
+
 * Fixed an inconsistency of when `sequence_()` would error when supplied with 
 a zero-length size argument.
 

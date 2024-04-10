@@ -229,6 +229,69 @@ extern "C" SEXP _cheapr_cpp_sequence_id(SEXP size) {
     return cpp11::as_sexp(cpp_sequence_id(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size)));
   END_CPP11
 }
+// set_math.cpp
+SEXP cpp_set_abs(SEXP x);
+extern "C" SEXP _cheapr_cpp_set_abs(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_abs(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_floor(SEXP x);
+extern "C" SEXP _cheapr_cpp_set_floor(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_floor(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_ceiling(SEXP x);
+extern "C" SEXP _cheapr_cpp_set_ceiling(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_ceiling(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_trunc(SEXP x);
+extern "C" SEXP _cheapr_cpp_set_trunc(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_trunc(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_round(SEXP x, int digits);
+extern "C" SEXP _cheapr_cpp_set_round(SEXP x, SEXP digits) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_round(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(digits)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_change_sign(SEXP x);
+extern "C" SEXP _cheapr_cpp_set_change_sign(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_change_sign(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_exp(SEXP x);
+extern "C" SEXP _cheapr_cpp_set_exp(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_exp(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_sqrt(SEXP x);
+extern "C" SEXP _cheapr_cpp_set_sqrt(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_sqrt(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_log(SEXP x, double base);
+extern "C" SEXP _cheapr_cpp_set_log(SEXP x, SEXP base) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_log(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(base)));
+  END_CPP11
+}
 // sset.cpp
 bool is_alt_compact_seq(SEXP x);
 extern "C" SEXP _cheapr_is_alt_compact_seq(SEXP x) {
@@ -347,10 +410,19 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_row_na_counts",        (DL_FUNC) &_cheapr_cpp_row_na_counts,        1},
     {"_cheapr_cpp_sequence",             (DL_FUNC) &_cheapr_cpp_sequence,             3},
     {"_cheapr_cpp_sequence_id",          (DL_FUNC) &_cheapr_cpp_sequence_id,          1},
+    {"_cheapr_cpp_set_abs",              (DL_FUNC) &_cheapr_cpp_set_abs,              1},
     {"_cheapr_cpp_set_add_attr",         (DL_FUNC) &_cheapr_cpp_set_add_attr,         3},
     {"_cheapr_cpp_set_add_attributes",   (DL_FUNC) &_cheapr_cpp_set_add_attributes,   3},
+    {"_cheapr_cpp_set_ceiling",          (DL_FUNC) &_cheapr_cpp_set_ceiling,          1},
+    {"_cheapr_cpp_set_change_sign",      (DL_FUNC) &_cheapr_cpp_set_change_sign,      1},
+    {"_cheapr_cpp_set_exp",              (DL_FUNC) &_cheapr_cpp_set_exp,              1},
+    {"_cheapr_cpp_set_floor",            (DL_FUNC) &_cheapr_cpp_set_floor,            1},
+    {"_cheapr_cpp_set_log",              (DL_FUNC) &_cheapr_cpp_set_log,              2},
     {"_cheapr_cpp_set_rm_attr",          (DL_FUNC) &_cheapr_cpp_set_rm_attr,          2},
     {"_cheapr_cpp_set_rm_attributes",    (DL_FUNC) &_cheapr_cpp_set_rm_attributes,    1},
+    {"_cheapr_cpp_set_round",            (DL_FUNC) &_cheapr_cpp_set_round,            2},
+    {"_cheapr_cpp_set_sqrt",             (DL_FUNC) &_cheapr_cpp_set_sqrt,             1},
+    {"_cheapr_cpp_set_trunc",            (DL_FUNC) &_cheapr_cpp_set_trunc,            1},
     {"_cheapr_cpp_sset_df",              (DL_FUNC) &_cheapr_cpp_sset_df,              2},
     {"_cheapr_cpp_sset_range",           (DL_FUNC) &_cheapr_cpp_sset_range,           4},
     {"_cheapr_cpp_vec_length",           (DL_FUNC) &_cheapr_cpp_vec_length,           1},
