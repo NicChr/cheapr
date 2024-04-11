@@ -1,9 +1,10 @@
-#' Math operations by reference
+#' Math operations by reference - \bold{Experimental}
 #'
 #' @description
 #' These functions transform your variable by reference, with no copies being made.
 #'
 #' @param x A numeric vector.
+#' @param y A numeric vector.
 #' @param digits Number of digits to round to.
 #' @param base Logarithm base.
 #'
@@ -13,7 +14,13 @@
 #' wish to perform further operations without creating more copies. \cr
 #' `NA` and `NaN` values are ignored and never updated. \cr
 #' These functions will \bold{not work} on \bold{any} classed objects, meaning they
-#' only work on standard integer and numeric vectors and matrices.
+#' only work on standard integer and numeric vectors and matrices. \cr
+#'
+#' ### When a copy has to be made
+#'
+#' A copy is only made in certain instances, e.g. when passing an integer vector
+#' to `set_log()`. A warning will always be thrown in this instance alerting the user
+#' to assign the output to an object because `x` has not been updated by reference.
 #'
 #' @returns
 #' The exact same object with no copy made, just transformed.
@@ -59,5 +66,21 @@ set_round <- function(x, digits = 0){
 #' @rdname set_math
 #' @export
 set_log <- function(x, base = exp(1)){
-  cpp_set_log(x, base)
+  cpp_set_log(x, as.double(base))
 }
+#' @rdname set_math
+#' @export
+set_pow <- cpp_set_pow
+#' @rdname set_math
+#' @export
+set_add <- cpp_set_add
+#' @rdname set_math
+#' @export
+set_subtract <- cpp_set_subtract
+#' @rdname set_math
+#' @export
+set_multiply <- cpp_set_multiply
+#' @rdname set_math
+#' @export
+set_divide <- cpp_set_divide
+

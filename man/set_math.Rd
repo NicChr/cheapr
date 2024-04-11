@@ -10,7 +10,12 @@
 \alias{set_change_sign}
 \alias{set_round}
 \alias{set_log}
-\title{Math operations by reference}
+\alias{set_pow}
+\alias{set_add}
+\alias{set_subtract}
+\alias{set_multiply}
+\alias{set_divide}
+\title{Math operations by reference - \bold{Experimental}}
 \usage{
 set_abs(x)
 
@@ -29,6 +34,16 @@ set_change_sign(x)
 set_round(x, digits = 0)
 
 set_log(x, base = exp(1))
+
+set_pow(x, y)
+
+set_add(x, y)
+
+set_subtract(x, y)
+
+set_multiply(x, y)
+
+set_divide(x, y)
 }
 \arguments{
 \item{x}{A numeric vector.}
@@ -36,6 +51,8 @@ set_log(x, base = exp(1))
 \item{digits}{Number of digits to round to.}
 
 \item{base}{Logarithm base.}
+
+\item{y}{A numeric vector.}
 }
 \value{
 The exact same object with no copy made, just transformed.
@@ -49,7 +66,13 @@ where you have made a copy and then
 wish to perform further operations without creating more copies. \cr
 \code{NA} and \code{NaN} values are ignored and never updated. \cr
 These functions will \bold{not work} on \bold{any} classed objects, meaning they
-only work on standard integer and numeric vectors and matrices.
+only work on standard integer and numeric vectors and matrices. \cr
+\subsection{When a copy has to be made}{
+
+A copy is only made in certain instances, e.g. when passing an integer vector
+to \code{set_log()}. A warning will always be thrown in this instance alerting the user
+to assign the output to an object because \code{x} has not been updated by reference.
+}
 }
 \examples{
 library(cheapr)

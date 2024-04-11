@@ -258,13 +258,6 @@ extern "C" SEXP _cheapr_cpp_set_trunc(SEXP x) {
   END_CPP11
 }
 // set_math.cpp
-SEXP cpp_set_round(SEXP x, int digits);
-extern "C" SEXP _cheapr_cpp_set_round(SEXP x, SEXP digits) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_set_round(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(digits)));
-  END_CPP11
-}
-// set_math.cpp
 SEXP cpp_set_change_sign(SEXP x);
 extern "C" SEXP _cheapr_cpp_set_change_sign(SEXP x) {
   BEGIN_CPP11
@@ -286,10 +279,52 @@ extern "C" SEXP _cheapr_cpp_set_sqrt(SEXP x) {
   END_CPP11
 }
 // set_math.cpp
-SEXP cpp_set_log(SEXP x, double base);
+SEXP cpp_set_add(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_set_add(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_add(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_subtract(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_set_subtract(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_subtract(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_multiply(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_set_multiply(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_multiply(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_divide(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_set_divide(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_divide(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_pow(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_set_pow(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_pow(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_log(SEXP x, SEXP base);
 extern "C" SEXP _cheapr_cpp_set_log(SEXP x, SEXP base) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_set_log(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(base)));
+    return cpp11::as_sexp(cpp_set_log(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(base)));
+  END_CPP11
+}
+// set_math.cpp
+SEXP cpp_set_round(SEXP x, SEXP digits);
+extern "C" SEXP _cheapr_cpp_set_round(SEXP x, SEXP digits) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_round(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(digits)));
   END_CPP11
 }
 // sset.cpp
@@ -411,17 +446,22 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_sequence",             (DL_FUNC) &_cheapr_cpp_sequence,             3},
     {"_cheapr_cpp_sequence_id",          (DL_FUNC) &_cheapr_cpp_sequence_id,          1},
     {"_cheapr_cpp_set_abs",              (DL_FUNC) &_cheapr_cpp_set_abs,              1},
+    {"_cheapr_cpp_set_add",              (DL_FUNC) &_cheapr_cpp_set_add,              2},
     {"_cheapr_cpp_set_add_attr",         (DL_FUNC) &_cheapr_cpp_set_add_attr,         3},
     {"_cheapr_cpp_set_add_attributes",   (DL_FUNC) &_cheapr_cpp_set_add_attributes,   3},
     {"_cheapr_cpp_set_ceiling",          (DL_FUNC) &_cheapr_cpp_set_ceiling,          1},
     {"_cheapr_cpp_set_change_sign",      (DL_FUNC) &_cheapr_cpp_set_change_sign,      1},
+    {"_cheapr_cpp_set_divide",           (DL_FUNC) &_cheapr_cpp_set_divide,           2},
     {"_cheapr_cpp_set_exp",              (DL_FUNC) &_cheapr_cpp_set_exp,              1},
     {"_cheapr_cpp_set_floor",            (DL_FUNC) &_cheapr_cpp_set_floor,            1},
     {"_cheapr_cpp_set_log",              (DL_FUNC) &_cheapr_cpp_set_log,              2},
+    {"_cheapr_cpp_set_multiply",         (DL_FUNC) &_cheapr_cpp_set_multiply,         2},
+    {"_cheapr_cpp_set_pow",              (DL_FUNC) &_cheapr_cpp_set_pow,              2},
     {"_cheapr_cpp_set_rm_attr",          (DL_FUNC) &_cheapr_cpp_set_rm_attr,          2},
     {"_cheapr_cpp_set_rm_attributes",    (DL_FUNC) &_cheapr_cpp_set_rm_attributes,    1},
     {"_cheapr_cpp_set_round",            (DL_FUNC) &_cheapr_cpp_set_round,            2},
     {"_cheapr_cpp_set_sqrt",             (DL_FUNC) &_cheapr_cpp_set_sqrt,             1},
+    {"_cheapr_cpp_set_subtract",         (DL_FUNC) &_cheapr_cpp_set_subtract,         2},
     {"_cheapr_cpp_set_trunc",            (DL_FUNC) &_cheapr_cpp_set_trunc,            1},
     {"_cheapr_cpp_sset_df",              (DL_FUNC) &_cheapr_cpp_sset_df,              2},
     {"_cheapr_cpp_sset_range",           (DL_FUNC) &_cheapr_cpp_sset_range,           4},

@@ -144,10 +144,6 @@ cpp_set_trunc <- function(x) {
   .Call(`_cheapr_cpp_set_trunc`, x)
 }
 
-cpp_set_round <- function(x, digits) {
-  .Call(`_cheapr_cpp_set_round`, x, digits)
-}
-
 cpp_set_change_sign <- function(x) {
   .Call(`_cheapr_cpp_set_change_sign`, x)
 }
@@ -160,8 +156,32 @@ cpp_set_sqrt <- function(x) {
   .Call(`_cheapr_cpp_set_sqrt`, x)
 }
 
+cpp_set_add <- function(x, y) {
+  .Call(`_cheapr_cpp_set_add`, x, y)
+}
+
+cpp_set_subtract <- function(x, y) {
+  .Call(`_cheapr_cpp_set_subtract`, x, y)
+}
+
+cpp_set_multiply <- function(x, y) {
+  .Call(`_cheapr_cpp_set_multiply`, x, y)
+}
+
+cpp_set_divide <- function(x, y) {
+  .Call(`_cheapr_cpp_set_divide`, x, y)
+}
+
+cpp_set_pow <- function(x, y) {
+  .Call(`_cheapr_cpp_set_pow`, x, y)
+}
+
 cpp_set_log <- function(x, base) {
   .Call(`_cheapr_cpp_set_log`, x, base)
+}
+
+cpp_set_round <- function(x, digits) {
+  .Call(`_cheapr_cpp_set_round`, x, digits)
 }
 
 is_alt_compact_seq <- function(x) {
