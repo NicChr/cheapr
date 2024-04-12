@@ -1,24 +1,21 @@
-* Updated to version 0.5.0
+* Updated to version 0.8.0
+
+* Checked using rhub v2.0.0 in the following environments:
 
 ## Test environments
-- R-hub windows-x86_64-devel (r-devel)
-- R-hub ubuntu-gcc-release (r-release)
-- R-hub fedora-clang-devel (r-devel)
-- R-hub linux-x86_64-rocker-gcc-san (r-devel)
+- R-hubv2 windows (R-devel)
+- R-hubv2 linux (R-devel)
+- R-hubv2 macos-arm64 (R-devel)
+- R-hubv2 macos (R-devel)
+- R-hubv2 ubuntu-clang
+- R-hubv2 ubuntu-gcc12
+- R-hubv2 ubuntu-release
+- R-hubv2 clang-asan
+- R-hubv2 valgrind
 
-## R CMD check results
-❯ On windows-x86_64-devel (r-devel)
-  checking for non-standard things in the check directory ... NOTE
-  Found the following files/directories:
-    ''NULL''
+Additional checked on:
 
-❯ On windows-x86_64-devel (r-devel)
-  checking for detritus in the temp directory ... NOTE
-  Found the following files/directories:
-    'lastMiKTeXException'
+- windows (R-release)
+- windows (R-old release)
 
-❯ On ubuntu-gcc-release (r-release), fedora-clang-devel (r-devel)
-  checking HTML version of manual ... NOTE
-  Skipping checking HTML validation: no command 'tidy' found
-
-0 errors ✔ | 0 warnings ✔ | 3 notes ✖
+No errors, warnings or notes to show.

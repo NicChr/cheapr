@@ -10,6 +10,9 @@
 #' @param j Column indices, names or logical vector.
 #' @param ... Further parameters passed to `[`.
 #'
+#' @returns
+#' A new vector, data frame, list, matrix or other R object.
+#'
 #' @details
 #' `sset` is an S3 generic.
 #' You can either write methods for `sset` or `[`. \cr
@@ -23,13 +26,13 @@
 #' When `i` is a logical vector, it is passed directly to `which_()`. \cr
 #' This means that `NA` values are ignored and this also means that `i`
 #' is not recycled, so it is good practice to make sure the logical vector
-#' matches the length of x. To return `NA` values, use `x[NA_integer_]`.
+#' matches the length of x. To return `NA` values, use `sset(x, NA_integer_)`.
 #'
 #' ### ALTREP range subsetting
 #'
-#' When `i` is an ALTREP compact integer sequence which can be commonly created
+#' When `i` is an ALTREP compact sequence which can be commonly created
 #' using e.g. `1:10` or using `seq_len`, `seq_along` and `seq.int`,
-#' `sset` internally uses a range-based subsetting which is faster and doesn't
+#' `sset` internally uses a range-based subsetting method which is faster and doesn't
 #' allocate `i` into memory.
 #'
 #' @examples

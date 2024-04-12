@@ -12,7 +12,8 @@
 #' These functions are particularly useful for situations
 #' where you have made a copy and then
 #' wish to perform further operations without creating more copies. \cr
-#' `NA` and `NaN` values are ignored and never updated. \cr
+#' `NA` and `NaN` values are ignored though in some instances `NaN` values may
+#' be replaced with `NA`.
 #' These functions will \bold{not work} on \bold{any} classed objects, meaning they
 #' only work on standard integer and numeric vectors and matrices. \cr
 #'
@@ -20,7 +21,12 @@
 #'
 #' A copy is only made in certain instances, e.g. when passing an integer vector
 #' to `set_log()`. A warning will always be thrown in this instance alerting the user
-#' to assign the output to an object because `x` has not been updated by reference.
+#' to assign the output to an object because `x` has not been updated by reference. \cr
+#' To ensure consistent and expected outputs, always assign the output to the same object, \cr e.g.
+#' `x <- set_log(x)` (\bold{do this}) ✅ \cr
+#' `set_log(x)` (\bold{don't do this}) ❌ \cr
+#' `x2 <- set_log(x)` (Don't do this either) ❌ \cr
+#' \cr No copy is made here unless x is an integer vector.
 #'
 #' @returns
 #' The exact same object with no copy made, just transformed.
