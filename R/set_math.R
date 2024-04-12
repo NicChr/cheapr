@@ -23,9 +23,9 @@
 #' to `set_log()`. A warning will always be thrown in this instance alerting the user
 #' to assign the output to an object because `x` has not been updated by reference. \cr
 #' To ensure consistent and expected outputs, always assign the output to the same object, \cr e.g.
-#' `x <- set_log(x)` (\bold{do this}) ✅ \cr
-#' `set_log(x)` (\bold{don't do this}) ❌ \cr
-#' `x2 <- set_log(x)` (Don't do this either) ❌ \cr
+#' `x <- set_log(x)` (\bold{do this}) \cr
+#' `set_log(x)` (\bold{don't do this}) \cr
+#' `x2 <- set_log(x)` (Don't do this either) \cr
 #' \cr No copy is made here unless x is an integer vector.
 #'
 #' @returns

@@ -74,9 +74,9 @@ A copy is only made in certain instances, e.g. when passing an integer vector
 to \code{set_log()}. A warning will always be thrown in this instance alerting the user
 to assign the output to an object because \code{x} has not been updated by reference. \cr
 To ensure consistent and expected outputs, always assign the output to the same object, \cr e.g.
-\code{x <- set_log(x)} (\bold{do this}) ✅ \cr
-\code{set_log(x)} (\bold{don't do this}) ❌ \cr
-\code{x2 <- set_log(x)} (Don't do this either) ❌ \cr
+\code{x <- set_log(x)} (\bold{do this}) \cr
+\code{set_log(x)} (\bold{don't do this}) \cr
+\code{x2 <- set_log(x)} (Don't do this either) \cr
 \cr No copy is made here unless x is an integer vector.
 }
 }
