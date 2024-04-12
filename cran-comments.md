@@ -1,5 +1,7 @@
 * Updated to version 0.8.0
 
+* Re-submission due to unsupported unicode characters in documentation. These have been removed.
+
 * Checked using rhub v2.0.0 in the following environments:
 
 ## Test environments
