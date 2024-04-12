@@ -204,10 +204,10 @@ test_that("more math operations", {
     x / z,
     set_divide(sset(x), z)
   )
-  # expect_equal(
-  #   x^y,
-  #   set_pow(sset(x), y)
-  # )
+  expect_equal(
+    x^y,
+    set_pow(sset(x), y)
+  )
   expect_equal(
     round(x, y),
     set_round(sset(x), y)
@@ -258,10 +258,10 @@ test_that("more math operations", {
     x / z,
     suppressWarnings(set_divide(sset(x), z))
   )
-  # expect_equal(
-  #   x^y,
-  #   set_pow(sset(x), y)
-  # )
+  expect_equal(
+    x^y,
+    suppressWarnings(set_pow(sset(x), y))
+  )
   expect_equal(
     x,
     # round(x, y),
@@ -301,10 +301,10 @@ test_that("more math operations", {
     x / y,
     set_divide(sset(x), y)
   )
-  # expect_equal(
-  #   x^y,
-  #   set_pow(sset(x), y)
-  # )
+  expect_equal(
+    x^y,
+    set_pow(sset(x), y)
+  )
   expect_equal(
     round(x, y),
     set_round(sset(x), y)
@@ -347,10 +347,10 @@ test_that("more math operations", {
     x / z,
     suppressWarnings(set_divide(sset(x), z))
   )
-  # expect_equal(
-  #   x^y,
-  #   set_pow(sset(x), y)
-  # )
+  expect_equal(
+    x^y,
+    suppressWarnings(set_pow(sset(x), y))
+  )
   expect_equal(
     # round(x, y),
     x,

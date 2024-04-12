@@ -511,8 +511,12 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
 #pragma omp parallel for simd num_threads(n_cores) if (n_cores > 1)
     for (R_xlen_t i = 0; i < xn; ++i) {
       R_xlen_t yi = i % yn;
-      p_x[i] = (p_x[i] !=  p_x[i] || p_y[yi] == NA_INTEGER) ?
-      NA_REAL : std::pow(p_x[i], p_y[yi]);
+      if (p_x[i] == 1.0 || p_y[yi] == 0){
+        p_x[i] = 1.0;
+      } else {
+        p_x[i] = (p_x[i] !=  p_x[i] || p_y[yi] == NA_INTEGER) ?
+        NA_REAL : std::pow(p_x[i], p_y[yi]);
+      }
     }
     break;
   }
@@ -522,8 +526,12 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
 #pragma omp parallel for simd num_threads(n_cores) if (n_cores > 1)
     for (R_xlen_t i = 0; i < xn; ++i) {
       R_xlen_t yi = i % yn;
-      p_x[i] = (p_x[i] != p_x[i]  || p_y[yi] != p_y[yi]) ?
-      NA_REAL : std::pow(p_x[i], p_y[yi]);
+      if (p_x[i] == 1.0 || p_y[yi] == 0.0){
+        p_x[i] = 1.0;
+      } else {
+        p_x[i] = (p_x[i] != p_x[i]  || p_y[yi] != p_y[yi]) ?
+        NA_REAL : std::pow(p_x[i], p_y[yi]);
+      }
     }
     break;
   }
