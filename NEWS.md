@@ -1,3 +1,5 @@
+# cheapr (Development version)
+
 # cheapr 0.8.0
 
 * New 'set' Math operations inspired by 'data.table' and 'collapse' 
