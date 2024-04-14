@@ -596,9 +596,10 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
           if ( (p_x[i] == p_x[i] && p_digits[digitsi] != NA_INTEGER) ){
             double tempx = p_x[i];
             int tempdig = p_digits[digitsi];
-            tempx *= std::pow(10.0, tempdig);
+            double mfactor = std::pow(10, tempdig);
+            tempx *= mfactor;
             tempx = round_nearest_even(tempx);
-            tempx *= std::pow(10.0, -(tempdig));
+            tempx /= mfactor;
             p_x[i] = tempx;
           } else {
             p_x[i] = NA_REAL;
@@ -611,9 +612,10 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
           if ( (p_x[i] == p_x[i] && p_digits[digitsi] != NA_INTEGER) ){
             double tempx = p_x[i];
             int tempdig = p_digits[digitsi];
-            tempx *= std::pow(10.0, tempdig);
+            double mfactor = std::pow(10, tempdig);
+            tempx *= mfactor;
             tempx = round_nearest_even(tempx);
-            tempx *= std::pow(10.0, -(tempdig));
+            tempx /= mfactor;
             p_x[i] = tempx;
           } else {
             p_x[i] = NA_REAL;
@@ -632,9 +634,10 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
           if ( (p_x[i] == p_x[i] && p_digits[digitsi] == p_digits[digitsi]) ){
             double tempx = p_x[i];
             int tempdig = p_digits[digitsi];
-            tempx *= std::pow(10, tempdig);
+            double mfactor = std::pow(10, tempdig);
+            tempx *= mfactor;
             tempx = round_nearest_even(tempx);
-            tempx *= std::pow(10, -(tempdig));
+            tempx /= mfactor;
             p_x[i] = tempx;
           } else {
             p_x[i] = NA_REAL;
@@ -647,9 +650,10 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
           if ( (p_x[i] == p_x[i] && p_digits[digitsi] == p_digits[digitsi]) ){
             double tempx = p_x[i];
             int tempdig = p_digits[digitsi];
-            tempx *= std::pow(10, tempdig);
+            double mfactor = std::pow(10, tempdig);
+            tempx *= mfactor;
             tempx = round_nearest_even(tempx);
-            tempx *= std::pow(10, -(tempdig));
+            tempx /= mfactor;
             p_x[i] = tempx;
           } else {
             p_x[i] = NA_REAL;
