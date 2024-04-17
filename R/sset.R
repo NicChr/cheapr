@@ -94,20 +94,6 @@ sset.default <- function(x, i, ...){
 #' @rdname sset
 #' @export
 sset.Date <- function(x, i, ...){
-  # old_class <- oldClass(x)
-  # set_rm_attr(x, "class")
-  # on.exit({invisible(set_attr(x, "class", old_class))})
-  # out <- sset.default(x, i, ...)
-  # set_attr(out, "class", old_class)
-  # out <- sset.default(unclass(x), i, ...)
-  # cls <- oldClass(x)
-  # class(x) <- NULL
-  # out <- NextMethod("sset")
-  # set_attr(out, "class", cls)
-
-
-  # out <- sset.default(unclass(x), i, ...)
-  # set_attr(out, "class", oldClass(x))
   if (!missing(i) && is.logical(i)){
     check_length(i, length(x))
     i <- which_(i)

@@ -1,5 +1,11 @@
 # cheapr (Development version)
 
+* New function `lag_` for very fast lags and leads on vectors and data frames.
+It includes a `set` argument allowing users to create a lagged vector 
+by reference without copies.
+
+* `set_round` has been amended to improve floating point accuracy.
+
 # cheapr 0.8.0
 
 * New 'set' Math operations inspired by 'data.table' and 'collapse' 

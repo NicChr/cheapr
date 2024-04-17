@@ -180,6 +180,11 @@ SEXP r_address(SEXP x) {
   return Rf_mkChar(buf);
 }
 
+[[cpp11::register]]
+SEXP r_copy(SEXP x){
+  return Rf_duplicate(x);
+}
+
 // Potentially useful for rolling calculations
 // Computes the rolling number of true values in a given
 // series of consecutive true values

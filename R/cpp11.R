@@ -40,6 +40,10 @@ cpp_lcm2_vectorised <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_lcm2_vectorised`, x, y, tol, na_rm)
 }
 
+cpp_lag <- function(x, k, fill, set, recursive) {
+  .Call(`_cheapr_cpp_lag`, x, k, fill, set, recursive)
+}
+
 cpp_num_na <- function(x, recursive) {
   .Call(`_cheapr_cpp_num_na`, x, recursive)
 }
@@ -222,6 +226,10 @@ cpp_drop_null <- function(l, always_shallow_copy) {
 
 cpp_list_as_df <- function(x) {
   .Call(`_cheapr_cpp_list_as_df`, x)
+}
+
+r_copy <- function(x) {
+  .Call(`_cheapr_r_copy`, x)
 }
 
 cpp_which_ <- function(x, invert) {
