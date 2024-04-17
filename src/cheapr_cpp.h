@@ -1,8 +1,8 @@
-#include <cpp11.hpp>
-#include <Rinternals.h>
-
 #ifndef cheapr_cpp_funs
 #define cheapr_cpp_funs
+
+#include <cpp11.hpp>
+#include <Rinternals.h>
 
 #ifndef R_NO_REMAP
 #define R_NO_REMAP
@@ -19,9 +19,6 @@
 #define OMP_PARALLEL _Pragma("omp parallel num_threads(n_cores) ")
 #define OMP_FOR_SIMD _Pragma("omp for simd ")
 #define OMP_PARALLEL_FOR_SIMD	_Pragma("omp parallel for simd num_threads(n_cores) ")
-// #if _OPENMP >= 201307
-//   #define OMP_VER_4
-// #endif
 #else
 #define OMP_NUM_PROCS 1
 #define OMP_THREAD_LIMIT 1
@@ -32,16 +29,6 @@
 #endif
 
 #define integer_max_ std::numeric_limits<int>::max()
-
-// #ifdef OMP_VER_4
-// #define SAFE_SIMD _Pragma("omp simd")
-// #define SAFE_FOR_SIMD _Pragma("omp for simd")
-// #define SAFE_PARALLEL_FOR_SIMD _Pragma("omp parallel for simd")
-// #else
-// #define SAFE_SIMD
-// #define SAFE_FOR_SIMD
-// #define SAFE_PARALLEL_FOR_SIMD
-// #endif
 
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
