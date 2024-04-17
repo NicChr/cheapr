@@ -1,6 +1,4 @@
 #include "cheapr_cpp.h"
-#include <cpp11.hpp>
-#include <Rinternals.h>
 
 // Adding and removing attributes in-place
 // There is a check to ensure that attributes are copied when they are the same

@@ -1,6 +1,4 @@
 #include "cheapr_cpp.h"
-#include <cpp11.hpp>
-#include <Rinternals.h>
 
 [[cpp11::register]]
 double cpp_gcd2(double x, double y, double tol, bool na_rm){

@@ -1,6 +1,4 @@
 #include "cheapr_cpp.h"
-#include <cpp11.hpp>
-#include <Rinternals.h>
 
 R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);

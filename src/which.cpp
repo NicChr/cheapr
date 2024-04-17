@@ -1,6 +1,4 @@
 #include "cheapr_cpp.h"
-#include <cpp11.hpp>
-#include <Rinternals.h>
 
 // A more memory-efficient which()
 // Author: Nick Christofides

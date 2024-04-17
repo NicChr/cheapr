@@ -7,7 +7,7 @@
 lag_(x, n = 1, fill = NULL, set = FALSE, recursive = TRUE)
 }
 \arguments{
-\item{x}{A vector.}
+\item{x}{A vector or data frame.}
 
 \item{n}{Number of lags. Negative values are accepted.}
 

@@ -1,6 +1,4 @@
 #include "cheapr_cpp.h"
-#include <cpp11.hpp>
-#include <Rinternals.h>
 
 double r_sum(SEXP x, bool na_rm = false){
   cpp11::function base_sum = cpp11::package("base")["sum"];

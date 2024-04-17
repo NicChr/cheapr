@@ -3,7 +3,7 @@
 #' @description
 #' Fast lags and leads
 #'
-#' @param x A vector.
+#' @param x A vector or data frame.
 #' @param n Number of lags. Negative values are accepted.
 #' @param fill Value used to fill first n values. Default is `NA`.
 #' @param set Should x be updated by reference? If `TRUE` no copy is made and

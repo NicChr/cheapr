@@ -1,6 +1,4 @@
 #include "cheapr_cpp.h"
-#include <cpp11.hpp>
-#include <Rinternals.h>
 
 [[cpp11::register]]
 SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
