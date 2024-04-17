@@ -381,6 +381,12 @@ SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
     Rf_unprotect(n_protections);
     return out;
   } else {
+    if (k > size){
+      k = size;
+    }
+    if (k < -size){
+      k = -size;
+    }
     SEXP fill_value = Rf_protect(Rf_coerceVector(fill_size >= 1 ? fill : R_NilValue, VECSXP));
     ++n_protections;
     SEXP out = Rf_protect(set ? x : Rf_allocVector(VECSXP, size));
