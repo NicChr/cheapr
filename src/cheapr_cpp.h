@@ -4,10 +4,6 @@
 #include <cpp11.hpp>
 #include <Rinternals.h>
 
-#ifndef R_NO_REMAP
-#define R_NO_REMAP
-#endif
-
 #define VECTOR_PTR(x) ((SEXP *) DATAPTR(x))
 #define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
 
