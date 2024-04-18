@@ -8,18 +8,14 @@ SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
   if (fill_size > 1){
     Rf_error("fill size must be NULL or length 1");
   }
+  R_xlen_t klag = k;
   switch(TYPEOF(x)){
   case NILSXP: {
     return R_NilValue;
   }
   case LGLSXP:
   case INTSXP: {
-    if (k > size){
-    k = size;
-  }
-    if (k < -size){
-      k = -size;
-    }
+    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
     int fill_value = NA_INTEGER;
     if (fill_size >= 1){
       fill_value = Rf_asInteger(fill);
@@ -77,8 +73,6 @@ SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
     if (!Rf_isNull(Rf_getAttrib(x, R_NamesSymbol))){
       SEXP old_names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
       ++n_protections;
-      // SEXP empty_char = Rf_protect(Rf_ScalarString(NA_STRING));
-      // ++n_protections;
       SEXP new_names = Rf_protect(cpp_lag(old_names, k, R_NilValue, set, recursive));
       ++n_protections;
       Rf_setAttrib(out, R_NamesSymbol, new_names);
@@ -87,12 +81,7 @@ SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
     return out;
   }
   case REALSXP: {
-    if (k > size){
-    k = size;
-  }
-    if (k < -size){
-      k = -size;
-    }
+    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
     double fill_value = NA_REAL;
     if (fill_size >= 1){
       fill_value = Rf_asReal(fill);
@@ -158,12 +147,7 @@ SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
     return out;
   }
   case CPLXSXP: {
-    if (k > size){
-    k = size;
-  }
-    if (k < -size){
-      k = -size;
-    }
+    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
     SEXP fill_sexp = Rf_protect(Rf_allocVector(CPLXSXP, 1));
     ++n_protections;
     Rcomplex *p_fill = COMPLEX(fill_sexp);
@@ -232,12 +216,7 @@ SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
     return out;
   }
   case STRSXP: {
-    if (k > size){
-    k = size;
-  }
-    if (k < -size){
-      k = -size;
-    }
+    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
     SEXP fill_char = Rf_protect(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
     ++n_protections;
     SEXP out = Rf_protect(set ? x : Rf_duplicate(x));
@@ -301,12 +280,7 @@ SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
     return out;
   }
   case RAWSXP: {
-    if (k > size){
-    k = size;
-  }
-    if (k < -size){
-      k = -size;
-    }
+    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
     SEXP raw_sexp = Rf_protect(Rf_coerceVector(fill, RAWSXP));
     Rbyte fill_raw = fill_size == 0 ? RAW(Rf_ScalarRaw(0))[0] : RAW(raw_sexp)[0];
     ++n_protections;
@@ -370,23 +344,17 @@ SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive) {
   }
   case VECSXP: {
     if (recursive){
-    R_xlen_t n_items = Rf_xlength(x);
     const SEXP *p_x = VECTOR_PTR_RO(x);
-    SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_items));
+    SEXP out = Rf_protect(Rf_allocVector(VECSXP, size));
     ++n_protections;
     SHALLOW_DUPLICATE_ATTRIB(out, x);
-    for (R_xlen_t i = 0; i < n_items; ++i){
+    for (R_xlen_t i = 0; i < size; ++i){
       SET_VECTOR_ELT(out, i, cpp_lag(p_x[i], k, fill, set, true));
     }
     Rf_unprotect(n_protections);
     return out;
   } else {
-    if (k > size){
-      k = size;
-    }
-    if (k < -size){
-      k = -size;
-    }
+    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
     SEXP fill_value = Rf_protect(Rf_coerceVector(fill_size >= 1 ? fill : R_NilValue, VECSXP));
     ++n_protections;
     SEXP out = Rf_protect(set ? x : Rf_allocVector(VECSXP, size));

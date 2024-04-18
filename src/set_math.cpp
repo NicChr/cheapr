@@ -30,12 +30,12 @@ SEXP cpp_set_abs(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] != NA_INTEGER) p_x[i] = std::abs(p_x[i]);
+        p_x[i] = p_x[i] == NA_INTEGER ? p_x[i] : std::abs(p_x[i]);
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] != NA_INTEGER) p_x[i] = std::abs(p_x[i]);
+        p_x[i] = p_x[i] == NA_INTEGER ? p_x[i] : std::abs(p_x[i]);
       }
     }
     break;
@@ -45,13 +45,13 @@ SEXP cpp_set_abs(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = std::fabs(p_x[i]);
+        p_x[i] = p_x[i] != p_x[i] ? p_x[i] : std::abs(p_x[i]);
       }
     }
     else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = std::fabs(p_x[i]);
+        p_x[i] = p_x[i] != p_x[i] ? p_x[i] : std::abs(p_x[i]);
       }
     }
     break;
@@ -70,12 +70,12 @@ SEXP cpp_set_floor(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = std::floor(p_x[i]);
+        p_x[i] = (p_x[i] == p_x[i]) ? std::floor(p_x[i]) : p_x[i];
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = std::floor(p_x[i]);
+        p_x[i] = (p_x[i] == p_x[i]) ? std::floor(p_x[i]) : p_x[i];
       }
     }
   }
@@ -92,12 +92,12 @@ SEXP cpp_set_ceiling(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = std::ceil(p_x[i]);
+        p_x[i] = (p_x[i] == p_x[i]) ? std::ceil(p_x[i]) : p_x[i];
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = std::ceil(p_x[i]);
+        p_x[i] = (p_x[i] == p_x[i]) ? std::ceil(p_x[i]) : p_x[i];
       }
     }
   }
@@ -114,12 +114,12 @@ SEXP cpp_set_trunc(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = std::trunc(p_x[i]);
+        p_x[i] = (p_x[i] == p_x[i]) ? std::trunc(p_x[i]) : p_x[i];
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = std::trunc(p_x[i]);
+        p_x[i] = (p_x[i] == p_x[i]) ? std::trunc(p_x[i]) : p_x[i];
       }
     }
   }
@@ -137,12 +137,12 @@ SEXP cpp_set_change_sign(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] != NA_INTEGER) p_x[i] = -p_x[i];
+        p_x[i] = (p_x[i] == NA_INTEGER) ? p_x[i] : -p_x[i];
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] != NA_INTEGER) p_x[i] = -p_x[i];
+        p_x[i] = (p_x[i] == NA_INTEGER) ? p_x[i] : -p_x[i];
       }
     }
     break;
@@ -153,12 +153,12 @@ SEXP cpp_set_change_sign(SEXP x){
       int n_cores = num_cores();
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = -p_x[i];
+        p_x[i] = (p_x[i] == p_x[i]) ? -p_x[i] : p_x[i];
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_x[i] == p_x[i]) p_x[i] = -p_x[i];
+        p_x[i] = (p_x[i] == p_x[i]) ? -p_x[i] : p_x[i];
       }
     }
     break;
@@ -178,12 +178,12 @@ SEXP cpp_set_exp(SEXP x){
   if (n_cores > 1){
     OMP_PARALLEL_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) {
-      if (p_x[i] == p_x[i]) p_x[i] = std::exp(p_x[i]);
+      p_x[i] = (p_x[i] == p_x[i]) ? std::exp(p_x[i]) : p_x[i];
     }
   } else {
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) {
-      if (p_x[i] == p_x[i]) p_x[i] = std::exp(p_x[i]);
+      p_x[i] = (p_x[i] == p_x[i]) ? std::exp(p_x[i]) : p_x[i];
     }
   }
   Rf_unprotect(1);
@@ -201,12 +201,12 @@ SEXP cpp_set_sqrt(SEXP x){
   if (n_cores > 1){
     OMP_PARALLEL_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) {
-      if (p_x[i] == p_x[i]) p_x[i] = std::sqrt(p_x[i]);
+      p_x[i] = (p_x[i] == p_x[i]) ? std::sqrt(p_x[i]) : p_x[i];
     }
   } else {
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) {
-      if (p_x[i] == p_x[i]) p_x[i] = std::sqrt(p_x[i]);
+      p_x[i] = (p_x[i] == p_x[i]) ? std::sqrt(p_x[i]) : p_x[i];
     }
   }
   Rf_unprotect(1);
