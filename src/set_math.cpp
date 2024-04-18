@@ -45,13 +45,13 @@ SEXP cpp_set_abs(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        p_x[i] = p_x[i] != p_x[i] ? p_x[i] : std::abs(p_x[i]);
+        p_x[i] = p_x[i] != p_x[i] ? p_x[i] : std::fabs(p_x[i]);
       }
     }
     else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) {
-        p_x[i] = p_x[i] != p_x[i] ? p_x[i] : std::abs(p_x[i]);
+        p_x[i] = p_x[i] != p_x[i] ? p_x[i] : std::fabs(p_x[i]);
       }
     }
     break;
