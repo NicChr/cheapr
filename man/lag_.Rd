@@ -35,9 +35,9 @@ library(bench)
 df <- data.frame(x = 1:10^5)
 
 # Lag these behind by 3 rows
-lag_(df, 3, set = TRUE)
+sset(lag_(df, 3, set = TRUE), 1:10)
 
-sset(df, 1:5) # x variable was updated by reference!
+df$x[1:10] # x variable was updated by reference!
 
 # The above can be used naturally in data.table to lag data
 # without any copies
