@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.9.0
 
 * New function `lag_` for very fast lags and leads on vectors and data frames.
 It includes a `set` argument allowing users to create a lagged vector 
