@@ -5,6 +5,20 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
+// altrep_utils.cpp
+bool is_compact_seq(SEXP x);
+extern "C" SEXP _cheapr_is_compact_seq(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(is_compact_seq(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// altrep_utils.cpp
+SEXP compact_seq_data(SEXP x);
+extern "C" SEXP _cheapr_compact_seq_data(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(compact_seq_data(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // attrs.cpp
 SEXP cpp_set_rm_attributes(SEXP x);
 extern "C" SEXP _cheapr_cpp_set_rm_attributes(SEXP x) {
@@ -335,20 +349,6 @@ extern "C" SEXP _cheapr_cpp_set_round(SEXP x, SEXP digits) {
   END_CPP11
 }
 // sset.cpp
-bool is_alt_compact_seq(SEXP x);
-extern "C" SEXP _cheapr_is_alt_compact_seq(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(is_alt_compact_seq(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// sset.cpp
-SEXP alt_compact_seq_data(SEXP x);
-extern "C" SEXP _cheapr_alt_compact_seq_data(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(alt_compact_seq_data(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// sset.cpp
 SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by);
 extern "C" SEXP _cheapr_cpp_sset_range(SEXP x, SEXP from, SEXP to, SEXP by) {
   BEGIN_CPP11
@@ -428,7 +428,7 @@ extern "C" SEXP _cheapr_cpp_which_val(SEXP x, SEXP value, SEXP invert) {
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_cheapr_alt_compact_seq_data",     (DL_FUNC) &_cheapr_alt_compact_seq_data,     1},
+    {"_cheapr_compact_seq_data",         (DL_FUNC) &_cheapr_compact_seq_data,         1},
     {"_cheapr_cpp_all_na",               (DL_FUNC) &_cheapr_cpp_all_na,               3},
     {"_cheapr_cpp_any_na",               (DL_FUNC) &_cheapr_cpp_any_na,               2},
     {"_cheapr_cpp_col_na_counts",        (DL_FUNC) &_cheapr_cpp_col_na_counts,        1},
@@ -486,7 +486,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",         (DL_FUNC) &_cheapr_cpp_which_not_na,         1},
     {"_cheapr_cpp_which_val",            (DL_FUNC) &_cheapr_cpp_which_val,            3},
     {"_cheapr_cpp_window_sequence",      (DL_FUNC) &_cheapr_cpp_window_sequence,      4},
-    {"_cheapr_is_alt_compact_seq",       (DL_FUNC) &_cheapr_is_alt_compact_seq,       1},
+    {"_cheapr_is_compact_seq",           (DL_FUNC) &_cheapr_is_compact_seq,           1},
     {"_cheapr_r_copy",                   (DL_FUNC) &_cheapr_r_copy,                   1},
     {NULL, NULL, 0}
 };

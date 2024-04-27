@@ -77,8 +77,8 @@ sset.default <- function(x, i, ...){
   # case of subsetting with a fairly large altrep int sequence
   # For non-classed objects
   if (!is.object(x) && !missing(i) &&
-      is_alt_compact_seq(i) && n_dots(...) == 0){
-    int_seq_data <- alt_compact_seq_data(i)
+      is_compact_seq(i) && n_dots(...) == 0){
+    int_seq_data <- compact_seq_data(i)
     from <- int_seq_data[[1]]
     to <- int_seq_data[[2]]
     by <- int_seq_data[[3]]
@@ -99,8 +99,8 @@ sset.Date <- function(x, i, ...){
     i <- which_(i)
   }
   if (!missing(i) &&
-      is_alt_compact_seq(i) && n_dots(...) == 0){
-    int_seq_data <- alt_compact_seq_data(i)
+      is_compact_seq(i) && n_dots(...) == 0){
+    int_seq_data <- compact_seq_data(i)
     from <- int_seq_data[[1]]
     to <- int_seq_data[[2]]
     by <- int_seq_data[[3]]
@@ -122,8 +122,8 @@ sset.POSIXct <- function(x, i, ...){
     i <- which_(i)
   }
   if (!missing(i) &&
-      is_alt_compact_seq(i) && n_dots(...) == 0){
-    int_seq_data <- alt_compact_seq_data(i)
+      is_compact_seq(i) && n_dots(...) == 0){
+    int_seq_data <- compact_seq_data(i)
     from <- int_seq_data[[1]]
     to <- int_seq_data[[2]]
     by <- int_seq_data[[3]]
@@ -145,8 +145,8 @@ sset.factor <- function(x, i, ...){
     i <- which_(i)
   }
   if (!missing(i) &&
-      is_alt_compact_seq(i) && n_dots(...) == 0){
-    int_seq_data <- alt_compact_seq_data(i)
+      is_compact_seq(i) && n_dots(...) == 0){
+    int_seq_data <- compact_seq_data(i)
     from <- int_seq_data[[1]]
     to <- int_seq_data[[2]]
     by <- int_seq_data[[3]]

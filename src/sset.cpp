@@ -1,77 +1,7 @@
 #include "cheapr_cpp.h"
-// #include <vector>
-// using namespace cpp11;
 
 // Subsetting vectors and data frames
 // Includes a unique optimisation on range subsetting
-
-// Altrep utils
-
-bool is_altrep(SEXP x){
-  return ALTREP(x);
-}
-SEXP alt_class(SEXP x){
-  if (is_altrep(x)){
-    SEXP alt_attribs = Rf_protect(Rf_coerceVector(ATTRIB(ALTREP_CLASS(x)), VECSXP));
-    SEXP out = Rf_protect(Rf_coerceVector(VECTOR_ELT(alt_attribs, 0), STRSXP));
-    Rf_unprotect(2);
-    return out;
-  } else {
-    return R_NilValue;
-  }
-}
-SEXP alt_pkg(SEXP x){
-  if (is_altrep(x)){
-    SEXP alt_attribs = Rf_protect(Rf_coerceVector(ATTRIB(ALTREP_CLASS(x)), VECSXP));
-    SEXP out = Rf_protect(Rf_coerceVector(VECTOR_ELT(alt_attribs, 1), STRSXP));
-    Rf_unprotect(2);
-    return out;
-  } else {
-    return R_NilValue;
-  }
-}
-
-SEXP alt_data1(SEXP x){
-  if (is_altrep(x)){
-    return R_altrep_data1(x);
-  } else {
-    return R_NilValue;
-  }
-}
-[[cpp11::register]]
-bool is_alt_compact_seq(SEXP x){
-  if (!is_altrep(x)) return false;
-  SEXP alt_class_nm = Rf_protect(alt_class(x));
-  SEXP alt_pkg_nm = Rf_protect(alt_pkg(x));
-  SEXP intseq_char = Rf_protect(Rf_mkChar("compact_intseq"));
-  SEXP realseq_char = Rf_protect(Rf_mkChar("compact_realseq"));
-  SEXP base_char = Rf_protect(Rf_mkChar("base"));
-  bool out = (STRING_ELT(alt_class_nm, 0) == intseq_char ||
-              STRING_ELT(alt_class_nm, 0) == realseq_char) &&
-              STRING_ELT(alt_pkg_nm, 0) == base_char;
-  Rf_unprotect(5);
-  return out;
-}
-
-[[cpp11::register]]
-SEXP alt_compact_seq_data(SEXP x){
-  if (!is_alt_compact_seq(x)){
-    Rf_error("x must be an altrep compact_intseq");
-  }
-  SEXP alt_data = Rf_protect(Rf_coerceVector(alt_data1(x), REALSXP));
-  double alt_size = REAL(alt_data)[0];
-  double alt_from = REAL(alt_data)[1];
-  double alt_by = REAL(alt_data)[2];
-  double alt_to = (std::fmax(alt_size - 1.0, 0.0) * alt_by) + alt_from;
-  SEXP out = Rf_protect(Rf_allocVector(REALSXP, 4));
-  double *p_out = REAL(out);
-  p_out[0] = alt_from;
-  p_out[1] = alt_to;
-  p_out[2] = alt_by;
-  p_out[3] = alt_size;
-  Rf_unprotect(2);
-  return out;
-}
 
 // Subset with no checks, indices vector must be pre-curated
 
@@ -651,11 +581,11 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   // If indices is a special type of ALTREP compact int sequence, we can
   // Use a range-based subset instead
 
-  if (is_alt_compact_seq(indices)){
+  if (is_compact_seq(indices)){
 
     // ALTREP integer sequence method
 
-    SEXP seq_data = Rf_protect(alt_compact_seq_data(indices));
+    SEXP seq_data = Rf_protect(compact_seq_data(indices));
     ++n_protections;
     R_xlen_t from = REAL(seq_data)[0];
     R_xlen_t to = REAL(seq_data)[1];
@@ -853,7 +783,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
 }
 
 // SEXP cpp_sset(SEXP x, SEXP indices){
-//   if (!Rf_isObject(x) && Rf_isNull(Rf_getAttrib(x, R_NamesSymbol)) && is_alt_compact_seq(indices)){
+//   if (!Rf_isObject(x) && Rf_isNull(Rf_getAttrib(x, R_NamesSymbol)) && is_compact_seq(indices)){
 //     SEXP int_seq_data = Rf_protect(Rf_coerceVector(alt_data1(indices), INTSXP));
 //     int size = INTEGER(int_seq_data)[0];
 //     int from = INTEGER(int_seq_data)[1];

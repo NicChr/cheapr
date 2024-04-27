@@ -44,5 +44,9 @@ SEXP cpp_list_as_df(SEXP x);
 SEXP cpp_is_na(SEXP x);
 SEXP cpp_which_na(SEXP x);
 SEXP cpp_which_not_na(SEXP x);
+SEXP check_transform_altrep(SEXP x);
+SEXP altrep_materialise(SEXP x);
+SEXP compact_seq_data(SEXP x);
+bool is_compact_seq(SEXP x);
 
 #endif

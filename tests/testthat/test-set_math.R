@@ -44,87 +44,87 @@ test_that("math operations", {
   )
   make_test_data1()
   expect_equal(round(x, 1), set_round(r_copy(x), 1))
-  make_test_data1()
+
   expect_equal(abs(x), set_abs(r_copy(x)))
-  make_test_data1()
+
   expect_identical(floor(x), set_floor(r_copy(x)))
-  make_test_data1()
+
   expect_identical(ceiling(x), set_ceiling(r_copy(x)))
-  make_test_data1()
+
   expect_identical(trunc(x), set_trunc(r_copy(x)))
-  make_test_data1()
+
   expect_equal(exp(x), set_exp(r_copy(x)))
-  make_test_data1()
+
   expect_equal(log(abs(x)), set_log(set_abs(r_copy(x))))
-  make_test_data1()
+
   expect_equal(log10(abs(x)), set_log(set_abs(r_copy(x)), base = 10))
-  make_test_data1()
+
   expect_equal(sqrt(abs(x)), set_sqrt(set_abs(r_copy(x))))
-  make_test_data1()
+
   expect_equal(-x, set_change_sign(r_copy(x)))
 
 
   make_test_data2()
-  expect_equal(round(x, 1),set_round(x, 1))
-  make_test_data2()
+  expect_equal(round(x, 1), set_round(x, 1))
+
   expect_equal(abs(x), set_abs(r_copy(x)))
-  make_test_data2()
+
   expect_equal(floor(x), set_floor(r_copy(x)))
-  make_test_data2()
+
   expect_equal(ceiling(x), set_ceiling(r_copy(x)))
-  make_test_data2()
+
   expect_equal(trunc(x), set_trunc(r_copy(x)))
-  make_test_data2()
+
   expect_equal(exp(x), suppressWarnings(set_exp(r_copy(x))))
-  make_test_data2()
+
   expect_equal(log(abs(x)), suppressWarnings(set_log(set_abs(r_copy(x)))))
-  make_test_data2()
+
   expect_equal(log10(abs(x)), suppressWarnings(set_log(set_abs(r_copy(x)), base = 10)))
-  make_test_data2()
+
   expect_equal(sqrt(abs(x)), suppressWarnings(set_sqrt(set_abs(r_copy(x)))))
-  make_test_data2()
+
   expect_equal(-x, set_change_sign(r_copy(x)))
 
   make_test_data3()
   expect_equal(round(x, 1), set_round(r_copy(x), 1))
-  make_test_data3()
+
   expect_equal(abs(x), set_abs(r_copy(x)))
-  make_test_data3()
+
   expect_equal(floor(x), set_floor(r_copy(x)))
-  make_test_data3()
+
   expect_equal(ceiling(x), set_ceiling(r_copy(x)))
-  make_test_data3()
+
   expect_equal(trunc(x), set_trunc(r_copy(x)))
-  make_test_data3()
+
   expect_equal(exp(x), set_exp(r_copy(x)))
-  make_test_data3()
+
   expect_equal(log(abs(x)), set_log(set_abs(r_copy(x))))
-  make_test_data3()
+
   expect_equal(log10(abs(x)), set_log(set_abs(r_copy(x)), base = 10))
-  make_test_data3()
+
   expect_equal(sqrt(abs(x)), set_sqrt(set_abs(r_copy(x))))
-  make_test_data3()
+
   expect_equal(-x, set_change_sign(r_copy(x)))
 
   make_test_data4()
   expect_equal(round(x, 1),set_round(r_copy(x), 1))
-  make_test_data4()
+
   expect_equal(abs(x), set_abs(r_copy(x)))
-  make_test_data4()
+
   expect_equal(floor(x), set_floor(r_copy(x)))
-  make_test_data4()
+
   expect_equal(ceiling(x), set_ceiling(r_copy(x)))
-  make_test_data4()
+
   expect_equal(trunc(x), set_trunc(r_copy(x)))
-  make_test_data4()
+
   expect_equal(exp(x), suppressWarnings(set_exp(r_copy(x))))
-  make_test_data4()
+
   expect_equal(log(abs(x)), suppressWarnings(set_log(set_abs(r_copy(x)))))
-  make_test_data4()
+
   expect_equal(log10(abs(x)), suppressWarnings(set_log(set_abs(r_copy(x)), base = 10)))
-  make_test_data4()
+
   expect_equal(sqrt(abs(x)), suppressWarnings(set_sqrt(set_abs(r_copy(x)))))
-  make_test_data4()
+
   expect_equal(-x, set_change_sign(r_copy(x)))
   options(cheapr.cores = 1)
 })

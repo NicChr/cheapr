@@ -20,8 +20,11 @@
 #' library(bench)
 #'
 #' # A use-case for data.table
+#' # Adding 0 because can't update ALTREP by reference
+#' df <- data.frame(x = 1:10^5 + 0L)
 #'
-#' df <- data.frame(x = 1:10^5)
+#' # Normal data frame lag
+#' sset(lag_(df), 1:10)
 #'
 #' # Lag these behind by 3 rows
 #' sset(lag_(df, 3, set = TRUE), 1:10)
