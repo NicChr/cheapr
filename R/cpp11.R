@@ -52,6 +52,10 @@ cpp_lag <- function(x, k, fill, set, recursive) {
   .Call(`_cheapr_cpp_lag`, x, k, fill, set, recursive)
 }
 
+cpp_lag2 <- function(x, lag, order, run_lengths, fill, recursive) {
+  .Call(`_cheapr_cpp_lag2`, x, lag, order, run_lengths, fill, recursive)
+}
+
 cpp_num_na <- function(x, recursive) {
   .Call(`_cheapr_cpp_num_na`, x, recursive)
 }

@@ -17,6 +17,7 @@ Imports:
     collapse (>= 2.0.0)
 Suggests:
     bench,
+    data.table,
     testthat (>= 3.0.0),
     vctrs
 LinkingTo: 

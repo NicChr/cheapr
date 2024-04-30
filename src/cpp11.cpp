@@ -96,6 +96,13 @@ extern "C" SEXP _cheapr_cpp_lag(SEXP x, SEXP k, SEXP fill, SEXP set, SEXP recurs
     return cpp11::as_sexp(cpp_lag(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(k), cpp11::as_cpp<cpp11::decay_t<SEXP>>(fill), cpp11::as_cpp<cpp11::decay_t<bool>>(set), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
   END_CPP11
 }
+// lag.cpp
+SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool recursive);
+extern "C" SEXP _cheapr_cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, SEXP recursive) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_lag2(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(lag), cpp11::as_cpp<cpp11::decay_t<SEXP>>(order), cpp11::as_cpp<cpp11::decay_t<SEXP>>(run_lengths), cpp11::as_cpp<cpp11::decay_t<SEXP>>(fill), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
+  END_CPP11
+}
 // nas.cpp
 SEXP cpp_num_na(SEXP x, bool recursive);
 extern "C" SEXP _cheapr_cpp_num_na(SEXP x, SEXP recursive) {
@@ -441,6 +448,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_int_sequence",         (DL_FUNC) &_cheapr_cpp_int_sequence,         3},
     {"_cheapr_cpp_is_na",                (DL_FUNC) &_cheapr_cpp_is_na,                1},
     {"_cheapr_cpp_lag",                  (DL_FUNC) &_cheapr_cpp_lag,                  5},
+    {"_cheapr_cpp_lag2",                 (DL_FUNC) &_cheapr_cpp_lag2,                 6},
     {"_cheapr_cpp_lag_sequence",         (DL_FUNC) &_cheapr_cpp_lag_sequence,         3},
     {"_cheapr_cpp_lcm",                  (DL_FUNC) &_cheapr_cpp_lcm,                  3},
     {"_cheapr_cpp_lcm2",                 (DL_FUNC) &_cheapr_cpp_lcm2,                 4},
