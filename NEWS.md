@@ -1,5 +1,12 @@
 # cheapr (Development version)
 
+* The `set` functions that update by reference are now ALTREP aware and
+take a copy when the input is an ALTREP object.
+
+* New function `lag2_` as a generalised solution for complex lags. It supports
+dynamic lag vectors, lags using an order vector, and custom run lengths. 
+It doesn't support updating by reference or long vectors.
+
 # cheapr 0.9.0 (22-Apr-2024)
 
 * New function `lag_` for very fast lags and leads on vectors and data frames.
