@@ -90,10 +90,10 @@ extern "C" SEXP _cheapr_cpp_lcm2_vectorised(SEXP x, SEXP y, SEXP tol, SEXP na_rm
   END_CPP11
 }
 // lag.cpp
-SEXP cpp_lag(SEXP x, int k, SEXP fill, bool set, bool recursive);
+SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive);
 extern "C" SEXP _cheapr_cpp_lag(SEXP x, SEXP k, SEXP fill, SEXP set, SEXP recursive) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_lag(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(k), cpp11::as_cpp<cpp11::decay_t<SEXP>>(fill), cpp11::as_cpp<cpp11::decay_t<bool>>(set), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
+    return cpp11::as_sexp(cpp_lag(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(k), cpp11::as_cpp<cpp11::decay_t<SEXP>>(fill), cpp11::as_cpp<cpp11::decay_t<bool>>(set), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
   END_CPP11
 }
 // lag.cpp

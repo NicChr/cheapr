@@ -53,7 +53,8 @@ run lengths.
 \details{
 For most applications, it is more efficient and recommended to use \code{lag_()}.
 For anything that requires dynamic lags, lag by order of another variable,
-or by-group lags, one can use \code{lag2_()}.
+or by-group lags, one can use \code{lag2_()}. \cr
+To do cyclic lags, see the examples below for an implementation.
 \subsection{\code{lag2_}}{
 
 \code{lag2_} is a generalised form of \code{lag_} that by default performs
@@ -125,8 +126,8 @@ x <- 1:10
 # lag every 2nd element
 lag2_(x, n = c(1, 0)) # lag vector is recycled
 
-# Explicit lags along x
-lags <- lag_sequence(length(x), 1, partial = FALSE)
+# Explicit Lag(3) using a vector of lags
+lags <- lag_sequence(length(x), 3, partial = FALSE)
 lag2_(x, n = lags)
 
 # Alternating lags and leads
@@ -150,12 +151,13 @@ lag2_(x, order = order(years))
 
 # Example of how to do a cyclical lag
 n <- length(x)
+
+# When k >= 0
 k <- min(3, n)
-if (k >= 0){
-  lag2_(x, c(rep(-n + k, k), rep(k, n - k)))
-} else {
-  lag2_(x, c(rep(k, n + k), rep(n + k, -k)))
-}
+lag2_(x, c(rep(-n + k, k), rep(k, n - k)))
+# When k < 0
+k <- max(-3, -n)
+lag2_(x, c(rep(k, n + k), rep(n + k, -k)))
 
 # As it turns out, we can do a grouped lag
 # by supplying group sizes as run lengths and group order as the order
@@ -211,11 +213,13 @@ grouped_lag(x, g = g)
 # Let's compare this to data.table
 
 library(data.table)
-setDTthreads(2)
+default_threads <- getDTthreads()
+setDTthreads(1)
 dt <- data.table(x = 1:10^5,
                  g = sample.int(10^4, 10^5, TRUE))
 
 bench::mark(dt[, y := shift(x), by = g][][["y"]],
             grouped_lag(dt$x, g = dt$g),
             iterations = 10)
+setDTthreads(default_threads)
 }

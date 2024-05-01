@@ -161,7 +161,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       lcm = NA_REAL;
     }
     int lcm_int = p_x[0];
-    double int_max = double(integer_max_);
+    double int_max = integer_max_;
     for (int i = 1; i < n; ++i) {
       if (!na_rm && !(lcm == lcm)){
         lcm = NA_REAL;
