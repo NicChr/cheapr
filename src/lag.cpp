@@ -1,10 +1,4 @@
 #include "cheapr_cpp.h"
-#include <variant>
-#include <memory>
-
-template<typename T> T cpp_sign(T x) {
-  return (x > 0) - (x < 0);
-}
 
 // Internal fast check for valid order values (here they are 0-indexed)
 // Where rng = length(x) - 1
