@@ -9,6 +9,7 @@
 \alias{enframe_}
 \alias{deframe_}
 \alias{na_rm}
+\alias{recycle}
 \title{Extra utilities}
 \usage{
 setdiff_(x, y, dups = TRUE)
@@ -35,6 +36,8 @@ enframe_(x, name = "name", value = "value")
 deframe_(x)
 
 na_rm(x)
+
+recycle(..., length = NULL)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -62,6 +65,8 @@ na_rm(x)
 \item{name}{The column name to assign the names of a vector.}
 
 \item{value}{The column name to assign the values of a vector.}
+
+\item{length}{Optional length to recycle objects to.}
 }
 \value{
 \verb{enframe()_} converts a vector to a data frame. \cr
@@ -74,7 +79,12 @@ in which case an integer vector of break indices is returned. \cr
 \verb{\%in_\%} and \verb{\%!in_\%} both return a logical vector signifying if the values of
 \code{x} exist or don't exist in \code{table} respectively. \cr
 \code{na_rm()} is a convenience function that removes \code{NA} values and
-works only on vectors. For more advanced \code{NA} handling, see \code{?is_na}.
+empty rows in the case of data frames.
+For more advanced \code{NA} handling, see \code{?is_na}. \cr
+\code{recycle()} explicitly recycles the given R objects (including data frames)
+to the common maximum size,
+unless one of them is length zero, in which case all are recycled to length zero,
+returning a list of the recycled objects.
 }
 \description{
 Extra utilities

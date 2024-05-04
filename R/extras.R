@@ -13,6 +13,7 @@
 #' @param ordered_result See `?cut`.
 #' @param table See `?collapse::fmatch`
 #' @param ... See `?cut`.
+#' @param length Optional length to recycle objects to.
 #'
 #' @returns
 #' `enframe()_` converts a vector to a data frame. \cr
@@ -25,7 +26,12 @@
 #' `%in_%` and `%!in_%` both return a logical vector signifying if the values of
 #' `x` exist or don't exist in `table` respectively. \cr
 #' `na_rm()` is a convenience function that removes `NA` values and
-#' works only on vectors. For more advanced `NA` handling, see `?is_na`.
+#' empty rows in the case of data frames.
+#' For more advanced `NA` handling, see `?is_na`. \cr
+#' `recycle()` explicitly recycles the given R objects (including data frames)
+#' to the common maximum size,
+#' unless one of them is length zero, in which case all are recycled to length zero,
+#' returning a list of the recycled objects.
 #'
 #' @details
 #' `intersect_()` and `setdiff_()` are faster and more efficient
@@ -168,4 +174,27 @@ na_rm <- function(x){
   } else {
     sset(x, which_not_na(x))
   }
+}
+#' @export
+#' @rdname extras
+recycle <- function (..., length = NULL){
+  out <- cpp_list_rm_null(list(...))
+  lens <- lengths_(out)
+  if (is.null(length)) {
+    if (length(lens)) {
+      N <- max(lens)
+    }
+    else {
+      N <- 0L
+    }
+  }
+  else {
+    N <- length
+  }
+  N <- N * (!collapse::anyv(lens, 0L))
+  recyclei <- which_(lens != N)
+  if (length(recyclei)){
+    out[recyclei] <- lapply(out[recyclei], cheapr_rep_len, N)
+  }
+  out
 }

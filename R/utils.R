@@ -86,27 +86,14 @@ tzone <- function(x){
   }
 }
 
-# Recycle arguments
-recycle <- function (..., length = NULL){
-  out <- cpp_list_rm_null(list(...))
-  lens <- lengths_(out)
-  uniq_lens <- collapse::fnunique(lens)
-  if (is.null(length)) {
-    if (length(lens)) {
-      N <- max(lens)
-    }
-    else {
-      N <- 0L
-    }
+cheapr_rep_len <- function(x, length.out){
+  if (inherits(x, "data.frame")){
+    sset(x, rep_len(attr(x, "row.names"), length.out))
+  } else {
+    rep_len(x, length.out)
   }
-  else {
-    N <- length
-  }
-  N <- N * (!collapse::anyv(lens, 0L))
-  recycle <- which_(lens != N)
-  out[recycle] <- lapply(out[recycle], rep_len, N)
-  out
 }
+
 n_dots <- function(...){
   nargs()
 }
