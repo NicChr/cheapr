@@ -13,7 +13,13 @@ R_xlen_t cpp_vec_length(SEXP x){
     if (Rf_inherits(x, "vctrs_rcrd")){
       return cpp_vec_length(VECTOR_ELT(x, 0));
     } else if (Rf_inherits(x, "POSIXlt")){
-      return Rf_xlength(VECTOR_ELT(x, 0));
+      const SEXP *p_x = VECTOR_PTR_RO(x);
+      R_xlen_t out = 0;
+      for (int i = 0; i != 10; ++i){
+        out = std::max(out, Rf_xlength(p_x[i]));
+      }
+      return out;
+      // return Rf_xlength(VECTOR_ELT(x, 0));
     } else if (Rf_isObject(x)){
       return Rf_asReal(cpp11::package("base")["length"](x));
     } else {
