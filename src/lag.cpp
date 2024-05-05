@@ -522,7 +522,6 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
         Rf_error("sum(run_lengths) must be equal to length(x)");
       }
       // int trick to calculate inclusive bounded between(x, lo, hi)
-      // See: https://stackoverflow.com/questions/17095324/fastest-way-to-determine-if-an-integer-is-between-two-integers-inclusive-with
       unsigned int rng = (run_end - 1) - run_start;
       // Loop starting from the end of the previous run-length
       for (int j = run_start; j != run_end; ++j){

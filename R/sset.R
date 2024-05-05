@@ -177,11 +177,7 @@ sset.tbl_df <- function(x, i, j, ...){
 sset.POSIXlt <- function(x, i, j, ...){
   missingi <- missing(i)
   missingj <- missing(j)
-  if (n_unique(lengths_(unclass(x))) > 1){
-    out <- balance_posixlt(x)
-  } else {
-    out <- unclass(x)
-  }
+  out <- fill_posixlt(x, classed = FALSE)
   if (missingj){
     j <- seq_along(out)
   }
@@ -191,7 +187,12 @@ sset.POSIXlt <- function(x, i, j, ...){
     set_rm_attr(out, "row.names")
   }
   set_attr(out, "tzone", attr(x, "tzone"))
-  set_attr(out, "balanced", TRUE)
+  if (posixlt_is_balanced(x)){
+    set_attr(out, "balanced", TRUE)
+  } else {
+    set_attr(out, "balanced", NA)
+  }
+  out
 }
 #' @rdname sset
 #' @export

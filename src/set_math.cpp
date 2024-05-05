@@ -13,7 +13,6 @@ void copy_warning(){
   Rf_warning("x is not a double vector and has been copied, it will not be replaced by reference.\n\tEnsure the result is assigned to an object if used in further calculations\n\te.g. `x <- set_log(x)`");
 }
 
-// Source: https://stackoverflow.com/questions/32746523/ieee-754-compliant-round-half-to-even
 double round_nearest_even(double x){
   x -= std::remainder(x, 1.0);
   return x;

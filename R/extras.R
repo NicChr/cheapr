@@ -13,7 +13,9 @@
 #' @param ordered_result See `?cut`.
 #' @param table See `?collapse::fmatch`
 #' @param ... See `?cut`.
-#' @param length Optional length to recycle objects to.
+#' @param size See `?sample`.
+#' @param replace See `?sample`.
+#' @param prob See `?sample`.
 #'
 #' @returns
 #' `enframe()_` converts a vector to a data frame. \cr
@@ -28,10 +30,9 @@
 #' `na_rm()` is a convenience function that removes `NA` values and
 #' empty rows in the case of data frames.
 #' For more advanced `NA` handling, see `?is_na`. \cr
-#' `recycle()` explicitly recycles the given R objects (including data frames)
-#' to the common maximum size,
-#' unless one of them is length zero, in which case all are recycled to length zero,
-#' returning a list of the recycled objects.
+#' `sample_()` is an alternative to `sample()` that natively samples
+#' data frame rows through `sset()`. It also does not have a special case when
+#' `length(x)` is 1.
 #'
 #' @details
 #' `intersect_()` and `setdiff_()` are faster and more efficient
@@ -177,24 +178,6 @@ na_rm <- function(x){
 }
 #' @export
 #' @rdname extras
-recycle <- function (..., length = NULL){
-  out <- cpp_list_rm_null(list(...))
-  lens <- lengths_(out)
-  if (is.null(length)) {
-    if (length(lens)) {
-      N <- max(lens)
-    }
-    else {
-      N <- 0L
-    }
-  }
-  else {
-    N <- length
-  }
-  N <- N * (!collapse::anyv(lens, 0L))
-  recyclei <- which_(lens != N)
-  if (length(recyclei)){
-    out[recyclei] <- lapply(out[recyclei], cheapr_rep_len, N)
-  }
-  out
+sample_ <- function(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL){
+  sset(x, sample.int(cpp_vec_length(x), size, replace, prob))
 }

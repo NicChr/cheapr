@@ -9,7 +9,7 @@
 \alias{enframe_}
 \alias{deframe_}
 \alias{na_rm}
-\alias{recycle}
+\alias{sample_}
 \title{Extra utilities}
 \usage{
 setdiff_(x, y, dups = TRUE)
@@ -37,7 +37,7 @@ deframe_(x)
 
 na_rm(x)
 
-recycle(..., length = NULL)
+sample_(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -66,7 +66,11 @@ recycle(..., length = NULL)
 
 \item{value}{The column name to assign the values of a vector.}
 
-\item{length}{Optional length to recycle objects to.}
+\item{size}{See \code{?sample}.}
+
+\item{replace}{See \code{?sample}.}
+
+\item{prob}{See \code{?sample}.}
 }
 \value{
 \verb{enframe()_} converts a vector to a data frame. \cr
@@ -81,10 +85,9 @@ in which case an integer vector of break indices is returned. \cr
 \code{na_rm()} is a convenience function that removes \code{NA} values and
 empty rows in the case of data frames.
 For more advanced \code{NA} handling, see \code{?is_na}. \cr
-\code{recycle()} explicitly recycles the given R objects (including data frames)
-to the common maximum size,
-unless one of them is length zero, in which case all are recycled to length zero,
-returning a list of the recycled objects.
+\code{sample_()} is an alternative to \code{sample()} that natively samples
+data frame rows through \code{sset()}. It also does not have a special case when
+\code{length(x)} is 1.
 }
 \description{
 Extra utilities

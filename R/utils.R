@@ -34,22 +34,6 @@ df_as_tbl <- function(x){
   class(out) <- c("tbl_df", "tbl", "data.frame")
   out
 }
-as.character.vctrs_rcrd <- function(x, ...){
-  format(x, ...)
-}
-funique.vctrs_rcrd <- function(x, sort = FALSE, ...){
-  out <- unique(x, ...)
-  if (sort){
-    out <- sort(out)
-  }
-  out
-}
-funique.POSIXlt <- function(x, ...){
-  out <- collapse::funique(list_as_df(x), ...)
-  out <- unclass(out)
-  attributes(out) <- attributes(x)
-  out
-}
 check_length <- function(x, n){
   if (length(x) != n){
     stop(paste(deparse1(substitute(x)), "must have length", n))
@@ -90,7 +74,7 @@ cheapr_rep_len <- function(x, length.out){
   if (inherits(x, "data.frame")){
     sset(x, rep_len(attr(x, "row.names"), length.out))
   } else {
-    rep_len(x, length.out)
+    rep(x, length.out = length.out)
   }
 }
 
@@ -102,17 +86,70 @@ set_attrs <- cpp_set_add_attributes
 set_rm_attr <- cpp_set_rm_attr
 set_rm_attrs <- cpp_set_rm_attributes
 
-balance_posixlt <- function(x){
-  balance_pos <- tryCatch(get("balancePOSIXlt",
-                              asNamespace("base"),
-                              inherits = FALSE),
-                          error = function(e) return(".r.error"))
-  if (is.character(balance_pos) && length(balance_pos) == 1 && balance_pos == ".r.error"){
-    unclass(x)
-  } else {
-    balance_pos(x, fill.only = FALSE, classed = FALSE)
-  }
-}
 cpp_list_rm_null <- function(x, always_shallow_copy = TRUE){
   cpp_drop_null(x, always_shallow_copy)
+}
+list_is_df_like <- function(x){
+  collapse::fnunique(lengths_(x)) <= 1
+}
+posixlt_is_balanced <- function(x){
+  isTRUE(attr(x, "balanced")) && list_is_df_like(x)
+}
+fill_posixlt <- function(x, classed = TRUE){
+  if (!inherits(x, "POSIXlt")){
+    stop("x must be a POSIXlt")
+  }
+  out <- unclass(x)
+  out <- do.call(recycle, out)
+  attributes(out) <- attributes(x)
+  if (!posixlt_is_balanced(x)){
+    attr(out, "balanced") <- NA
+  }
+  if (!classed){
+    class(out) <- NULL
+  }
+  out
+}
+
+# balance_posixlt <- function(x, fill.only = FALSE, classed = TRUE){
+#   balance_pos <- tryCatch(get("balancePOSIXlt",
+#                               asNamespace("base"),
+#                               inherits = FALSE),
+#                           error = function(e) return(".r.error"))
+#   if (is.character(balance_pos) && length(balance_pos) == 1 && balance_pos == ".r.error"){
+#     fill_posixlt(x, classed = classed)
+#   } else {
+#     balance_pos(x, fill.only = fill.only, classed = classed)
+#   }
+# }
+
+#' @exportS3Method base::as.character
+as.character.vctrs_rcrd <- function(x, ...){
+  format(x, ...)
+}
+#' @exportS3Method collapse::funique
+funique.vctrs_rcrd <- function(x, sort = FALSE, ...){
+  out <- unique(x, ...)
+  if (sort){
+    out <- sort(out)
+  }
+  out
+}
+#' @exportS3Method collapse::funique
+funique.POSIXlt <- function(x, sort = FALSE, ...){
+  out <- fill_posixlt(x, classed = FALSE)
+  # out <- balance_posixlt(x, fill.only = TRUE, classed = FALSE)
+  out_attrs <- attributes(out)
+  out <- list_as_df(out)
+  out <- collapse::funique(out, sort = FALSE)
+  if (sort){
+    o <- collapse::radixorderv(
+      sset(out, j = c("year", "yday", "hour", "min", "sec")),
+      ...
+    )
+    out <- sset(out, o)
+  }
+  attributes(out) <- out_attrs
+  class(out) <- class(x)
+  out
 }

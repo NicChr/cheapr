@@ -59,6 +59,7 @@ The exact same object with no copy made, just transformed.
 }
 \description{
 These functions transform your variable by reference, with no copies being made.
+It is advisable to only use these if you know what you are doing.
 }
 \details{
 These functions are particularly useful for situations
