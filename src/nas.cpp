@@ -338,8 +338,8 @@ SEXP cpp_is_na(SEXP x){
     for (R_xlen_t i = 0; i < n; ++i){
       p_out[i] = cpp_all_na(p_x[i], false, true);
     }
-  }
     break;
+  }
   }
   default: {
     out = Rf_protect(cpp11::package("base")["is.na"](x));
