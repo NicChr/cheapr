@@ -1,6 +1,6 @@
 # cheapr (Development version)
 
-* New function `recycle` to help in recycling R objects to a common size.
+* New function `recycle` to help recycle R objects to a common size.
 
 * The `set` functions that update by reference are now ALTREP aware and
 take a copy when the input is an ALTREP object.
