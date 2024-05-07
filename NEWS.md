@@ -1,4 +1,6 @@
-# cheapr 0.9.1
+# cheapr (Development version)
+
+# cheapr 0.9.1 (05-May-2024)
 
 * New function `recycle` to help recycle R objects to a common size.
 
