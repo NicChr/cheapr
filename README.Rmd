@@ -197,22 +197,32 @@ lag_(1:10, 3) # Lag(3)
 lag_(1:10, -3) # Lead(3)
 
 # Using an example from data.table
-
-DF <- data.frame(year=2010:2014, v1=runif(5), v2=1:5, v3=letters[1:5])
+library(data.table)
+dt <- data.table(year=2010:2014, v1=runif(5), v2=1:5, v3=letters[1:5])
 
 # Similar to data.table::shift()
 
-lag_(DF, 1) # Lag 
-lag_(DF, -1) # Lead
+lag_(dt, 1) # Lag 
+lag_(dt, -1) # Lead
 ```
 
 With `lag_` we can update variables by reference, including entire data frames
 
 ```{r}
 # At the moment, shift() cannot do this
-lag_(DF, set = TRUE)
+lag_(dt, set = TRUE)
 
-DF # Was updated by reference
+dt # Was updated by reference
+```
+
+`lag2_` is a more generalised variant that supports vectors of lags, 
+custom ordering and run lengths.
+
+```{r}
+lag2_(dt, order = 5:1) # Reverse order lag (same as lead)
+lag2_(dt, -1) # Same as above
+lag2_(dt, c(1, -1)) # Alternating lead/lag
+lag2_(dt, c(-1, 0, 0, 0, 0)) # Lead e.g. only first row
 ```
 
 
