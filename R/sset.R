@@ -62,6 +62,21 @@
 #'      sset(df, df$x > 0),
 #'      check = FALSE) # Row names are different
 #'
+#'
+#' ## EXTRA: An easy way to incorporate cheapr into dplyr's filter()
+#' # cheapr_filter <- function(.data, ..., .by = NULL, .preserve = FALSE){
+#' #   filter_df <- .data |>
+#' #     dplyr::mutate(..., .by = {{ .by }}, .keep = "none")
+#' #   groups <- dplyr::group_vars(filter_df)
+#' #   filter_df <- cheapr::sset(filter_df, j = setdiff(names(filter_df), groups))
+#' #   n_filters <- ncol(filter_df)
+#' #   if (n_filters < 1){
+#' #     .data
+#' #   } else {
+#' #     dplyr::dplyr_row_slice(.data, cheapr::which_(Reduce(`&`, filter_df)),
+#' #                            preserve = .preserve)
+#' #   }
+#' # }
 #' @rdname sset
 #' @export
 sset <- function(x, ...){
