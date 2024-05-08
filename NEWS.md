@@ -1,5 +1,10 @@
 # cheapr (Development version)
 
+* A signed integer overflow bug in `lag2_` has been fixed. This occurred when 
+supplying `NA` lags. 
+
+* `lag2_` no longer fills the names of named vectors when the `fill` value is supplied.
+
 # cheapr 0.9.1 (05-May-2024)
 
 * New function `recycle` to help recycle R objects to a common size.
