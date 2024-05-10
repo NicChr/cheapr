@@ -449,19 +449,33 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   if (lag_size < 1){
     Rf_error("lag must be a non-zero length integer vector");
   }
-  bool has_order = o_size > 0;
-  bool has_rl = rl_size > 0;
+  bool has_order = !Rf_isNull(order);
+  bool has_rl = !Rf_isNull(run_lengths);
   bool recycle_lag = lag_size != 1;
+
+  // When order is NULL we run through x from left to right (as usual)
+  // When run_lengths is NULL we run through x without resetting
+  // To do this properly we use dummy vectors so that
+  // we can statically assign int pointers
+  // While keeping order and run_lengths as NULL (if they are NULL)
+  // This is mainly done this way because lag2_ is recursive and
+  // hence order/run_lengths should remain NULL throughout each recursion
+  // if they are NULL
+
+  SEXP dummy_vec1 = Rf_protect(Rf_allocVector(INTSXP, 0));
+  ++n_protections;
+  SEXP dummy_vec2 = Rf_protect(Rf_allocVector(INTSXP, 0));
+  ++n_protections;
   Rf_protect(lag = Rf_coerceVector(lag, INTSXP));
   ++n_protections;
-  Rf_protect(order = Rf_coerceVector(order, INTSXP));
+  Rf_protect(order = has_order ? Rf_coerceVector(order, INTSXP) : R_NilValue);
   ++n_protections;
-  Rf_protect(run_lengths = Rf_coerceVector(run_lengths, INTSXP));
+  Rf_protect(run_lengths = has_rl ? Rf_coerceVector(run_lengths, INTSXP) : R_NilValue);
   ++n_protections;
   // std::variant<int*, double*> p_o;
   // typedef std::conditional<true, int*, double*>::type p_o;
-  int *p_o = INTEGER(order);
-  int *p_rl = INTEGER(run_lengths);
+  int *p_o = INTEGER(has_order ? order : dummy_vec1);
+  int *p_rl = INTEGER(has_rl ? run_lengths : dummy_vec2);
   int *p_lag = INTEGER(lag);
   int rl; // Run-length
   int run_start = 0; // Start index of current run
@@ -482,6 +496,8 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
     Rf_setAttrib(out, R_NamesSymbol, new_names);               \
   }                                                            \
 
+  // Initialise range of possible order values to fast check
+  // user-supplied order values
   unsigned int o_rng = o_size - 1;
   SEXP out;
   switch(TYPEOF(x)){
@@ -493,7 +509,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   case INTSXP: {
     int size = Rf_length(x);
     if (has_order && (size != o_size)){
-      Rf_error("length(order) must equal length(x)");
+      Rf_error("length(order) must equal length(x) (%d)", size);
     }
     int *p_x = INTEGER(x);
     int fill_value = NA_INTEGER;
@@ -518,7 +534,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
         Rf_unprotect(n_protections);
-        Rf_error("sum(run_lengths) must be equal to length(x)");
+        Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // int trick to calculate inclusive bounded between(x, lo, hi)
       // unsigned int rng = (run_end - 1) - run_start;
@@ -544,7 +560,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
     }
     if (run_end != size){
       Rf_unprotect(n_protections);
-      Rf_error("sum(run_lengths) must be equal to length(x)");
+      Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     LAG_R_NAMES;
     break;
@@ -552,7 +568,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   case REALSXP: {
     int size = Rf_length(x);
     if (has_order && (size != o_size)){
-      Rf_error("length(order) must equal length(x)");
+      Rf_error("length(order) must equal length(x) (%d)", size);
     }
     double *p_x = REAL(x);
     double fill_value = NA_REAL;
@@ -576,7 +592,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
         Rf_unprotect(n_protections);
-        Rf_error("sum(run_lengths) must be equal to length(x)");
+        Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
       for (int j = run_start; j != run_end; ++j){
@@ -597,7 +613,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
     }
     if (run_end != size){
       Rf_unprotect(n_protections);
-      Rf_error("sum(run_lengths) must be equal to length(x)");
+      Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     LAG_R_NAMES;
     break;
@@ -605,7 +621,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   case STRSXP: {
     int size = Rf_length(x);
     if (has_order && (size != o_size)){
-      Rf_error("length(order) must equal length(x)");
+      Rf_error("length(order) must equal length(x) (%d)", size);
     }
     SEXP *p_x = STRING_PTR(x);
     SEXP fill_value = Rf_protect(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
@@ -626,7 +642,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
         Rf_unprotect(n_protections);
-        Rf_error("sum(run_lengths) must be equal to length(x)");
+        Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
       for (int j = run_start; j != run_end; ++j){
@@ -647,7 +663,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
     }
     if (run_end != size){
       Rf_unprotect(n_protections);
-      Rf_error("sum(run_lengths) must be equal to length(x)");
+      Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     LAG_R_NAMES;
     break;
@@ -655,7 +671,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   case CPLXSXP: {
     int size = Rf_length(x);
     if (has_order && (size != o_size)){
-      Rf_error("length(order) must equal length(x)");
+      Rf_error("length(order) must equal length(x) (%d)", size);
     }
     Rcomplex *p_x = COMPLEX(x);
     SEXP fill_sexp = Rf_protect(Rf_allocVector(CPLXSXP, 1));
@@ -680,7 +696,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
         Rf_unprotect(n_protections);
-        Rf_error("sum(run_lengths) must be equal to length(x)");
+        Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
       for (int j = run_start; j != run_end; ++j){
@@ -701,7 +717,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
     }
     if (run_end != size){
       Rf_unprotect(n_protections);
-      Rf_error("sum(run_lengths) must be equal to length(x)");
+      Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     LAG_R_NAMES;
     break;
@@ -709,7 +725,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   case RAWSXP: {
     int size = Rf_length(x);
     if (has_order && (size != o_size)){
-      Rf_error("length(order) must equal length(x)");
+      Rf_error("length(order) must equal length(x) (%d)", size);
     }
     Rbyte *p_x = RAW(x);
     SEXP raw_sexp = Rf_protect(Rf_coerceVector(fill, RAWSXP));
@@ -731,7 +747,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
         Rf_unprotect(n_protections);
-        Rf_error("sum(run_lengths) must be equal to length(x)");
+        Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
       for (int j = run_start; j != run_end; ++j){
@@ -750,6 +766,10 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
         }
       }
     }
+    if (run_end != size){
+      Rf_unprotect(n_protections);
+      Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
+    }
     LAG_R_NAMES;
     break;
   }
@@ -766,7 +786,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   } else {
     int size = Rf_length(x);
     if (has_order && (size != o_size)){
-      Rf_error("length(order) must equal length(x)");
+      Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const SEXP *p_x = VECTOR_PTR_RO(x);
     SEXP fill_value = Rf_protect(VECTOR_ELT(Rf_coerceVector(fill_size >= 1 ? fill : R_NilValue, VECSXP), 0));
@@ -787,7 +807,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
         Rf_unprotect(n_protections);
-        Rf_error("sum(run_lengths) must be equal to length(x)");
+        Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
       for (int j = run_start; j != run_end; ++j){
@@ -808,7 +828,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
     }
     if (run_end != size){
       Rf_unprotect(n_protections);
-      Rf_error("sum(run_lengths) must be equal to length(x)");
+      Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     LAG_R_NAMES;
   }
