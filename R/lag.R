@@ -65,7 +65,7 @@
 #' | Leads | Yes | Yes |
 #' | Long vector support | Yes | No |
 #' | Lag by reference | Yes | No |
-#' | Dynamic vectorized lags | No | Yes |
+#' | Dynamic vectorised lags | No | Yes |
 #' | Data frame row lags | Yes | Yes |
 #' | Alternative order lags | No | Yes |
 #'

@@ -1,6 +1,6 @@
-* Updated to version 0.9.1
+* Updated to version 0.9.2
 
-Note: Number of updates in past 6 months: 7
+* Have fixed the issues listed at https://cran.r-project.org/web/checks/check_results_cheapr.html
 
 * Checked and passed using rhub v2.0.0 in the following environments:
 

@@ -88,7 +88,7 @@ a unique and separate vector. See the examples for a showcase.
    Leads \tab Yes \tab Yes \cr
    Long vector support \tab Yes \tab No \cr
    Lag by reference \tab Yes \tab No \cr
-   Dynamic vectorized lags \tab No \tab Yes \cr
+   Dynamic vectorised lags \tab No \tab Yes \cr
    Data frame row lags \tab Yes \tab Yes \cr
    Alternative order lags \tab No \tab Yes \cr
 }
