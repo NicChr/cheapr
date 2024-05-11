@@ -1,4 +1,6 @@
-# cheapr 0.9.2
+# cheapr (Development version)
+
+# cheapr 0.9.2 (11-May-2024)
 
 * A signed integer overflow bug in `lag2_` has been fixed. This occurred when 
 supplying `NA` lags. 
