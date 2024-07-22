@@ -235,7 +235,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     ++n_protections;
     out = Rf_protect(set ? xvec : Rf_duplicate(xvec));
     ++n_protections;
-    SEXP *p_out = STRING_PTR(out);
+    const SEXP *p_out = STRING_PTR_RO(out);
     if (set){
       R_xlen_t tempi;
       // If k = 0 then no lag occurs
@@ -244,7 +244,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
         ++n_protections;
         SEXP tempv = Rf_protect(Rf_allocVector(STRSXP, 1));
         ++n_protections;
-        SEXP* __restrict__ p_lag = STRING_PTR(lag_temp);
+        const SEXP* __restrict__ p_lag = STRING_PTR_RO(lag_temp);
         // Positive lags
         if (k >= 0){
           for (R_xlen_t i = 0; i < k; ++i) {
@@ -272,7 +272,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
         }
       }
     } else {
-      SEXP *p_x = STRING_PTR(xvec);
+      const SEXP *p_x = STRING_PTR_RO(xvec);
       if (k >= 0){
         for (R_xlen_t i = 0; i < size; ++i) {
           SET_STRING_ELT(out, i, i >= k ? p_x[i - k] : fill_char);
@@ -624,7 +624,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     SEXP fill_value = Rf_protect(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
     ++n_protections;
     out = Rf_protect(Rf_duplicate(x));

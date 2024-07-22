@@ -86,7 +86,7 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
   SEXP names = Rf_protect(Rf_getAttrib(l, R_NamesSymbol));
   bool has_names = !Rf_isNull(names);
   if (has_names){
-    SEXP *p_names = STRING_PTR(names);
+    const SEXP *p_names = STRING_PTR_RO(names);
     SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_keep));
     for (int k = 0; k < n_keep; ++k) {
       SET_STRING_ELT(out_names, k, p_names[p_keep[k]]);

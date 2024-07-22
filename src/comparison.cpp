@@ -65,8 +65,8 @@
 //     break;
 //   }
 //   case STRSXP: {
-//     SEXP *p_x = STRING_PTR(x);
-//     SEXP *p_y = STRING_PTR(y);
+//     const SEXP *p_x = STRING_PTR_RO(x);
+//     const SEXP *p_y = STRING_PTR_RO(y);
 //     // OMP_FOR_SIMD
 //     for (R_xlen_t i = 0; i < n1; ++i){
 //       SEXP a = p_x[i];
@@ -161,8 +161,8 @@
 //     break;
 //   }
 //   case STRSXP: {
-//     SEXP *p_x = STRING_PTR(x);
-//     SEXP *p_y = STRING_PTR(y);
+//     const SEXP *p_x = STRING_PTR_RO(x);
+//     const SEXP *p_y = STRING_PTR_RO(y);
 //     // OMP_FOR_SIMD
 //     for (R_xlen_t i = 0; i < n1; ++i){
 //       if (p_lgl[i] != FALSE){
@@ -270,8 +270,8 @@
 //     break;
 //   }
 //   case STRSXP: {
-//     SEXP *p_x = STRING_PTR(x);
-//     SEXP *p_y = STRING_PTR(y);
+//     const SEXP *p_x = STRING_PTR_RO(x);
+//     const SEXP *p_y = STRING_PTR_RO(y);
 //     for (R_xlen_t i = 0; i < n1; ++i){
 //       // either_na = (p_x[i] == NA_STRING || p_y[i] == NA_STRING);
 //       // na_count += either_na;

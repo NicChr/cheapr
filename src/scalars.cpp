@@ -74,7 +74,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     if (STRING_ELT(value, 0) == NA_STRING) break;
     SEXP val = Rf_protect(Rf_asChar(value));
     ++n_prot;
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       VAL_COUNT(val);
@@ -201,7 +201,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool set){
     ++n_prot;
     SEXP repl = Rf_protect(Rf_asChar(replace));
     ++n_prot;
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     out = Rf_protect(set ? x : Rf_duplicate(x));
     ++n_prot;
     for (R_xlen_t i = 0; i < n; ++i) if (p_x[i] == val) SET_STRING_ELT(out, i, repl);

@@ -160,7 +160,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     ++n_protections;
     SEXP val = Rf_protect(Rf_asChar(value));
     ++n_protections;
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);
       WHICH_VAL(val);

@@ -67,7 +67,7 @@ SEXP cpp_sset_unsafe(SEXP x, int *pind, int n, int n_cores){
     return out;
   }
   case STRSXP: {
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
     OMP_FOR_SIMD
     for (int i = 0; i < n; ++i){
@@ -361,7 +361,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     return out;
   }
   case STRSXP: {
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     SEXP out = Rf_protect(Rf_allocVector(STRSXP, out_size));
     if (double_loop){
       OMP_FOR_SIMD

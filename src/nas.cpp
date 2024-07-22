@@ -86,7 +86,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case STRSXP: {
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += (p_x[i] == NA_STRING);
@@ -181,7 +181,7 @@ bool cpp_any_na(SEXP x, bool recursive){
     break;
   }
   case STRSXP: {
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       if (p_x[i] == NA_STRING){
         out = true;
@@ -260,7 +260,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
     break;
   }
   case STRSXP: {
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       if (p_x[i] != NA_STRING){
         out = false;
@@ -349,7 +349,7 @@ SEXP cpp_is_na(SEXP x){
   case STRSXP: {
     out = Rf_protect(Rf_allocVector(LGLSXP, n));
     int *p_out = LOGICAL(out);
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) p_out[i] = (p_x[i] == NA_STRING);
@@ -473,7 +473,7 @@ SEXP cpp_which_na(SEXP x){
   }
   case STRSXP: {
     R_xlen_t count = na_count(x, true);
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     if (is_short){
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, count));
       int *p_out = INTEGER(out);
@@ -615,7 +615,7 @@ SEXP cpp_which_not_na(SEXP x){
   }
   case STRSXP: {
     R_xlen_t count = na_count(x, true);
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
     if (is_short){
       int out_size = n - count;
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, out_size));
@@ -739,7 +739,7 @@ SEXP cpp_row_na_counts(SEXP x){
       break;
     }
     case STRSXP: {
-      SEXP *p_xj = STRING_PTR(p_x[j]);
+      const SEXP *p_xj = STRING_PTR_RO(p_x[j]);
 #pragma omp parallel num_threads(n_cores) if(do_parallel)
 #pragma omp for simd
       for (R_xlen_t i = 0; i < num_row; ++i){
@@ -904,7 +904,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
     break;
   }
   case STRSXP: {
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
 #pragma omp atomic
@@ -967,7 +967,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
     break;
   }
   case STRSXP: {
-    SEXP *p_x = STRING_PTR(x);
+    const SEXP *p_x = STRING_PTR_RO(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
 #pragma omp atomic
