@@ -548,7 +548,8 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
           oi = j;
         }
         // Costly to use % if we don't need to
-        k = recycle_lag ? p_lag[j % lag_size] : lag1;
+        // k = recycle_lag ? p_lag[j % lag_size] : lag1;
+        k = recycle_lag ? p_lag[oi % lag_size] : lag1;
         if (k >= 0){
           p_out[oi] = (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value;
         } else {
@@ -603,7 +604,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
         } else {
           oi = j;
         }
-        k = recycle_lag ? p_lag[j % lag_size] : lag1;
+        k = recycle_lag ? p_lag[oi % lag_size] : lag1;
         if (k >= 0){
           p_out[oi] = (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value;
         } else {
@@ -653,7 +654,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
         } else {
           oi = j;
         }
-        k = recycle_lag ? p_lag[j % lag_size] : p_lag[0];
+        k = recycle_lag ? p_lag[oi % lag_size] : lag1;
         if (k >= 0){
           SET_STRING_ELT(out, oi, (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
         } else {
@@ -707,7 +708,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
         } else {
           oi = j;
         }
-        k = recycle_lag ? p_lag[j % lag_size] : lag1;
+        k = recycle_lag ? p_lag[oi % lag_size] : lag1;
         if (k >= 0){
           SET_COMPLEX_ELT(out, oi, (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
         } else {
@@ -758,7 +759,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
         } else {
           oi = j;
         }
-        k = recycle_lag ? p_lag[j % lag_size] : lag1;
+        k = recycle_lag ? p_lag[oi % lag_size] : lag1;
         if (k >= 0){
           SET_RAW_ELT(out, oi, (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
         } else {
@@ -818,7 +819,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
         } else {
           oi = j;
         }
-        k = recycle_lag ? p_lag[j % lag_size] : lag1;
+        k = recycle_lag ? p_lag[oi % lag_size] : lag1;
         if (k >= 0){
           SET_VECTOR_ELT(out, oi, (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
         } else {

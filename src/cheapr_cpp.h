@@ -28,7 +28,13 @@
 #define OMP_PARALLEL_FOR_SIMD
 #endif
 
+#ifndef integer_max_
 #define integer_max_ std::numeric_limits<int>::max()
+#endif
+
+#ifndef is_na_cplx
+#define is_na_cplx(x) (bool) (x.r != x.r) || (x.i != x.i)
+#endif
 
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
@@ -48,5 +54,6 @@ SEXP check_transform_altrep(SEXP x);
 SEXP altrep_materialise(SEXP x);
 SEXP compact_seq_data(SEXP x);
 bool is_compact_seq(SEXP x);
+void cpp_copy_names(SEXP source, SEXP target);
 
 #endif

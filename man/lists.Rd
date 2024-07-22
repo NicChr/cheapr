@@ -6,7 +6,7 @@
 \alias{new_list}
 \title{List utilities}
 \usage{
-lengths_(x)
+lengths_(x, names = FALSE)
 
 unlisted_length(x)
 
@@ -14,6 +14,8 @@ new_list(length = 0L, default = NULL)
 }
 \arguments{
 \item{x}{A list.}
+
+\item{names}{Should names of list elements be added? Default is \code{FALSE}.}
 
 \item{length}{Length of list.}
 

@@ -12,7 +12,7 @@
 #' @param dig.lab See `?cut`.
 #' @param ordered_result See `?cut`.
 #' @param table See `?collapse::fmatch`
-#' @param ... See `?cut`.
+#' @param ... Further arguments passed onto `cut` or `set.seed`.
 #' @param size See `?sample`.
 #' @param replace See `?sample`.
 #' @param prob See `?sample`.
@@ -32,7 +32,7 @@
 #' For more advanced `NA` handling, see `?is_na`. \cr
 #' `sample_()` is an alternative to `sample()` that natively samples
 #' data frame rows through `sset()`. It also does not have a special case when
-#' `length(x)` is 1.
+#' `length(x)` is 1. \cr
 #'
 #' @details
 #' `intersect_()` and `setdiff_()` are faster and more efficient
@@ -121,9 +121,6 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
 #' @rdname extras
 `%in_%` <- function(x, table){
   collapse::fmatch(x, table, overid = 2L, nomatch = 0L) > 0L
-  # out <- logical(length(x))
-  # out[which_not_na(collapse::fmatch(x, table, overid = 2L))] <- TRUE
-  # out
 }
 #' @export
 #' @rdname extras
@@ -181,3 +178,39 @@ na_rm <- function(x){
 sample_ <- function(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL){
   sset(x, sample.int(cpp_vec_length(x), size, replace, prob))
 }
+# head_ <- function(x, n = 1L){
+#   check_length(n, 1L)
+#   N <- cpp_vec_length(x)
+#   if (n >= 0) {
+#     size <- min(n, N)
+#   }
+#   else {
+#     size <- max(0L, N + n)
+#   }
+#   sset(x, seq_len(size))
+# }
+# tail_ <- function (x, n = 1L){
+#   check_length(n, 1L)
+#   N <- cpp_vec_length(x)
+#   if (n >= 0) {
+#     size <- min(n, N)
+#   }
+#   else {
+#     size <- max(0L, N + n)
+#   }
+#   sset(x, seq.int(from = N - size + 1L, by = 1L, length.out = size))
+# }
+# with_seed <- function (expr, .seed = NULL, ...){
+#   old <- globalenv()[[".Random.seed"]]
+#   if (is.null(old)) {
+#     set.seed(NULL)
+#     old <- globalenv()[[".Random.seed"]]
+#   }
+#   if (!is.null(.seed)) {
+#     set.seed(.seed, ...)
+#   }
+#   on.exit({
+#     assign(".Random.seed", old, envir = globalenv())
+#   })
+#   eval(expr, envir = parent.frame())
+# }

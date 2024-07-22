@@ -242,7 +242,8 @@ test_that("lists", {
   # all NA empty row/col data frames
   expect_identical(
     row_all_na(data.frame(row.names = 1:100)),
-    logical(100)
+    rep(TRUE, 100)
+    # logical(100)
   )
   expect_identical(
     row_all_na(data.frame(x = rep(NA, 100),
@@ -256,7 +257,8 @@ test_that("lists", {
   expect_identical(
     col_all_na(data.frame(x = rep(NA, 100),
                           y = rep(NA, 100))[0, , drop = FALSE]),
-    logical(2)
+    rep(TRUE, 2)
+    # logical(2)
   )
 
   x <- list(1, 1:5, NA, list(1:10, list(c(2, NA, NA))))

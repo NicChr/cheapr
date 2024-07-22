@@ -48,6 +48,7 @@
 #' when `FALSE`, the other `NA` functions rely on calling `is_na()`,
 #' therefore allocating a vector. This is so that alternative objects with
 #' `is.na` methods can be supported.
+#' @param names Should row/col names be added?
 #'
 #'
 #' @returns
@@ -63,24 +64,25 @@
 #' which_na(x)
 #' which_not_na(x)
 #'
-#' row_nas <- row_na_counts(airquality)
-#' col_nas <- col_na_counts(airquality)
-#' names(row_nas) <- rownames(airquality)
-#' names(col_nas) <- colnames(airquality)
+#' row_nas <- row_na_counts(airquality, names = TRUE)
+#' col_nas <- col_na_counts(airquality, names = TRUE)
 #' row_nas
 #' col_nas
 #'
-#' df <- airquality[, 1:2]
+#' df <- sset(airquality, j = 1:2)
 #'
 #' # Number of NAs in data
 #' num_na(df)
 #' # Which rows are empty?
 #' row_na <- row_all_na(df)
-#' df[which_(row_na), ]
+#' sset(df, row_na)
 #'
 #' # Removing the empty rows
-#' df[which_(row_na, invert = TRUE), ]
-#'
+#' sset(df, which_(row_na, invert = TRUE))
+#' # Or
+#' na_rm(df)
+#' # Or
+#' sset(df, row_na_counts(df) < ncol(df))
 #' @rdname is_na
 #' @export
 is_na <- function(x){
@@ -135,74 +137,60 @@ all_na <- function(x, recursive = TRUE){
 }
 #' @rdname is_na
 #' @export
-row_na_counts <- function(x){
+row_na_counts <- function(x, names = FALSE){
   if (!inherits(x, c("matrix", "data.frame"))){
     stop("x must be a matrix or data frame")
   }
   if (is.matrix(x)){
-    cpp_matrix_row_na_counts(x)
+    out <- cpp_matrix_row_na_counts(x)
+    if (names){
+      names(out) <- rownames(x)
+    }
   } else {
-    cpp_row_na_counts(x)
+    out <- cpp_row_na_counts(x)
+    if (names){
+      names(out) <- rownames(x)
+    }
   }
+  out
 }
 #' @rdname is_na
 #' @export
-col_na_counts <- function(x){
+col_na_counts <- function(x, names = FALSE){
   if (!inherits(x, c("matrix", "data.frame"))){
     stop("x must be a matrix or data frame")
   }
   if (is.matrix(x)){
-    cpp_matrix_col_na_counts(x)
+    out <- cpp_matrix_col_na_counts(x)
+    if (names){
+      names(out) <- colnames(x)
+    }
   } else {
-    cpp_col_na_counts(x)
+    out <- cpp_col_na_counts(x)
+    if (names){
+      names(out) <- names(x)
+    }
   }
+  out
 }
 
 #' @rdname is_na
 #' @export
-row_all_na <- function(x){
-  if (!inherits(x, c("matrix", "data.frame"))){
-    stop("x must be a matrix or data frame")
-  }
-  if (is.matrix(x)){
-    cpp_matrix_missing_row(x, 1, TRUE)
-  } else {
-    cpp_missing_row(x, 1, TRUE)
-  }
+row_all_na <- function(x, names = FALSE){
+  row_na_counts(x, names = names) == ncol(x)
 }
 #' @rdname is_na
 #' @export
-col_all_na <- function(x){
-  if (!inherits(x, c("matrix", "data.frame"))){
-    stop("x must be a matrix or data frame")
-  }
-  if (is.matrix(x)){
-    cpp_matrix_missing_col(x, 1, TRUE)
-  } else {
-    cpp_missing_col(x, 1, TRUE)
-  }
+col_all_na <- function(x, names = FALSE){
+  col_na_counts(x, names = names) == nrow(x)
 }
 #' @rdname is_na
 #' @export
-row_any_na <- function(x){
-  if (!inherits(x, c("matrix", "data.frame"))){
-    stop("x must be a matrix or data frame")
-  }
-  if (is.matrix(x)){
-    cpp_matrix_missing_row(x, 1, FALSE)
-  } else {
-    cpp_missing_row(x, 1, FALSE)
-  }
+row_any_na <- function(x, names = FALSE){
+  row_na_counts(x, names = names) > 0L
 }
 #' @rdname is_na
 #' @export
-col_any_na <- function(x){
-  if (!inherits(x, c("matrix", "data.frame"))){
-    stop("x must be a matrix or data frame")
-  }
-  if (is.matrix(x)){
-    cpp_matrix_missing_col(x, 1, FALSE)
-  } else {
-    cpp_missing_col(x, 1, FALSE)
-  }
+col_any_na <- function(x, names = FALSE){
+  col_na_counts(x, names = names) > 0L
 }

@@ -39,17 +39,17 @@ any_na(x, recursive = TRUE)
 
 all_na(x, recursive = TRUE)
 
-row_na_counts(x)
+row_na_counts(x, names = FALSE)
 
-col_na_counts(x)
+col_na_counts(x, names = FALSE)
 
-row_all_na(x)
+row_all_na(x, names = FALSE)
 
-col_all_na(x)
+col_all_na(x, names = FALSE)
 
-row_any_na(x)
+row_any_na(x, names = FALSE)
 
-col_any_na(x)
+col_any_na(x, names = FALSE)
 }
 \arguments{
 \item{x}{A vector, list, data frame or matrix.}
@@ -59,6 +59,8 @@ The default is \code{TRUE}. Setting this to \code{TRUE} is actually much cheaper
 when \code{FALSE}, the other \code{NA} functions rely on calling \code{is_na()},
 therefore allocating a vector. This is so that alternative objects with
 \code{is.na} methods can be supported.}
+
+\item{names}{Should row/col names be added?}
 }
 \value{
 Number or location of \code{NA} values.
@@ -122,22 +124,23 @@ num_na(x)
 which_na(x)
 which_not_na(x)
 
-row_nas <- row_na_counts(airquality)
-col_nas <- col_na_counts(airquality)
-names(row_nas) <- rownames(airquality)
-names(col_nas) <- colnames(airquality)
+row_nas <- row_na_counts(airquality, names = TRUE)
+col_nas <- col_na_counts(airquality, names = TRUE)
 row_nas
 col_nas
 
-df <- airquality[, 1:2]
+df <- sset(airquality, j = 1:2)
 
 # Number of NAs in data
 num_na(df)
 # Which rows are empty?
 row_na <- row_all_na(df)
-df[which_(row_na), ]
+sset(df, row_na)
 
 # Removing the empty rows
-df[which_(row_na, invert = TRUE), ]
-
+sset(df, which_(row_na, invert = TRUE))
+# Or
+na_rm(df)
+# Or
+sset(df, row_na_counts(df) < ncol(df))
 }

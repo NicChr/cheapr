@@ -614,14 +614,14 @@ SEXP cpp_set_log(SEXP x, SEXP base){
     OMP_PARALLEL_FOR_SIMD
     for (R_xlen_t i = 0; i < xn; ++i) {
       R_xlen_t basei = i % basen;
-      p_x[i] = (p_x[i] != p_x[i]  || p_base[basei] != p_base[basei]) ?
+      p_x[i] = (p_x[i] != p_x[i] || p_base[basei] != p_base[basei]) ?
       NA_REAL : std::log(p_x[i]) / std::log(p_base[basei]);
     }
   } else {
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < xn; ++i) {
       R_xlen_t basei = i % basen;
-      p_x[i] = (p_x[i] != p_x[i]  || p_base[basei] != p_base[basei]) ?
+      p_x[i] = (p_x[i] != p_x[i] || p_base[basei] != p_base[basei]) ?
       NA_REAL : std::log(p_x[i]) / std::log(p_base[basei]);
     }
   }

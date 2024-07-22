@@ -6,6 +6,7 @@
 #' @param x A list.
 #' @param length Length of list.
 #' @param default Default value for each list element.
+#' @param names Should names of list elements be added? Default is `FALSE`.
 #'
 #' @returns
 #' `lengths_()` returns the list lengths. \cr
@@ -34,7 +35,9 @@
 #' vctrs::new_list_of(l, ptype = integer())[1:5]
 #' @export
 #' @rdname lists
-lengths_ <- cpp_lengths
+lengths_ <- function(x, names = FALSE){
+  .Call(`_cheapr_cpp_lengths`, x, names)
+}
 #' @export
 #' @rdname lists
 unlisted_length <- cpp_r_unnested_length

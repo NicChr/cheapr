@@ -56,6 +56,34 @@ cpp_lag2 <- function(x, lag, order, run_lengths, fill, recursive) {
   .Call(`_cheapr_cpp_lag2`, x, lag, order, run_lengths, fill, recursive)
 }
 
+cpp_r_unnested_length <- function(x) {
+  .Call(`_cheapr_cpp_r_unnested_length`, x)
+}
+
+cpp_lengths <- function(x, names) {
+  .Call(`_cheapr_cpp_lengths`, x, names)
+}
+
+cpp_new_list <- function(size, default_value) {
+  .Call(`_cheapr_cpp_new_list`, size, default_value)
+}
+
+cpp_drop_null <- function(l, always_shallow_copy) {
+  .Call(`_cheapr_cpp_drop_null`, l, always_shallow_copy)
+}
+
+cpp_list_as_df <- function(x) {
+  .Call(`_cheapr_cpp_list_as_df`, x)
+}
+
+cpp_check_nested_lengths <- function(x, y) {
+  invisible(.Call(`_cheapr_cpp_check_nested_lengths`, x, y))
+}
+
+cpp_cast_common <- function(x, y) {
+  .Call(`_cheapr_cpp_cast_common`, x, y)
+}
+
 cpp_num_na <- function(x, recursive) {
   .Call(`_cheapr_cpp_num_na`, x, recursive)
 }
@@ -88,14 +116,6 @@ cpp_col_na_counts <- function(x) {
   .Call(`_cheapr_cpp_col_na_counts`, x)
 }
 
-cpp_missing_row <- function(x, threshold, threshold_is_prop) {
-  .Call(`_cheapr_cpp_missing_row`, x, threshold, threshold_is_prop)
-}
-
-cpp_missing_col <- function(x, threshold, threshold_is_prop) {
-  .Call(`_cheapr_cpp_missing_col`, x, threshold, threshold_is_prop)
-}
-
 cpp_matrix_row_na_counts <- function(x) {
   .Call(`_cheapr_cpp_matrix_row_na_counts`, x)
 }
@@ -104,16 +124,12 @@ cpp_matrix_col_na_counts <- function(x) {
   .Call(`_cheapr_cpp_matrix_col_na_counts`, x)
 }
 
-cpp_matrix_missing_row <- function(x, threshold, threshold_is_prop) {
-  .Call(`_cheapr_cpp_matrix_missing_row`, x, threshold, threshold_is_prop)
-}
-
-cpp_matrix_missing_col <- function(x, threshold, threshold_is_prop) {
-  .Call(`_cheapr_cpp_matrix_missing_col`, x, threshold, threshold_is_prop)
-}
-
 cpp_count_val <- function(x, value, recursive) {
   .Call(`_cheapr_cpp_count_val`, x, value, recursive)
+}
+
+cpp_val_replace <- function(x, value, replace, set) {
+  .Call(`_cheapr_cpp_val_replace`, x, value, replace, set)
 }
 
 cpp_int_sequence <- function(size, from, by) {
@@ -210,26 +226,6 @@ cpp_sset_df <- function(x, indices) {
 
 cpp_vec_length <- function(x) {
   .Call(`_cheapr_cpp_vec_length`, x)
-}
-
-cpp_r_unnested_length <- function(x) {
-  .Call(`_cheapr_cpp_r_unnested_length`, x)
-}
-
-cpp_lengths <- function(x) {
-  .Call(`_cheapr_cpp_lengths`, x)
-}
-
-cpp_new_list <- function(size, default_value) {
-  .Call(`_cheapr_cpp_new_list`, size, default_value)
-}
-
-cpp_drop_null <- function(l, always_shallow_copy) {
-  .Call(`_cheapr_cpp_drop_null`, l, always_shallow_copy)
-}
-
-cpp_list_as_df <- function(x) {
-  .Call(`_cheapr_cpp_list_as_df`, x)
 }
 
 r_copy <- function(x) {

@@ -58,7 +58,7 @@ sample_(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL)
 
 \item{ordered_result}{See \code{?cut}.}
 
-\item{...}{See \code{?cut}.}
+\item{...}{Further arguments passed onto \code{cut} or \code{set.seed}.}
 
 \item{table}{See \code{?collapse::fmatch}}
 
@@ -87,7 +87,7 @@ empty rows in the case of data frames.
 For more advanced \code{NA} handling, see \code{?is_na}. \cr
 \code{sample_()} is an alternative to \code{sample()} that natively samples
 data frame rows through \code{sset()}. It also does not have a special case when
-\code{length(x)} is 1.
+\code{length(x)} is 1. \cr
 }
 \description{
 Extra utilities

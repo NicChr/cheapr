@@ -2,9 +2,15 @@
 % Please edit documentation in R/scalars.R
 \name{count_val}
 \alias{count_val}
+\alias{val_count}
+\alias{which_val}
 \title{Count the number of occurrences of a value.}
 \usage{
 count_val(x, value, recursive = TRUE)
+
+val_count(x, value, recursive = TRUE)
+
+which_val(x, value, invert = FALSE)
 }
 \arguments{
 \item{x}{A vector, list, data frame or matrix.}
@@ -12,6 +18,9 @@ count_val(x, value, recursive = TRUE)
 \item{value}{A value with which to count the frequency of.}
 
 \item{recursive}{Should the function be applied recursively to lists?}
+
+\item{invert}{Should \code{which_val} find locations of
+everything except specified value? Default is \code{FALSE}.}
 }
 \value{
 A count of the number of times \code{value} appears in \code{x}.

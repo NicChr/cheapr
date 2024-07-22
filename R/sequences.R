@@ -112,13 +112,12 @@ seq_ <- function(from = 1L, to = 1L, by = 1L, add_id = FALSE){
 #' @rdname sequences
 #' @export
 seq_size <- function(from, to, by = 1L){
-  del <- to - from
+  del <- unclass(to - from)
   if (is.integer(by) && allv2(by, 1L)){
     size <- del
   } else {
     size <- del / by
-    # size[collapse::whichv(del, 0)] <- 0
-    size[cpp_which_val(del, 0, invert = FALSE)] <- 0
+    size[which_val(del, 0)] <- 0
   }
   size_rng <- collapse::frange(size, na.rm = TRUE)
   if (isTRUE(any(size_rng < 0))){
@@ -126,13 +125,17 @@ seq_size <- function(from, to, by = 1L){
   }
   if (length(size) == 0 || all(is_integerable(abs(size_rng) + 1), na.rm = TRUE)){
     if (is.integer(size)){
-      size + 1L
+      size <- set_add(size, 1L)
     } else {
-      as.integer(size + 1e-10) + 1L
+      # size <- as.integer(size + 1e-10) + 1L
+      size <- set_add(size, 1e-10)
+      size <- as.integer(size)
+      size <- set_add(size, 1L)
     }
   } else {
-    trunc(size + 1e-10) + 1
+    size <- trunc(size + 1e-10) + 1
   }
+  size
 }
 seq_from <- function(size, to, by = 1L){
   to - (pmax(size - 1L, 0L) * by)
@@ -143,7 +146,7 @@ seq_to <- function(size, from, by = 1L){
 seq_by <- function(size, from, to){
   del <- as.double((to - from))
   out <- del / pmax.int(size - 1L, 0L)
-  out[cpp_which_val(del, 0, invert = FALSE)] <- 0
+  out[which_val(del, 0)] <- 0
   out
 }
 #' @rdname sequences
