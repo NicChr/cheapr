@@ -55,5 +55,7 @@ SEXP altrep_materialise(SEXP x);
 SEXP compact_seq_data(SEXP x);
 bool is_compact_seq(SEXP x);
 void cpp_copy_names(SEXP source, SEXP target);
+R_xlen_t na_count(SEXP x, bool recursive);
+bool cpp_any_na(SEXP x, bool recursive);
 
 #endif
