@@ -71,11 +71,7 @@ SEXP compact_seq_data(SEXP x){
 }
 
 SEXP altrep_materialise(SEXP x) {
-  if (ALTREP(x)){
-    return Rf_duplicate(x);
-  } else {
-    return x;
-  }
+  return ALTREP(x) ? Rf_duplicate(x) : x;
   // Even after using DATAPTR, ALTREP(x) == TRUE ?
   // if (ALTREP(x)) DATAPTR(x);
   // return x;

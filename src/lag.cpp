@@ -24,7 +24,6 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   if (set_and_altrep){
     Rf_warning("Cannot lag an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations\n\te.g. `x <- lag_(x, set = TRUE)`");
   }
-  R_xlen_t klag = k;
   switch(TYPEOF(xvec)){
   case NILSXP: {
     out = R_NilValue;
@@ -32,7 +31,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   }
   case LGLSXP:
   case INTSXP: {
-    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
+    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     int fill_value = NA_INTEGER;
     if (fill_size >= 1){
       fill_value = Rf_asInteger(fill);
@@ -78,13 +77,15 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     } else {
       int *p_x = INTEGER(xvec);
       if (k >= 0){
-        for (R_xlen_t i = 0; i < size; ++i) {
-          p_out[i] = i >= k ? p_x[i - k] : fill_value;
-        }
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
+        OMP_FOR_SIMD
+        for (R_xlen_t i = k; i < size; ++i) p_out[i] = p_x[i - k];
       } else {
-        for (R_xlen_t i = size - 1; i >= 0; --i) {
-          p_out[i] = (i - size) < k ? p_x[i - k] : fill_value;
-        }
+        OMP_FOR_SIMD
+        for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
+        OMP_FOR_SIMD
+        for (R_xlen_t i = size + k - 1; i >= 0; --i) p_out[i] = p_x[i - k];
       }
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
@@ -97,7 +98,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     break;
   }
   case REALSXP: {
-    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
+    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     double fill_value = NA_REAL;
     if (fill_size >= 1){
       fill_value = Rf_asReal(fill);
@@ -143,13 +144,15 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     } else {
       double *p_x = REAL(xvec);
       if (k >= 0){
-        for (R_xlen_t i = 0; i < size; ++i) {
-          p_out[i] = i >= k ? p_x[i - k] : fill_value;
-        }
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
+        OMP_FOR_SIMD
+        for (R_xlen_t i = k; i < size; ++i) p_out[i] = p_x[i - k];
       } else {
-        for (R_xlen_t i = size - 1; i >= 0; --i) {
-          p_out[i] = (i - size) < k ? p_x[i - k] : fill_value;
-        }
+        OMP_FOR_SIMD
+        for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
+        OMP_FOR_SIMD
+        for (R_xlen_t i = size + k - 1; i >= 0; --i) p_out[i] = p_x[i - k];
       }
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
@@ -162,7 +165,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     break;
   }
   case CPLXSXP: {
-    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
+    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     SEXP fill_sexp = Rf_protect(Rf_allocVector(CPLXSXP, 1));
     ++n_protections;
     Rcomplex *p_fill = COMPLEX(fill_sexp);
@@ -230,7 +233,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     break;
   }
   case STRSXP: {
-    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
+    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     SEXP fill_char = Rf_protect(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
     ++n_protections;
     out = Rf_protect(set ? xvec : Rf_duplicate(xvec));
@@ -274,13 +277,11 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     } else {
       const SEXP *p_x = STRING_PTR_RO(xvec);
       if (k >= 0){
-        for (R_xlen_t i = 0; i < size; ++i) {
-          SET_STRING_ELT(out, i, i >= k ? p_x[i - k] : fill_char);
-        }
+        for (R_xlen_t i = 0; i < k; ++i) SET_STRING_ELT(out, i, fill_char);
+        for (R_xlen_t i = k; i < size; ++i) SET_STRING_ELT(out, i, p_x[i - k]);
       } else {
-        for (R_xlen_t i = size - 1; i >= 0; --i) {
-          SET_STRING_ELT(out, i, (i - size) < k ? p_x[i - k] : fill_char);
-        }
+        for (R_xlen_t i = size - 1; i >= size + k; --i) SET_STRING_ELT(out, i, fill_char);
+        for (R_xlen_t i = size + k - 1; i >= 0; --i) SET_STRING_ELT(out, i, p_x[i - k]);
       }
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
@@ -293,7 +294,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     break;
   }
   case RAWSXP: {
-    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
+    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     SEXP raw_sexp = Rf_protect(Rf_coerceVector(fill, RAWSXP));
     Rbyte fill_raw = fill_size == 0 ? RAW(Rf_ScalarRaw(0))[0] : RAW(raw_sexp)[0];
     ++n_protections;
@@ -364,7 +365,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       SET_VECTOR_ELT(out, i, cpp_lag(p_x[i], k, fill, set, true));
     }
   } else {
-    k = k >= 0 ? std::min(size, klag) : std::max(-size, klag);
+    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     SEXP fill_value = Rf_protect(Rf_coerceVector(fill_size >= 1 ? fill : R_NilValue, VECSXP));
     ++n_protections;
     out = Rf_protect(set ? xvec : Rf_allocVector(VECSXP, size));

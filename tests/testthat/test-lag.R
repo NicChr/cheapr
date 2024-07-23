@@ -1,3 +1,9 @@
+base_lag <- function(x, lag = 1L, check = TRUE){
+  lagged_indices <- seq_along(x) - lag
+  lagged_indices[lagged_indices < 1L] <- NA_integer_
+  x[lagged_indices]
+}
+
 test_that("lags and leads", {
   base_lag <- function(x, lag = 1L, check = TRUE){
     lagged_indices <- seq_along(x) - lag
@@ -371,11 +377,6 @@ test_that("lags and leads with lag2_", {
 })
 
 test_that("lags and lead with set = TRUE", {
-  base_lag <- function(x, lag = 1L, check = TRUE){
-    lagged_indices <- seq_along(x) - lag
-    lagged_indices[lagged_indices < 1L] <- NA_integer_
-    x[lagged_indices]
-  }
   set.seed(876123)
   a <- rnorm(10^5)
   b <- sample(-12:123, 10^5, TRUE)
@@ -558,4 +559,35 @@ test_that("lags and lead with set = TRUE", {
     set_lag(r_copy(iris), 7),
     as.data.frame(lapply(iris, base_lag, 7)),
   )
+})
+
+test_that("Dynamic lags by-group", {
+  set.seed(1239)
+  df <- data.frame(x = sample.int(5, 20, TRUE),
+                   g = sample.int(3, 20, TRUE),
+                   lags = sample(c(0, 1, 2), 20, TRUE))
+
+  o <- order(df$g)
+  rls <- as.integer(table(df$g))
+
+  # Somewhat ugly by-group calculation
+  # order(order(x)) will return sort(x) back to its original order
+  res <- unname(
+    do.call(
+      c,
+      lapply(split(df, df$g),
+             function(x) base_lag(x$x, x$lags))
+    )
+  )[order(o)]
+
+res2 <- lag2_(df$x, order = o, run_lengths = rls, n = df$lags)
+
+expect_identical(res, res2)
+})
+
+test_that("oob lag", {
+  expect_identical(lag_(1:10, 100), rep(NA_integer_, 10))
+  expect_identical(lag_(1:10, -100), rep(NA_integer_, 10))
+  expect_identical(lag_(1:10, 100, fill = 99), rep(99L, 10))
+  expect_identical(lag_(1:10, -100, fill = 99), rep(99L, 10))
 })
