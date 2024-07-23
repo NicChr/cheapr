@@ -1,9 +1,18 @@
 # cheapr (Development version)
 
+* New functions `val_count` and `which_val` for common scalar operations.
+
+* Some functions gain a 'names' argument.
+
+* Replaced calls to `STRING_PTR` with `STRING_PTR_RO` to satisfy R package check results.
+
+* `lag_` should now be somewhat faster.
+
+* Fixed a small bug in `lag2_` that would produce incorrect results when supplying a vector of lags and an order vector.
+
 # cheapr 0.9.2 (11-May-2024)
 
-* A signed integer overflow bug in `lag2_` has been fixed. This occurred when 
-supplying `NA` lags. 
+* A signed integer overflow bug in `lag2_` has been fixed. This occurred when supplying `NA` lags.
 
 * `lag2_` no longer fills the names of named vectors when the `fill` value is supplied.
 
