@@ -116,6 +116,7 @@ SEXP cpp_sset_unsafe(SEXP x, int *pind, int n, int n_cores){
 // Can be readily used when indices are an altrep compact integer sequence
 // Also works with negative-indexing
 
+
 [[cpp11::register]]
 SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   R_xlen_t n = Rf_xlength(x);
@@ -131,7 +132,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   R_xlen_t istart = from;
   R_xlen_t iend = to;
-  R_xlen_t out_size, istart1, istart2, iend1, iend2, diff;
+  R_xlen_t out_size, istart1, istart2, iend1, iend2;
   bool double_loop = false;
   // Negative indexing is complicated
 
@@ -214,100 +215,41 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     }
     out_size = ((iend - istart) / by) + 1;
   }
-  bool do_parallel = out_size >= 100000;
-  int n_cores = do_parallel ? num_cores() : 1;
+
   unsigned int k = 0;
+
+    // Out-of-bounds
+    R_xlen_t n_oob = std::max(( by > 0) ? iend - n : istart - n, (R_xlen_t) 0);
+    // Adjustment for when all values are oob
+    if ( ( by > 0 && istart > n ) || (by < 0 && iend > n)){
+      n_oob = out_size;
+    }
+    // R_xlen_t oob_start = by > 0 ? iend - n_oob : istart;
+    // R_xlen_t oob_end = by > 0 ? iend : istart - n_oob;
+    R_xlen_t in_bounds_size = std::max(out_size - n_oob, (R_xlen_t) 0);
 
   switch ( TYPEOF(x) ){
   case NILSXP: {
     return R_NilValue;
   }
-  case LGLSXP: {
-    int *p_x = LOGICAL(x);
-    SEXP out = Rf_protect(Rf_allocVector(LGLSXP, out_size));
-    int *p_out = LOGICAL(out);
-    if (double_loop){
-      diff = iend1 - istart1 + 2;
-#pragma omp parallel num_threads(n_cores) if (do_parallel)
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
-        p_out[i - istart1 + 1] = i < n ? p_x[i] : NA_LOGICAL;
-      }
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart2 - 1; i < iend2; ++i){
-        p_out[i - istart2 + diff] = i < n ? p_x[i] : NA_LOGICAL;
-      }
-    } else {
-      if (by > 0){
-        if (do_parallel){
-          OMP_PARALLEL_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i < iend; ++i){
-            p_out[i - istart + 1] = i < n ? p_x[i] : NA_LOGICAL;
-          }
-        } else {
-          OMP_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i < iend; ++i){
-            p_out[i - istart + 1] = i < n ? p_x[i] : NA_LOGICAL;
-          }
-        }
-      } else {
-        if (do_parallel){
-          OMP_PARALLEL_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-            p_out[istart - i - 1] = i < n ? p_x[i] : NA_LOGICAL;
-          }
-        } else {
-          OMP_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-            p_out[istart - i - 1] = i < n ? p_x[i] : NA_LOGICAL;
-          }
-        }
-      }
-    }
-    Rf_unprotect(1);
-    return out;
-  }
+  case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
-    SEXP out = Rf_protect(Rf_allocVector(INTSXP, out_size));
+    SEXP out = Rf_protect(Rf_allocVector(TYPEOF(x), out_size));
     int *p_out = INTEGER(out);
     if (double_loop){
-      diff = iend1 - istart1 + 2;
-#pragma omp parallel num_threads(n_cores) if (do_parallel)
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
-        p_out[i - istart1 + 1] = (i < n ? p_x[i] : NA_INTEGER);
-      }
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart2 - 1; i < iend2; ++i){
-        p_out[i - istart2 + diff] = (i < n ? p_x[i] : NA_INTEGER);
-      }
+      memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(int));
+      memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(int));
     } else {
       if (by > 0){
-        if (do_parallel){
-          OMP_PARALLEL_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i < iend; ++i){
-            p_out[i - istart + 1] = i < n ? p_x[i] : NA_INTEGER;
-          }
-        } else {
-          OMP_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i < iend; ++i){
-            p_out[i - istart + 1] = i < n ? p_x[i] : NA_INTEGER;
-          }
-        }
-
+        memmove(p_out, p_x + (istart - 1), in_bounds_size * sizeof(int));
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = NA_INTEGER;
       } else {
-        if (do_parallel){
-          OMP_PARALLEL_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-            p_out[istart - i - 1] = i < n ? p_x[i] : NA_INTEGER;
-          }
-        } else {
-          OMP_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-            p_out[istart - i - 1] = i < n ? p_x[i] : NA_INTEGER;
-          }
-        }
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[i] = NA_INTEGER;
+        OMP_FOR_SIMD
+        for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
     }
     Rf_unprotect(1);
@@ -318,43 +260,18 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     SEXP out = Rf_protect(Rf_allocVector(REALSXP, out_size));
     double *p_out = REAL(out);
     if (double_loop){
-      diff = iend1 - istart1 + 2;
-#pragma omp parallel num_threads(n_cores) if (do_parallel)
-      OMP_FOR_SIMD
-      for (R_xlen_t i = (istart1 - 1); i < iend1; ++i){
-        p_out[i - istart1 + 1] = (i < n ? p_x[i] : NA_REAL);
-      }
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart2 - 1; i < iend2; ++i){
-        p_out[i - istart2 + diff] = i < n ? p_x[i] : NA_REAL;
-      }
+      memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(double));
+      memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(double));
     } else {
       if (by > 0){
-        if (do_parallel){
-          OMP_PARALLEL_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i < iend; ++i){
-            p_out[i - istart + 1] = i < n ? p_x[i] : NA_REAL;
-          }
-        } else {
-          OMP_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i < iend; ++i){
-            p_out[i - istart + 1] = i < n ? p_x[i] : NA_REAL;
-          }
-        }
-
+        memmove(p_out, p_x + (istart - 1), in_bounds_size * sizeof(double));
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = NA_REAL;
       } else {
-        if (do_parallel){
-          OMP_PARALLEL_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-            p_out[istart - i - 1] = i < n ? p_x[i] : NA_REAL;
-          }
-        } else {
-          OMP_FOR_SIMD
-          for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-            p_out[istart - i - 1] = i < n ? p_x[i] : NA_REAL;
-          }
-        }
-
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[i] = NA_REAL;
+        OMP_FOR_SIMD
+        for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
     }
     Rf_unprotect(1);
