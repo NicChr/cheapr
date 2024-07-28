@@ -134,6 +134,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   R_xlen_t iend = to;
   R_xlen_t out_size, istart1, istart2, iend1, iend2;
   bool double_loop = false;
+
   // Negative indexing is complicated
 
   // Assuming N = length(x)
@@ -216,26 +217,27 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out_size = ((iend - istart) / by) + 1;
   }
 
-  unsigned int k = 0;
+  R_xlen_t k = 0;
 
-    // Out-of-bounds
-    R_xlen_t n_oob = std::max(( by > 0) ? iend - n : istart - n, (R_xlen_t) 0);
-    // Adjustment for when all values are oob
-    if ( ( by > 0 && istart > n ) || (by < 0 && iend > n)){
-      n_oob = out_size;
-    }
-    // R_xlen_t oob_start = by > 0 ? iend - n_oob : istart;
-    // R_xlen_t oob_end = by > 0 ? iend : istart - n_oob;
-    R_xlen_t in_bounds_size = std::max(out_size - n_oob, (R_xlen_t) 0);
+  // Out-of-bounds
+  R_xlen_t n_oob = std::max(( by > 0) ? iend - n : istart - n, (R_xlen_t) 0);
+  // Adjustment for when all values are oob
+  if ( ( by > 0 && istart > n ) || (by < 0 && iend > n)){
+    n_oob = out_size;
+  }
+  R_xlen_t in_bounds_size = std::max(out_size - n_oob, (R_xlen_t) 0);
+
+  SEXP out;
 
   switch ( TYPEOF(x) ){
   case NILSXP: {
-    return R_NilValue;
+    out = R_NilValue;
+    break;
   }
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
-    SEXP out = Rf_protect(Rf_allocVector(TYPEOF(x), out_size));
+    out = Rf_protect(Rf_allocVector(TYPEOF(x), out_size));
     int *p_out = INTEGER(out);
     if (double_loop){
       memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(int));
@@ -252,12 +254,11 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
     }
-    Rf_unprotect(1);
-    return out;
+    break;
   }
   case REALSXP: {
     double *p_x = REAL(x);
-    SEXP out = Rf_protect(Rf_allocVector(REALSXP, out_size));
+    out = Rf_protect(Rf_allocVector(REALSXP, out_size));
     double *p_out = REAL(out);
     if (double_loop){
       memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(double));
@@ -274,81 +275,80 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
     }
-    Rf_unprotect(1);
-    return out;
+    break;
   }
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
-    SEXP out = Rf_protect(Rf_allocVector(STRSXP, out_size));
+    out = Rf_protect(Rf_allocVector(STRSXP, out_size));
     if (double_loop){
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
-        SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
+      for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
+        SET_STRING_ELT(out, k, p_x[i]);
       }
-      OMP_FOR_SIMD
-      for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
-        SET_STRING_ELT(out, k++, j < n ? p_x[j] : NA_STRING);
+      for (R_xlen_t j = istart2 - 1, k = iend1; j < iend2; ++j, ++k){
+        SET_STRING_ELT(out, k, p_x[j]);
       }
     } else {
       if (by > 0){
-        OMP_FOR_SIMD
-        for (R_xlen_t i = istart - 1; i < iend; ++i){
-          SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
+        for (R_xlen_t i = istart - 1, k = 0; i < (iend - n_oob); ++i, ++k){
+          SET_STRING_ELT(out, k, p_x[i]);
+        }
+        for (R_xlen_t i = 0; i < n_oob; ++i){
+          SET_STRING_ELT(out, in_bounds_size + i, NA_STRING);
         }
       } else {
-        OMP_FOR_SIMD
-        for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-          SET_STRING_ELT(out, k++, i < n ? p_x[i] : NA_STRING);
+        for (R_xlen_t i = 0; i < n_oob; ++i){
+          SET_STRING_ELT(out, i, NA_STRING);
+        }
+        for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i){
+          SET_STRING_ELT(out, istart - i - 1, p_x[i]);
         }
       }
     }
-    Rf_unprotect(1);
-    return out;
+    break;
   }
   case CPLXSXP: {
     Rcomplex *p_x = COMPLEX(x);
-    SEXP out = Rf_protect(Rf_allocVector(CPLXSXP, out_size));
-    SEXP na_complex_sexp = Rf_protect(Rf_allocVector(CPLXSXP, 1));
-    Rcomplex *p_na_complex = COMPLEX(na_complex_sexp);
-    p_na_complex[0].i = NA_REAL;
-    p_na_complex[0].r = NA_REAL;
-    Rcomplex na_complex = Rf_asComplex(na_complex_sexp);
+    out = Rf_protect(Rf_allocVector(CPLXSXP, out_size));
+    Rcomplex *p_out = COMPLEX(out);
     if (double_loop){
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
-        SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
-      }
-      OMP_FOR_SIMD
-      for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
-        SET_COMPLEX_ELT(out, k++, j < n ? p_x[j] : na_complex);
-      }
+      memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(Rcomplex));
+      memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(Rcomplex));
+      // memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * 2 * sizeof(double));
+      // memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * 2 * sizeof(double));
     } else {
       if (by > 0){
+        memmove(p_out, &p_x[istart - 1], in_bounds_size * sizeof(Rcomplex));
         OMP_FOR_SIMD
-        for (R_xlen_t i = istart - 1; i < iend; ++i){
-          SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
+        for (R_xlen_t i = 0; i < n_oob; ++i){
+          R_xlen_t tempi = in_bounds_size + i;
+          p_out[tempi].r = NA_REAL;
+          p_out[tempi].i = NA_REAL;
         }
       } else {
         OMP_FOR_SIMD
-        for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-          SET_COMPLEX_ELT(out, k++, i < n ? p_x[i] : na_complex);
+        for (R_xlen_t i = 0; i < n_oob; ++i){
+          p_out[i].r = NA_REAL;
+          p_out[i].i = NA_REAL;
+        }
+        OMP_FOR_SIMD
+        for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i){
+          R_xlen_t tempi = istart - i - 1;
+          p_out[tempi].r = p_x[i].r;
+          p_out[tempi].i = p_x[i].i;
         }
       }
     }
-    Rf_unprotect(2);
-    return out;
+    break;
   }
   case RAWSXP: {
     Rbyte *p_x = RAW(x);
-    SEXP out = Rf_protect(Rf_allocVector(RAWSXP, out_size));
+    out = Rf_protect(Rf_allocVector(RAWSXP, out_size));
     if (double_loop){
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
-        SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
+      for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
+        SET_RAW_ELT(out, k, p_x[i]);
       }
-      OMP_FOR_SIMD
-      for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
-        SET_RAW_ELT(out, k++, j < n ? p_x[j] : 0);
+      for (R_xlen_t j = istart2 - 1, k = iend1; j < iend2; ++j, ++k){
+        SET_RAW_ELT(out, k, p_x[j]);
       }
     } else {
       if (by > 0){
@@ -363,53 +363,41 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
         }
       }
     }
-    Rf_unprotect(1);
-    return out;
+    break;
   }
   case VECSXP: {
     const SEXP *p_x = VECTOR_PTR_RO(x);
-    SEXP out = Rf_protect(Rf_allocVector(VECSXP, out_size));
+    out = Rf_protect(Rf_allocVector(VECSXP, out_size));
     if (double_loop){
-      OMP_FOR_SIMD
-      for (R_xlen_t i = istart1 - 1; i < iend1; ++i){
-        if (i < n){
-          SET_VECTOR_ELT(out, k, p_x[i]);
-        }
-        ++k;
+      for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
+        SET_VECTOR_ELT(out, k, p_x[i]);
       }
-      OMP_FOR_SIMD
-      for (R_xlen_t j = istart2 - 1; j < iend2; ++j){
-        if (j < n){
-          SET_VECTOR_ELT(out, k, p_x[j]);
-        }
-        ++k;
+      for (R_xlen_t j = istart2 - 1, k = iend1; j < iend2; ++j, ++k){
+        SET_VECTOR_ELT(out, k, p_x[j]);
       }
     } else {
       if (by > 0){
-        OMP_FOR_SIMD
-        for (R_xlen_t i = istart - 1; i < iend; ++i){
+        for (R_xlen_t i = istart - 1, k = 0; i < iend; ++i, ++k){
           if (i < n){
             SET_VECTOR_ELT(out, k, p_x[i]);
           }
-          ++k;
         }
       } else {
-        OMP_FOR_SIMD
-        for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
+        for (R_xlen_t i = istart - 1, k = 0; i >= iend - 1; --i, ++k){
           if (i < n){
             SET_VECTOR_ELT(out, k, p_x[i]);
           }
-          ++k;
         }
       }
     }
-    Rf_unprotect(1);
-    return out;
+    break;
   }
   default: {
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
+  Rf_unprotect(1);
+  return out;
 }
 
 // Helper to convert altrep sequences into the final subsetted length

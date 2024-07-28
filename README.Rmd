@@ -192,7 +192,7 @@ sset(x)
 ## Vector and data frame lags with `lag_()`
 
 ```{r}
-
+set.seed(37)
 lag_(1:10, 3) # Lag(3)
 lag_(1:10, -3) # Lead(3)
 
