@@ -1,4 +1,4 @@
-* Updated to version 0.9.2
+* Updated to version 0.9.3
 
 * Have fixed the issues listed at https://cran.r-project.org/web/checks/check_results_cheapr.html
 

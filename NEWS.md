@@ -1,4 +1,6 @@
-# cheapr (Development version)
+# cheapr
+
+* Range based subsetting, e.g. `sset(x, 1:10)` should now be faster.
 
 * New functions `val_count` and `which_val` for common scalar operations.
 
