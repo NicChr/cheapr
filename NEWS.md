@@ -1,4 +1,6 @@
-# cheapr
+#cheapr (Development version)
+
+# cheapr (29-Jul-2024)
 
 * Range based subsetting, e.g. `sset(x, 1:10)` should now be faster.
 
