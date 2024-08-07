@@ -1,5 +1,10 @@
 # cheapr (Development version)
 
+* `lag_` now uses `memmove` where possible.
+
+* Fixed an issue where `lag_(x)` was materialising x twice if x was an altrep 
+integer sequence.
+
 # cheapr 0.9.3 (29-Jul-2024)
 
 * Range based subsetting, e.g. `sset(x, 1:10)` should now be faster as `memmove` 

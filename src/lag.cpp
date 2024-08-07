@@ -19,7 +19,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   }
   bool set_and_altrep = set && ALTREP(x);
   SEXP out;
-  SEXP xvec = Rf_protect(altrep_materialise(x));
+  SEXP xvec = Rf_protect(set_and_altrep ? altrep_materialise(x) : x);
   ++n_protections;
   if (set_and_altrep){
     Rf_warning("Cannot lag an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations\n\te.g. `x <- lag_(x, set = TRUE)`");
@@ -39,54 +39,15 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     out = Rf_protect(set ? xvec : Rf_duplicate(xvec));
     ++n_protections;
     int *p_out = INTEGER(out);
-    if (set){
-      R_xlen_t tempi;
-      int tempv;
-      // If k = 0 then no lag occurs
-      if (std::abs(k) >= 1){
-        SEXP lag_temp = Rf_protect(Rf_allocVector(INTSXP, std::abs(k)));
-        ++n_protections;
-        int* __restrict__ p_lag = INTEGER(lag_temp);
-        // Positive lags
-        if (k >= 0){
-          for (R_xlen_t i = 0; i < k; ++i) {
-            p_lag[i] = p_out[i];
-            p_out[i] = fill_value;
-          }
-          for (R_xlen_t i = k; i < size; ++i) {
-            tempi = ((i - k) % k);
-            tempv = p_lag[tempi];
-            p_lag[tempi] = p_out[i];
-            p_out[i] = tempv;
-          }
-          // Negative lags
-        } else {
-          for (R_xlen_t i = size - 1; i >= size + k; --i) {
-            p_lag[size - i - 1] = p_out[i];
-            p_out[i] = fill_value;
-          }
-          for (R_xlen_t i = size + k - 1; i >= 0; --i) {
-            tempi = ( (size - (i - k) - 1) % k);
-            tempv = p_lag[tempi];
-            p_lag[tempi] = p_out[i];
-            p_out[i] = tempv;
-          }
-        }
-
-      }
+    int *p_x = INTEGER(xvec);
+    if (k >= 0){
+      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
+      OMP_FOR_SIMD
+      for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
-      int *p_x = INTEGER(xvec);
-      if (k >= 0){
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
-        OMP_FOR_SIMD
-        for (R_xlen_t i = k; i < size; ++i) p_out[i] = p_x[i - k];
-      } else {
-        OMP_FOR_SIMD
-        for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
-        OMP_FOR_SIMD
-        for (R_xlen_t i = size + k - 1; i >= 0; --i) p_out[i] = p_x[i - k];
-      }
+      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int));
+      OMP_FOR_SIMD
+      for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
@@ -106,54 +67,15 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     out = Rf_protect(set ? xvec : Rf_duplicate(xvec));
     ++n_protections;
     double *p_out = REAL(out);
-    if (set){
-      R_xlen_t tempi;
-      double tempv;
-      // If k = 0 then no lag occurs
-      if (std::abs(k) >= 1){
-        SEXP lag_temp = Rf_protect(Rf_allocVector(REALSXP, std::abs(k)));
-        ++n_protections;
-        double* __restrict__ p_lag = REAL(lag_temp);
-        // Positive lags
-        if (k >= 0){
-          for (R_xlen_t i = 0; i < k; ++i) {
-            p_lag[i] = p_out[i];
-            p_out[i] = fill_value;
-          }
-          for (R_xlen_t i = k; i < size; ++i) {
-            tempi = ((i - k) % k);
-            tempv = p_lag[tempi];
-            p_lag[tempi] = p_out[i];
-            p_out[i] = tempv;
-          }
-          // Negative lags
-        } else {
-          for (R_xlen_t i = size - 1; i >= size + k; --i) {
-            p_lag[size - i - 1] = p_out[i];
-            p_out[i] = fill_value;
-          }
-          for (R_xlen_t i = size + k - 1; i >= 0; --i) {
-            tempi = ( (size - (i - k) - 1) % k);
-            tempv = p_lag[tempi];
-            p_lag[tempi] = p_out[i];
-            p_out[i] = tempv;
-          }
-        }
-
-      }
+    double *p_x = REAL(xvec);
+    if (k >= 0){
+      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
+      OMP_FOR_SIMD
+      for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
-      double *p_x = REAL(xvec);
-      if (k >= 0){
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
-        OMP_FOR_SIMD
-        for (R_xlen_t i = k; i < size; ++i) p_out[i] = p_x[i - k];
-      } else {
-        OMP_FOR_SIMD
-        for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
-        OMP_FOR_SIMD
-        for (R_xlen_t i = size + k - 1; i >= 0; --i) p_out[i] = p_x[i - k];
-      }
+      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(double));
+      OMP_FOR_SIMD
+      for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
@@ -175,53 +97,14 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     out = Rf_protect(set ? xvec : Rf_duplicate(xvec));
     ++n_protections;
     Rcomplex *p_out = COMPLEX(out);
-    if (set){
-      R_xlen_t tempi;
-      Rcomplex tempv;
-      // If k = 0 then no lag occurs
-      if (std::abs(k) >= 1){
-        SEXP lag_temp = Rf_protect(Rf_allocVector(CPLXSXP, std::abs(k)));
-        ++n_protections;
-        Rcomplex* __restrict__ p_lag = COMPLEX(lag_temp);
-        // Positive lags
-        if (k >= 0){
-          for (R_xlen_t i = 0; i < k; ++i) {
-            p_lag[i].i = p_out[i].i;
-            p_lag[i].r = p_out[i].r;
-            SET_COMPLEX_ELT(out, i, fill_value);
-          }
-          for (R_xlen_t i = k; i < size; ++i) {
-            tempi = ((i - k) % k);
-            tempv = p_lag[tempi];
-            SET_COMPLEX_ELT(lag_temp, tempi, p_out[i]);
-            SET_COMPLEX_ELT(out, i, tempv);
-          }
-          // Negative lags
-        } else {
-          for (R_xlen_t i = size - 1; i >= size + k; --i) {
-            SET_COMPLEX_ELT(lag_temp, size - i - 1, p_out[i]);
-            SET_COMPLEX_ELT(out, i, fill_value);
-          }
-          for (R_xlen_t i = size + k - 1; i >= 0; --i) {
-            tempi = ( (size - (i - k) - 1) % k);
-            tempv = p_lag[tempi];
-            SET_COMPLEX_ELT(lag_temp, tempi, p_out[i]);
-            SET_COMPLEX_ELT(out, i, tempv);
-          }
-        }
-
-      }
+    Rcomplex *p_x = COMPLEX(xvec);
+    if (k >= 0){
+      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(Rcomplex));
+      for (R_xlen_t i = 0; i < k; ++i) SET_COMPLEX_ELT(out, i, fill_value);
     } else {
-      Rcomplex *p_x = COMPLEX(xvec);
-      if (k >= 0){
-        for (R_xlen_t i = 0; i < size; ++i) {
-          SET_COMPLEX_ELT(out, i, i >= k ? p_x[i - k] : fill_value);
-        }
-      } else {
-        for (R_xlen_t i = size - 1; i >= 0; --i) {
-          SET_COMPLEX_ELT(out, i, (i - size) < k ? p_x[i - k] : fill_value);
-        }
-      }
+      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(Rcomplex));
+      OMP_FOR_SIMD
+      for (R_xlen_t i = size - 1; i >= size + k; --i) SET_COMPLEX_ELT(out, i, fill_value);
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
