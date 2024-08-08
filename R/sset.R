@@ -184,7 +184,7 @@ sset.data.frame <- function(x, i, j, ...){
 #' @export
 sset.tbl_df <- function(x, i, j, ...){
   out <- df_subset(x, i, j)
-  class(out) <- class(x)
+  class(out) <- c("tbl_df", "tbl", "data.frame")
   out
 }
 #' @rdname sset
