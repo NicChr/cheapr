@@ -5,6 +5,9 @@
 \alias{levels_factor}
 \alias{used_levels}
 \alias{unused_levels}
+\alias{add_na_level}
+\alias{drop_na_level}
+\alias{drop_levels}
 \title{A faster version of \code{factor()}}
 \usage{
 factor_(
@@ -20,6 +23,12 @@ levels_factor(x)
 used_levels(x)
 
 unused_levels(x)
+
+add_na_level(x, name = NA, where = c("last", "first"))
+
+drop_na_level(x)
+
+drop_levels(x)
 }
 \arguments{
 \item{x}{A vector.}
@@ -34,16 +43,24 @@ are sorted by order of first appearance.}
 Default is \code{TRUE}.}
 
 \item{ordered}{Should the result be an ordered factor?}
+
+\item{name}{Name of \code{NA} level.}
+
+\item{where}{Where should \code{NA} level be placed? Either first or last.}
 }
 \value{
 A \code{factor} or \code{character} in the case of \code{used_levels} and \code{unused_levels}.
 }
 \description{
-A fast version of \code{factor()} using the collapse package.
+A fast version of \code{factor()} using the collapse package. \cr
+
 There are some additional utilities such as
 \code{levels_factor()} which returns the levels of a factor, as a factor,
 \code{used_levels()} which returns the used levels of a factor,
-and \code{unused_levels()} which returns the unused levels of a factor.
+\code{unused_levels()} which returns the unused levels of a factor,
+\code{add_na_level()} which adds an explicit \code{NA} level,
+\code{drop_na_level()} which drops the \code{NA} level,
+and \code{drop_levels()} which drops unused factor levels.
 }
 \details{
 This operates similarly to \code{collapse::qF()}. \cr

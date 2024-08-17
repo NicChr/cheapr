@@ -1,11 +1,15 @@
 #' A faster version of `factor()`
 #'
 #' @description
-#' A fast version of `factor()` using the collapse package.
+#' A fast version of `factor()` using the collapse package. \cr
+#'
 #' There are some additional utilities such as
 #' `levels_factor()` which returns the levels of a factor, as a factor,
 #' `used_levels()` which returns the used levels of a factor,
-#' and `unused_levels()` which returns the unused levels of a factor.
+#' `unused_levels()` which returns the unused levels of a factor,
+#' `add_na_level()` which adds an explicit `NA` level,
+#' `drop_na_level()` which drops the `NA` level,
+#' and `drop_levels()` which drops unused factor levels.
 #'
 #' @returns
 #' A `factor` or `character` in the case of `used_levels` and `unused_levels`.
@@ -18,6 +22,8 @@
 #' @param na_exclude Should `NA` values be excluded from the factor levels?
 #' Default is `TRUE`.
 #' @param ordered Should the result be an ordered factor?
+#' @param name Name of `NA` level.
+#' @param where Where should `NA` level be placed? Either first or last.
 #'
 #' @details
 #' This operates similarly to `collapse::qF()`. \cr
@@ -69,11 +75,17 @@ factor_ <- function(x = integer(), levels = NULL, order = TRUE,
 #' @export
 #' @rdname factors
 levels_factor <- function(x){
+  check_is_factor(x)
   lvls <- levels(x)
   out <- seq_along(lvls)
   attr(out, "levels") <- lvls
   class(out) <- class(x)
   out
+}
+check_is_factor <- function(x){
+  if (!is.factor(x)){
+    stop("x must be a factor")
+  }
 }
 #' @export
 #' @rdname factors
@@ -84,4 +96,67 @@ used_levels <- function(x){
 #' @rdname factors
 unused_levels <- function(x){
   as.character(setdiff_(levels_factor(x), x))
+}
+#' @export
+#' @rdname factors
+add_na_level <- function(x, name = NA, where = c("last", "first")){
+  check_is_factor(x)
+  where <- match.arg(where)
+  lvls <- levels(x)
+  if (any_na(lvls)){
+    x
+  } else {
+    out <- unclass(x)
+    n_lvls <- length(lvls)
+
+    if (where == "first"){
+      out <- out + 1L
+      attr(out, "levels") <- c(name, lvls)
+      out[which_na(out)] <- 1L
+    } else {
+      attr(out, "levels") <- c(lvls, name)
+      out[which_na(out)] <- n_lvls + 1L
+    }
+
+    class(out) <- class(x)
+    out
+  }
+}
+#' @export
+#' @rdname factors
+drop_na_level <- function(x){
+
+  check_is_factor(x)
+  lvls <- levels(x)
+
+  which_na_lvl <- which_na(lvls)
+  if (length(which_na_lvl) == 0){
+    x
+  } else {
+    new_lvls <- lvls[-which_na_lvl]
+
+    matches <- collapse::fmatch(lvls, new_lvls, overid = 2L)
+    out <- matches[unclass(x)]
+
+    attributes(out) <- attributes(x)
+    attr(out, "levels") <- new_lvls
+
+    out
+  }
+}
+#' @export
+#' @rdname factors
+drop_levels <- function(x){
+  lvls <- levels(x)
+  n_lvls <- length(lvls)
+  used_lvls <- intersect_(levels_factor(x), x)
+  if (length(used_lvls) == n_lvls){
+    x
+  } else {
+   factor_(x, levels = used_lvls)
+    # Alternative
+    # out <- collapse::fmatch(lvls, used_lvls, overid = 2L)[unclass(x)]
+    # attributes(out) <- attributes(x)
+    # attr(out, "levels") <- as.character(used_lvls)
+  }
 }

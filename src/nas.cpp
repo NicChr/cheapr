@@ -1,57 +1,5 @@
 #include "cheapr_cpp.h"
 
-// The below works but probably not a good idea to use internal R code
-// Direct inclusion of internal structure definitions
-// typedef struct sxpinfo_struct {
-//   SEXPTYPE type      : 5;
-//   unsigned int obj   : 1;
-//   unsigned int named : 2;
-//   unsigned int gp    : 16;
-//   unsigned int mark  : 1;
-//   unsigned int debug : 1;
-//   unsigned int trace : 1;
-//   unsigned int spare : 1;
-//   unsigned int gcgen : 1;
-//   unsigned int gccls : 3;
-// } sxpinfo_struct;
-//
-// typedef struct SEXPREC {
-//   sxpinfo_struct sxpinfo;
-//   struct SEXPREC *attrib;
-//   struct SEXPREC *gengc_next_node, *gengc_prev_node;
-//   union {
-//     struct primsxp_struct {int offset; } primsxp;
-//     struct symsxp_struct {
-//       struct SEXPREC *pname;
-//       struct SEXPREC *value;
-//       struct SEXPREC *internal;
-//     } symsxp;
-//     struct listsxp_struct {
-//       struct SEXPREC *carval;
-//       struct SEXPREC *cdrval;
-//       struct SEXPREC *tagval;
-//     } listsxp;
-//     struct envsxp_struct {
-//       struct SEXPREC *frame;
-//       struct SEXPREC *enclos;
-//       struct SEXPREC *hashtab;
-//     } envsxp;
-//     struct closxp_struct {
-//       struct SEXPREC *formals;
-//       struct SEXPREC *body;
-//       struct SEXPREC *env;
-//     } closxp;
-//     struct promsxp_struct {
-//       struct SEXPREC *value;
-//       struct SEXPREC *expr;
-//       struct SEXPREC *env;
-//     } promsxp;
-//   } u;
-// } SEXPREC, *SEXP;
-//
-// #define SET_TYPEOF2(x, v) ((x)->sxpinfo.type = (v))
-
-
 R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
