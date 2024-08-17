@@ -1,5 +1,7 @@
 # cheapr (Development version)
 
+* New cheap factor functions `add_na_level`, `drop_na_level` and `drop_levels`.
+
 * `lag_` now uses `memmove` where possible.
 
 * Fixed an issue where `lag_(x)` was materialising x twice if x was an altrep 
