@@ -2,6 +2,7 @@
 % Please edit documentation in R/factors.R
 \name{factor_}
 \alias{factor_}
+\alias{as_factor}
 \alias{levels_factor}
 \alias{used_levels}
 \alias{unused_levels}
@@ -18,6 +19,8 @@ factor_(
   na_exclude = TRUE,
   ordered = is.ordered(x)
 )
+
+as_factor(x)
 
 levels_factor(x)
 

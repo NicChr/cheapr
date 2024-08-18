@@ -85,6 +85,15 @@ factor_ <- function(
   # attr(out, "data") <- x
   out
 }
+#' @export
+#' @rdname factors
+as_factor <- function(x){
+  if (is.factor(x)){
+    x
+  } else {
+    factor_(x)
+  }
+}
 # print.cheapr_factor <- function(x, ...){
 #   class(x) <- setdiff(class(x), "cheapr_factor")
 #   attr(x, "data") <- NULL
