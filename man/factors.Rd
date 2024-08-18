@@ -8,6 +8,7 @@
 \alias{add_na_level}
 \alias{drop_na_level}
 \alias{drop_levels}
+\alias{reorder_levels}
 \title{A faster version of \code{factor()}}
 \usage{
 factor_(
@@ -29,6 +30,8 @@ add_na_level(x, name = NA, where = c("last", "first"))
 drop_na_level(x)
 
 drop_levels(x)
+
+reorder_levels(x, order_by, decreasing = FALSE)
 }
 \arguments{
 \item{x}{A vector.}
@@ -47,6 +50,12 @@ Default is \code{TRUE}.}
 \item{name}{Name of \code{NA} level.}
 
 \item{where}{Where should \code{NA} level be placed? Either first or last.}
+
+\item{order_by}{A vector to order the levels of \code{x} by using the medians of
+\code{order_by}.}
+
+\item{decreasing}{Should the reordered levels be in decreasing order?
+Default is \code{FALSE}.}
 }
 \value{
 A \code{factor} or \code{character} in the case of \code{used_levels} and \code{unused_levels}.
@@ -60,7 +69,9 @@ There are some additional utilities such as
 \code{unused_levels()} which returns the unused levels of a factor,
 \code{add_na_level()} which adds an explicit \code{NA} level,
 \code{drop_na_level()} which drops the \code{NA} level,
-and \code{drop_levels()} which drops unused factor levels.
+\code{drop_levels()} which drops unused factor levels,
+and finally \code{reorder_levels()} which reorders the levels of \code{x}
+based on \code{y} using the ordered median values of \code{y} for each level.
 }
 \details{
 This operates similarly to \code{collapse::qF()}. \cr
