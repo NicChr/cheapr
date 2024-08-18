@@ -1,6 +1,7 @@
 # cheapr (Development version)
 
-* New cheap factor functions `add_na_level`, `drop_na_level` and `drop_levels`.
+* New cheap factor functions `add_na_level`, `drop_na_level`, `drop_levels` and
+`reorder_levels`.
 
 * `lag_` now uses `memmove` where possible.
 
