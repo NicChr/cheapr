@@ -132,7 +132,8 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   R_xlen_t istart = from;
   R_xlen_t iend = to;
-  R_xlen_t out_size, istart1, istart2, iend1, iend2;
+  R_xlen_t out_size, istart1, istart2;
+  R_xlen_t iend1 = 0, iend2 = 0;
   bool double_loop = false;
 
   // Negative indexing is complicated
