@@ -286,7 +286,6 @@ seq_size(start, end, increments)
 ### which
 
 ```{r}
-# which()
 x <- rep(TRUE, 10^6)
 mark(cheapr_which = which_(x),
      base_which = which(x))
@@ -308,7 +307,6 @@ mark(cheapr_which = which_(x),
 ### factor
 
 ```{r}
-# factor()
 x <- sample(seq(-10^3, 10^3, 0.01))
 y <- do.call(paste0, expand.grid(letters, letters, letters, letters))
 mark(cheapr_factor = factor_(x), 
@@ -324,7 +322,6 @@ mark(cheapr_factor = factor_(y, order = FALSE),
 ### intersect & setdiff
 
 ```{r}
-# intersect() & setdiff()
 x <- sample.int(10^6, 10^5, TRUE)
 y <- sample.int(10^6, 10^5, TRUE)
 mark(cheapr_intersect = intersect_(x, y, dups = FALSE),
@@ -345,7 +342,6 @@ mark(cheapr = x %!in_% y,
 ### cut.default
 
 ```{r}
-# cut.default()
 x <- rnorm(10^7)
 b <- seq(0, max(x), 0.2)
 mark(cheapr_cut = cut_numeric(x, b), 

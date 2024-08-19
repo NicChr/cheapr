@@ -1,20 +1,22 @@
-#' A faster version of `factor()`
+#' A cheaper version of `factor()` along with cheaper utilities
 #'
 #' @description
 #' A fast version of `factor()` using the collapse package. \cr
 #'
-#' There are some additional utilities such as
+#' There are some additional utilities, most of which begin with the prefix
+#' 'levels_', such as
+#' `as_factor()` which is an efficient way to coerce both vectors and factors,
 #' `levels_factor()` which returns the levels of a factor, as a factor,
-#' `used_levels()` which returns the used levels of a factor,
-#' `unused_levels()` which returns the unused levels of a factor,
-#' `add_na_level()` which adds an explicit `NA` level,
-#' `drop_na_level()` which drops the `NA` level,
-#' `drop_levels()` which drops unused factor levels,
-#' and finally `reorder_levels()` which reorders the levels of `x`
+#' `levels_used()` which returns the used levels of a factor,
+#' `levels_unused()` which returns the unused levels of a factor,
+#' `levels_add_na()` which adds an explicit `NA` level,
+#' `levels_drop_na()` which drops the `NA` level,
+#' `levels_drop()` which drops unused factor levels,
+#' and finally `levels_reorder()` which reorders the levels of `x`
 #' based on `y` using the ordered median values of `y` for each level.
 #'
 #' @returns
-#' A `factor` or `character` in the case of `used_levels` and `unused_levels`.
+#' A `factor` or `character` in the case of `levels_used` and `levels_unused`.
 #'
 #' @param x A vector.
 #' @param levels Optional factor levels.
@@ -163,14 +165,14 @@ which_unused_levels <- function(x){
 }
 #' @export
 #' @rdname factors
-used_levels <- function(x){
+levels_used <- function(x){
   levels(x)[which_used_levels(x)]
   # levels(x)[which_in(seq_along(levels(x)), unclass(x))]
   # factor_as_character(intersect_(levels_factor(x), x))
 }
 #' @export
 #' @rdname factors
-unused_levels <- function(x){
+levels_unused <- function(x){
   levels(x)[which_unused_levels(x)]
   # levels(x)[which_not_in(seq_along(levels(x)), unclass(x))]
   # factor_as_character(setdiff_(levels_factor(x), x))
@@ -178,7 +180,19 @@ unused_levels <- function(x){
 }
 #' @export
 #' @rdname factors
-add_na_level <- function(x, name = NA, where = c("last", "first")){
+used_levels <- function(x){
+  on.exit(.Deprecated("levels_used"))
+  levels_used(x)
+}
+#' @export
+#' @rdname factors
+unused_levels <- function(x){
+  on.exit(.Deprecated("levels_unused"))
+  levels_unused(x)
+}
+#' @export
+#' @rdname factors
+levels_add_na <- function(x, name = NA, where = c("last", "first")){
   check_is_factor(x)
   where <- match.arg(where)
   lvls <- levels(x)
@@ -203,7 +217,7 @@ add_na_level <- function(x, name = NA, where = c("last", "first")){
 }
 #' @export
 #' @rdname factors
-drop_na_level <- function(x){
+levels_drop_na <- function(x){
 
   check_is_factor(x)
   lvls <- levels(x)
@@ -252,7 +266,7 @@ drop_na_level <- function(x){
 
 #' @export
 #' @rdname factors
-drop_levels <- function(x){
+levels_drop <- function(x){
   lvls <- levels(x)
   n_lvls <- length(lvls)
   which_used <- which_used_levels(x)
@@ -268,7 +282,7 @@ drop_levels <- function(x){
 }
 #' @export
 #' @rdname factors
-reorder_levels <- function(x, order_by, decreasing = FALSE){
+levels_reorder <- function(x, order_by, decreasing = FALSE){
   check_is_factor(x)
   groups <- collapse::GRP(x, return.groups = FALSE)
   medians <- collapse::fmedian(order_by, g = groups, use.g.names = FALSE)

@@ -4,13 +4,15 @@
 \alias{factor_}
 \alias{as_factor}
 \alias{levels_factor}
+\alias{levels_used}
+\alias{levels_unused}
 \alias{used_levels}
 \alias{unused_levels}
-\alias{add_na_level}
-\alias{drop_na_level}
-\alias{drop_levels}
-\alias{reorder_levels}
-\title{A faster version of \code{factor()}}
+\alias{levels_add_na}
+\alias{levels_drop_na}
+\alias{levels_drop}
+\alias{levels_reorder}
+\title{A cheaper version of \code{factor()} along with cheaper utilities}
 \usage{
 factor_(
   x = integer(),
@@ -24,17 +26,21 @@ as_factor(x)
 
 levels_factor(x)
 
+levels_used(x)
+
+levels_unused(x)
+
 used_levels(x)
 
 unused_levels(x)
 
-add_na_level(x, name = NA, where = c("last", "first"))
+levels_add_na(x, name = NA, where = c("last", "first"))
 
-drop_na_level(x)
+levels_drop_na(x)
 
-drop_levels(x)
+levels_drop(x)
 
-reorder_levels(x, order_by, decreasing = FALSE)
+levels_reorder(x, order_by, decreasing = FALSE)
 }
 \arguments{
 \item{x}{A vector.}
@@ -61,19 +67,21 @@ Default is \code{TRUE}.}
 Default is \code{FALSE}.}
 }
 \value{
-A \code{factor} or \code{character} in the case of \code{used_levels} and \code{unused_levels}.
+A \code{factor} or \code{character} in the case of \code{levels_used} and \code{levels_unused}.
 }
 \description{
 A fast version of \code{factor()} using the collapse package. \cr
 
-There are some additional utilities such as
+There are some additional utilities, most of which begin with the prefix
+'levels_', such as
+\code{as_factor()} which is an efficient way to coerce both vectors and factors,
 \code{levels_factor()} which returns the levels of a factor, as a factor,
-\code{used_levels()} which returns the used levels of a factor,
-\code{unused_levels()} which returns the unused levels of a factor,
-\code{add_na_level()} which adds an explicit \code{NA} level,
-\code{drop_na_level()} which drops the \code{NA} level,
-\code{drop_levels()} which drops unused factor levels,
-and finally \code{reorder_levels()} which reorders the levels of \code{x}
+\code{levels_used()} which returns the used levels of a factor,
+\code{levels_unused()} which returns the unused levels of a factor,
+\code{levels_add_na()} which adds an explicit \code{NA} level,
+\code{levels_drop_na()} which drops the \code{NA} level,
+\code{levels_drop()} which drops unused factor levels,
+and finally \code{levels_reorder()} which reorders the levels of \code{x}
 based on \code{y} using the ordered median values of \code{y} for each level.
 }
 \details{

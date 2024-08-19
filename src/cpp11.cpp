@@ -146,13 +146,6 @@ extern "C" SEXP _cheapr_cpp_check_nested_lengths(SEXP x, SEXP y) {
     return R_NilValue;
   END_CPP11
 }
-// lists.cpp
-SEXP cpp_cast_common(SEXP x, SEXP y);
-extern "C" SEXP _cheapr_cpp_cast_common(SEXP x, SEXP y) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_cast_common(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
-  END_CPP11
-}
 // nas.cpp
 SEXP cpp_num_na(SEXP x, bool recursive);
 extern "C" SEXP _cheapr_cpp_num_na(SEXP x, SEXP recursive) {
@@ -432,7 +425,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_compact_seq_data",         (DL_FUNC) &_cheapr_compact_seq_data,         1},
     {"_cheapr_cpp_all_na",               (DL_FUNC) &_cheapr_cpp_all_na,               3},
     {"_cheapr_cpp_any_na",               (DL_FUNC) &_cheapr_cpp_any_na,               2},
-    {"_cheapr_cpp_cast_common",          (DL_FUNC) &_cheapr_cpp_cast_common,          2},
     {"_cheapr_cpp_check_nested_lengths", (DL_FUNC) &_cheapr_cpp_check_nested_lengths, 2},
     {"_cheapr_cpp_col_na_counts",        (DL_FUNC) &_cheapr_cpp_col_na_counts,        1},
     {"_cheapr_cpp_count_val",            (DL_FUNC) &_cheapr_cpp_count_val,            3},

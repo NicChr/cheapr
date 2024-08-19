@@ -80,10 +80,6 @@ cpp_check_nested_lengths <- function(x, y) {
   invisible(.Call(`_cheapr_cpp_check_nested_lengths`, x, y))
 }
 
-cpp_cast_common <- function(x, y) {
-  .Call(`_cheapr_cpp_cast_common`, x, y)
-}
-
 cpp_num_na <- function(x, recursive) {
   .Call(`_cheapr_cpp_num_na`, x, recursive)
 }
