@@ -35,11 +35,11 @@ test_that("factors", {
   # Used and unused levels
   fct <- factor_(airquality$Ozone, levels = c(NA, 10:100), na_exclude = FALSE)
   expect_identical(
-    used_levels(fct),
+    levels_used(fct),
     intersect(levels(fct), airquality$Ozone)
   )
   expect_identical(
-    unused_levels(fct),
+    levels_unused(fct),
     setdiff(levels(fct), airquality$Ozone)
   )
   expect_identical(
