@@ -1,5 +1,4 @@
 #include "cheapr_cpp.h"
-#include <R_ext/Altrep.h>
 
 // Altrep utils
 
