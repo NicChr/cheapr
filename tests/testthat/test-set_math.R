@@ -362,3 +362,43 @@ test_that("more math operations", {
   )
   options(cheapr.cores = 1)
 })
+
+test_that("zero-length vectors", {
+  x <- 1
+  y <- numeric()
+
+  expect_error(set_add(x, y))
+  expect_error(set_subtract(x, y))
+  expect_error(set_divide(x, y))
+  expect_error(set_multiply(x, y))
+  expect_error(set_log(x, y))
+  expect_error(set_pow(x, y))
+  expect_error(set_round(x, y))
+
+  expect_identical(set_add(y, x), numeric())
+  expect_identical(set_subtract(y, x), numeric())
+  expect_identical(set_divide(y, x), numeric())
+  expect_identical(set_multiply(y, x), numeric())
+  expect_identical(set_log(y, x), numeric())
+  expect_identical(set_pow(y, x), numeric())
+  expect_identical(set_round(y, x), numeric())
+
+  x <- 1L
+  y <- integer()
+
+  expect_error(set_add(x, y))
+  expect_error(set_subtract(x, y))
+  expect_error(set_divide(x, y))
+  expect_error(set_multiply(x, y))
+  expect_error(set_log(x, y))
+  expect_error(set_pow(x, y))
+  expect_error(set_round(x, y))
+
+  expect_identical(set_add(y, x), integer())
+  expect_identical(set_subtract(y, x), integer())
+  expect_identical(set_divide(as.double(y), x), numeric())
+  expect_identical(set_multiply(y, x), integer())
+  expect_identical(set_log(as.double(y), x), numeric())
+  expect_identical(set_pow(as.double(y), x), numeric())
+  expect_identical(set_round(y, x), integer())
+})
