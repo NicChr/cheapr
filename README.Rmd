@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# cheapr
+# cheapr <a href="https://github.com/NicChr/cheapr"><img src="man/figures/cheapr_logo.png" align="right" height="238" /></a>
 
 <!-- badges: start -->
 
