@@ -1,8 +1,8 @@
 #' @noRd
 
-# Include this as it's not available in older versions of R
-deparse1 <- function(expr, collapse = " ", width.cutoff = 500L, ...){
-  paste(deparse(expr, width.cutoff, ...), collapse = collapse)
+# Like deparse1 but has a cutoff in case of massive strings
+deparse2 <- function(expr, collapse = " ", width.cutoff = 500L, nlines = 5L, ...){
+  paste(deparse(expr, width.cutoff, nlines = nlines, ...), collapse = collapse)
 }
 
 is_integerable <- function(x){
@@ -38,12 +38,12 @@ list_as_df <- cpp_list_as_df
 
 check_length <- function(x, n){
   if (length(x) != n){
-    stop(paste(deparse1(substitute(x)), "must have length", n))
+    stop(paste(deparse2(substitute(x)), "must have length", n))
   }
 }
 check_is_df <- function(x){
   if (!inherits(x, "data.frame")){
-    stop(paste(deparse1(substitute(x)), "must be a data frame."))
+    stop(paste(deparse2(substitute(x)), "must be a data frame."))
   }
 }
 df_add_cols <- function(data, cols){

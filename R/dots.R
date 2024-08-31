@@ -26,5 +26,5 @@ named_dots <- function(...){
   dots
 }
 dot_expr_names <- function(...){
-  vapply(substitute(alist(...))[-1L], deparse1, "", USE.NAMES = FALSE)
+  vapply(substitute(alist(...))[-1L], deparse2, "", USE.NAMES = FALSE)
 }
