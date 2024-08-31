@@ -1,3 +1,10 @@
+#' @noRd
+
+# Include this as it's not available in older versions of R
+deparse1 <- function(expr, collapse = " ", width.cutoff = 500L, ...){
+  paste(deparse(expr, width.cutoff, ...), collapse = collapse)
+}
+
 is_integerable <- function(x){
   abs(x) <= .Machine$integer.max
 }
@@ -29,11 +36,6 @@ allv2 <- function(x, value){
 
 list_as_df <- cpp_list_as_df
 
-df_as_tbl <- function(x){
-  out <- list_as_df(x)
-  class(out) <- c("tbl_df", "tbl", "data.frame")
-  out
-}
 check_length <- function(x, n){
   if (length(x) != n){
     stop(paste(deparse1(substitute(x)), "must have length", n))
@@ -78,9 +80,6 @@ cheapr_rep_len <- function(x, length.out){
   }
 }
 
-n_dots <- function(...){
-  nargs()
-}
 set_attr <- cpp_set_add_attr
 set_attrs <- cpp_set_add_attributes
 set_rm_attr <- cpp_set_rm_attr
@@ -152,4 +151,28 @@ funique.POSIXlt <- function(x, sort = FALSE, ...){
   attributes(out) <- out_attrs
   class(out) <- class(x)
   out
+}
+
+n_dots <- function(...){
+  nargs()
+}
+
+dot_expr_names <- function(...){
+  vapply(substitute(alist(...))[-1L], deparse1, "", USE.NAMES = FALSE)
+}
+
+named_dots <- function(...){
+  dots <- list(...)
+
+  dot_nms <- names(dots)
+
+  if (is.null(dot_nms)){
+    names(dots) <- dot_expr_names(...)
+  } else if (!all(nzchar(dot_nms))){
+    empty <- which_(!nzchar(dot_nms))
+    expr_names <- dot_expr_names(...)
+    dot_nms[empty] <- expr_names[empty]
+    names(dots) <- dot_nms
+  }
+  dots
 }
