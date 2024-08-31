@@ -1,5 +1,7 @@
 # cheapr (Development version)
 
+* New functions `new_df` and `named_dots`.
+
 * All factor levels utilities now begin with the prefix 'levels_'.
 
 * New cheap factor functions `as_factor`, `add_na_level`, `drop_na_level`, 
