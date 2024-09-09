@@ -4,12 +4,12 @@
 \alias{new_df}
 \title{Fast data frame constructor}
 \usage{
-new_df(..., ..N = NULL, .recycle = FALSE, .name_repair = FALSE)
+new_df(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE)
 }
 \arguments{
 \item{...}{Key-value pairs.}
 
-\item{..N}{\code{integer(1)} (Optional) number of rows. \cr
+\item{.nrows}{\code{integer(1)} (Optional) number of rows. \cr
 Commonly used to initialise a 0-column data frame with rows.}
 
 \item{.recycle}{\code{logical(1)} Should arguments be recycled?

@@ -16,15 +16,19 @@ named_dots <- function(...){
   dot_nms <- names(dots)
 
   if (is.null(dot_nms)){
-    names(dots) <- dot_expr_names(...)
+    names(dots) <- expr_names(...)
   } else if (!all(nzchar(dot_nms))){
     empty <- which_(!nzchar(dot_nms))
-    expr_names <- dot_expr_names(...)
-    dot_nms[empty] <- expr_names[empty]
+    expr_nms <- expr_names(...)
+    dot_nms[empty] <- expr_nms[empty]
     names(dots) <- dot_nms
   }
   dots
 }
-dot_expr_names <- function(...){
-  vapply(substitute(alist(...))[-1L], deparse2, "", USE.NAMES = FALSE)
+expr_names <- function(...){
+  as.character(substitute(c(...))[-1L])
+  # vapply(substitute(alist(...))[-1L], deparse2, "", USE.NAMES = FALSE)
+}
+list_named <- function(...){
+  cpp_list_rm_null(named_dots(...))
 }
