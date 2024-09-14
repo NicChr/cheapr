@@ -214,3 +214,37 @@ sample_ <- function(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL){
 #   })
 #   eval(expr, envir = parent.frame())
 # }
+duplicated_ <- function(x, .all = FALSE){
+  groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
+  out <- (attr(groups, "group.sizes") > 1L)[groups]
+  out[attr(groups, "starts")] <- FALSE
+  out
+}
+
+# duplicates <- function(x, .all = FALSE, .count = FALSE){
+#   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
+#   sizes <- attr(groups, "group.sizes")
+#   starts <- attr(groups, "starts")
+#   dup <- (sizes > 1L)[groups]
+#   dup[starts] <- FALSE
+#   which_dup <- which_(dup)
+#   out <- sset(x, which_dup)
+#
+#   # Adjust group sizes as they reflect the dup count + 1
+#
+#   if (.count){
+#     sizes <- sizes[groups]
+#     if (!.all && NROW(out) > 0){
+#       set_subtract(sizes, 1L)
+#       which_zero <- which_val(sizes, 0L)
+#       collapse::setv(
+#         sizes,
+#         which_zero,
+#         1L,
+#         vind1 = TRUE
+#       )
+#     }
+#     cpp_set_add_attr(out, "n_dupes", sset(sizes, which_dup))
+#   }
+#   out
+# }

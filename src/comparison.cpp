@@ -1,4 +1,5 @@
-// #include "cheapr_cpp.h"
+#include "cheapr_cpp.h"
+#include <string>
 
 // THis is a helper function to assist with doing multiple comparisons
 // across binary pairs of vectors between 2 data frames
@@ -218,7 +219,6 @@
 //   return out;
 // }
 //
-// [[cpp11::register]]
 // bool cpp_all_equal(SEXP x, SEXP y){
 //   R_xlen_t n1 = Rf_xlength(x);
 //   R_xlen_t n2  = Rf_xlength(y);
@@ -311,3 +311,263 @@
 //   return out;
 // }
 //
+
+
+// Relational operators
+template <typename T1, typename T2>
+int equals(T1 a, T2 b) { return a == b; }
+template <typename T1, typename T2>
+int gt(T1 a, T2 b) { return a > b; }
+template <typename T1, typename T2>
+int lt(T1 a, T2 b) { return a < b; }
+template <typename T1, typename T2>
+int gte(T1 a, T2 b) { return a >= b; }
+template <typename T1, typename T2>
+int lte(T1 a, T2 b) { return a <= b; }
+template <typename T1, typename T2>
+int neq(T1 a, T2 b) { return a != b; }
+
+// int char_equals(const char *a, const char *b) { return std::strcmp(a, b) == 0; }
+// int char_gt(const char *a, const char *b) { return std::strcmp(a, b) > 0; }
+// int char_lt(const char *a, const char *b) { return std::strcmp(a, b) < 0; }
+// int char_gte(const char *a, const char *b) { return std::strcmp(a, b) >= 0; }
+// int char_lte(const char *a, const char *b) { return std::strcmp(a, b) <= 0; }
+// int char_neq(const char *a, const char *b) { return std::strcmp(a, b) != 0; }
+
+
+// int char_equals(std::string a, std::string b) { return a.compare(b) == 0; }
+// int char_gt(std::string a, std::string b) { return a.compare(b) > 0; }
+// int char_lt(std::string a, std::string b) { return a.compare(b) < 0; }
+// int char_gte(std::string a, std::string b) { return a.compare(b) >= 0; }
+// int char_lte(std::string a, std::string b) { return a.compare(b) <= 0; }
+// int char_neq(std::string a, std::string b) { return a.compare(b) != 0; }
+
+int r_str_compare(SEXP x, SEXP y){
+  std::string a = Rf_translateCharUTF8(x);
+  std::string b = Rf_translateCharUTF8(y);
+  return a.compare(b);
+}
+
+[[cpp11::register]]
+SEXP cpp_compare(SEXP x, SEXP y, int op){
+  int NP = 0;
+  R_xlen_t xn = Rf_xlength(x);
+  R_xlen_t yn = Rf_xlength(y);
+
+  R_xlen_t n = xn == 0 || yn == 0 ? 0 : std::max(xn, yn);
+
+  R_xlen_t i, xi, yi;
+
+  SEXP out = Rf_protect(Rf_allocVector(LGLSXP, n)); ++NP;
+  int *p_out = LOGICAL(out);
+
+  R_xlen_t n_true = 0;
+  int eq = 0;
+
+#define OP_SWITCH                                                                                 \
+  switch(op){                                                                                     \
+  case 1: {                                                                                       \
+  c_op = equals;                                                                                  \
+  break;                                                                                          \
+}                                                                                                 \
+  case 2: {                                                                                       \
+    c_op = gt;                                                                                    \
+    break;                                                                                        \
+  }                                                                                               \
+  case 3: {                                                                                       \
+    c_op = lt;                                                                                    \
+    break;                                                                                        \
+  }                                                                                               \
+  case 4: {                                                                                       \
+    c_op = gte;                                                                                   \
+    break;                                                                                        \
+  }                                                                                               \
+  case 5: {                                                                                       \
+    c_op = lte;                                                                                   \
+    break;                                                                                        \
+  }                                                                                               \
+  case 6: {                                                                                       \
+    c_op = neq;                                                                                   \
+    break;                                                                                        \
+  }                                                                                               \
+  default: {                                                                                      \
+    Rf_unprotect(NP);                                                                             \
+    Rf_error("Supported relational operations: `==`, `>`, `<`, `>=`, `<=`, `!=`");                \
+  }                                                                                               \
+  }                                                                                               \
+
+
+switch (TYPEOF(x)){
+case LGLSXP:
+case INTSXP: {
+
+  switch (TYPEOF(y)){
+case LGLSXP:
+case INTSXP: {
+
+  int (*c_op)(int, int);
+  OP_SWITCH;
+
+  int *p_x = INTEGER(x);
+  int *p_y = INTEGER(y);
+
+  for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
+       yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
+    eq = (p_x[xi] == NA_INTEGER || p_y[yi] == NA_INTEGER) ?
+    NA_INTEGER : c_op(p_x[xi], p_y[yi]);
+    p_out[i] = eq;
+  }
+  break;
+}
+case REALSXP: {
+
+  int (*c_op)(double, double);
+  OP_SWITCH;
+
+  int *p_x = INTEGER(x);
+  double *p_y = REAL(y);
+  for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
+       yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
+    eq = (p_x[xi] == NA_INTEGER || p_y[yi] != p_y[yi]) ?
+    NA_INTEGER : c_op(p_x[xi], p_y[yi]);
+    p_out[i] = eq;
+  }
+  break;
+}
+case STRSXP: {
+
+  // int (*c_op)(int, int);
+  int (*c_op)(std::string, std::string);
+  OP_SWITCH;
+
+  Rf_protect(x = Rf_coerceVector(x, STRSXP)); ++NP;
+
+  const SEXP *p_x = STRING_PTR_RO(x);
+  const SEXP *p_y = STRING_PTR_RO(y);
+  for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
+       yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
+    eq = (p_x[xi] == NA_STRING || p_y[yi] == NA_STRING) ?
+    NA_INTEGER : c_op(Rf_translateCharUTF8(p_x[xi]),
+                      Rf_translateCharUTF8(p_y[yi]));
+    // NA_INTEGER : c_op(r_str_compare(p_x[xi], p_y[yi]), 0);
+    p_out[i] = eq;
+  }
+  break;
+}
+default: {
+  Rf_unprotect(NP);
+  Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+}
+}
+  break;
+}
+case REALSXP: {
+
+  switch (TYPEOF(y)){
+  case REALSXP: {
+
+    int (*c_op)(double, double);
+    OP_SWITCH;
+
+    double *p_x = REAL(x);
+    double *p_y = REAL(y);
+
+    for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
+         yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
+      eq = (p_x[xi] != p_x[xi] || p_y[yi] != p_y[yi]) ?
+      NA_INTEGER : c_op(p_x[xi], p_y[yi]);
+      p_out[i] = eq;
+    }
+    break;
+  }
+  case INTSXP: {
+
+    int (*c_op)(double, double);
+    OP_SWITCH;
+
+    double *p_x = REAL(x);
+    int *p_y = INTEGER(y);
+    for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
+         yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
+      eq = (p_x[xi] != p_x[xi] || p_y[yi] == NA_INTEGER) ?
+      NA_INTEGER : c_op(p_x[xi], p_y[yi]);
+      p_out[i] = eq;
+    }
+    break;
+  }
+  case STRSXP: {
+
+    // int (*c_op)(int, int);
+    int (*c_op)(std::string, std::string);
+    OP_SWITCH;
+
+    Rf_protect(x = Rf_coerceVector(x, STRSXP)); ++NP;
+
+    const SEXP *p_x = STRING_PTR_RO(x);
+    const SEXP *p_y = STRING_PTR_RO(y);
+    for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
+         yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
+      eq = (p_x[xi] == NA_STRING || p_y[yi] == NA_STRING) ?
+      NA_INTEGER : c_op(Rf_translateCharUTF8(p_x[xi]),
+                        Rf_translateCharUTF8(p_y[yi]));
+      // NA_INTEGER : c_op(r_str_compare(p_x[xi], p_y[yi]), 0);
+      p_out[i] = eq;
+    }
+    break;
+  }
+  default: {
+    Rf_unprotect(1);
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+  }
+  }
+  break;
+}
+case STRSXP: {
+
+  switch (TYPEOF(y)){
+
+  // No break in these cases to allow the STRSXP case to be used after coercion
+case LGLSXP:
+case INTSXP:
+case REALSXP: {
+  Rf_protect(y = Rf_coerceVector(y, STRSXP)); ++NP;
+}
+case STRSXP: {
+
+  // int (*c_op)(int, int);
+  int (*c_op)(std::string, std::string);
+  OP_SWITCH;
+
+  const SEXP *p_x = STRING_PTR_RO(x);
+  const SEXP *p_y = STRING_PTR_RO(y);
+
+  for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
+       yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
+    eq = (p_x[xi] == NA_STRING || p_y[yi] == NA_STRING) ?
+    NA_INTEGER : c_op(Rf_translateCharUTF8(p_x[xi]),
+                      Rf_translateCharUTF8(p_y[yi]));
+    // NA_INTEGER : c_op(r_str_compare(p_x[xi], p_y[yi]), 0);
+    p_out[i] = eq;
+  }
+  break;
+}
+default: {
+  Rf_unprotect(NP);
+  Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+}
+}
+  break;
+}
+default: {
+  Rf_unprotect(NP);
+  Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+}
+}
+
+  SEXP r_n_true = Rf_protect(Rf_ScalarInteger(n_true)); ++NP;
+
+  SEXP n_true_attrib = Rf_protect(Rf_installChar(Rf_mkChar(".n.true"))); ++NP;
+  Rf_setAttrib(out, n_true_attrib, r_n_true);
+  Rf_unprotect(NP);
+  return out;
+}

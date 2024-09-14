@@ -47,6 +47,13 @@ extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add
     return cpp11::as_sexp(cpp_set_add_attributes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(attributes), cpp11::as_cpp<cpp11::decay_t<bool>>(add)));
   END_CPP11
 }
+// comparison.cpp
+SEXP cpp_compare(SEXP x, SEXP y, int op);
+extern "C" SEXP _cheapr_cpp_compare(SEXP x, SEXP y, SEXP op) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_compare(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y), cpp11::as_cpp<cpp11::decay_t<int>>(op)));
+  END_CPP11
+}
 // gcd.cpp
 double cpp_gcd2(double x, double y, double tol, bool na_rm);
 extern "C" SEXP _cheapr_cpp_gcd2(SEXP x, SEXP y, SEXP tol, SEXP na_rm) {
@@ -427,6 +434,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_any_na",               (DL_FUNC) &_cheapr_cpp_any_na,               2},
     {"_cheapr_cpp_check_nested_lengths", (DL_FUNC) &_cheapr_cpp_check_nested_lengths, 2},
     {"_cheapr_cpp_col_na_counts",        (DL_FUNC) &_cheapr_cpp_col_na_counts,        1},
+    {"_cheapr_cpp_compare",              (DL_FUNC) &_cheapr_cpp_compare,              3},
     {"_cheapr_cpp_count_val",            (DL_FUNC) &_cheapr_cpp_count_val,            3},
     {"_cheapr_cpp_dbl_sequence",         (DL_FUNC) &_cheapr_cpp_dbl_sequence,         3},
     {"_cheapr_cpp_drop_null",            (DL_FUNC) &_cheapr_cpp_drop_null,            2},
