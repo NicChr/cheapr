@@ -217,6 +217,7 @@ sample_ <- function(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL){
 duplicated_ <- function(x, .all = FALSE){
   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
   out <- (attr(groups, "group.sizes") > 1L)[groups]
+  # out <- attr(groups, "group.sizes")[groups] %v>% 1L
   out[attr(groups, "starts")] <- FALSE
   out
 }

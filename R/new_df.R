@@ -11,7 +11,7 @@
 #' @returns A `data.frame`
 #'
 #' @export
-new_df <- function(..., .nrows = NULL,.recycle = FALSE, .name_repair = FALSE){
+new_df <- function(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE){
 
   out <- list_named(...)
 

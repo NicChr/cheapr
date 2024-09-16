@@ -43,20 +43,23 @@
 
 
 cheapr_compare <- function(x, y, .op){
-  if (!is.object(x) && is.atomic(x) && !is.object(y) && is.atomic(y)){
-    cpp_compare(
-      x, y,
-      switch(if (is.character(.op)) .op else as.character(substitute(.op)),
-             `==` = 1L,
-             `>` = 2L,
-             `<` = 3L,
-             `>=` = 4L,
-             `<=` = 5L,
-             `!=` = 6L,
-             0L)
-    )
+  funs <- c("==", ">", "<", ">=", "<=", "!=", "=")
+  fun <- if (is.character(.op)) .op else as.character(substitute(.op))
+  type <- match(fun, funs)
+  op <- switch(funs[type],
+               `==` = `==`,
+               `>` = `>`,
+               `<` = `<`,
+               `>=` = `>=`,
+               `<=` = `<=`,
+               `!=` = `!=`,
+               `=` = stop("`=` cannot be used for comparisons, perhaps you meant `==`?"),
+               stop("Unsupported comparison"))
+  if (!is.object(x) && is.atomic(x) && (is.numeric(x) || is.character(x)) &&
+      !is.object(y) && is.atomic(y) && (is.numeric(y) || is.character(y))){
+    cpp_compare(x, y, type)
   } else {
-    match.fun(.op)(x, y)
+    do.call(op, list(x, y))
   }
 }
 

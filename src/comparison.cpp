@@ -327,26 +327,38 @@ int lte(T1 a, T2 b) { return a <= b; }
 template <typename T1, typename T2>
 int neq(T1 a, T2 b) { return a != b; }
 
-// int char_equals(const char *a, const char *b) { return std::strcmp(a, b) == 0; }
-// int char_gt(const char *a, const char *b) { return std::strcmp(a, b) > 0; }
-// int char_lt(const char *a, const char *b) { return std::strcmp(a, b) < 0; }
-// int char_gte(const char *a, const char *b) { return std::strcmp(a, b) >= 0; }
-// int char_lte(const char *a, const char *b) { return std::strcmp(a, b) <= 0; }
-// int char_neq(const char *a, const char *b) { return std::strcmp(a, b) != 0; }
+#define OP_SWITCH                                                                                 \
+switch(op){                                                                                       \
+case 1: {                                                                                         \
+  c_op = equals;                                                                                  \
+  break;                                                                                          \
+}                                                                                                 \
+case 2: {                                                                                         \
+  c_op = gt;                                                                                      \
+  break;                                                                                          \
+}                                                                                                 \
+case 3: {                                                                                         \
+  c_op = lt;                                                                                      \
+  break;                                                                                          \
+}                                                                                                 \
+case 4: {                                                                                         \
+  c_op = gte;                                                                                     \
+  break;                                                                                          \
+}                                                                                                 \
+case 5: {                                                                                         \
+  c_op = lte;                                                                                     \
+  break;                                                                                          \
+}                                                                                                 \
+case 6: {                                                                                         \
+  c_op = neq;                                                                                     \
+  break;                                                                                          \
+}                                                                                                 \
+default: {                                                                                        \
+  Rf_unprotect(NP);                                                                               \
+  Rf_error("Supported relational operations: `==`, `>`, `<`, `>=`, `<=`, `!=`");                  \
+}                                                                                                 \
+}                                                                                                 \
 
-
-// int char_equals(std::string a, std::string b) { return a.compare(b) == 0; }
-// int char_gt(std::string a, std::string b) { return a.compare(b) > 0; }
-// int char_lt(std::string a, std::string b) { return a.compare(b) < 0; }
-// int char_gte(std::string a, std::string b) { return a.compare(b) >= 0; }
-// int char_lte(std::string a, std::string b) { return a.compare(b) <= 0; }
-// int char_neq(std::string a, std::string b) { return a.compare(b) != 0; }
-
-int r_str_compare(SEXP x, SEXP y){
-  std::string a = Rf_translateCharUTF8(x);
-  std::string b = Rf_translateCharUTF8(y);
-  return a.compare(b);
-}
 
 [[cpp11::register]]
 SEXP cpp_compare(SEXP x, SEXP y, int op){
@@ -363,39 +375,6 @@ SEXP cpp_compare(SEXP x, SEXP y, int op){
 
   R_xlen_t n_true = 0;
   int eq = 0;
-
-#define OP_SWITCH                                                                                 \
-  switch(op){                                                                                     \
-  case 1: {                                                                                       \
-  c_op = equals;                                                                                  \
-  break;                                                                                          \
-}                                                                                                 \
-  case 2: {                                                                                       \
-    c_op = gt;                                                                                    \
-    break;                                                                                        \
-  }                                                                                               \
-  case 3: {                                                                                       \
-    c_op = lt;                                                                                    \
-    break;                                                                                        \
-  }                                                                                               \
-  case 4: {                                                                                       \
-    c_op = gte;                                                                                   \
-    break;                                                                                        \
-  }                                                                                               \
-  case 5: {                                                                                       \
-    c_op = lte;                                                                                   \
-    break;                                                                                        \
-  }                                                                                               \
-  case 6: {                                                                                       \
-    c_op = neq;                                                                                   \
-    break;                                                                                        \
-  }                                                                                               \
-  default: {                                                                                      \
-    Rf_unprotect(NP);                                                                             \
-    Rf_error("Supported relational operations: `==`, `>`, `<`, `>=`, `<=`, `!=`");                \
-  }                                                                                               \
-  }                                                                                               \
-
 
 switch (TYPEOF(x)){
 case LGLSXP:
@@ -436,7 +415,6 @@ case REALSXP: {
 }
 case STRSXP: {
 
-  // int (*c_op)(int, int);
   int (*c_op)(std::string, std::string);
   OP_SWITCH;
 
@@ -449,7 +427,6 @@ case STRSXP: {
     eq = (p_x[xi] == NA_STRING || p_y[yi] == NA_STRING) ?
     NA_INTEGER : c_op(Rf_translateCharUTF8(p_x[xi]),
                       Rf_translateCharUTF8(p_y[yi]));
-    // NA_INTEGER : c_op(r_str_compare(p_x[xi], p_y[yi]), 0);
     p_out[i] = eq;
   }
   break;
@@ -497,7 +474,6 @@ case REALSXP: {
   }
   case STRSXP: {
 
-    // int (*c_op)(int, int);
     int (*c_op)(std::string, std::string);
     OP_SWITCH;
 
@@ -510,7 +486,6 @@ case REALSXP: {
       eq = (p_x[xi] == NA_STRING || p_y[yi] == NA_STRING) ?
       NA_INTEGER : c_op(Rf_translateCharUTF8(p_x[xi]),
                         Rf_translateCharUTF8(p_y[yi]));
-      // NA_INTEGER : c_op(r_str_compare(p_x[xi], p_y[yi]), 0);
       p_out[i] = eq;
     }
     break;
@@ -534,7 +509,6 @@ case REALSXP: {
 }
 case STRSXP: {
 
-  // int (*c_op)(int, int);
   int (*c_op)(std::string, std::string);
   OP_SWITCH;
 
@@ -571,3 +545,5 @@ default: {
   Rf_unprotect(NP);
   return out;
 }
+
+#undef OP_SWITCH
