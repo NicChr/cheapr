@@ -290,7 +290,7 @@
 //     for (R_xlen_t i = 0; i < n1; ++i){
 //       a = p_x[i];
 //       b = p_y[i];
-//       // either_na = is_na_cplx(a) || is_na_cplx(b);
+//       // either_na = cheapr_is_na_cplx(a) || cheapr_is_na_cplx(b);
 //       // na_count += either_na;
 //       // if (( (a.r != a.r) || (a.i != a.i) ) && !either_na){
 //       if (( (a.r != a.r) || (a.i != a.i) )){
@@ -360,6 +360,14 @@ default: {                                                                      
 }                                                                                                 \
 
 
+#define CHEAPR_COMPARISON_LOOP(a, b, ISNA1, ISNA2)                 \
+for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,           \
+     yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){        \
+  eq = (ISNA1(p_x[xi]) || ISNA2(p_y[yi])) ?                        \
+  NA_INTEGER : c_op(a, b);                                         \
+  p_out[i] = eq;                                                   \
+}                                                                  \
+
 [[cpp11::register]]
 SEXP cpp_compare(SEXP x, SEXP y, int op){
   int NP = 0;
@@ -390,12 +398,8 @@ case INTSXP: {
   int *p_x = INTEGER(x);
   int *p_y = INTEGER(y);
 
-  for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
-       yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
-    eq = (p_x[xi] == NA_INTEGER || p_y[yi] == NA_INTEGER) ?
-    NA_INTEGER : c_op(p_x[xi], p_y[yi]);
-    p_out[i] = eq;
-  }
+
+  CHEAPR_COMPARISON_LOOP(p_x[xi], p_y[yi], cheapr_is_na_int, cheapr_is_na_int);
   break;
 }
 case REALSXP: {
@@ -405,12 +409,7 @@ case REALSXP: {
 
   int *p_x = INTEGER(x);
   double *p_y = REAL(y);
-  for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
-       yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
-    eq = (p_x[xi] == NA_INTEGER || p_y[yi] != p_y[yi]) ?
-    NA_INTEGER : c_op(p_x[xi], p_y[yi]);
-    p_out[i] = eq;
-  }
+  CHEAPR_COMPARISON_LOOP(p_x[xi], p_y[yi], cheapr_is_na_int, cheapr_is_na_dbl);
   break;
 }
 case STRSXP: {
@@ -422,13 +421,10 @@ case STRSXP: {
 
   const SEXP *p_x = STRING_PTR_RO(x);
   const SEXP *p_y = STRING_PTR_RO(y);
-  for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
-       yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
-    eq = (p_x[xi] == NA_STRING || p_y[yi] == NA_STRING) ?
-    NA_INTEGER : c_op(Rf_translateCharUTF8(p_x[xi]),
-                      Rf_translateCharUTF8(p_y[yi]));
-    p_out[i] = eq;
-  }
+  CHEAPR_COMPARISON_LOOP(Rf_translateCharUTF8(p_x[xi]),
+                         Rf_translateCharUTF8(p_y[yi]),
+                         cheapr_is_na_str,
+                         cheapr_is_na_str);
   break;
 }
 default: {
@@ -448,13 +444,7 @@ case REALSXP: {
 
     double *p_x = REAL(x);
     double *p_y = REAL(y);
-
-    for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
-         yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
-      eq = (p_x[xi] != p_x[xi] || p_y[yi] != p_y[yi]) ?
-      NA_INTEGER : c_op(p_x[xi], p_y[yi]);
-      p_out[i] = eq;
-    }
+    CHEAPR_COMPARISON_LOOP(p_x[xi], p_y[yi], cheapr_is_na_dbl, cheapr_is_na_dbl);
     break;
   }
   case INTSXP: {
@@ -464,12 +454,7 @@ case REALSXP: {
 
     double *p_x = REAL(x);
     int *p_y = INTEGER(y);
-    for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
-         yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
-      eq = (p_x[xi] != p_x[xi] || p_y[yi] == NA_INTEGER) ?
-      NA_INTEGER : c_op(p_x[xi], p_y[yi]);
-      p_out[i] = eq;
-    }
+    CHEAPR_COMPARISON_LOOP(p_x[xi], p_y[yi], cheapr_is_na_int, cheapr_is_na_int);
     break;
   }
   case STRSXP: {
@@ -481,13 +466,10 @@ case REALSXP: {
 
     const SEXP *p_x = STRING_PTR_RO(x);
     const SEXP *p_y = STRING_PTR_RO(y);
-    for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
-         yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
-      eq = (p_x[xi] == NA_STRING || p_y[yi] == NA_STRING) ?
-      NA_INTEGER : c_op(Rf_translateCharUTF8(p_x[xi]),
-                        Rf_translateCharUTF8(p_y[yi]));
-      p_out[i] = eq;
-    }
+    CHEAPR_COMPARISON_LOOP(Rf_translateCharUTF8(p_x[xi]),
+                           Rf_translateCharUTF8(p_y[yi]),
+                           cheapr_is_na_str,
+                           cheapr_is_na_str);
     break;
   }
   default: {
@@ -514,15 +496,10 @@ case STRSXP: {
 
   const SEXP *p_x = STRING_PTR_RO(x);
   const SEXP *p_y = STRING_PTR_RO(y);
-
-  for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
-       yi = (++yi == yn) ? 0 : yi, n_true += (eq == 1), ++i){
-    eq = (p_x[xi] == NA_STRING || p_y[yi] == NA_STRING) ?
-    NA_INTEGER : c_op(Rf_translateCharUTF8(p_x[xi]),
-                      Rf_translateCharUTF8(p_y[yi]));
-    // NA_INTEGER : c_op(r_str_compare(p_x[xi], p_y[yi]), 0);
-    p_out[i] = eq;
-  }
+  CHEAPR_COMPARISON_LOOP(Rf_translateCharUTF8(p_x[xi]),
+                         Rf_translateCharUTF8(p_y[yi]),
+                         cheapr_is_na_str,
+                         cheapr_is_na_str);
   break;
 }
 default: {
@@ -547,3 +524,4 @@ default: {
 }
 
 #undef OP_SWITCH
+#undef CHEAPR_COMPARISON_LOOP

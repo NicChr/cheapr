@@ -1,9 +1,15 @@
 #include "cheapr_cpp.h"
 
+#define CHEAPR_COUNT_NA(_ISNA_)                                \
+for (R_xlen_t i = 0; i < n; ++i){                              \
+  count += _ISNA_(p_x[i]);                                     \
+}                                                              \
+
+
 R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
-  int n_prot = 0;
+  int NP = 0;
   int n_cores = n >= 100000 ? num_cores() : 1;
   bool do_parallel = n_cores > 1;
   switch ( TYPEOF(x) ){
@@ -15,10 +21,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
     int *p_x = INTEGER(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += (p_x[i] == NA_INTEGER);
+      CHEAPR_COUNT_NA(cheapr_is_na_int);
     } else {
       OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += (p_x[i] == NA_INTEGER);
+      CHEAPR_COUNT_NA(cheapr_is_na_int);
     }
     break;
   }
@@ -26,10 +32,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
     double *p_x = REAL(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += (p_x[i] != p_x[i]);
+      CHEAPR_COUNT_NA(cheapr_is_na_dbl);
     } else {
       OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += (p_x[i] != p_x[i]);
+      CHEAPR_COUNT_NA(cheapr_is_na_dbl);
     }
     break;
   }
@@ -37,10 +43,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
     const SEXP *p_x = STRING_PTR_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += (p_x[i] == NA_STRING);
+      CHEAPR_COUNT_NA(cheapr_is_na_str);
     } else {
       OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += (p_x[i] == NA_STRING);
+      CHEAPR_COUNT_NA(cheapr_is_na_str);
     }
     break;
   }
@@ -51,14 +57,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
     Rcomplex *p_x = COMPLEX(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i){
-        count += is_na_cplx(p_x[i]);
-      }
+      CHEAPR_COUNT_NA(cheapr_is_na_cplx);
     } else {
       OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i){
-        count += is_na_cplx(p_x[i]);
-      }
+      CHEAPR_COUNT_NA(cheapr_is_na_cplx);
     }
     break;
   }
@@ -74,15 +76,13 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   }
   default: {
-    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
-    ++n_prot;
-    SEXP r_true = Rf_protect(Rf_ScalarLogical(true));
-    ++n_prot;
+    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x)); ++NP;
+    SEXP r_true = Rf_protect(Rf_ScalarLogical(true)); ++NP;
     count = scalar_count(is_missing, r_true, true);
     break;
   }
   }
-  Rf_unprotect(n_prot);
+  Rf_unprotect(NP);
   return count;
 }
 
@@ -943,3 +943,5 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   Rf_unprotect(1);
   return out;
 }
+
+#undef CHEAPR_COUNT_NA

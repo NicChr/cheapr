@@ -36,8 +36,20 @@
 #define integer_max_ std::numeric_limits<int>::max()
 #endif
 
-#ifndef is_na_cplx
-#define is_na_cplx(x) (bool) (x.r != x.r) || (x.i != x.i)
+#ifndef cheapr_is_na_int
+#define cheapr_is_na_int(x) ((bool) (x == NA_INTEGER))
+#endif
+
+#ifndef cheapr_is_na_str
+#define cheapr_is_na_str(x) ((bool) (x == NA_STRING))
+#endif
+
+#ifndef cheapr_is_na_cplx
+#define cheapr_is_na_cplx(x) ((bool) (x.r != x.r) || (x.i != x.i))
+#endif
+
+#ifndef cheapr_is_na_dbl
+#define cheapr_is_na_dbl(x) ((bool) (x != x))
 #endif
 
 int num_cores();
