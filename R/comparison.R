@@ -35,14 +35,10 @@
 #   }
 # }
 
-## Like the R equivalents
-## except an attr '.n.true' is returned
-## showing the number of true values in lgl vec
-## This is very useful for further subsetting
-## When '.n.true' is 0, subsetting is very fast compare to base
-
-
-cheapr_compare <- function(x, y, .op){
+character_compare <- function(x, y, .op){
+  if (!( is.character(x) || is.character(y) )){
+    stop("Either x or y  must be a character vector")
+  }
   funs <- c("==", ">", "<", ">=", "<=", "!=", "=")
   fun <- if (is.character(.op)) .op else as.character(substitute(.op))
   type <- match(fun, funs)
@@ -55,29 +51,38 @@ cheapr_compare <- function(x, y, .op){
                `!=` = `!=`,
                `=` = stop("`=` cannot be used for comparisons, perhaps you meant `==`?"),
                stop("Unsupported comparison"))
-  if (!is.object(x) && is.atomic(x) && (is.numeric(x) || is.character(x)) &&
-      !is.object(y) && is.atomic(y) && (is.numeric(y) || is.character(y))){
-    cpp_compare(x, y, type)
-  } else {
-    do.call(op, list(x, y))
-  }
+  cpp_character_compare(x, y, type)
 }
 
-`%v==%` <- function(e1, e2){
-  cheapr_compare(e1, e2, "==")
+# Comparison operators for character vectors
+#
+# Currently (and this is unlikely to change), only `==` and `!=` is supported
+# as cheapr is unicode un-aware and therefore can't make comparisons in
+# different locales. For this type of comparison, the 'stringi' package
+# can be used.
+# These operators are somewhat cheaper when `x` or `y` is numeric and the
+# other is a character vector because the entire vector isn't coerced
+# to character. For floating-point vectors it's likely the outputs
+# will not match base R operator outputs.
+#
+#
+# A logical vector reflecting the requested comparison.
+#
+`%ch==%` <- function(x, y){
+  cpp_character_compare(x, y, 1L)
 }
-`%v!=%` <- function(e1, e2){
-  cheapr_compare(e1, e2, "!=")
+`%ch!=%` <- function(x, y){
+  cpp_character_compare(x, y, 6L)
 }
-`%v>%` <- function(e1, e2){
-  cheapr_compare(e1, e2, ">")
+`%ch>%` <- function(x, y){
+  character_compare(x, y, ">")
 }
-`%v<%` <- function(e1, e2){
-  cheapr_compare(e1, e2, "<")
+`%ch<%` <- function(x, y){
+  character_compare(x, y, "<")
 }
-`%v>=%` <- function(e1, e2){
-  cheapr_compare(e1, e2, ">=")
+`%ch>=%` <- function(x, y){
+  character_compare(x, y, ">=")
 }
-`%v<=%` <- function(e1, e2){
-  cheapr_compare(e1, e2, "<=")
+`%ch<=%` <- function(x, y){
+  character_compare(x, y, "<=")
 }
