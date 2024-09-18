@@ -133,39 +133,38 @@ SEXP cpp_list_as_df(SEXP x) {
   }
 }
 
-[[cpp11::register]]
-void cpp_check_nested_lengths(SEXP x, SEXP y){
-  R_xlen_t n1 = Rf_xlength(x);
-  R_xlen_t n2 = Rf_xlength(y);
-  if (n1 != n2){
-    Rf_error("x and y must have the same length");
-  }
-  if (Rf_isVectorList(x) && Rf_isVectorList(y)){
-    R_xlen_t n3, n4;
-    const SEXP *p_x = VECTOR_PTR_RO(x);
-    const SEXP *p_y = VECTOR_PTR_RO(y);
-
-    for (R_xlen_t i = 0; i < n1; ++i){
-      bool xlist = Rf_isVectorList(p_x[i]);
-      bool ylist = Rf_isVectorList(p_y[i]);
-      int both_lists = xlist + ylist;
-      if (both_lists == 1){
-        Rf_error("x and y must have identical nested lengths");
-      } else if (both_lists == 2){
-        // Recurse back through the same function at this point
-        cpp_check_nested_lengths(p_x[i], p_y[i]);
-      } else {
-        n3 = Rf_xlength(p_x[i]);
-        n4 = Rf_xlength(p_y[i]);
-        if (n3 != n4){
-          Rf_error("x and y must have identical nested lengths");
-        }
-      }
-    }
-  } else if (!(!Rf_isVectorList(x) && !Rf_isVectorList(y))){
-    Rf_error("x and y must either be both lists or both not lists");
-  }
-}
+// void cpp_check_nested_lengths(SEXP x, SEXP y){
+//   R_xlen_t n1 = Rf_xlength(x);
+//   R_xlen_t n2 = Rf_xlength(y);
+//   if (n1 != n2){
+//     Rf_error("x and y must have the same length");
+//   }
+//   if (Rf_isVectorList(x) && Rf_isVectorList(y)){
+//     R_xlen_t n3, n4;
+//     const SEXP *p_x = VECTOR_PTR_RO(x);
+//     const SEXP *p_y = VECTOR_PTR_RO(y);
+//
+//     for (R_xlen_t i = 0; i < n1; ++i){
+//       bool xlist = Rf_isVectorList(p_x[i]);
+//       bool ylist = Rf_isVectorList(p_y[i]);
+//       int both_lists = xlist + ylist;
+//       if (both_lists == 1){
+//         Rf_error("x and y must have identical nested lengths");
+//       } else if (both_lists == 2){
+//         // Recurse back through the same function at this point
+//         cpp_check_nested_lengths(p_x[i], p_y[i]);
+//       } else {
+//         n3 = Rf_xlength(p_x[i]);
+//         n4 = Rf_xlength(p_y[i]);
+//         if (n3 != n4){
+//           Rf_error("x and y must have identical nested lengths");
+//         }
+//       }
+//     }
+//   } else if (!(!Rf_isVectorList(x) && !Rf_isVectorList(y))){
+//     Rf_error("x and y must either be both lists or both not lists");
+//   }
+// }
 
 // SEXP cpp_shallow_copy(SEXP x){
 //   if (Rf_isVectorList(x)){

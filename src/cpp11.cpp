@@ -145,14 +145,6 @@ extern "C" SEXP _cheapr_cpp_list_as_df(SEXP x) {
     return cpp11::as_sexp(cpp_list_as_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// lists.cpp
-void cpp_check_nested_lengths(SEXP x, SEXP y);
-extern "C" SEXP _cheapr_cpp_check_nested_lengths(SEXP x, SEXP y) {
-  BEGIN_CPP11
-    cpp_check_nested_lengths(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y));
-    return R_NilValue;
-  END_CPP11
-}
 // nas.cpp
 SEXP cpp_num_na(SEXP x, bool recursive);
 extern "C" SEXP _cheapr_cpp_num_na(SEXP x, SEXP recursive) {
@@ -193,6 +185,20 @@ SEXP cpp_col_na_counts(SEXP x);
 extern "C" SEXP _cheapr_cpp_col_na_counts(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// nas.cpp
+SEXP cpp_col_any_na(SEXP x, bool names);
+extern "C" SEXP _cheapr_cpp_col_any_na(SEXP x, SEXP names) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_col_any_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(names)));
+  END_CPP11
+}
+// nas.cpp
+SEXP cpp_col_all_na(SEXP x, bool names);
+extern "C" SEXP _cheapr_cpp_col_all_na(SEXP x, SEXP names) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_col_all_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(names)));
   END_CPP11
 }
 // nas.cpp
@@ -433,7 +439,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_all_na",               (DL_FUNC) &_cheapr_cpp_all_na,               3},
     {"_cheapr_cpp_any_na",               (DL_FUNC) &_cheapr_cpp_any_na,               2},
     {"_cheapr_cpp_character_compare",    (DL_FUNC) &_cheapr_cpp_character_compare,    3},
-    {"_cheapr_cpp_check_nested_lengths", (DL_FUNC) &_cheapr_cpp_check_nested_lengths, 2},
+    {"_cheapr_cpp_col_all_na",           (DL_FUNC) &_cheapr_cpp_col_all_na,           2},
+    {"_cheapr_cpp_col_any_na",           (DL_FUNC) &_cheapr_cpp_col_any_na,           2},
     {"_cheapr_cpp_col_na_counts",        (DL_FUNC) &_cheapr_cpp_col_na_counts,        1},
     {"_cheapr_cpp_count_val",            (DL_FUNC) &_cheapr_cpp_count_val,            3},
     {"_cheapr_cpp_dbl_sequence",         (DL_FUNC) &_cheapr_cpp_dbl_sequence,         3},

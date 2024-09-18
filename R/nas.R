@@ -187,10 +187,10 @@ col_all_na <- function(x, names = FALSE){
 #' @rdname is_na
 #' @export
 row_any_na <- function(x, names = FALSE){
-  row_na_counts(x, names = names) > 0L
+  row_na_counts(x, names = names) != 0L
 }
 #' @rdname is_na
 #' @export
 col_any_na <- function(x, names = FALSE){
-  col_na_counts(x, names = names) > 0L
+  col_na_counts(x, names = names) != 0L
 }

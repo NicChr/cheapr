@@ -80,10 +80,6 @@ cpp_list_as_df <- function(x) {
   .Call(`_cheapr_cpp_list_as_df`, x)
 }
 
-cpp_check_nested_lengths <- function(x, y) {
-  invisible(.Call(`_cheapr_cpp_check_nested_lengths`, x, y))
-}
-
 cpp_num_na <- function(x, recursive) {
   .Call(`_cheapr_cpp_num_na`, x, recursive)
 }
@@ -106,6 +102,14 @@ cpp_row_na_counts <- function(x) {
 
 cpp_col_na_counts <- function(x) {
   .Call(`_cheapr_cpp_col_na_counts`, x)
+}
+
+cpp_col_any_na <- function(x, names) {
+  .Call(`_cheapr_cpp_col_any_na`, x, names)
+}
+
+cpp_col_all_na <- function(x, names) {
+  .Call(`_cheapr_cpp_col_all_na`, x, names)
 }
 
 cpp_matrix_row_na_counts <- function(x) {

@@ -42,13 +42,40 @@ new_df <- function(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE){
   class(out) <- "data.frame"
   out
 }
+as_df <- function(x){
+  if (inherits(x, "data.frame")){
+    out <- x
+  } else if (is.atomic(x) && length(dim(x)) < 2){
+    out <- cpp_list_rm_null(list(name = names(x), value = x))
+    attr(out, "row.names") <- .set_row_names(NROW(x))
+    class(out) <- "data.frame"
+  } else {
+    # Plain list
+    if (!is.object(x) && is.list(x)){
+      out <- list_as_df(do.call(recycle, as.list(x)))
+    } else {
+      out <- as.data.frame(x, stringsAsFactors = FALSE)
+    }
+    if (is.null(names(out))){
+      names(out) <- paste0("col_", seq_along(out))
+    }
+    non_empty <- nzchar(names(out))
+    if (!all(non_empty)){
+      empty <- which_(non_empty, invert = TRUE)
+      names(out)[empty] <- paste0("col_", empty)
+    }
+  }
+  out
+}
 unique_name_repair <- function(x, .sep = "..."){
-  if (is.null(x)) {
+  if (is.null(x)){
     return(x)
   }
   x <- as.character(x)
   col_seq <- seq_along(x)
-  which_dup <- which_(collapse::fduplicated(x, all = TRUE))
+  which_dup <- which(collapse::fduplicated(x, all = TRUE))
   x[which_dup] <- paste0(x[which_dup], .sep, col_seq[which_dup])
+  which_empty <- which_(nzchar(x), invert = TRUE)
+  x[which_empty] <- paste0(x[which_empty], .sep, col_seq[which_empty])
   x
 }

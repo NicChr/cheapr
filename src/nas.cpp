@@ -495,6 +495,183 @@ SEXP cpp_col_na_counts(SEXP x){
   return out;
 }
 
+[[cpp11::register]]
+SEXP cpp_col_any_na(SEXP x, bool names){
+  if (!Rf_isFrame(x)){
+    Rf_error("x must be a data frame");
+  }
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  int NP = 0;
+  int num_row = cpp_df_nrow(x);
+  int num_col = Rf_length(x);
+
+  SEXP out = Rf_protect(Rf_allocVector(LGLSXP, num_col)); ++NP;
+  int *p_out = INTEGER(out);
+
+  for (int j = 0; j < num_col; ++j){
+    switch ( TYPEOF(p_x[j]) ){
+    case VECSXP: {
+      if (Rf_isObject(p_x[j])){
+      SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](p_x[j]));
+      cpp11::function r_any = cpp11::package("base")["any"];
+      ++NP;
+      if (Rf_xlength(is_missing) != num_row){
+        int int_nrows = num_row;
+        int element_length = Rf_xlength(is_missing); ++NP;
+        SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
+        Rf_unprotect(NP);
+        Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
+                 CHAR(STRING_ELT(names, j)), element_length, int_nrows);
+      }
+      SEXP r_any_true = Rf_protect(r_any(is_missing)); ++NP;
+      p_out[j] = Rf_asLogical(r_any_true);
+    } else {
+      bool any_na = false;
+      bool all_na;
+      for (int i = 0; i < num_row; ++i){
+        // x[[i]] is only 'NA' if all nested elements are NA
+        all_na = cpp_all_na(VECTOR_ELT(p_x[j], i), false, true);
+        if (all_na){
+          any_na = true;
+          break;
+        }
+      }
+      p_out[j] = any_na;
+    }
+    break;
+    }
+    default: {
+      p_out[j] = cpp_any_na(p_x[j], false);
+      break;
+    }
+    }
+  }
+  if (names) cpp_copy_names(x, out);
+  Rf_unprotect(NP);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_col_all_na(SEXP x, bool names){
+  if (!Rf_isFrame(x)){
+    Rf_error("x must be a data frame");
+  }
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  int NP = 0;
+  int num_row = cpp_df_nrow(x);
+  int num_col = Rf_length(x);
+
+  SEXP out = Rf_protect(Rf_allocVector(LGLSXP, num_col)); ++NP;
+  int *p_out = INTEGER(out);
+
+  for (int j = 0; j < num_col; ++j){
+    switch ( TYPEOF(p_x[j]) ){
+    case VECSXP: {
+      if (Rf_isObject(p_x[j])){
+      SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](p_x[j]));
+      cpp11::function r_all = cpp11::package("base")["all"];
+      ++NP;
+      if (Rf_xlength(is_missing) != num_row){
+        int int_nrows = num_row;
+        int element_length = Rf_xlength(is_missing); ++NP;
+        SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));
+        Rf_unprotect(NP);
+        Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
+                 CHAR(STRING_ELT(names, j)), element_length, int_nrows);
+      }
+      SEXP r_all_true = Rf_protect(r_all(is_missing)); ++NP;
+      p_out[j] = Rf_asLogical(r_all_true);
+    } else {
+      bool all_na2 = true;
+      bool all_na;
+      for (int i = 0; i < num_row; ++i){
+        // x[[i]] is only 'NA' if all nested elements are NA
+        all_na = cpp_all_na(VECTOR_ELT(p_x[j], i), false, true);
+        if (!all_na){
+          all_na2 = false;
+          break;
+        }
+      }
+      p_out[j] = all_na2;
+    }
+    break;
+    }
+    default: {
+      p_out[j] = cpp_all_na(p_x[j], true, false);
+      break;
+    }
+    }
+  }
+  if (names) cpp_copy_names(x, out);
+  Rf_unprotect(NP);
+  return out;
+}
+
+// INCOMPLETE
+// SEXP cpp_row_any_na(SEXP x, bool names){
+//   if (!Rf_isFrame(x)){
+//     Rf_error("x must be a data frame");
+//   }
+//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//
+//   int NP = 0;
+//   int num_row = cpp_df_nrow(x);
+//   int num_col = Rf_length(x);
+//
+//   SEXP out = Rf_protect(Rf_allocVector(LGLSXP, num_row)); ++NP;
+//   int *p_out = INTEGER(out);
+//
+//   bool row_has_na = false;
+//
+//   for (int i = 0; i < num_row; ++i){
+//     row_has_na = false;
+//     for (int j = 0; j < num_col; ++j){
+//       switch ( TYPEOF(p_x[j]) ){
+//       case LGLSXP:
+//       case INTSXP: {
+//         if (cheapr_is_na_int(INTEGER(p_x[j])[i])){
+//         row_has_na = true;
+//         break;
+//       }
+//         break;
+//       }
+//       case REALSXP: {
+//         if (Rf_inherits(p_x[j], "integer64")){
+//         long long *p_xj = (long long *) REAL(p_x[j]);
+//         if (cheapr_is_na_int64(p_xj[i])){
+//           row_has_na = true;
+//           break;
+//         }
+//       } else {
+//         if (cheapr_is_na_dbl(REAL(p_x[j])[i])){
+//           row_has_na = true;
+//           break;
+//         }
+//       }
+//         break;
+//       }
+//       case STRSXP: {
+//         if (cheapr_is_na_str(STRING_PTR_RO(p_x[j])[i])){
+//         row_has_na = true;
+//         break;
+//       }
+//         break;
+//       }
+//       default: {
+//         Rf_unprotect(NP);
+//         Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(p_x[j])));
+//       }
+//       }
+//     }
+//     p_out[i] = row_has_na;
+//   }
+//   if (names) cpp_copy_names(x, out);
+//   Rf_unprotect(NP);
+//   return out;
+// }
+
 R_xlen_t cpp_clean_threshold(double threshold, bool threshold_is_prop, R_xlen_t n){
   if (threshold != threshold){
     Rf_error("threshold cannot be NA");
