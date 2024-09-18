@@ -56,7 +56,7 @@ SEXP cpp_set_abs(SEXP x){
   cpp_check_numeric(x);
   SEXP out = Rf_protect(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = n >= 100000 ? num_cores() : 1;
+  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = INTEGER(out);
@@ -91,7 +91,7 @@ SEXP cpp_set_floor(SEXP x){
   cpp_check_numeric(x);
   SEXP out = Rf_protect(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = n >= 100000 ? num_cores() : 1;
+  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
     double *p_out = REAL(out);
     if (n_cores > 1){
@@ -111,7 +111,7 @@ SEXP cpp_set_ceiling(SEXP x){
   cpp_check_numeric(x);
   SEXP out = Rf_protect(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = n >= 100000 ? num_cores() : 1;
+  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
     double *p_out = REAL(out);
     if (n_cores > 1){
@@ -131,7 +131,7 @@ SEXP cpp_set_trunc(SEXP x){
   cpp_check_numeric(x);
   SEXP out = Rf_protect(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = n >= 100000 ? num_cores() : 1;
+  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
     double *p_out = REAL(out);
     if (n_cores > 1){
@@ -151,7 +151,7 @@ SEXP cpp_set_change_sign(SEXP x){
   cpp_check_numeric(x);
   SEXP out = Rf_protect(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = n >= 100000 ? num_cores() : 1;
+  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = INTEGER(out);
@@ -193,7 +193,7 @@ SEXP cpp_set_change_sign(SEXP x){
 SEXP cpp_set_exp(SEXP x){
   cpp_check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = n >= 100000 ? num_cores() : 1;
+  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
@@ -217,7 +217,7 @@ SEXP cpp_set_exp(SEXP x){
 SEXP cpp_set_sqrt(SEXP x){
   cpp_check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = n >= 100000 ? num_cores() : 1;
+  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
@@ -245,7 +245,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
   SEXP out = Rf_protect(check_transform_altrep(x)); ++NP;
   R_xlen_t xn = Rf_xlength(out);
   R_xlen_t yn = Rf_xlength(y);
-  int n_cores = xn >= 100000 ? num_cores() : 1;
+  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
   if (xn > 0){
     if (yn > xn){
@@ -332,7 +332,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
   ++NP;
   R_xlen_t xn = Rf_xlength(out);
   R_xlen_t yn = Rf_xlength(y);
-  int n_cores = xn >= 100000 ? num_cores() : 1;
+  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (xn > 0){
     if (yn > xn){
       Rf_unprotect(NP);
@@ -417,7 +417,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
   ++NP;
   R_xlen_t xn = Rf_xlength(out);
   R_xlen_t yn = Rf_xlength(y);
-  int n_cores = xn >= 100000 ? num_cores() : 1;
+  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (xn > 0){
     if (yn > xn){
       Rf_unprotect(NP);
@@ -501,7 +501,7 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
   cpp_check_numeric(y);
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t yn = Rf_xlength(y);
-  int n_cores = xn >= 100000 ? num_cores() : 1;
+  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (xn > 0){
     if (yn > xn){
       Rf_error("length(y) must be <= length(x)");
@@ -552,7 +552,7 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
   cpp_check_numeric(y);
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t yn = Rf_xlength(y);
-  int n_cores = xn >= 100000 ? num_cores() : 1;
+  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (xn > 0){
     if (yn > xn){
       Rf_error("length(y) must be <= length(x)");
@@ -618,7 +618,7 @@ SEXP cpp_set_log(SEXP x, SEXP base){
       Rf_error("length(base) must be be non-zero");
     }
   }
-  int n_cores = xn >= 100000 ? num_cores() : 1;
+  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
@@ -662,7 +662,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
       Rf_error("length(digits) must be be non-zero");
     }
   }
-  int n_cores = xn >= 100000 ? num_cores() : 1;
+  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   // We don't need to round integers.
   if (Rf_isReal(out)){
     switch (TYPEOF(digits)){
@@ -747,6 +747,3 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
   Rf_unprotect(1);
   return out;
 }
-
-#undef CHEAPR_MATH_INT_LOOP
-#undef CHEAPR_MATH_REAL_LOOP

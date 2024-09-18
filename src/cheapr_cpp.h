@@ -52,6 +52,18 @@
 #define cheapr_is_na_dbl(x) ((bool) (x != x))
 #endif
 
+#ifndef NA_INTEGER64
+#define NA_INTEGER64 LLONG_MIN
+#endif
+
+#ifndef cheapr_is_na_int64
+#define cheapr_is_na_int64(x) ((bool) (x == NA_INTEGER64))
+#endif
+
+#ifndef CHEAPR_OMP_THRESHOLD
+#define CHEAPR_OMP_THRESHOLD 100000
+#endif
+
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);

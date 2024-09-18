@@ -100,14 +100,6 @@ cpp_is_na <- function(x) {
   .Call(`_cheapr_cpp_is_na`, x)
 }
 
-cpp_which_na <- function(x) {
-  .Call(`_cheapr_cpp_which_na`, x)
-}
-
-cpp_which_not_na <- function(x) {
-  .Call(`_cheapr_cpp_which_not_na`, x)
-}
-
 cpp_row_na_counts <- function(x) {
   .Call(`_cheapr_cpp_row_na_counts`, x)
 }
@@ -238,4 +230,12 @@ cpp_which_ <- function(x, invert) {
 
 cpp_which_val <- function(x, value, invert) {
   .Call(`_cheapr_cpp_which_val`, x, value, invert)
+}
+
+cpp_which_na <- function(x) {
+  .Call(`_cheapr_cpp_which_na`, x)
+}
+
+cpp_which_not_na <- function(x) {
+  .Call(`_cheapr_cpp_which_not_na`, x)
 }

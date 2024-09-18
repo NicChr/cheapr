@@ -182,20 +182,6 @@ extern "C" SEXP _cheapr_cpp_is_na(SEXP x) {
   END_CPP11
 }
 // nas.cpp
-SEXP cpp_which_na(SEXP x);
-extern "C" SEXP _cheapr_cpp_which_na(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_which_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// nas.cpp
-SEXP cpp_which_not_na(SEXP x);
-extern "C" SEXP _cheapr_cpp_which_not_na(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_which_not_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// nas.cpp
 SEXP cpp_row_na_counts(SEXP x);
 extern "C" SEXP _cheapr_cpp_row_na_counts(SEXP x) {
   BEGIN_CPP11
@@ -424,6 +410,20 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
 extern "C" SEXP _cheapr_cpp_which_val(SEXP x, SEXP value, SEXP invert) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_which_val(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value), cpp11::as_cpp<cpp11::decay_t<bool>>(invert)));
+  END_CPP11
+}
+// which.cpp
+SEXP cpp_which_na(SEXP x);
+extern "C" SEXP _cheapr_cpp_which_na(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_which_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// which.cpp
+SEXP cpp_which_not_na(SEXP x);
+extern "C" SEXP _cheapr_cpp_which_not_na(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_which_not_na(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 
