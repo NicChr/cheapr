@@ -1,5 +1,8 @@
 # cheapr (Development version)
 
+* Limited support added for 'integer64' objects when counting and 
+finding `NA` values.
+
 * New functions `new_df` and `named_dots`.
 
 * All factor levels utilities now begin with the prefix 'levels_'.
