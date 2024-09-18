@@ -45,7 +45,8 @@ new_df <- function(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE){
 as_df <- function(x){
   if (inherits(x, "data.frame")){
     out <- x
-  } else if (is.atomic(x) && length(dim(x)) < 2){
+    class(out) <- "data.frame"
+  } else if (is.null(x) || (is.atomic(x) && length(dim(x)) < 2)){
     out <- cpp_list_rm_null(list(name = names(x), value = x))
     attr(out, "row.names") <- .set_row_names(NROW(x))
     class(out) <- "data.frame"
