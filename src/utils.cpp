@@ -65,6 +65,45 @@ SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
 }
 
+bool is_int64(SEXP x){
+  return Rf_isReal(x) && Rf_inherits(x, "integer64");
+}
+
+[[cpp11::register]]
+SEXP cpp_int64_to_double(SEXP x){
+  if (!is_int64(x)){
+    Rf_error("x must be an integer64");
+  }
+  R_xlen_t n = Rf_xlength(x);
+
+  SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
+  double *p_out = REAL(out);
+
+  long long *p_x = (long long *) REAL(x);
+
+  for (R_xlen_t i = 0; i < n; ++i){
+    p_out[i] = cheapr_is_na_int64(p_x[i]) ? NA_REAL : (double) p_x[i];
+  }
+  Rf_unprotect(1);
+  return out;
+}
+// The reverse operation but don't need this
+// SEXP cpp_double_to_int64(SEXP x){
+//   R_xlen_t n = Rf_xlength(x);
+//
+//   SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
+//   long long *p_out = (long long *) REAL(out);
+//   double *p_x = REAL(x);
+//
+//   for (R_xlen_t i = 0; i < n; ++i){
+//     p_out[i] = cheapr_is_na_dbl(p_x[i]) ? NA_INTEGER64 : (long long) p_x[i];
+//   }
+//   Rf_classgets(out, Rf_mkString("integer64"));
+//   Rf_unprotect(1);
+//   return out;
+// }
+
+
 // Potentially useful for rolling calculations
 // Computes the rolling number of true values in a given
 // series of consecutive true values

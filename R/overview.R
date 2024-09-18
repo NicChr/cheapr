@@ -58,6 +58,13 @@ overview.numeric <- function(x, hist = FALSE, digits = getOption("cheapr.digits"
 }
 #' @rdname overview
 #' @export
+overview.integer64 <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  out <- overview(cpp_int64_to_double(x), hist = hist, digits = digits)
+  out$numeric$class <- class(x)[1]
+  out
+}
+#' @rdname overview
+#' @export
 overview.character <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
   out <- overview(list_as_df(list(x = as.character(x))), hist = hist, digits = digits)
   out$cols <- NA_integer_
@@ -115,7 +122,10 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   }
   lgl_vars <- data_nms[vapply(skim_df, is.logical, FALSE)]
   num_vars <- data_nms[vapply(skim_df, function(x) inherits(x,
-                                                            c("integer", "numeric")), FALSE)]
+                                                            c("integer", "numeric", "integer64")), FALSE)]
+  ### SUBSET OF NUM_VARS
+  int64_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "integer64"), FALSE)]
+
   date_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "Date"), FALSE)]
   datetime_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "POSIXt"),  FALSE)]
   ts_vars <- data_nms[vapply(skim_df, function(x) inherits(x, c("ts", "zoo")),  FALSE)]
@@ -158,6 +168,10 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   if (hist){
     num_out$hist <- NA_character_[value_size]
   }
+
+  ## Coerce int64 to double
+  num_data <- transform_all(num_data, cpp_int64_to_double, int64_vars)
+
   if (N > 0L && length(which_num) > 0) {
     num_out$n_missing <- pluck_row(summarise_all(num_data, num_na), 1)
     num_out$p_complete <- pluck_row(summarise_all(num_data, prop_complete), 1)
@@ -412,8 +426,8 @@ prop_missing <- function(x, recursive = TRUE){
 prop_complete <- function(x, recursive = TRUE){
   1 - prop_missing(x, recursive = recursive)
 }
-transform_all <- function(data, .fn){
-  for (col in names(data)){
+transform_all <- function(data, .fn, .cols = names(data)){
+  for (col in .cols){
     data[[col]] <- .fn(data[[col]])
   }
   data

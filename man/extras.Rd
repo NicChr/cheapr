@@ -4,6 +4,7 @@
 \alias{setdiff_}
 \alias{intersect_}
 \alias{cut_numeric}
+\alias{cut.integer64}
 \alias{\%in_\%}
 \alias{\%!in_\%}
 \alias{enframe_}
@@ -17,6 +18,17 @@ setdiff_(x, y, dups = TRUE)
 intersect_(x, y, dups = TRUE)
 
 cut_numeric(
+  x,
+  breaks,
+  labels = NULL,
+  include.lowest = FALSE,
+  right = TRUE,
+  dig.lab = 3L,
+  ordered_result = FALSE,
+  ...
+)
+
+\method{cut}{integer64}(
   x,
   breaks,
   labels = NULL,

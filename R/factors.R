@@ -55,6 +55,10 @@ factor_ <- function(
   if (is.null(x)){
     x <- integer()
   }
+  is_int64 <- inherits(x, "integer64")
+  if (is_int64){
+    x <- cpp_int64_to_double(x)
+  }
   if (is.null(levels)){
     lvls <- collapse::funique(x, sort = order, na.last = TRUE)
   } else {
@@ -70,21 +74,17 @@ factor_ <- function(
   out <- collapse::fmatch(x, lvls, overid = 2L)
   if (inherits(lvls, "data.frame")){
     fct_lvls <- do.call(paste, c(lvls, list(sep = "_")))
-  } else {
+  } else if (is_int64){
+    # fct_lvls <- formatC(lvls, format = "f", drop0trailing = TRUE)
+    fct_lvls <- format(lvls, scientific = FALSE, trim = TRUE)
+    } else {
     fct_lvls <- as.character(lvls)
   }
   if (inherits(x, "POSIXt") && collapse::any_duplicated(fct_lvls)){
     fct_lvls <- paste(fct_lvls, as.POSIXlt(lvls)$zone)
   }
-  # if (!identical(levels, labels)){
-  #   fct_lvls <- as.character(labels)
-  # }
   attr(out, "levels") <- fct_lvls
   class(out) <- c(if (ordered) "ordered" else character(), "factor")
-  # class(out) <- c("cheapr_factor", if (ordered) "ordered" else character(),
-  #                 # if (!na_exclude) "na_included" else character(),
-  #                 "factor")
-  # attr(out, "data") <- x
   out
 }
 #' @export
@@ -96,49 +96,7 @@ as_factor <- function(x){
     factor_(x)
   }
 }
-# print.cheapr_factor <- function(x, ...){
-#   class(x) <- setdiff(class(x), "cheapr_factor")
-#   attr(x, "data") <- NULL
-#   # class(x) <- setdiff(class(x), "cheapr_factor")
-#   # NextMethod("print")
-#   print(x, ...)
-# }
-# as.character.cheapr_factor <- function(x, ...){
-#   data <- attr(x, "data")
-#   if (!is.null(data)){
-#     x <- data
-#   }
-#   as.character(x, ...)
-#   # x <- attr(x, "data")
-#   # class(x) <- setdiff(class(x), "cheapr_factor")
-#   # NextMethod("as.character")
-# }
-# `[.cheapr_factor` <- function(x, ...){
-#   data <- attr(x, "data")
-#   attr(x, "data") <- NULL
-#   out <- NextMethod("[")
-#   if (!is.null(data)){
-#     attr(out, "data") <- data[...]
-#   }
-#   out
-# }
-#
-# as.double.cheapr_factor <- function(x, ...){
-#   data <- attr(x, "data")
-#   if (!is.null(data)){
-#     x <- data
-#   }
-#   as.double(x, ...)
-#   # NextMethod("as.numeric")
-# }
-# as.integer.cheapr_factor <- function(x, ...){
-#   data <- attr(x, "data")
-#   if (!is.null(data)){
-#     x <- data
-#   }
-#   as.integer(x, ...)
-#   # NextMethod("as.integer")
-# }
+
 #' @export
 #' @rdname factors
 levels_factor <- function(x){
@@ -167,16 +125,11 @@ which_unused_levels <- function(x){
 #' @rdname factors
 levels_used <- function(x){
   levels(x)[which_used_levels(x)]
-  # levels(x)[which_in(seq_along(levels(x)), unclass(x))]
-  # factor_as_character(intersect_(levels_factor(x), x))
 }
 #' @export
 #' @rdname factors
 levels_unused <- function(x){
   levels(x)[which_unused_levels(x)]
-  # levels(x)[which_not_in(seq_along(levels(x)), unclass(x))]
-  # factor_as_character(setdiff_(levels_factor(x), x))
-  # as.character(setdiff_(levels_factor(x), x))
 }
 #' @export
 #' @rdname factors
@@ -235,35 +188,8 @@ levels_drop_na <- function(x){
     attr(out, "levels") <- new_lvls
 
     out
-
-    ### Alternative
-
-    # which_lvls <- seq_along(lvls)[-which_na_lvl]
-    # out <- which_lvls[unclass(x)]
-    #
-    # attributes(out) <- attributes(x)
-    # attr(out, "levels") <- levels(x)[which_lvls]
-    #
-    # out
   }
 }
-
-# Alternative
-# drop_levels <- function(x){
-#   lvls <- levels(x)
-#   n_lvls <- length(lvls)
-#   used_lvls <- intersect_(levels_factor(x), x)
-#   if (length(used_lvls) == n_lvls){
-#     x
-#   } else {
-#    factor_(x, levels = used_lvls)
-#     # sub alternative
-#     # out <- collapse::fmatch(lvls, used_lvls, overid = 2L)[unclass(x)]
-#     # attributes(out) <- attributes(x)
-#     # attr(out, "levels") <- as.character(used_lvls)
-#   }
-# }
-
 #' @export
 #' @rdname factors
 levels_drop <- function(x){
@@ -273,7 +199,6 @@ levels_drop <- function(x){
   if (length(which_used) == n_lvls){
     x
   } else {
-    # out <- collapse::fmatch(unclass(x), which_used)
     out <- which_used[unclass(x)]
     attributes(out) <- attributes(x)
     attr(out, "levels") <- levels(x)[which_used]
@@ -295,15 +220,4 @@ levels_reorder <- function(x, order_by, decreasing = FALSE){
     ordered_levels <- levels(x)[o]
     factor_(x, levels = ordered_levels)
   }
-  # out <- collapse::fmatch(seq_along(levels(x)), o, overid = 2L)[unclass(x)]
-  # Alternative
-  # out <- collapse::fmatch(x, ordered_levels, overid = 2L)
-
 }
-
-# rename_levels <- function(x, names){
-#   check_length(names, length(levels(x)))
-#   levels(x) <- names
-#   x
-# }
-

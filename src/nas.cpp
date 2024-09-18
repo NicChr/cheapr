@@ -50,7 +50,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case REALSXP: {
-    if (Rf_inherits(x, "integer64")){
+    if (is_int64(x)){
     long long *p_x = (long long *)REAL(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
@@ -140,7 +140,7 @@ bool cpp_any_na(SEXP x, bool recursive){
     break;
   }
   case REALSXP: {
-    if (Rf_inherits(x, "integer64")){
+    if (is_int64(x)){
     long long *p_x = (long long *) REAL(x);
     CHEAPR_ANY_NA(cheapr_is_na_int64);
   } else {
@@ -202,7 +202,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
     break;
   }
   case REALSXP: {
-    if (Rf_inherits(x, "integer64")){
+    if (is_int64(x)){
     long long *p_x = (long long *) REAL(x);
     CHEAPR_ALL_NA(cheapr_is_na_int64);
   } else {
@@ -276,7 +276,7 @@ SEXP cpp_is_na(SEXP x){
   case REALSXP: {
     out = Rf_protect(Rf_allocVector(LGLSXP, n));
     int *p_out = LOGICAL(out);
-    if (Rf_inherits(x, "integer64")){
+    if (is_int64(x)){
       long long *p_x = (long long *) REAL(x);
       if (n_cores > 1){
         OMP_PARALLEL_FOR_SIMD
@@ -377,7 +377,7 @@ SEXP cpp_row_na_counts(SEXP x){
       break;
     }
     case REALSXP: {
-      if (Rf_inherits(p_x[j], "integer64")){
+      if (is_int64(p_x[j])){
       long long *p_xj = (long long *) REAL(p_x[j]);
 #pragma omp parallel num_threads(n_cores) if(do_parallel)
 #pragma omp for simd
@@ -638,7 +638,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //         break;
 //       }
 //       case REALSXP: {
-//         if (Rf_inherits(p_x[j], "integer64")){
+//         if (is_int64(p_x[j])){
 //         long long *p_xj = (long long *) REAL(p_x[j]);
 //         if (cheapr_is_na_int64(p_xj[i])){
 //           row_has_na = true;
@@ -724,7 +724,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
     break;
   }
   case REALSXP: {
-    if (Rf_inherits(x, "integer64")){
+    if (is_int64(x)){
     long long *p_x = (long long *) REAL(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
@@ -796,7 +796,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
     break;
   }
   case REALSXP: {
-    if (Rf_inherits(x, "integer64")){
+    if (is_int64(x)){
     long long *p_x = (long long *) REAL(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){

@@ -119,6 +119,16 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
 }
 #' @export
 #' @rdname extras
+cut.integer64 <- function(x, breaks, labels = NULL, include.lowest = FALSE,
+                          right = TRUE, dig.lab = 3L, ordered_result = FALSE, ...){
+  cut_numeric(cpp_int64_to_double(x), breaks = breaks,
+              labels = labels, include.lowest = include.lowest,
+              right = right, dig.lab = dig.lab, ordered_result = ordered_result,
+              ...)
+
+}
+#' @export
+#' @rdname extras
 `%in_%` <- function(x, table){
   collapse::fmatch(x, table, overid = 2L, nomatch = 0L) > 0L
 }
@@ -216,8 +226,8 @@ sample_ <- function(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL){
 # }
 duplicated_ <- function(x, .all = FALSE){
   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
-  out <- (attr(groups, "group.sizes") > 1L)[groups]
-  # out <- attr(groups, "group.sizes")[groups] %v>% 1L
+  sizes <- attr(groups, "group.sizes")
+  out <- (sizes > 1L)[groups]
   out[attr(groups, "starts")] <- FALSE
   out
 }
