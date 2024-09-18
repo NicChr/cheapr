@@ -18,6 +18,18 @@ R_xlen_t count_true(int *px, R_xlen_t n){
   }
 }
 
+#define CHEAPR_WHICH_VAL(_val_)                                \
+while (whichi < out_size){                                     \
+  p_out[whichi] = i + 1;                                       \
+  whichi += (p_x[i++] == _val_);                               \
+}                                                              \
+
+#define CHEAPR_WHICH_VAL_INVERTED(_val_)                       \
+while (whichi < out_size){                                     \
+  p_out[whichi] = i + 1;                                       \
+  whichi += (p_x[i++] != _val_);                               \
+}                                                              \
+
 [[cpp11::register]]
 SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
@@ -31,10 +43,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       double *p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i++] != TRUE);
-      }
+      CHEAPR_WHICH_VAL_INVERTED(TRUE);
       Rf_unprotect(1);
       return out;
     } else {
@@ -44,36 +53,27 @@ SEXP cpp_which_(SEXP x, bool invert){
       int *p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i++] != TRUE);
-      }
+      CHEAPR_WHICH_VAL_INVERTED(TRUE);
       Rf_unprotect(1);
       return out;
     }
   } else {
     if (is_long){
-      R_xlen_t size = count_true(p_x, n);
-      SEXP out = Rf_protect(Rf_allocVector(REALSXP, size));
+      R_xlen_t out_size = count_true(p_x, n);
+      SEXP out = Rf_protect(Rf_allocVector(REALSXP, out_size));
       double *p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
-      while (whichi < size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i++] == TRUE);
-      }
+      CHEAPR_WHICH_VAL(TRUE);
       Rf_unprotect(1);
       return out;
     } else {
-      int size = count_true(p_x, n);
-      SEXP out = Rf_protect(Rf_allocVector(INTSXP, size));
+      int out_size = count_true(p_x, n);
+      SEXP out = Rf_protect(Rf_allocVector(INTSXP, out_size));
       int *p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
-      while (whichi < size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i++] == TRUE);
-      }
+      CHEAPR_WHICH_VAL(TRUE);
       Rf_unprotect(1);
       return out;
     }
@@ -101,18 +101,6 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
       return cpp_which_na(x);
     }
   }
-#define WHICH_VAL(_val_)                                           \
-  if (invert){                                                     \
-    while (whichi < out_size){                                     \
-      p_out[whichi] = i + 1;                                       \
-      whichi += (p_x[i++] != _val_);                               \
-    }                                                              \
-  } else {                                                         \
-    while (whichi < out_size){                                     \
-      p_out[whichi] = i + 1;                                       \
-      whichi += (p_x[i++] == _val_);                               \
-    }                                                              \
-  }
   R_xlen_t n_vals = scalar_count(x, value, false);
   R_xlen_t out_size = invert ? n - n_vals : n_vals;
   R_xlen_t whichi = 0;
@@ -128,10 +116,18 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     int *p_x = INTEGER(x);
     if (is_long){
       double *p_out = REAL(out);
-      WHICH_VAL(val);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
     } else {
       int *p_out = INTEGER(out);
-      WHICH_VAL(val);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
     }
     Rf_unprotect(n_protections);
     return out;
@@ -145,10 +141,18 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     double *p_x = REAL(x);
     if (is_long){
       double *p_out = REAL(out);
-      WHICH_VAL(val);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
     } else {
       int *p_out = INTEGER(out);
-      WHICH_VAL(val);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
     }
     Rf_unprotect(n_protections);
     return out;
@@ -163,10 +167,18 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);
-      WHICH_VAL(val);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
     } else {
       int *p_out = INTEGER(out);
-      WHICH_VAL(val);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
     }
     Rf_unprotect(n_protections);
     return out;
