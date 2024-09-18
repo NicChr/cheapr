@@ -1,15 +1,5 @@
 #include "cheapr_cpp.h"
 #include <string>
-#include <sstream>
-
-// THis is a helper function to assist with doing multiple comparisons
-// across binary pairs of vectors between 2 data frames
-// The idea is that rows are equal when all values across columns are equal
-// And so we create a logical outside this function for the comparisons
-// in the first column, and then we simply replace our logical vector
-// With comparisons for the rest of the vector pairs, without making more copies.
-// For large data frames this should be quite cheap
-
 
 // Initialise logical with all TRUE
 
@@ -379,18 +369,6 @@ for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,       \
   NA_LOGICAL : c_op(std::strcmp(a, b), 0);                     \
 }                                                              \
 
-// Alternative using c++ compare()
-// #define CHEAPR_CHAR_COMPARISON_LOOP3(a, b, ISNA1, ISNA2)
-// for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,
-//      yi = (++yi == yn) ? 0 : yi, ++i){
-//   p_out[i] = (ISNA1(p_x[xi]) || ISNA2(p_y[yi])) ?
-//   NA_LOGICAL : c_op(a.compare(b), 0);
-// }
-
-
-// std::string char_as_string(const char *a){
-//   return a;
-// }
 // Fun idea, may explore later
 // Adding the number of true values to a logical vector
 // as you're creating it can speed up cheapr::which_()
@@ -548,66 +526,6 @@ for (i = xi = yi = 0; i < n; xi = (++xi == xn) ? 0 : xi,       \
 //   Rf_setAttrib(out, n_true_attrib, r_n_true);
 //   Rf_unprotect(NP);
 //   return out;
-// }
-
-// const char* ConvertDoubleToString(double value){
-//   std::stringstream ss ;
-//   ss << value;
-//   const char* str = ss.str().c_str();
-//   return str;
-// }
-
-// const char* ConvertDoubleToString(double value){
-//   std::stringstream ss ;
-//   ss << value;
-//   const char* str = ss.str().c_str();
-//   return str;
-// }
-
-// template <typename T>
-// const char* convert_to_char(T x){
-//   std::string s = std::to_string(x);
-//   char const *pchar = s.c_str();
-//   return pchar;
-// }
-
-// template <typename T>
-// std::string to_string(T x){
-//   return std::to_string(x);
-// }
-//
-// const char* string_to_char(std::string x){
-//   const char *c = x.c_str();
-//   return c;
-// }
-//
-// template <typename T>
-// const char* convert_to_char(T x){
-//   // return string_to_char(to_string(x));
-//   return string_to_char(std::to_string(x));
-// }
-//
-// const char* str_to_char(std::string
-//
-// template <typename T>
-// const char* convert_to_char(T x){
-//   std::stringstream ss;
-//   ss << x;
-//   const string s = ss.str();
-//   return s.c_str();
-// }
-
-// template <typename T>
-// std::string to_string_with_precision(const T a_value, const int n = std::numeric_limits<double>::digits10 - 1){
-//   std::ostringstream out;
-//   out.precision(n);
-//   out << std::fixed << a_value;
-//   return std::move(out).str();
-// }
-
-// SEXP r_convert_str(double x){
-//   // return Rf_mkString(std::to_string(x).c_str());
-//   return Rf_mkString(to_string_with_precision(x).c_str());
 // }
 
 [[cpp11::register]]
