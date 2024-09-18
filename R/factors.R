@@ -76,7 +76,8 @@ factor_ <- function(
     fct_lvls <- do.call(paste, c(lvls, list(sep = "_")))
   } else if (is_int64){
     # fct_lvls <- formatC(lvls, format = "f", drop0trailing = TRUE)
-    fct_lvls <- format(lvls, scientific = FALSE, trim = TRUE)
+    # fct_lvls <- format(lvls, scientific = FALSE, trim = TRUE)
+    fct_lvls <- cpp_format_double_as_int64(lvls)
     } else {
     fct_lvls <- as.character(lvls)
   }

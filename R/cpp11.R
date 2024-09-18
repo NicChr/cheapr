@@ -232,6 +232,10 @@ cpp_int64_to_double <- function(x) {
   .Call(`_cheapr_cpp_int64_to_double`, x)
 }
 
+cpp_format_double_as_int64 <- function(x) {
+  .Call(`_cheapr_cpp_format_double_as_int64`, x)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

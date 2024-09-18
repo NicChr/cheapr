@@ -87,6 +87,7 @@ SEXP cpp_int64_to_double(SEXP x){
   Rf_unprotect(1);
   return out;
 }
+
 // The reverse operation but don't need this
 // SEXP cpp_double_to_int64(SEXP x){
 //   R_xlen_t n = Rf_xlength(x);
@@ -103,6 +104,45 @@ SEXP cpp_int64_to_double(SEXP x){
 //   return out;
 // }
 
+// Found here stackoverflow.com/questions/347949
+template<typename ... Args>
+std::string string_format( const std::string& format, Args ... args){
+  int size_s = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
+  if( size_s <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+  auto size = static_cast<size_t>( size_s );
+  std::unique_ptr<char[]> buf( new char[ size ] );
+  std::snprintf( buf.get(), size, format.c_str(), args ... );
+  return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+}
+
+[[cpp11::register]]
+SEXP cpp_format_double_as_int64(SEXP x){
+  R_xlen_t n = Rf_xlength(x);
+
+  SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
+  // switch(TYPEOF(x)){
+  // case INTSXP: {
+  //   int *p_x = INTEGER(x);
+  //   for (R_xlen_t i = 0; i < n; ++i){
+  //     int temp = p_x[i];
+  //     std::string s = string_format("%d", temp);
+  //     SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+  //   }
+  //  break;
+  // }
+  // default: {
+  double *p_x = REAL(x);
+  for (R_xlen_t i = 0; i < n; ++i){
+    long long temp = p_x[i];
+    std::string s = string_format("%lld", temp);
+    SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+  }
+  //   break;
+  // }
+  // }
+  Rf_unprotect(1);
+  return out;
+}
 
 // Potentially useful for rolling calculations
 // Computes the rolling number of true values in a given
