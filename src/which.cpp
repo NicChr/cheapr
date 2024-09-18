@@ -23,14 +23,9 @@ SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
   int *p_x = LOGICAL(x);
   bool is_long = (n > integer_max_);
-
-  SEXP n_true_attrib = Rf_protect(Rf_getAttrib(x, Rf_installChar(Rf_mkChar(".n.true"))));
-  bool has_n_true_attrib = Rf_length(n_true_attrib) == 1 && Rf_isInteger(n_true_attrib);
-  R_xlen_t size1 = has_n_true_attrib ? INTEGER(n_true_attrib)[0] : count_true(p_x, n);
-
   if (invert){
     if (is_long){
-      int size = size1;
+      R_xlen_t size = count_true(p_x, n);
       R_xlen_t out_size = n - size;
       SEXP out = Rf_protect(Rf_allocVector(REALSXP, out_size));
       double *p_out = REAL(out);
@@ -40,10 +35,10 @@ SEXP cpp_which_(SEXP x, bool invert){
         p_out[whichi] = i + 1;
         whichi += (p_x[i++] != TRUE);
       }
-      Rf_unprotect(2);
+      Rf_unprotect(1);
       return out;
     } else {
-      int size = size1;
+      int size = count_true(p_x, n);
       int out_size = n - size;
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, out_size));
       int *p_out = INTEGER(out);
@@ -53,12 +48,12 @@ SEXP cpp_which_(SEXP x, bool invert){
         p_out[whichi] = i + 1;
         whichi += (p_x[i++] != TRUE);
       }
-      Rf_unprotect(2);
+      Rf_unprotect(1);
       return out;
     }
   } else {
     if (is_long){
-      R_xlen_t size = size1;
+      R_xlen_t size = count_true(p_x, n);
       SEXP out = Rf_protect(Rf_allocVector(REALSXP, size));
       double *p_out = REAL(out);
       R_xlen_t whichi = 0;
@@ -67,10 +62,10 @@ SEXP cpp_which_(SEXP x, bool invert){
         p_out[whichi] = i + 1;
         whichi += (p_x[i++] == TRUE);
       }
-      Rf_unprotect(2);
+      Rf_unprotect(1);
       return out;
     } else {
-      int size = size1;
+      int size = count_true(p_x, n);
       SEXP out = Rf_protect(Rf_allocVector(INTSXP, size));
       int *p_out = INTEGER(out);
       int whichi = 0;
@@ -79,7 +74,7 @@ SEXP cpp_which_(SEXP x, bool invert){
         p_out[whichi] = i + 1;
         whichi += (p_x[i++] == TRUE);
       }
-      Rf_unprotect(2);
+      Rf_unprotect(1);
       return out;
     }
   }
