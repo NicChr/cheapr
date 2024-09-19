@@ -120,27 +120,18 @@ SEXP cpp_format_double_as_int64(SEXP x){
   R_xlen_t n = Rf_xlength(x);
 
   SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
-  // switch(TYPEOF(x)){
-  // case INTSXP: {
-  //   int *p_x = INTEGER(x);
-  //   for (R_xlen_t i = 0; i < n; ++i){
-  //     int temp = p_x[i];
-  //     std::string s = string_format("%d", temp);
-  //     SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
-  //   }
-  //  break;
-  // }
-  // default: {
   double *p_x = REAL(x);
+  SEXP na_char = Rf_protect(Rf_mkChar("NA"));
   for (R_xlen_t i = 0; i < n; ++i){
-    long long temp = p_x[i];
-    std::string s = string_format("%lld", temp);
-    SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+    if (cheapr_is_na_dbl(p_x[i])){
+      SET_STRING_ELT(out, i, na_char);
+    } else {
+      long long temp = p_x[i];
+      std::string s = string_format("%lld", temp);
+      SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+    }
   }
-  //   break;
-  // }
-  // }
-  Rf_unprotect(1);
+  Rf_unprotect(2);
   return out;
 }
 
