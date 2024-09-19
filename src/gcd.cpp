@@ -134,6 +134,9 @@ long long int cpp_lcm2_int64(long long int x, long long int y, bool na_rm){
   // 64-bit integer overflow check
   // Make sure not to divide by zero!
 
+  // res can be an int because the gcd ensures the denom
+  // divides x by a whole number
+
   long long res = std::llabs(x) / cpp_gcd2_int64(x, y, false);
   if (y != 0 && (std::llabs(res) > (LLONG_MAX / std::llabs(y)))){
     Rf_error("64-bit integer overflow, please use doubles");

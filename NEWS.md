@@ -1,7 +1,7 @@
 # cheapr (Development version)
 
-* Limited support added for 'integer64' objects when counting and 
-finding `NA` values.
+* Limited support added for 'integer64' objects. This applies to the
+`NA` related functions as well as the GCD and LCM functions.
 
 * New functions `new_df` and `named_dots`.
 
