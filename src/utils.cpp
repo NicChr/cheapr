@@ -69,6 +69,8 @@ bool is_int64(SEXP x){
   return Rf_isReal(x) && Rf_inherits(x, "integer64");
 }
 
+// We almost never want to convert back to 32-bit int
+
 [[cpp11::register]]
 SEXP cpp_int64_to_double(SEXP x){
   if (!is_int64(x)){
@@ -79,7 +81,7 @@ SEXP cpp_int64_to_double(SEXP x){
   SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
   double *p_out = REAL(out);
 
-  long long *p_x = (long long *) REAL(x);
+  long long *p_x = INTEGER64_PTR(x);
 
   for (R_xlen_t i = 0; i < n; ++i){
     p_out[i] = cheapr_is_na_int64(p_x[i]) ? NA_REAL : (double) p_x[i];
@@ -88,21 +90,44 @@ SEXP cpp_int64_to_double(SEXP x){
   return out;
 }
 
-// The reverse operation but don't need this
-// SEXP cpp_double_to_int64(SEXP x){
-//   R_xlen_t n = Rf_xlength(x);
-//
-//   SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
-//   long long *p_out = (long long *) REAL(out);
-//   double *p_x = REAL(x);
-//
-//   for (R_xlen_t i = 0; i < n; ++i){
-//     p_out[i] = cheapr_is_na_dbl(p_x[i]) ? NA_INTEGER64 : (long long) p_x[i];
-//   }
-//   Rf_classgets(out, Rf_mkString("integer64"));
-//   Rf_unprotect(1);
-//   return out;
-// }
+// The reverse operation
+
+[[cpp11::register]]
+SEXP cpp_numeric_to_int64(SEXP x){
+
+  if (is_int64(x)){
+    return x;
+  }
+
+  R_xlen_t n = Rf_xlength(x);
+
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
+    long long *p_out = INTEGER64_PTR(out);
+    int *p_x = INTEGER(x);
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      p_out[i] = cheapr_is_na_int(p_x[i]) ? NA_INTEGER64 : (long long) p_x[i];
+    }
+    Rf_classgets(out, Rf_mkString("integer64"));
+    Rf_unprotect(1);
+    return out;
+  }
+  default: {
+    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
+    long long *p_out = INTEGER64_PTR(out);
+    double *p_x = REAL(x);
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      p_out[i] = cheapr_is_na_dbl(p_x[i]) ? NA_INTEGER64 : (long long) p_x[i];
+    }
+    Rf_classgets(out, Rf_mkString("integer64"));
+    Rf_unprotect(1);
+    return out;
+  }
+  }
+}
 
 // Found here stackoverflow.com/questions/347949
 template<typename ... Args>

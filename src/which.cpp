@@ -229,7 +229,7 @@ SEXP cpp_which_na(SEXP x){
   case REALSXP: {
     R_xlen_t count = na_count(x, true);
     if (Rf_inherits(x, "integer64")){
-      long long *p_x = (long long *) REAL(x);
+      long long *p_x = INTEGER64_PTR(x);
       if (is_short){
         int out_size = count;
         SEXP out = Rf_protect(Rf_allocVector(INTSXP, out_size));
@@ -391,7 +391,7 @@ SEXP cpp_which_not_na(SEXP x){
   case REALSXP: {
     R_xlen_t count = na_count(x, true);
     if (Rf_inherits(x, "integer64")){
-      long long *p_x = (long long *) REAL(x);
+      long long *p_x = INTEGER64_PTR(x);
       if (is_short){
         int out_size = n - count;
         SEXP out = Rf_protect(Rf_allocVector(INTSXP, out_size));

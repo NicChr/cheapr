@@ -5,6 +5,11 @@ template<typename T> T cpp_sign(T x) {
   return (x > 0) - (x < 0);
 }
 
+#define CHEAPR_INT_TO_INT64(x) ((long long int) (x == NA_INTEGER ? NA_INTEGER64 : x))
+#define CHEAPR_DBL_TO_INT64(x) ((long long int) (x != x ? NA_INTEGER64 : x))
+#define CHEAPR_INT64_TO_INT(x) ((int) (x == NA_INTEGER64 ? NA_INTEGER : x))
+#define CHEAPR_INT64_TO_DBL(x) ((double) (x == NA_INTEGER64 ? NA_REAL : x))
+
 [[cpp11::register]]
 double cpp_gcd2(double x, double y, double tol, bool na_rm){
   double zero = 0.0;
@@ -68,6 +73,41 @@ int cpp_gcd2_int(int x, int y, bool na_rm){
   return x;
 }
 
+long long int cpp_gcd2_int64(long long int x, long long int y, bool na_rm){
+  long long int zero = 0;
+  bool has_na = ( x == NA_INTEGER64 || y == NA_INTEGER64 );
+  if (!na_rm && has_na){
+    return NA_INTEGER64;
+  }
+  if (na_rm && has_na){
+    if (x == NA_INTEGER64){
+      return y;
+    } else {
+      return x;
+    }
+  }
+  // GCD(0,0)=0
+  if (x == zero && y == zero){
+    return zero;
+  }
+  // GCD(a,0)=a
+  if (x == zero){
+    return y;
+  }
+  // GCD(a,0)=a
+  if (y == zero){
+    return x;
+  }
+  long long int r;
+  // Taken from number theory lecture notes
+  while(y != zero){
+    r = x % y;
+    x = y;
+    y = r;
+  }
+  return x;
+}
+
 [[cpp11::register]]
 double cpp_lcm2(double x, double y, double tol, bool na_rm){
   if (na_rm && ( !(x == x) || !(y == y) )){
@@ -77,6 +117,29 @@ double cpp_lcm2(double x, double y, double tol, bool na_rm){
     return 0.0;
   }
   return ( std::fabs(x) / cpp_gcd2(x, y, tol, true) ) * std::fabs(y);
+}
+
+long long int cpp_lcm2_int64(long long int x, long long int y, bool na_rm){
+  int num_nas = (x == NA_INTEGER64) + (y == NA_INTEGER64);
+  if ( num_nas >= 1 ){
+    if (na_rm && num_nas == 1){
+      return (x == NA_INTEGER64 ? y : x);
+    } else {
+      return NA_INTEGER64;
+    }
+  }
+  if (x == 0 && y == 0){
+    return 0;
+  }
+  // 64-bit integer overflow check
+  // Make sure not to divide by zero!
+
+  long long res = std::llabs(x) / cpp_gcd2_int64(x, y, false);
+  if (y != 0 && (std::llabs(res) > (LLONG_MAX / std::llabs(y)))){
+    Rf_error("64-bit integer overflow, please use doubles");
+  } else {
+    return (res * std::llabs(y));
+  }
 }
 
 double cpp_lcm2_int(int x, int y, bool na_rm){
@@ -100,54 +163,80 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     Rf_error("tol must be >= 0 and < 1");
   }
   int NP = 0;
-  int n = Rf_length(x);
+  R_xlen_t n = Rf_xlength(x);
 
-  if (Rf_isReal(x) && Rf_inherits(x, "integer64")){
-    Rf_protect(x = cpp_int64_to_double(x)); ++NP;
-  }
   switch(TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
-    SEXP out = Rf_protect(Rf_allocVector(INTSXP, std::min(n, 1))); ++NP;
-    int *p_out = INTEGER(out);
-    int gcd = p_x[0];
-    double agcd; // A double because you cant do abs(NA_integer_)
-    for (int i = 1; i < n; ++i) {
-      gcd = cpp_gcd2_int(gcd, p_x[i], na_rm);
-      agcd = std::fabs(gcd);
-      if ((agcd > 0.0 && agcd <= 1.0) || (!na_rm && (gcd == NA_INTEGER))){
-        break;
+    SEXP out = Rf_protect(Rf_allocVector(INTSXP, n == 0 ? 0 : 1)); ++NP;
+    if (n > 0){
+      int gcd = p_x[0];
+      int agcd;
+      for (R_xlen_t i = 1; i < n; ++i) {
+        gcd = cpp_gcd2_int(gcd, p_x[i], na_rm);
+        if (gcd == NA_INTEGER){
+          if (!na_rm) break;
+        } else {
+          agcd = std::abs(gcd);
+          if (agcd > 0 && agcd == 1){
+            break;
+          }
+        }
       }
+      INTEGER(out)[0] = gcd;
     }
-    p_out[0] = gcd;
     Rf_unprotect(NP);
     return out;
   }
   default: {
-    double *p_x = REAL(x);
-    SEXP out = Rf_protect(Rf_allocVector(REALSXP, std::min(n, 1))); ++NP;
-    double *p_out = REAL(out);
-    double gcd = p_x[0];
-    double agcd;
-    for (int i = 1; i < n; ++i) {
-      gcd = cpp_gcd2(gcd, p_x[i], tol, na_rm);
-      agcd = std::fabs(gcd);
-      if ((!na_rm && !(gcd == gcd))){
-        break;
+    if (is_int64(x)){
+    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n == 0 ? 0 : 1)); ++NP;
+    if (n > 0){
+      long long int *p_x = INTEGER64_PTR(x);
+      long long int gcd = p_x[0];
+      long long int agcd;
+      for (R_xlen_t i = 1; i < n; ++i) {
+        gcd = cpp_gcd2_int64(gcd, p_x[i], na_rm);
+        if (gcd == NA_INTEGER64){
+          if (!na_rm) break;
+        } else {
+          agcd = std::abs(gcd);
+          if (agcd > 0 && agcd == 1){
+            break;
+          }
+        }
       }
-      if (break_early && agcd > 0.0 && agcd < (tol + tol)){
-        gcd = tol * cpp_sign<double>(gcd);
-        break;
-      }
+      REAL(out)[0] = CHEAPR_INT64_TO_DBL(gcd);
     }
-    if (round && tol > 0){
-      double factor = std::pow(10, std::ceil(std::fabs(std::log10(tol))) + 1);
-      gcd = std::round(gcd * factor) / factor;
-    }
-    p_out[0] = gcd;
     Rf_unprotect(NP);
     return out;
+  } else {
+    double *p_x = REAL(x);
+    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n == 0 ? 0 : 1)); ++NP;
+    if (n > 0){
+      double gcd = p_x[0];
+      double agcd;
+      for (R_xlen_t i = 1; i < n; ++i) {
+        gcd = cpp_gcd2(gcd, p_x[i], tol, na_rm);
+        agcd = std::fabs(gcd);
+        if ((!na_rm && !(gcd == gcd))){
+          break;
+        }
+        if (break_early && agcd > 0.0 && agcd < (tol + tol)){
+          gcd = tol * cpp_sign<double>(gcd);
+          break;
+        }
+      }
+      if (round && tol > 0){
+        double factor = std::pow(10, std::ceil(std::fabs(std::log10(tol))) + 1);
+        gcd = std::round(gcd * factor) / factor;
+      }
+      REAL(out)[0] = gcd;
+    }
+    Rf_unprotect(NP);
+    return out;
+  }
   }
   }
 }
@@ -159,58 +248,81 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
   if (tol < 0 || tol >= 1){
     Rf_error("tol must be >= 0 and < 1");
   }
-  int n = Rf_length(x);
+  R_xlen_t n = Rf_xlength(x);
   int NP = 0;
-  if (Rf_isReal(x) && Rf_inherits(x, "integer64")){
-    Rf_protect(x = cpp_int64_to_double(x)); ++NP;
-  }
 
   switch(TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
-    SEXP out = Rf_protect(Rf_allocVector(REALSXP, std::min(n, 1))); ++NP;
-    double *p_out = REAL(out);
-    double lcm = p_x[0];
-    if (p_x[0] == NA_INTEGER){
-      lcm = NA_REAL;
-    }
-    int lcm_int = p_x[0];
-    double int_max = integer_max_;
-    for (int i = 1; i < n; ++i) {
-      if (!na_rm && !(lcm == lcm)){
-        lcm = NA_REAL;
-        break;
+
+    SEXP out;
+
+    if (n > 0){
+
+      // Initialise first value as lcm
+      long long int lcm = CHEAPR_INT_TO_INT64(p_x[0]);
+
+      for (R_xlen_t i = 1; i < n; ++i) {
+        if (!na_rm && lcm == NA_INTEGER64){
+          break;
+        }
+        lcm = cpp_lcm2_int64(lcm, CHEAPR_INT_TO_INT64(p_x[i]), na_rm);
       }
-      lcm = cpp_lcm2_int(lcm_int, p_x[i], na_rm);
-      if (std::fabs(lcm) > int_max){
-        Rf_warning("Integer overflow, returning NA");
-        lcm = NA_REAL;
-        break;
+      bool is_short = lcm == NA_INTEGER64 || (std::llabs(lcm) <= integer_max_);
+      out = Rf_protect(Rf_allocVector(is_short ? INTSXP : REALSXP, 1)); ++NP;
+      if (is_short){
+        int temp = CHEAPR_INT64_TO_INT(lcm);
+        INTEGER(out)[0] = temp;
+      } else {
+        double temp = CHEAPR_INT64_TO_DBL(lcm);
+        REAL(out)[0] = temp;
       }
-      lcm_int = (lcm == lcm) ? lcm : NA_INTEGER;
+    } else {
+      out = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
     }
-    p_out[0] = lcm;
-    Rf_protect(out = Rf_coerceVector(out, INTSXP)); ++NP;
     Rf_unprotect(NP);
     return out;
   }
   default: {
-    double *p_x = REAL(x);
-    SEXP out = Rf_protect(Rf_allocVector(REALSXP, std::min(n, 1))); ++NP;
-    double *p_out = REAL(out);
-    double lcm = p_x[0];
-    for (int i = 1; i < n; ++i) {
-      if (!na_rm && !(lcm == lcm)){
-        lcm = NA_REAL;
-        break;
+    if (is_int64(x)){
+    long long *p_x = INTEGER64_PTR(x);
+
+    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n == 0 ? 0 : 1)); ++NP;
+
+    if (n > 0){
+      // Initialise first value as lcm
+      long long int lcm = p_x[0];
+
+      for (R_xlen_t i = 1; i < n; ++i) {
+        if (!na_rm && lcm == NA_INTEGER64){
+          break;
+        }
+        lcm = cpp_lcm2_int64(lcm, p_x[i], na_rm);
       }
-      lcm = cpp_lcm2(lcm, p_x[i], tol, na_rm);
-      if (lcm == R_PosInf || lcm == R_NegInf) break;
+      double temp = CHEAPR_INT64_TO_DBL(lcm);
+      REAL(out)[0] = temp;
     }
-    p_out[0] = lcm;
     Rf_unprotect(NP);
     return out;
+  } else {
+    double *p_x = REAL(x);
+    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n == 0 ? 0 : 1)); ++NP;
+    if (n > 0){
+      double lcm = p_x[0];
+      for (R_xlen_t i = 1; i < n; ++i) {
+        if (!na_rm && !(lcm == lcm)){
+          lcm = NA_REAL;
+          break;
+        }
+        lcm = cpp_lcm2(lcm, p_x[i], tol, na_rm);
+        if (lcm == R_PosInf || lcm == R_NegInf) break;
+      }
+      REAL(out)[0] = lcm;
+    }
+    Rf_unprotect(NP);
+    return out;
+  }
   }
   }
 }

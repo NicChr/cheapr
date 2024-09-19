@@ -14,6 +14,9 @@
 #ifndef VECTOR_PTR_RO
 #define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
 #endif
+#ifndef INTEGER64_PTR
+#define INTEGER64_PTR(x) ((long long*) REAL(x))
+#endif
 
 #ifdef _OPENMP
 #include <omp.h>

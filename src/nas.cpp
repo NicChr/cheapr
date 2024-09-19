@@ -51,7 +51,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   case REALSXP: {
     if (is_int64(x)){
-    long long *p_x = (long long *)REAL(x);
+    long long *p_x = INTEGER64_PTR(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       CHEAPR_COUNT_NA(cheapr_is_na_int64);
@@ -141,7 +141,7 @@ bool cpp_any_na(SEXP x, bool recursive){
   }
   case REALSXP: {
     if (is_int64(x)){
-    long long *p_x = (long long *) REAL(x);
+    long long *p_x = INTEGER64_PTR(x);
     CHEAPR_ANY_NA(cheapr_is_na_int64);
   } else {
     double *p_x = REAL(x);
@@ -203,7 +203,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   }
   case REALSXP: {
     if (is_int64(x)){
-    long long *p_x = (long long *) REAL(x);
+    long long *p_x = INTEGER64_PTR(x);
     CHEAPR_ALL_NA(cheapr_is_na_int64);
   } else {
     double *p_x = REAL(x);
@@ -277,7 +277,7 @@ SEXP cpp_is_na(SEXP x){
     out = Rf_protect(Rf_allocVector(LGLSXP, n));
     int *p_out = LOGICAL(out);
     if (is_int64(x)){
-      long long *p_x = (long long *) REAL(x);
+      long long *p_x = INTEGER64_PTR(x);
       if (n_cores > 1){
         OMP_PARALLEL_FOR_SIMD
         CHEAPR_VEC_IS_NA(cheapr_is_na_int64);
@@ -725,7 +725,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
   }
   case REALSXP: {
     if (is_int64(x)){
-    long long *p_x = (long long *) REAL(x);
+    long long *p_x = INTEGER64_PTR(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
 #pragma omp atomic
@@ -797,7 +797,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   }
   case REALSXP: {
     if (is_int64(x)){
-    long long *p_x = (long long *) REAL(x);
+    long long *p_x = INTEGER64_PTR(x);
 #pragma omp for
     for (R_xlen_t i = 0; i < n; ++i){
 #pragma omp atomic

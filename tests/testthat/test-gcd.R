@@ -151,10 +151,12 @@ test_that("signs", {
 })
 
 test_that("Overflow", {
-  expect_equal(scm(1:22), 232792560)
-  expect_equal(scm(-(1:22)), -232792560)
-  expect_warning(scm(1:23))
-  expect_warning(scm(-(1:23)))
+  expect_equal(scm(1:30), 2329089562800)
+  expect_equal(scm(-(1:30)), -2329089562800)
+  expect_error(scm(1:50))
+  expect_error(scm(-(1:50)))
+  expect_equal(scm(as.double(1:50)), 18523376382441352270484866200)
+  expect_equal(scm(-as.double(1:50)), -18523376382441352270484866200)
 })
 
 test_that("Binary gcd and scm", {
