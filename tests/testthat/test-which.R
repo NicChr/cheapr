@@ -1,7 +1,7 @@
 test_that("c++ which", {
   set.seed(42)
   x <- sample(c(TRUE, FALSE), size = 10^3, replace = TRUE)
-  x <- fill_with_na(x, prop = 0.1)
+  x <- na_insert(x, prop = 0.1)
 
   expect_identical(which(TRUE), which_(TRUE))
   expect_identical(which(FALSE), which_(FALSE))

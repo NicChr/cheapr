@@ -11,6 +11,7 @@
 \alias{deframe_}
 \alias{na_rm}
 \alias{sample_}
+\alias{na_insert}
 \title{Extra utilities}
 \usage{
 setdiff_(x, y, dups = TRUE)
@@ -50,6 +51,8 @@ deframe_(x)
 na_rm(x)
 
 sample_(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL)
+
+na_insert(x, n = NULL, prop = NULL)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -83,6 +86,12 @@ sample_(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL)
 \item{replace}{See \code{?sample}.}
 
 \item{prob}{See \code{?sample}.}
+
+\item{n}{Number of \code{NA} values to insert
+randomly into your vector.}
+
+\item{prop}{Proportion of \code{NA} values to insert
+randomly into your vector.}
 }
 \value{
 \verb{enframe()_} converts a vector to a data frame. \cr

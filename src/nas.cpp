@@ -351,7 +351,7 @@ SEXP cpp_is_na(SEXP x){
 }
 
 [[cpp11::register]]
-SEXP cpp_row_na_counts(SEXP x){
+SEXP cpp_df_row_na_counts(SEXP x){
   if (!Rf_isFrame(x)){
     Rf_error("x must be a data frame");
   }
@@ -449,7 +449,7 @@ SEXP cpp_row_na_counts(SEXP x){
 }
 
 [[cpp11::register]]
-SEXP cpp_col_na_counts(SEXP x){
+SEXP cpp_df_col_na_counts(SEXP x){
   if (!Rf_isFrame(x)){
     Rf_error("x must be a data frame");
   }
@@ -610,6 +610,8 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 }
 
 // INCOMPLETE
+//TO-DO - Rewrite this but for all_na()
+// More likely to be faster for the all_na case
 // SEXP cpp_row_any_na(SEXP x, bool names){
 //   if (!Rf_isFrame(x)){
 //     Rf_error("x must be a data frame");
@@ -840,5 +842,87 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   }
   }
   Rf_unprotect(1);
+  return out;
+}
+
+// Helpers to get matrix row and col names
+
+SEXP matrix_rownames(SEXP x) {
+  SEXP dimnames = Rf_protect(Rf_getAttrib(x, R_DimNamesSymbol));
+
+  if (Rf_isNull(dimnames) ||
+      TYPEOF(dimnames) != VECSXP ||
+      Rf_length(dimnames) != 2){
+    Rf_unprotect(1);
+    return R_NilValue;
+  }
+  Rf_unprotect(1);
+  return VECTOR_ELT(dimnames, 0);
+}
+SEXP matrix_colnames(SEXP x) {
+  SEXP dimnames = Rf_protect(Rf_getAttrib(x, R_DimNamesSymbol));
+
+  if (Rf_isNull(dimnames) ||
+      TYPEOF(dimnames) != VECSXP ||
+      Rf_length(dimnames) != 2){
+    Rf_unprotect(1);
+    return R_NilValue;
+  }
+  Rf_unprotect(1);
+  return VECTOR_ELT(dimnames, 1);
+}
+
+[[cpp11::register]]
+SEXP cpp_row_na_counts(SEXP x, bool names){
+  bool is_matrix = Rf_isMatrix(x);
+  bool is_data_frame = Rf_isFrame(x);
+
+  if (!is_matrix && !is_data_frame){
+    Rf_error("x must be a matrix or data frame");
+  }
+
+  int NP = 0;
+
+  SEXP out;
+  if (is_matrix){
+    out = Rf_protect(cpp_matrix_row_na_counts(x)); ++NP;
+    if (names){
+      SEXP row_names = Rf_protect(Rf_duplicate(matrix_rownames(x))); ++NP;
+      Rf_setAttrib(out, R_NamesSymbol, row_names);
+    }
+  } else {
+    out = Rf_protect(cpp_df_row_na_counts(x)); ++NP;
+    if (names){
+      SEXP row_names = Rf_protect(Rf_duplicate(Rf_getAttrib(x, R_RowNamesSymbol))); ++NP;
+      Rf_setAttrib(out, R_NamesSymbol, row_names);
+    }
+  }
+  Rf_unprotect(NP);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_col_na_counts(SEXP x, bool names){
+  bool is_matrix = Rf_isMatrix(x);
+  bool is_data_frame = Rf_isFrame(x);
+
+  if (!is_matrix && !is_data_frame){
+    Rf_error("x must be a matrix or data frame");
+  }
+
+  int NP = 0;
+
+  SEXP out;
+  if (is_matrix){
+    out = Rf_protect(cpp_matrix_col_na_counts(x)); ++NP;
+    if (names){
+      SEXP col_names = Rf_protect(Rf_duplicate(matrix_colnames(x))); ++NP;
+      Rf_setAttrib(out, R_NamesSymbol, col_names);
+    }
+  } else {
+    out = Rf_protect(cpp_df_col_na_counts(x)); ++NP;
+    if (names) cpp_copy_names(x, out);
+  }
+  Rf_unprotect(NP);
   return out;
 }

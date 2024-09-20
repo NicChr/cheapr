@@ -2,7 +2,7 @@ test_that("factors", {
   expect_identical(factor_(NULL), factor())
 
   x <- rnorm(10)
-  y <- fill_with_na(x, 5)
+  y <- na_insert(x, 5)
   expect_identical(factor(x), factor_(x))
   expect_identical(factor(y), factor_(y))
   expect_identical(

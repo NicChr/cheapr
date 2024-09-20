@@ -14,19 +14,7 @@ all_integerable <- function(x, shift = 0){
     na.rm = TRUE
   )
 }
-fill_with_na <- function(x, n = NULL, prop = NULL){
-  if (!is.null(n) && !is.null(prop)) {
-    stop("either n or prop must be supplied")
-  }
-  if (!is.null(n)) {
-    x[sample.int(length(x), size = n, replace = FALSE)] <- NA
-  }
-  if (!is.null(prop)) {
-    x[sample.int(length(x), size = floor(prop * length(x)),
-                 replace = FALSE)] <- NA
-  }
-  x
-}
+
 allv2 <- function(x, value){
   if (!length(x)) {
     return(FALSE)
@@ -156,3 +144,6 @@ funique.POSIXlt <- function(x, sort = FALSE, ...){
 n_dots <- function(...){
   nargs()
 }
+
+# Keep this in-case anyone was using it
+fill_with_na <- na_insert

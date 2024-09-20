@@ -58,7 +58,7 @@ test_that("subsetting", {
 
   for (obj in objs_to_test){
     if (!is.raw(get(obj))){
-      assign(obj, `names<-`(fill_with_na(get(obj), n = 111), sample.int(1000)))
+      assign(obj, `names<-`(na_insert(get(obj), n = 111), sample.int(1000)))
     }
   }
   # Vectors lose their names here

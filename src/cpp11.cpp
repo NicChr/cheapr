@@ -174,17 +174,17 @@ extern "C" SEXP _cheapr_cpp_is_na(SEXP x) {
   END_CPP11
 }
 // nas.cpp
-SEXP cpp_row_na_counts(SEXP x);
-extern "C" SEXP _cheapr_cpp_row_na_counts(SEXP x) {
+SEXP cpp_df_row_na_counts(SEXP x);
+extern "C" SEXP _cheapr_cpp_df_row_na_counts(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_row_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(cpp_df_row_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // nas.cpp
-SEXP cpp_col_na_counts(SEXP x);
-extern "C" SEXP _cheapr_cpp_col_na_counts(SEXP x) {
+SEXP cpp_df_col_na_counts(SEXP x);
+extern "C" SEXP _cheapr_cpp_df_col_na_counts(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(cpp_df_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // nas.cpp
@@ -213,6 +213,20 @@ SEXP cpp_matrix_col_na_counts(SEXP x);
 extern "C" SEXP _cheapr_cpp_matrix_col_na_counts(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_matrix_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// nas.cpp
+SEXP cpp_row_na_counts(SEXP x, bool names);
+extern "C" SEXP _cheapr_cpp_row_na_counts(SEXP x, SEXP names) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_row_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(names)));
+  END_CPP11
+}
+// nas.cpp
+SEXP cpp_col_na_counts(SEXP x, bool names);
+extern "C" SEXP _cheapr_cpp_col_na_counts(SEXP x, SEXP names) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(names)));
   END_CPP11
 }
 // scalars.cpp
@@ -462,9 +476,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_character_compare",      (DL_FUNC) &_cheapr_cpp_character_compare,      3},
     {"_cheapr_cpp_col_all_na",             (DL_FUNC) &_cheapr_cpp_col_all_na,             2},
     {"_cheapr_cpp_col_any_na",             (DL_FUNC) &_cheapr_cpp_col_any_na,             2},
-    {"_cheapr_cpp_col_na_counts",          (DL_FUNC) &_cheapr_cpp_col_na_counts,          1},
+    {"_cheapr_cpp_col_na_counts",          (DL_FUNC) &_cheapr_cpp_col_na_counts,          2},
     {"_cheapr_cpp_count_val",              (DL_FUNC) &_cheapr_cpp_count_val,              3},
     {"_cheapr_cpp_dbl_sequence",           (DL_FUNC) &_cheapr_cpp_dbl_sequence,           3},
+    {"_cheapr_cpp_df_col_na_counts",       (DL_FUNC) &_cheapr_cpp_df_col_na_counts,       1},
+    {"_cheapr_cpp_df_row_na_counts",       (DL_FUNC) &_cheapr_cpp_df_row_na_counts,       1},
     {"_cheapr_cpp_drop_null",              (DL_FUNC) &_cheapr_cpp_drop_null,              2},
     {"_cheapr_cpp_format_double_as_int64", (DL_FUNC) &_cheapr_cpp_format_double_as_int64, 1},
     {"_cheapr_cpp_gcd",                    (DL_FUNC) &_cheapr_cpp_gcd,                    5},
@@ -488,7 +504,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_num_na",                 (DL_FUNC) &_cheapr_cpp_num_na,                 2},
     {"_cheapr_cpp_numeric_to_int64",       (DL_FUNC) &_cheapr_cpp_numeric_to_int64,       1},
     {"_cheapr_cpp_r_unnested_length",      (DL_FUNC) &_cheapr_cpp_r_unnested_length,      1},
-    {"_cheapr_cpp_row_na_counts",          (DL_FUNC) &_cheapr_cpp_row_na_counts,          1},
+    {"_cheapr_cpp_row_na_counts",          (DL_FUNC) &_cheapr_cpp_row_na_counts,          2},
     {"_cheapr_cpp_sequence",               (DL_FUNC) &_cheapr_cpp_sequence,               3},
     {"_cheapr_cpp_sequence_id",            (DL_FUNC) &_cheapr_cpp_sequence_id,            1},
     {"_cheapr_cpp_set_abs",                (DL_FUNC) &_cheapr_cpp_set_abs,                1},

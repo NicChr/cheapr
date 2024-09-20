@@ -96,12 +96,12 @@ cpp_is_na <- function(x) {
   .Call(`_cheapr_cpp_is_na`, x)
 }
 
-cpp_row_na_counts <- function(x) {
-  .Call(`_cheapr_cpp_row_na_counts`, x)
+cpp_df_row_na_counts <- function(x) {
+  .Call(`_cheapr_cpp_df_row_na_counts`, x)
 }
 
-cpp_col_na_counts <- function(x) {
-  .Call(`_cheapr_cpp_col_na_counts`, x)
+cpp_df_col_na_counts <- function(x) {
+  .Call(`_cheapr_cpp_df_col_na_counts`, x)
 }
 
 cpp_col_any_na <- function(x, names) {
@@ -118,6 +118,14 @@ cpp_matrix_row_na_counts <- function(x) {
 
 cpp_matrix_col_na_counts <- function(x) {
   .Call(`_cheapr_cpp_matrix_col_na_counts`, x)
+}
+
+cpp_row_na_counts <- function(x, names) {
+  .Call(`_cheapr_cpp_row_na_counts`, x, names)
+}
+
+cpp_col_na_counts <- function(x, names) {
+  .Call(`_cheapr_cpp_col_na_counts`, x, names)
 }
 
 cpp_count_val <- function(x, value, recursive) {

@@ -35,7 +35,8 @@
 #'
 #' ## Method
 #'
-#' ### GCD
+#' ### GCD (Greatest Common Divisor)
+#'
 #' The GCD is calculated using a binary function that takes input
 #' `GCD(gcd, x[i + 1])` where the output of this function is passed as input
 #' back into the same function iteratively along the length of `x`.
@@ -47,7 +48,7 @@
 #'
 #' This has the nice property that zeroes are essentially ignored.
 #'
-#' ### SCM
+#' ### SCM (Smallest Common Multiple)
 #'
 #' This is calculated using the GCD and the formula is: \cr
 #' `SCM(x, y) = (abs(x) / GCD(x, y) ) * abs(y)`
@@ -55,6 +56,22 @@
 #'
 #' If you want to calculate the gcd & lcm for 2 values
 #' or across 2 vectors of values, use `gcd2` and `scm2`.
+#'
+#' ### A note on performance
+#'
+#' A very common solution to finding the GCD of a vector of values is to use
+#' `Reduce()` along with a binary function like `gcd2()`. \cr
+#' e.g. `Reduce(gcd2, seq(5, 20, 5))`. \cr
+#' This is exactly identical to `gcd(seq(5, 20, 5))`, with `gcd()` being much
+#' faster and overall cheaper as it is written in C++ and heavily optimised.
+#' Therefore it is recommended to always use `gcd()`.
+#'
+#' For example we can compare the two approaches below, \cr
+#' `x <- seq(5L, length = 10^6, by = 5L)` \cr
+#' `bench::mark(Reduce(gcd2, x), gcd(x))` \cr
+#' This example code shows `gcd()` being ~200x faster on my machine than
+#' the `Reduce` + `gcd2` approach, even though `gcd2` itself is written in C++
+#' and has little overhead.
 #'
 #' @examples
 #' library(cheapr)

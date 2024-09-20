@@ -1,6 +1,6 @@
 test_that("NAs", {
   set.seed(42)
-  x <- fill_with_na(1:20, 10)
+  x <- na_insert(1:20, 10)
   x[4] <- 14L
   x[15] <- NA_integer_
   y <- matrix(x, ncol = 4)
@@ -71,11 +71,11 @@ test_that("NAs", {
 
 test_that("different classes", {
   set.seed(42)
-  a1 <- fill_with_na(1:20, 10)
+  a1 <- na_insert(1:20, 10)
   a2 <- as.double(a1)
   a3 <- as.character(a1)
-  a4 <- complex(real = fill_with_na(1:20, 10),
-                imaginary = fill_with_na(1:20, 10))
+  a4 <- complex(real = na_insert(1:20, 10),
+                imaginary = na_insert(1:20, 10))
   l <- list(a1, list(a1, a2), list(a1, a2, a3), list(a1, a2, a3, a4))
 
   a10 <- a1[0]
@@ -154,11 +154,11 @@ test_that("different classes", {
 test_that("multiple cores", {
   options(cheapr.cores = 2)
   set.seed(42)
-  a1 <- fill_with_na(1:10^5, 10)
+  a1 <- na_insert(1:10^5, 10)
   a2 <- as.double(a1)
   a3 <- as.character(a1)
-  a4 <- complex(real = fill_with_na(1:10^5, 10),
-                imaginary = fill_with_na(1:10^5, 10))
+  a4 <- complex(real = na_insert(1:10^5, 10),
+                imaginary = na_insert(1:10^5, 10))
   l <- list(a1, list(a1, a2), list(a1, a2, a3), list(a1, a2, a3, a4))
 
   allNA <- function(x){
@@ -283,12 +283,12 @@ test_that("lists", {
   ## Triggering parallel code
   options(cheapr.cores = 2)
   set.seed(912389)
-  df <- list(a = as.list(fill_with_na(sample(letters, 10^5 + 1, TRUE), n = 10^4)),
-             b = fill_with_na(rnorm(10^5 + 1), 10^3),
-             c = fill_with_na(sample.int(100, 10^5 + 1, TRUE), 10^3),
-             d = complex(real = fill_with_na(sample.int(100, 10^5 + 1, TRUE), 10^3),
-                         imaginary = fill_with_na(sample.int(100, 10^5 + 1, TRUE), 10^3)),
-             e = fill_with_na(sample(letters, 10^5 + 1, TRUE), n = 10^4))
+  df <- list(a = as.list(na_insert(sample(letters, 10^5 + 1, TRUE), n = 10^4)),
+             b = na_insert(rnorm(10^5 + 1), 10^3),
+             c = na_insert(sample.int(100, 10^5 + 1, TRUE), 10^3),
+             d = complex(real = na_insert(sample.int(100, 10^5 + 1, TRUE), 10^3),
+                         imaginary = na_insert(sample.int(100, 10^5 + 1, TRUE), 10^3)),
+             e = na_insert(sample(letters, 10^5 + 1, TRUE), n = 10^4))
 
   attributes(df) <- list(class = "data.frame",
                          row.names = c(NA_integer_, -as.integer(10^5 + 1)),

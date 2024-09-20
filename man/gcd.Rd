@@ -60,7 +60,7 @@ using the Euclidean algorithm.
 }
 \details{
 \subsection{Method}{
-\subsection{GCD}{
+\subsection{GCD (Greatest Common Divisor)}{
 
 The GCD is calculated using a binary function that takes input
 \code{GCD(gcd, x[i + 1])} where the output of this function is passed as input
@@ -74,13 +74,30 @@ Zeroes are handled in the following way: \cr
 This has the nice property that zeroes are essentially ignored.
 }
 
-\subsection{SCM}{
+\subsection{SCM (Smallest Common Multiple)}{
 
 This is calculated using the GCD and the formula is: \cr
 \code{SCM(x, y) = (abs(x) / GCD(x, y) ) * abs(y)}
 
 If you want to calculate the gcd & lcm for 2 values
 or across 2 vectors of values, use \code{gcd2} and \code{scm2}.
+}
+
+\subsection{A note on performance}{
+
+A very common solution to finding the GCD of a vector of values is to use
+\code{Reduce()} along with a binary function like \code{gcd2()}. \cr
+e.g. \code{Reduce(gcd2, seq(5, 20, 5))}. \cr
+This is exactly identical to \code{gcd(seq(5, 20, 5))}, with \code{gcd()} being much
+faster and overall cheaper as it is written in C++ and heavily optimised.
+Therefore it is recommended to always use \code{gcd()}.
+
+For example we can compare the two approaches below, \cr
+\code{x <- seq(5L, length = 10^6, by = 5L)} \cr
+\code{bench::mark(Reduce(gcd2, x), gcd(x))} \cr
+This example code shows \code{gcd()} being ~200x faster on my machine than
+the \code{Reduce} + \code{gcd2} approach, even though \code{gcd2} itself is written in C++
+and has little overhead.
 }
 
 }

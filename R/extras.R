@@ -16,6 +16,10 @@
 #' @param size See `?sample`.
 #' @param replace See `?sample`.
 #' @param prob See `?sample`.
+#' @param n Number of `NA` values to insert
+#' randomly into your vector.
+#' @param prop Proportion of `NA` values to insert
+#' randomly into your vector.
 #'
 #' @returns
 #' `enframe()_` converts a vector to a data frame. \cr
@@ -187,6 +191,21 @@ na_rm <- function(x){
 #' @rdname extras
 sample_ <- function(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL){
   sset(x, sample.int(cpp_vec_length(x), size, replace, prob))
+}
+#' @export
+#' @rdname extras
+na_insert <- function(x, n = NULL, prop = NULL){
+  if (!is.null(n) && !is.null(prop)) {
+    stop("either n or prop must be supplied")
+  }
+  if (!is.null(n)) {
+    x[sample.int(length(x), size = n, replace = FALSE)] <- NA
+  }
+  if (!is.null(prop)) {
+    x[sample.int(length(x), size = floor(prop * length(x)),
+                 replace = FALSE)] <- NA
+  }
+  x
 }
 # head_ <- function(x, n = 1L){
 #   check_length(n, 1L)
