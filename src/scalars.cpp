@@ -149,10 +149,9 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   bool any_eq = false;
   bool eq = false;
 
-  SEXP out;
+  SEXP out = Rf_protect(R_NilValue); ++NP;
   switch ( TYPEOF(x) ){
   case NILSXP: {
-    out = Rf_protect(R_NilValue); ++NP;
     break;
   }
   case LGLSXP:
