@@ -63,6 +63,19 @@
 #define cheapr_is_na_int64(x) ((bool) (x == NA_INTEGER64))
 #endif
 
+#ifndef CHEAPR_INT_TO_INT64
+#define CHEAPR_INT_TO_INT64(x) ((long long int) (x == NA_INTEGER ? NA_INTEGER64 : x))
+#endif
+#ifndef CHEAPR_DBL_TO_INT64
+#define CHEAPR_DBL_TO_INT64(x) ((long long int) (x != x ? NA_INTEGER64 : x))
+#endif
+#ifndef CHEAPR_INT64_TO_INT
+#define CHEAPR_INT64_TO_INT(x) ((int) (x == NA_INTEGER64 ? NA_INTEGER : x))
+#endif
+#ifndef CHEAPR_INT64_TO_DBL
+#define CHEAPR_INT64_TO_DBL(x) ((double) (x == NA_INTEGER64 ? NA_REAL : x))
+#endif
+
 #ifndef CHEAPR_OMP_THRESHOLD
 #define CHEAPR_OMP_THRESHOLD 100000
 #endif

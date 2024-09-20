@@ -1,5 +1,9 @@
 # cheapr (Development version)
 
+* New function `na_insert` to randomly insert `NA` values into a vector.
+
+* New function `vector_length` as a hybrid between `length` and `nrow`.
+
 * Limited support added for 'integer64' objects. This applies to the
 `NA` related functions as well as the GCD and LCM functions.
 

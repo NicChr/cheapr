@@ -5,11 +5,6 @@ template<typename T> T cpp_sign(T x) {
   return (x > 0) - (x < 0);
 }
 
-#define CHEAPR_INT_TO_INT64(x) ((long long int) (x == NA_INTEGER ? NA_INTEGER64 : x))
-#define CHEAPR_DBL_TO_INT64(x) ((long long int) (x != x ? NA_INTEGER64 : x))
-#define CHEAPR_INT64_TO_INT(x) ((int) (x == NA_INTEGER64 ? NA_INTEGER : x))
-#define CHEAPR_INT64_TO_DBL(x) ((double) (x == NA_INTEGER64 ? NA_REAL : x))
-
 [[cpp11::register]]
 double cpp_gcd2(double x, double y, double tol, bool na_rm){
   double zero = 0.0;

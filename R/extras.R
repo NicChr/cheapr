@@ -37,6 +37,10 @@
 #' `sample_()` is an alternative to `sample()` that natively samples
 #' data frame rows through `sset()`. It also does not have a special case when
 #' `length(x)` is 1. \cr
+#' `na_insert` inserts `NA` values randomly into your vector.
+#' Useful for generating missing data. \cr
+#' `vector_length` behaves mostly like `NROW()` except
+#' for matrices in which it matches `length()`.
 #'
 #' @details
 #' `intersect_()` and `setdiff_()` are faster and more efficient
@@ -207,6 +211,10 @@ na_insert <- function(x, n = NULL, prop = NULL){
   }
   x
 }
+#' @export
+#' @rdname extras
+vector_length <- cpp_vec_length
+
 # head_ <- function(x, n = 1L){
 #   check_length(n, 1L)
 #   N <- cpp_vec_length(x)

@@ -77,7 +77,7 @@ factor_ <- function(
   } else if (is_int64){
     # fct_lvls <- formatC(lvls, format = "f", drop0trailing = TRUE)
     # fct_lvls <- format(lvls, scientific = FALSE, trim = TRUE)
-    fct_lvls <- cpp_format_double_as_int64(lvls)
+    fct_lvls <- cpp_format_numeric_as_int64(lvls)
     } else {
     fct_lvls <- as.character(lvls)
   }
@@ -221,4 +221,10 @@ levels_reorder <- function(x, order_by, decreasing = FALSE){
     ordered_levels <- levels(x)[o]
     factor_(x, levels = ordered_levels)
   }
+}
+# Generic factor conversion to data representation
+factor_as_type <- function(x, type){
+  check_length(type, 1)
+
+  do.call(paste0("as.", type), list(levels(x)))[unclass(x)]
 }

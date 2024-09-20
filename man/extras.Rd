@@ -12,6 +12,7 @@
 \alias{na_rm}
 \alias{sample_}
 \alias{na_insert}
+\alias{vector_length}
 \title{Extra utilities}
 \usage{
 setdiff_(x, y, dups = TRUE)
@@ -53,6 +54,8 @@ na_rm(x)
 sample_(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL)
 
 na_insert(x, n = NULL, prop = NULL)
+
+vector_length(x)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -109,6 +112,10 @@ For more advanced \code{NA} handling, see \code{?is_na}. \cr
 \code{sample_()} is an alternative to \code{sample()} that natively samples
 data frame rows through \code{sset()}. It also does not have a special case when
 \code{length(x)} is 1. \cr
+\code{na_insert} inserts \code{NA} values randomly into your vector.
+Useful for generating missing data. \cr
+\code{vector_length} behaves mostly like \code{NROW()} except
+for matrices in which it matches \code{length()}.
 }
 \description{
 Extra utilities

@@ -140,24 +140,64 @@ std::string string_format( const std::string& format, Args ... args){
   return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
 }
 
+// Simple format large integers
+// same as `format(x, scientific = FALSE, trim = TRUE)`
+
 [[cpp11::register]]
-SEXP cpp_format_double_as_int64(SEXP x){
+SEXP cpp_format_numeric_as_int64(SEXP x){
   R_xlen_t n = Rf_xlength(x);
 
-  SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
-  double *p_x = REAL(x);
-  SEXP na_char = Rf_protect(Rf_mkChar("NA"));
-  for (R_xlen_t i = 0; i < n; ++i){
-    if (cheapr_is_na_dbl(p_x[i])){
-      SET_STRING_ELT(out, i, na_char);
-    } else {
-      long long temp = p_x[i];
-      std::string s = string_format("%lld", temp);
-      SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
+    int *p_x = INTEGER(x);
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      if (cheapr_is_na_int(p_x[i])){
+        SET_STRING_ELT(out, i, NA_STRING);
+      } else {
+        long long temp = p_x[i];
+        std::string s = string_format("%lld", temp);
+        SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+      }
     }
+    Rf_unprotect(1);
+    return out;
   }
-  Rf_unprotect(2);
-  return out;
+  case REALSXP: {
+    SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
+    if (is_int64(x)){
+      long long *p_x = INTEGER64_PTR(x);
+
+      for (R_xlen_t i = 0; i < n; ++i){
+        if (cheapr_is_na_int64(p_x[i])){
+          SET_STRING_ELT(out, i, NA_STRING);
+        } else {
+          long long temp = p_x[i];
+          std::string s = string_format("%lld", temp);
+          SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+        }
+      }
+    } else {
+      double *p_x = REAL(x);
+
+      for (R_xlen_t i = 0; i < n; ++i){
+        if (cheapr_is_na_dbl(p_x[i])){
+          SET_STRING_ELT(out, i, NA_STRING);
+        } else {
+          long long temp = p_x[i];
+          std::string s = string_format("%lld", temp);
+          SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+        }
+      }
+    }
+    Rf_unprotect(1);
+    return out;
+  }
+  default: {
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+  }
+  }
 }
 
 // Potentially useful for rolling calculations
