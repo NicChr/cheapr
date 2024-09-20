@@ -41,6 +41,13 @@ SEXP cpp_set_rm_attr(SEXP x, SEXP which) {
 [[cpp11::register]]
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
   int NP = 0;
+  if (Rf_isNull(attributes)){
+    if (add){
+      return x;
+    } else {
+      return cpp_set_rm_attributes(x);
+    }
+  }
   if (!add){
     cpp_set_rm_attributes(x);
   }

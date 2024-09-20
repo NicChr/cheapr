@@ -237,10 +237,10 @@ extern "C" SEXP _cheapr_cpp_count_val(SEXP x, SEXP value, SEXP recursive) {
   END_CPP11
 }
 // scalars.cpp
-SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool set);
-extern "C" SEXP _cheapr_cpp_val_replace(SEXP x, SEXP value, SEXP replace, SEXP set) {
+SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
+extern "C" SEXP _cheapr_cpp_val_replace(SEXP x, SEXP value, SEXP replace, SEXP recursive) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_val_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value), cpp11::as_cpp<cpp11::decay_t<SEXP>>(replace), cpp11::as_cpp<cpp11::decay_t<bool>>(set)));
+    return cpp11::as_sexp(cpp_val_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value), cpp11::as_cpp<cpp11::decay_t<SEXP>>(replace), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
   END_CPP11
 }
 // sequences.cpp

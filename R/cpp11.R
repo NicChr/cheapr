@@ -132,8 +132,8 @@ cpp_count_val <- function(x, value, recursive) {
   .Call(`_cheapr_cpp_count_val`, x, value, recursive)
 }
 
-cpp_val_replace <- function(x, value, replace, set) {
-  .Call(`_cheapr_cpp_val_replace`, x, value, replace, set)
+cpp_val_replace <- function(x, value, replace, recursive) {
+  .Call(`_cheapr_cpp_val_replace`, x, value, replace, recursive)
 }
 
 cpp_int_sequence <- function(size, from, by) {
