@@ -141,6 +141,31 @@ funique.POSIXlt <- function(x, sort = FALSE, ...){
   out
 }
 
+#' @exportS3Method collapse::fmean
+fmean.integer64 <- function(x, ...){
+  collapse::fmean(cpp_int64_to_double(x), ...)
+}
+#' @exportS3Method collapse::fmedian
+fmedian.integer64 <- function(x, ...){
+  collapse::fmedian(cpp_int64_to_double(x), ...)
+}
+#' @exportS3Method collapse::fvar
+fvar.integer64 <- function(x, ...){
+  collapse::fvar(cpp_int64_to_double(x), ...)
+}
+#' @exportS3Method collapse::fsd
+fsd.integer64 <- function(x, ...){
+  collapse::fsd(cpp_int64_to_double(x), ...)
+}
+#' @exportS3Method collapse::fnth
+fnth.integer64 <- function(x, ...){
+  collapse::fnth(cpp_int64_to_double(x), ...)
+}
+#' @exportS3Method collapse::fnobs
+fnobs.integer64 <- function(x, ...){
+  collapse::fnobs(cpp_int64_to_double(x), ...)
+}
+
 n_dots <- function(...){
   nargs()
 }

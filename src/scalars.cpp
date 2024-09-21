@@ -181,6 +181,36 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     break;
   }
   case REALSXP: {
+    if (is_int64(x)){
+    SEXP temp = Rf_protect(Rf_allocVector(REALSXP, 0)); ++NP;
+    long long *p_out = INTEGER64_PTR(temp);
+
+    if (!is_int64(value)){
+      Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
+      Rf_protect(value = cpp_numeric_to_int64(value)); ++NP;
+    }
+    if (!is_int64(replace)){
+      Rf_protect(replace = Rf_coerceVector(replace, REALSXP)); ++NP;
+      Rf_protect(replace = cpp_numeric_to_int64(replace)); ++NP;
+    }
+    long long val = INTEGER64_PTR(value)[0];
+    long long repl = INTEGER64_PTR(replace)[0];
+    long long *p_x = INTEGER64_PTR(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      eq = p_x[i] == val;
+      if (!any_eq && eq){
+        any_eq = true;
+        out = Rf_protect(Rf_duplicate(x)); ++NP;
+        // Change where pointer is pointing to
+        p_out = INTEGER64_PTR(out);
+      }
+      if (eq) p_out[i] = repl;
+    }
+    // Make sure to return x if there were no values to replace
+    if (!any_eq){
+      out = Rf_protect(x); ++NP;
+    }
+  } else {
     SEXP temp = Rf_protect(Rf_allocVector(REALSXP, 0)); ++NP;
     double *p_out = REAL(temp);
     Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
@@ -219,7 +249,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
         out = Rf_protect(x); ++NP;
       }
     }
-    break;
+  }
+  break;
   }
   case STRSXP: {
     Rf_protect(value = Rf_coerceVector(value, STRSXP)); ++NP;
