@@ -141,6 +141,16 @@ funique.POSIXlt <- function(x, sort = FALSE, ...){
   out
 }
 
+# collapse methods for integer64
+
+#' @exportS3Method collapse::fmin
+fmin.integer64 <- function(x, ...){
+  collapse::fmin(cpp_int64_to_double(x), ...)
+}
+#' @exportS3Method collapse::fmax
+fmax.integer64 <- function(x, ...){
+  collapse::fmax(cpp_int64_to_double(x), ...)
+}
 #' @exportS3Method collapse::fmean
 fmean.integer64 <- function(x, ...){
   collapse::fmean(cpp_int64_to_double(x), ...)
