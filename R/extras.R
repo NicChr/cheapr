@@ -16,9 +16,9 @@
 #' @param size See `?sample`.
 #' @param replace See `?sample`.
 #' @param prob See `?sample`.
-#' @param n Number of `NA` values to insert
+#' @param n Number of scalar values (or `NA`) to insert
 #' randomly into your vector.
-#' @param prop Proportion of `NA` values to insert
+#' @param prop Proportion of scalar values (or `NA`) values to insert
 #' randomly into your vector.
 #'
 #' @returns
@@ -31,12 +31,11 @@
 #' in which case an integer vector of break indices is returned. \cr
 #' `%in_%` and `%!in_%` both return a logical vector signifying if the values of
 #' `x` exist or don't exist in `table` respectively. \cr
-#' `na_rm()` is a convenience function that removes `NA` values and
-#' empty rows in the case of data frames.
-#' For more advanced `NA` handling, see `?is_na`. \cr
 #' `sample_()` is an alternative to `sample()` that natively samples
 #' data frame rows through `sset()`. It also does not have a special case when
 #' `length(x)` is 1. \cr
+#' `val_insert` inserts scalar values randomly into your vector.
+#' Useful for replacing lots of data with a single value. \cr
 #' `na_insert` inserts `NA` values randomly into your vector.
 #' Useful for generating missing data. \cr
 #' `vector_length` behaves mostly like `NROW()` except
@@ -129,7 +128,7 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
 #' @rdname extras
 cut.integer64 <- function(x, breaks, labels = NULL, include.lowest = FALSE,
                           right = TRUE, dig.lab = 3L, ordered_result = FALSE, ...){
-  cut_numeric(cpp_int64_to_double(x), breaks = breaks,
+  cut_numeric(as.double(x), breaks = breaks,
               labels = labels, include.lowest = include.lowest,
               right = right, dig.lab = dig.lab, ordered_result = ordered_result,
               ...)
@@ -181,35 +180,28 @@ deframe_ <- function(x){
 }
 #' @export
 #' @rdname extras
-na_rm <- function(x){
-  n_na <- num_na(x, recursive = TRUE)
-  if (n_na == unlisted_length(x)){
-    sset(x, 0L)
-  } else if (n_na == 0){
-    x
-  } else {
-    sset(x, which_not_na(x))
-  }
-}
-#' @export
-#' @rdname extras
 sample_ <- function(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL){
   sset(x, sample.int(cpp_vec_length(x), size, replace, prob))
 }
 #' @export
 #' @rdname extras
-na_insert <- function(x, n = NULL, prop = NULL){
+val_insert <- function(x, value, n = NULL, prop = NULL){
   if (!is.null(n) && !is.null(prop)) {
     stop("either n or prop must be supplied")
   }
-  if (!is.null(n)) {
-    x[sample.int(length(x), size = n, replace = FALSE)] <- NA
+  if (!is.null(n)){
+    x[sample.int(length(x), size = n, replace = FALSE)] <- value
   }
   if (!is.null(prop)) {
     x[sample.int(length(x), size = floor(prop * length(x)),
-                 replace = FALSE)] <- NA
+                 replace = FALSE)] <- value
   }
   x
+}
+#' @export
+#' @rdname extras
+na_insert <- function(x, n = NULL, prop = NULL){
+  val_insert(x, value = NA, n = n, prop = prop)
 }
 #' @export
 #' @rdname extras

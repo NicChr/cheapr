@@ -96,6 +96,34 @@ extern "C" SEXP _cheapr_cpp_lcm2_vectorised(SEXP x, SEXP y, SEXP tol, SEXP na_rm
     return cpp11::as_sexp(cpp_lcm2_vectorised(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y), cpp11::as_cpp<cpp11::decay_t<double>>(tol), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
   END_CPP11
 }
+// int64.cpp
+SEXP cpp_int64_to_int(SEXP x);
+extern "C" SEXP _cheapr_cpp_int64_to_int(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_int64_to_int(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// int64.cpp
+SEXP cpp_int64_to_double(SEXP x);
+extern "C" SEXP _cheapr_cpp_int64_to_double(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_int64_to_double(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// int64.cpp
+SEXP cpp_numeric_to_int64(SEXP x);
+extern "C" SEXP _cheapr_cpp_numeric_to_int64(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_numeric_to_int64(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// int64.cpp
+SEXP cpp_format_numeric_as_int64(SEXP x);
+extern "C" SEXP _cheapr_cpp_format_numeric_as_int64(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_format_numeric_as_int64(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // lag.cpp
 SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive);
 extern "C" SEXP _cheapr_cpp_lag(SEXP x, SEXP k, SEXP fill, SEXP set, SEXP recursive) {
@@ -418,27 +446,6 @@ extern "C" SEXP _cheapr_r_copy(SEXP x) {
     return cpp11::as_sexp(r_copy(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// utils.cpp
-SEXP cpp_int64_to_double(SEXP x);
-extern "C" SEXP _cheapr_cpp_int64_to_double(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_int64_to_double(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_numeric_to_int64(SEXP x);
-extern "C" SEXP _cheapr_cpp_numeric_to_int64(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_numeric_to_int64(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_format_numeric_as_int64(SEXP x);
-extern "C" SEXP _cheapr_cpp_format_numeric_as_int64(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_format_numeric_as_int64(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -487,6 +494,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_gcd2",                    (DL_FUNC) &_cheapr_cpp_gcd2,                    4},
     {"_cheapr_cpp_gcd2_vectorised",         (DL_FUNC) &_cheapr_cpp_gcd2_vectorised,         4},
     {"_cheapr_cpp_int64_to_double",         (DL_FUNC) &_cheapr_cpp_int64_to_double,         1},
+    {"_cheapr_cpp_int64_to_int",            (DL_FUNC) &_cheapr_cpp_int64_to_int,            1},
     {"_cheapr_cpp_int_sequence",            (DL_FUNC) &_cheapr_cpp_int_sequence,            3},
     {"_cheapr_cpp_is_na",                   (DL_FUNC) &_cheapr_cpp_is_na,                   1},
     {"_cheapr_cpp_lag",                     (DL_FUNC) &_cheapr_cpp_lag,                     5},

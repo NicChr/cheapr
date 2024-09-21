@@ -52,6 +52,22 @@ cpp_lcm2_vectorised <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_lcm2_vectorised`, x, y, tol, na_rm)
 }
 
+cpp_int64_to_int <- function(x) {
+  .Call(`_cheapr_cpp_int64_to_int`, x)
+}
+
+cpp_int64_to_double <- function(x) {
+  .Call(`_cheapr_cpp_int64_to_double`, x)
+}
+
+cpp_numeric_to_int64 <- function(x) {
+  .Call(`_cheapr_cpp_numeric_to_int64`, x)
+}
+
+cpp_format_numeric_as_int64 <- function(x) {
+  .Call(`_cheapr_cpp_format_numeric_as_int64`, x)
+}
+
 cpp_lag <- function(x, k, fill, set, recursive) {
   .Call(`_cheapr_cpp_lag`, x, k, fill, set, recursive)
 }
@@ -234,18 +250,6 @@ cpp_vec_length <- function(x) {
 
 r_copy <- function(x) {
   .Call(`_cheapr_r_copy`, x)
-}
-
-cpp_int64_to_double <- function(x) {
-  .Call(`_cheapr_cpp_int64_to_double`, x)
-}
-
-cpp_numeric_to_int64 <- function(x) {
-  .Call(`_cheapr_cpp_numeric_to_int64`, x)
-}
-
-cpp_format_numeric_as_int64 <- function(x) {
-  .Call(`_cheapr_cpp_format_numeric_as_int64`, x)
 }
 
 cpp_which_ <- function(x, invert) {

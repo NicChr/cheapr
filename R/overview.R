@@ -59,7 +59,7 @@ overview.numeric <- function(x, hist = FALSE, digits = getOption("cheapr.digits"
 #' @rdname overview
 #' @export
 overview.integer64 <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(cpp_int64_to_double(x), hist = hist, digits = digits)
+  out <- overview(as.double(x), hist = hist, digits = digits)
   out$numeric$class <- class(x)[1]
   out
 }
@@ -170,7 +170,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   }
 
   ## Coerce int64 to double
-  num_data <- transform_all(num_data, cpp_int64_to_double, int64_vars)
+  num_data <- transform_all(num_data, as.double, int64_vars)
 
   if (N > 0L && length(which_num) > 0) {
     num_out$n_missing <- pluck_row(summarise_all(num_data, num_na), 1)

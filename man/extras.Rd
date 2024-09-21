@@ -9,8 +9,8 @@
 \alias{\%!in_\%}
 \alias{enframe_}
 \alias{deframe_}
-\alias{na_rm}
 \alias{sample_}
+\alias{val_insert}
 \alias{na_insert}
 \alias{vector_length}
 \title{Extra utilities}
@@ -49,9 +49,9 @@ enframe_(x, name = "name", value = "value")
 
 deframe_(x)
 
-na_rm(x)
-
 sample_(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL)
+
+val_insert(x, value, n = NULL, prop = NULL)
 
 na_insert(x, n = NULL, prop = NULL)
 
@@ -90,10 +90,10 @@ vector_length(x)
 
 \item{prob}{See \code{?sample}.}
 
-\item{n}{Number of \code{NA} values to insert
+\item{n}{Number of scalar values (or \code{NA}) to insert
 randomly into your vector.}
 
-\item{prop}{Proportion of \code{NA} values to insert
+\item{prop}{Proportion of scalar values (or \code{NA}) values to insert
 randomly into your vector.}
 }
 \value{
@@ -106,12 +106,11 @@ through the \code{breaks} argument and returns a factor unless \code{labels = FA
 in which case an integer vector of break indices is returned. \cr
 \verb{\%in_\%} and \verb{\%!in_\%} both return a logical vector signifying if the values of
 \code{x} exist or don't exist in \code{table} respectively. \cr
-\code{na_rm()} is a convenience function that removes \code{NA} values and
-empty rows in the case of data frames.
-For more advanced \code{NA} handling, see \code{?is_na}. \cr
 \code{sample_()} is an alternative to \code{sample()} that natively samples
 data frame rows through \code{sset()}. It also does not have a special case when
 \code{length(x)} is 1. \cr
+\code{val_insert} inserts scalar values randomly into your vector.
+Useful for replacing lots of data with a single value. \cr
 \code{na_insert} inserts \code{NA} values randomly into your vector.
 Useful for generating missing data. \cr
 \code{vector_length} behaves mostly like \code{NROW()} except

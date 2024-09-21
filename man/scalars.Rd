@@ -8,6 +8,9 @@
 \alias{val_replace}
 \alias{na_replace}
 \alias{val_rm}
+\alias{na_count}
+\alias{na_find}
+\alias{na_rm}
 \title{Efficient functions for counting, finding, replacing and removing scalars}
 \usage{
 val_count(x, value, recursive = TRUE)
@@ -23,6 +26,12 @@ val_replace(x, value, replace, recursive = TRUE)
 na_replace(x, replace, recursive = TRUE)
 
 val_rm(x, value)
+
+na_count(x, recursive = TRUE)
+
+na_find(x, invert = FALSE)
+
+na_rm(x)
 }
 \arguments{
 \item{x}{A vector, list, data frame or matrix.}
@@ -52,11 +61,20 @@ If no instances are found, the original input x is returned as is.
 \description{
 These are primarily intended as very fast scalar-based functions
 for developers.
+They are particularly useful for working with \code{NA} values in a fast
+and efficient manner.
 }
 \details{
 At the moment these functions only work for
-integer, double and character vectors.
+integer, double and character vectors with the exception of the \code{NA}
+functions.
 They are intended mainly for developers who wish to write cheaper code
 and reduce expensive vector operations. For example
 \code{val_count(x, 0)} will always be cheaper than \code{sum(x == 0)}.
+
+Historically function naming has not been consistent, though going forward
+all scalar functions (including the \code{NA} convenience functions) will be
+prefixed with 'val_' and 'na_' respectively.
+Functions named with the older naming scheme like \code{which_na} may be
+removed at some point in the future.
 }

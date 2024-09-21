@@ -141,39 +141,50 @@ funique.POSIXlt <- function(x, sort = FALSE, ...){
   out
 }
 
+#' @exportS3Method base::as.double
+as.double.integer64 <- function(x, ...){
+  cpp_int64_to_double(x)
+}
+#' @exportS3Method base::as.numeric
+as.numeric.integer64 <- as.double.integer64
+#' @exportS3Method base::as.integer
+as.integer.integer64 <- function(x, ...){
+  cpp_int64_to_int(x)
+}
+
 # collapse methods for integer64
 
 #' @exportS3Method collapse::fmin
 fmin.integer64 <- function(x, ...){
-  collapse::fmin(cpp_int64_to_double(x), ...)
+  cpp_numeric_to_int64(collapse::fmin(as.double(x), ...))
 }
 #' @exportS3Method collapse::fmax
 fmax.integer64 <- function(x, ...){
-  collapse::fmax(cpp_int64_to_double(x), ...)
+  cpp_numeric_to_int64(collapse::fmax(as.double(x), ...))
 }
 #' @exportS3Method collapse::fmean
 fmean.integer64 <- function(x, ...){
-  collapse::fmean(cpp_int64_to_double(x), ...)
+  collapse::fmean(as.double(x), ...)
 }
 #' @exportS3Method collapse::fmedian
 fmedian.integer64 <- function(x, ...){
-  collapse::fmedian(cpp_int64_to_double(x), ...)
+  collapse::fmedian(as.double(x), ...)
 }
 #' @exportS3Method collapse::fvar
 fvar.integer64 <- function(x, ...){
-  collapse::fvar(cpp_int64_to_double(x), ...)
+  collapse::fvar(as.double(x), ...)
 }
 #' @exportS3Method collapse::fsd
 fsd.integer64 <- function(x, ...){
-  collapse::fsd(cpp_int64_to_double(x), ...)
+  collapse::fsd(as.double(x), ...)
 }
 #' @exportS3Method collapse::fnth
 fnth.integer64 <- function(x, ...){
-  collapse::fnth(cpp_int64_to_double(x), ...)
+  collapse::fnth(as.double(x), ...)
 }
 #' @exportS3Method collapse::fnobs
 fnobs.integer64 <- function(x, ...){
-  collapse::fnobs(cpp_int64_to_double(x), ...)
+  collapse::fnobs(as.double(x), ...)
 }
 
 n_dots <- function(...){
