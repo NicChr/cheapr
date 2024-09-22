@@ -115,22 +115,19 @@ SEXP cpp_list_as_df(SEXP x) {
   } else {
     N = cpp_vec_length(VECTOR_ELT(out, 0));
   }
-  SEXP df_str = Rf_protect(Rf_ScalarString(Rf_mkChar("data.frame")));
+  SEXP df_str = Rf_protect(Rf_mkString("data.frame"));
+  SEXP row_names;
   if (N > 0){
-    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
+    row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
     INTEGER(row_names)[0] = NA_INTEGER;
     INTEGER(row_names)[1] = -N;
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-    Rf_classgets(out, df_str);
-    Rf_unprotect(3);
-    return out;
   } else {
-    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0));
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-    Rf_classgets(out, df_str);
-    Rf_unprotect(3);
-    return out;
+    row_names = Rf_protect(Rf_allocVector(INTSXP, 0));
   }
+  Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  Rf_classgets(out, df_str);
+  Rf_unprotect(3);
+  return out;
 }
 
 // void cpp_check_nested_lengths(SEXP x, SEXP y){

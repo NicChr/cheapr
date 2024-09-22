@@ -75,28 +75,3 @@ SEXP altrep_materialise(SEXP x) {
   // if (ALTREP(x)) DATAPTR(x);
   // return x;
 }
-
-// SEXP altrep_materialise(SEXP x) {
-//   if (!ALTREP(x)) return x;
-//   SEXP out;
-//   R_xlen_t n = Rf_xlength(x);
-//   switch (TYPEOF(x)) {
-//   case INTSXP: {
-//     out = Rf_protect(Rf_allocVector(INTSXP, n));
-//     INTEGER_GET_REGION(x, 0, n, INTEGER(out));
-//     break;
-//   }
-//   case REALSXP: {
-//     out = Rf_protect(Rf_allocVector(REALSXP, n));
-//     REAL_GET_REGION(x, 0, n, REAL(out));
-//     break;
-//   }
-//   default: {
-//     // This is a pretty hacky way of doing it..
-//     cpp11::function base_subset = cpp11::package("base")["["];
-//     out = Rf_protect(base_subset(x));
-//   }
-//   }
-//   Rf_unprotect(1);
-//   return out;
-// }

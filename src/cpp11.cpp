@@ -5,14 +5,14 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
-// altrep_utils.cpp
+// altrep.cpp
 bool is_compact_seq(SEXP x);
 extern "C" SEXP _cheapr_is_compact_seq(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(is_compact_seq(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// altrep_utils.cpp
+// altrep.cpp
 SEXP compact_seq_data(SEXP x);
 extern "C" SEXP _cheapr_compact_seq_data(SEXP x) {
   BEGIN_CPP11

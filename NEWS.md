@@ -4,8 +4,14 @@
 
 * New function `vector_length` as a hybrid between `length` and `nrow`.
 
-* Limited support added for 'integer64' objects. This applies to the
-`NA` related functions as well as the GCD and LCM functions.
+* `gcd` and `scm` now make use of 64-bit integers internally and can accept
+'integer64' objects. `scm` used to return `NA` once the 32-bit integer limit
+of 2^31 - 1 was reached if the input was an integer vector. 
+This has now been increased to the 64-bit integer limit, 
+which is approximately 9.223372e+18.
+
+* 'integer64' objects are now lightly supported. They are not 
+supported in any sequence functions or in the 'set_math' functions.
 
 * New functions `new_df` and `named_dots`.
 
