@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.9.5
 
 * New function `na_insert` to randomly insert `NA` values into a vector.
 
