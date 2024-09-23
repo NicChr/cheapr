@@ -51,6 +51,48 @@ SEXP cpp_int64_to_double(SEXP x){
   return out;
 }
 
+// Can all numbers be safely converted to 32-bit int?
+
+bool cpp_all_integerable(SEXP x, int shift = 0){
+  R_xlen_t n = Rf_xlength(x);
+  bool out = true;
+
+  switch (TYPEOF(x)){
+  case LGLSXP:
+  case INTSXP: {
+    break;
+  }
+  case REALSXP: {
+    if (is_int64(x)){
+    long long int *p_x = INTEGER64_PTR(x);
+    long long int int_max = integer_max_;
+    long long int shift_ = shift;
+    for (R_xlen_t i = 0; i < n; ++i){
+      if (!cheapr_is_na_int64(p_x[i]) && ( (std::llabs(p_x[i]) + shift_) > int_max )){
+        out = false;
+        break;
+      }
+    }
+  } else {
+    double *p_x = REAL(x);
+    double int_max = integer_max_;
+    double shift_ = shift;
+    for (R_xlen_t i = 0; i < n; ++i){
+      if (!cheapr_is_na_dbl(p_x[i]) && ( (std::fabs(p_x[i]) + shift_) > int_max )){
+        out = false;
+        break;
+      }
+    }
+  }
+  break;
+  }
+  default: {
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+  }
+  }
+  return out;
+}
+
 // Convert 64-bit integer to int if possible, otherwise double
 
 [[cpp11::register]]
@@ -58,19 +100,7 @@ SEXP cpp_int64_to_numeric(SEXP x){
   if (!is_int64(x)){
     Rf_error("x must be an integer64");
   }
-  R_xlen_t n = Rf_xlength(x);
-
-  long long *p_x = INTEGER64_PTR(x);
-
-  bool maybe_int = true;
-  long long int int_max = integer_max_;
-  for (R_xlen_t i = 0; i < n; ++i){
-    if (!cheapr_is_na_int64(p_x[i]) && std::llabs(p_x[i]) > int_max){
-     maybe_int = false;
-     break;
-    }
-  }
-  return maybe_int ? cpp_int64_to_int(x) : cpp_int64_to_double(x);
+  return cpp_all_integerable(x, 0) ? cpp_int64_to_int(x) : cpp_int64_to_double(x);
 }
 
 // The reverse operation

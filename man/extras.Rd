@@ -30,16 +30,7 @@ cut_numeric(
   ...
 )
 
-\method{cut}{integer64}(
-  x,
-  breaks,
-  labels = NULL,
-  include.lowest = FALSE,
-  right = TRUE,
-  dig.lab = 3L,
-  ordered_result = FALSE,
-  ...
-)
+\method{cut}{integer64}(x, ...)
 
 x \%in_\% table
 
@@ -49,7 +40,7 @@ enframe_(x, name = "name", value = "value")
 
 deframe_(x)
 
-sample_(x, size = cpp_vec_length(x), replace = FALSE, prob = NULL)
+sample_(x, size = vector_length(x), replace = FALSE, prob = NULL)
 
 val_insert(x, value, n = NULL, prop = NULL)
 

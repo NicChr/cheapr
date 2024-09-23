@@ -1,15 +1,14 @@
-* Updated to version 0.9.3
-
-* Have fixed the issues listed at https://cran.r-project.org/web/checks/check_results_cheapr.html
+* Updated to version 0.9.5
 
 * Checked and passed using rhub v2.0.0 in the following environments:
 
 ## Test environments
 - R-hubv2 windows (R-devel)
 - R-hubv2 linux (R-devel)
-- R-hubv2 macos (R-devel)
+- R-hubv2 macos-arm64 (R-devel)
 - R-hubv2 clang-asan
 - R-hubv2 ubuntu-gcc12
+- R-hubv2 ubuntu-clang
 
 Additionally checked on win-builder.r-project.org:
 

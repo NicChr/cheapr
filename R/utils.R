@@ -155,6 +155,11 @@ as.integer.integer64 <- function(x, ...){
 
 #' @exportS3Method collapse::fsum
 fsum.integer64 <- function(x, g = NULL, ...){
+
+  ## The statement is here because
+  ## when there are groups, collapse::fsum
+  ## errors when there is a 32-bit int overflow
+
   if (is.null(g)){
     collapse::fsum(cpp_int64_to_numeric(x), ...)
   } else {

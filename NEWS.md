@@ -22,7 +22,7 @@ supported in any sequence functions or in the 'set_math' functions.
 
 * `lag_` now uses `memmove` where possible.
 
-* Fixed an issue where `lag_(x)` was materialising x twice if x was an altrep 
+* Fixed an issue where `lag_(x)` was materialising x twice if x was an ALTREP 
 integer sequence.
 
 # cheapr 0.9.3 (29-Jul-2024)

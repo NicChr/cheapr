@@ -107,9 +107,9 @@ na_count <- num_na
 #' @export
 na_find <- function(x, invert = FALSE){
   if (invert){
-    which_na(x)
-  } else {
     which_not_na(x)
+  } else {
+    which_na(x)
   }
 }
 #' @rdname scalars
