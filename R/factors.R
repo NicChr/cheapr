@@ -57,7 +57,7 @@ factor_ <- function(
   }
   is_int64 <- inherits(x, "integer64")
   if (is_int64){
-    x <- as.double(x)
+    x <- cpp_int64_to_numeric(x)
   }
   if (is.null(levels)){
     lvls <- collapse::funique(x, sort = order, na.last = TRUE)

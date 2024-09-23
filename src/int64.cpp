@@ -51,6 +51,28 @@ SEXP cpp_int64_to_double(SEXP x){
   return out;
 }
 
+// Convert 64-bit integer to int if possible, otherwise double
+
+[[cpp11::register]]
+SEXP cpp_int64_to_numeric(SEXP x){
+  if (!is_int64(x)){
+    Rf_error("x must be an integer64");
+  }
+  R_xlen_t n = Rf_xlength(x);
+
+  long long *p_x = INTEGER64_PTR(x);
+
+  bool maybe_int = true;
+  long long int int_max = integer_max_;
+  for (R_xlen_t i = 0; i < n; ++i){
+    if (!cheapr_is_na_int64(p_x[i]) && std::llabs(p_x[i]) > int_max){
+     maybe_int = false;
+     break;
+    }
+  }
+  return maybe_int ? cpp_int64_to_int(x) : cpp_int64_to_double(x);
+}
+
 // The reverse operation
 // Convert any numeric vector into 64-integer vec
 // Very much an internal function as cheapr never explicitly outputs

@@ -145,30 +145,33 @@ funique.POSIXlt <- function(x, sort = FALSE, ...){
 as.double.integer64 <- function(x, ...){
   cpp_int64_to_double(x)
 }
-#' @exportS3Method base::as.numeric
-as.numeric.integer64 <- as.double.integer64
 #' @exportS3Method base::as.integer
 as.integer.integer64 <- function(x, ...){
   cpp_int64_to_int(x)
 }
 
 # collapse methods for integer64
+# They are obviously slow but at least result is correct
 
+#' @exportS3Method collapse::fsum
+fsum.integer64 <- function(x, ...){
+  collapse::fsum(cpp_int64_to_numeric(x), ...)
+}
 #' @exportS3Method collapse::fmin
 fmin.integer64 <- function(x, ...){
-  cpp_numeric_to_int64(collapse::fmin(as.double(x), ...))
+  cpp_numeric_to_int64(collapse::fmin(cpp_int64_to_numeric(x), ...))
 }
 #' @exportS3Method collapse::fmax
 fmax.integer64 <- function(x, ...){
-  cpp_numeric_to_int64(collapse::fmax(as.double(x), ...))
+  cpp_numeric_to_int64(collapse::fmax(cpp_int64_to_numeric(x), ...))
 }
 #' @exportS3Method collapse::fmean
 fmean.integer64 <- function(x, ...){
-  collapse::fmean(as.double(x), ...)
+  collapse::fmean(cpp_int64_to_numeric(x), ...)
 }
 #' @exportS3Method collapse::fmedian
 fmedian.integer64 <- function(x, ...){
-  collapse::fmedian(as.double(x), ...)
+  collapse::fmedian(cpp_int64_to_numeric(x), ...)
 }
 #' @exportS3Method collapse::fvar
 fvar.integer64 <- function(x, ...){
@@ -180,11 +183,11 @@ fsd.integer64 <- function(x, ...){
 }
 #' @exportS3Method collapse::fnth
 fnth.integer64 <- function(x, ...){
-  collapse::fnth(as.double(x), ...)
+  collapse::fnth(cpp_int64_to_numeric(x), ...)
 }
 #' @exportS3Method collapse::fnobs
 fnobs.integer64 <- function(x, ...){
-  collapse::fnobs(as.double(x), ...)
+  collapse::fnobs(cpp_int64_to_numeric(x), ...)
 }
 
 n_dots <- function(...){
