@@ -145,7 +145,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
                                        n_false = NA_integer_[value_size]))
   lgl_out <- df_add_cols(lgl_out, list(p_true = NA_real_[value_size]))
   if (N > 0L && length(which_lgl) > 0) {
-    lgl_out$n_missing <- pluck_row(summarise_all(lgl_data, num_na), 1)
+    lgl_out$n_missing <- pluck_row(summarise_all(lgl_data, na_count), 1)
     lgl_out$p_complete <- pluck_row(summarise_all(lgl_data, prop_complete), 1)
     lgl_out$n_true <- pluck_row(summarise_all(lgl_data, function(x) sum(x, na.rm = TRUE)), 1)
     lgl_out$n_false <- N - lgl_out[["n_missing"]] - lgl_out[["n_true"]]
@@ -173,7 +173,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   num_data <- transform_all(num_data, as.double, int64_vars)
 
   if (N > 0L && length(which_num) > 0) {
-    num_out$n_missing <- pluck_row(summarise_all(num_data, num_na), 1)
+    num_out$n_missing <- pluck_row(summarise_all(num_data, na_count), 1)
     num_out$p_complete <- pluck_row(summarise_all(num_data, prop_complete), 1)
     num_out$n_unique <- pluck_row(summarise_all(num_data, n_unique), 1)
     num_out$n_unique <- num_out$n_unique - (num_out$n_missing > 0L)
@@ -210,7 +210,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   date_out <- df_add_cols(date_out, list(min = .Date(NA_real_[value_size]),
                                          max = .Date(NA_real_[value_size])))
   if (N > 0L && length(which_date) > 0) {
-    date_out$n_missing <- pluck_row(summarise_all(date_data, num_na), 1)
+    date_out$n_missing <- pluck_row(summarise_all(date_data, na_count), 1)
     date_out$p_complete <- pluck_row(summarise_all(date_data, prop_complete), 1)
     date_out$n_unique <- pluck_row(summarise_all(date_data, n_unique), 1)
     date_out$n_unique <- date_out$n_unique - (date_out$n_missing > 0L)
@@ -235,7 +235,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   datetime_out <- df_add_cols(datetime_out, list(min = .POSIXct(NA_real_[value_size]),
                                                  max = .POSIXct(NA_real_[value_size])))
   if (N > 0L && length(which_datetime) > 0) {
-    datetime_out$n_missing <- pluck_row(summarise_all(datetime_data, num_na), 1)
+    datetime_out$n_missing <- pluck_row(summarise_all(datetime_data, na_count), 1)
     datetime_out$p_complete <- pluck_row(summarise_all(datetime_data, prop_complete), 1)
     datetime_out$n_unique <- pluck_row(summarise_all(datetime_data, n_unique), 1)
     datetime_out$n_unique <- datetime_out$n_unique - (datetime_out$n_missing > 0L)
@@ -280,7 +280,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   cat_out <- df_add_cols(cat_out, list(min = NA_character_[value_size],
                                        max = NA_character_[value_size]))
   if (N > 0L && length(which_cat) > 0) {
-    cat_out$n_missing <- pluck_row(summarise_all(cat_data, num_na), 1)
+    cat_out$n_missing <- pluck_row(summarise_all(cat_data, na_count), 1)
     cat_out$p_complete <- pluck_row(summarise_all(cat_data, prop_complete), 1)
     cat_out$n_unique <- pluck_row(summarise_all(cat_data, n_unique), 1)
     cat_out$n_unique <- cat_out$n_unique - (cat_out$n_missing > 0L)
@@ -306,7 +306,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   other_out <- df_add_cols(other_out, list(n_unique = NA_integer_[value_size]))
   if (N > 0L && length(which_other) > 0) {
     other_out$n_missing <- pluck_row(summarise_all(
-      other_data, function(x) num_na(x, recursive = FALSE)
+      other_data, function(x) na_count(x, recursive = FALSE)
       ), 1)
     other_out$p_complete <- pluck_row(summarise_all(
       other_data, function(x) prop_complete(x, recursive = FALSE)
@@ -421,7 +421,7 @@ prop_missing <- function(x, recursive = TRUE){
   } else {
     N <- cpp_vec_length(x)
   }
-  num_na(x, recursive = recursive) / N
+  na_count(x, recursive = recursive) / N
 }
 prop_complete <- function(x, recursive = TRUE){
   1 - prop_missing(x, recursive = recursive)

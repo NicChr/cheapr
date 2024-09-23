@@ -42,7 +42,7 @@ lengths_(l) # Faster lengths()
 unlisted_length(l) # length of vector if we unlist
 paste0("length: ", length(print(unlist(l))))
 
-unlisted_length(l) - num_na(l) # Number of non-NA elements
+unlisted_length(l) - na_count(l) # Number of non-NA elements
 
 # We can create and initialise a new list with a default value
 l <- new_list(20, 0L)

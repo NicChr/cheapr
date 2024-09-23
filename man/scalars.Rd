@@ -65,14 +65,38 @@ They are particularly useful for working with \code{NA} values in a fast
 and efficient manner.
 }
 \details{
+The \code{val_} functions allow you to very efficiently work with
+scalars, i.e length 1 vectors. Many common common operations like
+counting the occurrence of \code{NA} or zeros, e.g. \code{sum(x == 0)} or
+\code{sum(is.na(x))} can be replaced more efficiently with
+\code{val_count(x, 0)} and \code{na_count(x)} respectively.
+
 At the moment these functions only work for
 integer, double and character vectors with the exception of the \code{NA}
 functions.
 They are intended mainly for developers who wish to write cheaper code
-and reduce expensive vector operations. For example
-\code{val_count(x, 0)} will always be cheaper than \code{sum(x == 0)}.
+and reduce expensive vector operations.
+\itemize{
+\item \code{val_count()} - Counts occurrences of a value
+\item \code{val_find()} Finds locations (indices) of a value
+\item \code{val_replace()} - Replaces value with another value
+\item \code{val_rm()} - Removes occurrences of value from an object
+}
 
-Historically function naming has not been consistent, though going forward
+There are \code{NA} equivalent convenience functions.
+\itemize{
+\item \code{na_count()} == \code{val_count(x, NA)}
+\item \code{na_find()} == \code{val_find(x, NA)}
+\item \code{na_replace()} == \code{val_replace(x, NA)}
+\item \code{na_rm()} == \code{val_rm(x, NA)}
+}
+
+\code{val_count()} and \code{val_replace()} can work recursively. For example,
+when applied to a data frame, \code{na_replace} will replace \code{NA} values across
+the entire data frame with the specified replacement value.
+
+In 'cheapr' function-naming conventions have not been consistent but
+going forward
 all scalar functions (including the \code{NA} convenience functions) will be
 prefixed with 'val_' and 'na_' respectively.
 Functions named with the older naming scheme like \code{which_na} may be

@@ -15,14 +15,36 @@
 #' @param replace Replacement scalar value.
 #'
 #' @details
+#' The `val_` functions allow you to very efficiently work with
+#' scalars, i.e length 1 vectors. Many common common operations like
+#' counting the occurrence of `NA` or zeros, e.g. `sum(x == 0)` or
+#' `sum(is.na(x))` can be replaced more efficiently with
+#' `val_count(x, 0)` and `na_count(x)` respectively.
+#'
 #' At the moment these functions only work for
 #' integer, double and character vectors with the exception of the `NA`
 #' functions.
 #' They are intended mainly for developers who wish to write cheaper code
-#' and reduce expensive vector operations. For example
-#' `val_count(x, 0)` will always be cheaper than `sum(x == 0)`.
+#' and reduce expensive vector operations.
 #'
-#' Historically function naming has not been consistent, though going forward
+#' * `val_count()` - Counts occurrences of a value
+#' * `val_find()` Finds locations (indices) of a value
+#' * `val_replace()` - Replaces value with another value
+#' * `val_rm()` - Removes occurrences of value from an object
+#'
+#' There are `NA` equivalent convenience functions.
+#'
+#' * `na_count()` == `val_count(x, NA)`
+#' * `na_find()` == `val_find(x, NA)`
+#' * `na_replace()` == `val_replace(x, NA)`
+#' * `na_rm()` == `val_rm(x, NA)`
+#'
+#' `val_count()` and `val_replace()` can work recursively. For example,
+#' when applied to a data frame, `na_replace` will replace `NA` values across
+#' the entire data frame with the specified replacement value.
+#'
+#' In 'cheapr' function-naming conventions have not been consistent but
+#' going forward
 #' all scalar functions (including the `NA` convenience functions) will be
 #' prefixed with 'val_' and 'na_' respectively.
 #' Functions named with the older naming scheme like `which_na` may be
