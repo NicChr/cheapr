@@ -154,8 +154,12 @@ as.integer.integer64 <- function(x, ...){
 # They are obviously slow but at least result is correct
 
 #' @exportS3Method collapse::fsum
-fsum.integer64 <- function(x, ...){
-  collapse::fsum(cpp_int64_to_numeric(x), ...)
+fsum.integer64 <- function(x, g = NULL, ...){
+  if (is.null(g)){
+    collapse::fsum(cpp_int64_to_numeric(x), ...)
+  } else {
+    collapse::fsum(as.double(x), ...)
+  }
 }
 #' @exportS3Method collapse::fmin
 fmin.integer64 <- function(x, ...){
@@ -164,6 +168,14 @@ fmin.integer64 <- function(x, ...){
 #' @exportS3Method collapse::fmax
 fmax.integer64 <- function(x, ...){
   cpp_numeric_to_int64(collapse::fmax(cpp_int64_to_numeric(x), ...))
+}
+#' @exportS3Method collapse::ffirst
+ffirst.integer64 <- function(x, ...){
+  cpp_numeric_to_int64(collapse::ffirst(cpp_int64_to_numeric(x), ...))
+}
+#' @exportS3Method collapse::flast
+flast.integer64 <- function(x, ...){
+  cpp_numeric_to_int64(collapse::flast(cpp_int64_to_numeric(x), ...))
 }
 #' @exportS3Method collapse::fmean
 fmean.integer64 <- function(x, ...){
