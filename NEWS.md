@@ -8,7 +8,7 @@
 'integer64' objects. `scm` used to return `NA` once the 32-bit integer limit
 of 2^31 - 1 was reached if the input was an integer vector. 
 This has now been increased to the 64-bit integer limit, 
-which is approximately 9.223372e+18.
+which is approximately 9.223372e+18 and errors if that limit is exceeded.
 
 * 'integer64' objects are now lightly supported. They are not 
 supported in any sequence functions or in the 'set_math' functions.
@@ -17,8 +17,8 @@ supported in any sequence functions or in the 'set_math' functions.
 
 * All factor levels utilities now begin with the prefix 'levels_'.
 
-* New cheap factor functions `as_factor`, `add_na_level`, `drop_na_level`, 
-`drop_levels` and `reorder_levels`.
+* New cheap factor functions `as_factor`, `levels_add_na`, `levels_drop_na`, 
+`levels_drop` and `levels_reorder`.
 
 * `lag_` now uses `memmove` where possible.
 
