@@ -31,10 +31,17 @@ bool is_scalar_na(SEXP x){
   }
 }
 
-// Doesn't properly handle integer64
-bool implicit_na_coercion(SEXP x, int target_type){
-  SEXP target = Rf_protect(Rf_coerceVector(x, target_type));
-  bool out = !is_scalar_na(x) && is_scalar_na(target);
+SEXP coerce_vector(SEXP source, SEXP target){
+  if (is_int64(target)){
+    return cpp_numeric_to_int64(Rf_coerceVector(source, REALSXP));
+  } else {
+    return Rf_coerceVector(source, TYPEOF(target));
+  }
+}
+
+bool implicit_na_coercion(SEXP x, SEXP target){
+  SEXP coerced = Rf_protect(coerce_vector(x, target));
+  bool out = !is_scalar_na(x) && is_scalar_na(coerced);
   Rf_unprotect(1);
   return out;
 }
@@ -62,7 +69,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   case LGLSXP:
   case INTSXP: {
-    if (implicit_na_coercion(value, TYPEOF(x))) break;
+    if (implicit_na_coercion(value, x)) break;
     Rf_protect(value = Rf_coerceVector(value, INTSXP)); ++NP;
     int val = Rf_asInteger(value);
     int *p_x = INTEGER(x);
@@ -76,7 +83,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     break;
   }
   case REALSXP: {
-    if (implicit_na_coercion(value, TYPEOF(x))) break;
+    if (implicit_na_coercion(value, x)) break;
     Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
     double val = Rf_asReal(value);
     double *p_x = REAL(x);
@@ -90,7 +97,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     break;
   }
   case STRSXP: {
-    if (implicit_na_coercion(value, TYPEOF(x))) break;
+    if (implicit_na_coercion(value, x)) break;
     Rf_protect(value = Rf_coerceVector(value, STRSXP)); ++NP;
     SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -169,7 +176,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   case LGLSXP:
   case INTSXP: {
-    if (implicit_na_coercion(value, TYPEOF(x))){
+    if (implicit_na_coercion(value, x)){
     out = x;
     break;
   }
@@ -198,7 +205,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     break;
   }
   case REALSXP: {
-    if (implicit_na_coercion(value, TYPEOF(x))){
+    if (implicit_na_coercion(value, x)){
     out = x;
     break;
   }
@@ -274,7 +281,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   break;
   }
   case STRSXP: {
-    if (implicit_na_coercion(value, TYPEOF(x))){
+    if (implicit_na_coercion(value, x)){
     out = x;
     break;
   }
