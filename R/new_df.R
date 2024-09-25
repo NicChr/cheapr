@@ -13,7 +13,7 @@
 #' @export
 new_df <- function(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE){
 
-  out <- list_named(...)
+  out <- named_list(..., .keep_null = FALSE)
 
   # Recycle
   if (.recycle){

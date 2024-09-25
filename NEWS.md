@@ -13,7 +13,7 @@ which is approximately 9.223372e+18 and errors if that limit is exceeded.
 * 'integer64' objects are now lightly supported. They are not 
 supported in any sequence functions or in the 'set_math' functions.
 
-* New functions `new_df` and `named_dots`.
+* New functions `new_df` and `named_list`.
 
 * All factor levels utilities now begin with the prefix 'levels_'.
 
