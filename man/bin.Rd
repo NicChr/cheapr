@@ -7,8 +7,8 @@
 bin(
   x,
   breaks,
-  right = FALSE,
-  include_lowest = FALSE,
+  left_closed = TRUE,
+  include_endpoint = FALSE,
   include_oob = FALSE,
   codes = TRUE
 )
@@ -18,15 +18,15 @@ bin(
 
 \item{breaks}{A numeric vector of breaks.}
 
-\item{right}{Should intervals be right-closed (and left-open)?
-Default is \code{FALSE} which means they are right-open (and left-closed).}
+\item{left_closed}{Should intervals be left-closed (and right-open)?
+Default is \code{TRUE}. If \code{FALSE} they are left-open (and right-closed).}
 
-\item{include_lowest}{See \code{?.bincode} for details.}
+\item{include_endpoint}{Equivalent to \code{include.lowest} in  \code{?.bincode}.}
 
 \item{include_oob}{Should out-of-bounds interval be included?
 Default is \code{FALSE}. This is the equivalent of adding \code{Inf} as
-the last value of the breaks, or the
-first value of the breaks if \code{right = TRUE}.}
+the last value of the breaks, or \code{-Inf} as the
+first value of the breaks if \code{left_closed = FALSE}.}
 
 \item{codes}{Should an integer vector indicating which bin the values
 fall into be returned? Default is \code{TRUE}. If \code{FALSE} the

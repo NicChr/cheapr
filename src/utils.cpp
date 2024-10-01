@@ -140,45 +140,43 @@ for (R_xlen_t i = 0; i < n; ++i) {                                              
         else                                                                                   \
           hi = cutpoint;                                                                       \
       }                                                                                        \
-      p_out[i] = lo + 1;                                                                       \
+      p_out[i] = lo + 1 + (right && include_oob);                                              \
     }                                                                                          \
   }                                                                                            \
 }                                                                                              \
 
-#define CHEAPR_BIN_NCODES(_IS_NA_, _NA_VAL_)                                                              \
-for (R_xlen_t i = 0; i < n; ++i) {                                                                        \
-  p_out[i] = _NA_VAL_;                                                                                    \
-  if (!_IS_NA_(p_x[i])) {                                                                                 \
-    lo = 0;                                                                                               \
-    hi = nb1;                                                                                             \
-    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||            \
-         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                                \
-      p_out[i] = p_b[(left ? hi : lo)];                                                                   \
-    }                                                                                                     \
-    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                    \
-             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                        \
-      while (hi - lo >= 2) {                                                                              \
-        cutpoint = (hi + lo)/2;                                                                           \
-        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                  \
-          lo = cutpoint;                                                                                  \
-        else                                                                                              \
-          hi = cutpoint;                                                                                  \
-      }                                                                                                   \
-      p_out[i] = p_b[lo];                                                                                 \
-    }                                                                                                     \
-  }                                                                                                       \
-}                                                                                                         \
+#define CHEAPR_BIN_NCODES(_IS_NA_, _NA_VAL_)                                                                    \
+for (R_xlen_t i = 0; i < n; ++i) {                                                                              \
+  p_out[i] = _NA_VAL_;                                                                                          \
+  if (!_IS_NA_(p_x[i])) {                                                                                       \
+    lo = 0;                                                                                                     \
+    hi = nb1;                                                                                                   \
+    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||                  \
+         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                                      \
+      p_out[i] = p_b[(left ? hi : lo)];                                                                         \
+    }                                                                                                           \
+    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                          \
+             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                              \
+      while (hi - lo >= 2) {                                                                                    \
+        cutpoint = (hi + lo)/2;                                                                                 \
+        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                        \
+          lo = cutpoint;                                                                                        \
+        else                                                                                                    \
+          hi = cutpoint;                                                                                        \
+      }                                                                                                         \
+      p_out[i] = p_b[lo + (right && include_oob)];                                                                                 \
+    }                                                                                                           \
+  }                                                                                                             \
+}                                                                                                               \
 
 [[cpp11::register]]
 SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
              bool include_lowest,
              bool include_oob){
   int n = Rf_length(x);
-  int lo;
-  int hi;
+  int lo, hi, cutpoint;
   int nb = Rf_length(breaks);
   int nb1 = nb - 1;
-  int cutpoint;
   bool left = !right;
   bool include_border = include_lowest;
   switch(TYPEOF(x)){
