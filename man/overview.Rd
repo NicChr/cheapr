@@ -4,6 +4,7 @@
 \alias{overview}
 \alias{overview.default}
 \alias{overview.logical}
+\alias{overview.integer}
 \alias{overview.numeric}
 \alias{overview.integer64}
 \alias{overview.character}
@@ -20,6 +21,8 @@ overview(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 \method{overview}{default}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
 \method{overview}{logical}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+
+\method{overview}{integer}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 
 \method{overview}{numeric}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 

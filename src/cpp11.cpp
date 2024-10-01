@@ -453,6 +453,20 @@ extern "C" SEXP _cheapr_r_copy(SEXP x) {
     return cpp11::as_sexp(r_copy(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// utils.cpp
+double var_sum_squared_diff(SEXP x, double mu);
+extern "C" SEXP _cheapr_var_sum_squared_diff(SEXP x, SEXP mu) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(var_sum_squared_diff(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(mu)));
+  END_CPP11
+}
+// utils.cpp
+SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right, bool include_lowest, bool include_oob);
+extern "C" SEXP _cheapr_cpp_bin(SEXP x, SEXP breaks, SEXP codes, SEXP right, SEXP include_lowest, SEXP include_oob) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_bin(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(breaks), cpp11::as_cpp<cpp11::decay_t<bool>>(codes), cpp11::as_cpp<cpp11::decay_t<bool>>(right), cpp11::as_cpp<cpp11::decay_t<bool>>(include_lowest), cpp11::as_cpp<cpp11::decay_t<bool>>(include_oob)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -487,6 +501,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_compact_seq_data",            (DL_FUNC) &_cheapr_compact_seq_data,            1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
+    {"_cheapr_cpp_bin",                     (DL_FUNC) &_cheapr_cpp_bin,                     6},
     {"_cheapr_cpp_character_compare",       (DL_FUNC) &_cheapr_cpp_character_compare,       3},
     {"_cheapr_cpp_col_all_na",              (DL_FUNC) &_cheapr_cpp_col_all_na,              2},
     {"_cheapr_cpp_col_any_na",              (DL_FUNC) &_cheapr_cpp_col_any_na,              2},
@@ -552,6 +567,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
     {"_cheapr_is_compact_seq",              (DL_FUNC) &_cheapr_is_compact_seq,              1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
+    {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}
 };
 }

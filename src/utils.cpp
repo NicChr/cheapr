@@ -65,6 +65,168 @@ SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
 }
 
+// Internal-only function
+// Sum of squared-differences
+// Used in `cheapr_var()`
+
+[[cpp11::register]]
+double var_sum_squared_diff(SEXP x, double mu){
+  R_xlen_t n = Rf_xlength(x);
+
+  double out = 0;
+
+  // NA values are always ignored here
+
+  if (!cheapr_is_na_dbl(mu)){
+    switch (TYPEOF(x)){
+
+    case INTSXP: {
+      int *p_x = INTEGER(x);
+      // if (std::abs(mu - std::round(mu)) < std::numeric_limits<double>::epsilon()){
+      //   long long temp = 0;
+      //   long long temp2;
+      //   long long llmu = mu;
+      //   long long temp1;
+      //   for (R_xlen_t i = 0; i < n; ++i){
+      //     if (cheapr_is_na_int(p_x[i])) continue;
+      //     temp1 = p_x[i];
+      //     temp2 = std::pow(temp1 - llmu, 2);
+      //     temp += temp2;
+      //   }
+      //   out = temp;
+      // } else {
+        for (R_xlen_t i = 0; i < n; ++i){
+          if (cheapr_is_na_int(p_x[i])) continue;
+          out += std::pow(p_x[i] - mu, 2);
+        }
+      break;
+    }
+    default: {
+      double *p_x = REAL(x);
+      for (R_xlen_t i = 0; i < n; ++i){
+        if (cheapr_is_na_dbl(p_x[i])) continue;
+        out += std::pow(p_x[i] - mu, 2);
+      }
+      break;
+    }
+    }
+  } else {
+    out = NA_REAL;
+  }
+  return out;
+}
+
+// Credits to R authors
+// Re-purposed .bincode
+// The main difference is that codes or breaks can be returned efficiently
+// Values outside the (right or left) intervals can be included too
+
+#define CHEAPR_BIN_CODES(_IS_NA_, _NA_VAL_)                                                    \
+for (R_xlen_t i = 0; i < n; ++i) {                                                             \
+  p_out[i] = _NA_VAL_;                                                                         \
+  if (!_IS_NA_(p_x[i])) {                                                                      \
+    lo = 0;                                                                                    \
+    hi = nb1;                                                                                  \
+    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) || \
+         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                     \
+      p_out[i] = (left ? hi : lo) + 1;                                                         \
+    }                                                                                          \
+    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                         \
+             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                             \
+      while (hi - lo >= 2) {                                                                   \
+        cutpoint = (hi + lo)/2;                                                                \
+        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                       \
+          lo = cutpoint;                                                                       \
+        else                                                                                   \
+          hi = cutpoint;                                                                       \
+      }                                                                                        \
+      p_out[i] = lo + 1;                                                                       \
+    }                                                                                          \
+  }                                                                                            \
+}                                                                                              \
+
+#define CHEAPR_BIN_NCODES(_IS_NA_, _NA_VAL_)                                                              \
+for (R_xlen_t i = 0; i < n; ++i) {                                                                        \
+  p_out[i] = _NA_VAL_;                                                                                    \
+  if (!_IS_NA_(p_x[i])) {                                                                                 \
+    lo = 0;                                                                                               \
+    hi = nb1;                                                                                             \
+    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||            \
+         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                                \
+      p_out[i] = p_b[(left ? hi : lo)];                                                                   \
+    }                                                                                                     \
+    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                    \
+             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                        \
+      while (hi - lo >= 2) {                                                                              \
+        cutpoint = (hi + lo)/2;                                                                           \
+        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                  \
+          lo = cutpoint;                                                                                  \
+        else                                                                                              \
+          hi = cutpoint;                                                                                  \
+      }                                                                                                   \
+      p_out[i] = p_b[lo];                                                                                 \
+    }                                                                                                     \
+  }                                                                                                       \
+}                                                                                                         \
+
+[[cpp11::register]]
+SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
+             bool include_lowest,
+             bool include_oob){
+  int n = Rf_length(x);
+  int lo;
+  int hi;
+  int nb = Rf_length(breaks);
+  int nb1 = nb - 1;
+  int cutpoint;
+  bool left = !right;
+  bool include_border = include_lowest;
+  switch(TYPEOF(x)){
+  case INTSXP: {
+    if (codes){
+    SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+    Rf_protect(breaks = Rf_coerceVector(breaks, REALSXP));
+    int *p_x = INTEGER(x);
+    double *p_b = REAL(breaks);
+    int *p_out = INTEGER(out);
+    CHEAPR_BIN_CODES(cheapr_is_na_int, NA_INTEGER);
+    Rf_unprotect(2);
+    return out;
+  } else {
+    SEXP out = Rf_protect(Rf_duplicate(x));
+    Rf_protect(breaks = Rf_coerceVector(breaks, REALSXP));
+    int *p_x = INTEGER(x);
+    double *p_b = REAL(breaks);
+    int *p_out = INTEGER(out);
+    CHEAPR_BIN_NCODES(cheapr_is_na_int, NA_INTEGER);
+    Rf_unprotect(2);
+    return out;
+  }
+  }
+  default: {
+    if (codes){
+    SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+    Rf_protect(breaks = Rf_coerceVector(breaks, REALSXP));
+    double *p_x = REAL(x);
+    double *p_b = REAL(breaks);
+    int *p_out = INTEGER(out);
+    CHEAPR_BIN_CODES(cheapr_is_na_dbl, NA_INTEGER);
+    Rf_unprotect(2);
+    return out;
+  } else {
+    SEXP out = Rf_protect(Rf_duplicate(x));
+    Rf_protect(breaks = Rf_coerceVector(breaks, REALSXP));
+    double *p_x = REAL(x);
+    double *p_b = REAL(breaks);
+    double *p_out = REAL(out);
+    CHEAPR_BIN_NCODES(cheapr_is_na_dbl, NA_REAL);
+    Rf_unprotect(2);
+    return out;
+  }
+  }
+  }
+}
+
 // Potentially useful for rolling calculations
 // Computes the rolling number of true values in a given
 // series of consecutive true values

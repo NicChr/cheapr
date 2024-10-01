@@ -256,6 +256,14 @@ r_copy <- function(x) {
   .Call(`_cheapr_r_copy`, x)
 }
 
+var_sum_squared_diff <- function(x, mu) {
+  .Call(`_cheapr_var_sum_squared_diff`, x, mu)
+}
+
+cpp_bin <- function(x, breaks, codes, right, include_lowest, include_oob) {
+  .Call(`_cheapr_cpp_bin`, x, breaks, codes, right, include_lowest, include_oob)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

@@ -42,52 +42,59 @@ overview <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
 #' @rdname overview
 #' @export
 overview.default <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  overview(list_as_df(list(x = x)), hist = hist, digits = digits)
+  overview(new_df(x = x), hist = hist, digits = digits)
 }
 #' @rdname overview
 #' @export
 overview.logical <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  overview(list_as_df(list(x = as.logical(x))), hist = hist, digits = digits)
+  overview(new_df(x = as.logical(x)), hist = hist, digits = digits)
+}
+#' @rdname overview
+#' @export
+overview.integer <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+  out <- overview(new_df(x = as.integer(x)), hist = hist, digits = digits)
+  out$cols <- NA_integer_
+  out
 }
 #' @rdname overview
 #' @export
 overview.numeric <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(list_as_df(list(x = as.numeric(x))), hist = hist, digits = digits)
+  out <- overview(new_df(x = as.numeric(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.integer64 <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(as.double(x), hist = hist, digits = digits)
+  out <- overview(cpp_int64_to_numeric(x), hist = hist, digits = digits)
   out$numeric$class <- class(x)[1]
   out
 }
 #' @rdname overview
 #' @export
 overview.character <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(list_as_df(list(x = as.character(x))), hist = hist, digits = digits)
+  out <- overview(new_df(x = as.character(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.factor <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(list_as_df(list(x = as.factor(x))), hist = hist, digits = digits)
+  out <- overview(new_df(x = as.factor(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.Date <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(list_as_df(list(x = as.Date(x))), hist = hist, digits = digits)
+  out <- overview(new_df(x = as.Date(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
 overview.POSIXt <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(list_as_df(list(x = as.POSIXct(x))), hist = hist, digits = digits)
+  out <- overview(new_df(x = as.POSIXct(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
@@ -170,7 +177,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
   }
 
   ## Coerce int64 to double
-  num_data <- transform_all(num_data, as.double, int64_vars)
+  num_data <- transform_all(num_data, cpp_int64_to_numeric, int64_vars)
 
   if (N > 0L && length(which_num) > 0) {
     num_out$n_missing <- pluck_row(summarise_all(num_data, na_count), 1)
@@ -190,7 +197,7 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
     ), 1)
     num_out$p100 <- pluck_row(summarise_all(num_data, collapse::fmax), 1)
     num_out$iqr <- num_out$p75 - num_out$p25
-    num_out$sd <- pluck_row(summarise_all(num_data, collapse::fsd), 1)
+    num_out$sd <- pluck_row(summarise_all(num_data, cheapr_sd), 1)
     if (hist){
       num_out$hist <- pluck_row(summarise_all(
         num_data, inline_hist
