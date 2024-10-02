@@ -2,6 +2,12 @@
 
 * Checked and passed using rhub v2.0.0 in the following environments:
 
+We checked 2 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
+
+ * We saw 0 new problems
+ * We failed to check 0 packages
+
+
 ## Test environments
 - R-hubv2 windows (R-devel)
 - R-hubv2 linux (R-devel)
