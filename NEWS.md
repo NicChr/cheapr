@@ -1,5 +1,16 @@
 # cheapr (Development version)
 
+* New scalar functions have been added and some renamed. Most are now
+prefixed with 'val_' or 'na_' in the case of `NA` specific scalar functions.
+
+* New cheap functions for binning continuous data into discrete bins. 
+These include `get_breaks`, `as_discrete` and `bin`.
+`get_breaks` finds 'pretty' break-points of numeric data very quickly.
+`as_discrete` converts numeric data to discrete categories as a factor.
+`bin` is a low-level function for binning numeric data into the correct
+bins. It can also efficiently return the corresponding break values 
+instead of the break indices through `codes = FALSE`.
+
 * New function `na_insert` to randomly insert `NA` values into a vector.
 
 * New function `vector_length` as a hybrid between `length` and `nrow`.
