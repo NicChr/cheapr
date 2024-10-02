@@ -225,6 +225,39 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   }
 }
 
+// bool cpp_all_whole_numbers(SEXP x, double tol, bool na_ignore){
+//   R_xlen_t n = Rf_xlength(x);
+//   double adiff;
+//   bool out = false;
+//   switch ( TYPEOF(x) ){
+//   case LGLSXP:
+//   case INTSXP: {
+//     out = true;
+//     break;
+//   }
+//   default: {
+//     out = true;
+//     double *p_x = REAL(x);
+//     for (R_xlen_t i = 0; i < n; ++i) {
+//       adiff = std::fabs(p_x[i] - std::round(p_x[i]));
+//       if (cheapr_is_na_dbl(p_x[i])){
+//         if (na_ignore){
+//           continue;
+//         } else {
+//           out = false;
+//           break;
+//         }
+//       } else if (adiff > tol){
+//         out = false;
+//         break;
+//       }
+//     }
+//     break;
+//   }
+//   }
+//   return out;
+// }
+
 // Potentially useful for rolling calculations
 // Computes the rolling number of true values in a given
 // series of consecutive true values

@@ -36,8 +36,12 @@
 #'     intv_end_fun = function(x) x - 1,
 #'     intv_openers = c("", ""),
 #'     intv_closers = c("", ""),
-#'     include_oob = TRUE
+#'     include_oob = TRUE,
+#'     ordered = TRUE
 #'   )
+#'
+#'   # Below is just renaming the last age group
+#'
 #'   lvls <- levels(age_groups)
 #'   n_lvls <- length(lvls)
 #'   max_ages <- paste0(max(breaks), "+")
@@ -47,7 +51,7 @@
 #'
 #' age_group(ages, seq(0, 80, 20))
 #' age_group(ages, seq(0, 25, 5))
-#' age_group(ages, 3)
+#' age_group(ages, 5)
 #'
 #' @rdname as_discrete
 #' @export
@@ -137,15 +141,4 @@ as_discrete.integer <- as_discrete.numeric
 as_discrete.integer64 <- function(x, ...){
   as_discrete(cpp_int64_to_numeric(x), ...)
 }
-#' @rdname as_discrete
-#' @export
-as_discrete.character <- function(x, ...){
-  x
-}
-#' @rdname as_discrete
-#' @export
-as_discrete.factor <- function(x, ...){
-  x
-}
-
 

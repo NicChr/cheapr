@@ -75,6 +75,14 @@ get_breaks.numeric <- function(x, n = 7,
     # Make end-points prettier
 
     adj_start <- round(pretty_floor(start), 6)
+    scale_diff <- log_scale(rng_width) - log_scale(adj_start)
+
+    # If large range & relatively small starting value
+    # floor start to the nearest difference in orders of magnitude
+
+    if (scale_diff >= 1){
+      adj_start <- nearest_floor(adj_start, 10^(scale_diff))
+    }
     adj_rng_width <- end - adj_start
 
     # Calculate bin-width (guaranteed to span end-points inclusively)
@@ -84,9 +92,22 @@ get_breaks.numeric <- function(x, n = 7,
     # Reduce floating-point error
     # If width is almost a whole number, just round it
 
-    if (all(abs(adj_width - round(adj_width)) < sqrt(.Machine$double.eps), na.rm = TRUE)) {
+    last_break_is_short <- isTRUE(is_integerable(seq_to(n + 3, adj_start, by = adj_width)))
+
+    # Also this produces an integer sequence
+    if (isTRUE(abs(adj_width - round(adj_width)) < sqrt(.Machine$double.eps))){
       adj_width <- round(adj_width)
+      if (last_break_is_short){
+        adj_width <- as.integer(adj_width)
+      }
     }
+    if (isTRUE(abs(adj_start - round(adj_start)) < sqrt(.Machine$double.eps))){
+      adj_start <- round(adj_start)
+      if (last_break_is_short){
+        adj_start <- as.integer(adj_start)
+      }
+    }
+
 
     # Breaks
 

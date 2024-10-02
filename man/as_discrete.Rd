@@ -4,8 +4,6 @@
 \alias{as_discrete}
 \alias{as_discrete.numeric}
 \alias{as_discrete.integer64}
-\alias{as_discrete.character}
-\alias{as_discrete.factor}
 \title{Turn continuous data into discrete bins}
 \usage{
 as_discrete(x, ...)
@@ -26,10 +24,6 @@ as_discrete(x, ...)
 )
 
 \method{as_discrete}{integer64}(x, ...)
-
-\method{as_discrete}{character}(x, ...)
-
-\method{as_discrete}{factor}(x, ...)
 }
 \arguments{
 \item{x}{A numeric vector.}
@@ -82,8 +76,12 @@ age_group <- function(x, breaks){
     intv_end_fun = function(x) x - 1,
     intv_openers = c("", ""),
     intv_closers = c("", ""),
-    include_oob = TRUE
+    include_oob = TRUE,
+    ordered = TRUE
   )
+
+  # Below is just renaming the last age group
+
   lvls <- levels(age_groups)
   n_lvls <- length(lvls)
   max_ages <- paste0(max(breaks), "+")
@@ -93,6 +91,6 @@ age_group <- function(x, breaks){
 
 age_group(ages, seq(0, 80, 20))
 age_group(ages, seq(0, 25, 5))
-age_group(ages, 3)
+age_group(ages, 5)
 
 }
