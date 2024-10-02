@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.9.8
 
 * New scalar functions have been added and some renamed. Most are now
 prefixed with 'val_' or 'na_' in the case of `NA` specific scalar functions.

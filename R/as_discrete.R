@@ -16,6 +16,9 @@
 #' end points.
 #' @param ... Extra arguments passed onto methods.
 #'
+#' @returns
+#' A factor of discrete bins (intervals of start/end pairs).
+#'
 #' @examples
 #' library(cheapr)
 #'

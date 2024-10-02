@@ -53,6 +53,9 @@ use for opening either left or right closed intervals.}
 \item{intv_sep}{A length 1 character vector used to separate the start and
 end points.}
 }
+\value{
+A factor of discrete bins (intervals of start/end pairs).
+}
 \description{
 Turn continuous data into discrete bins
 }
