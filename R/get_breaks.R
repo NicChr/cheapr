@@ -47,9 +47,13 @@ get_breaks.numeric <- function(x, n = 7,
   stopifnot(n >= 1)
 
   rng <- as.double(collapse::frange(x, na.rm = TRUE, finite = TRUE))
+  if (any_na(rng)){
+    return(NA_real_)
+  }
   rng_width <- diff(rng)
   start <- rng[1]
   end <- rng[2]
+  spans_zero <- abs(diff(sign(rng))) == 2
 
   if (rng_width == 0){
     return(seq(start - 0.05, end + 0.05, by = 0.1 / max((n - 1), 1)))
@@ -61,12 +65,10 @@ get_breaks.numeric <- function(x, n = 7,
     width <- rng_width / n
     out <- seq(start, end, by = width)
     if (expand_min){
-      adj_start <- start - (rng_width * 0.001)
-      out[1] <- adj_start
+      out[1] <- start - (rng_width * 0.001)
     }
     if (expand_max){
-      adj_end <- end + (rng_width * 0.001)
-      out[length(out)] <- adj_end
+      out[length(out)] <- end + (rng_width * 0.001)
     }
     out
 
@@ -81,7 +83,12 @@ get_breaks.numeric <- function(x, n = 7,
     # floor start to the nearest difference in orders of magnitude
 
     if (scale_diff >= 1){
-      adj_start <- nearest_floor(adj_start, 10^(scale_diff))
+      # If range spans across zero and start val is small
+      if (spans_zero && abs(adj_start) < 1){
+        adj_start <- nearest_floor(adj_start, 10^(log_scale(end)))
+      } else {
+        adj_start <- nearest_floor(adj_start, 10^(scale_diff))
+      }
     }
     adj_rng_width <- end - adj_start
 

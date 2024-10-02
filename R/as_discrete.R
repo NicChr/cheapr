@@ -73,7 +73,8 @@ as_discrete.numeric <- function(
     intv_sep = ",",
     ...
 ){
-  breaks <- sort(as.double(breaks))
+  breaks <- collapse::funique(as.double(breaks), sort = TRUE)
+  breaks <- na_rm(breaks)
   nb <- length(breaks)
 
   stopifnot(is.character(intv_closers) && length(intv_closers) == 2)
@@ -101,7 +102,7 @@ as_discrete.numeric <- function(
       )
     }
     if (anyDuplicated(labels)){
-      stop("'labels' are not unique either after formatting")
+      stop("'labels' are not unique after formatting")
     }
 
     if (include_endpoint){
