@@ -18,8 +18,7 @@ Imports:
 Suggests:
     bench,
     data.table,
-    testthat (>= 3.0.0),
-    vctrs
+    testthat (>= 3.0.0)
 LinkingTo: 
     cpp11
 Config/testthat/edition: 3

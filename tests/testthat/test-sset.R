@@ -88,7 +88,6 @@ test_that("subsetting", {
     expect_identical(
      sset(df, r_ind),
      base_sset(df, r_ind, 1:ncol(df), drop = FALSE)
-     # vctrs::vec_slice(df, r_ind)
     )
   }
 
