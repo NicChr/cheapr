@@ -1,5 +1,8 @@
 ---
 output: github_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -13,58 +16,79 @@ knitr::opts_chunk$set(
 )
 ```
 
-# cheapr <a href="https://github.com/NicChr/cheapr"><img src="man/figures/cheapr_logo.png" align="right" height="238" /></a>
+# cheapr <a href="https://github.com/NicChr/cheapr"><img src="man/figures/cheapr_logo.png" align="right" height="238"/></a>
 
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/NicChr/cheapr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/NicChr/cheapr/actions/workflows/R-CMD-check.yaml)
-[![CRAN status](https://www.r-pkg.org/badges/version/cheapr)](https://CRAN.R-project.org/package=cheapr)
-[![Codecov test coverage](https://codecov.io/gh/NicChr/cheapr/branch/main/graph/badge.svg)](https://app.codecov.io/gh/NicChr/cheapr?branch=main)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/cheapr)](https://CRAN.R-project.org/package=cheapr)
+[![Codecov test
+coverage](https://codecov.io/gh/NicChr/cheapr/branch/main/graph/badge.svg)](https://app.codecov.io/gh/NicChr/cheapr?branch=main)
+
 <!-- badges: end -->
 
-In cheapr, 'cheap' means fast and memory-efficient, and that's exactly the philosophy that cheapr aims to follow.
+In cheapr, 'cheap' means fast and memory-efficient, and that's exactly
+the philosophy that cheapr aims to follow.
 
 ## Installation
 
-You can install the development version of cheapr like so:
+You can install cheapr like so: 
+
+``` r
+install.packages("cheapr")
+```
+
+or you can install the development version of cheapr:
 
 ``` r
 remotes::install_github("NicChr/cheapr")
 ```
 
-## Last-observation carried forward (minor optimisation)
+Some common operations that cheapr can do much faster and more efficiently include: 
 
-`num_na()` is a useful function to efficiently return the number of `NA` values and can be used in a variety of problems.
+* Counting, finding, removing and replacing `NA` and scalar values
 
-Here is an example of a minor optimisation we can add to `vctrs::vec_fill_missing` to return x if x has zero or only `NA` values.
+* Creating factors
 
-```{r example}
-library(cheapr)
-library(vctrs)
-library(bench)
+* Creating multiple sequences in a vectorised way
 
-na_locf <- function(x){
-  # num_na is recursive so we compare it to unlisted length
-  if (num_na(x) %in% c(0, unlisted_length(x))){
-    x
-  } else {
-    vec_fill_missing(x, direction = "down")
-  }
-}
-x <- rep(NA, 10^6)
-identical(x, na_locf(x))
-mark(na_locf(x), vec_fill_missing(x, direction = "down"))
-mark(na_locf(x), vec_fill_missing(x, direction = "down"))
-```
+* Sub-setting vectors and data frames efficiently
 
-All the `NA` handling functions in cheapr can make use of multiple cores on your machine using openMP.
+* Safe, flexible and fast greatest common divisor and lowest common multiple
+
+* Lags/leads
+
+* Lightweight `integer64` support
+
+* In-memory Math (no copies, vectors updated by reference)
+
+* Summary statistics of data frame variables
+
+* Binning of continuous data
+
+Let's first load the required packages
 
 ```{r}
+library(cheapr)
+library(bench)
+```
+
+`num_na()` is a useful function to efficiently return the number of `NA`
+values and can be used in a variety of problems.
+
+Almost all the `NA` handling functions in cheapr can make use of multiple cores
+on your machine through openMP.
+
+```{r}
+x <- rep(NA, 10^6)
+
 # 1 core by default
 mark(num_na(x), sum(is.na(x)))
 # 4 cores
 options(cheapr.cores = 4)
 mark(num_na(x), sum(is.na(x)))
+options(cheapr.cores = 4)
 ```
 
 ## Efficient NA counts by row/col
@@ -79,7 +103,7 @@ mark(col_na_counts(m),
      colSums(is.na(m)))
 ```
 
-`is_na` is a multi-threaded alternative to `is.na` 
+`is_na` is a multi-threaded alternative to `is.na`
 
 ```{r}
 x <- rnorm(10^6)
@@ -96,10 +120,10 @@ mark(is.na(hours), is_na(hours))
 
 It differs in 2 regards:
 
-* List elements are regarded as `NA` when either that element is an `NA` value 
-or it is a list containing only `NA` values.
-* For data frames, `is_na` returns a logical vector where `TRUE` defines an empty 
-row of only `NA` values.
+-   List elements are regarded as `NA` when either that element is an
+    `NA` value or it is a list containing only `NA` values.
+-   For data frames, `is_na` returns a logical vector where `TRUE`
+    defines an empty row of only `NA` values.
 
 ```{r}
 # List example
@@ -116,14 +140,14 @@ is_na(df)
 identical(is_na(df), row_na_counts(df) == ncol(df))
 ```
 
-`is_na` and all the `NA` handling functions fall back on calling `is.na()` if no 
-suitable method is found. This means that custom objects like vctrs rcrds and
-more are supported.
+`is_na` and all the `NA` handling functions fall back on calling
+`is.na()` if no suitable method is found. This means that custom objects
+like vctrs rcrds and more are supported.
 
 ## Cheap data frame summaries with `overview`
 
-Inspired by the excellent skimr package, `overview()` is a cheaper alternative
-designed for larger data.
+Inspired by the excellent skimr package, `overview()` is a cheaper
+alternative designed for larger data.
 
 ```{r}
 df <- data.frame(
@@ -151,8 +175,8 @@ y <- sample.int(10^6, 10^4, TRUE)
 mark(sset(x, x %in_% y), sset(x, x %in% y), x[x %in% y])
 ```
 
-`sset` uses an internal range-based subset when `i` is an ALTREP integer sequence
-of the form m:n.
+`sset` uses an internal range-based subset when `i` is an ALTREP integer
+sequence of the form m:n.
 
 ```{r}
 mark(sset(df, 0:10^5), df[0:10^5, , drop = FALSE])
@@ -166,12 +190,12 @@ mark(sset(df, -10^4:0),
      check = FALSE) # The only difference is the row names
 ```
 
-The biggest difference between `sset` and `[` is the way logical vectors are handled.
-The two main differences when `i` is a logical vector are:
+The biggest difference between `sset` and `[` is the way logical vectors
+are handled. The two main differences when `i` is a logical vector are:
 
-* `NA` values are ignored, only the locations of `TRUE` values are used.
-* `i` must be the same length as `x` and is not recycled.
-
+-   `NA` values are ignored, only the locations of `TRUE` values are
+    used.
+-   `i` must be the same length as `x` and is not recycled.
 
 ```{r,error=TRUE}
 # Examples with NAs
@@ -187,7 +211,6 @@ x[TRUE]
 # to..
 sset(x)
 ```
-
 
 ## Vector and data frame lags with `lag_()`
 
@@ -206,7 +229,8 @@ lag_(dt, 1) # Lag
 lag_(dt, -1) # Lead
 ```
 
-With `lag_` we can update variables by reference, including entire data frames
+With `lag_` we can update variables by reference, including entire data
+frames
 
 ```{r}
 # At the moment, shift() cannot do this
@@ -215,7 +239,7 @@ lag_(dt, set = TRUE)
 dt # Was updated by reference
 ```
 
-`lag2_` is a more generalised variant that supports vectors of lags, 
+`lag2_` is a more generalised variant that supports vectors of lags,
 custom ordering and run lengths.
 
 ```{r}
@@ -224,7 +248,6 @@ lag2_(dt, -1) # Same as above
 lag2_(dt, c(1, -1)) # Alternating lead/lag
 lag2_(dt, c(-1, 0, 0, 0, 0)) # Lead e.g. only first row
 ```
-
 
 ## Greatest common divisor and smallest common multiple
 
@@ -244,7 +267,8 @@ mark(gcd(x))
 ## Creating many sequences
 
 As an example, to create 3 sequences with different increments,\
-the usual approach might be to use lapply to loop through the increment values together with `seq()`
+the usual approach might be to use lapply to loop through the increment
+values together with `seq()`
 
 ```{r}
 # Base R
@@ -339,11 +363,13 @@ mark(cheapr = x %!in_% y,
      base = !x %in% y)
 ```
 
-### cut.default
+### `as_discrete`
+
+`as_discrete` is a cheaper alternative to `cut`
 
 ```{r}
 x <- rnorm(10^7)
 b <- seq(0, max(x), 0.2)
-mark(cheapr_cut = cut_numeric(x, b), 
+mark(cheapr_cut = as_discrete(x, b, left = FALSE), 
      base_cut = cut(x, b))
 ```
