@@ -47,7 +47,7 @@ get_breaks.numeric <- function(x, n = 7,
   stopifnot(n >= 1)
 
   rng <- as.double(collapse::frange(x, na.rm = TRUE, finite = TRUE))
-  if (any_na(rng)){
+  if (any_na(rng) || all(is.infinite(rng))){
     return(NA_real_)
   }
   rng_width <- diff(rng)
@@ -55,7 +55,7 @@ get_breaks.numeric <- function(x, n = 7,
   end <- rng[2]
   spans_zero <- abs(diff(sign(rng))) == 2
 
-  if (rng_width == 0){
+  if (isTRUE(rng_width == 0)){
     return(seq(start - 0.05, end + 0.05, by = 0.1 / max((n - 1), 1)))
   }
 
