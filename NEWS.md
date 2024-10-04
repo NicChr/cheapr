@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.9.9
 
 * Removed internal C++ functions as package installation was failing for
 some machines.
