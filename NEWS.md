@@ -1,5 +1,8 @@
 # cheapr (Development version)
 
+* Removed internal C++ functions as package installation was failing for
+some machines.
+
 # cheapr 0.9.8 (02-Oct-2024)
 
 * New scalar functions have been added and some renamed. Most are now
