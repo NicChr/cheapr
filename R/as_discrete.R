@@ -5,6 +5,14 @@
 #' @param left_closed Left-closed intervals or right-closed intervals?
 #' @param include_endpoint Include endpoint? Default is `FALSE`.
 #' @param include_oob Include out-of-bounds values? Default is `FALSE`.
+#' This is equivalent to `breaks = c(breaks, Inf)` or
+#' `breaks = c(-Inf, breaks)` when `left_closed = FALSE`.
+#' If `include_endpoint = TRUE`, the endpoint interval is prioritised before
+#' the out-of-bounds interval.
+#' This behaviour cannot be replicated easily with `cut()`.
+#' For example, these 2 expressions are not equivalent: \cr
+#' \preformatted{cut(10, c(9, 10, Inf), right = F, include.lowest = T) !=
+#' as_discrete(10, c(9, 10), include_endpoint = T, include_oob = T)}
 #' @param ordered Should result be an ordered factor? Default is `FALSE`.
 #' @param intv_start_fun Function used to format interval start points.
 #' @param intv_end_fun Function used to format interval end points.
@@ -78,29 +86,32 @@ as_discrete.numeric <- function(
 ){
   breaks <- collapse::funique(as.double(breaks), sort = TRUE)
   breaks <- na_rm(breaks)
+  # N breaks
   nb <- length(breaks)
+  # N intervals = N breaks - 1
+  nintv <- max(nb - 1L, as.integer(include_endpoint))
 
   stopifnot(is.character(intv_closers) && length(intv_closers) == 2)
   stopifnot(is.character(intv_openers) && length(intv_openers) == 2)
   stopifnot(is.character(intv_sep) && length(intv_sep) == 1)
 
   # Creating labels
-  if (nb < 2){
+  if (nb < (2 - include_endpoint)){
     labels <- character()
   } else {
-    n <- max(nb - 1L, 0L)
+
     if (left_closed){
       labels <- paste0(
         intv_closers[1],
-        intv_start_fun(breaks[seq_len(n)]), intv_sep,
-        intv_end_fun(breaks[seq.int(to = nb, length.out = n)]),
+        intv_start_fun(breaks[seq_len(nintv)]), intv_sep,
+        intv_end_fun(breaks[seq.int(to = nb, length.out = nintv)]),
         intv_openers[2]
       )
     } else {
       labels <- paste0(
         intv_openers[1],
-        intv_end_fun(breaks[seq_len(n)]), intv_sep,
-        intv_start_fun(breaks[seq.int(to = nb, length.out = n)]),
+        intv_end_fun(breaks[seq_len(nintv)]), intv_sep,
+        intv_start_fun(breaks[seq.int(to = nb, length.out = nintv)]),
         intv_closers[2]
       )
     }
@@ -108,9 +119,9 @@ as_discrete.numeric <- function(
       stop("'labels' are not unique after formatting")
     }
 
-    if (include_endpoint){
+    if (include_endpoint && nb >= 1){
       if (left_closed && nzchar(intv_closers[2])){
-        substring(labels[nb - 1L], nchar(labels[nb - 1L], "c")) <- intv_closers[2]
+        substring(labels[nintv], nchar(labels[nintv], "c")) <- intv_closers[2]
       } else if (nzchar(intv_closers[1])){
         substr(labels[1L], 1L, 1L) <- intv_closers[1]
       }

@@ -36,7 +36,15 @@ as_discrete(x, ...)
 
 \item{include_endpoint}{Include endpoint? Default is \code{FALSE}.}
 
-\item{include_oob}{Include out-of-bounds values? Default is \code{FALSE}.}
+\item{include_oob}{Include out-of-bounds values? Default is \code{FALSE}.
+This is equivalent to \code{breaks = c(breaks, Inf)} or
+\code{breaks = c(-Inf, breaks)} when \code{left_closed = FALSE}.
+If \code{include_endpoint = TRUE}, the endpoint interval is prioritised before
+the out-of-bounds interval.
+This behaviour cannot be replicated easily with \code{cut()}.
+For example, these 2 expressions are not equivalent: \cr
+\preformatted{cut(10, c(9, 10, Inf), right = F, include.lowest = T) !=
+as_discrete(10, c(9, 10), include_endpoint = T, include_oob = T)}}
 
 \item{ordered}{Should result be an ordered factor? Default is \code{FALSE}.}
 

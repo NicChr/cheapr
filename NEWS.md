@@ -1,5 +1,7 @@
 # cheapr 0.9.9
 
+* Safety improvements to `as_discrete`.
+
 * Removed internal C++ functions as package installation was failing for
 some machines.
 
