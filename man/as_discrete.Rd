@@ -91,7 +91,7 @@ age_group <- function(x, breaks){
   age_groups <- as_discrete(
     x,
     breaks = breaks,
-    intv_sep = "--",
+    intv_sep = "-",
     intv_end_fun = function(x) x - 1,
     intv_openers = c("", ""),
     intv_closers = c("", ""),
