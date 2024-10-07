@@ -14,7 +14,8 @@
 #' @param include_oob Should out-of-bounds interval be included?
 #' Default is `FALSE`. This is the equivalent of adding `Inf` as
 #' the last value of the breaks, or `-Inf` as the
-#' first value of the breaks if `left_closed = FALSE`.
+#' first value of the breaks if `left_closed = FALSE`. When `TRUE`,
+#' this essentially becomes `findInterval()`.
 #' @param codes Should an integer vector indicating which bin the values
 #' fall into be returned? Default is `TRUE`. If `FALSE` the
 #' start values of the respective bin intervals are returned, i.e the

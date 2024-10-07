@@ -1,5 +1,17 @@
 #' Turn continuous data into discrete bins
 #'
+#' @description
+#' This is a cheapr version of `cut.numeric()` which is more efficient and
+#' prioritises pretty-looking breaks by default through
+#' the use of `get_breaks()`.
+#' Out-of-bounds values can be included naturally through the
+#' `include_oob` argument. Left-closed (right-open) intervals are
+#' returned by default in contrast to cut's default right-closed intervals.
+#' Furthermore there is flexibility in formatting the interval bins,
+#' allowing the user to specify formatting functions and symbols for
+#' the interval close and open symbols.
+#'
+#'
 #' @param x A numeric vector.
 #' @param breaks Break-points.
 #' @param left_closed Left-closed intervals or right-closed intervals?
@@ -43,7 +55,7 @@
 #'   age_groups <- as_discrete(
 #'     x,
 #'     breaks = breaks,
-#'     intv_sep = "--",
+#'     intv_sep = "-",
 #'     intv_end_fun = function(x) x - 1,
 #'     intv_openers = c("", ""),
 #'     intv_closers = c("", ""),

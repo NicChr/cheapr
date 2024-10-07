@@ -65,7 +65,15 @@ end points.}
 A factor of discrete bins (intervals of start/end pairs).
 }
 \description{
-Turn continuous data into discrete bins
+This is a cheapr version of \code{cut.numeric()} which is more efficient and
+prioritises pretty-looking breaks by default through
+the use of \code{get_breaks()}.
+Out-of-bounds values can be included naturally through the
+\code{include_oob} argument. Left-closed (right-open) intervals are
+returned by default in contrast to cut's default right-closed intervals.
+Furthermore there is flexibility in formatting the interval bins,
+allowing the user to specify formatting functions and symbols for
+the interval close and open symbols.
 }
 \examples{
 library(cheapr)

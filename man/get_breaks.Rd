@@ -29,10 +29,13 @@ get_breaks(x, n = 7, ...)
 \item{pretty}{Should pretty break-points be prioritised? Default is \code{TRUE}.}
 
 \item{expand_min}{Should smallest break be extended beyond the
-minimum of the data? Default is \code{FALSE}.}
+minimum of the data? Default is \code{FALSE}.
+If \code{TRUE} the then \code{min(get_breaks(x))} is ensured to be less than \code{min(x)}.}
 
 \item{expand_max}{Should largest break be extended beyond the maximum
-of the data? Default is \code{FALSE}.}
+of the data? Default is \code{FALSE}.
+If \code{TRUE} the then \code{max(get_breaks(x))} is ensured
+to be greater than \code{max(x)}.}
 }
 \value{
 A numeric vector of break-points.

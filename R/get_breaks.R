@@ -8,8 +8,11 @@
 #' @param pretty Should pretty break-points be prioritised? Default is `TRUE`.
 #' @param expand_min Should smallest break be extended beyond the
 #' minimum of the data? Default is `FALSE`.
+#' If `TRUE` the then `min(get_breaks(x))` is ensured to be less than `min(x)`.
 #' @param expand_max Should largest break be extended beyond the maximum
 #' of the data? Default is `FALSE`.
+#' If `TRUE` the then `max(get_breaks(x))` is ensured
+#' to be greater than `max(x)`.
 #' @param ... Extra arguments passed onto methods.
 #'
 #' @returns
@@ -50,12 +53,13 @@ get_breaks.numeric <- function(x, n = 7,
   if (any_na(rng) || all(is.infinite(rng))){
     return(NA_real_)
   }
-  rng_width <- diff(rng)
   start <- rng[1]
   end <- rng[2]
+  rng_width <- end - start
   spans_zero <- abs(diff(sign(rng))) == 2
+  zero_range <- isTRUE(rng_width == 0)
 
-  if (isTRUE(rng_width == 0)){
+  if (zero_range){
     return(seq(start - 0.05, end + 0.05, by = 0.1 / max((n - 1), 1)))
   }
 
@@ -76,25 +80,36 @@ get_breaks.numeric <- function(x, n = 7,
 
     # Make end-points prettier
 
-    adj_start <- round(pretty_floor(start), 6)
-    scale_diff <- log_scale(rng_width) - log_scale(adj_start)
+    scale_diff <- log_scale(rng_width)
 
     # If large range & relatively small starting value
     # floor start to the nearest difference in orders of magnitude
 
-    if (scale_diff >= 1){
-      # If range spans across zero and start val is small
-      if (spans_zero && abs(adj_start) < 1){
-        adj_start <- nearest_floor(adj_start, 10^(log_scale(end)))
-      } else {
-        adj_start <- nearest_floor(adj_start, 10^(scale_diff))
-      }
+    # If range spans across zero and start val is small
+    if (scale_diff >= 1 && spans_zero && abs(start) < 1){
+      adj_start <- nearest_floor(start, 10^(log_scale(end)))
+    } else {
+      adj_start <- nearest_floor(start, 10^(scale_diff))
     }
+
     adj_rng_width <- end - adj_start
 
     # Calculate bin-width (guaranteed to span end-points inclusively)
     bin_width <- adj_rng_width / n
-    adj_width <- round(pretty_ceiling(bin_width), 6)
+
+    if (bin_width > 2 && bin_width < 5){
+      adj_width <- 5
+    } else if (bin_width > 5 && bin_width < 10){
+      adj_width <- 10
+    } else if (bin_width < 1){
+      adj_width <- nearest_ceiling(bin_width, (10^(ceiling(log10(bin_width)))) / 2)
+      } else {
+      adj_width <- pretty_ceiling(bin_width)
+    }
+    adj_width <- round(adj_width, 6)
+
+    # Second adjustment to start value
+    adj_start <- nearest_floor(adj_start, 10^log_scale(adj_width))
 
     # Reduce floating-point error
     # If width is almost a whole number, just round it
@@ -115,7 +130,6 @@ get_breaks.numeric <- function(x, n = 7,
       }
     }
 
-
     # Breaks
 
     n_breaks <- n + 1
@@ -129,13 +143,13 @@ get_breaks.numeric <- function(x, n = 7,
 
     out <- seq(adj_start, by = adj_width, length.out = n_breaks)
 
+    ## Remove outliers
+
     rm <- which_(out > end)
 
     if (expand_max && (length(rm) > 0)){
       rm <- rm[-1L]
     }
-
-    # Remove outlier breaks
 
     if (length(rm) > 0){
       out <- out[-rm]
@@ -152,9 +166,6 @@ get_breaks.integer64 <- function(x, n = 7, ...){
   get_breaks(cpp_int64_to_numeric(x), n, ...)
 }
 
-## Based on the log10 scale of x, it is rounded down/up to the nearest order
-## of magnitude
-
 log_scale <- function(x, base = 10){
   y <- val_replace(x, 0, 1)
   floor(log(abs(y), base = base))
@@ -165,6 +176,10 @@ nearest_floor <- function(x, n){
 nearest_ceiling <- function(x, n){
   ceiling(x / n) * n
 }
+
+## Based on the log10 scale of x,
+## it is rounded down/up to the nearest order of magnitude
+
 pretty_floor <- function(x, base = 10){
   scale <- log_scale(x, base)
   nearest_floor(x, (base ^ scale))
@@ -173,3 +188,280 @@ pretty_ceiling <- function(x, base = 10){
   scale <- log_scale(x, base)
   nearest_ceiling(x, (base ^ scale))
 }
+# Like the above with special handling of small values
+# pretty_floor2 <- function(x){
+#   scale <- log_scale(x, 10)
+#   nearest_factor <- 10 ^ scale
+#   ax <- abs(x)
+#   manual <- which_(
+#     (ax < 1) |
+#       (ax > 2 & ax < 5) |
+#       (ax > 5 & ax < 10)
+#   )
+#   nearest_factor[manual] <- (10 ^ (scale[manual] + 1)) / 2
+#   nearest_floor(x, nearest_factor)
+# }
+# pretty_ceiling2 <- function(x){
+#   scale <- log_scale(x, 10)
+#   nearest_factor <- 10 ^ scale
+#   ax <- abs(x)
+#   manual <- which_(
+#     (ax < 1) |
+#       (ax > 2 & ax < 5) |
+#       (ax > 5 & ax < 10)
+#   )
+#   nearest_factor[manual] <- (10 ^ (scale[manual] + 1)) / 2
+#   nearest_ceiling(x, nearest_factor)
+# }
+
+### Alternative
+# get_breaks2 <- function(x, n = 7,
+#                                pretty = TRUE,
+#                                expand_min = FALSE,
+#                                expand_max = FALSE,
+#                                ...){
+#   check_length(n, 1L)
+#   stopifnot(n >= 1)
+#
+#   rng <- as.double(collapse::frange(x, na.rm = TRUE, finite = TRUE))
+#   if (any_na(rng) || all(is.infinite(rng))){
+#     return(NA_real_)
+#   }
+#   rng_width <- diff(rng)
+#   start <- rng[1]
+#   end <- rng[2]
+#   spans_zero <- abs(diff(sign(rng))) == 2
+#
+#   if (isTRUE(rng_width == 0)){
+#     return(seq(start - 0.05, end + 0.05, by = 0.1 / max((n - 1), 1)))
+#   }
+#
+#   if (!pretty){
+#
+#     # The way cut() does it
+#     width <- rng_width / n
+#     out <- seq(start, end, by = width)
+#     if (expand_min){
+#       out[1] <- start - (rng_width * 0.001)
+#     }
+#     if (expand_max){
+#       out[length(out)] <- end + (rng_width * 0.001)
+#     }
+#     out
+#
+#   } else {
+#
+#     # Make end-points prettier
+#
+#     scale_diff <- log_scale(rng_width) - log_scale(start)
+#
+#     # If large range & relatively small starting value
+#     # floor start to the nearest difference in orders of magnitude
+#
+#     # If range spans across zero and start val is small
+#     if (scale_diff >= 1 && spans_zero && abs(start) < 1){
+#       adj_start <- nearest_floor(start, 10^(log_scale(end)))
+#     } else {
+#       adj_start <- nearest_floor(start, 10^(scale_diff))
+#     }
+#
+#     adj_rng_width <- end - adj_start
+#
+#     # Calculate bin-width (guaranteed to span end-points inclusively)
+#     bin_width <- adj_rng_width / n
+#
+#     # if (bin_width < 1){
+#     #   # adj_width <- nearest_ceiling(bin_width, 10 ^ (floor(log10(bin_width))))
+#     #   adj_width <- nearest_ceiling(bin_width, 10 ^ ( (floor(log10(bin_width)) + 1) / 2))
+#     #   } else
+#     if (bin_width > 2 && bin_width < 5){
+#       adj_width <- 5
+#     } else if (bin_width > 5 && bin_width < 10){
+#       adj_width <- 10
+#     } else {
+#       adj_width <- pretty_ceiling(bin_width)
+#     }
+#     adj_width <- round(adj_width, 6)
+#
+#     # Second adjustment to start value
+#     adj_start <- nearest_floor(adj_start, 10^log_scale(adj_width))
+#
+#     # Reduce floating-point error
+#     # If width is almost a whole number, just round it
+#
+#     last_break_is_short <- isTRUE(is_integerable(seq_to(n + 3, adj_start, by = adj_width)))
+#
+#     # Also this produces an integer sequence
+#     if (isTRUE(abs(adj_width - round(adj_width)) < sqrt(.Machine$double.eps))){
+#       adj_width <- round(adj_width)
+#       if (last_break_is_short){
+#         adj_width <- as.integer(adj_width)
+#       }
+#     }
+#     if (isTRUE(abs(adj_start - round(adj_start)) < sqrt(.Machine$double.eps))){
+#       adj_start <- round(adj_start)
+#       if (last_break_is_short){
+#         adj_start <- as.integer(adj_start)
+#       }
+#     }
+#
+#
+#     # Breaks
+#
+#     n_breaks <- n + 1
+#     if (expand_max){
+#       n_breaks <- n_breaks + 2 # 2 for good measure
+#     }
+#
+#     if (expand_min && adj_start >= start){
+#       adj_start <- adj_start - adj_width
+#     }
+#
+#     out <- seq(adj_start, by = adj_width, length.out = n_breaks)
+#
+#     rm <- which_(out > end)
+#
+#     if (expand_max && (length(rm) > 0)){
+#       rm <- rm[-1L]
+#     }
+#
+#     # Remove outlier breaks
+#
+#     if (length(rm) > 0){
+#       out <- out[-rm]
+#     }
+#
+#     out
+#   }
+# }
+
+# get_breaks3 <- function(x, n = 7,
+#                         pretty = TRUE,
+#                         expand_min = FALSE,
+#                         expand_max = FALSE,
+#                         ...){
+#   check_length(n, 1L)
+#   stopifnot(n >= 1)
+#
+#   rng <- as.double(collapse::frange(x, na.rm = TRUE, finite = TRUE))
+#   if (any_na(rng) || all(is.infinite(rng))){
+#     return(NA_real_)
+#   }
+#   rng_width <- diff(rng)
+#   start <- rng[1]
+#   end <- rng[2]
+#   spans_zero <- abs(diff(sign(rng))) == 2
+#
+#   if (isTRUE(rng_width == 0)){
+#     return(seq(start - 0.05, end + 0.05, by = 0.1 / max((n - 1), 1)))
+#   }
+#
+#   if (!pretty){
+#
+#     # The way cut() does it
+#     width <- rng_width / n
+#     out <- seq(start, end, by = width)
+#     if (expand_min){
+#       out[1] <- start - (rng_width * 0.001)
+#     }
+#     if (expand_max){
+#       out[length(out)] <- end + (rng_width * 0.001)
+#     }
+#     out
+#
+#   } else {
+#
+#     # Make end-points prettier
+#
+#     adj_start <- pretty_floor(start)
+#     scale_diff <- log_scale(rng_width) - log_scale(adj_start)
+#
+#     # If large range & relatively small starting value
+#     # floor start to the nearest difference in orders of magnitude
+#
+#     # If range spans across zero and start val is small
+#     if (scale_diff >= 1 && spans_zero && abs(adj_start) < 1){
+#       adj_start <- nearest_floor(adj_start, 10^(log_scale(end)))
+#     } else {
+#       adj_start <- nearest_floor(adj_start, 10^(scale_diff))
+#     }
+#
+#     adj_rng_width <- end - adj_start
+#
+#     # Calculate bin-width (guaranteed to span end-points inclusively)
+#     bin_width <- adj_rng_width / n
+#
+#     # if (bin_width < 1){
+#     #   # adj_width <- nearest_ceiling(bin_width, 10 ^ (floor(log10(bin_width))))
+#     #   adj_width <- nearest_ceiling(bin_width, 10 ^ ( (floor(log10(bin_width)) + 1) / 2))
+#     #   } else
+#     if (bin_width > 2 && bin_width < 5){
+#       adj_width <- 5
+#     } else if (bin_width > 5 && bin_width < 10){
+#       adj_width <- 10
+#     } else {
+#       adj_width <- pretty_ceiling(bin_width)
+#     }
+#     adj_width <- round(adj_width, 6)
+#
+#     # Second adjustment to start value
+#     adj_start <- nearest_floor(adj_start, 10^log_scale(adj_width))
+#
+#     # Reduce floating-point error
+#     # If width is almost a whole number, just round it
+#
+#     last_break_is_short <- isTRUE(is_integerable(seq_to(n + 3, adj_start, by = adj_width)))
+#
+#     # Also this produces an integer sequence
+#     if (isTRUE(abs(adj_width - round(adj_width)) < sqrt(.Machine$double.eps))){
+#       adj_width <- round(adj_width)
+#       if (last_break_is_short){
+#         adj_width <- as.integer(adj_width)
+#       }
+#     }
+#     if (isTRUE(abs(adj_start - round(adj_start)) < sqrt(.Machine$double.eps))){
+#       adj_start <- round(adj_start)
+#       if (last_break_is_short){
+#         adj_start <- as.integer(adj_start)
+#       }
+#     }
+#
+#
+#     # Breaks
+#
+#     n_breaks <- n + 1
+#     if (expand_max){
+#       n_breaks <- n_breaks + 2 # 2 for good measure
+#     }
+#
+#     if (expand_min && adj_start >= start){
+#       adj_start <- adj_start - adj_width
+#     }
+#
+#     out <- seq(adj_start, by = adj_width, length.out = n_breaks)
+#
+#     ## Remove outliers
+#
+#     rm <- which_(out > end)
+#
+#     if (expand_max && (length(rm) > 0)){
+#       rm <- rm[-1L]
+#     }
+#
+#     if (length(rm) > 0){
+#       out <- out[-rm]
+#     }
+#
+#     rm <- which_(out < start)
+#
+#     if (expand_min && (length(rm) > 0)){
+#       rm <- rm[-1L]
+#     }
+#
+#     if (length(rm) > 0){
+#       out <- out[-rm]
+#     }
+#
+#     out
+#   }
+# }
