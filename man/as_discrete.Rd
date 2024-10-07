@@ -20,6 +20,7 @@ as_discrete(x, ...)
   intv_closers = c("[", "]"),
   intv_openers = c("(", ")"),
   intv_sep = ",",
+  inf_label = "∞",
   ...
 )
 
@@ -60,6 +61,8 @@ use for opening either left or right closed intervals.}
 
 \item{intv_sep}{A length 1 character vector used to separate the start and
 end points.}
+
+\item{inf_label}{Label to use for intervals that include infinity.}
 }
 \value{
 A factor of discrete bins (intervals of start/end pairs).
@@ -112,4 +115,7 @@ age_group(ages, seq(0, 80, 20))
 age_group(ages, seq(0, 25, 5))
 age_group(ages, 5)
 
+}
+\seealso{
+\link{bin} \link{get_breaks}
 }

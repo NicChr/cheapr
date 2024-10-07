@@ -21,6 +21,8 @@
 #' start values of the respective bin intervals are returned, i.e the
 #' corresponding breaks.
 #'
+#' @seealso [get_breaks] [as_discrete]
+#'
 #' @returns
 #' Either an integer vector of codes indicating which bin the values fall
 #' into, or the start of the intervals for which each value falls into.

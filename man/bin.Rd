@@ -44,3 +44,6 @@ no coercion to a double vector occurs. This alternative also has more
 arguments that allow you to return the start values of the binned vector,
 as well as including out-of-bounds intervals.
 }
+\seealso{
+\link{get_breaks} \link{as_discrete}
+}

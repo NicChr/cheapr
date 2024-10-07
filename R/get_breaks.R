@@ -15,6 +15,8 @@
 #' to be greater than `max(x)`.
 #' @param ... Extra arguments passed onto methods.
 #'
+#' @seealso [bin] [as_discrete]
+#'
 #' @returns
 #' A numeric vector of break-points.
 #'

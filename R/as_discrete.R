@@ -34,7 +34,10 @@
 #' use for opening either left or right closed intervals.
 #' @param intv_sep A length 1 character vector used to separate the start and
 #' end points.
+#' @param inf_label Label to use for intervals that include infinity.
 #' @param ... Extra arguments passed onto methods.
+#'
+#' @seealso [bin] [get_breaks]
 #'
 #' @returns
 #' A factor of discrete bins (intervals of start/end pairs).
@@ -94,6 +97,7 @@ as_discrete.numeric <- function(
     intv_closers = c("[", "]"),
     intv_openers = c("(", ")"),
     intv_sep = ",",
+    inf_label = "\u221E",
     ...
 ){
   breaks <- collapse::funique(as.double(breaks), sort = TRUE)
@@ -148,10 +152,10 @@ as_discrete.numeric <- function(
   if (include_oob){
     if (left_closed){
       end_point <- max(breaks)
-      labels <- c(labels, paste0(intv_closers[1], end_point, intv_sep, Inf, intv_openers[2]))
+      labels <- c(labels, paste0(intv_closers[1], end_point, intv_sep, inf_label, intv_openers[2]))
     } else {
       end_point <- min(breaks)
-      labels <- c(paste0(intv_openers[1], -Inf, intv_sep, end_point, intv_closers[2]), labels)
+      labels <- c(paste0(intv_openers[1], "-", inf_label, intv_sep, end_point, intv_closers[2]), labels)
     }
   }
   levels(out) <- as.character(labels)

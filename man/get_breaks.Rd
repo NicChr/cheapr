@@ -60,3 +60,6 @@ signif(
 levels(cut(ages, 5))
 
 }
+\seealso{
+\link{bin} \link{as_discrete}
+}
