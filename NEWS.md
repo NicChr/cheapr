@@ -1,5 +1,9 @@
 # cheapr 0.9.9
 
+* `get_breaks` has been improved and a few small bugs have been fixed.
+
+* `as_discrete` gains a new argument `inf_label`.
+
 * Safety improvements to `as_discrete`.
 
 * Removed internal C++ functions as package installation was failing for
