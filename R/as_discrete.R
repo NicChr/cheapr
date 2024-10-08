@@ -104,6 +104,11 @@ as_discrete.numeric <- function(
   breaks <- na_rm(breaks)
   # N breaks
   nb <- length(breaks)
+
+  if (nb == 0){
+    stop("Please provide at least 1 valid break")
+  }
+
   # N intervals = N breaks - 1
   nintv <- max(nb - 1L, as.integer(include_endpoint))
 
