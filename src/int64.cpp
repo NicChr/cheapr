@@ -5,7 +5,6 @@ bool is_int64(SEXP x){
 }
 
 // Convert 64-bit integer vec to 32-bit integer vec
-// We almost never want to convert back to 32-bit int
 
 [[cpp11::register]]
 SEXP cpp_int64_to_int(SEXP x){
@@ -30,6 +29,7 @@ SEXP cpp_int64_to_int(SEXP x){
 }
 
 // Convert 64-bit integer vec to double vec
+
 [[cpp11::register]]
 SEXP cpp_int64_to_double(SEXP x){
   if (!is_int64(x)){
@@ -93,7 +93,7 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
   return out;
 }
 
-// Convert 64-bit integer to int if possible, otherwise double
+// Convert 64-bit integer to 32-bit int if possible, otherwise double
 
 [[cpp11::register]]
 SEXP cpp_int64_to_numeric(SEXP x){
