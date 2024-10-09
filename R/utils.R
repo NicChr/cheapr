@@ -148,26 +148,3 @@ n_dots <- function(...){
 
 # Keep this in-case anyone was using it
 fill_with_na <- na_insert
-
-# Basically if x is integer no vector conversion to double happens
-cheapr_var <- function(x, na.rm = TRUE){
-  if (is.integer(x)){
-    y <- as.integer(x)
-  } else {
-    y <- as.double(x)
-  }
-  if (na.rm){
-    N <- (length(y) - na_count(y)) - 1
-  } else {
-    N <- length(y) - 1
-  }
-  mu <- collapse::fmean(y, na.rm = na.rm)
-  if (length(mu) < 1 || any_na(mu)){
-    NA_real_
-  } else {
-    var_sum_squared_diff(y, as.double(mu)) /  N
-  }
-}
-cheapr_sd <- function(x, na.rm = TRUE){
-  sqrt(cheapr_var(x, na.rm = na.rm))
-}
