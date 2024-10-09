@@ -115,6 +115,26 @@ age_group(ages, seq(0, 80, 20))
 age_group(ages, seq(0, 25, 5))
 age_group(ages, 5)
 
+# To closely replicate `cut()` with `as_discrete()` we can use the following
+
+cheapr_cut <- function(x, breaks, right = TRUE,
+                       include.lowest = FALSE,
+                       ordered.result = FALSE){
+  if (length(breaks) == 1){
+    breaks <- get_breaks(x, breaks, pretty = FALSE,
+                         expand_min = TRUE, expand_max = TRUE)
+  }
+  as_discrete(x, breaks, left_closed = !right,
+              include_endpoint = include.lowest,
+              ordered = ordered.result,
+              intv_start_fun = function(x) formatC(x, digits = 3, width = 1),
+              intv_end_fun = function(x) formatC(x, digits = 3, width = 1))
+}
+
+x <- rnorm(100)
+cheapr_cut(x, 10)
+identical(cut(x, 10), cheapr_cut(x, 10))
+
 }
 \seealso{
 \link{bin} \link{get_breaks}

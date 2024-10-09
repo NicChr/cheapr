@@ -36,6 +36,19 @@
 #' )
 #' levels(cut(ages, 5))
 #'
+#' # `get_breaks()` is left-biased in a sense, meaning that
+#' # the first break is always <= `min(x)` but the last break
+#' # may be < `max(x)`
+#'
+#' # To get right-biased breaks we can use a helper like so..
+#'
+#' right_breaks <- function(x, ...){
+#'   abs(get_breaks(-x, ...))
+#' }
+#'
+#' get_breaks(4:24, 10)
+#' right_breaks(4:24, 10)
+#'
 #' @rdname get_breaks
 #' @export
 get_breaks <- function(x, n = 7, ...){
@@ -111,7 +124,7 @@ get_breaks.numeric <- function(x, n = 7,
     adj_width <- round(adj_width, 6)
 
     # Second adjustment to start value
-    adj_start <- nearest_floor(adj_start, 10^log_scale(adj_width))
+    # adj_start <- nearest_floor(adj_start, 10^log_scale(adj_width))
 
     # Reduce floating-point error
     # If width is almost a whole number, just round it
@@ -155,6 +168,12 @@ get_breaks.numeric <- function(x, n = 7,
 
     if (length(rm) > 0){
       out <- out[-rm]
+    }
+
+    rm <- which_(out < start)
+
+    if (length(rm) > 1){
+      out <- out[-rm[-length(rm)]]
     }
 
     out

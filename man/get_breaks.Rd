@@ -59,6 +59,19 @@ signif(
 )
 levels(cut(ages, 5))
 
+# `get_breaks()` is left-biased in a sense, meaning that
+# the first break is always <= `min(x)` but the last break
+# may be < `max(x)`
+
+# To get right-biased breaks we can use a helper like so..
+
+right_breaks <- function(x, ...){
+  abs(get_breaks(-x, ...))
+}
+
+get_breaks(4:24, 10)
+right_breaks(4:24, 10)
+
 }
 \seealso{
 \link{bin} \link{as_discrete}
