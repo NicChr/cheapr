@@ -121,8 +121,10 @@ cheapr_cut <- function(x, breaks, right = TRUE,
                        include.lowest = FALSE,
                        ordered.result = FALSE){
   if (length(breaks) == 1){
-    breaks <- get_breaks(x, breaks, pretty = FALSE,
-                         expand_min = TRUE, expand_max = TRUE)
+    breaks <- get_breaks(x, breaks, pretty = FALSE)
+    adj <- diff(range(breaks)) * 0.001
+    breaks[1] <- breaks[1] - adj
+    breaks[length(breaks)] <- breaks[length(breaks)] + adj
   }
   as_discrete(x, breaks, left_closed = !right,
               include_endpoint = include.lowest,
