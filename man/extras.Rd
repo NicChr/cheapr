@@ -14,6 +14,7 @@
 \alias{na_insert}
 \alias{vector_length}
 \alias{cheapr_var}
+\alias{cheapr_rev}
 \title{Extra utilities}
 \usage{
 setdiff_(x, y, dups = TRUE)
@@ -50,6 +51,8 @@ na_insert(x, n = NULL, prop = NULL)
 vector_length(x)
 
 cheapr_var(x, na.rm = TRUE)
+
+cheapr_rev(x, recursive = TRUE)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -92,6 +95,8 @@ randomly into your vector.}
 
 \item{na.rm}{Should \code{NA} values be ignored in \code{cheapr_var()} Default is
 \code{TRUE}.}
+
+\item{recursive}{Should function be applied recursively to lists?}
 }
 \value{
 \verb{enframe()_} converts a vector to a data frame. \cr
@@ -113,7 +118,8 @@ Useful for generating missing data. \cr
 \code{vector_length} behaves mostly like \code{NROW()} except
 for matrices in which it matches \code{length()}.
 \code{cheapr_var} returns the variance of a numeric vector.
-No coercion happens for integer vectors and so is very cheap.
+No coercion happens for integer vectors and so is very cheap. \cr
+\code{cheapr_rev} is a much cheaper version of \code{rev()}.
 }
 \description{
 Extra utilities

@@ -50,7 +50,9 @@ R_xlen_t cpp_df_nrow(SEXP x){
 void cpp_copy_names(SEXP source, SEXP target){
   SEXP source_nms = Rf_protect(Rf_getAttrib(source, R_NamesSymbol));
   SEXP target_nms = Rf_protect(Rf_duplicate(source_nms));
-  Rf_setAttrib(target, R_NamesSymbol, target_nms);
+  if (!Rf_isNull(source_nms)){
+    Rf_setAttrib(target, R_NamesSymbol, target_nms);
+  }
   Rf_unprotect(2);
 }
 
@@ -63,6 +65,20 @@ SEXP r_address(SEXP x) {
 [[cpp11::register]]
 SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
+}
+
+SEXP shallow_copy(SEXP x){
+  if (TYPEOF(x) != VECSXP){
+    Rf_error("Can only shallow copy lists");
+  }
+  R_xlen_t n = Rf_xlength(x);
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, n));
+  cpp_copy_attributes(x, out);
+  for (R_xlen_t i = 0; i < n; ++i){
+    SET_VECTOR_ELT(out, i, VECTOR_ELT(x, i));
+  }
+  Rf_unprotect(1);
+  return out;
 }
 
 // Internal-only function
@@ -225,22 +241,137 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   }
 }
 
-// Very efficient reverse in-place
-// O(n/2) time
-// SEXP cpp_set_rev(SEXP x){
-//   R_xlen_t n = Rf_xlength(x);
-//   int temp;
-//   int *p_x = INTEGER(x);
-//   R_xlen_t half = int_div(n, 2);
-//   R_xlen_t k;
-//   for (R_xlen_t i = 0; i < half; ++i) {
-//     k = n - 1 - i;
-//     temp = p_x[i];
-//     p_x[i] = p_x[k];
-//     p_x[k] = temp;
-//   }
-//   return x;
-// }
+// Safe and very efficient reverse in-place (or with copy)
+// ~ O(n/2) time
+
+// matrix structure is preserved with cpp_rev
+
+[[cpp11::register]]
+SEXP cpp_rev(SEXP x, bool recursive, bool set){
+  R_xlen_t n = Rf_xlength(x);
+  R_xlen_t half = int_div(n, 2);
+  R_xlen_t k;
+  int NP = 0;
+  bool rev_names = true;
+  bool is_altrep = ALTREP(x);
+  if (set && is_altrep){
+    Rf_warning("Cannot update an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations");
+  }
+  Rf_protect(x = altrep_materialise(x)); ++ NP;
+
+  // altrep will have already been materialised so this should be safe
+  // and avoids a second copy
+  if (is_altrep){
+    set = true;
+  }
+  SEXP out;
+  switch (TYPEOF(x)){
+  case NILSXP: {
+    out = R_NilValue;
+    break;
+  }
+  case LGLSXP:
+  case INTSXP: {
+    out = Rf_protect(set ? x : Rf_duplicate(x)); ++NP;
+    int *p_out = INTEGER(out);
+    int temp;
+    for (R_xlen_t i = 0; i < half; ++i) {
+      k = n - 1 - i;
+      temp = p_out[i];
+      p_out[i] = p_out[k];
+      p_out[k] = temp;
+    }
+    break;
+  }
+  case REALSXP: {
+    out = Rf_protect(set ? x : Rf_duplicate(x)); ++NP;
+    double *p_out = REAL(out);
+    double temp;
+    for (R_xlen_t i = 0; i < half; ++i) {
+      k = n - 1 - i;
+      temp = p_out[i];
+      p_out[i] = p_out[k];
+      p_out[k] = temp;
+    }
+    break;
+  }
+  case STRSXP: {
+    out = Rf_protect(set ? x : Rf_duplicate(x)); ++NP;
+    const SEXP *p_out = STRING_PTR_RO(out);
+    for (R_xlen_t i = 0; i < half; ++i) {
+      k = n - 1 - i;
+      SEXP temp = Rf_protect(p_out[i]);
+      SET_STRING_ELT(out, i, p_out[k]);
+      SET_STRING_ELT(out, k, temp);
+      Rf_unprotect(1);
+    }
+    break;
+  }
+  case CPLXSXP: {
+    out = Rf_protect(set ? x : Rf_duplicate(x)); ++NP;
+    Rcomplex *p_out = COMPLEX(out);
+    for (R_xlen_t i = 0; i < half; ++i) {
+      k = n - 1 - i;
+      Rcomplex temp = p_out[i];
+      SET_COMPLEX_ELT(out, i, p_out[k]);
+      SET_COMPLEX_ELT(out, k, temp);
+    }
+    break;
+  }
+  case RAWSXP: {
+    out = Rf_protect(set ? x : Rf_duplicate(x)); ++NP;
+    Rbyte *p_out = RAW(out);
+    for (R_xlen_t i = 0; i < half; ++i) {
+      k = n - 1 - i;
+      Rbyte temp = p_out[i];
+      SET_RAW_ELT(out, i, p_out[k]);
+      SET_RAW_ELT(out, k, temp);
+    }
+    break;
+  }
+  case VECSXP: {
+    if (recursive){
+    rev_names = false;
+    out = Rf_protect(Rf_allocVector(VECSXP, n)); ++NP;
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_VECTOR_ELT(out, i, cpp_rev(VECTOR_ELT(x, i), true, set));
+    }
+    break;
+  } else if (!recursive && (!Rf_isObject(x) || Rf_isFrame(x))){
+    out = Rf_protect(set ? x : shallow_copy(x)); ++NP;
+    const SEXP *p_out = VECTOR_PTR_RO(out);
+    for (R_xlen_t i = 0; i < half; ++i) {
+      k = n - 1 - i;
+      SEXP temp = Rf_protect(p_out[i]);
+      SET_VECTOR_ELT(out, i, p_out[k]);
+      SET_VECTOR_ELT(out, k, temp);
+      Rf_unprotect(1);
+    }
+      break;
+    }
+  }
+  default: {
+    // set rev_names to false because catch-all r_rev() will handle that
+    rev_names = false;
+    cpp11::function r_rev = cpp11::package("base")["rev"];
+    if (set){
+      Rf_unprotect(NP);
+      Rf_error("Can't reverse in place here");
+    }
+    out = Rf_protect(r_rev(x)); ++NP;
+    break;
+  }
+  }
+  // // If x has names, reverse them too
+  if (rev_names && !Rf_isNull(Rf_getAttrib(out, R_NamesSymbol))){
+    SEXP old_names = Rf_protect(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
+    // should be okay to rev in-place here because we already copied the names
+    Rf_setAttrib(out, R_NamesSymbol, cpp_rev(old_names, false, true));
+  }
+  Rf_unprotect(NP);
+  return out;
+}
 
 // bool cpp_all_whole_numbers(SEXP x, double tol, bool na_ignore){
 //   R_xlen_t n = Rf_xlength(x);

@@ -260,6 +260,10 @@ cpp_bin <- function(x, breaks, codes, right, include_lowest, include_oob) {
   .Call(`_cheapr_cpp_bin`, x, breaks, codes, right, include_lowest, include_oob)
 }
 
+cpp_rev <- function(x, recursive, set) {
+  .Call(`_cheapr_cpp_rev`, x, recursive, set)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

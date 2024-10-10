@@ -22,6 +22,7 @@
 #' randomly into your vector.
 #' @param na.rm Should `NA` values be ignored in `cheapr_var()` Default is
 #' `TRUE`.
+#' @param recursive Should function be applied recursively to lists?
 #'
 #' @returns
 #' `enframe()_` converts a vector to a data frame. \cr
@@ -43,7 +44,8 @@
 #' `vector_length` behaves mostly like `NROW()` except
 #' for matrices in which it matches `length()`.
 #' `cheapr_var` returns the variance of a numeric vector.
-#' No coercion happens for integer vectors and so is very cheap.
+#' No coercion happens for integer vectors and so is very cheap. \cr
+#' `cheapr_rev` is a much cheaper version of `rev()`.
 #'
 #' @export
 #' @rdname extras
@@ -219,12 +221,18 @@ cheapr_var <- function(x, na.rm = TRUE){
     return(NA_real_)
   } else {
     mu <- collapse::fmean(y, na.rm = na.rm)
+    # mu <- sum(y, na.rm = na.rm) / (N + 1)
     if (is.na(mu)){
       NA_real_
     } else {
       var_sum_squared_diff(y, as.double(mu)) /  N
     }
   }
+}
+#' @export
+#' @rdname extras
+cheapr_rev <- function(x, recursive = TRUE){
+  .Call(`_cheapr_cpp_rev`, x, recursive, FALSE)
 }
 cheapr_sd <- function(x, na.rm = TRUE){
   sqrt(cheapr_var(x, na.rm = na.rm))

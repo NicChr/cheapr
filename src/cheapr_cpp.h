@@ -105,5 +105,6 @@ bool is_int64(SEXP x);
 SEXP cpp_int64_to_double(SEXP x);
 SEXP cpp_numeric_to_int64(SEXP x);
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
+void cpp_copy_attributes(SEXP source, SEXP target);
 
 #endif

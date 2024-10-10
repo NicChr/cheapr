@@ -73,3 +73,10 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
   Rf_unprotect(NP);
   return x;
 }
+
+void cpp_copy_attributes(SEXP source, SEXP target){
+  SEXP source_attrs = Rf_protect(ATTRIB(source));
+  SEXP target_attrs = Rf_protect(Rf_duplicate(Rf_coerceVector(source_attrs, VECSXP)));
+  cpp_set_add_attributes(target, target_attrs, false);
+  Rf_unprotect(2);
+}
