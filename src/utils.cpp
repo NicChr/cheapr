@@ -225,6 +225,23 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   }
 }
 
+// Very efficient reverse in-place
+// O(n/2) time
+// SEXP cpp_set_rev(SEXP x){
+//   R_xlen_t n = Rf_xlength(x);
+//   int temp;
+//   int *p_x = INTEGER(x);
+//   R_xlen_t half = int_div(n, 2);
+//   R_xlen_t k;
+//   for (R_xlen_t i = 0; i < half; ++i) {
+//     k = n - 1 - i;
+//     temp = p_x[i];
+//     p_x[i] = p_x[k];
+//     p_x[k] = temp;
+//   }
+//   return x;
+// }
+
 // bool cpp_all_whole_numbers(SEXP x, double tol, bool na_ignore){
 //   R_xlen_t n = Rf_xlength(x);
 //   double adiff;
