@@ -67,6 +67,9 @@ SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
 }
 
+// Shallow copy here means that a
+// new list is created and
+// all attributes are deep-copied
 SEXP shallow_copy(SEXP x){
   if (TYPEOF(x) != VECSXP){
     Rf_error("Can only shallow copy lists");
@@ -74,8 +77,9 @@ SEXP shallow_copy(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, n));
   cpp_copy_attributes(x, out);
+  const SEXP *p_x = VECTOR_PTR_RO(x);
   for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, VECTOR_ELT(x, i));
+    SET_VECTOR_ELT(out, i, p_x[i]);
   }
   Rf_unprotect(1);
   return out;
