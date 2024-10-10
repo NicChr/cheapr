@@ -76,8 +76,6 @@ get_breaks.numeric <- function(x, n = 10,
   tol <- sqrt(.Machine$double.eps)
 
   if (zero_range){
-    # width <- min(nearest_ceiling(abs(start), (10^(ceiling(log10(abs(start))))) / 2), 0.05)
-    # return(seq(start - width, end + width, by = width * 2 / max((n - 1), 1)))
     return(seq(start - 0.05, end + 0.05, by = 0.1 / max((n - 1), 1)))
   }
 
@@ -150,7 +148,6 @@ get_breaks.numeric <- function(x, n = 10,
       if (!lands_on_zero){
         adj_start <- adj_start - zero_adjustment
         n_breaks <- n_breaks + approx_int_div(zero_adjustment, adj_width)
-        # n_breaks <- n_breaks + (zero_adjustment %/% adj_width)
       }
     }
 
@@ -162,20 +159,16 @@ get_breaks.numeric <- function(x, n = 10,
       n_rm <- ceiling( (adj_end - end) / adj_width)
       n_breaks <- n_breaks - n_rm
       adj_end <- adj_end - (adj_width * n_rm)
-      # n_breaks <- n_breaks - ceiling( (adj_end - end) / adj_width)
-      # adj_end <- seq_to(n_breaks, adj_start, by = adj_width)
     }
 
     # adj_end might also have too few breaks
     if (adj_end < end){
       n_add <- approx_int_div(end - adj_end, adj_width)
-      # n_add <- (end - adj_end) %/% adj_width
       n_breaks <- n_breaks + n_add
       adj_end <- adj_end + (adj_width * n_add)
     }
     if (adj_start < start){
       n_rm <- approx_int_div(start - adj_start, adj_width)
-      # n_rm <- (start - adj_start) %/% adj_width
       n_breaks <- n_breaks - n_rm
       adj_start <- adj_start + (adj_width * n_rm)
     }
