@@ -1,5 +1,7 @@
 # cheapr 0.9.9
 
+* New functions `cheapr_var` and `cheapr_rev`.
+
 * `get_breaks` has been improved and a few small bugs have been fixed.
 
 * `as_discrete` gains a new argument `inf_label`.
