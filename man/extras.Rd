@@ -52,7 +52,7 @@ vector_length(x)
 
 cheapr_var(x, na.rm = TRUE)
 
-cheapr_rev(x, recursive = TRUE)
+cheapr_rev(x)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -95,8 +95,6 @@ randomly into your vector.}
 
 \item{na.rm}{Should \code{NA} values be ignored in \code{cheapr_var()} Default is
 \code{TRUE}.}
-
-\item{recursive}{Should function be applied recursively to lists?}
 }
 \value{
 \verb{enframe()_} converts a vector to a data frame. \cr

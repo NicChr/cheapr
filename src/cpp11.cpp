@@ -461,10 +461,10 @@ extern "C" SEXP _cheapr_cpp_bin(SEXP x, SEXP breaks, SEXP codes, SEXP right, SEX
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_rev(SEXP x, bool recursive, bool set);
-extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP recursive, SEXP set) {
+SEXP cpp_rev(SEXP x, bool set);
+extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP set) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_rev(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive), cpp11::as_cpp<cpp11::decay_t<bool>>(set)));
+    return cpp11::as_sexp(cpp_rev(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(set)));
   END_CPP11
 }
 // which.cpp
@@ -534,7 +534,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
     {"_cheapr_cpp_r_unnested_length",       (DL_FUNC) &_cheapr_cpp_r_unnested_length,       1},
-    {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     3},
+    {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
     {"_cheapr_cpp_sequence",                (DL_FUNC) &_cheapr_cpp_sequence,                3},
     {"_cheapr_cpp_sequence_id",             (DL_FUNC) &_cheapr_cpp_sequence_id,             1},

@@ -22,7 +22,6 @@
 #' randomly into your vector.
 #' @param na.rm Should `NA` values be ignored in `cheapr_var()` Default is
 #' `TRUE`.
-#' @param recursive Should function be applied recursively to lists?
 #'
 #' @returns
 #' `enframe()_` converts a vector to a data frame. \cr
@@ -231,8 +230,14 @@ cheapr_var <- function(x, na.rm = TRUE){
 }
 #' @export
 #' @rdname extras
-cheapr_rev <- function(x, recursive = TRUE){
-  .Call(`_cheapr_cpp_rev`, x, recursive, FALSE)
+cheapr_rev <- function(x){
+  # If x is a simple vector, use cpp_rev
+  if (!is.object(x) && is.atomic(x)){
+    .Call(`_cheapr_cpp_rev`, x, FALSE)
+  } else {
+    n <- vector_length(x)
+    sset(x, n:min(0L, n))
+  }
 }
 cheapr_sd <- function(x, na.rm = TRUE){
   sqrt(cheapr_var(x, na.rm = na.rm))

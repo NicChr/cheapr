@@ -98,13 +98,14 @@ SEXP check_transform_altrep(SEXP x);
 SEXP altrep_materialise(SEXP x);
 SEXP compact_seq_data(SEXP x);
 bool is_compact_seq(SEXP x);
-void cpp_copy_names(SEXP source, SEXP target);
 R_xlen_t na_count(SEXP x, bool recursive);
 bool cpp_any_na(SEXP x, bool recursive);
 bool is_int64(SEXP x);
 SEXP cpp_int64_to_double(SEXP x);
 SEXP cpp_numeric_to_int64(SEXP x);
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
-void cpp_copy_attributes(SEXP source, SEXP target);
+void cpp_copy_names(SEXP source, SEXP target, bool deep_copy);
+void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy);
+SEXP cpp_sset_df(SEXP x, SEXP indices);
 
 #endif

@@ -69,7 +69,6 @@ SEXP cpp_sset_unsafe(SEXP x, int *pind, int n, int n_cores){
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
     SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
-    OMP_FOR_SIMD
     for (int i = 0; i < n; ++i){
       SET_STRING_ELT(out, i, p_x[pind[i] - 1]);
     }
@@ -79,7 +78,6 @@ SEXP cpp_sset_unsafe(SEXP x, int *pind, int n, int n_cores){
   case CPLXSXP: {
     Rcomplex *p_x = COMPLEX(x);
     SEXP out = Rf_protect(Rf_allocVector(CPLXSXP, n));
-    OMP_FOR_SIMD
     for (int i = 0; i < n; ++i){
       SET_COMPLEX_ELT(out, i, p_x[pind[i] - 1]);
     }
@@ -89,7 +87,6 @@ SEXP cpp_sset_unsafe(SEXP x, int *pind, int n, int n_cores){
   case RAWSXP: {
     Rbyte *p_x = RAW(x);
     SEXP out = Rf_protect(Rf_allocVector(RAWSXP, n));
-    OMP_FOR_SIMD
     for (int i = 0; i < n; ++i){
       SET_RAW_ELT(out, i, p_x[pind[i] - 1]);
     }
@@ -99,7 +96,6 @@ SEXP cpp_sset_unsafe(SEXP x, int *pind, int n, int n_cores){
   case VECSXP: {
     const SEXP *p_x = VECTOR_PTR_RO(x);
     SEXP out = Rf_protect(Rf_allocVector(VECSXP, n));
-    OMP_FOR_SIMD
     for (int i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, p_x[pind[i] - 1]);
     }
@@ -353,12 +349,10 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       }
     } else {
       if (by > 0){
-        OMP_FOR_SIMD
         for (R_xlen_t i = istart - 1; i < iend; ++i){
           SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
         }
       } else {
-        OMP_FOR_SIMD
         for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
           SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
         }
@@ -468,6 +462,7 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
 [[cpp11::register]]
 SEXP cpp_sset_df(SEXP x, SEXP indices){
   int xn = cpp_df_nrow(x);
+  long long int llxn = xn;
   int ncols = Rf_length(x);
   int n = Rf_length(indices);
   int n_protections = 0;
@@ -545,7 +540,8 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       for (int j = 0; j < n; ++j){
         zero_count += (pi[j] == 0);
         pos_count += (pi[j] > 0);
-        oob_count += (std::fabs(pi[j]) > xn);
+        // oob_count counts NA as true so adjust after the fact
+        oob_count += (std::llabs(pi[j]) > llxn);
         na_count += (pi[j] == NA_INTEGER);
       }
     } else {
@@ -553,10 +549,13 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       for (int j = 0; j < n; ++j){
         zero_count += (pi[j] == 0);
         pos_count += (pi[j] > 0);
-        oob_count += (std::fabs(pi[j]) > xn);
+        // oob_count counts NA as true so adjust after the fact
+        oob_count += (std::llabs(pi[j]) > llxn);
         na_count += (pi[j] == NA_INTEGER);
       }
     }
+    // adjust oob_count
+    oob_count = oob_count - na_count;
     int neg_count = n - pos_count - zero_count - na_count;
     if ( (pos_count > 0 && neg_count > 0) ||
          (neg_count > 0 && na_count > 0)){

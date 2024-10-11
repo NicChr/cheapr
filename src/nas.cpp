@@ -547,7 +547,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
     }
     }
   }
-  if (names) cpp_copy_names(x, out);
+  if (names) cpp_copy_names(x, out, true);
   Rf_unprotect(NP);
   return out;
 }
@@ -604,7 +604,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
     }
     }
   }
-  if (names) cpp_copy_names(x, out);
+  if (names) cpp_copy_names(x, out, true);
   Rf_unprotect(NP);
   return out;
 }
@@ -669,7 +669,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //     }
 //     p_out[i] = row_has_na;
 //   }
-//   if (names) cpp_copy_names(x, out);
+//   if (names) cpp_copy_names(x, out, true);
 //   Rf_unprotect(NP);
 //   return out;
 // }
@@ -921,7 +921,7 @@ SEXP cpp_col_na_counts(SEXP x, bool names){
     }
   } else {
     out = Rf_protect(cpp_df_col_na_counts(x)); ++NP;
-    if (names) cpp_copy_names(x, out);
+    if (names) cpp_copy_names(x, out, true);
   }
   Rf_unprotect(NP);
   return out;
