@@ -20,7 +20,7 @@ as_discrete(x, ...)
   intv_closers = c("[", "]"),
   intv_openers = c("(", ")"),
   intv_sep = ",",
-  inf_label = "∞",
+  inf_label = NULL,
   ...
 )
 
@@ -62,7 +62,8 @@ use for opening either left or right closed intervals.}
 \item{intv_sep}{A length 1 character vector used to separate the start and
 end points.}
 
-\item{inf_label}{Label to use for intervals that include infinity.}
+\item{inf_label}{Label to use for intervals that include infinity.
+If left \code{NULL} the Unicode infinity symbol is used.}
 }
 \value{
 A factor of discrete bins (intervals of start/end pairs).

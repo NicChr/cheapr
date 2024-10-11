@@ -35,6 +35,7 @@
 #' @param intv_sep A length 1 character vector used to separate the start and
 #' end points.
 #' @param inf_label Label to use for intervals that include infinity.
+#' If left `NULL` the Unicode infinity symbol is used.
 #' @param ... Extra arguments passed onto methods.
 #'
 #' @seealso [bin] [get_breaks]
@@ -119,7 +120,7 @@ as_discrete.numeric <- function(
     intv_closers = c("[", "]"),
     intv_openers = c("(", ")"),
     intv_sep = ",",
-    inf_label = "\u221E",
+    inf_label = NULL,
     ...
 ){
   breaks <- collapse::funique(as.double(breaks), sort = TRUE)
@@ -177,6 +178,9 @@ as_discrete.numeric <- function(
              include_oob = include_oob)
 
   if (include_oob){
+    if (is.null(inf_label)){
+      inf_label <- "\u221E"
+    }
     if (left_closed){
       end_point <- max(breaks)
       labels <- c(labels, paste0(intv_closers[1], end_point, intv_sep, inf_label, intv_openers[2]))
