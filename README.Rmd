@@ -88,7 +88,7 @@ mark(num_na(x), sum(is.na(x)))
 # 4 cores
 options(cheapr.cores = 4)
 mark(num_na(x), sum(is.na(x)))
-options(cheapr.cores = 4)
+options(cheapr.cores = 1)
 ```
 
 ## Efficient NA counts by row/col
@@ -276,7 +276,6 @@ increments <- c(1, 0.5, 0.1)
 start <- 1
 end <- 5
 unlist(lapply(increments, \(x) seq(start, end, x)))
-  
 ```
 
 In cheapr you can use `seq_()` which accepts vector arguments.
