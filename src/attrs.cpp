@@ -54,14 +54,12 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
       return cpp_set_rm_attributes(x);
     }
   }
-  if (!add){
-    cpp_set_rm_attributes(x);
-  }
   SEXP names = Rf_protect(Rf_getAttrib(attrs, R_NamesSymbol)); ++NP;
   if (!attrs_are_a_list || Rf_isNull(names)){
     Rf_unprotect(NP);
     Rf_error("attributes must be a named list");
   }
+  if (!add) cpp_set_rm_attributes(x);
   const SEXP *p_attributes = VECTOR_PTR_RO(attrs);
   const SEXP *p_names = STRING_PTR_RO(names);
   for (int i = 0; i < n; ++i){

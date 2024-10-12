@@ -49,6 +49,19 @@ bool is_compact_seq(SEXP x){
   return out;
 }
 
+// bool is_compact_seq(SEXP x){
+//   if (!is_altrep(x)) return false;
+//   SEXP alt_attribs = Rf_protect(Rf_coerceVector(ATTRIB(ALTREP_CLASS(x)), VECSXP));
+//   std::string alt_class_str = CHAR(PRINTNAME(VECTOR_ELT(alt_attribs, 0)));
+//   std::string alt_pkg_str = CHAR(PRINTNAME(VECTOR_ELT(alt_attribs, 1)));
+//   std::string intseq_str = "compact_intseq";
+//   std::string realseq_str = "compact_realseq";
+//   std::string base_str = "base";
+//   bool out = alt_pkg_str == base_str && (alt_class_str == intseq_str || alt_class_str == realseq_str);
+//   Rf_unprotect(1);
+//   return out;
+// }
+
 [[cpp11::register]]
 SEXP compact_seq_data(SEXP x){
   if (!is_compact_seq(x)){

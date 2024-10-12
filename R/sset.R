@@ -238,6 +238,11 @@ sset.sf <- function(x, i, j, ...){
   attrs_to_keep <- source_attrs[setdiff_(source_nms, c("names", "row.names"))]
   set_attrs(out, attrs_to_keep, add = TRUE)
 }
+#' @export
+sset.vctrs_rcrd <- function(x, i, ...){
+  out <- sset(list_as_df(x), i)
+  set_attrs(out, attributes(x), add = FALSE)
+}
 df_select <- function(x, j){
   j_exists <- !missing(j)
   if (j_exists && is.logical(j)){
