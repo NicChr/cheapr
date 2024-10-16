@@ -1,5 +1,13 @@
 # cheapr (Development version)
 
+* `overview` cols are abbreviated to save visual space and histograms are
+printed by default.
+
+* New fast function `lump_levels` for keeping only the top n levels in terms
+of frequency.
+
+* `levels_drop` was not working correctly and has been fixed.
+
 # cheapr 0.9.9
 
 * New functions `cheapr_var` and `cheapr_rev`.

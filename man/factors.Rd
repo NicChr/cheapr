@@ -145,5 +145,5 @@ get_top_n <- function(x, n){
          count = tabulate(f))
 }
 
-get_top_n(x, 5)
+get_top_n(x, 3)
 }
