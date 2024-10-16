@@ -158,39 +158,3 @@ r_cut_breaks <- function(x, n){
   breaks[length(breaks)] <- breaks[length(breaks)] + adj
   breaks
 }
-
-
-# str_to_factor_size <- function(x){
-#   size <- as.double(object.size(x))
-#   lvls_size <- size - (8 * (length(x) - collapse::fnunique(x)))
-#   int_size <- 48 + (4 * length(x))
-#   (48 * 7) + int_size + lvls_size
-# }
-# factor_to_str_size <- function(x){
-#   lvls_size <- as.double(object.size(levels(x)))
-#   lvls_size + (8 * (length(x) - length(levels(x))))
-# }
-
-# vec_compress <- function(x){
-#   if (inherits(x, "data.frame")){
-#     for (i in seq_along(x)){
-#       x[[i]] <- vec_compress(x[[i]])
-#     }
-#   }
-#   if (is.factor(x)){
-#     if (length(levels(x)) >= (length(x) / 2)){
-#       x <- factor_as_character(x)
-#     }
-#   } else if (is.character(x)){
-#     if (collapse::fnunique(x) < (length(x) / 2)){
-#       x <- as_factor(x)
-#     }
-#   } else if (
-#     is.double(x) && !is.object(x) &&
-#     all_integerable(x) &&
-#     cpp_all_whole_numbers(x, tol = sqrt(.Machine$double.eps), na_ignore = TRUE)
-#   ){
-#     storage.mode(x) <- "integer" # This keeps matrix structure intact
-#   }
-#   x
-# }

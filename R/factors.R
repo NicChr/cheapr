@@ -258,38 +258,6 @@ levels_reorder <- function(x, order_by, decreasing = FALSE){
     factor_(x, levels = ordered_levels)
   }
 }
-# levels_lump <- function(x, n, prop, other_category = "Other",
-#                           ties = c("min", "average", "first", "last", "random", "max")){
-#   check_is_factor(x)
-#   if (!missing(n) && !missing(prop)){
-#     stop("Please supply either n or prop, not both")
-#   }
-#   if (!missing(prop)){
-#     n <- floor(prop * length(levels(x)))
-#   }
-#   temp <- unclass(x)
-#   ties <- match.arg(ties)
-#   # counts <- collapse::GRPN(x, expand = FALSE)
-#   counts <- tabulate(x, length(levels(x)))
-#   if (ties == "min"){
-#     bound <- sort(counts, decreasing = TRUE)[min(n, length(counts))]
-#     top <- which_(counts >= bound)
-#   } else {
-#     rank <- rank(counts, ties.method = ties)
-#     top <- which_(rank <= n)
-#   }
-#   if (length(top) == length(counts)){
-#     x
-#   } else {
-#     lvls <- levels_factor(x)[top]
-#     out <- collapse::fmatch(x, lvls, nomatch = length(lvls) + 1L, overid = 2L)
-#     out[which_na(x)] <- NA
-#     out_levels <- c(factor_as_character(lvls), other_category)
-#     attr(out, "levels") <- out_levels
-#     class(out) <- "factor"
-#     out
-#   }
-# }
 #' @export
 #' @rdname factors
 levels_lump <- function(x, n, prop, other_category = "Other",
