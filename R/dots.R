@@ -30,6 +30,6 @@ named_list <- function(..., .keep_null = TRUE){
   dots
 }
 expr_names <- function(...){
-  as.character(substitute(c(...))[-1L])
-  # vapply(substitute(alist(...))[-1L], deparse2, "", USE.NAMES = FALSE)
+  # as.character(substitute(c(...))[-1L])
+  vapply(substitute(alist(...))[-1L], deparse2, "", USE.NAMES = FALSE)
 }

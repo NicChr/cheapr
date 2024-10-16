@@ -12,6 +12,7 @@
 \alias{levels_drop_na}
 \alias{levels_drop}
 \alias{levels_reorder}
+\alias{levels_lump}
 \title{A cheaper version of \code{factor()} along with cheaper utilities}
 \usage{
 factor_(
@@ -41,6 +42,14 @@ levels_drop_na(x)
 levels_drop(x)
 
 levels_reorder(x, order_by, decreasing = FALSE)
+
+levels_lump(
+  x,
+  n,
+  prop,
+  other_category = "Other",
+  ties = c("min", "average", "first", "last", "random", "max")
+)
 }
 \arguments{
 \item{x}{A vector.}
@@ -65,6 +74,15 @@ Default is \code{TRUE}.}
 
 \item{decreasing}{Should the reordered levels be in decreasing order?
 Default is \code{FALSE}.}
+
+\item{n}{Top n number of levels to calculate.}
+
+\item{prop}{Top proportion of levels to calculate.
+This is a proportion of the total unique levels in x.}
+
+\item{other_category}{Name of 'other' category.}
+
+\item{ties}{Ties method to use. See \code{?rank}.}
 }
 \value{
 A \code{factor} or \code{character} in the case of \code{levels_used} and \code{levels_unused}.
@@ -81,6 +99,8 @@ There are some additional utilities, most of which begin with the prefix
 \code{levels_add_na()} which adds an explicit \code{NA} level,
 \code{levels_drop_na()} which drops the \code{NA} level,
 \code{levels_drop()} which drops unused factor levels,
+\code{levels_lump()} which returns top n levels and lumps all others into the
+same category,
 and finally \code{levels_reorder()} which reorders the levels of \code{x}
 based on \code{y} using the ordered median values of \code{y} for each level.
 }
@@ -95,4 +115,35 @@ Using a daylight savings example where the clocks go back: \cr
 produces 4 levels whereas \cr
 \code{factor_(as.POSIXct(1729984360, tz = "Europe/London") + 3600 *(1:5))}
 produces 5 levels.
+
+\code{levels_lump()} is a cheaper version of \code{forcats::lump_n()} but returns
+levels in order of highest frequency to lowest. This can be very useful
+for plotting.
+}
+\examples{
+library(cheapr)
+
+x <- factor_(sample(letters[sample.int(26, 10)], 100, TRUE), levels = letters)
+x
+# Used/unused levels
+
+levels_used(x)
+levels_unused(x)
+
+# Drop unused levels
+levels_drop(x)
+
+# Top 3 letters by by frequency
+
+table(levels_lump(x, 3))
+
+# We can use levels_lump to create a generic top n function for non-factors too
+
+get_top_n <- function(x, n){
+  f <- levels_lump(factor_(x, order = FALSE), n = n)
+  new_df(value = levels(f),
+         count = tabulate(f))
+}
+
+get_top_n(x, 5)
 }

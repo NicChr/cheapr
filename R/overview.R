@@ -36,71 +36,71 @@
 #' options(cheapr.digits = 2) # The default
 #' @rdname overview
 #' @export
-overview <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   UseMethod("overview")
 }
 #' @rdname overview
 #' @export
-overview.default <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.default <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   overview(new_df(x = x), hist = hist, digits = digits)
 }
 #' @rdname overview
 #' @export
-overview.logical <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.logical <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   overview(new_df(x = as.logical(x)), hist = hist, digits = digits)
 }
 #' @rdname overview
 #' @export
-overview.integer <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.integer <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   out <- overview(new_df(x = as.integer(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.numeric <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.numeric <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   out <- overview(new_df(x = as.numeric(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.integer64 <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.integer64 <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   out <- overview(cpp_int64_to_numeric(x), hist = hist, digits = digits)
   out$numeric$class <- class(x)[1]
   out
 }
 #' @rdname overview
 #' @export
-overview.character <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.character <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   out <- overview(new_df(x = as.character(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.factor <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.factor <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   out <- overview(new_df(x = as.factor(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.Date <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.Date <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   out <- overview(new_df(x = as.Date(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.POSIXt <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.POSIXt <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   out <- overview(new_df(x = as.POSIXct(x)), hist = hist, digits = digits)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.ts <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.ts <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist, digits = digits)
   out$time_series <- out$numeric
   out$numeric <- sset(out$numeric, 0)
@@ -112,7 +112,7 @@ overview.ts <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
 overview.zoo <- overview.ts
 #' @rdname overview
 #' @export
-overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digits", 2)){
+overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
   check_is_df(x)
   N <- nrow(x)
   num_cols <- ncol(x)
@@ -340,75 +340,101 @@ overview.data.frame <- function(x, hist = FALSE, digits = getOption("cheapr.digi
 }
 #' @export
 print.overview <- function(x, max = NULL, ...){
-  digits <- x[["print_digits"]]
+  temp <- unclass(x)
+  digits <- temp[["print_digits"]]
   pretty_round <- function(x, decimal_digits = digits, ...){
     pretty_num(round(x, digits = decimal_digits), ...)
   }
-  cat(paste("obs:", x$obs, "\ncols:", x$cols), "\n")
-  if (nrow(x$logical)){
-    x$logical$p_complete <- pretty_round(x$logical$p_complete)
+  abbr <- function(x, min = 6, left = TRUE){
+    abbreviate(x, minlength = min, named = FALSE,
+               method = if (left) "left.kept" else "both.sides")
+  }
+  cat(paste("obs:", temp$obs, "\ncols:", temp$cols), "\n")
+  if (nrow(temp$logical)){
+    temp$logical$p_complete <- pretty_round(temp$logical$p_complete)
     cat("\n----- Logical -----\n")
-    print(x$logical)
+    names(temp$logical) <- abbr(names(temp$logical))
+    temp$logical$class <- abbr(temp$logical$class, 5, FALSE)
+    temp$logical$col <- abbr(temp$logical$col, 10, FALSE)
+    print(temp$logical)
   }
-  if (nrow(x$numeric)){
-    x$numeric$p_complete <- pretty_round(x$numeric$p_complete)
-    x$numeric$mean <- pretty_round(x$numeric$mean)
-    x$numeric$p0 <- pretty_round(x$numeric$p0)
-    x$numeric$p25 <- pretty_round(x$numeric$p25)
-    x$numeric$p50 <- pretty_round(x$numeric$p50)
-    x$numeric$p75 <- pretty_round(x$numeric$p75)
-    x$numeric$p100 <- pretty_round(x$numeric$p100)
-    x$numeric$iqr <- pretty_round(x$numeric$iqr)
-    x$numeric$sd <- pretty_round(x$numeric$sd)
+  if (nrow(temp$numeric)){
+    temp$numeric$p_complete <- pretty_round(temp$numeric$p_complete)
+    temp$numeric$mean <- pretty_round(temp$numeric$mean)
+    temp$numeric$p0 <- pretty_round(temp$numeric$p0)
+    temp$numeric$p25 <- pretty_round(temp$numeric$p25)
+    temp$numeric$p50 <- pretty_round(temp$numeric$p50)
+    temp$numeric$p75 <- pretty_round(temp$numeric$p75)
+    temp$numeric$p100 <- pretty_round(temp$numeric$p100)
+    temp$numeric$iqr <- pretty_round(temp$numeric$iqr)
+    temp$numeric$sd <- pretty_round(temp$numeric$sd)
     cat("\n----- Numeric -----\n")
-    print(x$numeric)
+    names(temp$numeric) <- abbr(names(temp$numeric))
+    temp$numeric$class <- abbr(temp$numeric$class, 5, FALSE)
+    temp$numeric$col <- abbr(temp$numeric$col, 10, FALSE)
+    print(temp$numeric)
   }
-  if (nrow(x$date)){
-    x$date$p_complete <- pretty_round(x$date$p_complete)
+  if (nrow(temp$date)){
+    temp$date$p_complete <- pretty_round(temp$date$p_complete)
     cat("\n----- Dates -----\n")
-    print(x$date)
+    names(temp$date) <- abbr(names(temp$date))
+    temp$date$class <- abbr(temp$date$class, 5, FALSE)
+    temp$date$col <- abbr(temp$date$col, 10, FALSE)
+    print(temp$date)
   }
-  if (nrow(x$datetime)){
-    x$datetime$p_complete <- pretty_round(x$datetime$p_complete)
+  if (nrow(temp$datetime)){
+    temp$datetime$p_complete <- pretty_round(temp$datetime$p_complete)
     # An overview list contains a 'min' & 'max' variable of date-times
     # This is UTC because R can't handle a date-time with multiple time-zones
     # And so we want to print it in local-time
-    datetime_chr_min <- character(nrow(x$datetime))
-    datetime_chr_max <- character(nrow(x$datetime))
-    mins <- x[["datetime"]][["min"]]
-    maxs <- x[["datetime"]][["max"]]
-    tzones <- x[["datetime"]][["tzone"]]
-    for (i in seq_len(nrow(x$datetime))){
+    datetime_chr_min <- character(nrow(temp$datetime))
+    datetime_chr_max <- character(nrow(temp$datetime))
+    mins <- temp[["datetime"]][["min"]]
+    maxs <- temp[["datetime"]][["max"]]
+    tzones <- temp[["datetime"]][["tzone"]]
+    for (i in seq_len(nrow(temp$datetime))){
       datetime_chr_min[i] <- format(mins[i], tz = tzones[i])
       datetime_chr_max[i] <- format(maxs[i], tz = tzones[i])
     }
-    x$datetime$min <- datetime_chr_min
-    x$datetime$max <- datetime_chr_max
+    temp$datetime$min <- datetime_chr_min
+    temp$datetime$max <- datetime_chr_max
     cat("\n----- Date-Times -----\n")
-    print(x$datetime)
+    names(temp$datetime) <- abbr(names(temp$datetime))
+    temp$datetime$class <- abbr(temp$datetime$class, 5, FALSE)
+    temp$datetime$col <- abbr(temp$datetime$col, 10, FALSE)
+    print(temp$datetime)
   }
-  if (nrow(x$time_series)){
-    x$time_series$p_complete <- pretty_round(x$time_series$p_complete)
-    x$time_series$mean <- pretty_round(x$time_series$mean)
-    x$time_series$p0 <- pretty_round(x$time_series$p0)
-    x$time_series$p25 <- pretty_round(x$time_series$p25)
-    x$time_series$p50 <- pretty_round(x$time_series$p50)
-    x$time_series$p75 <- pretty_round(x$time_series$p75)
-    x$time_series$p100 <- pretty_round(x$time_series$p100)
-    x$time_series$iqr <- pretty_round(x$time_series$iqr)
-    x$time_series$sd <- pretty_round(x$time_series$sd)
+  if (nrow(temp$time_series)){
+    temp$time_series$p_complete <- pretty_round(temp$time_series$p_complete)
+    temp$time_series$mean <- pretty_round(temp$time_series$mean)
+    temp$time_series$p0 <- pretty_round(temp$time_series$p0)
+    temp$time_series$p25 <- pretty_round(temp$time_series$p25)
+    temp$time_series$p50 <- pretty_round(temp$time_series$p50)
+    temp$time_series$p75 <- pretty_round(temp$time_series$p75)
+    temp$time_series$p100 <- pretty_round(temp$time_series$p100)
+    temp$time_series$iqr <- pretty_round(temp$time_series$iqr)
+    temp$time_series$sd <- pretty_round(temp$time_series$sd)
     cat("\n----- Time-Series -----\n")
-    print(x$time_series)
+    names(temp$time_series) <- abbr(names(temp$time_series))
+    temp$time_series$class <- abbr(temp$time_series$class, 5, FALSE)
+    temp$time_series$col <- abbr(temp$time_series$col, 10, FALSE)
+    print(temp$time_series)
   }
-  if (nrow(x$categorical)){
-    x$categorical$p_complete <- pretty_round(x$categorical$p_complete)
+  if (nrow(temp$categorical)){
+    temp$categorical$p_complete <- pretty_round(temp$categorical$p_complete)
     cat("\n----- Categorical -----\n")
-    print(x$categorical)
+    names(temp$categorical) <- abbr(names(temp$categorical))
+    temp$categorical$class <- abbr(temp$categorical$class, 5, FALSE)
+    temp$categorical$col <- abbr(temp$categorical$col, 10, FALSE)
+    print(temp$categorical)
   }
-  if (nrow(x$other)){
-    x$other$p_complete <- pretty_round(x$other$p_complete)
+  if (nrow(temp$other)){
+    temp$other$p_complete <- pretty_round(temp$other$p_complete)
     cat("\n----- Other -----\n")
-    print(x$other)
+    names(temp$other) <- abbr(names(temp$other))
+    temp$other$class <- abbr(temp$other$class, 5, FALSE)
+    temp$other$col <- abbr(temp$other$col, 10, FALSE)
+    print(temp$other)
   }
   invisible(x)
 }
@@ -455,10 +481,10 @@ pluck_row <- function(data, i = 1){
 spark_bar <- function(x){
   bars <- intToUtf8(c(9601L, 9602L, 9603L, 9605L, 9606L, 9607L),
                     multiple = TRUE)
-  bar_codes <- findInterval(
-    x, vec = seq.int(0, to = 1, length.out = length(bars) + 1L),
-    rightmost.closed = TRUE,
-    left.open = FALSE, all.inside = FALSE
+  bar_codes <- bin(
+    x, seq.int(0, to = 1, length.out = length(bars) + 1L),
+    left_closed = TRUE, include_oob = TRUE,
+    include_endpoint = TRUE
   )
   bar_codes[bar_codes == 0L] <- NA_integer_
   out <- bars[bar_codes]
@@ -470,7 +496,7 @@ inline_hist <- function(x, n_bins = 5L){
     return(" ")
   }
   if (is.infinite(max(abs(collapse::frange(x, na.rm = TRUE))))) {
-    x[is.infinite(x)] <- NA
+    x[which_(is.infinite(x))] <- NA
   }
   if (all_na(x)) {
     return(" ")
@@ -478,8 +504,10 @@ inline_hist <- function(x, n_bins = 5L){
   if (allv2(na_rm(x), 0)) {
     x <- x + 1
   }
-  hist_dt <- tabulate(cut_numeric(x, n_bins, labels = FALSE),
-                      nbins = n_bins)
+  hist_dt <- tabulate(
+    bin(x, r_cut_breaks(x, n_bins), left_closed = FALSE),
+    nbins = n_bins
+  )
   hist_dt <- hist_dt / max(hist_dt)
   spark_bar(hist_dt)
 }

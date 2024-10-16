@@ -12,6 +12,8 @@
 #' `levels_add_na()` which adds an explicit `NA` level,
 #' `levels_drop_na()` which drops the `NA` level,
 #' `levels_drop()` which drops unused factor levels,
+#' `levels_lump()` which returns top n levels and lumps all others into the
+#' same category,
 #' and finally `levels_reorder()` which reorders the levels of `x`
 #' based on `y` using the ordered median values of `y` for each level.
 #'
@@ -32,6 +34,11 @@
 #' `order_by`.
 #' @param decreasing Should the reordered levels be in decreasing order?
 #' Default is `FALSE`.
+#' @param n Top n number of levels to calculate.
+#' @param prop Top proportion of levels to calculate.
+#' This is a proportion of the total unique levels in x.
+#' @param other_category Name of 'other' category.
+#' @param ties Ties method to use. See `?rank`.
 #'
 #' @details
 #' This operates similarly to `collapse::qF()`. \cr
@@ -45,6 +52,37 @@
 #' `factor_(as.POSIXct(1729984360, tz = "Europe/London") + 3600 *(1:5))`
 #' produces 5 levels.
 #'
+#' `levels_lump()` is a cheaper version of `forcats::lump_n()` but returns
+#' levels in order of highest frequency to lowest. This can be very useful
+#' for plotting.
+#'
+#'
+#' @examples
+#' library(cheapr)
+#'
+#' x <- factor_(sample(letters[sample.int(26, 10)], 100, TRUE), levels = letters)
+#' x
+#' # Used/unused levels
+#'
+#' levels_used(x)
+#' levels_unused(x)
+#'
+#' # Drop unused levels
+#' levels_drop(x)
+#'
+#' # Top 3 letters by by frequency
+#'
+#' table(levels_lump(x, 3))
+#'
+#' # We can use levels_lump to create a generic top n function for non-factors too
+#'
+#' get_top_n <- function(x, n){
+#'   f <- levels_lump(factor_(x, order = FALSE), n = n)
+#'   new_df(value = levels(f),
+#'          count = tabulate(f))
+#' }
+#'
+#' get_top_n(x, 5)
 #' @export
 #' @rdname factors
 factor_ <- function(
@@ -198,7 +236,7 @@ levels_drop <- function(x){
   if (length(which_used) == n_lvls){
     x
   } else {
-    out <- which_used[unclass(x)]
+    out <- collapse::fmatch(unclass(x), which_used, overid = 2L)
     attributes(out) <- attributes(x)
     attr(out, "levels") <- levels(x)[which_used]
     out
@@ -218,6 +256,72 @@ levels_reorder <- function(x, order_by, decreasing = FALSE){
   } else {
     ordered_levels <- levels(x)[o]
     factor_(x, levels = ordered_levels)
+  }
+}
+# levels_lump <- function(x, n, prop, other_category = "Other",
+#                           ties = c("min", "average", "first", "last", "random", "max")){
+#   check_is_factor(x)
+#   if (!missing(n) && !missing(prop)){
+#     stop("Please supply either n or prop, not both")
+#   }
+#   if (!missing(prop)){
+#     n <- floor(prop * length(levels(x)))
+#   }
+#   temp <- unclass(x)
+#   ties <- match.arg(ties)
+#   # counts <- collapse::GRPN(x, expand = FALSE)
+#   counts <- tabulate(x, length(levels(x)))
+#   if (ties == "min"){
+#     bound <- sort(counts, decreasing = TRUE)[min(n, length(counts))]
+#     top <- which_(counts >= bound)
+#   } else {
+#     rank <- rank(counts, ties.method = ties)
+#     top <- which_(rank <= n)
+#   }
+#   if (length(top) == length(counts)){
+#     x
+#   } else {
+#     lvls <- levels_factor(x)[top]
+#     out <- collapse::fmatch(x, lvls, nomatch = length(lvls) + 1L, overid = 2L)
+#     out[which_na(x)] <- NA
+#     out_levels <- c(factor_as_character(lvls), other_category)
+#     attr(out, "levels") <- out_levels
+#     class(out) <- "factor"
+#     out
+#   }
+# }
+#' @export
+#' @rdname factors
+levels_lump <- function(x, n, prop, other_category = "Other",
+                        ties = c("min", "average", "first", "last", "random", "max")){
+  check_is_factor(x)
+  if (!missing(n) && !missing(prop)){
+    stop("Please supply either n or prop, not both")
+  }
+  if (!missing(prop)){
+    n <- floor(prop * length(levels(x)))
+  }
+  ties <- match.arg(ties)
+  counts <- tabulate(x, length(levels(x)))
+  o <- order(counts, decreasing = TRUE)
+  sorted_counts <- counts[o]
+  if (ties == "min"){
+    bound <- sorted_counts[min(n, length(counts))]
+    top <- which_(sorted_counts >= bound)
+  } else {
+    rank <- rank(-sorted_counts, ties.method = ties)
+    top <- which_(rank <= n)
+  }
+  if (length(top) == length(counts)){
+    x
+  } else {
+    lvls <- levels_factor(x)[o][top]
+    out <- collapse::fmatch(x, lvls, nomatch = length(lvls) + 1L, overid = 2L)
+    out[which_na(x)] <- NA
+    out_levels <- c(factor_as_character(lvls), other_category)
+    attr(out, "levels") <- out_levels
+    class(out) <- "factor"
+    out
   }
 }
 # Generic factor conversion to data representation

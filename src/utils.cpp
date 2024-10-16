@@ -391,6 +391,10 @@ SEXP cpp_rev(SEXP x, bool set){
 //     break;
 //   }
 //   default: {
+//     if (is_int64(x)){
+//     out = true;
+//     break;
+//   }
 //     out = true;
 //     double *p_x = REAL(x);
 //     for (R_xlen_t i = 0; i < n; ++i) {

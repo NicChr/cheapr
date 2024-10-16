@@ -16,31 +16,31 @@
 \alias{overview.data.frame}
 \title{An alternative to \code{summary()} inspired by the skimr package}
 \usage{
-overview(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+overview(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{default}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{default}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{logical}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{logical}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{integer}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{integer}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{numeric}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{numeric}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{integer64}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{integer64}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{character}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{character}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{factor}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{factor}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{Date}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{Date}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{POSIXt}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{POSIXt}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{ts}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{ts}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{zoo}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{zoo}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 
-\method{overview}{data.frame}(x, hist = FALSE, digits = getOption("cheapr.digits", 2))
+\method{overview}{data.frame}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
 }
 \arguments{
 \item{x}{A vector or data frame.}
