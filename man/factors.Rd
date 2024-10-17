@@ -14,6 +14,7 @@
 \alias{levels_drop_na}
 \alias{levels_drop}
 \alias{levels_reorder}
+\alias{levels_rename}
 \alias{levels_lump}
 \title{A cheaper version of \code{factor()} along with cheaper utilities}
 \usage{
@@ -49,6 +50,8 @@ levels_drop(x)
 
 levels_reorder(x, order_by, decreasing = FALSE)
 
+levels_rename(x, ..., .fun = NULL)
+
 levels_lump(
   x,
   n,
@@ -81,6 +84,13 @@ Default is \code{TRUE}.}
 \item{decreasing}{Should the reordered levels be in decreasing order?
 Default is \code{FALSE}.}
 
+\item{...}{Key-value pairs where the key is the new name and
+value is the name to replace that with the new name. For example
+\code{levels_rename(x, new = old)} replaces the level "old" with the
+level "new".}
+
+\item{.fun}{Renaming function applied to each level.}
+
 \item{n}{Top n number of levels to calculate.}
 
 \item{prop}{Top proportion of levels to calculate.
@@ -107,6 +117,7 @@ There are some additional utilities, most of which begin with the prefix
 \code{levels_add_na()} which adds an explicit \code{NA} level,
 \code{levels_drop_na()} which drops the \code{NA} level,
 \code{levels_drop()} which drops unused factor levels,
+\code{levels_rename()} for renaming levels,
 \code{levels_lump()} which returns top n levels and lumps all others into the
 same category,
 and finally \code{levels_reorder()} which reorders the levels of \code{x}
@@ -164,4 +175,5 @@ get_top_n(x, 3)
 
 table(levels_lump(x, prop = 1)) # Highest to lowest
 table(levels_lump(x, prop = -1)) # Lowest to highest
+
 }

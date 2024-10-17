@@ -14,6 +14,7 @@
 #' `levels_add_na()` which adds an explicit `NA` level,
 #' `levels_drop_na()` which drops the `NA` level,
 #' `levels_drop()` which drops unused factor levels,
+#' `levels_rename()` for renaming levels,
 #' `levels_lump()` which returns top n levels and lumps all others into the
 #' same category,
 #' and finally `levels_reorder()` which reorders the levels of `x`
@@ -41,6 +42,11 @@
 #' This is a proportion of the total unique levels in x.
 #' @param other_category Name of 'other' category.
 #' @param ties Ties method to use. See `?rank`.
+#' @param .fun Renaming function applied to each level.
+#' @param ... Key-value pairs where the key is the new name and
+#' value is the name to replace that with the new name. For example
+#' `levels_rename(x, new = old)` replaces the level "old" with the
+#' level "new".
 #'
 #' @details
 #' This operates similarly to `collapse::qF()`. \cr
@@ -95,8 +101,9 @@
 #'
 #' table(levels_lump(x, prop = 1)) # Highest to lowest
 #' table(levels_lump(x, prop = -1)) # Lowest to highest
-#' @export
+#'
 #' @rdname factors
+#' @export
 factor_ <- function(
     x = integer(), levels = NULL, order = TRUE,
     na_exclude = TRUE,
@@ -136,8 +143,8 @@ factor_ <- function(
   class(out) <- c(if (ordered) "ordered" else character(), "factor")
   out
 }
-#' @export
 #' @rdname factors
+#' @export
 as_factor <- function(x){
   if (is.factor(x)){
     x
@@ -146,8 +153,8 @@ as_factor <- function(x){
   }
 }
 
-#' @export
 #' @rdname factors
+#' @export
 levels_factor <- function(x){
   check_is_factor(x)
   lvls <- levels(x)
@@ -170,30 +177,30 @@ which_used_levels <- function(x){
 which_unused_levels <- function(x){
   which_not_in(levels_factor(x), x)
 }
-#' @export
 #' @rdname factors
+#' @export
 levels_used <- function(x){
   levels(x)[which_used_levels(x)]
 }
-#' @export
 #' @rdname factors
+#' @export
 levels_unused <- function(x){
   levels(x)[which_unused_levels(x)]
 }
-#' @export
 #' @rdname factors
+#' @export
 used_levels <- function(x){
   on.exit(.Deprecated("levels_used"))
   levels_used(x)
 }
-#' @export
 #' @rdname factors
+#' @export
 unused_levels <- function(x){
   on.exit(.Deprecated("levels_unused"))
   levels_unused(x)
 }
-#' @export
 #' @rdname factors
+#' @export
 levels_rm <- function(x, levels){
   check_is_factor(x)
   x_lvls <- levels(x)
@@ -206,8 +213,8 @@ levels_rm <- function(x, levels){
     factor_(x, levels = levels_factor(x)[keep])
   }
 }
-#' @export
 #' @rdname factors
+#' @export
 levels_add <- function(x, levels){
   check_is_factor(x)
   x_lvls <- levels(x)
@@ -217,11 +224,16 @@ levels_add <- function(x, levels){
     x
   } else {
     add <- which_not_in(levels, x_lvls)
-    factor_(x, levels = c(x_lvls, levels[add]))
+    levels_to_add <- levels[add]
+    factor_(
+      x,
+      levels = c(x_lvls, levels_to_add),
+      na_exclude = !any_na(levels_to_add)
+    )
   }
 }
-#' @export
 #' @rdname factors
+#' @export
 levels_add_na <- function(x, name = NA, where = c("last", "first")){
   check_is_factor(x)
   where <- match.arg(where)
@@ -245,13 +257,13 @@ levels_add_na <- function(x, name = NA, where = c("last", "first")){
     out
   }
 }
-#' @export
 #' @rdname factors
+#' @export
 levels_drop_na <- function(x){
   levels_rm(x, NA)
 }
-#' @export
 #' @rdname factors
+#' @export
 levels_drop <- function(x){
   lvls <- levels(x)
   n_lvls <- length(lvls)
@@ -266,8 +278,8 @@ levels_drop <- function(x){
   }
 }
 
-#' @export
 #' @rdname factors
+#' @export
 levels_reorder <- function(x, order_by, decreasing = FALSE){
   check_is_factor(x)
   groups <- collapse::GRP(x, return.groups = FALSE)
@@ -282,8 +294,46 @@ levels_reorder <- function(x, order_by, decreasing = FALSE){
     factor_(x, levels = ordered_levels)
   }
 }
-#' @export
 #' @rdname factors
+#' @export
+levels_rename <- function(x, ..., .fun = NULL){
+  check_is_factor(x)
+  lvls <- levels(x)
+  key_value_list <- lapply(substitute(alist(...))[-1], as.character)
+  if (length(key_value_list) > 0){
+    if (collapse::fnunique(lengths_(key_value_list)) > 1){
+      stop("Please supply key-value pairs to ...")
+    }
+    keys <- names(key_value_list)
+    values <- unlist(unname(key_value_list))
+    if (is.null(keys) || any(!nzchar(keys))){
+      stop("Please supply key-value pairs to ...")
+    }
+    for (i in seq_along(key_value_list)){
+      key <- keys[[i]]
+      value <- values[[i]]
+      match <- match(value, lvls, nomatch = 0L)
+      lvls[match] <- key
+    }
+  }
+  if (!is.null(.fun)){
+    lvls <- do.call(.fun, list(lvls))
+  }
+  out <- x
+  if (length(lvls) != length(levels(x))){
+    stop("New levels must be the same length as `levels(x)`")
+    } else if (collapse::any_duplicated(lvls)){
+      groups <- collapse::group(lvls, starts = TRUE)
+      out <- groups[unclass(out)]
+      attributes(out) <- attributes(x)
+      attr(out, "levels") <- as.character(lvls[attr(groups, "starts")])
+  } else {
+    attr(out, "levels") <- as.character(lvls)
+  }
+  out
+}
+#' @rdname factors
+#' @export
 levels_lump <- function(x, n, prop, other_category = "Other",
                         ties = c("min", "average", "first", "last", "random", "max")){
   check_is_factor(x)
