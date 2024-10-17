@@ -9,6 +9,8 @@
 #' `levels_factor()` which returns the levels of a factor, as a factor,
 #' `levels_used()` which returns the used levels of a factor,
 #' `levels_unused()` which returns the unused levels of a factor,
+#' `levels_add()` adds the specified levels onto the existing levels,
+#' `levels_rm()` removes the specified levels,
 #' `levels_add_na()` which adds an explicit `NA` level,
 #' `levels_drop_na()` which drops the `NA` level,
 #' `levels_drop()` which drops unused factor levels,
@@ -71,8 +73,12 @@
 #' levels_drop(x)
 #'
 #' # Top 3 letters by by frequency
+#' lumped_letters <- levels_lump(x, 3)
+#' table(lumped_letters)
 #'
-#' table(levels_lump(x, 3))
+#' # To remove the "other" category, use `levels_rm()`
+#'
+#' table(levels_rm(lumped_letters, "Other"))
 #'
 #' # We can use levels_lump to create a generic top n function for non-factors too
 #'
@@ -83,6 +89,12 @@
 #' }
 #'
 #' get_top_n(x, 3)
+#'
+#' # A neat way to order the levels of a factor by frequency
+#' # is the following:
+#'
+#' table(levels_lump(x, prop = 1)) # Highest to lowest
+#' table(levels_lump(x, prop = -1)) # Lowest to highest
 #' @export
 #' @rdname factors
 factor_ <- function(
@@ -182,6 +194,34 @@ unused_levels <- function(x){
 }
 #' @export
 #' @rdname factors
+levels_rm <- function(x, levels){
+  check_is_factor(x)
+  x_lvls <- levels(x)
+  rm <- which_in(x_lvls, levels)
+
+  if (length(rm) == 0){
+    x
+  } else {
+    keep <- which_not_in(x_lvls, levels)
+    factor_(x, levels = levels_factor(x)[keep])
+  }
+}
+#' @export
+#' @rdname factors
+levels_add <- function(x, levels){
+  check_is_factor(x)
+  x_lvls <- levels(x)
+  same <- which_in(levels, x_lvls)
+
+  if (length(same) == length(levels)){
+    x
+  } else {
+    add <- which_not_in(levels, x_lvls)
+    factor_(x, levels = c(x_lvls, levels[add]))
+  }
+}
+#' @export
+#' @rdname factors
 levels_add_na <- function(x, name = NA, where = c("last", "first")){
   check_is_factor(x)
   where <- match.arg(where)
@@ -208,24 +248,7 @@ levels_add_na <- function(x, name = NA, where = c("last", "first")){
 #' @export
 #' @rdname factors
 levels_drop_na <- function(x){
-
-  check_is_factor(x)
-  lvls <- levels(x)
-
-  which_na_lvl <- which_na(lvls)
-  if (length(which_na_lvl) == 0){
-    x
-  } else {
-    new_lvls <- lvls[-which_na_lvl]
-
-    matches <- collapse::fmatch(lvls, new_lvls, overid = 2L)
-    out <- matches[unclass(x)]
-
-    attributes(out) <- attributes(x)
-    attr(out, "levels") <- new_lvls
-
-    out
-  }
+  levels_rm(x, NA)
 }
 #' @export
 #' @rdname factors
@@ -242,6 +265,7 @@ levels_drop <- function(x){
     out
   }
 }
+
 #' @export
 #' @rdname factors
 levels_reorder <- function(x, order_by, decreasing = FALSE){
@@ -269,24 +293,45 @@ levels_lump <- function(x, n, prop, other_category = "Other",
   if (!missing(prop)){
     n <- floor(prop * length(levels(x)))
   }
+  check_length(n, 1)
   ties <- match.arg(ties)
+  check_length(other_category, 1)
   counts <- tabulate(x, length(levels(x)))
-  o <- order(counts, decreasing = TRUE)
+
+  # Order counts
+  # names(counts) <- levels(x)
+  o <- order(counts, decreasing = (n >= 0))
   sorted_counts <- counts[o]
   if (ties == "min"){
-    bound <- sorted_counts[min(n, length(counts))]
-    top <- which_(sorted_counts >= bound)
+    bound <- sorted_counts[min(abs(n), length(counts))]
+    top <- which_(if (n >= 0) sorted_counts >= bound else sorted_counts <= bound)
   } else {
-    rank <- rank(-sorted_counts, ties.method = ties)
-    top <- which_(rank <= n)
+    rank <- rank(if (n >= 0) -sorted_counts else sorted_counts, ties.method = ties)
+    top <- which_(rank <= abs(n))
   }
-  if (length(top) == length(counts)){
+  # Does other category have > 0 items?
+  other_has_counts <- length(top) != length(counts)
+  if (!other_has_counts && identical(counts, sorted_counts)){
     x
   } else {
-    lvls <- levels_factor(x)[o][top]
-    out <- collapse::fmatch(x, lvls, nomatch = length(lvls) + 1L, overid = 2L)
+    lvls <- levels_factor(x)
+    sorted_lvls <- lvls[o][top]
+    # If other category already exists, we simply remove it
+    # from the sorted levels
+    other <- val_find(levels(sorted_lvls), other_category)
+    if (length(other) > 0){
+      sorted_lvls <- sorted_lvls[-val_find(sorted_lvls, other)]
+      attr(sorted_lvls, "levels") <- attr(sorted_lvls, "levels")[-other]
+    }
+    out_levels <- factor_as_character(sorted_lvls)
+    out <- collapse::fmatch(x,
+                            sorted_lvls,
+                            nomatch = length(sorted_lvls) + 1L,
+                            overid = 2L)
     out[which_na(x)] <- NA
-    out_levels <- c(factor_as_character(lvls), other_category)
+    if (other_has_counts){
+      out_levels <- c(out_levels, other_category)
+    }
     attr(out, "levels") <- out_levels
     class(out) <- "factor"
     out

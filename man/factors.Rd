@@ -8,6 +8,8 @@
 \alias{levels_unused}
 \alias{used_levels}
 \alias{unused_levels}
+\alias{levels_rm}
+\alias{levels_add}
 \alias{levels_add_na}
 \alias{levels_drop_na}
 \alias{levels_drop}
@@ -34,6 +36,10 @@ levels_unused(x)
 used_levels(x)
 
 unused_levels(x)
+
+levels_rm(x, levels)
+
+levels_add(x, levels)
 
 levels_add_na(x, name = NA, where = c("last", "first"))
 
@@ -96,6 +102,8 @@ There are some additional utilities, most of which begin with the prefix
 \code{levels_factor()} which returns the levels of a factor, as a factor,
 \code{levels_used()} which returns the used levels of a factor,
 \code{levels_unused()} which returns the unused levels of a factor,
+\code{levels_add()} adds the specified levels onto the existing levels,
+\code{levels_rm()} removes the specified levels,
 \code{levels_add_na()} which adds an explicit \code{NA} level,
 \code{levels_drop_na()} which drops the \code{NA} level,
 \code{levels_drop()} which drops unused factor levels,
@@ -134,8 +142,12 @@ levels_unused(x)
 levels_drop(x)
 
 # Top 3 letters by by frequency
+lumped_letters <- levels_lump(x, 3)
+table(lumped_letters)
 
-table(levels_lump(x, 3))
+# To remove the "other" category, use `levels_rm()`
+
+table(levels_rm(lumped_letters, "Other"))
 
 # We can use levels_lump to create a generic top n function for non-factors too
 
@@ -146,4 +158,10 @@ get_top_n <- function(x, n){
 }
 
 get_top_n(x, 3)
+
+# A neat way to order the levels of a factor by frequency
+# is the following:
+
+table(levels_lump(x, prop = 1)) # Highest to lowest
+table(levels_lump(x, prop = -1)) # Lowest to highest
 }
