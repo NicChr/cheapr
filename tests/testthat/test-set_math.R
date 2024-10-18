@@ -34,16 +34,16 @@ test_that("math operations", {
 
   make_test_data1()
   expect_equal(
-   round(x, 2),
+   base::round(x, 2),
    set_round(r_copy(x), 2)
   )
   make_test_data1()
   expect_equal(
-    round(x),
+    base::round(x),
     set_round(r_copy(x))
   )
   make_test_data1()
-  expect_equal(round(x, 1), set_round(r_copy(x), 1))
+  expect_equal(base::round(x, 1), set_round(r_copy(x), 1))
 
   expect_equal(abs(x), set_abs(r_copy(x)))
 
@@ -51,7 +51,7 @@ test_that("math operations", {
 
   expect_identical(ceiling(x), set_ceiling(r_copy(x)))
 
-  expect_identical(trunc(x), set_trunc(r_copy(x)))
+  expect_identical(base::trunc(x), set_trunc(r_copy(x)))
 
   expect_equal(exp(x), set_exp(r_copy(x)))
 
@@ -65,7 +65,7 @@ test_that("math operations", {
 
 
   make_test_data2()
-  expect_equal(round(x, 1), set_round(x, 1))
+  expect_equal(base::round(x, 1), set_round(x, 1))
 
   expect_equal(abs(x), set_abs(r_copy(x)))
 
@@ -73,7 +73,7 @@ test_that("math operations", {
 
   expect_equal(ceiling(x), set_ceiling(r_copy(x)))
 
-  expect_equal(trunc(x), set_trunc(r_copy(x)))
+  expect_equal(base::trunc(x), set_trunc(r_copy(x)))
 
   expect_equal(exp(x), suppressWarnings(set_exp(r_copy(x))))
 
@@ -86,7 +86,7 @@ test_that("math operations", {
   expect_equal(-x, set_change_sign(r_copy(x)))
 
   make_test_data3()
-  expect_equal(round(x, 1), set_round(r_copy(x), 1))
+  expect_equal(base::round(x, 1), set_round(r_copy(x), 1))
 
   expect_equal(abs(x), set_abs(r_copy(x)))
 
@@ -94,7 +94,7 @@ test_that("math operations", {
 
   expect_equal(ceiling(x), set_ceiling(r_copy(x)))
 
-  expect_equal(trunc(x), set_trunc(r_copy(x)))
+  expect_equal(base::trunc(x), set_trunc(r_copy(x)))
 
   expect_equal(exp(x), set_exp(r_copy(x)))
 
@@ -107,7 +107,7 @@ test_that("math operations", {
   expect_equal(-x, set_change_sign(r_copy(x)))
 
   make_test_data4()
-  expect_equal(round(x, 1),set_round(r_copy(x), 1))
+  expect_equal(base::round(x, 1),set_round(r_copy(x), 1))
 
   expect_equal(abs(x), set_abs(r_copy(x)))
 
@@ -115,7 +115,7 @@ test_that("math operations", {
 
   expect_equal(ceiling(x), set_ceiling(r_copy(x)))
 
-  expect_equal(trunc(x), set_trunc(r_copy(x)))
+  expect_equal(base::trunc(x), set_trunc(r_copy(x)))
 
   expect_equal(exp(x), suppressWarnings(set_exp(r_copy(x))))
 
@@ -209,11 +209,11 @@ test_that("more math operations", {
     set_pow(r_copy(x), y)
   )
   expect_equal(
-    round(x, y),
+    base::round(x, y),
     set_round(r_copy(x), y)
   )
   # expect_equal(
-  #   round(x, as.integer(z)),
+  #   base::round(x, as.integer(z)),
   #   set_round(r_copy(x), z)
   # )
   expect_equal(
@@ -264,7 +264,7 @@ test_that("more math operations", {
   )
   expect_equal(
     x,
-    # round(x, y),
+    # base::round(x, y),
     set_round(r_copy(x), y)
   )
   expect_equal(
@@ -306,7 +306,7 @@ test_that("more math operations", {
     set_pow(r_copy(x), y)
   )
   expect_equal(
-    round(x, y),
+    base::round(x, y),
     set_round(r_copy(x), y)
   )
   expect_equal(
@@ -352,7 +352,7 @@ test_that("more math operations", {
     suppressWarnings(set_pow(r_copy(x), y))
   )
   expect_equal(
-    # round(x, y),
+    # base::round(x, y),
     x,
     set_round(r_copy(x), y)
   )

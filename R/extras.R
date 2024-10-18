@@ -46,24 +46,24 @@
 #' No coercion happens for integer vectors and so is very cheap. \cr
 #' `cheapr_rev` is a much cheaper version of `rev()`.
 #'
-#' @export
 #' @rdname extras
+#' @export
 setdiff_ <- function(x, y, dups = TRUE){
   if (!dups){
     x <- collapse::funique(x)
   }
   sset(x, which_not_in(x, y))
 }
-#' @export
 #' @rdname extras
+#' @export
 intersect_ <- function(x, y, dups = TRUE){
   if (!dups){
     x <- collapse::funique(x)
   }
   sset(x, which_in(x, y))
 }
-#' @export
 #' @rdname extras
+#' @export
 cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
                         right = TRUE, dig.lab = 3L, ordered_result = FALSE, ...){
   if (!is.numeric(x))
@@ -123,26 +123,26 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
   }
   code
 }
-#' @export
 #' @rdname extras
+#' @export
 cut.integer64 <- function(x, ...){
 
   ## Would be nice if cut() accepted a formatting function
   ## As large int64 are printed with sci notation
   cut_numeric(cpp_int64_to_numeric(x), ...)
 }
-#' @export
 #' @rdname extras
+#' @export
 `%in_%` <- function(x, table){
   collapse::fmatch(x, table, overid = 2L, nomatch = 0L) > 0L
 }
-#' @export
 #' @rdname extras
+#' @export
 `%!in_%` <- function(x, table){
   cpp_is_na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
 }
-#' @export
 #' @rdname extras
+#' @export
 enframe_ <- function(x, name = "name", value = "value"){
   if (inherits(x, "data.frame")) {
     x <- unclass(x)
@@ -162,8 +162,8 @@ enframe_ <- function(x, name = "name", value = "value"){
   attr(out, "row.names") <- .set_row_names(length(x))
   out
 }
-#' @export
 #' @rdname extras
+#' @export
 deframe_ <- function(x){
   ncol <- length(names(x))
   if (!(inherits(x, "data.frame") && ncol %in% (1:2))) {
@@ -175,13 +175,13 @@ deframe_ <- function(x){
   }
   out
 }
-#' @export
 #' @rdname extras
+#' @export
 sample_ <- function(x, size = vector_length(x), replace = FALSE, prob = NULL){
   sset(x, sample.int(vector_length(x), size, replace, prob))
 }
-#' @export
 #' @rdname extras
+#' @export
 val_insert <- function(x, value, n = NULL, prop = NULL){
   if (!is.null(n) && !is.null(prop)) {
     stop("either n or prop must be supplied")
@@ -195,16 +195,16 @@ val_insert <- function(x, value, n = NULL, prop = NULL){
   }
   x
 }
-#' @export
 #' @rdname extras
+#' @export
 na_insert <- function(x, n = NULL, prop = NULL){
   val_insert(x, value = NA, n = n, prop = prop)
 }
-#' @export
 #' @rdname extras
+#' @export
 vector_length <- cpp_vec_length
-#' @export
 #' @rdname extras
+#' @export
 cheapr_var <- function(x, na.rm = TRUE){
   if (is.integer(x)){
     y <- as.integer(x)
@@ -228,8 +228,8 @@ cheapr_var <- function(x, na.rm = TRUE){
     }
   }
 }
-#' @export
 #' @rdname extras
+#' @export
 cheapr_rev <- function(x){
   # If x is a simple vector, use cpp_rev
   if (!is.object(x) && is.atomic(x)){
@@ -242,7 +242,6 @@ cheapr_rev <- function(x){
 cheapr_sd <- function(x, na.rm = TRUE){
   sqrt(cheapr_var(x, na.rm = na.rm))
 }
-
 
 # head_ <- function(x, n = 1L){
 #   check_length(n, 1L)
