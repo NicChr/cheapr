@@ -215,8 +215,9 @@ levels_rm <- function(x, levels){
 }
 #' @rdname factors
 #' @export
-levels_add <- function(x, levels){
+levels_add <- function(x, levels, where = c("last", "first")){
   check_is_factor(x)
+  where <- match.arg(where)
   x_lvls <- levels(x)
   same <- which_in(levels, x_lvls)
 
@@ -225,9 +226,14 @@ levels_add <- function(x, levels){
   } else {
     add <- which_not_in(levels, x_lvls)
     levels_to_add <- levels[add]
+    if (where == "first"){
+      out_lvls <- c(levels_to_add, x_lvls)
+    } else {
+      out_lvls <- c(x_lvls, levels_to_add)
+    }
     factor_(
       x,
-      levels = c(x_lvls, levels_to_add),
+      levels = out_lvls,
       na_exclude = !any_na(levels_to_add)
     )
   }

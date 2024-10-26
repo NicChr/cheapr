@@ -380,6 +380,179 @@ SEXP cpp_rev(SEXP x, bool set){
   return out;
 }
 
+[[cpp11::register]]
+SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no){
+  int NP = 0; // count num protections
+  if (TYPEOF(condition) != LGLSXP){
+    Rf_error("condition must be a logical vector");
+  }
+  if (TYPEOF(yes) != TYPEOF(no)){
+    Rf_error("`typeof(yes)` must match `typeof(no)`");
+  }
+  R_xlen_t n = Rf_xlength(condition);
+  R_xlen_t yes_size = Rf_xlength(yes);
+  R_xlen_t no_size = Rf_xlength(no);
+
+  if (yes_size != 1 && yes_size != n){
+    Rf_error("`length(yes)` must be 1 or `length(condition)`");
+  }
+  if (no_size != 1 && no_size != n){
+    Rf_error("`length(no)` must be 1 or `length(condition)`");
+  }
+
+  bool yes_scalar = yes_size == 1;
+  bool no_scalar = no_size == 1;
+
+  int *p_x = LOGICAL(condition);
+  SEXP out = Rf_protect(Rf_allocVector(TYPEOF(yes), n)); ++NP;
+
+  switch (TYPEOF(yes)){
+  case NILSXP: {
+    break;
+  }
+  case LGLSXP:
+  case INTSXP: {
+    int *p_out = INTEGER(out);
+    int *p_yes = INTEGER(yes);
+    int *p_no = INTEGER(no);
+
+    int na_val = NA_INTEGER;
+    for (R_xlen_t i = 0; i < n; ++i){
+      switch(p_x[i]){
+      case true: {
+      p_out[i] = p_yes[yes_scalar ? 0 : i];
+      break;
+    }
+      case false: {
+        p_out[i] = p_no[no_scalar ? 0 : i];
+        break;
+      }
+      default: {
+        p_out[i] = na_val;
+        break;
+      }
+      }
+      // p_out[i] = p_x[i] == NA_LOGICAL ? na_val : p_x[i] ?
+      // p_yes[yes_scalar ? 0 : i] : p_no[no_scalar ? 0 : i];
+    }
+    break;
+  }
+  case REALSXP: {
+    double *p_out = REAL(out);
+    double *p_yes = REAL(yes);
+    double *p_no = REAL(no);
+
+    double na_val = NA_REAL;
+    for (R_xlen_t i = 0; i < n; ++i){
+      switch(p_x[i]){
+      case true: {
+      p_out[i] = p_yes[yes_scalar ? 0 : i];
+      break;
+    }
+      case false: {
+        p_out[i] = p_no[no_scalar ? 0 : i];
+        break;
+      }
+      default: {
+        p_out[i] = na_val;
+        break;
+      }
+      }
+      // p_out[i] = p_x[i] == NA_LOGICAL ? na_val : p_x[i] ?
+      // p_yes[yes_scalar ? 0 : i] : p_no[no_scalar ? 0 : i];
+    }
+    break;
+  }
+  case STRSXP: {
+    const SEXP *p_yes = STRING_PTR_RO(yes);
+    const SEXP *p_no = STRING_PTR_RO(no);
+
+    SEXP na_val = NA_STRING;
+    for (R_xlen_t i = 0; i < n; ++i){
+      switch(p_x[i]){
+      case true: {
+      SET_STRING_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+      break;
+    }
+      case false: {
+        SET_STRING_ELT(out, i, p_no[no_scalar ? 0 : i]);
+        break;
+      }
+      default: {
+        SET_STRING_ELT(out, i, na_val);
+        break;
+      }
+      }
+      // SET_STRING_ELT(out, i, (
+      //     p_x[i] == NA_LOGICAL ? na_val : p_x[i] ?
+      // p_yes[yes_scalar ? 0 : i] : p_no[no_scalar ? 0 : i]
+      // ));
+    }
+    break;
+  }
+  case CPLXSXP: {
+    Rcomplex *p_yes = COMPLEX(yes);
+    Rcomplex *p_no = COMPLEX(no);
+
+    SEXP na_cplx = Rf_protect(Rf_allocVector(CPLXSXP, 1)); ++NP;
+    Rcomplex *p_na_cplx = COMPLEX(na_cplx);
+    p_na_cplx[0].r = NA_REAL;
+    p_na_cplx[0].i = NA_REAL;
+    Rcomplex na_val = Rf_asComplex(na_cplx);
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_COMPLEX_ELT(out, i, (
+          p_x[i] == NA_LOGICAL ? na_val : p_x[i] ?
+                        p_yes[yes_scalar ? 0 : i] : p_no[no_scalar ? 0 : i]
+      ));
+    }
+    break;
+  }
+  case RAWSXP: {
+    Rbyte *p_yes = RAW(yes);
+    Rbyte *p_no = RAW(no);
+
+    SEXP na_raw = Rf_protect(Rf_coerceVector(Rf_ScalarReal(0), RAWSXP)); ++NP;
+    Rbyte na_val = RAW(na_raw)[0];
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_RAW_ELT(out, i, (
+          p_x[i] == NA_LOGICAL ? na_val : p_x[i] ?
+                    p_yes[yes_scalar ? 0 : i] : p_no[no_scalar ? 0 : i]
+      ));
+    }
+    break;
+  }
+  case VECSXP: {
+    const SEXP *p_yes = VECTOR_PTR_RO(yes);
+    const SEXP *p_no = VECTOR_PTR_RO(no);
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      switch(p_x[i]){
+      case true: {
+      SET_VECTOR_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+      break;
+    }
+      case false: {
+        SET_VECTOR_ELT(out, i, p_no[no_scalar ? 0 : i]);
+        break;
+      }
+      default: {
+        break;
+      }
+      }
+    }
+    break;
+  }
+  default: {
+    Rf_unprotect(NP);
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(yes)));
+  }
+  }
+  Rf_unprotect(NP);
+  return out;
+}
+
 // bool cpp_all_whole_numbers(SEXP x, double tol, bool na_ignore){
 //   R_xlen_t n = Rf_xlength(x);
 //   double adiff;

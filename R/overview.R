@@ -342,48 +342,78 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
 print.overview <- function(x, max = NULL, ...){
   temp <- unclass(x)
   digits <- temp[["print_digits"]]
-  pretty_round <- function(x, decimal_digits = digits, ...){
-    pretty_num(round(x, digits = decimal_digits), ...)
+
+  # A nice rule for rounding prettily
+  # For numbers in { |x| < 1 }
+  # use significant digits
+  # Otherwise use decimal digits
+
+  pretty_round <- function(x, decimal_digits = digits, signif_digits = digits){
+    if (!is.numeric(x)){
+      stop("x must be numeric")
+    }
+    if (!is.integer(x) && is.numeric(x)){
+      x <- cheapr_if_else(
+        abs(x) < 1,
+        signif(x, signif_digits),
+        round(x, decimal_digits)
+      )
+    }
+    x
   }
-  abbr <- function(x, min = 6, left = TRUE){
+
+  pretty_num <- function(x, round_digits = digits, drop0trailing = TRUE, scientific = 3, ...){
+    format(pretty_round(x, round_digits, round_digits), drop0trailing = drop0trailing,
+           scientific = scientific, ...)
+  }
+  abbr <- function(x, min, left = FALSE){
     abbreviate(x, minlength = min, named = FALSE,
                method = if (left) "left.kept" else "both.sides")
   }
+  format_num_cols <- function(data, fun){
+    for (i in seq_along(data)){
+      if (is.numeric(data[[i]])){
+        data[[i]] <- fun(data[[i]])
+      }
+    }
+    data
+  }
+  for (i in seq_along(temp)){
+    # maybe_tbl <- package_has_function("tibble", "as_tibble")
+    # if (maybe_tbl){
+    #   as_tibble <- get("as_tibble", asNamespace("tibble"), inherits = FALSE)
+    # }
+    if (inherits(temp[[i]], "data.frame")){
+      # if (maybe_tbl){
+      #   temp[[i]] <- as_tibble(format_num_cols(temp[[i]], pretty_round))
+      # } else {
+      temp[[i]] <- format_num_cols(temp[[i]], pretty_num)
+      # }
+    }
+  }
   cat(paste("obs:", temp$obs, "\ncols:", temp$cols), "\n")
   if (nrow(temp$logical)){
-    temp$logical$p_complete <- pretty_round(temp$logical$p_complete)
     cat("\n----- Logical -----\n")
-    names(temp$logical) <- abbr(names(temp$logical))
-    temp$logical$class <- abbr(temp$logical$class, 5, FALSE)
-    temp$logical$col <- abbr(temp$logical$col, 10, FALSE)
+    names(temp$logical) <- abbr(names(temp$logical), 8)
+    temp$logical$class <- abbr(temp$logical$class, 6)
+    temp$logical$col <- abbr(temp$logical$col, 10)
     print(temp$logical)
   }
   if (nrow(temp$numeric)){
-    temp$numeric$p_complete <- pretty_round(temp$numeric$p_complete)
-    temp$numeric$mean <- pretty_round(temp$numeric$mean)
-    temp$numeric$p0 <- pretty_round(temp$numeric$p0)
-    temp$numeric$p25 <- pretty_round(temp$numeric$p25)
-    temp$numeric$p50 <- pretty_round(temp$numeric$p50)
-    temp$numeric$p75 <- pretty_round(temp$numeric$p75)
-    temp$numeric$p100 <- pretty_round(temp$numeric$p100)
-    temp$numeric$iqr <- pretty_round(temp$numeric$iqr)
-    temp$numeric$sd <- pretty_round(temp$numeric$sd)
     cat("\n----- Numeric -----\n")
-    names(temp$numeric) <- abbr(names(temp$numeric))
-    temp$numeric$class <- abbr(temp$numeric$class, 5, FALSE)
-    temp$numeric$col <- abbr(temp$numeric$col, 10, FALSE)
+    names(temp$numeric) <- abbr(names(temp$numeric), 8)
+    temp$numeric$class <- abbr(temp$numeric$class, 6)
+    temp$numeric$col <- abbr(temp$numeric$col, 10)
     print(temp$numeric)
   }
   if (nrow(temp$date)){
-    temp$date$p_complete <- pretty_round(temp$date$p_complete)
     cat("\n----- Dates -----\n")
-    names(temp$date) <- abbr(names(temp$date))
-    temp$date$class <- abbr(temp$date$class, 5, FALSE)
-    temp$date$col <- abbr(temp$date$col, 10, FALSE)
+    names(temp$date) <- abbr(names(temp$date), 8)
+    temp$date$class <- abbr(temp$date$class, 6)
+    temp$date$col <- abbr(temp$date$col, 10)
     print(temp$date)
   }
   if (nrow(temp$datetime)){
-    temp$datetime$p_complete <- pretty_round(temp$datetime$p_complete)
     # An overview list contains a 'min' & 'max' variable of date-times
     # This is UTC because R can't handle a date-time with multiple time-zones
     # And so we want to print it in local-time
@@ -399,41 +429,30 @@ print.overview <- function(x, max = NULL, ...){
     temp$datetime$min <- datetime_chr_min
     temp$datetime$max <- datetime_chr_max
     cat("\n----- Date-Times -----\n")
-    names(temp$datetime) <- abbr(names(temp$datetime))
-    temp$datetime$class <- abbr(temp$datetime$class, 5, FALSE)
-    temp$datetime$col <- abbr(temp$datetime$col, 10, FALSE)
+    names(temp$datetime) <- abbr(names(temp$datetime), 8)
+    temp$datetime$class <- abbr(temp$datetime$class, 6)
+    temp$datetime$col <- abbr(temp$datetime$col, 10)
     print(temp$datetime)
   }
   if (nrow(temp$time_series)){
-    temp$time_series$p_complete <- pretty_round(temp$time_series$p_complete)
-    temp$time_series$mean <- pretty_round(temp$time_series$mean)
-    temp$time_series$p0 <- pretty_round(temp$time_series$p0)
-    temp$time_series$p25 <- pretty_round(temp$time_series$p25)
-    temp$time_series$p50 <- pretty_round(temp$time_series$p50)
-    temp$time_series$p75 <- pretty_round(temp$time_series$p75)
-    temp$time_series$p100 <- pretty_round(temp$time_series$p100)
-    temp$time_series$iqr <- pretty_round(temp$time_series$iqr)
-    temp$time_series$sd <- pretty_round(temp$time_series$sd)
     cat("\n----- Time-Series -----\n")
-    names(temp$time_series) <- abbr(names(temp$time_series))
-    temp$time_series$class <- abbr(temp$time_series$class, 5, FALSE)
-    temp$time_series$col <- abbr(temp$time_series$col, 10, FALSE)
+    names(temp$time_series) <- abbr(names(temp$time_series), 8)
+    temp$time_series$class <- abbr(temp$time_series$class, 6)
+    temp$time_series$col <- abbr(temp$time_series$col, 10)
     print(temp$time_series)
   }
   if (nrow(temp$categorical)){
-    temp$categorical$p_complete <- pretty_round(temp$categorical$p_complete)
     cat("\n----- Categorical -----\n")
-    names(temp$categorical) <- abbr(names(temp$categorical))
-    temp$categorical$class <- abbr(temp$categorical$class, 5, FALSE)
-    temp$categorical$col <- abbr(temp$categorical$col, 10, FALSE)
+    names(temp$categorical) <- abbr(names(temp$categorical), 8)
+    temp$categorical$class <- abbr(temp$categorical$class, 6)
+    temp$categorical$col <- abbr(temp$categorical$col, 10)
     print(temp$categorical)
   }
   if (nrow(temp$other)){
-    temp$other$p_complete <- pretty_round(temp$other$p_complete)
     cat("\n----- Other -----\n")
-    names(temp$other) <- abbr(names(temp$other))
-    temp$other$class <- abbr(temp$other$class, 5, FALSE)
-    temp$other$col <- abbr(temp$other$col, 10, FALSE)
+    names(temp$other) <- abbr(names(temp$other), 8)
+    temp$other$class <- abbr(temp$other$class, 6)
+    temp$other$col <- abbr(temp$other$col, 10)
     print(temp$other)
   }
   invisible(x)
@@ -460,17 +479,20 @@ prop_complete <- function(x, recursive = TRUE){
   1 - prop_missing(x, recursive = recursive)
 }
 transform_all <- function(data, .fn, .cols = names(data)){
+  out <- unclass(data)
   for (col in .cols){
-    data[[col]] <- .fn(data[[col]])
+    out[[col]] <- .fn(out[[col]])
   }
-  data
+  class(out) <- class(data)
+  out
 }
 summarise_all <- function(data, .fn, size = 1){
-  out <- sset(data, seq_len(size))
-  out <- cpp_set_add_attr(out, "row.names", .set_row_names(size))
+  out <- unclass(sset(data, seq_len(size)))
   for (col in names(out)){
     out[[col]] <- .fn(data[[col]])
   }
+  attr(out, "row.names") <- .set_row_names(size)
+  class(out) <- class(data)
   out
 }
 pluck_row <- function(data, i = 1){
@@ -510,7 +532,4 @@ inline_hist <- function(x, n_bins = 5L){
   )
   hist_dt <- hist_dt / max(hist_dt)
   spark_bar(hist_dt)
-}
-pretty_num <- function(x, scientific = FALSE, ...){
-  prettyNum(x, scientific = scientific, ...)
 }

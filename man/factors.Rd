@@ -40,7 +40,7 @@ unused_levels(x)
 
 levels_rm(x, levels)
 
-levels_add(x, levels)
+levels_add(x, levels, where = c("last", "first"))
 
 levels_add_na(x, name = NA, where = c("last", "first"))
 
@@ -74,9 +74,9 @@ Default is \code{TRUE}.}
 
 \item{ordered}{Should the result be an ordered factor?}
 
-\item{name}{Name of \code{NA} level.}
-
 \item{where}{Where should \code{NA} level be placed? Either first or last.}
+
+\item{name}{Name of \code{NA} level.}
 
 \item{order_by}{A vector to order the levels of \code{x} by using the medians of
 \code{order_by}.}

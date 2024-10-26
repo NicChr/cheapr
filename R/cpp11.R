@@ -264,6 +264,10 @@ cpp_rev <- function(x, set) {
   .Call(`_cheapr_cpp_rev`, x, set)
 }
 
+cpp_if_else <- function(condition, yes, no) {
+  .Call(`_cheapr_cpp_if_else`, condition, yes, no)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

@@ -467,6 +467,13 @@ extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP set) {
     return cpp11::as_sexp(cpp_rev(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(set)));
   END_CPP11
 }
+// utils.cpp
+SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no);
+extern "C" SEXP _cheapr_cpp_if_else(SEXP condition, SEXP yes, SEXP no) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_if_else(cpp11::as_cpp<cpp11::decay_t<SEXP>>(condition), cpp11::as_cpp<cpp11::decay_t<SEXP>>(yes), cpp11::as_cpp<cpp11::decay_t<SEXP>>(no)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -514,6 +521,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_gcd",                     (DL_FUNC) &_cheapr_cpp_gcd,                     5},
     {"_cheapr_cpp_gcd2",                    (DL_FUNC) &_cheapr_cpp_gcd2,                    4},
     {"_cheapr_cpp_gcd2_vectorised",         (DL_FUNC) &_cheapr_cpp_gcd2_vectorised,         4},
+    {"_cheapr_cpp_if_else",                 (DL_FUNC) &_cheapr_cpp_if_else,                 3},
     {"_cheapr_cpp_int64_to_double",         (DL_FUNC) &_cheapr_cpp_int64_to_double,         1},
     {"_cheapr_cpp_int64_to_int",            (DL_FUNC) &_cheapr_cpp_int64_to_int,            1},
     {"_cheapr_cpp_int64_to_numeric",        (DL_FUNC) &_cheapr_cpp_int64_to_numeric,        1},

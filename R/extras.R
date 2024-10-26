@@ -287,6 +287,79 @@ duplicated_ <- function(x, .all = FALSE){
   out
 }
 
+cast <- function(x, template){
+  if (identical(typeof(x), typeof(template)) &&
+      identical(class(x), class(template))){
+    x
+  } else {
+    x[0] <- template[0]
+    `mostattributes<-`(x, attributes(template))
+  }
+}
+
+cheapr_if_else <- function(condition, true, false){
+  if (!is.logical(condition)){
+    stop("condition must be a logical vector")
+  }
+  if (length(true) != 1 && length(true) != length(condition)){
+    stop("`length(true)` must be 1 or `length(condition)`")
+  }
+  if (length(false) != 1 && length(false) != length(condition)){
+    stop("`length(false)` must be 1 or `length(condition)`")
+  }
+
+  if (is.factor(true) || is.factor(false)){
+    template <- combine_factors(true[1L], false[1L])[0L]
+  } else {
+    template <- c(true[1L], false[1L])[0L]
+  }
+
+  true <- cast(true, template)
+  false <- cast(false, template)
+
+  if (is_base_atomic(true) && is_base_atomic(true)){
+    return(`mostattributes<-`(
+      cpp_if_else(condition, true, false),
+      attributes(template)
+    ))
+  }
+
+  # Catch-all method
+
+  if (val_count(condition, TRUE) == length(condition)){
+    if (length(true) == 1){
+      return(rep(true, length(condition)))
+    } else {
+      return(true)
+    }
+  }
+
+  if (val_count(condition, FALSE) == length(condition)){
+    if (length(false) == 1){
+      return(rep(false, length(condition)))
+    } else {
+      return(false)
+    }
+  }
+
+  out <- rep(template, length.out = length(condition))
+
+  true_locs <- which_val(condition, TRUE)
+  false_locs <- which_val(condition, FALSE)
+
+  if (length(true) == 1){
+    out[true_locs] <- true
+  } else {
+    out[true_locs] <- true[true_locs]
+  }
+  if (length(false) == 1){
+    out[false_locs] <- false
+  } else {
+    out[false_locs] <- false[false_locs]
+  }
+  out
+}
+
 # duplicates <- function(x, .all = FALSE, .count = FALSE){
 #   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
 #   sizes <- attr(groups, "group.sizes")

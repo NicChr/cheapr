@@ -48,4 +48,6 @@ new_list <- function(length = 0L, default = NULL){
   }
   cpp_new_list(as.numeric(length), default)
 }
-
+# key_value_list <- function(...){
+#   lapply(substitute(alist(...))[-1], as.character)
+# }

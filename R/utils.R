@@ -158,3 +158,42 @@ r_cut_breaks <- function(x, n){
   breaks[length(breaks)] <- breaks[length(breaks)] + adj
   breaks
 }
+
+# Is x an atomic type?
+# logical, integer, double, character, raw, complex
+# including Dates, factors and POSIXcts
+
+is_base_atomic <- function(x){
+  (
+    is.atomic(x) && (
+      !is.object(x) || inherits(x, c("Date", "POSIXct", "factor"))
+    )
+  ) ||
+    is.null(x)
+}
+
+combine_factors <- function(...){
+  if (nargs() == 0){
+    return(NULL)
+  }
+  if (nargs() == 1){
+    return(list(...)[[1L]])
+  }
+  get_levels <- function(x){
+    if (is.factor(x)) levels(x) else as.character(x)
+  }
+  to_char <- function(x){
+    if (is.factor(x)) factor_as_character(x) else as.character(x)
+  }
+  factors <- list(...)
+  levels <- lapply(factors, get_levels)
+
+  # Unique combined levels
+  new_levels <- collapse::funique(collapse::vec(levels))
+
+  characters <- lapply(factors, to_char)
+
+  # Combine all factor elements (as character vectors)
+  factor_(unlist(characters, recursive = FALSE), levels = new_levels,
+          na_exclude = !any_na(new_levels))
+}
