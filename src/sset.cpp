@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 // Subsetting vectors and data frames
 // Includes a unique optimisation on range subsetting

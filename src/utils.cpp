@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 int int_div(int x, int y){
   return x / y;
@@ -552,6 +552,111 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no){
   Rf_unprotect(NP);
   return out;
 }
+
+// SEXP cpp_c(SEXP x){
+//   if (!Rf_isVectorList(x)){
+//     Rf_error("x must be a list of vectors");
+//   }
+//   int NP = 0;
+//   R_xlen_t n = Rf_xlength(x);
+//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//
+//   int vector_type = NILSXP;
+//   R_xlen_t out_size = 0;
+//
+//   for (R_xlen_t i = 0; i < n; ++i){
+//     vector_type = std::max(vector_type, TYPEOF(p_x[i]));
+//     out_size += Rf_xlength(p_x[i]);
+//     if (Rf_isFactor(p_x[i])){;
+//       return(cpp11::package("cheapr")["combine_factors"](x));
+//     }
+//   }
+//
+//   R_xlen_t k = 0;
+//
+//   switch(vector_type){
+//   case NILSXP: {
+//     return R_NilValue;
+//   }
+//   case LGLSXP:
+//   case INTSXP: {
+//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//     int *p_out = INTEGER(out);
+//
+//     for (R_xlen_t i = 0; i < n; ++i){
+//       R_xlen_t m = Rf_xlength(p_x[i]);
+//       int *p_temp = INTEGER(TYPEOF(p_x[i]) == vector_type ? p_x[i] : Rf_protect(Rf_coerceVector(p_x[i], vector_type)));
+//       if (TYPEOF(p_x[i]) != vector_type) ++NP;
+//       for (R_xlen_t j = 0; j < m; ++k, ++j){
+//         p_out[k] = p_temp[j];
+//       }
+//     }
+//     Rf_unprotect(NP);
+//     return out;
+//   }
+//   case REALSXP: {
+//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//     double *p_out = REAL(out);
+//
+//     for (R_xlen_t i = 0; i < n; ++i){
+//       R_xlen_t m = Rf_xlength(p_x[i]);
+//       double *p_temp = REAL(TYPEOF(p_x[i]) == vector_type ? p_x[i] : Rf_protect(Rf_coerceVector(p_x[i], vector_type)));
+//       if (TYPEOF(p_x[i]) != vector_type) ++NP;
+//       for (R_xlen_t j = 0; j < m; ++k, ++j){
+//         p_out[k] = p_temp[j];
+//       }
+//     }
+//     Rf_unprotect(NP);
+//     return out;
+//   }
+//   case STRSXP: {
+//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//
+//     for (R_xlen_t i = 0; i < n; ++i){
+//       R_xlen_t m = Rf_xlength(p_x[i]);
+//       const SEXP *p_temp = STRING_PTR_RO(TYPEOF(p_x[i]) == vector_type ? p_x[i] : Rf_protect(Rf_coerceVector(p_x[i], vector_type)));
+//       if (TYPEOF(p_x[i]) != vector_type) ++NP;
+//       for (R_xlen_t j = 0; j < m; ++k, ++j){
+//         SET_STRING_ELT(out, k, p_temp[j]);
+//       }
+//     }
+//     Rf_unprotect(NP);
+//     return out;
+//   }
+//   case CPLXSXP: {
+//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//
+//     for (R_xlen_t i = 0; i < n; ++i){
+//       R_xlen_t m = Rf_xlength(p_x[i]);
+//       Rcomplex *p_temp = COMPLEX(TYPEOF(p_x[i]) == vector_type ? p_x[i] : Rf_protect(Rf_coerceVector(p_x[i], vector_type)));
+//       if (TYPEOF(p_x[i]) != vector_type) ++NP;
+//       for (R_xlen_t j = 0; j < m; ++k, ++j){
+//         SET_COMPLEX_ELT(out, k, p_temp[j]);
+//       }
+//     }
+//     Rf_unprotect(NP);
+//     return out;
+//   }
+//   case VECSXP: {
+//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//
+//     for (R_xlen_t i = 0; i < n; ++i){
+//       R_xlen_t m = Rf_xlength(p_x[i]);
+//       const SEXP *p_temp = VECTOR_PTR_RO(TYPEOF(p_x[i]) == vector_type ? p_x[i] : Rf_protect(Rf_coerceVector(p_x[i], vector_type)));
+//       if (TYPEOF(p_x[i]) != vector_type) ++NP;
+//       for (R_xlen_t j = 0; j < m; ++k, ++j){
+//         SET_VECTOR_ELT(out, k, p_temp[j]);
+//       }
+//     }
+//     Rf_unprotect(NP);
+//     return out;
+//   }
+//
+//   default: {
+//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(vector_type));
+//   }
+//   }
+// }
 
 // bool cpp_all_whole_numbers(SEXP x, double tol, bool na_ignore){
 //   R_xlen_t n = Rf_xlength(x);

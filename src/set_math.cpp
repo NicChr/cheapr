@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 // Basic math operations by reference
 // All NA and NaN values are ignored

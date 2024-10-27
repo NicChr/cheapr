@@ -177,7 +177,12 @@ combine_factors <- function(...){
     return(NULL)
   }
   if (nargs() == 1){
-    return(list(...)[[1L]])
+    dots <- list(...)
+    if (!is.object(dots[[1L]]) && is.list(dots[[1L]])){
+      return(do.call(combine_factors, dots[[1L]]))
+    } else {
+      return(dots[[1L]])
+    }
   }
   get_levels <- function(x){
     if (is.factor(x)) levels(x) else as.character(x)
@@ -197,3 +202,19 @@ combine_factors <- function(...){
   factor_(unlist(characters, recursive = FALSE), levels = new_levels,
           na_exclude = !any_na(new_levels))
 }
+
+# Just a wrapper with a cheaper alternative to `c.factor()`
+# cheapr_c <- function(..., .check = TRUE){
+#   dots <- list(...)
+#   if (.check){
+#     for (vec in dots){
+#       if (is.factor(vec)){
+#         return(combine_factors(dots))
+#       }
+#       if (is.object(vec)){
+#         return(do.call(c, dots))
+#       }
+#     }
+#   }
+#   `attributes<-`(collapse::vec(dots), NULL)
+# }

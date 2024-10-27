@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 // A more memory-efficient which()
 // Author: Nick Christofides

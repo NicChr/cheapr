@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 #define CHEAPR_COUNT_NA(_ISNA_)                                \
 for (R_xlen_t i = 0; i < n; ++i){                              \

@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 // Internal fast check for valid order values (here they are 0-indexed)
 // Where rng = length(x) - 1

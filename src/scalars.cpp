@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 // Relational operators
 // define CHEAPR_OP_SWITCH

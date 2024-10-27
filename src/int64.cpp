@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 bool is_int64(SEXP x){
   return Rf_isReal(x) && Rf_inherits(x, "integer64");

@@ -1,4 +1,4 @@
-#include "cheapr_cpp.h"
+#include "cheapr.h"
 
 
 template<typename T> T cpp_sign(T x) {
