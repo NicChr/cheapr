@@ -1,5 +1,8 @@
 # cheapr (Development version)
 
+* Fixed a regression where `NULL` elements were not being correctly dropped
+in `new_df()`.
+
 * New factor functions `levels_rename`, `levels_add`, `levels_rm` 
 and `levels_lump`.
 
