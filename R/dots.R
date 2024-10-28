@@ -20,10 +20,10 @@ named_list <- function(..., .keep_null = TRUE){
   dot_nms <- names(dots)
 
   if (is.null(dot_nms)){
-    names(dots) <- expr_names(...)
+    names(dots) <- do.call(expr_names, dots)
   } else if (!all(nzchar(dot_nms))){
     empty <- which_(nzchar(dot_nms), invert = TRUE)
-    expr_nms <- expr_names(...)
+    expr_nms <- do.call(expr_names, dots)
     dot_nms[empty] <- expr_nms[empty]
     names(dots) <- dot_nms
   }
