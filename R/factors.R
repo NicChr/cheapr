@@ -16,12 +16,14 @@
 #' `levels_drop()` which drops unused factor levels,
 #' `levels_rename()` for renaming levels,
 #' `levels_lump()` which returns top n levels and lumps all others into the
-#' same category,
+#' same category, \cr
+#' `levels_count()` which returns the counts of each level,
 #' and finally `levels_reorder()` which reorders the levels of `x`
 #' based on `y` using the ordered median values of `y` for each level.
 #'
 #' @returns
 #' A `factor` or `character` in the case of `levels_used` and `levels_unused`.
+#' `levels_count` returns a data frame of counts and proportions for each level.
 #'
 #' @param x A vector.
 #' @param levels Optional factor levels.
@@ -80,18 +82,17 @@
 #'
 #' # Top 3 letters by by frequency
 #' lumped_letters <- levels_lump(x, 3)
-#' table(lumped_letters)
+#' levels_count(lumped_letters)
 #'
 #' # To remove the "other" category, use `levels_rm()`
 #'
-#' table(levels_rm(lumped_letters, "Other"))
+#' levels_count(levels_rm(lumped_letters, "Other"))
 #'
 #' # We can use levels_lump to create a generic top n function for non-factors too
 #'
 #' get_top_n <- function(x, n){
 #'   f <- levels_lump(factor_(x, order = FALSE), n = n)
-#'   new_df(value = levels(f),
-#'          count = tabulate(f))
+#'   levels_count(f)
 #' }
 #'
 #' get_top_n(x, 3)
@@ -99,8 +100,8 @@
 #' # A neat way to order the levels of a factor by frequency
 #' # is the following:
 #'
-#' table(levels_lump(x, prop = 1)) # Highest to lowest
-#' table(levels_lump(x, prop = -1)) # Lowest to highest
+#' levels(levels_lump(x, prop = 1)) # Highest to lowest
+#' levels(levels_lump(x, prop = -1)) # Lowest to highest
 #'
 #' @rdname factors
 #' @export
@@ -392,6 +393,14 @@ levels_lump <- function(x, n, prop, other_category = "Other",
     class(out) <- "factor"
     out
   }
+}
+#' @rdname factors
+#' @export
+levels_count <- function(x){
+  check_is_factor(x)
+  names <- attr(x, "levels")
+  out <- tabulate(x, nbins = length(names))
+  list_as_df(list(name = names, count = out, prop = out / sum(out)))
 }
 # Generic factor conversion to data representation
 factor_as_type <- function(x, type){

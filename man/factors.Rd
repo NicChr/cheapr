@@ -16,6 +16,7 @@
 \alias{levels_reorder}
 \alias{levels_rename}
 \alias{levels_lump}
+\alias{levels_count}
 \title{A cheaper version of \code{factor()} along with cheaper utilities}
 \usage{
 factor_(
@@ -59,6 +60,8 @@ levels_lump(
   other_category = "Other",
   ties = c("min", "average", "first", "last", "random", "max")
 )
+
+levels_count(x)
 }
 \arguments{
 \item{x}{A vector.}
@@ -102,6 +105,7 @@ This is a proportion of the total unique levels in x.}
 }
 \value{
 A \code{factor} or \code{character} in the case of \code{levels_used} and \code{levels_unused}.
+\code{levels_count} returns a data frame of counts and proportions for each level.
 }
 \description{
 A fast version of \code{factor()} using the collapse package. \cr
@@ -119,7 +123,8 @@ There are some additional utilities, most of which begin with the prefix
 \code{levels_drop()} which drops unused factor levels,
 \code{levels_rename()} for renaming levels,
 \code{levels_lump()} which returns top n levels and lumps all others into the
-same category,
+same category, \cr
+\code{levels_count()} which returns the counts of each level,
 and finally \code{levels_reorder()} which reorders the levels of \code{x}
 based on \code{y} using the ordered median values of \code{y} for each level.
 }
@@ -154,18 +159,17 @@ levels_drop(x)
 
 # Top 3 letters by by frequency
 lumped_letters <- levels_lump(x, 3)
-table(lumped_letters)
+levels_count(lumped_letters)
 
 # To remove the "other" category, use `levels_rm()`
 
-table(levels_rm(lumped_letters, "Other"))
+levels_count(levels_rm(lumped_letters, "Other"))
 
 # We can use levels_lump to create a generic top n function for non-factors too
 
 get_top_n <- function(x, n){
   f <- levels_lump(factor_(x, order = FALSE), n = n)
-  new_df(value = levels(f),
-         count = tabulate(f))
+  levels_count(f)
 }
 
 get_top_n(x, 3)
@@ -173,7 +177,7 @@ get_top_n(x, 3)
 # A neat way to order the levels of a factor by frequency
 # is the following:
 
-table(levels_lump(x, prop = 1)) # Highest to lowest
-table(levels_lump(x, prop = -1)) # Lowest to highest
+levels(levels_lump(x, prop = 1)) # Highest to lowest
+levels(levels_lump(x, prop = -1)) # Lowest to highest
 
 }

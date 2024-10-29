@@ -3,8 +3,8 @@
 * Fixed a regression where `NULL` elements were not being correctly dropped
 in `new_df()`.
 
-* New factor functions `levels_rename`, `levels_add`, `levels_rm` 
-and `levels_lump`.
+* New factor functions `levels_rename`, `levels_add`, `levels_rm`, 
+`levels_lump` and `levels_count`.
 
 * `overview` cols are abbreviated to save visual space and histograms are
 printed by default.

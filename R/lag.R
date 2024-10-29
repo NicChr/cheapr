@@ -206,9 +206,3 @@ lag_ <- function(x, n = 1L, fill = NULL, set = FALSE, recursive = TRUE){
 lag2_ <- function(x, n = 1L, order = NULL, run_lengths = NULL, fill = NULL, recursive = TRUE){
   .Call(`_cheapr_cpp_lag2`, x, n, order, run_lengths, fill, recursive)
 }
-# Is lag out-of-bounds?
-# lag_is_oob <- function(lag, n){
-#   lagi <- seq_len(n) - lag
-#   lagi < 1L | lagi > n
-# }
-

@@ -10,7 +10,7 @@ as_discrete(x, ...)
 
 \method{as_discrete}{numeric}(
   x,
-  breaks = get_breaks(x, expand_max = TRUE),
+  breaks = if (left_closed) get_breaks(x) else cheapr_rev(-get_breaks(-x)),
   left_closed = TRUE,
   include_endpoint = FALSE,
   include_oob = FALSE,
@@ -31,7 +31,10 @@ as_discrete(x, ...)
 
 \item{...}{Extra arguments passed onto methods.}
 
-\item{breaks}{Break-points.}
+\item{breaks}{Break-points.
+The default option creates pretty looking breaks.
+Unlike \code{cut()}, the \code{breaks} arg cannot be a number denoting the number
+of breaks you want. To generate breakpoints this way use \code{get_breaks()}.}
 
 \item{left_closed}{Left-closed intervals or right-closed intervals?}
 

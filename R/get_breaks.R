@@ -11,7 +11,7 @@
 #' minimum of the data? Default is `FALSE`.
 #' If `TRUE` then `min(get_breaks(x))` is ensured to be less than `min(x)`.
 #' @param expand_max Should largest break be extended beyond the maximum
-#' of the data? Default is `FALSE`.
+#' of the data? Default is `TRUE`.
 #' If `TRUE` then `max(get_breaks(x))` is ensured
 #' to be greater than `max(x)`.
 #' @param ... Extra arguments passed onto methods.
@@ -59,10 +59,11 @@ get_breaks <- function(x, n = 10, ...){
 get_breaks.numeric <- function(x, n = 10,
                                pretty = TRUE,
                                expand_min = FALSE,
-                               expand_max = FALSE,
+                               expand_max = TRUE,
                                ...){
   check_length(n, 1L)
   stopifnot(n >= 1)
+  stopifnot(is.finite(n))
 
   rng <- as.double(collapse::frange(x, na.rm = TRUE, finite = TRUE))
   if (any_na(rng) || all(is.infinite(rng))){

@@ -13,7 +13,7 @@ get_breaks(x, n = 10, ...)
   n = 10,
   pretty = TRUE,
   expand_min = FALSE,
-  expand_max = FALSE,
+  expand_max = TRUE,
   ...
 )
 
@@ -34,7 +34,7 @@ minimum of the data? Default is \code{FALSE}.
 If \code{TRUE} then \code{min(get_breaks(x))} is ensured to be less than \code{min(x)}.}
 
 \item{expand_max}{Should largest break be extended beyond the maximum
-of the data? Default is \code{FALSE}.
+of the data? Default is \code{TRUE}.
 If \code{TRUE} then \code{max(get_breaks(x))} is ensured
 to be greater than \code{max(x)}.}
 }

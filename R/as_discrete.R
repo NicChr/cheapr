@@ -14,6 +14,9 @@
 #'
 #' @param x A numeric vector.
 #' @param breaks Break-points.
+#' The default option creates pretty looking breaks.
+#' Unlike `cut()`, the `breaks` arg cannot be a number denoting the number
+#' of breaks you want. To generate breakpoints this way use `get_breaks()`.
 #' @param left_closed Left-closed intervals or right-closed intervals?
 #' @param include_endpoint Include endpoint? Default is `FALSE`.
 #' @param include_oob Include out-of-bounds values? Default is `FALSE`.
@@ -110,7 +113,7 @@ as_discrete <- function(x, ...){
 #' @rdname as_discrete
 #' @export
 as_discrete.numeric <- function(
-    x, breaks = get_breaks(x, expand_max = TRUE),
+    x, breaks = if (left_closed) get_breaks(x) else cheapr_rev(-get_breaks(-x)),
     left_closed = TRUE,
     include_endpoint = FALSE,
     include_oob = FALSE,
