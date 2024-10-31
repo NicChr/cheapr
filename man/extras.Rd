@@ -4,7 +4,6 @@
 \alias{setdiff_}
 \alias{intersect_}
 \alias{cut_numeric}
-\alias{cut.integer64}
 \alias{\%in_\%}
 \alias{\%!in_\%}
 \alias{enframe_}
@@ -15,6 +14,7 @@
 \alias{vector_length}
 \alias{cheapr_var}
 \alias{cheapr_rev}
+\alias{with_local_seed}
 \title{Extra utilities}
 \usage{
 setdiff_(x, y, dups = TRUE)
@@ -31,8 +31,6 @@ cut_numeric(
   ordered_result = FALSE,
   ...
 )
-
-\method{cut}{integer64}(x, ...)
 
 x \%in_\% table
 
@@ -53,6 +51,8 @@ vector_length(x)
 cheapr_var(x, na.rm = TRUE)
 
 cheapr_rev(x)
+
+with_local_seed(expr, .seed = NULL, ...)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -95,6 +95,13 @@ randomly into your vector.}
 
 \item{na.rm}{Should \code{NA} values be ignored in \code{cheapr_var()} Default is
 \code{TRUE}.}
+
+\item{expr}{Expression that will be evaluated with a local seed that
+is independent and has absolutely no effect on the global RNG state.}
+
+\item{.seed}{A local seed to set which is only used inside
+\code{with_local_seed()}. After the execution of the expression the original
+seed is reset.}
 }
 \value{
 \verb{enframe()_} converts a vector to a data frame. \cr
@@ -117,8 +124,63 @@ Useful for generating missing data. \cr
 for matrices in which it matches \code{length()}.
 \code{cheapr_var} returns the variance of a numeric vector.
 No coercion happens for integer vectors and so is very cheap. \cr
-\code{cheapr_rev} is a much cheaper version of \code{rev()}.
+\code{cheapr_rev} is a much cheaper version of \code{rev()}. \cr
+\code{with_local_seed} offers no speed improvements but is extremely handy
+in executing random number based expressions like \code{rnorm()} without
+affecting the global RNG state. It allows you to run these expressions in a
+sort of independent 'container' and with an optional seed for that
+'container' for reproducibility.
+The rationale for including this in 'cheapr' is that it can reduce the need
+to set many seed values,
+especially for multiple output comparisons of RNG expressions.
+Another way of thinking about it is that \code{with_local_seed()} is a helper
+that allows you to write reproducible code without side-effects, which
+traditionally cannot be avoided when calling \code{set.seed()} directly.
 }
 \description{
 Extra utilities
+}
+\examples{
+library(cheapr)
+
+# Using `with_local_seed()`
+
+# The below 2 statements are equivalent
+
+# Statement 1
+set.seed(123456789)
+res <- rnorm(10)
+
+# Statement 2
+res2 <- with_local_seed(rnorm(10), .seed = 123456789)
+
+# They are the same
+identical(res, res2)
+
+# As an example we can see that the RNG is unaffected by generating
+# random uniform deviates in batches between calls to `with_local_seed()`
+# and comparing to the first result
+
+set.seed(123456789)
+batch1 <- rnorm(2)
+
+with_local_seed(runif(10))
+batch2 <- rnorm(2)
+with_local_seed(runif(10))
+batch3 <- rnorm(1)
+with_local_seed(runif(10))
+batch4 <- rnorm(5)
+
+# Combining the batches produces the same result
+# therefore `with_local_seed` did not interrupt the rng sequence
+identical(c(batch1, batch2, batch3, batch4), res)
+
+# It can be useful in multiple comparisons
+out1 <- with_local_seed(rnorm(5))
+out2 <- with_local_seed(rnorm(5))
+out3 <- with_local_seed(rnorm(5))
+
+identical(out1, out2)
+identical(out1, out3)
+
 }

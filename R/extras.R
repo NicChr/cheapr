@@ -22,6 +22,11 @@
 #' randomly into your vector.
 #' @param na.rm Should `NA` values be ignored in `cheapr_var()` Default is
 #' `TRUE`.
+#' @param expr Expression that will be evaluated with a local seed that
+#' is independent and has absolutely no effect on the global RNG state.
+#' @param .seed A local seed to set which is only used inside
+#' `with_local_seed()`. After the execution of the expression the original
+#' seed is reset.
 #'
 #' @returns
 #' `enframe()_` converts a vector to a data frame. \cr
@@ -44,7 +49,61 @@
 #' for matrices in which it matches `length()`.
 #' `cheapr_var` returns the variance of a numeric vector.
 #' No coercion happens for integer vectors and so is very cheap. \cr
-#' `cheapr_rev` is a much cheaper version of `rev()`.
+#' `cheapr_rev` is a much cheaper version of `rev()`. \cr
+#' `with_local_seed` offers no speed improvements but is extremely handy
+#' in executing random number based expressions like `rnorm()` without
+#' affecting the global RNG state. It allows you to run these expressions in a
+#' sort of independent 'container' and with an optional seed for that
+#' 'container' for reproducibility.
+#' The rationale for including this in 'cheapr' is that it can reduce the need
+#' to set many seed values,
+#' especially for multiple output comparisons of RNG expressions.
+#' Another way of thinking about it is that `with_local_seed()` is a helper
+#' that allows you to write reproducible code without side-effects, which
+#' traditionally cannot be avoided when calling `set.seed()` directly.
+#'
+#' @examples
+#' library(cheapr)
+#'
+#' # Using `with_local_seed()`
+#'
+#' # The below 2 statements are equivalent
+#'
+#' # Statement 1
+#' set.seed(123456789)
+#' res <- rnorm(10)
+#'
+#' # Statement 2
+#' res2 <- with_local_seed(rnorm(10), .seed = 123456789)
+#'
+#' # They are the same
+#' identical(res, res2)
+#'
+#' # As an example we can see that the RNG is unaffected by generating
+#' # random uniform deviates in batches between calls to `with_local_seed()`
+#' # and comparing to the first result
+#'
+#' set.seed(123456789)
+#' batch1 <- rnorm(2)
+#'
+#' with_local_seed(runif(10))
+#' batch2 <- rnorm(2)
+#' with_local_seed(runif(10))
+#' batch3 <- rnorm(1)
+#' with_local_seed(runif(10))
+#' batch4 <- rnorm(5)
+#'
+#' # Combining the batches produces the same result
+#' # therefore `with_local_seed` did not interrupt the rng sequence
+#' identical(c(batch1, batch2, batch3, batch4), res)
+#'
+#' # It can be useful in multiple comparisons
+#' out1 <- with_local_seed(rnorm(5))
+#' out2 <- with_local_seed(rnorm(5))
+#' out3 <- with_local_seed(rnorm(5))
+#'
+#' identical(out1, out2)
+#' identical(out1, out3)
 #'
 #' @rdname extras
 #' @export
@@ -66,6 +125,7 @@ intersect_ <- function(x, y, dups = TRUE){
 #' @export
 cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
                         right = TRUE, dig.lab = 3L, ordered_result = FALSE, ...){
+  .Deprecated(old = "cut_numeric", new = "as_discrete")
   if (!is.numeric(x))
     stop("'x' must be numeric")
   if (length(breaks) == 1L) {
@@ -122,14 +182,6 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
     class(code) <- c(if (ordered_result) "ordered" else character(0), "factor")
   }
   code
-}
-#' @rdname extras
-#' @export
-cut.integer64 <- function(x, ...){
-
-  ## Would be nice if cut() accepted a formatting function
-  ## As large int64 are printed with sci notation
-  cut_numeric(cpp_int64_to_numeric(x), ...)
 }
 #' @rdname extras
 #' @export
@@ -231,8 +283,7 @@ cheapr_var <- function(x, na.rm = TRUE){
 #' @rdname extras
 #' @export
 cheapr_rev <- function(x){
-  # If x is a simple vector, use cpp_rev
-  if (!is.object(x) && is.atomic(x)){
+  if (is_base_atomic(x)){
     .Call(`_cheapr_cpp_rev`, x, FALSE)
   } else {
     n <- vector_length(x)
@@ -242,49 +293,22 @@ cheapr_rev <- function(x){
 cheapr_sd <- function(x, na.rm = TRUE){
   sqrt(cheapr_var(x, na.rm = na.rm))
 }
-
-# head_ <- function(x, n = 1L){
-#   check_length(n, 1L)
-#   N <- cpp_vec_length(x)
-#   if (n >= 0) {
-#     size <- min(n, N)
-#   }
-#   else {
-#     size <- max(0L, N + n)
-#   }
-#   sset(x, seq_len(size))
-# }
-# tail_ <- function (x, n = 1L){
-#   check_length(n, 1L)
-#   N <- cpp_vec_length(x)
-#   if (n >= 0) {
-#     size <- min(n, N)
-#   }
-#   else {
-#     size <- max(0L, N + n)
-#   }
-#   sset(x, seq.int(from = N - size + 1L, by = 1L, length.out = size))
-# }
-# with_seed <- function (expr, .seed = NULL, ...){
-#   old <- globalenv()[[".Random.seed"]]
-#   if (is.null(old)) {
-#     set.seed(NULL)
-#     old <- globalenv()[[".Random.seed"]]
-#   }
-#   if (!is.null(.seed)) {
-#     set.seed(.seed, ...)
-#   }
-#   on.exit({
-#     assign(".Random.seed", old, envir = globalenv())
-#   })
-#   eval(expr, envir = parent.frame())
-# }
-duplicated_ <- function(x, .all = FALSE){
-  groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
-  sizes <- attr(groups, "group.sizes")
-  out <- (sizes > 1L)[groups]
-  out[attr(groups, "starts")] <- FALSE
-  out
+#' @rdname extras
+#' @export
+with_local_seed <- function (expr, .seed = NULL, ...){
+  global_env <- base::globalenv
+  old <- global_env()[[".Random.seed"]]
+  if (is.null(old)) {
+    set.seed(NULL)
+    old <- global_env()[[".Random.seed"]]
+  }
+  if (!is.null(.seed)) {
+    set.seed(.seed, ...)
+  }
+  on.exit({
+    assign(".Random.seed", old, envir = global_env())
+  }, add = TRUE)
+  eval(expr, envir = parent.frame())
 }
 
 cast <- function(x, template){
@@ -297,69 +321,13 @@ cast <- function(x, template){
   }
 }
 
-cheapr_if_else <- function(condition, true, false){
-  if (!is.logical(condition)){
-    stop("condition must be a logical vector")
-  }
-  if (length(true) != 1 && length(true) != length(condition)){
-    stop("`length(true)` must be 1 or `length(condition)`")
-  }
-  if (length(false) != 1 && length(false) != length(condition)){
-    stop("`length(false)` must be 1 or `length(condition)`")
-  }
-
-  if (is.factor(true) || is.factor(false)){
-    template <- combine_factors(true[1L], false[1L])[0L]
-  } else {
-    template <- c(true[1L], false[1L])[0L]
-  }
-
-  true <- cast(true, template)
-  false <- cast(false, template)
-
-  if (is_base_atomic(true) && is_base_atomic(true)){
-    return(`mostattributes<-`(
-      cpp_if_else(condition, true, false),
-      attributes(template)
-    ))
-  }
-
-  # Catch-all method
-
-  if (val_count(condition, TRUE) == length(condition)){
-    if (length(true) == 1){
-      return(rep(true, length(condition)))
-    } else {
-      return(true)
-    }
-  }
-
-  if (val_count(condition, FALSE) == length(condition)){
-    if (length(false) == 1){
-      return(rep(false, length(condition)))
-    } else {
-      return(false)
-    }
-  }
-
-  out <- rep(template, length.out = length(condition))
-
-  true_locs <- which_val(condition, TRUE)
-  false_locs <- which_val(condition, FALSE)
-
-  if (length(true) == 1){
-    out[true_locs] <- true
-  } else {
-    out[true_locs] <- true[true_locs]
-  }
-  if (length(false) == 1){
-    out[false_locs] <- false
-  } else {
-    out[false_locs] <- false[false_locs]
-  }
-  out
-}
-
+# duplicated_ <- function(x, .all = FALSE){
+#   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
+#   sizes <- attr(groups, "group.sizes")
+#   out <- (sizes > 1L)[groups]
+#   out[attr(groups, "starts")] <- FALSE
+#   out
+# }
 # duplicates <- function(x, .all = FALSE, .count = FALSE){
 #   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
 #   sizes <- attr(groups, "group.sizes")

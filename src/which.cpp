@@ -530,6 +530,88 @@ SEXP cpp_which_not_na(SEXP x){
   }
 }
 
+// Return the locations of T, F, and NA in one pass
+// Must provide the correct num of T and F as args
+
+[[cpp11::register]]
+SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
+                  bool include_true, bool include_false, bool include_na){
+  R_xlen_t n = Rf_xlength(x);
+  int *p_x = LOGICAL(x);
+
+  if (n > integer_max_){
+    SEXP true_locs = Rf_protect(Rf_allocVector(REALSXP, include_true ? n_true : 0));
+    SEXP false_locs = Rf_protect(Rf_allocVector(REALSXP, include_false ? n_false : 0));
+    SEXP na_locs = Rf_protect(Rf_allocVector(REALSXP, include_na ? (n - n_true - n_false) : 0));
+
+    double *p_true = REAL(true_locs);
+    double *p_false = REAL(false_locs);
+    double *p_na = REAL(na_locs);
+
+    R_xlen_t k1 = 0;
+    R_xlen_t k2 = 0;
+    R_xlen_t k3 = 0;
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      if (include_true && p_x[i] == TRUE){
+        p_true[k1++] = i + 1;
+      } else if (include_false && p_x[i] == FALSE){
+        p_false[k2++] = i + 1;
+      } else if (include_na && p_x[i] == NA_LOGICAL){
+        p_na[k3++] = i + 1;
+      }
+    }
+    SEXP out = Rf_protect(Rf_allocVector(VECSXP, 3));
+    SET_VECTOR_ELT(out, 0, true_locs);
+    SET_VECTOR_ELT(out, 1, false_locs);
+    SET_VECTOR_ELT(out, 2, na_locs);
+
+    SEXP names = Rf_protect(Rf_allocVector(STRSXP, 3));
+    SET_STRING_ELT(names, 0, Rf_mkChar("true"));
+    SET_STRING_ELT(names, 1, Rf_mkChar("false"));
+    SET_STRING_ELT(names, 2, Rf_mkChar("na"));
+    Rf_setAttrib(out, R_NamesSymbol, names);
+
+    Rf_unprotect(5);
+    return out;
+  } else {
+    SEXP true_locs = Rf_protect(Rf_allocVector(INTSXP, include_true ? n_true : 0));
+    SEXP false_locs = Rf_protect(Rf_allocVector(INTSXP, include_false ? n_false : 0));
+    SEXP na_locs = Rf_protect(Rf_allocVector(INTSXP, include_na ? (n - n_true - n_false) : 0));
+
+    int *p_true = INTEGER(true_locs);
+    int *p_false = INTEGER(false_locs);
+    int *p_na = INTEGER(na_locs);
+
+    int k1 = 0;
+    int k2 = 0;
+    int k3 = 0;
+
+    for (int i = 0; i < n; ++i){
+      if (include_true && p_x[i] == TRUE){
+        p_true[k1++] = i + 1;
+      } else if (include_false && p_x[i] == FALSE){
+        p_false[k2++] = i + 1;
+      } else if (include_na && p_x[i] == NA_LOGICAL){
+        p_na[k3++] = i + 1;
+      }
+    }
+    SEXP out = Rf_protect(Rf_allocVector(VECSXP, 3));
+    SET_VECTOR_ELT(out, 0, true_locs);
+    SET_VECTOR_ELT(out, 1, false_locs);
+    SET_VECTOR_ELT(out, 2, na_locs);
+
+    SEXP names = Rf_protect(Rf_allocVector(STRSXP, 3));
+    SET_STRING_ELT(names, 0, Rf_mkChar("true"));
+    SET_STRING_ELT(names, 1, Rf_mkChar("false"));
+    SET_STRING_ELT(names, 2, Rf_mkChar("na"));
+    Rf_setAttrib(out, R_NamesSymbol, names);
+
+    Rf_unprotect(5);
+    return out;
+  }
+}
+
 
 // 2 more which() alternatives
 // list cpp_which2(SEXP x){

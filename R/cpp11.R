@@ -264,8 +264,12 @@ cpp_rev <- function(x, set) {
   .Call(`_cheapr_cpp_rev`, x, set)
 }
 
-cpp_if_else <- function(condition, yes, no) {
-  .Call(`_cheapr_cpp_if_else`, condition, yes, no)
+cpp_if_else <- function(condition, yes, no, na) {
+  .Call(`_cheapr_cpp_if_else`, condition, yes, no, na)
+}
+
+cpp_lgl_count <- function(x) {
+  .Call(`_cheapr_cpp_lgl_count`, x)
 }
 
 cpp_which_ <- function(x, invert) {
@@ -282,4 +286,8 @@ cpp_which_na <- function(x) {
 
 cpp_which_not_na <- function(x) {
   .Call(`_cheapr_cpp_which_not_na`, x)
+}
+
+cpp_lgl_locs <- function(x, n_true, n_false, include_true, include_false, include_na) {
+  .Call(`_cheapr_cpp_lgl_locs`, x, n_true, n_false, include_true, include_false, include_na)
 }
