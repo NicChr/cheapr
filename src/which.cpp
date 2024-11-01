@@ -7,7 +7,7 @@
 
 R_xlen_t count_true(int *px, R_xlen_t n){
   R_xlen_t size = 0;
-  if (n >= 100000){
+  if (n >= CHEAPR_OMP_THRESHOLD){
 #pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
     for (R_xlen_t j = 0; j < n; ++j) size += (px[j] == TRUE);
     return size;

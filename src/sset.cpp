@@ -471,7 +471,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   int oob_count = 0;
   int na_count = 0;
   int out_size;
-  bool do_parallel = n >= 10000;
+  bool do_parallel = n >= CHEAPR_OMP_THRESHOLD;
   int n_cores = do_parallel ? num_cores() : 1;
   cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
   const SEXP *p_x = VECTOR_PTR_RO(x);
