@@ -481,6 +481,28 @@ extern "C" SEXP _cheapr_cpp_lgl_count(SEXP x) {
     return cpp11::as_sexp(cpp_lgl_count(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// utils.cpp
+void cpp_set_copy_elements(SEXP source, SEXP target);
+extern "C" SEXP _cheapr_cpp_set_copy_elements(SEXP source, SEXP target) {
+  BEGIN_CPP11
+    cpp_set_copy_elements(cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target));
+    return R_NilValue;
+  END_CPP11
+}
+// utils.cpp
+SEXP cpp_set_replace(SEXP x, SEXP where, SEXP what);
+extern "C" SEXP _cheapr_cpp_set_replace(SEXP x, SEXP where, SEXP what) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(what)));
+  END_CPP11
+}
+// utils.cpp
+SEXP cpp_set_or(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_set_or(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_set_or(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -568,12 +590,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_add_attributes",      (DL_FUNC) &_cheapr_cpp_set_add_attributes,      3},
     {"_cheapr_cpp_set_ceiling",             (DL_FUNC) &_cheapr_cpp_set_ceiling,             1},
     {"_cheapr_cpp_set_change_sign",         (DL_FUNC) &_cheapr_cpp_set_change_sign,         1},
+    {"_cheapr_cpp_set_copy_elements",       (DL_FUNC) &_cheapr_cpp_set_copy_elements,       2},
     {"_cheapr_cpp_set_divide",              (DL_FUNC) &_cheapr_cpp_set_divide,              2},
     {"_cheapr_cpp_set_exp",                 (DL_FUNC) &_cheapr_cpp_set_exp,                 1},
     {"_cheapr_cpp_set_floor",               (DL_FUNC) &_cheapr_cpp_set_floor,               1},
     {"_cheapr_cpp_set_log",                 (DL_FUNC) &_cheapr_cpp_set_log,                 2},
     {"_cheapr_cpp_set_multiply",            (DL_FUNC) &_cheapr_cpp_set_multiply,            2},
+    {"_cheapr_cpp_set_or",                  (DL_FUNC) &_cheapr_cpp_set_or,                  2},
     {"_cheapr_cpp_set_pow",                 (DL_FUNC) &_cheapr_cpp_set_pow,                 2},
+    {"_cheapr_cpp_set_replace",             (DL_FUNC) &_cheapr_cpp_set_replace,             3},
     {"_cheapr_cpp_set_rm_attr",             (DL_FUNC) &_cheapr_cpp_set_rm_attr,             2},
     {"_cheapr_cpp_set_rm_attributes",       (DL_FUNC) &_cheapr_cpp_set_rm_attributes,       1},
     {"_cheapr_cpp_set_round",               (DL_FUNC) &_cheapr_cpp_set_round,               2},

@@ -118,6 +118,21 @@ factor_ <- function(
     x <- cpp_int64_to_numeric(x)
   }
   if (is.null(levels)){
+
+    # If x is a plain integer `qF()` is faster
+    if (!is.object(x) && is.integer(x)){
+      out <- collapse::qF(
+        x, ordered = FALSE,
+        sort = order,
+        na.exclude = na_exclude,
+        keep.attr = FALSE
+      )
+      lvls <- attr(out, "levels")
+      attributes(out) <- NULL
+      attr(out, "levels") <- lvls
+      class(out) <- c(if (ordered) "ordered" else character(), "factor")
+      return(out)
+    }
     lvls <- collapse::funique(x, sort = order, na.last = TRUE)
   } else {
     lvls <- levels
@@ -353,10 +368,9 @@ levels_lump <- function(x, n, prop, other_category = "Other",
   check_length(n, 1)
   ties <- match.arg(ties)
   check_length(other_category, 1)
-  counts <- tabulate(x, length(levels(x)))
+  counts <- cheapr_table(x, names = FALSE)
 
   # Order counts
-  # names(counts) <- levels(x)
   o <- order(counts, decreasing = (n >= 0))
   sorted_counts <- counts[o]
   if (ties == "min"){

@@ -465,7 +465,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   long long int llxn = xn;
   int ncols = Rf_length(x);
   int n = Rf_length(indices);
-  int n_protections = 0;
+  int NP = 0;
   int zero_count = 0;
   int pos_count = 0;
   int oob_count = 0;
@@ -476,7 +476,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols));
-  ++n_protections;
+  ++NP;
   // SEXP *p_out = VECTOR_PTR(out);
 
   // If indices is a special type of ALTREP compact int sequence, we can
@@ -487,7 +487,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     // ALTREP integer sequence method
 
     SEXP seq_data = Rf_protect(compact_seq_data(indices));
-    ++n_protections;
+    ++NP;
     R_xlen_t from = REAL(seq_data)[0];
     R_xlen_t to = REAL(seq_data)[1];
     R_xlen_t by = REAL(seq_data)[2];
@@ -600,7 +600,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
 
     } else if (neg_count > 0){
       SEXP indices2 = Rf_protect(cpp11::package("cheapr")["neg_indices_to_pos"](indices, xn));
-      ++n_protections;
+      ++NP;
       out_size = Rf_length(indices2);
       int *pi2 = INTEGER(indices2);
       for (int j = 0; j < ncols; ++j){
@@ -629,9 +629,9 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       // If index vector is clean except for existence of zeroes
     } else if (zero_count > 0 && oob_count == 0 && na_count == 0){
       SEXP r_zero = Rf_protect(Rf_ScalarInteger(0));
-      ++n_protections;
+      ++NP;
       SEXP indices2 = Rf_protect(cpp11::package("cheapr")["val_rm"](indices, r_zero));
-      ++n_protections;
+      ++NP;
       int *pi2 = INTEGER(indices2);
       for (int j = 0; j < ncols; ++j){
         SEXP df_var = Rf_protect(p_x[j]);
@@ -665,25 +665,25 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
     }
   }
   SEXP names = Rf_protect(Rf_duplicate(Rf_getAttrib(x, R_NamesSymbol)));
-  ++n_protections;
+  ++NP;
   Rf_setAttrib(out, R_NamesSymbol, names);
 
   // list to data frame object
   SEXP df_str = Rf_protect(Rf_ScalarString(Rf_mkChar("data.frame")));
-  ++n_protections;
+  ++NP;
   if (out_size > 0){
     SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
-    ++n_protections;
+    ++NP;
     INTEGER(row_names)[0] = NA_INTEGER;
     INTEGER(row_names)[1] = -out_size;
     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   } else {
     SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0));
-    ++n_protections;
+    ++NP;
     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   }
   Rf_classgets(out, df_str);
-  Rf_unprotect(n_protections);
+  Rf_unprotect(NP);
   return out;
 }
 

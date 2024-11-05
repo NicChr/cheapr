@@ -596,6 +596,180 @@ SEXP cpp_lgl_count(SEXP x){
   return out;
 }
 
+// Copy atomic elements from source to target
+
+[[cpp11::register]]
+void cpp_set_copy_elements(SEXP source, SEXP target){
+  if (TYPEOF(source) != TYPEOF(target)){
+    Rf_error("`typeof(target)` must match `typeof(source)`");
+  }
+  R_xlen_t n = Rf_xlength(source);
+
+  if (n != Rf_xlength(target)){
+    Rf_error("target and source must have the same length");
+  }
+
+  switch (TYPEOF(source)){
+  case NILSXP: {
+    break;
+  }
+  case LGLSXP:
+  case INTSXP: {
+    int *p_source = INTEGER(source);
+    int *p_target = INTEGER(target);
+    memmove(&p_target[0], &p_source[0], n * sizeof(int));
+    break;
+  }
+  case REALSXP: {
+    double *p_source = REAL(source);
+    double *p_target = REAL(target);
+    memmove(&p_target[0], &p_source[0], n * sizeof(double));
+    break;
+  }
+  case STRSXP: {
+    const SEXP *p_source = STRING_PTR_RO(source);
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_STRING_ELT(target, i, p_source[i]);
+    }
+    break;
+  }
+  case CPLXSXP: {
+    Rcomplex *p_source = COMPLEX(source);
+    Rcomplex *p_target = COMPLEX(target);
+    memmove(&p_target[0], &p_source[0], n * sizeof(Rcomplex));
+    break;
+  }
+  case RAWSXP: {
+    Rbyte *p_source = RAW(source);
+    Rbyte *p_target = RAW(target);
+    memmove(&p_target[0], &p_source[0], n * sizeof(Rbyte));
+    break;
+  }
+  default: {
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(source)));
+  }
+  }
+}
+
+[[cpp11::register]]
+SEXP cpp_set_replace(SEXP x, SEXP where, SEXP what){
+  if (TYPEOF(x) != TYPEOF(what)){
+    Rf_error("`typeof(x)` must match `typeof(what)`");
+  }
+  int *p_where = INTEGER(where);
+
+  long long int xn = Rf_xlength(x);
+  int where_size = Rf_length(where);
+  int what_size = Rf_length(what);
+  if (what_size != 1 && where_size != what_size){
+    Rf_error("`length(where)` must match `length(what)`");
+  }
+  long long int xi;
+
+
+#define CHEAPR_REPLACE                                                                         \
+  if (what_size == 1){                                                                           \
+    for (int i = 0; i < where_size; ++i){                                                        \
+      xi = p_where[i];                                                                           \
+      if (xi <= 0 || xi > xn){                                                                   \
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");         \
+      }                                                                                          \
+      p_x[xi - 1] = p_what[0];                                                                   \
+    }                                                                                            \
+  } else {                                                                                       \
+    for (int i = 0; i < where_size; ++i){                                                        \
+      xi = p_where[i];                                                                           \
+      if (xi <= 0 || xi > xn){                                                                   \
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");         \
+      }                                                                                          \
+      p_x[xi - 1] = p_what[i];                                                                   \
+    }                                                                                            \
+  }                                                                                              \
+
+
+switch (TYPEOF(x)){
+case NILSXP: {
+  break;
+}
+case LGLSXP:
+case INTSXP: {
+  int *p_x = INTEGER(x);
+  int *p_what = INTEGER(what);
+  CHEAPR_REPLACE
+  break;
+}
+case REALSXP: {
+  double *p_x = REAL(x);
+  double *p_what = REAL(what);
+  CHEAPR_REPLACE
+  break;
+}
+default: {
+  Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+}
+}
+  return x;
+}
+
+// Essentially `x & y` but updates x by reference
+
+// SEXP cpp_set_and(SEXP x, SEXP y){
+//   R_xlen_t xn = Rf_xlength(x);
+//   R_xlen_t yn = Rf_xlength(y);
+//
+//   R_xlen_t n = xn == 0 || yn == 0 ? 0 : xn;
+//
+//   R_xlen_t i, yi;
+//
+//   int *p_x = LOGICAL(x);
+//   int *p_y = LOGICAL(y);
+//
+//
+//   for (i = yi = 0; i < n; yi = (++yi == yn) ? 0 : yi, ++i){
+//
+//     if (p_x[i] != FALSE){
+//       if (p_y[yi] == FALSE){
+//         p_x[i] = FALSE;
+//       } else if ((p_x[i] == NA_LOGICAL) || (p_y[yi] == NA_LOGICAL)){
+//         p_x[i] = NA_LOGICAL;
+//       } else if (p_x[i] == TRUE && p_y[yi] == TRUE){
+//         p_x[i] = TRUE;
+//       }
+//     }
+//   }
+//   return x;
+// }
+
+// Essentially `x | y` but updates x by reference
+
+[[cpp11::register]]
+SEXP cpp_set_or(SEXP x, SEXP y){
+  R_xlen_t xn = Rf_xlength(x);
+  R_xlen_t yn = Rf_xlength(y);
+
+  R_xlen_t n = xn == 0 || yn == 0 ? 0 : xn;
+
+  R_xlen_t i, yi;
+
+  int *p_x = LOGICAL(x);
+  int *p_y = LOGICAL(y);
+
+
+  for (i = yi = 0; i < n; yi = (++yi == yn) ? 0 : yi, ++i){
+
+    if (p_x[i] != TRUE){
+      if (p_y[yi] == TRUE){
+        p_x[i] = TRUE;
+      } else if ((p_x[i] == NA_LOGICAL) || (p_y[yi] == NA_LOGICAL)){
+        p_x[i] = NA_LOGICAL;
+      } else if (p_x[i] == TRUE || p_y[yi] == TRUE){
+        p_x[i] = TRUE;
+      }
+    }
+  }
+  return x;
+}
+
 // SEXP cpp_c(SEXP x){
 //   if (!Rf_isVectorList(x)){
 //     Rf_error("x must be a list of vectors");

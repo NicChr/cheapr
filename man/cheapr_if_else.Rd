@@ -4,7 +4,7 @@
 \alias{cheapr_if_else}
 \title{Cheaper version of \code{ifelse()}}
 \usage{
-cheapr_if_else(condition, true, false, default = false[NA_integer_])
+cheapr_if_else(condition, true, false, na = false[NA_integer_])
 }
 \arguments{
 \item{condition}{\link{logical} A condition which will be used to
@@ -14,7 +14,7 @@ evaluate the if else operation.}
 
 \item{false}{Value(s) to replace \code{FALSE} instances.}
 
-\item{default}{Catch-all value(s) to replace all other instances,
+\item{na}{Catch-all value(s) to replace all other instances,
 where \code{is.na(condition)}.}
 }
 \value{
@@ -23,4 +23,7 @@ using a common type between \code{true}, \code{false} and \code{default}.
 }
 \description{
 Cheaper version of \code{ifelse()}
+}
+\seealso{
+\link{case} \link{val_match}
 }

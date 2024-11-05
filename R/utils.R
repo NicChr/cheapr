@@ -203,6 +203,21 @@ combine_factors <- function(...){
           na_exclude = !any_na(new_levels))
 }
 
+# A very fasty 1-D array frequency table
+cheapr_table <- function(x, names = TRUE){
+  if (is.factor(x)){
+    f <- x
+  } else {
+    f <- factor_(x, order = FALSE, na_exclude = FALSE)
+  }
+  lvls <- attr(f, "levels")
+  out <- tabulate(f, nbins = length(lvls))
+  if (names){
+    names(out) <- lvls
+  }
+  out
+}
+
 # Just a wrapper with a cheaper alternative to `c.factor()`
 # cheapr_c <- function(..., .check = TRUE){
 #   dots <- list(...)

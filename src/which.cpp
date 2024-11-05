@@ -82,7 +82,7 @@ SEXP cpp_which_(SEXP x, bool invert){
 
 [[cpp11::register]]
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
-  int n_protections = 0;
+  int NP = 0;
   R_xlen_t n = Rf_xlength(x);
   bool is_long = (n > integer_max_);
   if (Rf_length(value) != 1){
@@ -92,9 +92,9 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   SEXP val_is_na = Rf_protect(cpp_is_na(value));
-  ++n_protections;
+  ++NP;
   if (Rf_asLogical(val_is_na)){
-    Rf_unprotect(n_protections);
+    Rf_unprotect(NP);
     if (invert){
       return cpp_which_not_na(x);
     } else {
@@ -109,9 +109,8 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   case LGLSXP:
   case INTSXP: {
     SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
-    ++n_protections;
-    Rf_protect(value = Rf_coerceVector(value, INTSXP));
-    ++n_protections;
+    ++NP;
+    Rf_protect(value = Rf_coerceVector(value, INTSXP)); ++NP;
     int val = Rf_asInteger(value);
     int *p_x = INTEGER(x);
     if (is_long){
@@ -129,14 +128,14 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
         CHEAPR_WHICH_VAL(val);
       }
     }
-    Rf_unprotect(n_protections);
+    Rf_unprotect(NP);
     return out;
   }
   case REALSXP: {
     SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
-    ++n_protections;
+    ++NP;
     Rf_protect(value = Rf_coerceVector(value, REALSXP));
-    ++n_protections;
+    ++NP;
     double val = Rf_asReal(value);
     double *p_x = REAL(x);
     if (is_long){
@@ -154,16 +153,16 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
         CHEAPR_WHICH_VAL(val);
       }
     }
-    Rf_unprotect(n_protections);
+    Rf_unprotect(NP);
     return out;
   }
   case STRSXP: {
     SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
-    ++n_protections;
+    ++NP;
     Rf_protect(value = Rf_coerceVector(value, STRSXP));
-    ++n_protections;
+    ++NP;
     SEXP val = Rf_protect(Rf_asChar(value));
-    ++n_protections;
+    ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);
@@ -180,11 +179,11 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
         CHEAPR_WHICH_VAL(val);
       }
     }
-    Rf_unprotect(n_protections);
+    Rf_unprotect(NP);
     return out;
   }
   default: {
-    Rf_unprotect(n_protections);
+    Rf_unprotect(NP);
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
