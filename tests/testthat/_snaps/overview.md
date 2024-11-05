@@ -31,11 +31,11 @@
       cols: 5 
       
       ----- Numeric -----
-               col  class n_missng p_complt n_unique mean  p0 p25  p50 p75 p100 iqr
-      1 Sepl.Lngth numerc        0        1       35 5.84 4.3 5.1  5.8 6.4  7.9 1.3
-      2 Sepal.Wdth numerc        0        1       23 3.06   2 2.8    3 3.3  4.4 0.5
-      3 Petl.Lngth numerc        0        1       43 3.76   1 1.6 4.35 5.1  6.9 3.5
-      4 Petal.Wdth numerc        0        1       22  1.2 0.1 0.3  1.3 1.8  2.5 1.5
+                 col  class n_missng p_complt n_unique mean  p0 p25  p50 p75 p100 iqr
+      1 Sepal.Length numerc        0        1       35 5.84 4.3 5.1  5.8 6.4  7.9 1.3
+      2  Sepal.Width numerc        0        1       23 3.06   2 2.8    3 3.3  4.4 0.5
+      3 Petal.Length numerc        0        1       43 3.76   1 1.6 4.35 5.1  6.9 3.5
+      4  Petal.Width numerc        0        1       22  1.2 0.1 0.3  1.3 1.8  2.5 1.5
           sd
       1 0.83
       2 0.44
@@ -59,16 +59,16 @@
       1 large logicl        0        1     24      76   0.24
       
       ----- Numeric -----
-               col  class n_missng p_complt n_unique mean  p0 p25  p50  p75 p100  iqr
-      1 Sepl.Lngth numerc        0        1       28 5.47 4.3   5  5.4  5.9    7  0.9
-      2 Sepal.Wdth numerc        0        1       23  3.1   2 2.8 3.05  3.4  4.4  0.6
-      3 Petl.Lngth numerc        0        1       28 2.86   1 1.5 2.45 4.32  5.1 2.83
-      4 Petal.Wdth numerc        0        1       15 0.79 0.1 0.2  0.8  1.3  1.8  1.1
-          sd
-      1 0.64
-      2 0.48
-      3 1.45
-      4 0.57
+                 col  class n_missng p_complt n_unique mean  p0 p25  p50  p75 p100
+      1 Sepal.Length numerc        0        1       28 5.47 4.3   5  5.4  5.9    7
+      2  Sepal.Width numerc        0        1       23  3.1   2 2.8 3.05  3.4  4.4
+      3 Petal.Length numerc        0        1       28 2.86   1 1.5 2.45 4.32  5.1
+      4  Petal.Width numerc        0        1       15 0.79 0.1 0.2  0.8  1.3  1.8
+         iqr   sd
+      1  0.9 0.64
+      2  0.6 0.48
+      3 2.83 1.45
+      4  1.1 0.57
       
       ----- Categorical -----
              col  class n_missng p_complt n_unique n_levels    min        max

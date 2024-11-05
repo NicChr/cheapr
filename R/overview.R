@@ -396,21 +396,21 @@ print.overview <- function(x, max = NULL, ...){
     cat("\n----- Logical -----\n")
     names(temp$logical) <- abbr(names(temp$logical), 8)
     temp$logical$class <- abbr(temp$logical$class, 6)
-    temp$logical$col <- abbr(temp$logical$col, 10)
+    temp$logical$col <- abbr(temp$logical$col, 14)
     print(temp$logical)
   }
   if (nrow(temp$numeric)){
     cat("\n----- Numeric -----\n")
     names(temp$numeric) <- abbr(names(temp$numeric), 8)
     temp$numeric$class <- abbr(temp$numeric$class, 6)
-    temp$numeric$col <- abbr(temp$numeric$col, 10)
+    temp$numeric$col <- abbr(temp$numeric$col, 14)
     print(temp$numeric)
   }
   if (nrow(temp$date)){
     cat("\n----- Dates -----\n")
     names(temp$date) <- abbr(names(temp$date), 8)
     temp$date$class <- abbr(temp$date$class, 6)
-    temp$date$col <- abbr(temp$date$col, 10)
+    temp$date$col <- abbr(temp$date$col, 14)
     print(temp$date)
   }
   if (nrow(temp$datetime)){
@@ -431,28 +431,28 @@ print.overview <- function(x, max = NULL, ...){
     cat("\n----- Date-Times -----\n")
     names(temp$datetime) <- abbr(names(temp$datetime), 8)
     temp$datetime$class <- abbr(temp$datetime$class, 6)
-    temp$datetime$col <- abbr(temp$datetime$col, 10)
+    temp$datetime$col <- abbr(temp$datetime$col, 14)
     print(temp$datetime)
   }
   if (nrow(temp$time_series)){
     cat("\n----- Time-Series -----\n")
     names(temp$time_series) <- abbr(names(temp$time_series), 8)
     temp$time_series$class <- abbr(temp$time_series$class, 6)
-    temp$time_series$col <- abbr(temp$time_series$col, 10)
+    temp$time_series$col <- abbr(temp$time_series$col, 14)
     print(temp$time_series)
   }
   if (nrow(temp$categorical)){
     cat("\n----- Categorical -----\n")
     names(temp$categorical) <- abbr(names(temp$categorical), 8)
     temp$categorical$class <- abbr(temp$categorical$class, 6)
-    temp$categorical$col <- abbr(temp$categorical$col, 10)
+    temp$categorical$col <- abbr(temp$categorical$col, 14)
     print(temp$categorical)
   }
   if (nrow(temp$other)){
     cat("\n----- Other -----\n")
     names(temp$other) <- abbr(names(temp$other), 8)
     temp$other$class <- abbr(temp$other$class, 6)
-    temp$other$col <- abbr(temp$other$col, 10)
+    temp$other$col <- abbr(temp$other$col, 14)
     print(temp$other)
   }
   invisible(x)
