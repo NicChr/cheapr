@@ -162,7 +162,7 @@ val_match <- function(.x, ..., .default = NULL){
   N <- length(.x)
   n_exprs <- length(exprs)
 
-  if (!is_base_atomic(.x)){
+  if (!(is.atomic(.x) || is.null(.x))){
     stop("`.x` must be an atomic vector")
   }
 
@@ -208,8 +208,8 @@ val_match <- function(.x, ..., .default = NULL){
   }
 
   if (rhs_all_scalars && (n_exprs >= 5 || !all_same_type)){
-      # Pre-allocate key-value pairs
 
+    # Pre-allocate key-value pairs
       keys <- rep_len(.x[NA_integer_], n_exprs)
       values <- keys
 
@@ -241,7 +241,7 @@ val_match <- function(.x, ..., .default = NULL){
     # Create a vector filled with `.default` if given, otherwise NA
 
     if (!is.null(.default)){
-      out <- if (length(.default) != 1) r_copy(.default) else rep_len(.default, N)
+      out <- if (length(.default) != 1) .default else rep_len(.default, N)
     } else {
       out <- rep_len(.x[NA_integer_], N)
     }
@@ -249,14 +249,8 @@ val_match <- function(.x, ..., .default = NULL){
     for (i in seq_along(exprs)){
       lhs <- lhs_list[[i]]
       rhs <- rhs_list[[i]]
-      if (length(lhs) == 1 && length(rhs) == 1 &&
-          identical(typeof(.x), typeof(lhs)) &&
-          identical(typeof(.x), typeof(rhs))){
-        cpp_val_set_replace(out, lhs, rhs, recursive = TRUE)
-      } else {
-        val_locs <- val_find(.x, lhs)
-        out[val_locs] <- if (length(rhs) == 1) rhs else rhs[val_locs]
-      }
+      val_locs <- val_find(.x, lhs)
+      out[val_locs] <- if (length(rhs) == 1) rhs else rhs[val_locs]
     }
   }
   out

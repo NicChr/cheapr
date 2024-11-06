@@ -52,44 +52,17 @@
 // template <typename T1, typename T2>
 // int neq(T1 a, T2 b) { return a != b; }
 
-bool is_scalar_na(SEXP x){
-  if (Rf_xlength(x) != 1){
-    Rf_error("x must be a scalar value");
-  }
-  switch(TYPEOF(x)){
-  case LGLSXP:
-  case INTSXP: {
-    return cheapr_is_na_int(Rf_asInteger(x));
-  }
-  case REALSXP: {
-    if (is_int64(x)){
-    return cheapr_is_na_int64(INTEGER64_PTR(x)[0]);
-  } else {
-    return cheapr_is_na_dbl(Rf_asReal(x));
-  }
-  }
-  case STRSXP: {
-    return cheapr_is_na_str(Rf_asChar(x));
-  }
-  case CPLXSXP: {
-    return cheapr_is_na_cplx(Rf_asComplex(x));
-  }
-  case RAWSXP: {
-    return false;
-  }
-  default: {
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-  }
-  }
-}
+// coerceVector() that accounts for int64
 
 SEXP coerce_vector(SEXP source, SEXP target){
+  if (TYPEOF(source) == TYPEOF(target)) return source;
   if (is_int64(target)){
-    if (is_int64(source)){
-      return source;
-    } else {
-      return cpp_numeric_to_int64(Rf_coerceVector(source, REALSXP));
-    }
+    return cpp_numeric_to_int64(Rf_coerceVector(source, REALSXP));
+  } else if (is_int64(source)){
+    SEXP temp = Rf_protect(cpp_int64_to_numeric(source));
+    SEXP out = Rf_protect(Rf_coerceVector(temp, TYPEOF(target)));
+    Rf_unprotect(2);
+    return out;
   } else {
     return Rf_coerceVector(source, TYPEOF(target));
   }
@@ -97,7 +70,7 @@ SEXP coerce_vector(SEXP source, SEXP target){
 
 bool implicit_na_coercion(SEXP x, SEXP target){
   SEXP coerced = Rf_protect(coerce_vector(x, target));
-  bool out = !is_scalar_na(x) && is_scalar_na(coerced);
+  bool out = na_count(x, true) != na_count(coerced, true);
   Rf_unprotect(1);
   return out;
 }
@@ -143,7 +116,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case LGLSXP:
   case INTSXP: {
     if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = Rf_coerceVector(value, INTSXP)); ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
     int val = Rf_asInteger(value);
     int *p_x = INTEGER(x);
     // int (*c_op)(int, int);
@@ -173,7 +146,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
         CHEAPR_VAL_COUNT(val)
       }
     } else {
-      Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
+      Rf_protect(value = coerce_vector(value, x)); ++NP;
       double val = Rf_asReal(value);
       double *p_x = REAL(x);
       // int (*c_op)(double, double);
@@ -190,7 +163,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = Rf_coerceVector(value, STRSXP)); ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
     SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     // int (*c_op)(SEXP, SEXP);
@@ -277,8 +250,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SEXP temp = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
     int *p_out = INTEGER(temp);
-    Rf_protect(value = Rf_coerceVector(value, INTSXP)); ++NP;
-    Rf_protect(replace = Rf_coerceVector(replace, INTSXP)); ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
     int val = Rf_asInteger(value);
     int repl = Rf_asInteger(replace);
     int *p_x = INTEGER(x);
@@ -304,18 +277,11 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     out = x;
     break;
   }
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
     if (is_int64(x)){
     SEXP temp = Rf_protect(Rf_allocVector(REALSXP, 0)); ++NP;
     long long *p_out = INTEGER64_PTR(temp);
-
-    if (!is_int64(value)){
-      Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
-      Rf_protect(value = cpp_numeric_to_int64(value)); ++NP;
-    }
-    if (!is_int64(replace)){
-      Rf_protect(replace = Rf_coerceVector(replace, REALSXP)); ++NP;
-      Rf_protect(replace = cpp_numeric_to_int64(replace)); ++NP;
-    }
     long long val = INTEGER64_PTR(value)[0];
     long long repl = INTEGER64_PTR(replace)[0];
     long long *p_x = INTEGER64_PTR(x);
@@ -336,8 +302,6 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   } else {
     SEXP temp = Rf_protect(Rf_allocVector(REALSXP, 0)); ++NP;
     double *p_out = REAL(temp);
-    Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
-    Rf_protect(replace = Rf_coerceVector(replace, REALSXP)); ++NP;
     double val = Rf_asReal(value);
     double repl = Rf_asReal(replace);
     double *p_x = REAL(x);
@@ -380,8 +344,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     out = x;
     break;
   }
-    Rf_protect(value = Rf_coerceVector(value, STRSXP)); ++NP;
-    Rf_protect(replace = Rf_coerceVector(replace, STRSXP)); ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
     SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
     SEXP repl = Rf_protect(Rf_asChar(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -450,8 +414,8 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   case LGLSXP:
   case INTSXP: {
     if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = Rf_coerceVector(value, INTSXP)); ++NP;
-    Rf_protect(replace = Rf_coerceVector(replace, INTSXP)); ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
     int val = Rf_asInteger(value);
     int repl = Rf_asInteger(replace);
     int *p_x = INTEGER(x);
@@ -464,15 +428,9 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   case REALSXP: {
     if (implicit_na_coercion(value, x)) break;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
     if (is_int64(x)){
-      if (!is_int64(value)){
-        Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
-        Rf_protect(value = cpp_numeric_to_int64(value)); ++NP;
-      }
-      if (!is_int64(replace)){
-        Rf_protect(replace = Rf_coerceVector(replace, REALSXP)); ++NP;
-        Rf_protect(replace = cpp_numeric_to_int64(replace)); ++NP;
-      }
       long long val = INTEGER64_PTR(value)[0];
       long long repl = INTEGER64_PTR(replace)[0];
       long long *p_x = INTEGER64_PTR(x);
@@ -481,8 +439,6 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
         if (p_x[i] == val) p_x[i] = repl;
       }
     } else {
-      Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
-      Rf_protect(replace = Rf_coerceVector(replace, REALSXP)); ++NP;
       double val = Rf_asReal(value);
       double repl = Rf_asReal(replace);
       double *p_x = REAL(x);
@@ -502,8 +458,8 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = Rf_coerceVector(value, STRSXP)); ++NP;
-    Rf_protect(replace = Rf_coerceVector(replace, STRSXP)); ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
     SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
     SEXP repl = Rf_protect(Rf_asChar(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -531,6 +487,9 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   Rf_unprotect(NP);
   return x;
 }
+
+// At the moment this doesn't coerce what to type of x
+// or handle long vectors
 
 [[cpp11::register]]
 SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){

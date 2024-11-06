@@ -103,9 +103,12 @@ bool cpp_any_na(SEXP x, bool recursive);
 bool is_int64(SEXP x);
 SEXP cpp_int64_to_double(SEXP x);
 SEXP cpp_numeric_to_int64(SEXP x);
+SEXP cpp_int64_to_numeric(SEXP x);
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
 void cpp_copy_names(SEXP source, SEXP target, bool deep_copy);
 void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy);
 SEXP cpp_sset_df(SEXP x, SEXP indices);
+SEXP coerce_vector(SEXP source, SEXP target);
+bool implicit_na_coercion(SEXP x, SEXP target);
 
 #endif

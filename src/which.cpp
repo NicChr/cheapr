@@ -91,8 +91,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   if (Rf_isVectorList(x)){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
-  SEXP val_is_na = Rf_protect(cpp_is_na(value));
-  ++NP;
+  SEXP val_is_na = Rf_protect(cpp_is_na(value)); ++NP;
   if (Rf_asLogical(val_is_na)){
     Rf_unprotect(NP);
     if (invert){
@@ -101,6 +100,12 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
       return cpp_which_na(x);
     }
   }
+
+  if (implicit_na_coercion(value, x)){
+    Rf_unprotect(NP);
+    Rf_error("Value has been implicitly converted to NA, please check");
+  }
+
   R_xlen_t n_vals = scalar_count(x, value, false);
   R_xlen_t out_size = invert ? n - n_vals : n_vals;
   R_xlen_t whichi = 0;
@@ -110,7 +115,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   case INTSXP: {
     SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
-    Rf_protect(value = Rf_coerceVector(value, INTSXP)); ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
     int val = Rf_asInteger(value);
     int *p_x = INTEGER(x);
     if (is_long){
@@ -134,8 +139,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   case REALSXP: {
     SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
-    Rf_protect(value = Rf_coerceVector(value, REALSXP));
-    ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
     double val = Rf_asReal(value);
     double *p_x = REAL(x);
     if (is_long){
@@ -159,10 +163,8 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   case STRSXP: {
     SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
-    Rf_protect(value = Rf_coerceVector(value, STRSXP));
-    ++NP;
-    SEXP val = Rf_protect(Rf_asChar(value));
-    ++NP;
+    Rf_protect(value = coerce_vector(value, x)); ++NP;
+    SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);
