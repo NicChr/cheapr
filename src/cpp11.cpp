@@ -271,6 +271,20 @@ extern "C" SEXP _cheapr_cpp_val_replace(SEXP x, SEXP value, SEXP replace, SEXP r
     return cpp11::as_sexp(cpp_val_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value), cpp11::as_cpp<cpp11::decay_t<SEXP>>(replace), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
   END_CPP11
 }
+// scalars.cpp
+SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
+extern "C" SEXP _cheapr_cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, SEXP recursive) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_val_set_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value), cpp11::as_cpp<cpp11::decay_t<SEXP>>(replace), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
+  END_CPP11
+}
+// scalars.cpp
+SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what);
+extern "C" SEXP _cheapr_cpp_loc_set_replace(SEXP x, SEXP where, SEXP what) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_loc_set_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(what)));
+  END_CPP11
+}
 // sequences.cpp
 SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by);
 extern "C" SEXP _cheapr_cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
@@ -490,13 +504,6 @@ extern "C" SEXP _cheapr_cpp_set_copy_elements(SEXP source, SEXP target) {
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_set_replace(SEXP x, SEXP where, SEXP what);
-extern "C" SEXP _cheapr_cpp_set_replace(SEXP x, SEXP where, SEXP what) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_set_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(what)));
-  END_CPP11
-}
-// utils.cpp
 SEXP cpp_set_or(SEXP x, SEXP y);
 extern "C" SEXP _cheapr_cpp_set_or(SEXP x, SEXP y) {
   BEGIN_CPP11
@@ -574,6 +581,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_lgl_count",               (DL_FUNC) &_cheapr_cpp_lgl_count,               1},
     {"_cheapr_cpp_lgl_locs",                (DL_FUNC) &_cheapr_cpp_lgl_locs,                6},
     {"_cheapr_cpp_list_as_df",              (DL_FUNC) &_cheapr_cpp_list_as_df,              1},
+    {"_cheapr_cpp_loc_set_replace",         (DL_FUNC) &_cheapr_cpp_loc_set_replace,         3},
     {"_cheapr_cpp_matrix_col_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts,    1},
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
@@ -598,7 +606,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_multiply",            (DL_FUNC) &_cheapr_cpp_set_multiply,            2},
     {"_cheapr_cpp_set_or",                  (DL_FUNC) &_cheapr_cpp_set_or,                  2},
     {"_cheapr_cpp_set_pow",                 (DL_FUNC) &_cheapr_cpp_set_pow,                 2},
-    {"_cheapr_cpp_set_replace",             (DL_FUNC) &_cheapr_cpp_set_replace,             3},
     {"_cheapr_cpp_set_rm_attr",             (DL_FUNC) &_cheapr_cpp_set_rm_attr,             2},
     {"_cheapr_cpp_set_rm_attributes",       (DL_FUNC) &_cheapr_cpp_set_rm_attributes,       1},
     {"_cheapr_cpp_set_round",               (DL_FUNC) &_cheapr_cpp_set_round,               2},
@@ -608,6 +615,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_sset_df",                 (DL_FUNC) &_cheapr_cpp_sset_df,                 2},
     {"_cheapr_cpp_sset_range",              (DL_FUNC) &_cheapr_cpp_sset_range,              4},
     {"_cheapr_cpp_val_replace",             (DL_FUNC) &_cheapr_cpp_val_replace,             4},
+    {"_cheapr_cpp_val_set_replace",         (DL_FUNC) &_cheapr_cpp_val_set_replace,         4},
     {"_cheapr_cpp_vec_length",              (DL_FUNC) &_cheapr_cpp_vec_length,              1},
     {"_cheapr_cpp_which_",                  (DL_FUNC) &_cheapr_cpp_which_,                  2},
     {"_cheapr_cpp_which_na",                (DL_FUNC) &_cheapr_cpp_which_na,                1},

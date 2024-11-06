@@ -2,16 +2,13 @@
 #'
 #'
 #' @description
-#' `case` operates similarly to `dplyr::case_when` but is generally
-#' faster and requires less memory.
-#' `val_match` is a specialised variant that switches values efficiently.
-#' It is a special case of `case()`, specifically when the all LHS expressions
-#' are length-1 scalar vectors.
+#' `case` and `val_match` are cheaper alternatives to `dplyr::case_when` and
+#' `dplyr::case_match` respectively.
 #'
 #'
 #' @param ... Logical expressions or scalar values in the case of `val_match`.
 #' @param .x Vector used to switch values.
-#' @param .default Catch-all value.
+#' @param .default Catch-all value or vector.
 #'
 #' @seealso [cheapr_if_else]
 #'
@@ -23,8 +20,9 @@
 #' @details
 #' `val_match()` is a very efficient special case of the
 #' `case()` function when all lhs expressions are scalars,
-#' i.e. length-1 vectors. Therefore the below
-#' 2 expressions are equivalent.
+#' i.e. length-1 vectors. RHS expressions can be vectors the
+#' same length as `.x`.
+#' The below 2 expressions are equivalent.
 #'
 #' \preformatted{
 #' val_match(
@@ -117,7 +115,7 @@ case <- function(..., .default = NULL){
       }
 
       cpp_set_copy_elements(source = lgl, target = lgl3)
-      cpp_set_replace(lgl3, val_find(lgl_or, TRUE), FALSE)
+      cpp_loc_set_replace(lgl3, val_find(lgl_or, TRUE), FALSE)
       cpp_set_or(lgl_or, lgl)
 
       true_locs <- val_find(lgl3, TRUE)
@@ -180,6 +178,7 @@ val_match <- function(.x, ..., .default = NULL){
   # should carry minimal overhead
 
   rhs_all_scalars <- TRUE
+  all_same_type <- TRUE
   # rhs_all_scalars <- is.null(.default) || length(.default) == 1
 
   lhs_list <- new_list(n_exprs)
@@ -203,10 +202,12 @@ val_match <- function(.x, ..., .default = NULL){
     rhs_list[[i]] <- rhs
 
     rhs_all_scalars <- rhs_all_scalars && length(rhs) == 1
+    all_same_type <- all_same_type &&
+      identical(typeof(.x), typeof(lhs)) &&
+      identical(typeof(.x), typeof(rhs))
   }
 
-  if (rhs_all_scalars){
-
+  if (rhs_all_scalars && (n_exprs >= 5 || !all_same_type)){
       # Pre-allocate key-value pairs
 
       keys <- rep_len(.x[NA_integer_], n_exprs)
@@ -248,8 +249,14 @@ val_match <- function(.x, ..., .default = NULL){
     for (i in seq_along(exprs)){
       lhs <- lhs_list[[i]]
       rhs <- rhs_list[[i]]
-      val_locs <- val_find(.x, lhs)
-      out[val_locs] <- if (length(rhs) == 1) rhs else rhs[val_locs]
+      if (length(lhs) == 1 && length(rhs) == 1 &&
+          identical(typeof(.x), typeof(lhs)) &&
+          identical(typeof(.x), typeof(rhs))){
+        cpp_val_set_replace(out, lhs, rhs, recursive = TRUE)
+      } else {
+        val_locs <- val_find(.x, lhs)
+        out[val_locs] <- if (length(rhs) == 1) rhs else rhs[val_locs]
+      }
     }
   }
   out

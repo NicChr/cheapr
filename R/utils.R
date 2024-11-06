@@ -203,12 +203,18 @@ combine_factors <- function(...){
           na_exclude = !any_na(new_levels))
 }
 
-# A very fasty 1-D array frequency table
-cheapr_table <- function(x, names = TRUE){
+# A very fast 1-D array frequency table
+cheapr_table <- function(x, names = TRUE, order = FALSE, na_exclude = FALSE){
   if (is.factor(x)){
-    f <- x
+    if (na_exclude){
+      f <- levels_drop_na(x)
+    } else if (any_na(x)){
+      f <- levels_add_na(x)
+    } else {
+      f <- x
+    }
   } else {
-    f <- factor_(x, order = FALSE, na_exclude = FALSE)
+    f <- factor_(x, order = order, na_exclude = na_exclude)
   }
   lvls <- attr(f, "levels")
   out <- tabulate(f, nbins = length(lvls))

@@ -12,7 +12,7 @@ val_match(.x, ..., .default = NULL)
 \arguments{
 \item{...}{Logical expressions or scalar values in the case of \code{val_match}.}
 
-\item{.default}{Catch-all value.}
+\item{.default}{Catch-all value or vector.}
 
 \item{.x}{Vector used to switch values.}
 }
@@ -22,17 +22,15 @@ case of \code{case}, unless the condition length is smaller than the
 rhs, in which case the length of the rhs is used.
 }
 \description{
-\code{case} operates similarly to \code{dplyr::case_when} but is generally
-faster and requires less memory.
-\code{val_match} is a specialised variant that switches values efficiently.
-It is a special case of \code{case()}, specifically when the all LHS expressions
-are length-1 scalar vectors.
+\code{case} and \code{val_match} are cheaper alternatives to \code{dplyr::case_when} and
+\code{dplyr::case_match} respectively.
 }
 \details{
 \code{val_match()} is a very efficient special case of the
 \code{case()} function when all lhs expressions are scalars,
-i.e. length-1 vectors. Therefore the below
-2 expressions are equivalent.
+i.e. length-1 vectors. RHS expressions can be vectors the
+same length as \code{.x}.
+The below 2 expressions are equivalent.
 
 \preformatted{
 val_match(

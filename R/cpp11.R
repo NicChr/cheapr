@@ -152,6 +152,14 @@ cpp_val_replace <- function(x, value, replace, recursive) {
   .Call(`_cheapr_cpp_val_replace`, x, value, replace, recursive)
 }
 
+cpp_val_set_replace <- function(x, value, replace, recursive) {
+  .Call(`_cheapr_cpp_val_set_replace`, x, value, replace, recursive)
+}
+
+cpp_loc_set_replace <- function(x, where, what) {
+  .Call(`_cheapr_cpp_loc_set_replace`, x, where, what)
+}
+
 cpp_int_sequence <- function(size, from, by) {
   .Call(`_cheapr_cpp_int_sequence`, size, from, by)
 }
@@ -274,10 +282,6 @@ cpp_lgl_count <- function(x) {
 
 cpp_set_copy_elements <- function(source, target) {
   invisible(.Call(`_cheapr_cpp_set_copy_elements`, source, target))
-}
-
-cpp_set_replace <- function(x, where, what) {
-  .Call(`_cheapr_cpp_set_replace`, x, where, what)
 }
 
 cpp_set_or <- function(x, y) {

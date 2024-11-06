@@ -253,7 +253,7 @@ SEXP cpp_rev(SEXP x, bool set){
   if (set && is_altrep){
     Rf_warning("Cannot update an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations");
   }
-  Rf_protect(x = altrep_materialise(x)); ++ NP;
+  Rf_protect(x = altrep_materialise(x)); ++NP;
 
   // altrep will have already been materialised so this should be safe
   // and avoids a second copy
@@ -649,66 +649,6 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(source)));
   }
   }
-}
-
-[[cpp11::register]]
-SEXP cpp_set_replace(SEXP x, SEXP where, SEXP what){
-  if (TYPEOF(x) != TYPEOF(what)){
-    Rf_error("`typeof(x)` must match `typeof(what)`");
-  }
-  int *p_where = INTEGER(where);
-
-  long long int xn = Rf_xlength(x);
-  int where_size = Rf_length(where);
-  int what_size = Rf_length(what);
-  if (what_size != 1 && where_size != what_size){
-    Rf_error("`length(where)` must match `length(what)`");
-  }
-  long long int xi;
-
-
-#define CHEAPR_REPLACE                                                                         \
-  if (what_size == 1){                                                                           \
-    for (int i = 0; i < where_size; ++i){                                                        \
-      xi = p_where[i];                                                                           \
-      if (xi <= 0 || xi > xn){                                                                   \
-        Rf_error("where must be an integer vector of values between 1 and `length(x)`");         \
-      }                                                                                          \
-      p_x[xi - 1] = p_what[0];                                                                   \
-    }                                                                                            \
-  } else {                                                                                       \
-    for (int i = 0; i < where_size; ++i){                                                        \
-      xi = p_where[i];                                                                           \
-      if (xi <= 0 || xi > xn){                                                                   \
-        Rf_error("where must be an integer vector of values between 1 and `length(x)`");         \
-      }                                                                                          \
-      p_x[xi - 1] = p_what[i];                                                                   \
-    }                                                                                            \
-  }                                                                                              \
-
-
-switch (TYPEOF(x)){
-case NILSXP: {
-  break;
-}
-case LGLSXP:
-case INTSXP: {
-  int *p_x = INTEGER(x);
-  int *p_what = INTEGER(what);
-  CHEAPR_REPLACE
-  break;
-}
-case REALSXP: {
-  double *p_x = REAL(x);
-  double *p_what = REAL(what);
-  CHEAPR_REPLACE
-  break;
-}
-default: {
-  Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-}
-}
-  return x;
 }
 
 // Essentially `x & y` but updates x by reference

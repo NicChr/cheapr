@@ -424,3 +424,180 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   Rf_unprotect(NP);
   return out;
 }
+
+[[cpp11::register]]
+SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
+  int NP = 0;
+  R_xlen_t n = Rf_xlength(x);
+
+  if (Rf_length(value) != 1){
+    Rf_error("value must be a vector of length 1");
+  }
+  if (Rf_length(replace) != 1){
+    Rf_error("replace must be a vector of length 1");
+  }
+  bool val_is_na = cpp_any_na(value, true);
+
+  if (ALTREP(x)){
+    Rf_warning("Cannot update an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations");
+  }
+  Rf_protect(x = altrep_materialise(x)); ++NP;
+
+  switch ( TYPEOF(x) ){
+  case NILSXP: {
+    break;
+  }
+  case LGLSXP:
+  case INTSXP: {
+    if (implicit_na_coercion(value, x)) break;
+    Rf_protect(value = Rf_coerceVector(value, INTSXP)); ++NP;
+    Rf_protect(replace = Rf_coerceVector(replace, INTSXP)); ++NP;
+    int val = Rf_asInteger(value);
+    int repl = Rf_asInteger(replace);
+    int *p_x = INTEGER(x);
+
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      if (p_x[i] == val) p_x[i] = repl;
+    }
+    break;
+  }
+  case REALSXP: {
+    if (implicit_na_coercion(value, x)) break;
+    if (is_int64(x)){
+      if (!is_int64(value)){
+        Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
+        Rf_protect(value = cpp_numeric_to_int64(value)); ++NP;
+      }
+      if (!is_int64(replace)){
+        Rf_protect(replace = Rf_coerceVector(replace, REALSXP)); ++NP;
+        Rf_protect(replace = cpp_numeric_to_int64(replace)); ++NP;
+      }
+      long long val = INTEGER64_PTR(value)[0];
+      long long repl = INTEGER64_PTR(replace)[0];
+      long long *p_x = INTEGER64_PTR(x);
+      OMP_FOR_SIMD
+      for (R_xlen_t i = 0; i < n; ++i){
+        if (p_x[i] == val) p_x[i] = repl;
+      }
+    } else {
+      Rf_protect(value = Rf_coerceVector(value, REALSXP)); ++NP;
+      Rf_protect(replace = Rf_coerceVector(replace, REALSXP)); ++NP;
+      double val = Rf_asReal(value);
+      double repl = Rf_asReal(replace);
+      double *p_x = REAL(x);
+      if (val_is_na){
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < n; ++i){
+          if (p_x[i] != p_x[i]) p_x[i] = repl;
+        }
+      } else {
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < n; ++i){
+          if (p_x[i] == val) p_x[i] = repl;
+        }
+      }
+    }
+    break;
+  }
+  case STRSXP: {
+    if (implicit_na_coercion(value, x)) break;
+    Rf_protect(value = Rf_coerceVector(value, STRSXP)); ++NP;
+    Rf_protect(replace = Rf_coerceVector(replace, STRSXP)); ++NP;
+    SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
+    SEXP repl = Rf_protect(Rf_asChar(replace)); ++NP;
+    const SEXP *p_x = STRING_PTR_RO(x);
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      for (R_xlen_t i = 0; i < n; ++i){
+        if (p_x[i] == val) SET_STRING_ELT(x, i, repl);
+      }
+    }
+    break;
+  }
+  case VECSXP: {
+    if (recursive){
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_VECTOR_ELT(x, i, cpp_val_replace(VECTOR_ELT(x, i), value, replace, true));
+    }
+    break;
+  }
+  }
+  default: {
+    Rf_unprotect(NP);
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+  }
+  }
+  Rf_unprotect(NP);
+  return x;
+}
+
+[[cpp11::register]]
+SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){
+  if (TYPEOF(x) != TYPEOF(what)){
+    Rf_error("`typeof(x)` must match `typeof(what)`");
+  }
+  int *p_where = INTEGER(where);
+
+  if (ALTREP(x)){
+    Rf_warning("Cannot update an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations");
+  }
+  Rf_protect(x = altrep_materialise(x));
+
+  long long int xn = Rf_xlength(x);
+  int where_size = Rf_length(where);
+  int what_size = Rf_length(what);
+  if (what_size != 1 && where_size != what_size){
+    Rf_unprotect(1);
+    Rf_error("`what` must be either length 1 or `length(where)`");
+  }
+  long long int xi;
+
+
+#define CHEAPR_REPLACE                                                                           \
+  if (what_size == 1){                                                                           \
+    for (int i = 0; i < where_size; ++i){                                                        \
+      xi = p_where[i];                                                                           \
+      if (xi <= 0 || xi > xn){                                                                   \
+        Rf_unprotect(1);                                                                         \
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");         \
+      }                                                                                          \
+      p_x[xi - 1] = p_what[0];                                                                   \
+    }                                                                                            \
+  } else {                                                                                       \
+    for (int i = 0; i < where_size; ++i){                                                        \
+      xi = p_where[i];                                                                           \
+      if (xi <= 0 || xi > xn){                                                                   \
+        Rf_unprotect(1);                                                                         \
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");         \
+      }                                                                                          \
+      p_x[xi - 1] = p_what[i];                                                                   \
+    }                                                                                            \
+  }                                                                                              \
+
+
+switch (TYPEOF(x)){
+case NILSXP: {
+  break;
+}
+case LGLSXP:
+case INTSXP: {
+  int *p_x = INTEGER(x);
+  int *p_what = INTEGER(what);
+  CHEAPR_REPLACE
+  break;
+}
+case REALSXP: {
+  double *p_x = REAL(x);
+  double *p_what = REAL(what);
+  CHEAPR_REPLACE
+  break;
+}
+default: {
+  Rf_unprotect(1);
+  Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+}
+}
+  Rf_unprotect(1);
+  return x;
+}
