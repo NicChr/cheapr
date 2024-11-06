@@ -19,8 +19,10 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   }
   bool set_and_altrep = set && ALTREP(x);
   SEXP out;
-  SEXP xvec = Rf_protect(set_and_altrep ? altrep_materialise(x) : x);
-  ++NP;
+  if (ALTREP(x)){
+    set = true;
+  }
+  SEXP xvec = Rf_protect(altrep_materialise(x)); ++NP;
   if (set_and_altrep){
     Rf_warning("Cannot lag an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations\n\te.g. `x <- lag_(x, set = TRUE)`");
   }

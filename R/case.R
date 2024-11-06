@@ -241,7 +241,7 @@ val_match <- function(.x, ..., .default = NULL){
     # Create a vector filled with `.default` if given, otherwise NA
 
     if (!is.null(.default)){
-      out <- if (length(.default) != 1) .default else rep_len(.default, N)
+      out <- if (length(.default) != 1) r_copy(.default) else rep_len(.default, N)
     } else {
       out <- rep_len(.x[NA_integer_], N)
     }
