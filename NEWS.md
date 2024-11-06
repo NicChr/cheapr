@@ -1,5 +1,7 @@
 # cheapr (Development version)
 
+* New functions `cheapr_if_else`, `case` and `val_match`.
+
 * Fixed a regression where `NULL` elements were not being correctly dropped
 in `new_df()`.
 
