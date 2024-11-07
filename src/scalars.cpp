@@ -52,24 +52,8 @@
 // template <typename T1, typename T2>
 // int neq(T1 a, T2 b) { return a != b; }
 
-// coerceVector() that accounts for int64
-
-SEXP coerce_vector(SEXP source, SEXP target){
-  if (TYPEOF(source) == TYPEOF(target)) return source;
-  if (is_int64(target)){
-    return cpp_numeric_to_int64(Rf_coerceVector(source, REALSXP));
-  } else if (is_int64(source)){
-    SEXP temp = Rf_protect(cpp_int64_to_numeric(source));
-    SEXP out = Rf_protect(Rf_coerceVector(temp, TYPEOF(target)));
-    Rf_unprotect(2);
-    return out;
-  } else {
-    return Rf_coerceVector(source, TYPEOF(target));
-  }
-}
-
 bool implicit_na_coercion(SEXP x, SEXP target){
-  SEXP coerced = Rf_protect(coerce_vector(x, target));
+  SEXP coerced = Rf_protect(coerce_vector(x, CHEAPR_TYPEOF(target)));
   bool out = na_count(x, true) != na_count(coerced, true);
   Rf_unprotect(1);
   return out;
@@ -101,97 +85,99 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }                                                            \
                                                                \
 
-  // Alternative that works for other equality operators
-  // _IS_NA_ is a arg that accepts a function like cheapr_is_na_int
-  // for (R_xlen_t i = 0; i < n; ++i){
-  //   count += (c_op(p_x[i], _val_) && !_IS_NA_(p_x[i]));
-  // }
+// Alternative that works for other equality operators
+// _IS_NA_ is a arg that accepts a function like cheapr_is_na_int
+// for (R_xlen_t i = 0; i < n; ++i){
+//   count += (c_op(p_x[i], _val_) && !_IS_NA_(p_x[i]));
+// }
 
 
-  switch ( TYPEOF(x) ){
-  case NILSXP: {
-    Rf_unprotect(NP);
-    return count;
-  }
-  case LGLSXP:
-  case INTSXP: {
-    if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = coerce_vector(value, x)); ++NP;
-    int val = Rf_asInteger(value);
-    int *p_x = INTEGER(x);
-    // int (*c_op)(int, int);
-    // CHEAPR_OP_SWITCH;
-    if (n_cores > 1){
+switch ( CHEAPR_TYPEOF(x) ){
+case NILSXP: {
+  Rf_unprotect(NP);
+  return count;
+}
+case LGLSXP:
+case INTSXP: {
+  if (implicit_na_coercion(value, x)) break;
+  Rf_protect(value = coerce_vector(value, INTSXP)); ++NP;
+  int val = Rf_asInteger(value);
+  int *p_x = INTEGER(x);
+  // int (*c_op)(int, int);
+  // CHEAPR_OP_SWITCH;
+  if (n_cores > 1){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      CHEAPR_VAL_COUNT(val)
-    } else {
+    CHEAPR_VAL_COUNT(val)
+  } else {
 #pragma omp for simd
-      CHEAPR_VAL_COUNT(val)
-    }
-    break;
+    CHEAPR_VAL_COUNT(val)
   }
-  case REALSXP: {
-    if (implicit_na_coercion(value, x)) break;
-    if (is_int64(x)){
-      Rf_protect(value = coerce_vector(value, x)); ++NP;
-      long long int val = INTEGER64_PTR(value)[0];
-      long long int *p_x = INTEGER64_PTR(x);
-      // int (*c_op)(long long int, long long int);
-      // CHEAPR_OP_SWITCH;
-      if (n_cores > 1){
+  break;
+}
+case REALSXP: {
+  if (implicit_na_coercion(value, x)) break;
+  Rf_protect(value = coerce_vector(value, REALSXP)); ++NP;
+  double val = Rf_asReal(value);
+  double *p_x = REAL(x);
+  // int (*c_op)(double, double);
+  // CHEAPR_OP_SWITCH;
+  if (n_cores > 1){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-        CHEAPR_VAL_COUNT(val)
-      } else {
+    CHEAPR_VAL_COUNT(val)
+  } else {
 #pragma omp for simd
-        CHEAPR_VAL_COUNT(val)
-      }
-    } else {
-      Rf_protect(value = coerce_vector(value, x)); ++NP;
-      double val = Rf_asReal(value);
-      double *p_x = REAL(x);
-      // int (*c_op)(double, double);
-      // CHEAPR_OP_SWITCH;
-      if (n_cores > 1){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-        CHEAPR_VAL_COUNT(val)
-      } else {
-#pragma omp for simd
-        CHEAPR_VAL_COUNT(val)
-      }
-    }
-    break;
+    CHEAPR_VAL_COUNT(val)
   }
-  case STRSXP: {
-    if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = coerce_vector(value, x)); ++NP;
-    SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
-    const SEXP *p_x = STRING_PTR_RO(x);
-    // int (*c_op)(SEXP, SEXP);
-    // CHEAPR_OP_SWITCH;
 
-    if (n_cores > 1){
+  break;
+}
+case CHEAPR_INT64SXP: {
+  if (implicit_na_coercion(value, x)) break;
+  Rf_protect(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
+  long long int val = INTEGER64_PTR(value)[0];
+  long long int *p_x = INTEGER64_PTR(x);
+  // int (*c_op)(long long int, long long int);
+  // CHEAPR_OP_SWITCH;
+  if (n_cores > 1){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      CHEAPR_VAL_COUNT(val);
-    } else {
+    CHEAPR_VAL_COUNT(val)
+  } else {
 #pragma omp for simd
-      CHEAPR_VAL_COUNT(val);
-    }
-    break;
+    CHEAPR_VAL_COUNT(val)
   }
-  case VECSXP: {
-    if (recursive){
-    const SEXP *p_x = VECTOR_PTR_RO(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      count += scalar_count(p_x[i], value, true);
-    }
-    break;
+  break;
+}
+case STRSXP: {
+  if (implicit_na_coercion(value, x)) break;
+  Rf_protect(value = coerce_vector(value, STRSXP)); ++NP;
+  SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
+  const SEXP *p_x = STRING_PTR_RO(x);
+  // int (*c_op)(SEXP, SEXP);
+  // CHEAPR_OP_SWITCH;
+
+  if (n_cores > 1){
+#pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
+    CHEAPR_VAL_COUNT(val);
+  } else {
+#pragma omp for simd
+    CHEAPR_VAL_COUNT(val);
   }
+  break;
+}
+case VECSXP: {
+  if (recursive){
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+  for (R_xlen_t i = 0; i < n; ++i){
+    count += scalar_count(p_x[i], value, true);
   }
-  default: {
-    Rf_unprotect(NP);
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-  }
-  }
+  break;
+}
+}
+default: {
+  Rf_unprotect(NP);
+  Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+}
+}
   Rf_unprotect(NP);
   return count;
 }
@@ -238,7 +224,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   bool eq = false;
 
   SEXP out = Rf_protect(R_NilValue); ++NP;
-  switch ( TYPEOF(x) ){
+  switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
     break;
   }
@@ -250,8 +236,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SEXP temp = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
     int *p_out = INTEGER(temp);
-    Rf_protect(value = coerce_vector(value, x)); ++NP;
-    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
+    Rf_protect(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+    Rf_protect(replace = coerce_vector(replace, CHEAPR_TYPEOF(x))); ++NP;
     int val = Rf_asInteger(value);
     int repl = Rf_asInteger(replace);
     int *p_x = INTEGER(x);
@@ -277,29 +263,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     out = x;
     break;
   }
-    Rf_protect(value = coerce_vector(value, x)); ++NP;
-    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
-    if (is_int64(x)){
-    SEXP temp = Rf_protect(Rf_allocVector(REALSXP, 0)); ++NP;
-    long long *p_out = INTEGER64_PTR(temp);
-    long long val = INTEGER64_PTR(value)[0];
-    long long repl = INTEGER64_PTR(replace)[0];
-    long long *p_x = INTEGER64_PTR(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      eq = p_x[i] == val;
-      if (!any_eq && eq){
-        any_eq = true;
-        out = Rf_protect(Rf_duplicate(x)); ++NP;
-        // Change where pointer is pointing to
-        p_out = INTEGER64_PTR(out);
-      }
-      if (eq) p_out[i] = repl;
-    }
-    // Make sure to return x if there were no values to replace
-    if (!any_eq){
-      out = Rf_protect(x); ++NP;
-    }
-  } else {
+    Rf_protect(value = coerce_vector(value, REALSXP)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, REALSXP)); ++NP;
     SEXP temp = Rf_protect(Rf_allocVector(REALSXP, 0)); ++NP;
     double *p_out = REAL(temp);
     double val = Rf_asReal(value);
@@ -336,16 +301,43 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
         out = Rf_protect(x); ++NP;
       }
     }
+    break;
   }
-  break;
+  case CHEAPR_INT64SXP: {
+    if (implicit_na_coercion(value, x)){
+    out = x;
+    break;
+  }
+    Rf_protect(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, CHEAPR_INT64SXP)); ++NP;
+    SEXP temp = Rf_protect(Rf_allocVector(REALSXP, 0)); ++NP;
+    long long *p_out = INTEGER64_PTR(temp);
+    long long val = INTEGER64_PTR(value)[0];
+    long long repl = INTEGER64_PTR(replace)[0];
+    long long *p_x = INTEGER64_PTR(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      eq = p_x[i] == val;
+      if (!any_eq && eq){
+        any_eq = true;
+        out = Rf_protect(Rf_duplicate(x)); ++NP;
+        // Change where pointer is pointing to
+        p_out = INTEGER64_PTR(out);
+      }
+      if (eq) p_out[i] = repl;
+    }
+    // Make sure to return x if there were no values to replace
+    if (!any_eq){
+      out = Rf_protect(x); ++NP;
+    }
+    break;
   }
   case STRSXP: {
     if (implicit_na_coercion(value, x)){
     out = x;
     break;
   }
-    Rf_protect(value = coerce_vector(value, x)); ++NP;
-    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
+    Rf_protect(value = coerce_vector(value, STRSXP)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, STRSXP)); ++NP;
     SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
     SEXP repl = Rf_protect(Rf_asChar(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -407,15 +399,15 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   Rf_protect(x = altrep_materialise(x)); ++NP;
 
-  switch ( TYPEOF(x) ){
+  switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
     break;
   }
   case LGLSXP:
   case INTSXP: {
     if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = coerce_vector(value, x)); ++NP;
-    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
+    Rf_protect(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+    Rf_protect(replace = coerce_vector(replace, CHEAPR_TYPEOF(x))); ++NP;
     int val = Rf_asInteger(value);
     int repl = Rf_asInteger(replace);
     int *p_x = INTEGER(x);
@@ -428,38 +420,43 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   case REALSXP: {
     if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = coerce_vector(value, x)); ++NP;
-    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
-    if (is_int64(x)){
-      long long val = INTEGER64_PTR(value)[0];
-      long long repl = INTEGER64_PTR(replace)[0];
-      long long *p_x = INTEGER64_PTR(x);
+    Rf_protect(value = coerce_vector(value, REALSXP)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, REALSXP)); ++NP;
+
+    double val = Rf_asReal(value);
+    double repl = Rf_asReal(replace);
+    double *p_x = REAL(x);
+    if (val_is_na){
+      OMP_FOR_SIMD
+      for (R_xlen_t i = 0; i < n; ++i){
+        if (p_x[i] != p_x[i]) p_x[i] = repl;
+      }
+    } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
         if (p_x[i] == val) p_x[i] = repl;
       }
-    } else {
-      double val = Rf_asReal(value);
-      double repl = Rf_asReal(replace);
-      double *p_x = REAL(x);
-      if (val_is_na){
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n; ++i){
-          if (p_x[i] != p_x[i]) p_x[i] = repl;
-        }
-      } else {
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n; ++i){
-          if (p_x[i] == val) p_x[i] = repl;
-        }
-      }
+    }
+    break;
+  }
+  case CHEAPR_INT64SXP: {
+    if (implicit_na_coercion(value, x)) break;
+    Rf_protect(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, CHEAPR_INT64SXP)); ++NP;
+
+    long long val = INTEGER64_PTR(value)[0];
+    long long repl = INTEGER64_PTR(replace)[0];
+    long long *p_x = INTEGER64_PTR(x);
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      if (p_x[i] == val) p_x[i] = repl;
     }
     break;
   }
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
-    Rf_protect(value = coerce_vector(value, x)); ++NP;
-    Rf_protect(replace = coerce_vector(replace, x)); ++NP;
+    Rf_protect(value = coerce_vector(value, STRSXP)); ++NP;
+    Rf_protect(replace = coerce_vector(replace, STRSXP)); ++NP;
     SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
     SEXP repl = Rf_protect(Rf_asChar(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);

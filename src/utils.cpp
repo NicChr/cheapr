@@ -710,6 +710,21 @@ SEXP cpp_set_or(SEXP x, SEXP y){
   return x;
 }
 
+// coerceVector() that accounts for int64
+
+SEXP coerce_vector(SEXP source, SEXPTYPE type){
+  if (type == CHEAPR_INT64SXP){
+    return cpp_numeric_to_int64(Rf_coerceVector(source, REALSXP));
+  } else if (is_int64(source)){
+    SEXP temp = Rf_protect(cpp_int64_to_numeric(source));
+    SEXP out = Rf_protect(Rf_coerceVector(temp, type));
+    Rf_unprotect(2);
+    return out;
+  } else {
+    return Rf_coerceVector(source, type);
+  }
+}
+
 // SEXP cpp_c(SEXP x){
 //   if (!Rf_isVectorList(x)){
 //     Rf_error("x must be a list of vectors");

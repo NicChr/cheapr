@@ -80,6 +80,14 @@
 #define CHEAPR_OMP_THRESHOLD 100000
 #endif
 
+#ifndef CHEAPR_INT64SXP
+#define CHEAPR_INT64SXP 64
+#endif
+
+#ifndef CHEAPR_TYPEOF
+#define CHEAPR_TYPEOF(x)  ( (SEXPTYPE) (Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x)) )
+#endif
+
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
@@ -108,7 +116,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
 void cpp_copy_names(SEXP source, SEXP target, bool deep_copy);
 void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy);
 SEXP cpp_sset_df(SEXP x, SEXP indices);
-SEXP coerce_vector(SEXP source, SEXP target);
+SEXP coerce_vector(SEXP source, SEXPTYPE type);
 bool implicit_na_coercion(SEXP x, SEXP target);
 
 #endif

@@ -163,7 +163,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   int NP = 0;
   R_xlen_t n = Rf_xlength(x);
 
-  switch(TYPEOF(x)){
+  switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
@@ -187,8 +187,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     Rf_unprotect(NP);
     return out;
   }
-  default: {
-    if (is_int64(x)){
+  case CHEAPR_INT64SXP: {
     SEXP out = Rf_protect(Rf_allocVector(REALSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
       long long int *p_x = INTEGER64_PTR(x);
@@ -209,7 +208,8 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     }
     Rf_unprotect(NP);
     return out;
-  } else {
+  }
+  default: {
     double *p_x = REAL(x);
     SEXP out = Rf_protect(Rf_allocVector(REALSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
@@ -236,7 +236,6 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     return out;
   }
   }
-  }
 }
 
 // Lowest common multiple using GCD Euclidean algorithm
@@ -249,7 +248,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
   R_xlen_t n = Rf_xlength(x);
   int NP = 0;
 
-  switch(TYPEOF(x)){
+  switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
@@ -282,8 +281,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     Rf_unprotect(NP);
     return out;
   }
-  default: {
-    if (is_int64(x)){
+  case CHEAPR_INT64SXP: {
     long long *p_x = INTEGER64_PTR(x);
 
     SEXP out = Rf_protect(Rf_allocVector(REALSXP, n == 0 ? 0 : 1)); ++NP;
@@ -303,7 +301,8 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     }
     Rf_unprotect(NP);
     return out;
-  } else {
+  }
+  default: {
     double *p_x = REAL(x);
     SEXP out = Rf_protect(Rf_allocVector(REALSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
@@ -320,7 +319,6 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     }
     Rf_unprotect(NP);
     return out;
-  }
   }
   }
 }

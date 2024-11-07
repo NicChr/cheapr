@@ -33,7 +33,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   int NP = 0;
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   bool do_parallel = n_cores > 1;
-  switch ( TYPEOF(x) ){
+  switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
     break;
   }
@@ -49,8 +49,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     }
     break;
   }
-  case REALSXP: {
-    if (is_int64(x)){
+  case CHEAPR_INT64SXP: {
     long long *p_x = INTEGER64_PTR(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
@@ -59,7 +58,9 @@ R_xlen_t na_count(SEXP x, bool recursive){
       OMP_FOR_SIMD
       CHEAPR_COUNT_NA(cheapr_is_na_int64);
     }
-  } else {
+    break;
+  }
+  case REALSXP: {
     double *p_x = REAL(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
@@ -68,7 +69,6 @@ R_xlen_t na_count(SEXP x, bool recursive){
       OMP_FOR_SIMD
       CHEAPR_COUNT_NA(cheapr_is_na_dbl);
     }
-  }
     break;
   }
   case STRSXP: {
@@ -129,7 +129,7 @@ bool cpp_any_na(SEXP x, bool recursive){
   int NP = 0;
   R_xlen_t n = Rf_xlength(x);
   bool out = false;
-  switch ( TYPEOF(x) ){
+  switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
     return out;
   }
@@ -139,14 +139,14 @@ bool cpp_any_na(SEXP x, bool recursive){
     CHEAPR_ANY_NA(cheapr_is_na_int);
     break;
   }
-  case REALSXP: {
-    if (is_int64(x)){
+  case CHEAPR_INT64SXP: {
     long long *p_x = INTEGER64_PTR(x);
     CHEAPR_ANY_NA(cheapr_is_na_int64);
-  } else {
+    break;
+  }
+  case REALSXP: {
     double *p_x = REAL(x);
     CHEAPR_ANY_NA(cheapr_is_na_dbl);
-  }
     break;
   }
   case STRSXP: {
@@ -194,21 +194,21 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
       return false;
     }
   }
-  switch ( TYPEOF(x) ){
+  switch ( CHEAPR_TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
     CHEAPR_ALL_NA(cheapr_is_na_int);
     break;
   }
-  case REALSXP: {
-    if (is_int64(x)){
+  case CHEAPR_INT64SXP: {
     long long *p_x = INTEGER64_PTR(x);
     CHEAPR_ALL_NA(cheapr_is_na_int64);
-  } else {
+    break;
+  }
+  case REALSXP: {
     double *p_x = REAL(x);
     CHEAPR_ALL_NA(cheapr_is_na_dbl);
-  }
     break;
   }
   case STRSXP: {
@@ -253,7 +253,7 @@ SEXP cpp_is_na(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   SEXP out;
-  switch ( TYPEOF(x) ){
+  switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
     out = Rf_protect(Rf_allocVector(LGLSXP, 0));
     break;
@@ -273,29 +273,30 @@ SEXP cpp_is_na(SEXP x){
 
     break;
   }
+  case CHEAPR_INT64SXP: {
+    out = Rf_protect(Rf_allocVector(LGLSXP, n));
+    int *p_out = LOGICAL(out);
+    long long *p_x = INTEGER64_PTR(x);
+    if (n_cores > 1){
+      OMP_PARALLEL_FOR_SIMD
+      CHEAPR_VEC_IS_NA(cheapr_is_na_int64);
+    } else {
+      OMP_FOR_SIMD
+      CHEAPR_VEC_IS_NA(cheapr_is_na_int64);
+    }
+    break;
+  }
   case REALSXP: {
     out = Rf_protect(Rf_allocVector(LGLSXP, n));
     int *p_out = LOGICAL(out);
-    if (is_int64(x)){
-      long long *p_x = INTEGER64_PTR(x);
-      if (n_cores > 1){
-        OMP_PARALLEL_FOR_SIMD
-        CHEAPR_VEC_IS_NA(cheapr_is_na_int64);
-      } else {
-        OMP_FOR_SIMD
-        CHEAPR_VEC_IS_NA(cheapr_is_na_int64);
-      }
+    double *p_x = REAL(x);
+    if (n_cores > 1){
+      OMP_PARALLEL_FOR_SIMD
+      CHEAPR_VEC_IS_NA(cheapr_is_na_dbl);
     } else {
-      double *p_x = REAL(x);
-      if (n_cores > 1){
-        OMP_PARALLEL_FOR_SIMD
-        CHEAPR_VEC_IS_NA(cheapr_is_na_dbl);
-      } else {
-        OMP_FOR_SIMD
-        CHEAPR_VEC_IS_NA(cheapr_is_na_dbl);
-      }
+      OMP_FOR_SIMD
+      CHEAPR_VEC_IS_NA(cheapr_is_na_dbl);
     }
-
     break;
   }
   case STRSXP: {
