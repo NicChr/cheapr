@@ -31,7 +31,7 @@ the philosophy that cheapr aims to follow.
 
 ## Installation
 
-You can install cheapr like so: 
+You can install cheapr like so:
 
 ``` r
 install.packages("cheapr")
