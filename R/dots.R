@@ -13,19 +13,18 @@
 #' @export
 named_list <- function(..., .keep_null = TRUE){
   dots <- list(...)
-  if (!.keep_null){
-    dots <- cpp_list_rm_null(dots)
-  }
-
   dot_nms <- names(dots)
 
   if (is.null(dot_nms)){
-    names(dots) <- do.call(expr_names, dots)
+    names(dots) <- expr_names(...)
   } else if (!all(nzchar(dot_nms))){
     empty <- which_(nzchar(dot_nms), invert = TRUE)
-    expr_nms <- do.call(expr_names, dots)
+    expr_nms <- expr_names(...)
     dot_nms[empty] <- expr_nms[empty]
     names(dots) <- dot_nms
+  }
+  if (!.keep_null){
+    dots <- cpp_list_rm_null(dots)
   }
   dots
 }
