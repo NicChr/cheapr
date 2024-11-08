@@ -31,7 +31,7 @@ the philosophy that cheapr aims to follow.
 
 ## Installation
 
-You can install cheapr like so:
+You can install cheapr like so: 
 
 ``` r
 install.packages("cheapr")
@@ -371,3 +371,53 @@ b <- seq(0, max(x), 0.2)
 mark(cheapr_cut = as_discrete(x, b, left = FALSE), 
      base_cut = cut(x, b))
 ```
+
+### `cheapr_if_else`
+
+A cheap alternative to `ifelse`
+
+```{r}
+mark(
+  cheapr_if_else(x >= 0, "pos", "neg"),
+  ifelse(x >= 0, "pos", "neg"),
+  data.table::fifelse(x >= 0, "pos", "neg")
+)
+```
+
+### `case`
+
+cheapr's version of a case-when statement, with mostly the same arguments
+as `dplyr::case_when` but similar efficiency as `data.table::fcase`
+
+```{r}
+mark(case(
+    x >= 0 ~ "pos", 
+    x < 0 ~ "neg", 
+    .default = "Unknown"
+),
+data.table::fcase(
+    x >= 0, "pos", 
+    x < 0, "neg", 
+    rep_len(TRUE, length(x)), "Unknown"
+))
+```
+
+`val_match` is an even cheaper special variant of `case` when all LHS 
+expressions are length-1 vectors, i.e scalars
+
+```{r}
+x <- round(rnorm(10^7))
+
+mark(
+  val_match(x, 1 ~ Inf, 2 ~ -Inf, .default = NaN),
+     case(x == 1 ~ Inf, 
+          x == 2 ~ -Inf, 
+          .default = NaN),
+     data.table::fcase(x == 1, Inf, 
+          x == 2, -Inf, 
+          rep_len(TRUE, length(x)), NaN)
+     )
+```
+
+
+
