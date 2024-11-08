@@ -286,8 +286,7 @@ cheapr_rev <- function(x){
   if (is_base_atomic(x)){
     .Call(`_cheapr_cpp_rev`, x, FALSE)
   } else {
-    n <- vector_length(x)
-    sset(x, n:min(0L, n))
+    sset(x, vector_length(x):0)
   }
 }
 cheapr_sd <- function(x, na.rm = TRUE){
