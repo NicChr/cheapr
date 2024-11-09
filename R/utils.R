@@ -34,16 +34,7 @@ check_is_df <- function(x){
     stop(paste(deparse2(substitute(x)), "must be a data frame."))
   }
 }
-df_add_cols <- function(data, cols){
-  nms <- names(cols)
-  if (is.null(nms)){
-    stop("cols must be a named list")
-  }
-  for (i in seq_along(cols)){
-    data[[nms[i]]] <- cols[[i]]
-  }
-  data
-}
+
 which_in <- function(x, table){
   which_not_na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
 }
@@ -65,6 +56,14 @@ cheapr_rep_len <- function(x, length.out){
     sset(x, rep_len(attr(x, "row.names"), length.out))
   } else {
     rep(x, length.out = length.out)
+  }
+}
+
+cheapr_recycle <- function(x, length){
+  if (length == vector_length(x)){
+    x
+  } else {
+    cheapr_rep_len(x, length)
   }
 }
 
@@ -221,6 +220,20 @@ cheapr_table <- function(x, names = TRUE, order = FALSE, na_exclude = FALSE){
   if (names){
     names(out) <- lvls
   }
+  out
+}
+
+df_add_cols <- function(data, cols){
+  if (!(is.list(cols) && !is.null(names(cols)))){
+    stop("cols must be a named list")
+  }
+  N <- length(attr(data, "row.names"))
+  out <- unclass(data)
+  temp <- unclass(cols)
+  for (col in names(temp)){
+    out[[col]] <- cheapr_recycle(temp[[col]], length = N)
+  }
+  class(out) <- class(data)
   out
 }
 

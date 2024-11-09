@@ -125,7 +125,7 @@ intersect_ <- function(x, y, dups = TRUE){
 #' @export
 cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
                         right = TRUE, dig.lab = 3L, ordered_result = FALSE, ...){
-  .Deprecated(old = "cut_numeric", new = "as_discrete")
+  # .Deprecated(old = "cut_numeric", new = "as_discrete")
   if (!is.numeric(x))
     stop("'x' must be numeric")
   if (length(breaks) == 1L) {
