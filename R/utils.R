@@ -190,7 +190,13 @@ combine_factors <- function(...){
     if (is.factor(x)) factor_as_character(x) else as.character(x)
   }
   factors <- list(...)
-  levels <- lapply(factors, get_levels)
+  levels <- new_list(length(factors))
+  exclude_na <- TRUE
+  for (i in seq_along(levels)){
+    f <- factors[[i]]
+    levels[[i]] <- get_levels(f)
+    exclude_na <- exclude_na && !any_na(levels(f))
+  }
 
   # Unique combined levels
   new_levels <- collapse::funique(collapse::vec(levels))
@@ -198,8 +204,10 @@ combine_factors <- function(...){
   characters <- lapply(factors, to_char)
 
   # Combine all factor elements (as character vectors)
+  # factor_(unlist(characters, recursive = FALSE), levels = new_levels,
+  #         na_exclude = TRUE)
   factor_(unlist(characters, recursive = FALSE), levels = new_levels,
-          na_exclude = !any_na(new_levels))
+          na_exclude = exclude_na)
 }
 
 # A very fast 1-D array frequency table

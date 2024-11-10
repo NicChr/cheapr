@@ -30,14 +30,18 @@ cheapr_if_else <- function(condition, true, false, na = false[NA_integer_]){
   }
 
   if (is.factor(true) || is.factor(false) || is.factor(na)){
-    template <- combine_factors(true[1L], false[1L], na[1L])[0L]
+    template <- combine_factors(true[1L], false[1L], na[1L])
+    template_lvls <- levels(template)
+    true <- factor_(true, levels = template_lvls)
+    false <- factor_(false, levels = template_lvls)
+    na <- factor_(na, levels = template_lvls)
   } else {
     template <- c(true[1L], false[1L], na[1L])[0L]
+    true <- cast(true, template)
+    false <- cast(false, template)
+    na <- cast(na, template)
   }
 
-  true <- cast(true, template)
-  false <- cast(false, template)
-  na <- cast(na, template)
 
   if (is_base_atomic(true) && is_base_atomic(false) && is_base_atomic(na)){
     return(`mostattributes<-`(
