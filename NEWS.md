@@ -1,4 +1,4 @@
-# cheapr (Development version)
+# cheapr 0.9.9-2
 
 * New functions `cheapr_if_else`, `case` and `val_match`.
 
