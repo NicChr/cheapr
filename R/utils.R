@@ -191,21 +191,20 @@ combine_factors <- function(...){
   }
   factors <- list(...)
   levels <- new_list(length(factors))
+  characters <- new_list(length(factors))
   exclude_na <- TRUE
   for (i in seq_along(levels)){
     f <- factors[[i]]
     levels[[i]] <- get_levels(f)
+    characters[[i]] <- to_char(f)
     exclude_na <- exclude_na && !any_na(levels(f))
+
   }
 
   # Unique combined levels
   new_levels <- collapse::funique(collapse::vec(levels))
 
-  characters <- lapply(factors, to_char)
-
   # Combine all factor elements (as character vectors)
-  # factor_(unlist(characters, recursive = FALSE), levels = new_levels,
-  #         na_exclude = TRUE)
   factor_(unlist(characters, recursive = FALSE), levels = new_levels,
           na_exclude = exclude_na)
 }
