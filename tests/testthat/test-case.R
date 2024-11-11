@@ -54,6 +54,24 @@ test_that("matching", {
       target
     )
 
+    x
+    expect_identical(
+      case(x == 100 ~ 1L,
+           is.na(x) ~ 2L,
+           .default = x),
+      val_match(x, 100 ~ 1L,
+                NA ~ 2L,
+                .default = x)
+    )
+    expect_identical(
+      case(x == 100 ~ 1L,
+           is.na(x) ~ rep(2L, length(x)),
+           .default = x),
+      val_match(x, 100 ~ 1L,
+                NA ~ rep(2L, length(x)),
+                .default = x)
+    )
+
   },
   .seed = 12345)
 })
