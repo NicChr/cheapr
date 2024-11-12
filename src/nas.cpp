@@ -710,7 +710,6 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
   R_xlen_t num_row = Rf_nrows(x);
   R_xlen_t num_col = Rf_ncols(x);
   R_xlen_t n = Rf_xlength(x);
-  bool new_col;
   SEXP out = Rf_protect(Rf_allocVector(INTSXP, num_row));
   int *p_out = INTEGER(out);
   memset(p_out, 0, num_row * sizeof(int));
@@ -719,48 +718,32 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
     case LGLSXP:
     case INTSXP: {
       int *p_x = INTEGER(x);
-      for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
-        new_col = rowi == num_row;
-        if (new_col){
-          ++coli;
-          rowi = 0;
-        }
+      for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
+        if (rowi == num_row) rowi = 0;
         p_out[rowi] += cheapr_is_na_int(p_x[i]);
       }
       break;
     }
     case REALSXP: {
       double *p_x = REAL(x);
-      for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
-        new_col = rowi == num_row;
-        if (new_col){
-          ++coli;
-          rowi = 0;
-        }
+      for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
+        if (rowi == num_row) rowi = 0;
         p_out[rowi] += cheapr_is_na_dbl(p_x[i]);
       }
       break;
     }
     case CHEAPR_INT64SXP: {
       long long *p_x = INTEGER64_PTR(x);
-      for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
-        new_col = rowi == num_row;
-        if (new_col){
-          ++coli;
-          rowi = 0;
-        }
+      for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
+        if (rowi == num_row) rowi = 0;
         p_out[rowi] += cheapr_is_na_int64(p_x[i]);
       }
       break;
     }
     case STRSXP: {
       const SEXP *p_x = STRING_PTR_RO(x);
-      for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
-        new_col = rowi == num_row;
-        if (new_col){
-          ++coli;
-          rowi = 0;
-        }
+      for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
+        if (rowi == num_row) rowi = 0;
         p_out[rowi] += cheapr_is_na_str(p_x[i]);
       }
       break;
@@ -770,12 +753,8 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
     }
     case CPLXSXP: {
       Rcomplex *p_x = COMPLEX(x);
-      for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
-        new_col = rowi == num_row;
-        if (new_col){
-          ++coli;
-          rowi = 0;
-        }
+      for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
+        if (rowi == num_row) rowi = 0;
         p_out[rowi] += cheapr_is_na_cplx(p_x[i]);
       }
       break;
