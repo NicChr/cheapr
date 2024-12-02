@@ -714,7 +714,10 @@ SEXP cpp_set_or(SEXP x, SEXP y){
 
 SEXP coerce_vector(SEXP source, SEXPTYPE type){
   if (type == CHEAPR_INT64SXP){
-    return cpp_numeric_to_int64(Rf_coerceVector(source, REALSXP));
+    SEXP temp = Rf_protect(Rf_coerceVector(source, REALSXP));
+    SEXP out = Rf_protect(cpp_numeric_to_int64(temp));
+    Rf_unprotect(2);
+    return out;
   } else if (is_int64(source)){
     SEXP temp = Rf_protect(cpp_int64_to_numeric(source));
     SEXP out = Rf_protect(Rf_coerceVector(temp, type));

@@ -77,7 +77,16 @@ get_breaks.numeric <- function(x, n = 10,
   tol <- sqrt(.Machine$double.eps)
 
   if (zero_range){
-    return(seq(start - 0.05, end + 0.05, by = 0.1 / max((n - 1), 1)))
+    if (isTRUE(start == 0)){
+      rng_width <- 1
+    } else {
+      rng_width <- abs(start)
+    }
+    return(
+      seq(start - (rng_width / 1000),
+          end + (rng_width / 1000),
+          length.out = (n + 1))
+    )
   }
 
   if (!pretty){
