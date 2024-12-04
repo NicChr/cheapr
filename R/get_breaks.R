@@ -103,6 +103,7 @@ get_breaks.numeric <- function(x, n = 10,
 
     # Making breaks prettier
 
+    # This is the number of orders of magnitude the data spans
     scale_diff <- log_scale(rng_width)
 
     # If large range & relatively small starting value

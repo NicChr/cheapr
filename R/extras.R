@@ -125,14 +125,13 @@ intersect_ <- function(x, y, dups = TRUE){
 #' @export
 cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
                         right = TRUE, dig.lab = 3L, ordered_result = FALSE, ...){
-  # .Deprecated(old = "cut_numeric", new = "as_discrete")
   if (!is.numeric(x))
     stop("'x' must be numeric")
   if (length(breaks) == 1L) {
     if (is.na(breaks) || breaks < 2L)
       stop("invalid number of intervals")
     nb <- as.integer(breaks + 1)
-    dx <- diff(rx <- collapse::frange(x, na.rm = TRUE))
+    dx <- diff(rx <- range(x, na.rm = TRUE))
     if (isTRUE(dx == 0)) {
       dx <- if (rx[1L] != 0)
         abs(rx[1L])
@@ -176,7 +175,6 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
     stop("number of intervals and length of 'labels' differ")
   code <- cpp_bin(x, breaks, codes = TRUE, right = right,
                   include_lowest = include.lowest, include_oob = FALSE)
-  # code <- .bincode(x, breaks, right, include.lowest)
   if (!codes.only) {
     levels(code) <- as.character(labels)
     class(code) <- c(if (ordered_result) "ordered" else character(0), "factor")
@@ -320,11 +318,12 @@ cast <- function(x, template){
   }
 }
 
-# duplicated_ <- function(x, .all = FALSE){
+# is_duplicate <- function(x, .all = FALSE){
 #   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
-#   sizes <- attr(groups, "group.sizes")
+#   sizes <- attr(groups, "group.sizes", TRUE)
+#   starts <- attr(groups, "starts", TRUE)
 #   out <- (sizes > 1L)[groups]
-#   out[attr(groups, "starts")] <- FALSE
+#   out[starts] <- FALSE
 #   out
 # }
 # duplicates <- function(x, .all = FALSE, .count = FALSE){

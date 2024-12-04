@@ -89,7 +89,8 @@
 #'                        include.lowest = FALSE,
 #'                        ordered.result = FALSE){
 #'   if (length(breaks) == 1){
-#'     breaks <- get_breaks(x, breaks, pretty = FALSE)
+#'     breaks <- get_breaks(x, breaks, pretty = FALSE,
+#'                          expand_min = FALSE, expand_max = FALSE)
 #'     adj <- diff(range(breaks)) * 0.001
 #'     breaks[1] <- breaks[1] - adj
 #'     breaks[length(breaks)] <- breaks[length(breaks)] + adj
