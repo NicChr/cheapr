@@ -59,7 +59,7 @@ get_breaks <- function(x, n = 10, ...){
 get_breaks.numeric <- function(x, n = 10,
                                pretty = TRUE,
                                expand_min = FALSE,
-                               expand_max = TRUE,
+                               expand_max = pretty,
                                ...){
   check_length(n, 1L)
   stopifnot(n >= 1)
@@ -126,14 +126,16 @@ get_breaks.numeric <- function(x, n = 10,
     } else if (bin_width > 5 && bin_width < 10){
       adj_width <- 10
     } else if (bin_width < 1){
-      adj_width <- nearest_ceiling(bin_width, (10^(ceiling(log10(bin_width)))) / 2)
+      # adj_width <- nearest_ceiling(bin_width, (10^(ceiling(log10(bin_width)))) / 2)
+
+      # Probably a better specification
+      adj_width <- nearest_ceiling(bin_width, (10^(floor(log10(bin_width)))) * 5)
       } else {
       adj_width <- pretty_ceiling(bin_width)
       }
 
     # n is our first best guess at number of final breaks
     n_breaks <- n
-
 
     # These functions only work on length-1 vectors
 
@@ -211,7 +213,12 @@ get_breaks.numeric <- function(x, n = 10,
       n_breaks <- n_breaks + 1
       adj_start <- adj_start - adj_width
     }
-    seq(adj_start, by = adj_width, length.out = n_breaks)
+
+    m_factor <- 1e10
+
+    seq( round(adj_start * m_factor) / m_factor,
+         by = round(adj_width * m_factor) / m_factor,
+         length.out = n_breaks)
   }
 }
 

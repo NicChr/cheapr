@@ -13,7 +13,7 @@ get_breaks(x, n = 10, ...)
   n = 10,
   pretty = TRUE,
   expand_min = FALSE,
-  expand_max = TRUE,
+  expand_max = pretty,
   ...
 )
 
