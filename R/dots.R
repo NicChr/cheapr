@@ -30,5 +30,5 @@ named_list <- function(..., .keep_null = TRUE){
 }
 expr_names <- function(...){
   # as.character(substitute(c(...))[-1L])
-  vapply(substitute(alist(...))[-1L], deparse2, "", USE.NAMES = FALSE)
+  vapply(exprs(...), deparse2, "", USE.NAMES = FALSE)
 }

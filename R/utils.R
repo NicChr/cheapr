@@ -271,6 +271,11 @@ df_add_cols <- function(data, cols){
   out
 }
 
+# unevaluated expression list
+exprs <- function(...){
+  as.list(substitute(alist(...)))[-1]
+}
+
 # Just a wrapper with a cheaper alternative to `c.factor()`
 # cheapr_c <- function(..., .check = TRUE){
 #   dots <- list(...)

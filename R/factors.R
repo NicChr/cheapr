@@ -321,7 +321,7 @@ levels_reorder <- function(x, order_by, decreasing = FALSE){
 levels_rename <- function(x, ..., .fun = NULL){
   check_is_factor(x)
   lvls <- levels(x)
-  key_value_list <- lapply(substitute(alist(...))[-1], as.character)
+  key_value_list <- lapply(exprs(...), as.character)
   if (length(key_value_list) > 0){
     if (collapse::fnunique(lengths_(key_value_list)) > 1){
       stop("Please supply key-value pairs to ...")

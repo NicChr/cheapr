@@ -42,7 +42,7 @@
 #' @rdname case
 #' @export
 case <- function(..., .default = NULL){
-  conditions <- as.list(substitute(alist(...)))[-1]
+  conditions <- exprs(...)
   default_val <- .default
   n_conditions <- length(conditions)
 
@@ -90,6 +90,8 @@ case <- function(..., .default = NULL){
     out[true_locs] <- rhs[true_locs]
   }
 
+  # Initialise a logical that will keep track of
+  # which conditions have been met
   lgl_or <- r_copy(lgl)
 
   if (n_conditions >= 2){
@@ -111,6 +113,11 @@ case <- function(..., .default = NULL){
       if (!length(rhs) %in% c(1, out_size)){
         stop("rhs must be of length 1 or length of lhs")
       }
+
+      # 1. Copy elements from user condition into our temporary lgl3 vector
+      # 2. Replace previous evaluated `TRUE` elements with `FALSE`
+      # to keep priority of former conditions
+      # 3. Do `lgl_or | lgl` to keep track of evaluated `TRUE` elements
 
       cpp_set_copy_elements(source = lgl, target = lgl3)
       cpp_loc_set_replace(lgl3, val_find(lgl_or, TRUE), FALSE)
@@ -151,7 +158,7 @@ case <- function(..., .default = NULL){
 #' @rdname case
 #' @export
 val_match <- function(.x, ..., .default = NULL){
-  exprs <- as.list(substitute(alist(...)))[-1]
+  exprs <- exprs(...)
 
   N <- length(.x)
   n_exprs <- length(exprs)
