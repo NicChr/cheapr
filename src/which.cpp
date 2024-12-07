@@ -637,6 +637,160 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
   }
 }
 
+// like cpp_which_val but an optional n_values arg to skip counting
+SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
+  int NP = 0;
+  R_xlen_t n = Rf_xlength(x);
+  bool is_long = (n > integer_max_);
+  if (Rf_length(value) != 1){
+    Rf_error("value must be a vector of length 1");
+  }
+  if (Rf_isVectorList(x)){
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+  }
+
+  bool val_is_na = cpp_any_na(value, true);
+
+  if (implicit_na_coercion(value, x)){
+    Rf_unprotect(NP);
+    Rf_error("Value has been implicitly converted to NA, please check");
+  }
+
+  R_xlen_t n_vals = Rf_isNull(n_values) ? scalar_count(x, value, false) : Rf_asReal(n_values);
+  R_xlen_t out_size = invert ? n - n_vals : n_vals;
+  R_xlen_t whichi = 0;
+  R_xlen_t i = 0;
+  switch ( CHEAPR_TYPEOF(x) ){
+  case LGLSXP:
+  case INTSXP: {
+    SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
+    ++NP;
+    Rf_protect(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+    int val = Rf_asInteger(value);
+    int *p_x = INTEGER(x);
+    if (is_long){
+      double *p_out = REAL(out);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
+    } else {
+      int *p_out = INTEGER(out);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
+    }
+    Rf_unprotect(NP);
+    return out;
+  }
+  case REALSXP: {
+    SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
+    ++NP;
+    Rf_protect(value = coerce_vector(value, REALSXP)); ++NP;
+    double val = Rf_asReal(value);
+    double *p_x = REAL(x);
+    if (val_is_na){
+      if (is_long){
+        double *p_out = REAL(out);
+        if (invert){
+          while (whichi < out_size){
+            p_out[whichi] = i + 1;
+            whichi += !cheapr_is_na_dbl(p_x[i]);
+            ++i;
+          }
+        } else {
+          while (whichi < out_size){
+            p_out[whichi] = i + 1;
+            whichi += cheapr_is_na_dbl(p_x[i]);
+            ++i;
+          }
+        }
+      } else {
+        int *p_out = INTEGER(out);
+        if (invert){
+          CHEAPR_WHICH_VAL_INVERTED(val);
+        } else {
+          CHEAPR_WHICH_VAL(val);
+        }
+      }
+    } else {
+      if (is_long){
+        double *p_out = REAL(out);
+        if (invert){
+          CHEAPR_WHICH_VAL_INVERTED(val);
+        } else {
+          CHEAPR_WHICH_VAL(val);
+        }
+      } else {
+        int *p_out = INTEGER(out);
+        if (invert){
+          CHEAPR_WHICH_VAL_INVERTED(val);
+        } else {
+          CHEAPR_WHICH_VAL(val);
+        }
+      }
+    }
+    Rf_unprotect(NP);
+    return out;
+  }
+  case CHEAPR_INT64SXP: {
+    SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
+    ++NP;
+    Rf_protect(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
+    long long int val = INTEGER64_PTR(value)[0];
+    long long int *p_x = INTEGER64_PTR(x);
+    if (is_long){
+      double *p_out = REAL(out);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
+    } else {
+      int *p_out = INTEGER(out);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
+    }
+    Rf_unprotect(NP);
+    return out;
+  }
+  case STRSXP: {
+    SEXP out = Rf_protect(Rf_allocVector(is_long ? REALSXP : INTSXP, out_size));
+    ++NP;
+    Rf_protect(value = coerce_vector(value, STRSXP)); ++NP;
+    SEXP val = Rf_protect(Rf_asChar(value)); ++NP;
+    const SEXP *p_x = STRING_PTR_RO(x);
+    if (is_long){
+      double *p_out = REAL(out);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
+    } else {
+      int *p_out = INTEGER(out);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
+    }
+    Rf_unprotect(NP);
+    return out;
+  }
+  default: {
+    Rf_unprotect(NP);
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+  }
+  }
+}
+
 
 // 2 more which() alternatives
 // list cpp_which2(SEXP x){

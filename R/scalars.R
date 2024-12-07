@@ -69,7 +69,10 @@ val_count <- function(x, value, recursive = TRUE){
 }
 #' @rdname scalars
 #' @export
-count_val <- val_count
+count_val <- function(x, value, recursive = TRUE){
+  .Deprecated("val_count")
+  val_count(x, value, recursive)
+}
 #' @rdname scalars
 #' @export
 val_find <- function(x, value, invert = FALSE){
@@ -90,16 +93,7 @@ na_replace <- function(x, replace, recursive = TRUE){
 }
 #' @rdname scalars
 #' @export
-val_rm <- function(x, value){
-  n_vals <- val_count(x, value, recursive = TRUE)
-  if (n_vals == unlisted_length(x)){
-    sset(x, 0L)
-  } else if (n_vals == 0){
-    x
-  } else {
-    sset(x, cpp_which_val(x, value, invert = TRUE))
-  }
-}
+val_rm <- cpp_val_remove
 #' @rdname scalars
 #' @export
 na_count <- num_na
@@ -115,12 +109,20 @@ na_find <- function(x, invert = FALSE){
 #' @rdname scalars
 #' @export
 na_rm <- function(x){
-  n_na <- na_count(x, recursive = TRUE)
-  if (n_na == unlisted_length(x)){
-    sset(x, 0L)
-  } else if (n_na == 0){
-    x
+
+  ## This part is for legacy reasons
+  ## Some users might be using `na_rm` to remove empty rows of a data frame
+  if (is.list(x)){
+    n_na <- na_count(x, recursive = TRUE)
+    if (n_na == unlisted_length(x)){
+      sset(x, 0L)
+    } else if (n_na == 0){
+      x
+    } else {
+      sset(x, which_not_na(x))
+    }
   } else {
-    sset(x, which_not_na(x))
+    val_rm(x, NA)
   }
+
 }
