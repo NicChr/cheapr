@@ -700,13 +700,17 @@ default: {
 [[cpp11::register]]
 SEXP cpp_val_remove(SEXP x, SEXP value){
   check_atomic(x);
+  int NP = 0;
   R_xlen_t n_vals = scalar_count(x, value, true);
   if (n_vals == 0){
     return x;
   } else if (n_vals == Rf_xlength(x)){
+    SEXP out = Rf_protect(Rf_allocVector(TYPEOF(x), 0)); ++NP;
+    cpp_copy_attributes(x, out, false);
+    Rf_unprotect(NP);
+    return out;
     return cpp11::package("cheapr")["sset"](x, 0);
   } else {
-    int NP = 0;
     R_xlen_t n = Rf_xlength(x);
     R_xlen_t n_keep = n - n_vals;
     bool eq;

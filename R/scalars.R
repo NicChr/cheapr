@@ -119,10 +119,11 @@ na_rm <- function(x){
     } else if (n_na == 0){
       x
     } else {
-      sset(x, which_not_na(x))
+      na_locs <- na_find(x, invert = TRUE)
+      sset(x, na_locs)
     }
   } else {
-    val_rm(x, NA)
+    .Call(`_cheapr_cpp_val_remove`, x, NA)
   }
 
 }
