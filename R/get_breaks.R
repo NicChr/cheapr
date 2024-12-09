@@ -126,13 +126,21 @@ get_breaks.numeric <- function(x, n = 10,
     } else if (bin_width > 5 && bin_width < 10){
       adj_width <- 10
     } else if (bin_width < 1){
-      # adj_width <- nearest_ceiling(bin_width, (10^(ceiling(log10(bin_width)))) / 2)
-
-      # Probably a better specification
       adj_width <- nearest_ceiling(bin_width, (10^(floor(log10(bin_width)))) * 5)
-      } else {
+
+      # Below produces more breaks on average if needed
+
+      # adj_width <- nearest(bin_width, (10^(floor(log10(bin_width)))) * 5)
+      # if (adj_width < tol){
+      #   adj_width <- nearest_ceiling(bin_width, (10^(floor(log10(bin_width)))) * 5)
+      # }
+
+      # If width is a multiple of 10
+    # } else if ((bin_width %% 10) < tol){
+    #   adj_width <- nearest_ceiling(bin_width, (10^(floor(log10(bin_width)))) * 5)
+    } else {
       adj_width <- pretty_ceiling(bin_width)
-      }
+    }
 
     # n is our first best guess at number of final breaks
     n_breaks <- n
@@ -152,6 +160,34 @@ get_breaks.numeric <- function(x, n = 10,
     approx_int_div <- function(x, y, .tol = tol){
       out <- x / y
       if (is_whole_number(out, .tol)) round(out) else trunc(out)
+    }
+
+    can_be_int <- function(x){
+      is_whole_number(x) && is_integerable(x)
+    }
+
+    # We scale up to work with whole numbers
+    scale_up <- adj_width < 1
+    if (scale_up){
+
+      # The below only works because
+      # a) width won't contain decimals for widths >= 1
+      # b) It is a decimal of the form 0.0..n for >= 0 zeros
+      # so -log10(width) tells us the number of decimals here
+
+      .scale <- min(abs(floor(log10(adj_width))), 12)
+      .scale_adj <- as.double(10^.scale)
+      adj_width <- as.double(round(adj_width * .scale_adj))
+
+      # Not sure if adj_start needs rounding here
+      adj_start <- as.double(adj_start * .scale_adj)
+
+      if (is_whole_number(adj_start)){
+        adj_start <- round(adj_start)
+      }
+      start <- as.double(start * .scale_adj)
+      end <- as.double(end * .scale_adj)
+      on.exit({return(set_divide(out, .scale_adj))}, add = TRUE)
     }
 
     # If breaks span zero make sure they actually land on zero
@@ -193,32 +229,32 @@ get_breaks.numeric <- function(x, n = 10,
       adj_end <- adj_end + adj_width
     }
 
-    # Reduce floating-point error
-    # If width is almost a whole number, just round it
-
-    if (is_whole_number(adj_width)){
-      adj_width <- as.integer(round(adj_width))
-    }
-    if (is_whole_number(adj_start)){
-      adj_start <- as.integer(round(adj_start))
-    }
-
-    # If last break is >= 2^31 use doubles
-    if (!isTRUE(is_integerable(adj_end))){
-      adj_start <- as.double(adj_start)
-      adj_width <- as.double(adj_width)
-    }
-
     if (expand_min && adj_start >= start){
       n_breaks <- n_breaks + 1
       adj_start <- adj_start - adj_width
     }
 
-    m_factor <- 1e10
+    # Work with integers where possible
 
-    seq( round(adj_start * m_factor) / m_factor,
-         by = round(adj_width * m_factor) / m_factor,
-         length.out = n_breaks)
+    # If we have to scale up it means width was a decimal and
+    # hence result is not an integer
+    if (!scale_up){
+      if (can_be_int(adj_width)){
+        adj_width <- as.integer(round(adj_width))
+      }
+      if (can_be_int(adj_start)){
+        adj_start <- as.integer(round(adj_start))
+      }
+
+      # If last break is >= 2^31 use doubles
+      if (!is_integerable(adj_end)){
+        adj_start <- as.double(adj_start)
+        adj_width <- as.double(adj_width)
+      }
+    }
+
+    out <- seq(adj_start, by = adj_width, length.out = n_breaks)
+    out
   }
 }
 
@@ -229,7 +265,6 @@ get_breaks.integer <- get_breaks.numeric
 get_breaks.integer64 <- function(x, n = 10, ...){
   get_breaks(cpp_int64_to_numeric(x), n, ...)
 }
-
 log_scale <- function(x, base = 10){
   y <- val_replace(x, 0, 1)
   floor(log(abs(y), base = base))
@@ -239,6 +274,9 @@ nearest_floor <- function(x, n){
 }
 nearest_ceiling <- function(x, n){
   ceiling(x / n) * n
+}
+nearest <- function(x, n){
+  round(x / n) * n
 }
 
 ## Based on the log10 scale of x,

@@ -52,16 +52,40 @@ test_that("breaks", {
 
   # Lots of breaks
 
+
   expect_equal(
-    b2(with_local_seed(rnorm(100), .seed = 42), 123456),
+    b2(with_local_seed(rnorm(100), 42), 123456),
     seq(-2.99310, 2.28665, 0.00005)
   )
 
+  y <- with_local_seed(rnorm(100, sd = 0.03), 43)
+
+  y_min <- min(y)
+  y_max <- max(y)
+
+  expect_true(max(get_breaks(y, 10^3, expand_max = FALSE)) <= y_max)
+  expect_true(max(get_breaks(y, 10^3, expand_max = TRUE)) > y_max)
+
+  expect_false(min(get_breaks(y, 10^3, expand_min = FALSE)) > y_min)
+  expect_false(min(get_breaks(y, 10^3, expand_min = TRUE)) > y_min)
+
+  expect_true(min(get_breaks(y, 10^3, expand_min = FALSE)) <= y_min)
+  expect_true(min(get_breaks(y, 10^3, expand_min = TRUE)) < y_min)
+
   # Floating point precision example
 
-  expect_equal(
+  expect_identical(
     get_breaks(with_local_seed(rnorm(100, sd = 0.01), .seed = 3), 10),
-    seq(-0.025, 0.02, 0.005)
+    seq(-25L, 20L, 5L) / 1000
+  )
+
+  # Another
+
+  # seq(-2.8, 3.1, by = 0.1) This is basically the result, which has FP error
+
+  expect_identical(
+    get_breaks(with_local_seed(rnorm(1e03), 2), 100),
+    seq(-28L, 31L, by = 1L) / 10
   )
 
 })
