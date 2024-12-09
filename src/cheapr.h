@@ -119,5 +119,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices);
 SEXP coerce_vector(SEXP source, SEXPTYPE type);
 bool implicit_na_coercion(SEXP x, SEXP target);
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
+double round_nearest_even(double x);
+SEXP cpp_set_divide(SEXP x, SEXP y);
 
 #endif

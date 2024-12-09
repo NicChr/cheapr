@@ -341,6 +341,13 @@ extern "C" SEXP _cheapr_cpp_sequence_id(SEXP size) {
     return cpp11::as_sexp(cpp_sequence_id(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size)));
   END_CPP11
 }
+// sequences.cpp
+SEXP cpp_fixed_width_breaks(double start, double end, double n, bool pretty, bool expand_min, bool expand_max);
+extern "C" SEXP _cheapr_cpp_fixed_width_breaks(SEXP start, SEXP end, SEXP n, SEXP pretty, SEXP expand_min, SEXP expand_max) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_fixed_width_breaks(cpp11::as_cpp<cpp11::decay_t<double>>(start), cpp11::as_cpp<cpp11::decay_t<double>>(end), cpp11::as_cpp<cpp11::decay_t<double>>(n), cpp11::as_cpp<cpp11::decay_t<bool>>(pretty), cpp11::as_cpp<cpp11::decay_t<bool>>(expand_min), cpp11::as_cpp<cpp11::decay_t<bool>>(expand_max)));
+  END_CPP11
+}
 // set_math.cpp
 SEXP cpp_set_abs(SEXP x);
 extern "C" SEXP _cheapr_cpp_set_abs(SEXP x) {
@@ -567,6 +574,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_df_col_na_counts",        (DL_FUNC) &_cheapr_cpp_df_col_na_counts,        1},
     {"_cheapr_cpp_df_row_na_counts",        (DL_FUNC) &_cheapr_cpp_df_row_na_counts,        1},
     {"_cheapr_cpp_drop_null",               (DL_FUNC) &_cheapr_cpp_drop_null,               2},
+    {"_cheapr_cpp_fixed_width_breaks",      (DL_FUNC) &_cheapr_cpp_fixed_width_breaks,      6},
     {"_cheapr_cpp_format_numeric_as_int64", (DL_FUNC) &_cheapr_cpp_format_numeric_as_int64, 1},
     {"_cheapr_cpp_gcd",                     (DL_FUNC) &_cheapr_cpp_gcd,                     5},
     {"_cheapr_cpp_gcd2",                    (DL_FUNC) &_cheapr_cpp_gcd2,                    4},

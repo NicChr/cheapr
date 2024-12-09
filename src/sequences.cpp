@@ -357,6 +357,7 @@ SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
   Rf_unprotect(2);
   return out;
 }
+
 [[cpp11::register]]
 SEXP cpp_sequence_id(SEXP size){
   int size_n = Rf_length(size);
@@ -379,4 +380,250 @@ SEXP cpp_sequence_id(SEXP size){
   }
   Rf_unprotect(2);
   return out;
+}
+
+double log10_scale(double x){
+  return std::floor(std::log(std::abs(x == 0.0 ? 1.0 : x)) / std::log(10.0));
+}
+double nearest_floor(double x, double n){
+  return std::floor(x / n) * n;
+}
+double nearest_ceiling(double x, double n){
+  return std::ceil(x / n) * n;
+}
+
+double pretty_ceiling(double x){
+  double scale = log10_scale(x);
+  return nearest_ceiling(x, (std::pow(10.0, scale)));
+}
+
+bool is_whole_number(double x, double tolerance){
+  return (std::fabs(x - round_nearest_even(x)) < tolerance);
+}
+double approx_int_div(double x, double y, double tolerance){
+  double out = x / y;
+  if (is_whole_number(out, tolerance)){
+    return round_nearest_even(out);
+  } else{
+    return std::trunc(out);
+  }
+}
+
+bool can_be_int(double x, double tolerance){
+  return is_whole_number(x, tolerance) && std::fabs(x) <= integer_max_;
+}
+
+double seq_end(double size, double from, double by){
+  return from + (std::fmax(size - 1.0, 0.0) * by);
+}
+double seq_width(double size, double from, double to){
+  double del = (to - from);
+  double out = del / std::fmax(size - 1.0, 0.0);
+  return del == 0.0 ? 0.0 : out;
+}
+
+bool is_infinite(double x){
+  return (x == R_NegInf) || (x == R_PosInf);
+}
+
+[[cpp11::register]]
+SEXP cpp_fixed_width_breaks(double start, double end, double n,
+                            bool pretty, bool expand_min, bool expand_max){
+  if (cheapr_is_na_dbl(n)){
+    Rf_error("n must not be `NA`");
+  }
+  if (n < 1){
+    Rf_error("n must be >= 1");
+  }
+  if (n >= R_PosInf){
+    Rf_error("n must be finite");
+  }
+  if (cheapr_is_na_dbl(start) || cheapr_is_na_dbl(end) ||
+      is_infinite(start) || is_infinite(end)){
+    return Rf_ScalarReal(NA_REAL);
+  }
+  double rng_width = end - start;
+  bool spans_zero = (start < 0.0 && end > 0.0) || (start > 0.0 && end < 0.0);
+  bool zero_range = rng_width == 0.0;
+  double tol = std::sqrt(std::numeric_limits<double>::epsilon());
+
+  double n_breaks,
+  bin_width, adj_width,
+  adj_start, adj_end, adj_rng_width,
+  scale, scale_adj, scale_diff,
+  zero_adjustment, n_rm, n_add;
+  bool lands_on_zero;
+
+  bool scale_up = false;
+
+  if (zero_range){
+    if (start == 0.0){
+      rng_width = 1.0;
+    } else {
+      rng_width = std::fabs(start);
+    }
+    adj_start = start - (rng_width / 1000.0);
+    adj_end = end + (rng_width / 1000.0);
+    SEXP size = Rf_protect(Rf_ScalarInteger(n + 1.0));
+    SEXP from = Rf_protect(Rf_ScalarReal(adj_start));
+    SEXP by = Rf_protect(Rf_ScalarReal(seq_width(n + 1.0, adj_start, adj_end)));
+    SEXP out = Rf_protect(cpp_dbl_sequence(size, from, by));
+    Rf_unprotect(4);
+    return out;
+  }
+
+  if (!pretty){
+    bin_width = rng_width / n;
+    int out_size = n + 1.0;
+    if (expand_min){
+      start -= bin_width;
+      ++out_size;
+    }
+    if (expand_max){
+      ++out_size;
+    }
+    SEXP size_sexp = Rf_protect(Rf_ScalarInteger(out_size));
+    SEXP start_sexp = Rf_protect(Rf_ScalarReal(start));
+    SEXP width_sexp = Rf_protect(Rf_ScalarReal(bin_width));
+    SEXP out = Rf_protect(cpp_dbl_sequence(size_sexp, start_sexp, width_sexp));
+    Rf_unprotect(4);
+    return out;
+
+  } else {
+
+    // Making breaks prettier
+
+    // This is the number of orders of magnitude the data spans
+    scale_diff = log10_scale(rng_width);
+
+    // If large range & relatively small starting value
+    // floor start to the nearest difference in orders of magnitude
+
+    // If range spans across zero and start val is small
+    if (scale_diff >= 1.0 && spans_zero && std::fabs(start) < 1.0){
+      adj_start = nearest_floor(start, std::pow(10.0, log10_scale(end)));
+    } else {
+      adj_start = nearest_floor(start, std::pow(10.0, scale_diff));
+    }
+
+    // Calculate bin-width (guaranteed to span end-points inclusively)
+    adj_rng_width = end - adj_start;
+    bin_width = adj_rng_width / n;
+
+    // Make width look nicer
+    if (bin_width > 2.0 && bin_width < 5.0){
+      adj_width = 5.0;
+    } else if (bin_width > 5.0 && bin_width < 10.0){
+      adj_width = 10.0;
+    } else if (bin_width < 1.0){
+      adj_width = nearest_ceiling(bin_width, std::pow(10.0, log10_scale(bin_width)) * 5.0);
+    } else {
+      adj_width = pretty_ceiling(bin_width);
+    }
+
+    n_breaks = n;
+
+    // We scale up to work with whole numbers
+    scale_up = adj_width < 1.0;
+    if (scale_up){
+
+      // The below only works because
+      // a) width won't contain decimals for widths >= 1
+      // b) It is a decimal of the form 0.0..n for >= 0 zeros
+      // so -log10(width) tells us the number of decimals here
+
+      scale = std::fmin(std::abs(log10_scale(adj_width)), 12.0);
+      scale_adj = std::pow(10.0, scale);
+      adj_width = round_nearest_even(adj_width * scale_adj);
+
+      // Not sure if adj_start needs rounding here
+      adj_start = adj_start * scale_adj;
+
+      if (is_whole_number(adj_start, tol)){
+        adj_start = round_nearest_even(adj_start);
+      }
+      start = start * scale_adj;
+      end = end * scale_adj;
+    }
+
+    // If breaks span zero make sure they actually land on zero
+    if (spans_zero){
+      zero_adjustment = adj_start + (adj_width * std::ceil(std::abs(adj_start) / adj_width));
+      lands_on_zero = std::abs(zero_adjustment) < tol;
+      if (!lands_on_zero){
+        adj_start = adj_start - zero_adjustment;
+        n_breaks = n_breaks + approx_int_div(zero_adjustment, adj_width, tol);
+      }
+    }
+
+    // Final break?
+    adj_end = seq_end(n_breaks, adj_start, adj_width);
+
+    // If too many breaks, reduce
+    if (adj_end > end){
+      n_rm = std::ceil( (adj_end - end) / adj_width);
+      n_breaks = n_breaks - n_rm;
+      adj_end = adj_end - (adj_width * n_rm);
+    }
+
+    // adj_end might also have too few breaks
+    if (adj_end < end){
+      n_add = approx_int_div(end - adj_end, adj_width, tol);
+      n_breaks = n_breaks + n_add;
+      adj_end = adj_end + (adj_width * n_add);
+    }
+
+    if (adj_start < start){
+      n_rm = approx_int_div(start - adj_start, adj_width, tol);
+      n_breaks = n_breaks - n_rm;
+      adj_start = adj_start + (adj_width * n_rm);
+    }
+
+    // At this point, adj_end will be in range (end - adj_width, end]
+    // If we want last break to extend beyond data, add adj_width to it
+
+    if (expand_max && adj_end <= end){
+      n_breaks = n_breaks + 1.0;
+      adj_end = adj_end + adj_width;
+    }
+
+    if (expand_min && adj_start >= start){
+      n_breaks = n_breaks + 1.0;
+      adj_start = adj_start - adj_width;
+    }
+
+    // Work with integers where possible
+
+    // If we have to scale up it means width was a decimal and
+    // hence result is not an integer
+
+    SEXP out, seq_size, seq_from, seq_width;
+    if (!scale_up && can_be_int(adj_width, tol) && can_be_int(adj_start, tol) &&
+        std::fabs(adj_end) <= integer_max_){
+      adj_width = round_nearest_even(adj_width);
+      adj_start = round_nearest_even(adj_start);
+
+      seq_size = Rf_protect(Rf_ScalarInteger(n_breaks));
+      seq_from = Rf_protect(Rf_ScalarInteger(adj_start));
+      seq_width = Rf_protect(Rf_ScalarInteger(adj_width));
+
+      out = Rf_protect(cpp_int_sequence(seq_size, seq_from, seq_width));
+    }
+
+    if (scale_up){
+      seq_size = Rf_protect(Rf_ScalarInteger(n_breaks));
+      seq_from = Rf_protect(Rf_ScalarReal(adj_start));
+      seq_width = Rf_protect(Rf_ScalarReal(adj_width));
+
+      out = Rf_protect(cpp_dbl_sequence(seq_size, seq_from, seq_width));
+      R_xlen_t n = Rf_xlength(out);
+      double *p_out = REAL(out);
+      for (R_xlen_t i = 0; i < n; ++i){
+        p_out[i] = p_out[i] / scale_adj;
+      }
+    }
+
+    Rf_unprotect(4);
+    return out;
+  }
 }

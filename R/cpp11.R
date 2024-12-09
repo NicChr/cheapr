@@ -192,6 +192,10 @@ cpp_sequence_id <- function(size) {
   .Call(`_cheapr_cpp_sequence_id`, size)
 }
 
+cpp_fixed_width_breaks <- function(start, end, n, pretty, expand_min, expand_max) {
+  .Call(`_cheapr_cpp_fixed_width_breaks`, start, end, n, pretty, expand_min, expand_max)
+}
+
 cpp_set_abs <- function(x) {
   .Call(`_cheapr_cpp_set_abs`, x)
 }
