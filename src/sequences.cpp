@@ -650,9 +650,8 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       out = Rf_protect(cpp_dbl_sequence(seq_size, seq_from, seq_width));
       R_xlen_t n = n_breaks;
       double *p_out = REAL(out);
-      for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = p_out[i] / scale_adj;
-      }
+      OMP_FOR_SIMD
+      for (R_xlen_t i = 0; i < n; ++i) p_out[i] = p_out[i] / scale_adj;
     }
 
     Rf_unprotect(4);
