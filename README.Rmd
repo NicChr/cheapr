@@ -23,7 +23,9 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/NicChr/cheapr/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/NicChr/cheapr/actions/workflows/R-CMD-check.yaml)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/cheapr)](https://CRAN.R-project.org/package=cheapr)
-[![Codecov test coverage](https://codecov.io/gh/NicChr/cheapr/graph/badge.svg)](https://app.codecov.io/gh/NicChr/cheapr)
+[![Codecov test
+coverage](https://codecov.io/gh/NicChr/cheapr/graph/badge.svg)](https://app.codecov.io/gh/NicChr/cheapr)
+
 <!-- badges: end -->
 
 In cheapr, 'cheap' means fast and memory-efficient, and that's exactly
@@ -31,7 +33,7 @@ the philosophy that cheapr aims to follow.
 
 ## Installation
 
-You can install cheapr like so: 
+You can install cheapr like so:
 
 ``` r
 install.packages("cheapr")
@@ -43,27 +45,29 @@ or you can install the development version of cheapr:
 remotes::install_github("NicChr/cheapr")
 ```
 
-Some common operations that cheapr can do much faster and more efficiently include: 
+Some common operations that cheapr can do much faster and more
+efficiently include:
 
-* Counting, finding, removing and replacing `NA` and scalar values
+-   Counting, finding, removing and replacing `NA` and scalar values
 
-* Creating factors
+-   Creating factors
 
-* Creating multiple sequences in a vectorised way
+-   Creating multiple sequences in a vectorised way
 
-* Sub-setting vectors and data frames efficiently
+-   Sub-setting vectors and data frames efficiently
 
-* Safe, flexible and fast greatest common divisor and lowest common multiple
+-   Safe, flexible and fast greatest common divisor and lowest common
+    multiple
 
-* Lags/leads
+-   Lags/leads
 
-* Lightweight `integer64` support
+-   Lightweight `integer64` support
 
-* In-memory Math (no copies, vectors updated by reference)
+-   In-memory Math (no copies, vectors updated by reference)
 
-* Summary statistics of data frame variables
+-   Summary statistics of data frame variables
 
-* Binning of continuous data
+-   Binning of continuous data
 
 Let's first load the required packages
 
@@ -75,8 +79,8 @@ library(bench)
 `num_na()` is a useful function to efficiently return the number of `NA`
 values and can be used in a variety of problems.
 
-Almost all the `NA` handling functions in cheapr can make use of multiple cores
-on your machine through openMP.
+Almost all the `NA` handling functions in cheapr can make use of
+multiple cores on your machine through openMP.
 
 ```{r}
 x <- rep(NA, 10^6)
@@ -386,8 +390,9 @@ mark(
 
 ### `case`
 
-cheapr's version of a case-when statement, with mostly the same arguments
-as `dplyr::case_when` but similar efficiency as `data.table::fcase`
+cheapr's version of a case-when statement, with mostly the same
+arguments as `dplyr::case_when` but similar efficiency as
+`data.table::fcase`
 
 ```{r}
 mark(case(
@@ -402,7 +407,7 @@ data.table::fcase(
 ))
 ```
 
-`val_match` is an even cheaper special variant of `case` when all LHS 
+`val_match` is an even cheaper special variant of `case` when all LHS
 expressions are length-1 vectors, i.e scalars
 
 ```{r}
@@ -419,9 +424,9 @@ mark(
      )
 ```
 
-`get_breaks` is a very fast function for generating pretty equal-width breaks 
-It is similar to `base::pretty` though somewhat less flexible with simpler
-arguments.
+`get_breaks` is a very fast function for generating pretty equal-width
+breaks It is similar to `base::pretty` though somewhat less flexible
+with simpler arguments.
 
 ```{r}
 x <- with_local_seed(rnorm(10^5), 112)
@@ -440,6 +445,23 @@ get_breaks(x, 5, pretty = FALSE)
 diff(get_breaks(x, 5, pretty = FALSE)) # Widths
 ```
 
-It can accept both data a length-two vector representing a range, meaning
-it can easily be used in ggplot2 and base R plots
+It can accept both data and a length-two vector representing a range,
+meaning it can easily be used in ggplot2 and base R plots
 
+```{r}
+library(ggplot2)
+gg <- airquality |> 
+    ggplot(aes(x = Ozone, y = Wind)) +
+    geom_point() + 
+    geom_smooth(se = FALSE)
+
+# Add our breaks
+gg +
+  scale_x_continuous(breaks = get_breaks)
+
+# More breaks
+
+# get_breaks accepts a range too
+gg +
+  scale_x_continuous(breaks = \(x) get_breaks(range(x), 20)) 
+```
