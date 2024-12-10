@@ -419,5 +419,27 @@ mark(
      )
 ```
 
+`get_breaks` is a very fast function for generating pretty equal-width breaks 
+It is similar to `base::pretty` though somewhat less flexible with simpler
+arguments.
 
+```{r}
+x <- with_local_seed(rnorm(10^5), 112)
+# approximately 10 breaks
+get_breaks(x, 10)
+pretty(x, 10)
+
+mark(
+  get_breaks(x, 20),
+  pretty(x, 20), 
+  check = FALSE
+)
+
+# Not pretty but equal width breaks
+get_breaks(x, 5, pretty = FALSE)
+diff(get_breaks(x, 5, pretty = FALSE)) # Widths
+```
+
+It can accept both data a length-two vector representing a range, meaning
+it can easily be used in ggplot2 and base R plots
 

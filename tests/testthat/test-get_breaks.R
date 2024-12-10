@@ -88,4 +88,8 @@ test_that("breaks", {
     seq(-28L, 31L, by = 1L) / 10
   )
 
+  expect_equal(
+    get_breaks(with_local_seed(rnorm(100, sd = 1e-12), 1), 15, expand_max = TRUE),
+    seq(-2.5e-12, 2.5e-12, length.out = 11)
+  )
 })

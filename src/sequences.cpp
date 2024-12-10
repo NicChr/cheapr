@@ -382,8 +382,12 @@ SEXP cpp_sequence_id(SEXP size){
   return out;
 }
 
+bool is_whole_number(double x, double tolerance){
+  return (std::fabs(x - std::round(x)) < tolerance);
+}
+
 double log10_scale(double x){
-  return std::floor(std::log(std::abs(x == 0.0 ? 1.0 : x)) / std::log(10.0));
+  return std::floor(std::log(std::fabs(x == 0.0 ? 1.0 : x)) / std::log(10.0));
 }
 double nearest_floor(double x, double n){
   return std::floor(x / n) * n;
@@ -393,21 +397,42 @@ double nearest_ceiling(double x, double n){
 }
 
 double pretty_ceiling(double x){
-  double scale = log10_scale(x);
-  return nearest_ceiling(x, (std::pow(10.0, scale)));
+  return nearest_ceiling(x, (std::pow(10.0, log10_scale(x))));
 }
 
-bool is_whole_number(double x, double tolerance){
-  return (std::fabs(x - round_nearest_even(x)) < tolerance);
-}
-double approx_int_div(double x, double y, double tolerance){
-  double out = x / y;
-  if (is_whole_number(out, tolerance)){
-    return round_nearest_even(out);
-  } else{
-    return std::trunc(out);
-  }
-}
+// Not sure yet if approximate division is needed
+
+// double aprx_floor(double x, double tol){
+//   return is_whole_number(x, tol) ? std::round(x) : std::floor(x);
+// }
+// double aprx_ceil(double x, double tol){
+//   return is_whole_number(x, tol) ? std::round(x) : std::ceil(x);
+// }
+// double aprx_trunc(double x, double tol){
+//   return is_whole_number(x, tol) ? std::round(x) : std::trunc(x);
+// }
+
+// truncated division with a tolerance
+// aka integer division towards zero
+// double int_div_towards_zero(double x, double y, double tol){
+//   return aprx_trunc(x / y, tol);
+// }
+
+// approximate ceiling division
+// double ceil_div(double x, double y, double tol){
+//   return aprx_ceil(x / y, tol);
+// }
+
+// integer division away from zero
+// double int_div_away_from_zero(double x, double y, double tolerance){
+//   double out = x / y;
+//   if (is_whole_number(out, tolerance)){
+//     return std::round(out);
+//   } else {
+//     double sign = (out > 0) - (out < 0);
+//     return std::ceil(std::fabs(out)) * sign;
+//   }
+// }
 
 bool can_be_int(double x, double tolerance){
   return is_whole_number(x, tolerance) && std::fabs(x) <= integer_max_;
@@ -445,13 +470,14 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
   double rng_width = end - start;
   bool spans_zero = (start < 0.0 && end > 0.0) || (start > 0.0 && end < 0.0);
   bool zero_range = rng_width == 0.0;
-  double tol = std::sqrt(std::numeric_limits<double>::epsilon());
+  double tol = std::pow(std::numeric_limits<double>::epsilon(), 2.0/3.0);
 
   double n_breaks,
   bin_width, adj_width,
   adj_start, adj_end, adj_rng_width,
-  scale, scale_adj, scale_diff,
+  scale, scale_diff,
   zero_adjustment, n_rm, n_add;
+  double scale_adj = 1;
   bool lands_on_zero;
 
   bool scale_up = false;
@@ -532,27 +558,28 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       // b) It is a decimal of the form 0.0..n for >= 0 zeros
       // so -log10(width) tells us the number of decimals here
 
-      scale = std::fmin(std::abs(log10_scale(adj_width)), 12.0);
+      scale = std::fabs(log10_scale(adj_width));
       scale_adj = std::pow(10.0, scale);
       adj_width = round_nearest_even(adj_width * scale_adj);
 
       // Not sure if adj_start needs rounding here
-      adj_start = adj_start * scale_adj;
+      adj_start *= scale_adj;
 
       if (is_whole_number(adj_start, tol)){
         adj_start = round_nearest_even(adj_start);
       }
-      start = start * scale_adj;
-      end = end * scale_adj;
+      start *= scale_adj;
+      end *= scale_adj;
     }
 
     // If breaks span zero make sure they actually land on zero
     if (spans_zero){
-      zero_adjustment = adj_start + (adj_width * std::ceil(std::abs(adj_start) / adj_width));
-      lands_on_zero = std::abs(zero_adjustment) < tol;
+      zero_adjustment = adj_start + (adj_width * std::ceil(std::fabs(adj_start) / adj_width));
+      lands_on_zero = std::fabs(zero_adjustment) < tol;
       if (!lands_on_zero){
-        adj_start = adj_start - zero_adjustment;
-        n_breaks = n_breaks + approx_int_div(zero_adjustment, adj_width, tol);
+        adj_start -= zero_adjustment;
+        n_breaks += std::trunc(zero_adjustment / adj_width);
+        // n_breaks += int_div_towards_zero(zero_adjustment, adj_width, tol);
       }
     }
 
@@ -561,35 +588,37 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
 
     // If too many breaks, reduce
     if (adj_end > end){
-      n_rm = std::ceil( (adj_end - end) / adj_width);
-      n_breaks = n_breaks - n_rm;
-      adj_end = adj_end - (adj_width * n_rm);
+      n_rm = std::ceil(adj_end - end / adj_width);
+      n_breaks -= n_rm;
+      adj_end -= (adj_width * n_rm);
     }
 
     // adj_end might also have too few breaks
     if (adj_end < end){
-      n_add = approx_int_div(end - adj_end, adj_width, tol);
-      n_breaks = n_breaks + n_add;
-      adj_end = adj_end + (adj_width * n_add);
+      // n_add = int_div_towards_zero(end - adj_end, adj_width, tol);
+      n_add = std::trunc((end - adj_end) / adj_width);
+      n_breaks += n_add;
+      adj_end += (adj_width * n_add);
     }
 
     if (adj_start < start){
-      n_rm = approx_int_div(start - adj_start, adj_width, tol);
-      n_breaks = n_breaks - n_rm;
-      adj_start = adj_start + (adj_width * n_rm);
+      // n_rm = int_div_towards_zero(start - adj_start, adj_width, tol);
+      n_rm = std::trunc((start - adj_start) / adj_width);
+      n_breaks -= n_rm;
+      adj_start += (adj_width * n_rm);
     }
 
     // At this point, adj_end will be in range (end - adj_width, end]
     // If we want last break to extend beyond data, add adj_width to it
 
     if (expand_max && adj_end <= end){
-      n_breaks = n_breaks + 1.0;
-      adj_end = adj_end + adj_width;
+      n_breaks += 1.0;
+      adj_end += adj_width;
     }
 
     if (expand_min && adj_start >= start){
-      n_breaks = n_breaks + 1.0;
-      adj_start = adj_start - adj_width;
+      n_breaks += 1.0;
+      adj_start -= adj_width;
     }
 
     // Work with integers where possible
@@ -598,6 +627,9 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     // hence result is not an integer
 
     SEXP out, seq_size, seq_from, seq_width;
+    out = R_NilValue, seq_size = R_NilValue;
+    seq_from = R_NilValue, seq_width = R_NilValue;
+
     if (!scale_up && can_be_int(adj_width, tol) && can_be_int(adj_start, tol) &&
         std::fabs(adj_end) <= integer_max_){
       adj_width = round_nearest_even(adj_width);
@@ -616,7 +648,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       seq_width = Rf_protect(Rf_ScalarReal(adj_width));
 
       out = Rf_protect(cpp_dbl_sequence(seq_size, seq_from, seq_width));
-      R_xlen_t n = Rf_xlength(out);
+      R_xlen_t n = n_breaks;
       double *p_out = REAL(out);
       for (R_xlen_t i = 0; i < n; ++i){
         p_out[i] = p_out[i] / scale_adj;
