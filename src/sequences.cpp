@@ -387,7 +387,7 @@ bool is_whole_number(double x, double tolerance){
 }
 
 double log10_scale(double x){
-  return std::floor(std::log(std::fabs(x == 0.0 ? 1.0 : x)) / std::log(10.0));
+  return std::floor(std::log10(std::fabs(x == 0.0 ? 1.0 : x)));
 }
 double nearest_floor(double x, double n){
   return std::floor(x / n) * n;
@@ -467,9 +467,20 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       is_infinite(start) || is_infinite(end)){
     return Rf_ScalarReal(NA_REAL);
   }
+  // Switch them if needed
+  if (start > end){
+    double temp = end;
+    end = start;
+    start = temp;
+  }
   double rng_width = end - start;
   bool spans_zero = (start < 0.0 && end > 0.0) || (start > 0.0 && end < 0.0);
   bool zero_range = rng_width == 0.0;
+
+  // e^2/3 which is basically saying 1/3 of the representable digits
+  // aren't compared
+  // e^1/2 says 1/2 of them aren't to be compared so e^2/3 is a bit more strict
+  // as the tolerance is smaller
   double tol = std::pow(std::numeric_limits<double>::epsilon(), 2.0/3.0);
 
   double n_breaks,
