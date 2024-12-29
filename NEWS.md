@@ -1,5 +1,7 @@
 # cheapr (development version)
 
+- New function `cheapr_table` to create fast frequency tables.
+
 # cheapr 0.9.92
 
 - Fixed additional issues flagged by R checks.

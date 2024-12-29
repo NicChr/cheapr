@@ -209,53 +209,6 @@ combine_factors <- function(...){
           na_exclude = exclude_na)
 }
 
-# A very fast 1-D array frequency table
-cheapr_table <- function(..., names = TRUE, order = FALSE, na_exclude = FALSE,
-                         classed = FALSE){
-
-  vecs <- list(...)
-
-  to_factor <- function(x, na.excl){
-    if (is.factor(x)){
-      if (na_exclude){
-        levels_drop_na(x)
-      } else if (any_na(x)){
-        levels_add_na(x)
-      } else {
-        x
-      }
-    } else {
-      factor_(x, order = order, na_exclude = na_exclude)
-    }
-  }
-
-  factors <- lapply(vecs, to_factor, na_exclude)
-
-  if (length(factors) == 1){
-    f <- factors[[1L]]
-    lvls <- attr(f, "levels")
-    out <- tabulate(f, nbins = length(lvls))
-    if (names){
-      dim_names <- list(lvls)
-      names(dim_names) <- names(vecs)
-      names(out) <- lvls
-    } else {
-      dim_names <- NULL
-    }
-    if (classed){
-      out <- array(out, length(out), dim_names)
-      class(out) <- "table"
-    }
-  } else {
-    out <- do.call(collapse::qtab, c(factors, list(dnn = NULL)), envir = parent.frame())
-    if (!classed){
-      cpp_set_rm_attr(out, "class")
-      cpp_set_rm_attr(out, "sorted")
-      cpp_set_rm_attr(out, "weighted")
-    }
-  }
-  out
-}
 
 df_add_cols <- function(data, cols){
   if (!(is.list(cols) && !is.null(names(cols)))){
