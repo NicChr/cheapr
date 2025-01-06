@@ -2,11 +2,14 @@
 % Please edit documentation in R/get_breaks.R
 \name{get_breaks}
 \alias{get_breaks}
+\alias{get_breaks.default}
 \alias{get_breaks.numeric}
 \alias{get_breaks.integer64}
 \title{Pretty break-points for continuous (numeric) data}
 \usage{
 get_breaks(x, n = 10, ...)
+
+\method{get_breaks}{default}(x, n = 10, ...)
 
 \method{get_breaks}{numeric}(
   x,

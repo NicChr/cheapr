@@ -56,6 +56,11 @@ get_breaks <- function(x, n = 10, ...){
 }
 #' @rdname get_breaks
 #' @export
+get_breaks.default <- function(x, n = 10, ...){
+  get_breaks(as.double(x), n = n, ...)
+}
+#' @rdname get_breaks
+#' @export
 get_breaks.numeric <- function(x, n = 10,
                                pretty = TRUE,
                                expand_min = FALSE,
