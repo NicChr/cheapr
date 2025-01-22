@@ -76,27 +76,57 @@ library(cheapr)
 library(bench)
 ```
 
-`num_na()` is a useful function to efficiently return the number of `NA`
-values and can be used in a variety of problems.
+### Scalars and `NA`
 
-Almost all the `NA` handling functions in cheapr can make use of
-multiple cores on your machine through openMP.
+Because R mostly uses vectors and vectorised operations, this means that 
+there are few scalar-optimised operations. 
+
+cheapr provides tools to efficiently count, find, replace and remove scalars.
 
 ```{r}
-x <- rep(NA, 10^6)
+# Setup data with NA values
+set.seed(42)
+x <- sample(1:5, 30, TRUE)
+x <- na_insert(x, n = 7)
 
-# 1 core by default
-mark(num_na(x), sum(is.na(x)))
-# 4 cores
-options(cheapr.cores = 4)
-mark(num_na(x), sum(is.na(x)))
-options(cheapr.cores = 1)
+cheapr_table(x, order = TRUE) # Fast table()
 ```
+
+`NA` functions
+
+```{r}
+na_count(x)
+na_rm(x)
+na_find(x)
+na_replace(x, -99)
+```
+
+Scalar functions
+
+```{r}
+val_count(x, 3)
+val_rm(x, 3)
+val_find(x, 3)
+val_replace(x, 3, 99)
+```
+
+Scalar based case-match
+
+```{r}
+val_match(
+  x, 
+  1 ~ "one", 
+  2 ~ "two",
+  3 ~ "three", 
+  .default = ">3"
+)
+```
+
 
 ## Efficient NA counts by row/col
 
 ```{r}
-m <- matrix(x, ncol = 10^3)
+m <- matrix(na_insert(rnorm(10^6), prop = 1/4), ncol = 10^3)
 # Number of NA values by row
 mark(row_na_counts(m), 
      rowSums(is.na(m)))
@@ -108,14 +138,16 @@ mark(col_na_counts(m),
 `is_na` is a multi-threaded alternative to `is.na`
 
 ```{r}
-x <- rnorm(10^6)
-x[sample.int(10^6, 10^5)] <- NA
+x <- rnorm(10^6) |> 
+  na_insert(10^5)
+options(cheapr.cores = 4)
 mark(is.na(x), is_na(x))
+options(cheapr.cores = 1)
 
 ### posixlt method is much faster
 hours <- as.POSIXlt(seq.int(0, length.out = 10^6, by = 3600),
-                    tz = "UTC")
-hours[sample.int(10^6, 10^5)] <- NA
+                    tz = "UTC") |> 
+  na_insert(10^5)
 
 mark(is.na(hours), is_na(hours))
 ```
@@ -133,7 +165,7 @@ is.na(list(NA, list(NA, NA), 10))
 is_na(list(NA, list(NA, NA), 10))
 
 # Data frame example
-df <- data.frame(x = c(1, NA, 3),
+df <- new_df(x = c(1, NA, 3),
                  y = c(NA, NA, NA))
 df
 is_na(df)
@@ -152,11 +184,10 @@ Inspired by the excellent skimr package, `overview()` is a cheaper
 alternative designed for larger data.
 
 ```{r}
-set.seed(42)
-df <- data.frame(
-  x = sample.int(100, 10^7, TRUE),
-  y = factor_(sample(LETTERS, 10^7, TRUE)),
-  z = rnorm(10^7)
+df <- new_df(
+  x = sample.int(100, 10^6, TRUE),
+  y = as_factor(sample(LETTERS, 10^6, TRUE)),
+  z = rnorm(10^6)
 )
 overview(df)
 mark(overview(df, hist = FALSE))
@@ -369,7 +400,7 @@ mark(cheapr = x %!in_% y,
 `as_discrete` is a cheaper alternative to `cut`
 
 ```{r}
-x <- rnorm(10^7)
+x <- rnorm(10^6)
 b <- seq(0, max(x), 0.2)
 mark(cheapr_cut = as_discrete(x, b, left = FALSE), 
      base_cut = cut(x, b))
@@ -410,7 +441,7 @@ data.table::fcase(
 expressions are length-1 vectors, i.e scalars
 
 ```{r}
-x <- round(rnorm(10^7))
+x <- round(rnorm(10^6))
 
 mark(
   val_match(x, 1 ~ Inf, 2 ~ -Inf, .default = NaN),
