@@ -69,12 +69,6 @@ val_count <- function(x, value, recursive = TRUE){
 }
 #' @rdname scalars
 #' @export
-count_val <- function(x, value, recursive = TRUE){
-  .Deprecated("val_count")
-  val_count(x, value, recursive)
-}
-#' @rdname scalars
-#' @export
 val_find <- function(x, value, invert = FALSE){
   .Call(`_cheapr_cpp_which_val`, x, value, invert)
 }

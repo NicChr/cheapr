@@ -1,7 +1,7 @@
 #' Fast frequency tables - Still experimental
 #'
 #' @description
-#' This is not a 1-to-1 copy of `base::table()` as some behaviours differ.
+#' This is not a one-to-one copy of `base::table()` as some behaviours differ.
 #' It is more flexible as it accepts inputs such as data frames and
 #' `vctrs_rcrd` objects.
 #'

@@ -30,7 +30,7 @@ A named integer vector if one object is supplied, otherwise an
 array.
 }
 \description{
-This is not a 1-to-1 copy of \code{base::table()} as some behaviours differ.
+This is not a one-to-one copy of \code{base::table()} as some behaviours differ.
 It is more flexible as it accepts inputs such as data frames and
 \code{vctrs_rcrd} objects.
 }

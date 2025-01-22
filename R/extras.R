@@ -125,6 +125,7 @@ intersect_ <- function(x, y, dups = TRUE){
 #' @export
 cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
                         right = TRUE, dig.lab = 3L, ordered_result = FALSE, ...){
+  .Deprecated("as_discrete")
   if (!is.numeric(x))
     stop("'x' must be numeric")
   if (length(breaks) == 1L) {
@@ -194,6 +195,10 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
 #' @rdname extras
 #' @export
 enframe_ <- function(x, name = "name", value = "value"){
+  .Deprecated("fastplyr::f_enframe")
+  cheapr_enframe(x, name, value)
+}
+cheapr_enframe <- function(x, name = "name", value = "value"){
   if (inherits(x, "data.frame")) {
     x <- unclass(x)
     attr(x, "row.names") <- NULL
@@ -215,6 +220,7 @@ enframe_ <- function(x, name = "name", value = "value"){
 #' @rdname extras
 #' @export
 deframe_ <- function(x){
+  .Deprecated("fastplyr::f_deframe")
   ncol <- length(names(x))
   if (!(inherits(x, "data.frame") && ncol %in% (1:2))) {
     stop("`x` must be a 1 or 2 col data frame")

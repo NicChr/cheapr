@@ -119,7 +119,7 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
   skim_df <- x
   data_nms <- names(skim_df)
   col_classes <- vapply(skim_df, function(x) sset(class(x), length(class(x))), "")
-  out <- list_as_df(enframe_(col_classes, name = "col", value = "class"))
+  out <- list_as_df(cheapr_enframe(col_classes, name = "col", value = "class"))
   chr_vars <- data_nms[vapply(skim_df, is.character, FALSE,
                               USE.NAMES = FALSE)]
   if (length(chr_vars) > 0L) {
@@ -532,4 +532,78 @@ inline_hist <- function(x, n_bins = 5L){
   )
   hist_dt <- hist_dt / max(hist_dt)
   spark_bar(hist_dt)
+}
+
+# Efficient summary statistics
+# Can be used in overview() in the future
+numeric_summary <- function(x){
+  n <- length(x)
+  if (n == 0){
+    return(
+      fast_new_df(
+        n_missing = 0L,
+        p_complete = 1,
+        n_unique = 0L,
+        mean = NA_real_,
+        p0 = NA_real_,
+        p25 = NA_real_,
+        p50 = NA_real_,
+        p75 = NA_real_,
+        p100 = NA_real_,
+        iqr = NA_real_,
+        sd = NA_real_
+      )
+    )
+  }
+  n_missing <- na_count(x)
+  n_unique <- n_unique(x) - (n_missing > 0L)
+  p_complete <- 1 - (n_missing / n)
+  sum <- sum(x, na.rm = TRUE)
+  mean <- sum / (n - n_missing)
+
+  if (!is.integer(x)){
+    x <- as.double(x)
+  }
+  # o <- order(x, na.last = TRUE)
+  # percentiles <- c(
+  #   x[o[1]], # min
+  #   collapse::fnth(x, 0.25, na.rm = TRUE, o = o),
+  #   collapse::fnth(x, 0.5, na.rm = TRUE, o = o),
+  #   collapse::fnth(x, 0.75, na.rm = TRUE, o = o),
+  #   x[o[length(o) - n_missing]] # max
+  # )
+  rng <- collapse::frange(x, na.rm = TRUE)
+  percentiles <- c(
+    rng[1],
+    collapse::fnth(x, 0.25, na.rm = TRUE),
+    collapse::fnth(x, 0.5, na.rm = TRUE),
+    collapse::fnth(x, 0.75, na.rm = TRUE),
+    rng[2]
+  )
+  # percentiles <- collapse::fquantile(
+  #   x, probs = c(0, 0.25, 0.5, 0.75, 1),
+  #   na.rm = TRUE
+  # )
+  var <- var_sum_squared_diff(x, mean) / (n - n_missing - 1)
+  p0 <- percentiles[1]
+  p25 <- percentiles[2]
+  p50 <- percentiles[3]
+  p75 <- percentiles[4]
+  p100 <- percentiles[5]
+  sd <- sqrt(var)
+  iqr <- p75 - p25
+
+  fast_new_df(
+    n_missing = n_missing,
+    p_complete = p_complete,
+    n_unique = n_unique,
+    mean = mean,
+    p0 = p0,
+    p25 = p25,
+    p50 = p50,
+    p75 = p75,
+    p100 = p100,
+    iqr = iqr,
+    sd = sd
+  )
 }

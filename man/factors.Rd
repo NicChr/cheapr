@@ -6,8 +6,6 @@
 \alias{levels_factor}
 \alias{levels_used}
 \alias{levels_unused}
-\alias{used_levels}
-\alias{unused_levels}
 \alias{levels_rm}
 \alias{levels_add}
 \alias{levels_add_na}
@@ -34,10 +32,6 @@ levels_factor(x)
 levels_used(x)
 
 levels_unused(x)
-
-used_levels(x)
-
-unused_levels(x)
 
 levels_rm(x, levels)
 

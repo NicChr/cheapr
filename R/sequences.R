@@ -47,7 +47,8 @@
 #' # Add IDs to the sequences
 #' sequence_(1:3, by = 0.1, add_id = TRUE)
 #' # Turn this quickly into a data frame
-#' enframe_(sequence_(1:3, by = 0.1, add_id = TRUE))
+#' seqs <- sequence_(1:3, by = 0.1, add_id = TRUE)
+#' new_df(name = names(seqs), seq = seqs)
 #'
 #' sequence(c(3, 2), by = c(-0.1, 0.1))
 #' sequence_(c(3, 2), by = c(-0.1, 0.1))

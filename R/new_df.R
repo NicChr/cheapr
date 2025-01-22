@@ -1,15 +1,17 @@
 #' Fast data frame constructor
 #'
 #' @param ... Key-value pairs.
-#' @param .nrows `integer(1)` (Optional) number of rows. \cr
+#' @param .nrows `[integer(1)]` - (Optional) number of rows. \cr
 #' Commonly used to initialise a 0-column data frame with rows.
-#' @param .recycle `logical(1)` Should arguments be recycled?
+#' @param .recycle `[logical(1)]` - Should arguments be recycled?
 #' Default is `FALSE`.
-#' @param .name_repair `logical(1)` Should duplicate names be made unique?
+#' @param .name_repair `[logical(1)]` - Should duplicate names be made unique?
 #' Default is `FALSE`.
+#' @param x An object to coerce to a `data.frame`.
 #'
 #' @returns A `data.frame`
 #'
+#' @rdname new_df
 #' @export
 new_df <- function(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE){
 
@@ -42,6 +44,8 @@ new_df <- function(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE){
   class(out) <- "data.frame"
   out
 }
+#' @rdname new_df
+#' @export
 as_df <- function(x){
   if (inherits(x, "data.frame")){
     out <- x
@@ -83,4 +87,9 @@ unique_name_repair <- function(x, .sep = "..."){
     x[which_empty] <- paste0(x[which_empty], .sep, which_empty)
   }
   x
+}
+
+# new_df with 0 checks
+fast_new_df <- function(...){
+  list_as_df(list(...))
 }

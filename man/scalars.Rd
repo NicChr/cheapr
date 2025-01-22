@@ -2,7 +2,6 @@
 % Please edit documentation in R/scalars.R
 \name{val_count}
 \alias{val_count}
-\alias{count_val}
 \alias{val_find}
 \alias{which_val}
 \alias{val_replace}
@@ -14,8 +13,6 @@
 \title{Efficient functions for counting, finding, replacing and removing scalars}
 \usage{
 val_count(x, value, recursive = TRUE)
-
-count_val(x, value, recursive = TRUE)
 
 val_find(x, value, invert = FALSE)
 

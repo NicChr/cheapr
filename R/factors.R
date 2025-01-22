@@ -205,18 +205,6 @@ levels_unused <- function(x){
 }
 #' @rdname factors
 #' @export
-used_levels <- function(x){
-  on.exit(.Deprecated("levels_used"))
-  levels_used(x)
-}
-#' @rdname factors
-#' @export
-unused_levels <- function(x){
-  on.exit(.Deprecated("levels_unused"))
-  levels_unused(x)
-}
-#' @rdname factors
-#' @export
 levels_rm <- function(x, levels){
   check_is_factor(x)
   x_lvls <- levels(x)
@@ -304,8 +292,7 @@ levels_drop <- function(x){
 #' @export
 levels_reorder <- function(x, order_by, decreasing = FALSE){
   check_is_factor(x)
-  groups <- collapse::GRP(x, return.groups = FALSE)
-  medians <- collapse::fmedian(order_by, g = groups, use.g.names = FALSE)
+  medians <- collapse::fmedian(order_by, g = x, use.g.names = FALSE)
 
   o <- collapse::radixorderv(medians, decreasing = decreasing)
   sorted <- isTRUE(attr(o, "sorted"))
@@ -414,7 +401,7 @@ levels_count <- function(x){
   check_is_factor(x)
   names <- attr(x, "levels")
   out <- tabulate(x, nbins = length(names))
-  list_as_df(list(name = names, count = out, prop = out / sum(out)))
+  fast_new_df(name = names, count = out, prop = out / sum(out))
 }
 # Generic factor conversion to data representation
 factor_as_type <- function(x, type){

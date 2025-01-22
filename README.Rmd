@@ -297,8 +297,7 @@ If you know the sizes of your sequences beforehand, use `sequence_()`
 
 ```{r}
 seq_sizes <- c(3, 5, 10)
-sequence_(seq_sizes, from = 0, by = 1/3, add_id = TRUE) |> 
-  enframe_()
+sequence_(seq_sizes, from = 0, by = 1/3, add_id = TRUE)
 ```
 
 You can also calculate the sequence sizes using `seq_size()`
