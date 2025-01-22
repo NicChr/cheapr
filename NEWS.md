@@ -1,4 +1,4 @@
-# cheapr (development version)
+# cheapr 1.0.0
 
 - New functions `as_df`, `fast_df` and `cheapr_table`.
 
