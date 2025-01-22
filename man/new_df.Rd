@@ -3,11 +3,14 @@
 \name{new_df}
 \alias{new_df}
 \alias{as_df}
-\title{Fast data frame constructor}
+\alias{fast_df}
+\title{Fast data frame constructors}
 \usage{
 new_df(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE)
 
 as_df(x)
+
+fast_df(...)
 }
 \arguments{
 \item{...}{Key-value pairs.}
@@ -27,5 +30,10 @@ Default is \code{FALSE}.}
 A \code{data.frame}
 }
 \description{
-Fast data frame constructor
+Fast data frame constructors
+}
+\details{
+\code{fast_df()} is a very fast bare-bones version of \code{new_df()} that
+performs no checks and no recycling or name tidying.
+All variables must be named and of equal length.
 }

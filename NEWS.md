@@ -1,6 +1,6 @@
 # cheapr (development version)
 
-- New function `cheapr_table` to create fast frequency tables.
+- New functions `as_df`, `fast_df` and `cheapr_table`.
 
 - `count_val`, `unused_levels` and `used_levels` have been removed
 removed and replaced by `val_count`, `levels_unused` and `levels_used` 

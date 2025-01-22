@@ -1,4 +1,4 @@
-#' Fast data frame constructor
+#' Fast data frame constructors
 #'
 #' @param ... Key-value pairs.
 #' @param .nrows `[integer(1)]` - (Optional) number of rows. \cr
@@ -10,6 +10,11 @@
 #' @param x An object to coerce to a `data.frame`.
 #'
 #' @returns A `data.frame`
+#'
+#' @details
+#' `fast_df()` is a very fast bare-bones version of `new_df()` that
+#' performs no checks and no recycling or name tidying.
+#' All variables must be named and of equal length.
 #'
 #' @rdname new_df
 #' @export
@@ -89,7 +94,8 @@ unique_name_repair <- function(x, .sep = "..."){
   x
 }
 
-# new_df with 0 checks
-fast_new_df <- function(...){
-  list_as_df(list(...))
+#' @rdname new_df
+#' @export
+fast_df <- function(...){
+  .Call(`_cheapr_cpp_list_as_df`, list(...))
 }
