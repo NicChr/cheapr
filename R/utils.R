@@ -187,7 +187,8 @@ combine_levels <- function(...){
     }
   }
   # Unique combined levels
-  collapse::funique(collapse::vec(lapply(dots, get_levels)))
+  levels <- unlist(lapply(dots, get_levels), recursive = FALSE)
+  collapse::funique(levels)
 }
 
 combine_factors <- function(...){
