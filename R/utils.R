@@ -171,6 +171,32 @@ is_base_atomic <- function(x){
     is.null(x)
 }
 
+combine_levels <- function(...){
+  if (nargs() == 0){
+    return(NULL)
+  }
+  if (nargs() == 1){
+    dots <- list(...)
+    if (!is.object(dots[[1L]]) && is.list(dots[[1L]])){
+      return(do.call(combine_levels, dots[[1L]]))
+    } else {
+      return(dots[[1L]])
+    }
+  }
+  get_levels <- function(x){
+    if (is.factor(x)) levels(x) else as.character(x)
+  }
+  factors <- list(...)
+  levels <- new_list(length(factors))
+  for (i in seq_along(levels)){
+    f <- factors[[i]]
+    levels[[i]] <- get_levels(f)
+  }
+
+  # Unique combined levels
+  collapse::funique(collapse::vec(levels))
+}
+
 combine_factors <- function(...){
   if (nargs() == 0){
     return(NULL)
@@ -183,30 +209,18 @@ combine_factors <- function(...){
       return(dots[[1L]])
     }
   }
-  get_levels <- function(x){
-    if (is.factor(x)) levels(x) else as.character(x)
-  }
+  factors <- list(...)
   to_char <- function(x){
     if (is.factor(x)) factor_as_character(x) else as.character(x)
   }
-  factors <- list(...)
-  levels <- new_list(length(factors))
-  characters <- new_list(length(factors))
-  exclude_na <- TRUE
-  for (i in seq_along(levels)){
-    f <- factors[[i]]
-    levels[[i]] <- get_levels(f)
-    characters[[i]] <- to_char(f)
-    exclude_na <- exclude_na && !any_na(levels(f))
-
-  }
-
-  # Unique combined levels
-  new_levels <- collapse::funique(collapse::vec(levels))
+  combined_levels <- do.call(combine_levels, factors)
+  characters <- lapply(factors, to_char)
 
   # Combine all factor elements (as character vectors)
-  factor_(unlist(characters, recursive = FALSE), levels = new_levels,
-          na_exclude = exclude_na)
+  factor_(
+    unlist(characters, recursive = FALSE), levels = combined_levels,
+    na_exclude = !any_na(combined_levels)
+  )
 }
 
 

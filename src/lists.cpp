@@ -106,27 +106,36 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
 
 [[cpp11::register]]
 SEXP cpp_list_as_df(SEXP x) {
-  SEXP out = Rf_protect(cpp_drop_null(x, true));
   int N; // Number of rows
+  int NP = 0; // Number of protects
+  SEXP out = Rf_protect(cpp_drop_null(x, true)); ++NP;
+  int n_items = Rf_length(out);
   if (Rf_inherits(x, "data.frame")){
     N = cpp_df_nrow(x);
-  } else if (Rf_length(out) == 0){
+  } else if (n_items == 0){
     N = 0;
   } else {
     N = cpp_vec_length(VECTOR_ELT(out, 0));
   }
-  SEXP df_str = Rf_protect(Rf_mkString("data.frame"));
+
+  SEXP df_str = Rf_protect(Rf_mkString("data.frame")); ++NP;
   SEXP row_names;
   if (N > 0){
-    row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
+    row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
     INTEGER(row_names)[0] = NA_INTEGER;
     INTEGER(row_names)[1] = -N;
   } else {
-    row_names = Rf_protect(Rf_allocVector(INTSXP, 0));
+    row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
+  }
+
+  // If no names then add names
+  if (Rf_isNull(Rf_getAttrib(out, R_NamesSymbol))){
+    SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_items)); ++NP;
+    Rf_setAttrib(out, R_NamesSymbol, out_names);
   }
   Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   Rf_classgets(out, df_str);
-  Rf_unprotect(3);
+  Rf_unprotect(NP);
   return out;
 }
 
