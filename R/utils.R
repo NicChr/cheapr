@@ -150,11 +150,14 @@ fill_with_na <- na_insert
 
 r_cut_breaks <- function(x, n){
   check_length(n, 1)
-  stopifnot(n >= 2)
+  if (is.na(n) || n < 2){
+    stop(paste("number of breaks must be >= 2, not", n))
+  }
   breaks <- get_breaks(x, n, pretty = FALSE, expand_min = FALSE, expand_max = FALSE)
-  adj <- diff(range(breaks)) * 0.001
+  nb <- length(breaks)
+  adj <- (breaks[nb] - breaks[1]) * 0.001
   breaks[1] <- breaks[1] - adj
-  breaks[length(breaks)] <- breaks[length(breaks)] + adj
+  breaks[nb] <- breaks[nb] + adj
   breaks
 }
 

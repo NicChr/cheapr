@@ -523,7 +523,7 @@ inline_hist <- function(x, n_bins = 5L){
   if (all_na(x)) {
     return(" ")
   }
-  if (allv2(na_rm(x), 0)) {
+  if (val_count(x, 0) == (length(x) - na_count(x))){
     x <- x + 1
   }
   hist_dt <- tabulate(
