@@ -57,13 +57,12 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
   R_xlen_t n = Rf_xlength(x);
   bool out = true;
 
-  switch (TYPEOF(x)){
+  switch (CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
     break;
   }
-  case REALSXP: {
-    if (is_int64(x)){
+  case CHEAPR_INT64SXP: {
     long long int *p_x = INTEGER64_PTR(x);
     long long int int_max = integer_max_;
     long long int shift_ = shift;
@@ -73,7 +72,9 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
         break;
       }
     }
-  } else {
+    break;
+  }
+  case REALSXP: {
     double *p_x = REAL(x);
     double int_max = integer_max_;
     double shift_ = shift;
@@ -83,8 +84,7 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
         break;
       }
     }
-  }
-  break;
+    break;
   }
   default: {
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
@@ -110,33 +110,31 @@ SEXP cpp_int64_to_numeric(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_numeric_to_int64(SEXP x){
-
-  if (is_int64(x)){
-    return x;
-  }
-
   R_xlen_t n = Rf_xlength(x);
 
-  switch (TYPEOF(x)){
+  SEXP out;
+  long long int repl;
+
+  switch (CHEAPR_TYPEOF(x)){
   case INTSXP: {
-    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
-    long long *p_out = INTEGER64_PTR(out);
     int *p_x = INTEGER(x);
-    long long int repl;
+    out = Rf_protect(Rf_allocVector(REALSXP, n));
+    long long *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
       repl = cheapr_is_na_int(p_x[i]) ? NA_INTEGER64 : p_x[i];
       p_out[i] = repl;
     }
     Rf_classgets(out, Rf_mkString("integer64"));
-    Rf_unprotect(1);
-    return out;
+    break;
   }
-  default: {
-    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
-    long long *p_out = INTEGER64_PTR(out);
+  case CHEAPR_INT64SXP: {
+    out = Rf_protect(x);
+    break;
+  }
+  case REALSXP: {
     double *p_x = REAL(x);
-
-    long long int repl;
+    out = Rf_protect(Rf_allocVector(REALSXP, n));
+    long long *p_out = INTEGER64_PTR(out);
     double temp;
     for (R_xlen_t i = 0; i < n; ++i){
       temp = p_x[i];
@@ -148,10 +146,14 @@ SEXP cpp_numeric_to_int64(SEXP x){
       p_out[i] = repl;
     }
     Rf_classgets(out, Rf_mkString("integer64"));
-    Rf_unprotect(1);
-    return out;
+    break;
+  }
+  default: {
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
+  Rf_unprotect(1);
+  return out;
 }
 
 // Found here stackoverflow.com/questions/347949
@@ -171,11 +173,15 @@ std::string string_format( const std::string& format, Args ... args){
 
 [[cpp11::register]]
 SEXP cpp_format_numeric_as_int64(SEXP x){
+
   R_xlen_t n = Rf_xlength(x);
 
-  switch (TYPEOF(x)){
+  SEXP out;
+  std::string s;
+
+  switch (CHEAPR_TYPEOF(x)){
   case INTSXP: {
-    SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
+    out = Rf_protect(Rf_allocVector(STRSXP, n));
     int *p_x = INTEGER(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -183,45 +189,45 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
         SET_STRING_ELT(out, i, NA_STRING);
       } else {
         long long temp = p_x[i];
-        std::string s = string_format("%lld", temp);
+        s = string_format("%lld", temp);
         SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
       }
     }
-    Rf_unprotect(1);
-    return out;
+    break;
   }
-  case REALSXP: {
-    SEXP out = Rf_protect(Rf_allocVector(STRSXP, n));
-    if (is_int64(x)){
-      long long *p_x = INTEGER64_PTR(x);
+  case CHEAPR_INT64SXP: {
+    out = Rf_protect(Rf_allocVector(STRSXP, n));
+    long long *p_x = INTEGER64_PTR(x);
 
-      for (R_xlen_t i = 0; i < n; ++i){
-        if (cheapr_is_na_int64(p_x[i])){
-          SET_STRING_ELT(out, i, NA_STRING);
-        } else {
-          long long temp = p_x[i];
-          std::string s = string_format("%lld", temp);
-          SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
-        }
-      }
-    } else {
-      double *p_x = REAL(x);
-
-      for (R_xlen_t i = 0; i < n; ++i){
-        if (cheapr_is_na_dbl(p_x[i])){
-          SET_STRING_ELT(out, i, NA_STRING);
-        } else {
-          long long temp = p_x[i];
-          std::string s = string_format("%lld", temp);
-          SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
-        }
+    for (R_xlen_t i = 0; i < n; ++i){
+      if (cheapr_is_na_int64(p_x[i])){
+        SET_STRING_ELT(out, i, NA_STRING);
+      } else {
+        long long temp = p_x[i];
+        s = string_format("%lld", temp);
+        SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
       }
     }
-    Rf_unprotect(1);
-    return out;
+    break;
+  }
+  case REALSXP: {
+    out = Rf_protect(Rf_allocVector(STRSXP, n));
+    double *p_x = REAL(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      if (cheapr_is_na_dbl(p_x[i])){
+        SET_STRING_ELT(out, i, NA_STRING);
+      } else {
+        long long temp = p_x[i];
+        s = string_format("%lld", temp);
+        SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+      }
+    }
+    break;
   }
   default: {
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
+  Rf_unprotect(1);
+  return out;
 }
