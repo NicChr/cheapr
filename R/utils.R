@@ -172,29 +172,22 @@ is_base_atomic <- function(x){
 }
 
 combine_levels <- function(...){
-  if (nargs() == 0){
+  dots <- list(...)
+  if (length(dots) == 0){
     return(NULL)
   }
-  if (nargs() == 1){
-    dots <- list(...)
+  get_levels <- function(x){
+    if (is.factor(x)) attr(x, "levels", TRUE) else as.character(x)
+  }
+  if (length(dots) == 1){
     if (!is.object(dots[[1L]]) && is.list(dots[[1L]])){
       return(do.call(combine_levels, dots[[1L]]))
     } else {
-      return(dots[[1L]])
+      return(get_levels(dots[[1L]]))
     }
   }
-  get_levels <- function(x){
-    if (is.factor(x)) levels(x) else as.character(x)
-  }
-  factors <- list(...)
-  levels <- new_list(length(factors))
-  for (i in seq_along(levels)){
-    f <- factors[[i]]
-    levels[[i]] <- get_levels(f)
-  }
-
   # Unique combined levels
-  collapse::funique(collapse::vec(levels))
+  collapse::funique(collapse::vec(lapply(dots, get_levels)))
 }
 
 combine_factors <- function(...){
