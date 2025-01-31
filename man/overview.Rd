@@ -16,39 +16,41 @@
 \alias{overview.data.frame}
 \title{An alternative to \code{summary()} inspired by the skimr package}
 \usage{
-overview(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+overview(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{default}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{default}(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{logical}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{logical}(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{integer}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{integer}(x, digits = getOption("cheapr.digits", 2), hist = TRUE, ...)
 
-\method{overview}{numeric}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{numeric}(x, digits = getOption("cheapr.digits", 2), hist = TRUE, ...)
 
-\method{overview}{integer64}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{integer64}(x, digits = getOption("cheapr.digits", 2), hist = TRUE, ...)
 
-\method{overview}{character}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{character}(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{factor}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{factor}(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{Date}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{Date}(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{POSIXt}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{POSIXt}(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{ts}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{ts}(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{zoo}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{zoo}(x, digits = getOption("cheapr.digits", 2), ...)
 
-\method{overview}{data.frame}(x, hist = TRUE, digits = getOption("cheapr.digits", 2))
+\method{overview}{data.frame}(x, digits = getOption("cheapr.digits", 2), hist = TRUE, ...)
 }
 \arguments{
 \item{x}{A vector or data frame.}
 
-\item{hist}{Should in-line histograms be returned? Default is \code{FALSE}.}
-
 \item{digits}{How many decimal places should the summary statistics be
 printed as? Default is 2.}
+
+\item{...}{Further arguments passed onto methods. Currently unused.}
+
+\item{hist}{Should in-line histograms be returned? Default is \code{FALSE}.}
 }
 \value{
 An object of class "overview".
@@ -79,4 +81,5 @@ overview(airquality, digits = 0)
 options(cheapr.digits = 1)
 overview(rnorm(100))
 options(cheapr.digits = 2) # The default
+
 }

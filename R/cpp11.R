@@ -296,6 +296,10 @@ cpp_set_or <- function(x, y) {
   .Call(`_cheapr_cpp_set_or`, x, y)
 }
 
+cpp_growth_rate <- function(x) {
+  .Call(`_cheapr_cpp_growth_rate`, x)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

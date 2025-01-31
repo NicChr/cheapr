@@ -7,6 +7,7 @@
 #' @param hist Should in-line histograms be returned? Default is `FALSE`.
 #' @param digits How many decimal places should the summary statistics be
 #' printed as? Default is 2.
+#' @param ... Further arguments passed onto methods. Currently unused.
 #'
 #' @returns
 #' An object of class "overview".
@@ -34,77 +35,80 @@
 #' options(cheapr.digits = 1)
 #' overview(rnorm(100))
 #' options(cheapr.digits = 2) # The default
+#'
 #' @rdname overview
 #' @export
-overview <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
+overview <- function(x, digits = getOption("cheapr.digits", 2), ...){
   UseMethod("overview")
 }
 #' @rdname overview
 #' @export
-overview.default <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  overview(new_df(x = x), hist = hist, digits = digits)
+overview.default <- function(x, digits = getOption("cheapr.digits", 2), ...){
+  overview(new_df(x = x), digits = digits, ...)
 }
 #' @rdname overview
 #' @export
-overview.logical <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  overview(new_df(x = as.logical(x)), hist = hist, digits = digits)
+overview.logical <- function(x, digits = getOption("cheapr.digits", 2), ...){
+  overview(new_df(x = as.logical(x)), digits = digits, ...)
 }
 #' @rdname overview
 #' @export
-overview.integer <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(new_df(x = as.integer(x)), hist = hist, digits = digits)
+overview.integer <- function(x, digits = getOption("cheapr.digits", 2), hist = TRUE, ...){
+  out <- overview(new_df(x = as.integer(x)), hist = hist, digits = digits, ...)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.numeric <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(new_df(x = as.numeric(x)), hist = hist, digits = digits)
+overview.numeric <- function(x, digits = getOption("cheapr.digits", 2), hist = TRUE, ...){
+  out <- overview(new_df(x = as.numeric(x)), hist = hist, digits = digits, ...)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.integer64 <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(cpp_int64_to_numeric(x), hist = hist, digits = digits)
+overview.integer64 <- function(x, digits = getOption("cheapr.digits", 2), hist = TRUE, ...){
+  out <- overview(cpp_int64_to_numeric(x), hist = hist, digits = digits, ...)
   out$numeric$class <- class(x)[1]
   out
 }
 #' @rdname overview
 #' @export
-overview.character <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(new_df(x = as.character(x)), hist = hist, digits = digits)
+overview.character <- function(x, digits = getOption("cheapr.digits", 2), ...){
+  out <- overview(new_df(x = as.character(x)), digits = digits, ...)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.factor <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(new_df(x = as.factor(x)), hist = hist, digits = digits)
+overview.factor <- function(x, digits = getOption("cheapr.digits", 2), ...){
+  out <- overview(new_df(x = as.factor(x)), digits = digits, ...)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.Date <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(new_df(x = as.Date(x)), hist = hist, digits = digits)
+overview.Date <- function(x, digits = getOption("cheapr.digits", 2), ...){
+  out <- overview(new_df(x = as.Date(x)), digits = digits, ...)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.POSIXt <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(new_df(x = as.POSIXct(x)), hist = hist, digits = digits)
+overview.POSIXt <- function(x, digits = getOption("cheapr.digits", 2), ...){
+  out <- overview(new_df(x = as.POSIXct(x)), digits = digits, ...)
   out$cols <- NA_integer_
   out
 }
 #' @rdname overview
 #' @export
-overview.ts <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  out <- overview(transform_all(as.data.frame(x), as.numeric), hist = hist, digits = digits)
+overview.ts <- function(x, digits = getOption("cheapr.digits", 2), ...){
+  ts_df <- as.data.frame(x)
+  out <- overview(transform_all(ts_df, as.numeric), digits = digits, ...)
   out$time_series <- out$numeric
   out$numeric <- sset(out$numeric, 0)
   out$time_series$class <- class(x)[1]
+  out$time_series$growth_rate <- pluck_row(summarise_all(ts_df, cpp_growth_rate))
   out
 }
 #' @rdname overview
@@ -112,21 +116,19 @@ overview.ts <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
 overview.zoo <- overview.ts
 #' @rdname overview
 #' @export
-overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digits", 2)){
-  check_is_df(x)
+overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist = TRUE, ...){
   N <- nrow(x)
   num_cols <- ncol(x)
   skim_df <- x
   data_nms <- names(skim_df)
-  col_classes <- vapply(skim_df, function(x) sset(class(x), length(class(x))), "")
-  out <- list_as_df(cheapr_enframe(col_classes, name = "col", value = "class"))
+
+  col_classes <- vapply(skim_df, function(x) class(x)[length(class(x))], "")
+  out <- as_df(cheapr_enframe(col_classes, name = "col", value = "class"))
   chr_vars <- data_nms[vapply(skim_df, is.character, FALSE,
                               USE.NAMES = FALSE)]
-  if (length(chr_vars) > 0L) {
-    for (chr in chr_vars){
-      skim_df[[chr]] <- factor_(skim_df[[chr]], ordered = TRUE)
-    }
-  }
+  skim_df <- transform_all(
+    skim_df, function(x) factor_(x, ordered = TRUE), .cols = chr_vars
+  )
   lgl_vars <- data_nms[vapply(skim_df, is.logical, FALSE)]
   num_vars <- data_nms[vapply(skim_df, function(x) inherits(x,
                                                             c("integer", "numeric", "integer64")), FALSE)]
@@ -137,20 +139,24 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
   datetime_vars <- data_nms[vapply(skim_df, function(x) inherits(x, "POSIXt"),  FALSE)]
   ts_vars <- data_nms[vapply(skim_df, function(x) inherits(x, c("ts", "zoo")),  FALSE)]
   cat_vars <- data_nms[vapply(skim_df, is.factor, FALSE)]
-  other_vars <- setdiff_(data_nms, c(lgl_vars, num_vars, date_vars,
-                                     datetime_vars, ts_vars, cat_vars))
+  other_vars <- setdiff(data_nms, c(lgl_vars, num_vars, date_vars,
+                                    datetime_vars, ts_vars, cat_vars))
 
 # Logical -----------------------------------------------------------------
 
   lgl_data <- df_select(skim_df, lgl_vars)
   which_lgl <- which_in(out[["col"]], lgl_vars)
   lgl_out <- sset(out, which_lgl)
-  value_size <- min(length(which_lgl), 1L)
-  lgl_out <- df_add_cols(lgl_out, list(n_missing = NA_integer_[value_size]))
-  lgl_out <- df_add_cols(lgl_out, list(p_complete = NA_real_[value_size]))
-  lgl_out <- df_add_cols(lgl_out, list(n_true = NA_integer_[value_size],
-                                       n_false = NA_integer_[value_size]))
-  lgl_out <- df_add_cols(lgl_out, list(p_true = NA_real_[value_size]))
+  lgl_out <- df_add_cols(
+    lgl_out,
+    list(
+      n_missing = NA_integer_,
+      p_complete = NA_real_,
+      n_true = NA_integer_,
+      n_false = NA_integer_,
+      p_true = NA_real_
+    )
+  )
   if (N > 0L && length(which_lgl) > 0) {
     lgl_out$n_missing <- pluck_row(summarise_all(lgl_data, na_count), 1)
     lgl_out$p_complete <- pluck_row(summarise_all(lgl_data, prop_complete), 1)
@@ -162,42 +168,38 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
 # Numeric -----------------------------------------------------------------
 
   num_data <- df_select(skim_df, num_vars)
-  which_num <- which_in(out[["col"]], num_vars)
-  num_out <- sset(out, which_num)
-  value_size <- min(length(which_num), 1L)
-  num_out <- df_add_cols(num_out, list(n_missing = NA_integer_[value_size]))
-  num_out <- df_add_cols(num_out, list(p_complete = NA_real_[value_size]))
-  num_out <- df_add_cols(num_out, list(n_unique = NA_integer_[value_size]))
-  num_out <- df_add_cols(num_out, stats::setNames(
-    new_list(8, default = NA_real_[value_size]),
-    c("mean", "p0", "p25", "p50", "p75", "p100", "iqr", "sd")
-  ))
-  if (hist){
-    num_out$hist <- NA_character_[value_size]
-  }
 
   ## Coerce int64 to double
   num_data <- transform_all(num_data, cpp_int64_to_numeric, int64_vars)
 
+  which_num <- which_in(out[["col"]], num_vars)
+  num_out <- sset(out, which_num)
+  num_out <- df_add_cols(
+    num_out,
+    list(
+      n_missing = NA_integer_,
+      p_complete = NA_real_,
+      n_unique = NA_integer_,
+      mean = NA_real_,
+      p0 = NA_real_,
+      p25 = NA_real_,
+      p50 = NA_real_,
+      p75 = NA_real_,
+      p100 = NA_real_,
+      iqr = NA_real_,
+      sd = NA_real_
+    )
+  )
+
+  if (hist){
+    num_out$hist <- character(length(which_num))
+  }
+
   if (N > 0L && length(which_num) > 0) {
-    num_out$n_missing <- pluck_row(summarise_all(num_data, na_count), 1)
-    num_out$p_complete <- pluck_row(summarise_all(num_data, prop_complete), 1)
-    num_out$n_unique <- pluck_row(summarise_all(num_data, n_unique), 1)
-    num_out$n_unique <- num_out$n_unique - (num_out$n_missing > 0L)
-    num_out$mean <- pluck_row(summarise_all(num_data, collapse::fmean), 1)
-    num_out$p0 <- pluck_row(summarise_all(num_data, collapse::fmin), 1)
-    num_out$p25 <- pluck_row(summarise_all(
-      num_data, function(x) collapse::fnth(x, 0.25)
-    ), 1)
-    num_out$p50 <- pluck_row(summarise_all(
-      num_data, function(x) collapse::fnth(x, 0.5)
-    ), 1)
-    num_out$p75 <- pluck_row(summarise_all(
-      num_data, function(x) collapse::fnth(x, 0.75)
-    ), 1)
-    num_out$p100 <- pluck_row(summarise_all(num_data, collapse::fmax), 1)
-    num_out$iqr <- num_out$p75 - num_out$p25
-    num_out$sd <- pluck_row(summarise_all(num_data, cheapr_sd), 1)
+    num_summaries <- unname(lapply(num_data, numeric_summary))
+    num_out <- df_add_cols(
+      num_out, collapse::rowbind(num_summaries)
+    )
     if (hist){
       num_out$hist <- pluck_row(summarise_all(
         num_data, inline_hist
@@ -210,12 +212,16 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
   date_data <- df_select(skim_df, date_vars)
   which_date <- which_in(out[["col"]], date_vars)
   date_out <- sset(out, which_date)
-  value_size <- min(length(which_date), 1L)
-  date_out <- df_add_cols(date_out, list(n_missing = NA_integer_[value_size]))
-  date_out <- df_add_cols(date_out, list(p_complete = NA_real_[value_size]))
-  date_out <- df_add_cols(date_out, list(n_unique = NA_integer_[value_size]))
-  date_out <- df_add_cols(date_out, list(min = .Date(NA_real_[value_size]),
-                                         max = .Date(NA_real_[value_size])))
+  date_out <- df_add_cols(
+    date_out,
+    list(
+      n_missing = NA_integer_,
+      p_complete = NA_real_,
+      n_unique = NA_integer_,
+      min = NA_real_,
+      max = NA_real_
+    )
+  )
   if (N > 0L && length(which_date) > 0) {
     date_out$n_missing <- pluck_row(summarise_all(date_data, na_count), 1)
     date_out$p_complete <- pluck_row(summarise_all(date_data, prop_complete), 1)
@@ -234,13 +240,17 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
   datetime_data <- transform_all(datetime_data, as.POSIXct)
   which_datetime <- which_in(out[["col"]], datetime_vars)
   datetime_out <- sset(out, which_datetime)
-  value_size <- min(length(which_datetime), 1L)
-  datetime_out <- df_add_cols(datetime_out, list(n_missing = NA_integer_[value_size]))
-  datetime_out <- df_add_cols(datetime_out, list(p_complete = NA_real_[value_size]))
-  datetime_out <- df_add_cols(datetime_out, list(n_unique = NA_integer_[value_size]))
-  datetime_out <- df_add_cols(datetime_out, list(tzone = NA_character_[value_size]))
-  datetime_out <- df_add_cols(datetime_out, list(min = .POSIXct(NA_real_[value_size]),
-                                                 max = .POSIXct(NA_real_[value_size])))
+  datetime_out <- df_add_cols(
+    datetime_out,
+    list(
+      n_missing = NA_integer_,
+      p_complete = NA_real_,
+      n_unique = NA_integer_,
+      tzone = NA_character_,
+      min = NA_real_,
+      max = NA_real_
+    )
+  )
   if (N > 0L && length(which_datetime) > 0) {
     datetime_out$n_missing <- pluck_row(summarise_all(datetime_data, na_count), 1)
     datetime_out$p_complete <- pluck_row(summarise_all(datetime_data, prop_complete), 1)
@@ -263,7 +273,10 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
   if (N > 0L && length(which_ts) > 0) {
     ts_overviews <- new_list(nrow(ts_out))
     for (i in seq_along(ts_overviews)){
-      ts_overviews[[i]] <- overview(ts_data[[ts_out[["col"]][i]]], hist = hist, digits = digits)$time_series
+      ts_overviews[[i]] <- overview(
+        ts_data[[ts_out[["col"]][i]]],
+        hist = hist, digits = digits, ...
+      )$time_series
       if (length(attr(ts_overviews[[i]], "row.names")) > 1){
         ts_overviews[[i]][["col"]] <- paste0(ts_out[["col"]][i], "_",
                                              ts_overviews[[i]][["col"]])
@@ -279,13 +292,17 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
   cat_data <- df_select(skim_df, cat_vars)
   which_cat <- which_in(out[["col"]], cat_vars)
   cat_out <- sset(out, which_cat)
-  value_size <- min(length(which_cat), 1L)
-  cat_out <- df_add_cols(cat_out, list(n_missing = NA_integer_[value_size]))
-  cat_out <- df_add_cols(cat_out, list(p_complete = NA_real_[value_size]))
-  cat_out <- df_add_cols(cat_out, list(n_unique = NA_integer_[value_size]))
-  cat_out <- df_add_cols(cat_out, list(n_levels = NA_integer_[value_size]))
-  cat_out <- df_add_cols(cat_out, list(min = NA_character_[value_size],
-                                       max = NA_character_[value_size]))
+  cat_out <- df_add_cols(
+    cat_out,
+    list(
+      n_missing = NA_integer_,
+      p_complete = NA_real_,
+      n_unique = NA_integer_,
+      n_levels = NA_integer_,
+      min = NA_character_,
+      max = NA_character_
+    )
+  )
   if (N > 0L && length(which_cat) > 0) {
     cat_out$n_missing <- pluck_row(summarise_all(cat_data, na_count), 1)
     cat_out$p_complete <- pluck_row(summarise_all(cat_data, prop_complete), 1)
@@ -307,10 +324,14 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
   other_data <- df_select(skim_df, other_vars)
   which_other <- which_in(out[["col"]], other_vars)
   other_out <- sset(out, which_other)
-  value_size <- min(length(which_other), 1L)
-  other_out <- df_add_cols(other_out, list(n_missing = NA_integer_[value_size]))
-  other_out <- df_add_cols(other_out, list(p_complete = NA_real_[value_size]))
-  other_out <- df_add_cols(other_out, list(n_unique = NA_integer_[value_size]))
+  other_out <- df_add_cols(
+    other_out,
+    list(
+      n_missing = NA_integer_,
+      p_complete = NA_real_,
+      n_unique = NA_integer_
+    )
+  )
   if (N > 0L && length(which_other) > 0) {
     other_out$n_missing <- pluck_row(summarise_all(
       other_data, function(x) na_count(x, recursive = FALSE)
@@ -335,7 +356,7 @@ overview.data.frame <- function(x, hist = TRUE, digits = getOption("cheapr.digit
     categorical = cat_out,
     other = other_out
   )
-  class(out) <- c("overview", "list")
+  class(out) <- "overview"
   out
 }
 #' @export
@@ -348,23 +369,15 @@ print.overview <- function(x, max = NULL, ...){
   # use significant digits
   # Otherwise use decimal digits
 
-  pretty_round <- function(x, decimal_digits = digits, signif_digits = digits){
-    if (!is.numeric(x)){
-      stop("x must be numeric")
-    }
-    if (!is.integer(x) && is.numeric(x)){
-      x <- cheapr_if_else(
-        abs(x) < 1,
-        signif(x, signif_digits),
-        round(x, decimal_digits)
-      )
-    }
-    x
-  }
-
-  pretty_num <- function(x, round_digits = digits, drop0trailing = TRUE, scientific = 3, ...){
-    format(pretty_round(x, round_digits, round_digits), drop0trailing = drop0trailing,
-           scientific = scientific, ...)
+  pretty_num <- function(
+    x, round_digits = digits, drop0trailing = TRUE, scientific = 3, ...
+  ){
+    format(
+      pretty_round(
+        x, round_digits, round_digits
+      ), drop0trailing = drop0trailing,
+      scientific = scientific, ...
+    )
   }
   abbr <- function(x, min, left = FALSE){
     abbreviate(x, minlength = min, named = FALSE,
@@ -388,6 +401,7 @@ print.overview <- function(x, max = NULL, ...){
       #   temp[[i]] <- as_tibble(format_num_cols(temp[[i]], pretty_round))
       # } else {
       temp[[i]] <- format_num_cols(temp[[i]], pretty_num)
+      temp[[i]][["class"]] <- NULL
       # }
     }
   }
@@ -395,21 +409,18 @@ print.overview <- function(x, max = NULL, ...){
   if (nrow(temp$logical)){
     cat("\n----- Logical -----\n")
     names(temp$logical) <- abbr(names(temp$logical), 8)
-    temp$logical$class <- abbr(temp$logical$class, 6)
     temp$logical$col <- abbr(temp$logical$col, 14)
     print(temp$logical)
   }
   if (nrow(temp$numeric)){
     cat("\n----- Numeric -----\n")
     names(temp$numeric) <- abbr(names(temp$numeric), 8)
-    temp$numeric$class <- abbr(temp$numeric$class, 6)
     temp$numeric$col <- abbr(temp$numeric$col, 14)
     print(temp$numeric)
   }
   if (nrow(temp$date)){
     cat("\n----- Dates -----\n")
     names(temp$date) <- abbr(names(temp$date), 8)
-    temp$date$class <- abbr(temp$date$class, 6)
     temp$date$col <- abbr(temp$date$col, 14)
     print(temp$date)
   }
@@ -430,35 +441,37 @@ print.overview <- function(x, max = NULL, ...){
     temp$datetime$max <- datetime_chr_max
     cat("\n----- Date-Times -----\n")
     names(temp$datetime) <- abbr(names(temp$datetime), 8)
-    temp$datetime$class <- abbr(temp$datetime$class, 6)
     temp$datetime$col <- abbr(temp$datetime$col, 14)
     print(temp$datetime)
   }
   if (nrow(temp$time_series)){
     cat("\n----- Time-Series -----\n")
+    temp$time_series$growth_rate <- paste0(
+      pretty_num(
+        (x$time_series$growth_rate - 1) * 100
+      ), "%"
+    )
     names(temp$time_series) <- abbr(names(temp$time_series), 8)
-    temp$time_series$class <- abbr(temp$time_series$class, 6)
     temp$time_series$col <- abbr(temp$time_series$col, 14)
     print(temp$time_series)
   }
   if (nrow(temp$categorical)){
     cat("\n----- Categorical -----\n")
     names(temp$categorical) <- abbr(names(temp$categorical), 8)
-    temp$categorical$class <- abbr(temp$categorical$class, 6)
     temp$categorical$col <- abbr(temp$categorical$col, 14)
     print(temp$categorical)
   }
   if (nrow(temp$other)){
     cat("\n----- Other -----\n")
     names(temp$other) <- abbr(names(temp$other), 8)
-    temp$other$class <- abbr(temp$other$class, 6)
     temp$other$col <- abbr(temp$other$col, 14)
     print(temp$other)
   }
   invisible(x)
 }
 
-### Helpers
+# Helpers -----------------------------------------------------------------
+
 
 n_unique <- function(x, na_rm = FALSE){
   out <- collapse::fnunique(x)
@@ -515,15 +528,19 @@ spark_bar <- function(x){
 
 inline_hist <- function(x, n_bins = 5L){
   if (length(x) < 1L) {
-    return(" ")
+    return("")
   }
-  if (is.infinite(max(abs(collapse::frange(x, na.rm = TRUE))))) {
+  if (is.infinite(max(abs(collapse::frange(x, na.rm = TRUE))))){
     x[which_(is.infinite(x))] <- NA
   }
-  if (all_na(x)) {
-    return(" ")
+  n_nas <- na_count(x)
+  all_na <- n_nas == length(x)
+
+  if (all_na){
+    return("")
   }
-  if (val_count(x, 0) == (length(x) - na_count(x))){
+  # All zeros?
+  if (val_count(x, 0) == (length(x) - n_nas)){
     x <- x + 1
   }
   hist_dt <- tabulate(
@@ -535,15 +552,14 @@ inline_hist <- function(x, n_bins = 5L){
 }
 
 # Efficient summary statistics
-# Can be used in overview() in the future
 numeric_summary <- function(x){
   n <- length(x)
   if (n == 0){
     return(
       fast_df(
-        n_missing = 0L,
-        p_complete = 1,
-        n_unique = 0L,
+        n_missing = NA_integer_,
+        p_complete = NA_real_,
+        n_unique = NA_integer_,
         mean = NA_real_,
         p0 = NA_real_,
         p25 = NA_real_,
@@ -607,3 +623,26 @@ numeric_summary <- function(x){
     sd = sd
   )
 }
+
+# A custom rounding that uses decimal places for large numbers
+# and significant digits for small numbers
+pretty_round <- function(x, decimal_digits = 2, signif_digits = 2, threshold = 1){
+  if (!is.numeric(x)){
+    stop("x must be numeric")
+  }
+  if (!is.integer(x) && is.numeric(x)){
+    x <- cheapr_if_else(
+      abs(x) < threshold,
+      signif(x, signif_digits),
+      round(x, decimal_digits)
+    )
+  }
+  x
+}
+# ts_growth_rate_per_period <- function(x){
+#   time <- as.vector(stats::time(x))
+#   freq <- stats::frequency(x)
+#   a <- utils::head(x, n = 1)
+#   b <- utils::tail(x, n = 1)
+#   cpp_growth_rate(as.double(a), as.double(b), length(time) / freq)
+# }

@@ -524,6 +524,13 @@ extern "C" SEXP _cheapr_cpp_set_or(SEXP x, SEXP y) {
     return cpp11::as_sexp(cpp_set_or(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
   END_CPP11
 }
+// utils.cpp
+SEXP cpp_growth_rate(SEXP x);
+extern "C" SEXP _cheapr_cpp_growth_rate(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_growth_rate(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -579,6 +586,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_gcd",                     (DL_FUNC) &_cheapr_cpp_gcd,                     5},
     {"_cheapr_cpp_gcd2",                    (DL_FUNC) &_cheapr_cpp_gcd2,                    4},
     {"_cheapr_cpp_gcd2_vectorised",         (DL_FUNC) &_cheapr_cpp_gcd2_vectorised,         4},
+    {"_cheapr_cpp_growth_rate",             (DL_FUNC) &_cheapr_cpp_growth_rate,             1},
     {"_cheapr_cpp_if_else",                 (DL_FUNC) &_cheapr_cpp_if_else,                 4},
     {"_cheapr_cpp_int64_to_double",         (DL_FUNC) &_cheapr_cpp_int64_to_double,         1},
     {"_cheapr_cpp_int64_to_int",            (DL_FUNC) &_cheapr_cpp_int64_to_int,            1},

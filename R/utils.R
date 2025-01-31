@@ -1,6 +1,7 @@
 #' @noRd
 
 # Like deparse1 but has a cutoff in case of massive strings
+
 deparse2 <- function(expr, collapse = " ", width.cutoff = 500L, nlines = 10L, ...){
   paste(deparse(expr, width.cutoff, nlines = nlines, ...), collapse = collapse)
 }
@@ -148,6 +149,7 @@ n_dots <- function(...){
 # Keep this in-case anyone was using it
 fill_with_na <- na_insert
 
+# The breaks the `cut(x, n)` produces
 r_cut_breaks <- function(x, n){
   check_length(n, 1)
   if (is.na(n) || n < 2){
@@ -174,39 +176,35 @@ is_base_atomic <- function(x){
     is.null(x)
 }
 
-combine_levels <- function(...){
+# If args is a plain list of items then extract the first element of
+# the top list
+
+tidy_args <- function(...){
   dots <- list(...)
-  if (length(dots) == 0){
-    return(NULL)
+  if (length(dots) == 1 && !is.object(dots[[1L]]) && is.list(dots[[1L]])){
+    dots[[1L]]
+  } else {
+    dots
   }
+}
+
+# Combine levels of factors
+# Converts non factors into character vectors
+combine_levels <- function(...){
+  dots <- tidy_args(...)
   get_levels <- function(x){
     if (is.factor(x)) attr(x, "levels", TRUE) else as.character(x)
   }
-  if (length(dots) == 1){
-    if (!is.object(dots[[1L]]) && is.list(dots[[1L]])){
-      return(do.call(combine_levels, dots[[1L]]))
-    } else {
-      return(get_levels(dots[[1L]]))
-    }
-  }
   # Unique combined levels
-  levels <- unlist(lapply(dots, get_levels), recursive = FALSE)
+  levels <- as.character(unlist(lapply(dots, get_levels), recursive = FALSE))
   collapse::funique(levels)
 }
 
 combine_factors <- function(...){
-  if (nargs() == 0){
-    return(NULL)
+  factors <- tidy_args(...)
+  if (length(factors) == 1){
+    return(factors[[1L]])
   }
-  if (nargs() == 1){
-    dots <- list(...)
-    if (!is.object(dots[[1L]]) && is.list(dots[[1L]])){
-      return(do.call(combine_factors, dots[[1L]]))
-    } else {
-      return(dots[[1L]])
-    }
-  }
-  factors <- list(...)
   to_char <- function(x){
     if (is.factor(x)) factor_as_character(x) else as.character(x)
   }
@@ -229,7 +227,7 @@ df_add_cols <- function(data, cols){
   out <- unclass(data)
   temp <- unclass(cols)
   for (col in names(temp)){
-    out[[col]] <- cheapr_recycle(temp[[col]], length = N)
+    out[[col]] <- if (is.null(temp[[col]])) NULL else cheapr_recycle(temp[[col]], length = N)
   }
   class(out) <- class(data)
   out

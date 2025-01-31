@@ -728,6 +728,73 @@ SEXP coerce_vector(SEXP source, SEXPTYPE type){
   }
 }
 
+// Basic growth rate
+// i.e the expected percent change per unit of time
+// eqn: (new / old ) ^ 1/n
+//
+// Which is not the same as: new / old
+// of which the latter is mistakenly and commonly referred to
+// as a 'growth rate'
+
+// o(1) time and space
+
+double growth_rate(double a, double b, double n){
+  if (n < 1.0){
+    Rf_error("n must be >= 1");
+  }
+  if (n == R_PosInf){
+    Rf_error("n must be finite positive");
+  }
+  if (n == 1.0){
+    return NA_REAL;
+  }
+  if (a == 0.0 && b == 0.0){
+    return 1.0;
+  } else {
+    return std::pow(b / a, 1.0 / (n - 1.0));
+  }
+}
+
+#define R_SCALAR_AS_DOUBLE(x, na_val) ((double) (x == na_val ? NA_REAL : x))
+
+[[cpp11::register]]
+SEXP cpp_growth_rate(SEXP x){
+  R_xlen_t n = Rf_xlength(x);
+  if (n == 0){
+    return Rf_allocVector(REALSXP, 0);
+  }
+  if (n == 1){
+    return Rf_ScalarReal(NA_REAL);
+  }
+  double a, b;
+  switch(CHEAPR_TYPEOF(x)){
+  case LGLSXP:
+  case INTSXP: {
+    int x_n = INTEGER(x)[n - 1];
+    int x_1 = INTEGER(x)[0];
+    a = R_SCALAR_AS_DOUBLE(x_1, NA_INTEGER);
+    b = R_SCALAR_AS_DOUBLE(x_n, NA_INTEGER);
+    break;
+  }
+  case CHEAPR_INT64SXP: {
+    long long int x_n = INTEGER64_PTR(x)[n - 1];
+    long long int x_1 = INTEGER64_PTR(x)[0];
+    a = R_SCALAR_AS_DOUBLE(x_1, NA_INTEGER64);
+    b = R_SCALAR_AS_DOUBLE(x_n, NA_INTEGER64);
+    break;
+  }
+  case REALSXP: {
+    b = REAL(x)[n - 1];
+    a = REAL(x)[0];
+    break;
+  }
+  default: {
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+  }
+  }
+  return Rf_ScalarReal(growth_rate(a, b, n));
+}
+
 // SEXP cpp_c(SEXP x){
 //   if (!Rf_isVectorList(x)){
 //     Rf_error("x must be a list of vectors");
@@ -939,3 +1006,4 @@ SEXP coerce_vector(SEXP source, SEXPTYPE type){
 //   Rf_unprotect(3);
 //   return out;
 // }
+

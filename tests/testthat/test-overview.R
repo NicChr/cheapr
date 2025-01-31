@@ -1,5 +1,7 @@
 test_that("overview", {
   options(cheapr.digits = 2)
+  expect_snapshot(overview(numeric(), hist = TRUE))
+  expect_snapshot(overview(numeric(), hist = FALSE))
   expect_snapshot(overview(airquality, hist = FALSE))
   iris2 <- iris
   iris2$large <- iris2$Sepal.Length >= 6
@@ -18,12 +20,10 @@ test_that("overview", {
          1.59003458564609, 0.52747123961581, -0.699964248520901, -0.44330920205848,
          -1.23317865134766, -2.3631591543418, 0.858336607111522, 1.50765939182219,
          0.0275182238317008)
-  df <- list_as_df(
-    list(
-      y = ts(x),
-      x = ts(x),
-      z = ts(matrix(rep(x, 5), ncol = 5))
-    )
+  df <- fast_df(
+    y = ts(x),
+    x = ts(x),
+    z = ts(matrix(rep(x, 5), ncol = 5))
   )
   expect_snapshot(overview(df))
   expect_snapshot(overview(ts(matrix(x, ncol = 5))))
