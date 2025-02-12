@@ -2,6 +2,8 @@
 
 - R version 4.0.0 now required as also required by cpp11.
 
+- New function `int_sign` for integer-based signs.
+
 - `overview` now prints slightly differently. Specifically 'class'
 is not printed. Time series overviews now return and print the growth rate.
 

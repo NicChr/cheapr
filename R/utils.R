@@ -179,7 +179,7 @@ is_base_atomic <- function(x){
 # If args is a plain list of items then extract the first element of
 # the top list
 
-tidy_args <- function(...){
+as_list_of <- function(...){
   dots <- list(...)
   if (length(dots) == 1 && !is.object(dots[[1L]]) && is.list(dots[[1L]])){
     dots[[1L]]
@@ -191,7 +191,7 @@ tidy_args <- function(...){
 # Combine levels of factors
 # Converts non factors into character vectors
 combine_levels <- function(...){
-  dots <- tidy_args(...)
+  dots <- as_list_of(...)
   get_levels <- function(x){
     if (is.factor(x)) attr(x, "levels", TRUE) else as.character(x)
   }
@@ -201,7 +201,7 @@ combine_levels <- function(...){
 }
 
 combine_factors <- function(...){
-  factors <- tidy_args(...)
+  factors <- as_list_of(...)
   if (length(factors) == 1){
     return(factors[[1L]])
   }

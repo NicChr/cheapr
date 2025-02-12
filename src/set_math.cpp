@@ -750,3 +750,39 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
   Rf_unprotect(1);
   return out;
 }
+
+[[cpp11::register]]
+SEXP cpp_int_sign(SEXP x){
+  cpp_check_numeric(x);
+  R_xlen_t n = Rf_xlength(x);
+  SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+  int *p_out = INTEGER(out);
+  int res;
+  switch (TYPEOF(x)){
+  case LGLSXP: {
+    int *p_x = INTEGER(x);
+    memmove(&p_out[0], &p_x[0], n * sizeof(int));
+    break;
+  }
+  case INTSXP: {
+    int *p_x = INTEGER(x);
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i) {
+      res = p_x[i] == NA_INTEGER ? NA_INTEGER : (p_x[i] > 0) - (p_x[i] < 0);
+      p_out[i] = res;
+    }
+    break;
+  }
+  case REALSXP: {
+    double *p_x = REAL(x);
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i) {
+      res = p_x[i] != p_x[i] ? NA_INTEGER : (p_x[i] > 0) - (p_x[i] < 0);
+      p_out[i] = res;
+    }
+    break;
+  }
+  }
+  Rf_unprotect(1);
+  return out;
+}

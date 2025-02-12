@@ -446,6 +446,13 @@ extern "C" SEXP _cheapr_cpp_set_round(SEXP x, SEXP digits) {
     return cpp11::as_sexp(cpp_set_round(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(digits)));
   END_CPP11
 }
+// set_math.cpp
+SEXP cpp_int_sign(SEXP x);
+extern "C" SEXP _cheapr_cpp_int_sign(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_int_sign(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // sset.cpp
 SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by);
 extern "C" SEXP _cheapr_cpp_sset_range(SEXP x, SEXP from, SEXP to, SEXP by) {
@@ -592,6 +599,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_int64_to_int",            (DL_FUNC) &_cheapr_cpp_int64_to_int,            1},
     {"_cheapr_cpp_int64_to_numeric",        (DL_FUNC) &_cheapr_cpp_int64_to_numeric,        1},
     {"_cheapr_cpp_int_sequence",            (DL_FUNC) &_cheapr_cpp_int_sequence,            3},
+    {"_cheapr_cpp_int_sign",                (DL_FUNC) &_cheapr_cpp_int_sign,                1},
     {"_cheapr_cpp_is_na",                   (DL_FUNC) &_cheapr_cpp_is_na,                   1},
     {"_cheapr_cpp_lag",                     (DL_FUNC) &_cheapr_cpp_lag,                     5},
     {"_cheapr_cpp_lag2",                    (DL_FUNC) &_cheapr_cpp_lag2,                    6},
