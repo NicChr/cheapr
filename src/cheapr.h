@@ -8,9 +8,6 @@
 #define R_NO_REMAP
 #endif
 
-#ifndef VECTOR_PTR
-#define VECTOR_PTR(x) ((SEXP *) DATAPTR(x))
-#endif
 #ifndef VECTOR_PTR_RO
 #define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
 #endif

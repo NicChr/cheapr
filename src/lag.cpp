@@ -291,7 +291,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
         ++NP;
         SEXP tempv = Rf_protect(Rf_allocVector(VECSXP, 1));
         ++NP;
-        SEXP* __restrict__ p_lag = VECTOR_PTR(lag_temp);
+        const SEXP* __restrict__ p_lag = VECTOR_PTR_RO(lag_temp);
         // Positive lags
         if (k >= 0){
           for (R_xlen_t i = 0; i < k; ++i) {
