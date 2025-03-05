@@ -260,8 +260,16 @@ cpp_sset_range <- function(x, from, to, by) {
   .Call(`_cheapr_cpp_sset_range`, x, from, to, by)
 }
 
+cpp_df_select <- function(x, locs, copy_attrs) {
+  .Call(`_cheapr_cpp_df_select`, x, locs, copy_attrs)
+}
+
 cpp_sset_df <- function(x, indices) {
   .Call(`_cheapr_cpp_sset_df`, x, indices)
+}
+
+cpp_df_subset <- function(x, i, j) {
+  .Call(`_cheapr_cpp_df_subset`, x, i, j)
 }
 
 cpp_vec_length <- function(x) {

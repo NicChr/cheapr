@@ -243,52 +243,14 @@ sset.vctrs_rcrd <- function(x, i, ...){
   out <- sset(list_as_df(x), i)
   set_attrs(out, attributes(x), add = FALSE)
 }
-df_select <- function(x, j){
-  j_exists <- !missing(j)
-  if (j_exists && is.logical(j)){
-    check_length(j, length(x))
-    j <- which_(j)
-  }
-  if (j_exists && is.character(j)){
-    j <- collapse::fmatch(j, names(x), overid = 2L)
-  }
-  attrs <- attributes(x)
-  if (j_exists){
-    out <- cpp_list_rm_null(.subset(x, j), always_shallow_copy = FALSE)
-  } else {
-    out <- cpp_list_rm_null(x)
-  }
-  # Neater but not as efficient for dfs with many cols
-  # out <- cpp_list_rm_null(unclass(x)[j])
-  attrs[["names"]] <- attr(out, "names")
-  attrs[["row.names"]] <- .row_names_info(x, type = 0L)
-  set_attrs(out, attrs, add = FALSE)
+df_select <- function(x, j = NULL, copy_attrs = TRUE){
+  .Call(`_cheapr_cpp_df_select`, x, j, copy_attrs)
 }
 
 # Efficient data frame subset
 # It relies on sset which falls back on `[` when no method is found.
-df_subset <- function(x, i, j){
-  missingi <- missing(i)
-  missingj <- missing(j)
-  nrows <- length(attr(x, "row.names"))
-  if (!missingi && is.logical(i)){
-    check_length(i, nrows)
-    i <- which_(i)
-  }
-
-  ### Subset columns
-  # If j arg is missing, we want to still create a shallow copy
-  # Which we do through df_select()
-  if (!missingj || (missingi && missingj)){
-    out <- df_select(x, j)
-  } else {
-    out <- x
-  }
-  ### Subset rows
-  if (!missingi){
-    out <- cpp_sset_df(out, as.integer(i))
-  }
-  out
+df_subset <- function(x, i = NULL, j = NULL){
+  .Call(`_cheapr_cpp_df_subset`, x, if (missing(i)) NULL else i, if (missing(j)) NULL else j)
 }
 # Turn negative indices to positives
 neg_indices_to_pos <- function(exclude, n){

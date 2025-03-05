@@ -461,10 +461,24 @@ extern "C" SEXP _cheapr_cpp_sset_range(SEXP x, SEXP from, SEXP to, SEXP by) {
   END_CPP11
 }
 // sset.cpp
+SEXP cpp_df_select(SEXP x, SEXP locs, bool copy_attrs);
+extern "C" SEXP _cheapr_cpp_df_select(SEXP x, SEXP locs, SEXP copy_attrs) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_df_select(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(locs), cpp11::as_cpp<cpp11::decay_t<bool>>(copy_attrs)));
+  END_CPP11
+}
+// sset.cpp
 SEXP cpp_sset_df(SEXP x, SEXP indices);
 extern "C" SEXP _cheapr_cpp_sset_df(SEXP x, SEXP indices) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_sset_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
+  END_CPP11
+}
+// sset.cpp
+SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j);
+extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_df_subset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j)));
   END_CPP11
 }
 // utils.cpp
@@ -587,6 +601,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_dbl_sequence",            (DL_FUNC) &_cheapr_cpp_dbl_sequence,            3},
     {"_cheapr_cpp_df_col_na_counts",        (DL_FUNC) &_cheapr_cpp_df_col_na_counts,        1},
     {"_cheapr_cpp_df_row_na_counts",        (DL_FUNC) &_cheapr_cpp_df_row_na_counts,        1},
+    {"_cheapr_cpp_df_select",               (DL_FUNC) &_cheapr_cpp_df_select,               3},
+    {"_cheapr_cpp_df_subset",               (DL_FUNC) &_cheapr_cpp_df_subset,               3},
     {"_cheapr_cpp_drop_null",               (DL_FUNC) &_cheapr_cpp_drop_null,               2},
     {"_cheapr_cpp_fixed_width_breaks",      (DL_FUNC) &_cheapr_cpp_fixed_width_breaks,      6},
     {"_cheapr_cpp_format_numeric_as_int64", (DL_FUNC) &_cheapr_cpp_format_numeric_as_int64, 1},

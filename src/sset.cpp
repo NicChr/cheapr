@@ -310,8 +310,6 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     if (double_loop){
       memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(Rcomplex));
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(Rcomplex));
-      // memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * 2 * sizeof(double));
-      // memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * 2 * sizeof(double));
     } else {
       if (by > 0){
         memmove(p_out, &p_x[istart - 1], in_bounds_size * sizeof(Rcomplex));
@@ -459,6 +457,120 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
   return out;
 }
 
+
+// Data frame subsetting
+
+// Fast col select
+// Supports
+//  integer locations
+//  character vectors
+//  negative subscripting
+//  NULL to signify all locs (shallow copy)
+
+[[cpp11::register]]
+SEXP cpp_df_select(SEXP x, SEXP locs, bool copy_attrs){
+  int NP = 0,
+    n_cols = Rf_length(x),
+    n_rows = Rf_length(Rf_getAttrib(x, R_RowNamesSymbol)),
+    n_locs = Rf_length(locs);
+
+  // Flag to check indices
+  bool check = true;
+
+  SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+
+  cpp11::function base_seq_len = cpp11::package("base")["seq_len"];
+
+  SEXP cols;
+
+  if (Rf_isNull(locs)){
+    // If NULL then select all cols
+    cols = Rf_protect(base_seq_len(n_cols)); ++NP;
+    n_locs = n_cols;
+    check = false;
+  } else if (Rf_isString(locs)){
+    // If locs is a char vec, then match it into names
+    cpp11::function base_match = cpp11::package("base")["match"];
+    cols = Rf_protect(base_match(locs, names)); ++NP;
+  } else if (Rf_isLogical(locs)){
+    // If logical then find locs using `which_()`
+    if (Rf_length(locs) != n_cols){
+      Rf_unprotect(NP);
+      Rf_error("`length(j)` must match `ncol(x)` when `j` is a logical vector");
+    }
+    cols = Rf_protect(cpp_which_(locs, false)); ++NP;
+    n_locs = Rf_length(cols);
+    check = false;
+  } else {
+    // Catch-all make sure cols is an int vector
+    cols = Rf_protect(Rf_coerceVector(locs, INTSXP)); ++NP;
+  }
+
+  // Negative subscripting
+  if (n_locs > 0 && INTEGER(cols)[0] != NA_INTEGER && INTEGER(cols)[0] < 0){
+    cpp11::function base_sset = cpp11::package("base")["["];
+    Rf_protect(cols = base_sset(base_seq_len(n_cols), cols)); ++NP;
+    n_locs = Rf_length(cols);
+    check = false;
+  }
+
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_locs)); ++NP;
+  SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_locs)); ++NP;
+
+  int *p_cols = INTEGER(cols);
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_names = STRING_PTR_RO(names);
+  int k = 0;
+  int col;
+
+  if (check){
+    for (int i = 0; i < n_locs; ++i) {
+      col = p_cols[i];
+      if (col != NA_INTEGER && col >= 1 && col <= n_cols){
+        SET_VECTOR_ELT(out, k, p_x[col - 1]);
+        SET_STRING_ELT(out_names, k, p_names[col - 1]);
+        ++k;
+      } else if (col != NA_INTEGER && col < 0){
+        // This can only happen when there is a mix of pos & neg
+        // but wasn't captured by the negative subscripting section
+        // because that only looks to see if the 1st element is neg
+        Rf_error("Cannot mix positive and negative subscripts");
+      }
+    }
+  } else {
+    for (int i = 0; i < n_locs; ++i) {
+      col = p_cols[i];
+      SET_VECTOR_ELT(out, i, p_x[col - 1]);
+      SET_STRING_ELT(out_names, i, p_names[col - 1]);
+    }
+  }
+
+  if (check && k != n_locs){
+    Rf_protect(out = Rf_xlengthgets(out, k)); ++NP;
+    Rf_protect(out_names = Rf_xlengthgets(out_names, k)); ++NP;
+  }
+
+  // Either copy all attributes
+  // Or make a plain data frame
+  if (copy_attrs){
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
+  } else {
+    SEXP row_names;
+    if (n_rows > 0){
+      row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
+      INTEGER(row_names)[0] = NA_INTEGER;
+      INTEGER(row_names)[1] = -n_rows;
+    } else {
+      row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
+    }
+    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+    Rf_classgets(out, Rf_mkString("data.frame"));
+  }
+  Rf_setAttrib(out, R_NamesSymbol, out_names);
+  Rf_unprotect(NP);
+  return out;
+}
+
 [[cpp11::register]]
 SEXP cpp_sset_df(SEXP x, SEXP indices){
   int xn = cpp_df_nrow(x);
@@ -475,8 +587,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   int n_cores = do_parallel ? num_cores() : 1;
   cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
   const SEXP *p_x = VECTOR_PTR_RO(x);
-  SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols));
-  ++NP;
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols)); ++NP;
   // SEXP *p_out = VECTOR_PTR(out);
 
   // If indices is a special type of ALTREP compact int sequence, we can
@@ -486,8 +597,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
 
     // ALTREP integer sequence method
 
-    SEXP seq_data = Rf_protect(compact_seq_data(indices));
-    ++NP;
+    SEXP seq_data = Rf_protect(compact_seq_data(indices)); ++NP;
     R_xlen_t from = REAL(seq_data)[0];
     R_xlen_t to = REAL(seq_data)[1];
     R_xlen_t by = REAL(seq_data)[2];
@@ -628,8 +738,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       }
       // If index vector is clean except for existence of zeroes
     } else if (zero_count > 0 && oob_count == 0 && na_count == 0){
-      SEXP r_zero = Rf_protect(Rf_ScalarInteger(0));
-      ++NP;
+      SEXP r_zero = Rf_protect(Rf_ScalarInteger(0)); ++NP;
       SEXP indices2 = Rf_protect(cpp11::package("cheapr")["val_rm"](indices, r_zero));
       ++NP;
       int *pi2 = INTEGER(indices2);
@@ -669,20 +778,49 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   Rf_setAttrib(out, R_NamesSymbol, names);
 
   // list to data frame object
-  SEXP df_str = Rf_protect(Rf_ScalarString(Rf_mkChar("data.frame")));
-  ++NP;
+  SEXP df_str = Rf_protect(Rf_mkString("data.frame")); ++NP;
   if (out_size > 0){
-    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2));
-    ++NP;
+    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
     INTEGER(row_names)[0] = NA_INTEGER;
     INTEGER(row_names)[1] = -out_size;
     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   } else {
-    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0));
-    ++NP;
+    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   }
   Rf_classgets(out, df_str);
+  Rf_unprotect(NP);
+  return out;
+}
+
+// Subset that does both selecting and slicing
+[[cpp11::register]]
+SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
+  int NP = 0, n_rows = cpp_df_nrow(x);
+  bool missingi = Rf_isNull(i), missingj = Rf_isNull(j);
+
+  if (!missingi && Rf_isLogical(i)){
+    if (Rf_length(i) != n_rows){
+      Rf_error("`length(i)` must match `nrow(x)` when `i` is a logical vector");
+    }
+    Rf_protect(i = cpp_which_(i, false)); ++NP;
+  }
+
+  // Subset columns
+  // If `j` arg is missing, we want to still create a shallow copy
+  // Which we do through `cpp_df_select()`
+
+  SEXP out;
+  if (!missingj || (missingi && missingj)){
+    out = Rf_protect(cpp_df_select(x, j, false)); ++NP;
+  } else {
+    out = x;
+  }
+  // Subset rows
+  if (!missingi){
+    Rf_protect(i = Rf_coerceVector(i, INTSXP)); ++NP;
+    Rf_protect(out = cpp_sset_df(out, i)); ++NP;
+  }
   Rf_unprotect(NP);
   return out;
 }
