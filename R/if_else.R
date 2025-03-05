@@ -43,7 +43,7 @@ cheapr_if_else <- function(condition, true, false, na = false[NA_integer_]){
   }
 
 
-  if (is_base_atomic(true) && is_base_atomic(false) && is_base_atomic(na)){
+  if (is_simple_atomic(true) && is_simple_atomic(false) && is_simple_atomic(na)){
     return(`mostattributes<-`(
       cpp_if_else(condition, true, false, na),
       attributes(template)

@@ -163,14 +163,18 @@ r_cut_breaks <- function(x, n){
   breaks
 }
 
-# Is x an atomic type?
+# Is x a simple atomic type?
 # logical, integer, double, character, raw, complex
 # including Dates, factors and POSIXcts
 
-is_base_atomic <- function(x){
+# Simple here means it's
+# a) atomic
+# b) attributes aren't data-dependent and so can be all copied
+
+is_simple_atomic <- function(x){
   (
     is.atomic(x) && (
-      !is.object(x) || inherits(x, c("Date", "POSIXct", "factor"))
+      !is.object(x) || inherits(x, c("Date", "POSIXct", "factor", "integer64"))
     )
   ) ||
     is.null(x)

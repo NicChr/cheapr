@@ -1,9 +1,5 @@
 #include "cheapr.h"
 
-bool is_int64(SEXP x){
-  return Rf_isReal(x) && Rf_inherits(x, "integer64");
-}
-
 // Convert 64-bit integer vec to 32-bit integer vec
 
 [[cpp11::register]]

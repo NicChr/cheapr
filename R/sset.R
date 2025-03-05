@@ -91,86 +91,16 @@ sset.default <- function(x, i, ...){
   # The below line will handle a special but common
   # case of subsetting with a fairly large altrep int sequence
   # For non-classed objects
-  if (!is.object(x) && !missing(i) &&
+  if (is_simple_atomic(x) && !missing(i) &&
       is_compact_seq(i) && n_dots(...) == 0){
     int_seq_data <- compact_seq_data(i)
     from <- int_seq_data[[1]]
     to <- int_seq_data[[2]]
     by <- int_seq_data[[3]]
     out <- cpp_sset_range(x, from, to, by)
-    if (!is.null(names(x))){
-      names(out) <- cpp_sset_range(names(x), from, to, by)
-    }
+    cpp_shallow_duplicate_attrs(x, out)
+    names(out) <- cpp_sset_range(attr(x, "names", TRUE), from, to, by)
     out
-  } else {
-    x[i, ...]
-  }
-}
-#' @rdname sset
-#' @export
-sset.Date <- function(x, i, ...){
-  if (!missing(i) && is.logical(i)){
-    check_length(i, length(x))
-    i <- which_(i)
-  }
-  if (!missing(i) &&
-      is_compact_seq(i) && n_dots(...) == 0){
-    int_seq_data <- compact_seq_data(i)
-    from <- int_seq_data[[1]]
-    to <- int_seq_data[[2]]
-    by <- int_seq_data[[3]]
-    out <- cpp_sset_range(x, from, to, by)
-    if (!is.null(names(x))){
-      set_attr(out, "names", cpp_sset_range(names(x), from, to, by))
-    }
-    set_attr(out, "class", oldClass(x))
-
-  } else {
-    x[i, ...]
-  }
-}
-#' @rdname sset
-#' @export
-sset.POSIXct <- function(x, i, ...){
-  if (!missing(i) && is.logical(i)){
-    check_length(i, length(x))
-    i <- which_(i)
-  }
-  if (!missing(i) &&
-      is_compact_seq(i) && n_dots(...) == 0){
-    int_seq_data <- compact_seq_data(i)
-    from <- int_seq_data[[1]]
-    to <- int_seq_data[[2]]
-    by <- int_seq_data[[3]]
-    out <- cpp_sset_range(x, from, to, by)
-    if (!is.null(names(x))){
-      set_attr(out, "names", cpp_sset_range(names(x), from, to, by))
-    }
-    set_attr(out, "tzone", attr(x, "tzone"))
-    set_attr(out, "class", oldClass(x))
-  } else {
-    x[i, ...]
-  }
-}
-#' @rdname sset
-#' @export
-sset.factor <- function(x, i, ...){
-  if (!missing(i) && is.logical(i)){
-    check_length(i, length(x))
-    i <- which_(i)
-  }
-  if (!missing(i) &&
-      is_compact_seq(i) && n_dots(...) == 0){
-    int_seq_data <- compact_seq_data(i)
-    from <- int_seq_data[[1]]
-    to <- int_seq_data[[2]]
-    by <- int_seq_data[[3]]
-    out <- cpp_sset_range(x, from, to, by)
-    if (!is.null(names(x))){
-      set_attr(out, "names", cpp_sset_range(names(x), from, to, by))
-    }
-    set_attr(out, "levels", attr(x, "levels"))
-    set_attr(out, "class", oldClass(x))
   } else {
     x[i, ...]
   }
@@ -240,8 +170,9 @@ sset.sf <- function(x, i, j, ...){
 }
 #' @export
 sset.vctrs_rcrd <- function(x, i, ...){
-  out <- sset(list_as_df(x), i)
-  set_attrs(out, attributes(x), add = FALSE)
+  out <- cpp_sset_df(list_as_df(x), i)
+  cpp_shallow_duplicate_attrs(x, out)
+  out
 }
 df_select <- function(x, j = NULL, copy_attrs = TRUE){
   .Call(`_cheapr_cpp_df_select`, x, j, copy_attrs)

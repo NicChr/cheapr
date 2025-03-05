@@ -24,6 +24,10 @@ cpp_set_add_attributes <- function(x, attributes, add) {
   .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
+cpp_shallow_duplicate_attrs <- function(source, target) {
+  invisible(.Call(`_cheapr_cpp_shallow_duplicate_attrs`, source, target))
+}
+
 cpp_gcd2 <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_gcd2`, x, y, tol, na_rm)
 }

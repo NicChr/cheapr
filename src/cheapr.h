@@ -85,12 +85,27 @@
 #define CHEAPR_TYPEOF(x)  ( (SEXPTYPE) (Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x)) )
 #endif
 
+inline bool is_int64(SEXP x){
+  return Rf_isReal(x) && Rf_inherits(x, "integer64");
+}
+
 inline bool is_df(SEXP x){
   return Rf_inherits(x, "data.frame");
 }
 
 inline R_xlen_t r_length(SEXP x){
   return REAL(cpp11::package("base")["length"](x))[0];
+}
+
+inline bool is_base_atomic_vec(SEXP x){
+  return (
+      Rf_isVectorAtomic(x) && (
+          !Rf_isObject(x) || (
+              Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
+              Rf_inherits(x, "POSIXct")
+          )
+      )
+  );
 }
 
 int num_cores();
@@ -113,7 +128,6 @@ SEXP compact_seq_data(SEXP x);
 bool is_compact_seq(SEXP x);
 R_xlen_t na_count(SEXP x, bool recursive);
 bool cpp_any_na(SEXP x, bool recursive);
-bool is_int64(SEXP x);
 SEXP cpp_int64_to_double(SEXP x);
 SEXP cpp_numeric_to_int64(SEXP x);
 SEXP cpp_int64_to_numeric(SEXP x);
@@ -126,5 +140,6 @@ bool implicit_na_coercion(SEXP x, SEXP target);
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
 double round_nearest_even(double x);
 SEXP cpp_set_divide(SEXP x, SEXP y);
+SEXP cpp_val_remove(SEXP x, SEXP value);
 
 #endif

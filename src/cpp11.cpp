@@ -47,6 +47,14 @@ extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add
     return cpp11::as_sexp(cpp_set_add_attributes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(attributes), cpp11::as_cpp<cpp11::decay_t<bool>>(add)));
   END_CPP11
 }
+// attrs.cpp
+void cpp_shallow_duplicate_attrs(SEXP source, SEXP target);
+extern "C" SEXP _cheapr_cpp_shallow_duplicate_attrs(SEXP source, SEXP target) {
+  BEGIN_CPP11
+    cpp_shallow_duplicate_attrs(cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target));
+    return R_NilValue;
+  END_CPP11
+}
 // gcd.cpp
 double cpp_gcd2(double x, double y, double tol, bool na_rm);
 extern "C" SEXP _cheapr_cpp_gcd2(SEXP x, SEXP y, SEXP tol, SEXP na_rm) {
@@ -659,6 +667,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_sqrt",                (DL_FUNC) &_cheapr_cpp_set_sqrt,                1},
     {"_cheapr_cpp_set_subtract",            (DL_FUNC) &_cheapr_cpp_set_subtract,            2},
     {"_cheapr_cpp_set_trunc",               (DL_FUNC) &_cheapr_cpp_set_trunc,               1},
+    {"_cheapr_cpp_shallow_duplicate_attrs", (DL_FUNC) &_cheapr_cpp_shallow_duplicate_attrs, 2},
     {"_cheapr_cpp_sset_df",                 (DL_FUNC) &_cheapr_cpp_sset_df,                 2},
     {"_cheapr_cpp_sset_range",              (DL_FUNC) &_cheapr_cpp_sset_range,              4},
     {"_cheapr_cpp_val_remove",              (DL_FUNC) &_cheapr_cpp_val_remove,              2},

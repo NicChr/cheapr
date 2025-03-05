@@ -287,7 +287,7 @@ cheapr_var <- function(x, na.rm = TRUE){
 #' @rdname extras
 #' @export
 cheapr_rev <- function(x){
-  if (is_base_atomic(x)){
+  if (is_simple_atomic(x)){
     .Call(`_cheapr_cpp_rev`, x, FALSE)
   } else {
     sset(x, vector_length(x):0)

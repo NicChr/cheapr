@@ -93,3 +93,8 @@ void cpp_copy_names(SEXP source, SEXP target, bool deep_copy){
   }
   Rf_unprotect(2);
 }
+
+[[cpp11::register]]
+void cpp_shallow_duplicate_attrs(SEXP source, SEXP target){
+  SHALLOW_DUPLICATE_ATTRIB(target, source);
+}
