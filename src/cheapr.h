@@ -85,6 +85,14 @@
 #define CHEAPR_TYPEOF(x)  ( (SEXPTYPE) (Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x)) )
 #endif
 
+inline bool is_df(SEXP x){
+  return Rf_inherits(x, "data.frame");
+}
+
+inline R_xlen_t r_length(SEXP x){
+  return REAL(cpp11::package("base")["length"](x))[0];
+}
+
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);

@@ -6,7 +6,7 @@ int int_div(int x, int y){
 
 [[cpp11::register]]
 R_xlen_t cpp_vec_length(SEXP x){
-  if (Rf_isFrame(x)){
+  if (is_df(x)){
     return cpp_df_nrow(x);
     // Is x a list?
   } else if (Rf_isVectorList(x)){
@@ -21,7 +21,7 @@ R_xlen_t cpp_vec_length(SEXP x){
       return out;
       // return Rf_xlength(VECTOR_ELT(x, 0));
     } else if (Rf_isObject(x)){
-      return Rf_asReal(cpp11::package("base")["length"](x));
+      return r_length(x);
     } else {
       return Rf_xlength(x);
     }
@@ -341,7 +341,7 @@ SEXP cpp_rev(SEXP x, bool set){
   //     SET_VECTOR_ELT(out, i, cpp_rev(VECTOR_ELT(x, i), true, set));
   //   }
   //   break;
-  // } else if (!recursive && (!Rf_isObject(x) || Rf_isFrame(x))){
+  // } else if (!recursive && (!Rf_isObject(x) || is_df(x))){
   //   out = Rf_protect(set ? x : list_shallow_copy(x, false)); ++NP;
   //   if (!set){
   //     // SHALLOW_DUPLICATE_ATTRIB(out, x);

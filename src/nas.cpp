@@ -353,7 +353,7 @@ SEXP cpp_is_na(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_df_row_na_counts(SEXP x){
-  if (!Rf_isFrame(x)){
+  if (!is_df(x)){
     Rf_error("x must be a data frame");
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -451,7 +451,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_df_col_na_counts(SEXP x){
-  if (!Rf_isFrame(x)){
+  if (!is_df(x)){
     Rf_error("x must be a data frame");
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -498,7 +498,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_col_any_na(SEXP x, bool names){
-  if (!Rf_isFrame(x)){
+  if (!is_df(x)){
     Rf_error("x must be a data frame");
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -555,7 +555,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
 
 [[cpp11::register]]
 SEXP cpp_col_all_na(SEXP x, bool names){
-  if (!Rf_isFrame(x)){
+  if (!is_df(x)){
     Rf_error("x must be a data frame");
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -614,7 +614,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //TO-DO - Rewrite this but for all_na()
 // More likely to be faster for the all_na case
 // SEXP cpp_row_any_na(SEXP x, bool names){
-//   if (!Rf_isFrame(x)){
+//   if (!is_df(x)){
 //     Rf_error("x must be a data frame");
 //   }
 //   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -886,7 +886,7 @@ SEXP matrix_colnames(SEXP x) {
 [[cpp11::register]]
 SEXP cpp_row_na_counts(SEXP x, bool names){
   bool is_matrix = Rf_isMatrix(x);
-  bool is_data_frame = Rf_isFrame(x);
+  bool is_data_frame = is_df(x);
 
   if (!is_matrix && !is_data_frame){
     Rf_error("x must be a matrix or data frame");
@@ -915,7 +915,7 @@ SEXP cpp_row_na_counts(SEXP x, bool names){
 [[cpp11::register]]
 SEXP cpp_col_na_counts(SEXP x, bool names){
   bool is_matrix = Rf_isMatrix(x);
-  bool is_data_frame = Rf_isFrame(x);
+  bool is_data_frame = is_df(x);
 
   if (!is_matrix && !is_data_frame){
     Rf_error("x must be a matrix or data frame");
