@@ -127,7 +127,7 @@ sset.POSIXlt <- function(x, i, j, ...){
   if (missingj){
     j <- seq_along(out)
   }
-  out <- df_sset(list_as_df(out), missing(i) %!||% i , missing(j) %!||% j)
+  out <- df_sset(list_as_df(out), missingi %!||% i , missingj %!||% j)
   if (missingj){
     set_attr(out, "class", class(x))
     set_rm_attr(out, "row.names")
@@ -171,7 +171,7 @@ sset.sf <- function(x, i, j, ...){
 }
 #' @export
 sset.vctrs_rcrd <- function(x, i, ...){
-  out <- cpp_sset_df(list_as_df(x), i)
+  out <- df_slice(list_as_df(x), i)
   cpp_shallow_duplicate_attrs(x, out)
   out
 }

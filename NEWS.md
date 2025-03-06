@@ -1,9 +1,10 @@
 # cheapr (development version)
 
-- Data-frame subsetting is now faster and internally simpler. 
+- Data frame subsetting is now faster and internally simpler. 
+Data frame negative subsetting is now cheaper.
 
 - New functions `df_slice`, `df_select` and `df_sset` for row slicing and 
-col selecting with minimal overhead.
+col selecting with minimal overhead (~ 1 microsecond).
 
 # cheapr 1.0.1
 
