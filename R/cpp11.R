@@ -28,6 +28,10 @@ cpp_shallow_duplicate_attrs <- function(source, target) {
   invisible(.Call(`_cheapr_cpp_shallow_duplicate_attrs`, source, target))
 }
 
+cpp_copy_most_attrs <- function(source, target) {
+  invisible(.Call(`_cheapr_cpp_copy_most_attrs`, source, target))
+}
+
 cpp_gcd2 <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_gcd2`, x, y, tol, na_rm)
 }
@@ -264,16 +268,20 @@ cpp_sset_range <- function(x, from, to, by) {
   .Call(`_cheapr_cpp_sset_range`, x, from, to, by)
 }
 
-cpp_df_select <- function(x, locs, copy_attrs) {
-  .Call(`_cheapr_cpp_df_select`, x, locs, copy_attrs)
+cpp_df_select <- function(x, locs) {
+  .Call(`_cheapr_cpp_df_select`, x, locs)
 }
 
 cpp_sset_df <- function(x, indices) {
   .Call(`_cheapr_cpp_sset_df`, x, indices)
 }
 
-cpp_df_subset <- function(x, i, j) {
-  .Call(`_cheapr_cpp_df_subset`, x, i, j)
+cpp_df_slice <- function(x, indices) {
+  .Call(`_cheapr_cpp_df_slice`, x, indices)
+}
+
+cpp_df_subset <- function(x, i, j, keep_attrs) {
+  .Call(`_cheapr_cpp_df_subset`, x, i, j, keep_attrs)
 }
 
 cpp_vec_length <- function(x) {

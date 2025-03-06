@@ -98,7 +98,8 @@ sset.default <- function(x, i, ...){
     to <- int_seq_data[[2]]
     by <- int_seq_data[[3]]
     out <- cpp_sset_range(x, from, to, by)
-    cpp_shallow_duplicate_attrs(x, out)
+    # cpp_shallow_duplicate_attrs(x, out)
+    cpp_copy_most_attrs(x, out)
     names(out) <- cpp_sset_range(attr(x, "names", TRUE), from, to, by)
     out
   } else {
@@ -108,12 +109,12 @@ sset.default <- function(x, i, ...){
 #' @rdname sset
 #' @export
 sset.data.frame <- function(x, i, j, ...){
-  df_subset(x, i, j)
+  df_sset(x, missing(i) %!||% i , missing(j) %!||% j)
 }
 #' @rdname sset
 #' @export
 sset.tbl_df <- function(x, i, j, ...){
-  out <- df_subset(x, i, j)
+  out <- df_sset(x, missing(i) %!||% i , missing(j) %!||% j)
   class(out) <- c("tbl_df", "tbl", "data.frame")
   out
 }
@@ -126,7 +127,7 @@ sset.POSIXlt <- function(x, i, j, ...){
   if (missingj){
     j <- seq_along(out)
   }
-  out <- df_subset(list_as_df(out), i, j)
+  out <- df_sset(list_as_df(out), missing(i) %!||% i , missing(j) %!||% j)
   if (missingj){
     set_attr(out, "class", class(x))
     set_rm_attr(out, "row.names")
@@ -142,7 +143,7 @@ sset.POSIXlt <- function(x, i, j, ...){
 #' @rdname sset
 #' @export
 sset.data.table <- function(x, i, j, ...){
-  out <- df_subset(x, i, j)
+  out <- df_sset(x, missing(i) %!||% i , missing(j) %!||% j)
   set_attrs(out, list(
     class = class(x),
     .internal.selfref = attributes(x)[[".internal.selfref"]]
@@ -162,7 +163,7 @@ sset.data.table <- function(x, i, j, ...){
 #' @rdname sset
 #' @export
 sset.sf <- function(x, i, j, ...){
-  out <- df_subset(x, i, j)
+  out <- df_sset(x, missing(i) %!||% i , missing(j) %!||% j)
   source_attrs <- attributes(x)
   source_nms <- names(source_attrs)
   attrs_to_keep <- source_attrs[setdiff_(source_nms, c("names", "row.names"))]
@@ -173,24 +174,4 @@ sset.vctrs_rcrd <- function(x, i, ...){
   out <- cpp_sset_df(list_as_df(x), i)
   cpp_shallow_duplicate_attrs(x, out)
   out
-}
-df_select <- function(x, j = NULL, copy_attrs = TRUE){
-  .Call(`_cheapr_cpp_df_select`, x, j, copy_attrs)
-}
-
-# Efficient data frame subset
-# It relies on sset which falls back on `[` when no method is found.
-df_subset <- function(x, i = NULL, j = NULL){
-  .Call(`_cheapr_cpp_df_subset`, x, if (missing(i)) NULL else i, if (missing(j)) NULL else j)
-}
-# Turn negative indices to positives
-neg_indices_to_pos <- function(exclude, n){
-  if (n == 0){
-    integer()
-  } else {
-    which_not_in(
-      seq.int(from = -1L, to = -as.integer(n), by = -1L),
-      as.integer(exclude)
-    )
-  }
 }

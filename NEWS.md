@@ -1,5 +1,10 @@
 # cheapr (development version)
 
+- Data-frame subsetting is now faster and internally simpler. 
+
+- New functions `df_slice`, `df_select` and `df_sset` for row slicing and 
+col selecting with minimal overhead.
+
 # cheapr 1.0.1
 
 - R version 4.0.0 now required as also required by cpp11.

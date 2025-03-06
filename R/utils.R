@@ -242,6 +242,9 @@ exprs <- function(...){
   as.list(substitute(alist(...)))[-1]
 }
 
+# Sort of the inverse of %||%
+`%!||%` <- function(x, y) if (x) NULL else y
+
 # Just a wrapper with a cheaper alternative to `c.factor()`
 # cheapr_c <- function(..., .check = TRUE){
 #   dots <- list(...)

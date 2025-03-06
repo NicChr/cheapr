@@ -519,7 +519,7 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
 //  NULL to signify all locs (shallow copy)
 
 [[cpp11::register]]
-SEXP cpp_df_select(SEXP x, SEXP locs, bool copy_attrs){
+SEXP cpp_df_select(SEXP x, SEXP locs){
   int NP = 0,
     n_cols = Rf_length(x),
     n_rows = Rf_length(Rf_getAttrib(x, R_RowNamesSymbol)),
@@ -601,22 +601,17 @@ SEXP cpp_df_select(SEXP x, SEXP locs, bool copy_attrs){
     Rf_protect(out_names = Rf_xlengthgets(out_names, k)); ++NP;
   }
 
-  // Either copy all attributes
-  // Or make a plain data frame
-  if (copy_attrs){
-    SHALLOW_DUPLICATE_ATTRIB(out, x);
+  // Make a plain data frame
+  SEXP row_names;
+  if (n_rows > 0){
+    row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
+    INTEGER(row_names)[0] = NA_INTEGER;
+    INTEGER(row_names)[1] = -n_rows;
   } else {
-    SEXP row_names;
-    if (n_rows > 0){
-      row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
-      INTEGER(row_names)[0] = NA_INTEGER;
-      INTEGER(row_names)[1] = -n_rows;
-    } else {
-      row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
-    }
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-    Rf_classgets(out, Rf_mkString("data.frame"));
+    row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
   }
+  Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  Rf_classgets(out, Rf_mkString("data.frame"));
   Rf_setAttrib(out, R_NamesSymbol, out_names);
   Rf_unprotect(NP);
   return out;
@@ -726,6 +721,8 @@ SEXP clean_indices(SEXP indices, int xn){
 
 }
 
+// This is kept to not break dependencies.
+
 [[cpp11::register]]
 SEXP cpp_sset_df(SEXP x, SEXP indices){
   int xn = cpp_df_nrow(x);
@@ -755,7 +752,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
       SEXP df_var = Rf_protect(p_x[j]);
       if (is_base_atomic_vec(df_var)){
         SEXP list_var = Rf_protect(cpp_sset_range(df_var, from, to, by));
-        SHALLOW_DUPLICATE_ATTRIB(list_var, df_var);
+        Rf_copyMostAttrib(df_var, list_var);
         int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
         if (has_names){
           SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
@@ -779,7 +776,95 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
         SEXP df_var = Rf_protect(p_x[j]);
         if (is_base_atomic_vec(df_var)){
           SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, indices, check_indices));
-          SHALLOW_DUPLICATE_ATTRIB(list_var, df_var);
+          Rf_copyMostAttrib(df_var, list_var);
+          int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
+          if (has_names){
+            SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+            SEXP new_names = Rf_protect(cpp_sset_unsafe(
+              old_names, indices, check_indices
+            ));
+            Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+          }
+          SET_VECTOR_ELT(out, j, list_var);
+          Rf_unprotect(1 + (has_names * 2));
+        } else {
+          SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+        }
+        Rf_unprotect(1);
+      }
+    }
+
+  cpp_copy_names(x, out, true);
+
+  // list to data frame object
+  if (out_size > 0){
+    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
+    INTEGER(row_names)[0] = NA_INTEGER;
+    INTEGER(row_names)[1] = -out_size;
+    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  } else {
+    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
+    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  }
+  Rf_classgets(out, Rf_mkString("data.frame"));
+  Rf_unprotect(NP);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_df_slice(SEXP x, SEXP indices){
+  int xn = cpp_df_nrow(x);
+  int ncols = Rf_length(x);
+  int NP = 0;
+  cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols)); ++NP;
+
+  const SEXP clean_indices_info = Rf_protect(clean_indices(indices, xn)); ++NP;
+  Rf_protect(indices = VECTOR_ELT(clean_indices_info, 0)); ++NP;
+  int out_size = INTEGER(VECTOR_ELT(clean_indices_info, 1))[0];
+  bool check_indices = LOGICAL(VECTOR_ELT(clean_indices_info, 2))[0];
+
+  // If indices is a special type of ALTREP compact int sequence, we can
+  // Use a range-based subset instead
+
+  if (is_compact_seq(indices)){
+
+    // ALTREP integer sequence method
+
+    SEXP seq_data = Rf_protect(compact_seq_data(indices)); ++NP;
+    R_xlen_t from = REAL(seq_data)[0];
+    R_xlen_t to = REAL(seq_data)[1];
+    R_xlen_t by = REAL(seq_data)[2];
+    for (int j = 0; j < ncols; ++j){
+      SEXP df_var = Rf_protect(p_x[j]);
+      if (is_base_atomic_vec(df_var)){
+        SEXP list_var = Rf_protect(cpp_sset_range(df_var, from, to, by));
+        Rf_copyMostAttrib(df_var, list_var);
+        int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
+        if (has_names){
+          SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+          SEXP new_names = Rf_protect(cpp_sset_range(
+            old_names, from, to, by)
+          );
+          Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+        }
+        SET_VECTOR_ELT(out, j, list_var);
+        Rf_unprotect(1 + (has_names * 2));
+      } else {
+        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+      }
+      // Unprotecting new data frame variable
+      Rf_unprotect(1);
+    }
+  } else {
+    // If Index vector is clean we can use fast subset
+
+      for (int j = 0; j < ncols; ++j){
+        SEXP df_var = Rf_protect(p_x[j]);
+        if (is_base_atomic_vec(df_var)){
+          SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, indices, check_indices));
+          Rf_copyMostAttrib(df_var, list_var);
           int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
           if (has_names){
             SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
@@ -817,7 +902,12 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
 // Subset that does both selecting and slicing
 
 [[cpp11::register]]
-SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
+SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
+
+  if (!is_df(x)){
+    Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
+  }
+
   int NP = 0, n_rows = cpp_df_nrow(x);
   bool missingi = Rf_isNull(i), missingj = Rf_isNull(j);
 
@@ -834,14 +924,22 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
 
   SEXP out;
   if (!missingj || (missingi && missingj)){
-    out = Rf_protect(cpp_df_select(x, j, false)); ++NP;
+    out = Rf_protect(cpp_df_select(x, j)); ++NP;
   } else {
     out = x;
   }
   // Subset rows
   if (!missingi){
     Rf_protect(i = Rf_coerceVector(i, INTSXP)); ++NP;
-    Rf_protect(out = cpp_sset_df(out, i)); ++NP;
+    Rf_protect(out = cpp_df_slice(out, i)); ++NP;
+  }
+
+  if (keep_attrs){
+    SEXP names = Rf_protect(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
+    SEXP row_names = Rf_protect(Rf_getAttrib(out, R_RowNamesSymbol)); ++NP;
+    Rf_copyMostAttrib(x, out);
+    Rf_setAttrib(out, R_NamesSymbol, names);
+    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   }
   Rf_unprotect(NP);
   return out;
