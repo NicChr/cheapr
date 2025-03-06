@@ -1,4 +1,6 @@
 #include "cheapr.h"
+#include <R.h>
+#include <R_ext/Memory.h>
 
 // Subsetting vectors and data frames
 // Includes a unique optimisation on range subsetting
@@ -508,6 +510,76 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
   return out;
 }
 
+// expects only zero and negative elements in `exclude`
+
+SEXP exclude_elements(SEXP x, SEXP exclude) {
+  int n = Rf_length(x);
+  int m = Rf_length(exclude);
+  int *p_excl = INTEGER(exclude);
+  int idx;
+
+  // Which elements do we keep?
+  int *p_keep = R_Calloc(n, int);
+
+  OMP_FOR_SIMD
+  for (int i = 0; i < n; ++i) p_keep[i] = TRUE;
+
+  int exclude_count = 0;
+  for (int j = 0; j < m; ++j) {
+    if (p_excl[j] == NA_INTEGER) continue;
+    if (p_excl[j] > 0){
+      R_Free(p_keep);
+      Rf_error("Cannot mix positive and negative subscripts");
+    }
+    idx = -p_excl[j];
+    // Check keep array for already assigned FALSE to avoid double counting
+    if (idx > 0 && idx <= n && p_keep[idx - 1] == TRUE){
+      p_keep[idx - 1] = FALSE;
+      ++exclude_count;
+    }
+  }
+
+  SEXP out = Rf_protect(Rf_allocVector(INTSXP, n - exclude_count));
+  int *p_out = INTEGER(out);
+  int *p_x = INTEGER(x);
+  int k = 0;
+  for (int i = 0; i < n; ++i){
+    if (p_keep[i]) p_out[k++] = p_x[i];
+  }
+  R_Free(p_keep);
+  Rf_unprotect(1);
+  return out;
+}
+// Vector based version
+// SEXP exclude_elements(SEXP x, SEXP exclude) {
+//   int n = Rf_length(x);
+//   int m = Rf_length(exclude);
+//   int *p_excl = INTEGER(exclude);
+//   int idx;
+//
+//   // Which elements do we keep?
+//   SEXP keep = Rf_protect(Rf_allocVector(LGLSXP, n));
+//   int *p_keep = LOGICAL(keep);
+//
+//   OMP_FOR_SIMD
+//   for (int i = 0; i < n; ++i) p_keep[i] = TRUE;
+//
+//   for (int j = 0; j < m; ++j) {
+//     if (p_excl[j] == NA_INTEGER) continue;
+//     idx = std::abs(p_excl[j]);
+//     if (idx > 0 && idx <= n) p_keep[idx - 1] = FALSE;
+//   }
+//   SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+//   int *p_out = INTEGER(out);
+//   int *p_x = INTEGER(x);
+//   int k = 0;
+//   for (int i = 0; i < n; ++i){
+//     if (p_keep[i]) p_out[k++] = p_x[i];
+//   }
+//   Rf_protect(out = Rf_lengthgets(out, k));
+//   Rf_unprotect(3);
+//   return out;
+// }
 
 // Data frame subsetting
 
@@ -530,13 +602,11 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   SEXP names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
 
-  cpp11::function base_seq_len = cpp11::package("base")["seq_len"];
-
   SEXP cols;
 
   if (Rf_isNull(locs)){
     // If NULL then select all cols
-    cols = Rf_protect(base_seq_len(n_cols)); ++NP;
+    cols = Rf_protect(cpp_seq_len(n_cols)); ++NP;
     n_locs = n_cols;
     check = false;
   } else if (Rf_isString(locs)){
@@ -559,8 +629,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   // Negative subscripting
   if (n_locs > 0 && INTEGER(cols)[0] != NA_INTEGER && INTEGER(cols)[0] < 0){
-    cpp11::function base_sset = cpp11::package("base")["["];
-    Rf_protect(cols = base_sset(base_seq_len(n_cols), cols)); ++NP;
+    Rf_protect(cols = exclude_elements(cpp_seq_len(n_cols), cols)); ++NP;
     n_locs = Rf_length(cols);
     check = false;
   }
@@ -689,10 +758,8 @@ SEXP clean_indices(SEXP indices, int xn){
     check_indices = !(oob_count == 0 && na_count == 0);
 
     if (neg_count > 0){
-      cpp11::function base_seq_len = cpp11::package("base")["seq_len"];
-      cpp11::function base_sset = cpp11::package("base")["["];
-      SEXP row_seq = Rf_protect(base_seq_len(xn)); ++NP;
-      clean_indices = Rf_protect(base_sset(row_seq, indices)); ++NP;
+      SEXP row_seq = Rf_protect(cpp_seq_len(xn)); ++NP;
+      clean_indices = Rf_protect(exclude_elements(row_seq, indices)); ++NP;
       check_indices = false;
     } else if (zero_count > 0){
       SEXP zero = Rf_protect(Rf_ScalarInteger(0)); ++NP;
@@ -816,7 +883,6 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
   int xn = cpp_df_nrow(x);
   int ncols = Rf_length(x);
   int NP = 0;
-  cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols)); ++NP;
 
@@ -852,7 +918,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
         SET_VECTOR_ELT(out, j, list_var);
         Rf_unprotect(1 + (has_names * 2));
       } else {
-        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+        SET_VECTOR_ELT(out, j, cpp11::package("cheapr")["sset"](df_var, indices));
       }
       // Unprotecting new data frame variable
       Rf_unprotect(1);
@@ -876,7 +942,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
           SET_VECTOR_ELT(out, j, list_var);
           Rf_unprotect(1 + (has_names * 2));
         } else {
-          SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+          SET_VECTOR_ELT(out, j, cpp11::package("cheapr")["sset"](df_var, indices));
         }
         Rf_unprotect(1);
       }

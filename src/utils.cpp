@@ -57,6 +57,24 @@ SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
 }
 
+SEXP cpp_seq_len(R_xlen_t n){
+  if (n > integer_max_){
+    SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
+    double *p_out = REAL(out);
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i) p_out[i] = 1.0 + i;
+    Rf_unprotect(1);
+    return out;
+  } else {
+    SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+    int *p_out = INTEGER(out);
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i) p_out[i] = i + 1;
+    Rf_unprotect(1);
+    return out;
+  }
+}
+
 // Shallow copy here means that a
 // new list is created and
 // all attributes are deep-copied

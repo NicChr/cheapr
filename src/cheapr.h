@@ -141,5 +141,6 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
 double round_nearest_even(double x);
 SEXP cpp_set_divide(SEXP x, SEXP y);
 SEXP cpp_val_remove(SEXP x, SEXP value);
+SEXP cpp_seq_len(R_xlen_t n);
 
 #endif
