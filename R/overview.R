@@ -144,7 +144,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
 # Logical -----------------------------------------------------------------
 
-  lgl_data <- df_select(skim_df, lgl_vars)
+  lgl_data <- sset_col(skim_df, lgl_vars)
   which_lgl <- which_in(out[["col"]], lgl_vars)
   lgl_out <- sset(out, which_lgl)
   lgl_out <- df_add_cols(
@@ -167,7 +167,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
 # Numeric -----------------------------------------------------------------
 
-  num_data <- df_select(skim_df, num_vars)
+  num_data <- sset_col(skim_df, num_vars)
 
   ## Coerce int64 to double
   num_data <- transform_all(num_data, cpp_int64_to_numeric, int64_vars)
@@ -209,7 +209,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
 # Dates -------------------------------------------------------------------
 
-  date_data <- df_select(skim_df, date_vars)
+  date_data <- sset_col(skim_df, date_vars)
   which_date <- which_in(out[["col"]], date_vars)
   date_out <- sset(out, which_date)
   date_out <- df_add_cols(
@@ -236,7 +236,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
 # Date-Times --------------------------------------------------------------
 
-  datetime_data <- df_select(skim_df, datetime_vars)
+  datetime_data <- sset_col(skim_df, datetime_vars)
   datetime_data <- transform_all(datetime_data, as.POSIXct)
   which_datetime <- which_in(out[["col"]], datetime_vars)
   datetime_out <- sset(out, which_datetime)
@@ -267,7 +267,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
   # Time-Series -----------------------------------------------------------------
 
-  ts_data <- df_select(skim_df, ts_vars)
+  ts_data <- sset_col(skim_df, ts_vars)
   which_ts <- which_in(out[["col"]], ts_vars)
   ts_out <- sset(out, which_ts)
   if (N > 0L && length(which_ts) > 0) {
@@ -289,7 +289,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
 # Categorical -------------------------------------------------------------
 
-  cat_data <- df_select(skim_df, cat_vars)
+  cat_data <- sset_col(skim_df, cat_vars)
   which_cat <- which_in(out[["col"]], cat_vars)
   cat_out <- sset(out, which_cat)
   cat_out <- df_add_cols(
@@ -321,7 +321,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
   # Other -------------------------------------------------------------
 
-  other_data <- df_select(skim_df, other_vars)
+  other_data <- sset_col(skim_df, other_vars)
   which_other <- which_in(out[["col"]], other_vars)
   other_out <- sset(out, which_other)
   other_out <- df_add_cols(

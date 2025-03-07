@@ -109,12 +109,12 @@ sset.default <- function(x, i, ...){
 #' @rdname sset
 #' @export
 sset.data.frame <- function(x, i, j, ...){
-  df_sset(x, missing(i) %!||% i , missing(j) %!||% j)
+  sset_df(x, missing(i) %!||% i , missing(j) %!||% j)
 }
 #' @rdname sset
 #' @export
 sset.tbl_df <- function(x, i, j, ...){
-  out <- df_sset(x, missing(i) %!||% i , missing(j) %!||% j)
+  out <- sset_df(x, missing(i) %!||% i , missing(j) %!||% j)
   class(out) <- c("tbl_df", "tbl", "data.frame")
   out
 }
@@ -127,7 +127,7 @@ sset.POSIXlt <- function(x, i, j, ...){
   if (missingj){
     j <- seq_along(out)
   }
-  out <- df_sset(list_as_df(out), missingi %!||% i , missingj %!||% j)
+  out <- sset_df(list_as_df(out), missingi %!||% i , missingj %!||% j)
   if (missingj){
     set_attr(out, "class", class(x))
     set_rm_attr(out, "row.names")
@@ -143,7 +143,7 @@ sset.POSIXlt <- function(x, i, j, ...){
 #' @rdname sset
 #' @export
 sset.data.table <- function(x, i, j, ...){
-  out <- df_sset(x, missing(i) %!||% i , missing(j) %!||% j)
+  out <- sset_df(x, missing(i) %!||% i , missing(j) %!||% j)
   set_attrs(out, list(
     class = class(x),
     .internal.selfref = attributes(x)[[".internal.selfref"]]
@@ -163,7 +163,7 @@ sset.data.table <- function(x, i, j, ...){
 #' @rdname sset
 #' @export
 sset.sf <- function(x, i, j, ...){
-  out <- df_sset(x, missing(i) %!||% i , missing(j) %!||% j)
+  out <- sset_df(x, missing(i) %!||% i , missing(j) %!||% j)
   source_attrs <- attributes(x)
   source_nms <- names(source_attrs)
   attrs_to_keep <- source_attrs[setdiff_(source_nms, c("names", "row.names"))]

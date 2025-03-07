@@ -18,18 +18,23 @@
 #' `sset()`. These low-overhead helpers do not work well with data.tables
 #' but should work well with basic data frames and basic tibbles.
 #'
-#' @rdname df_sset
+#' @rdname sset_df
 #' @export
-df_sset <- function(x, i = NULL, j = NULL, keep_attrs = FALSE){
+sset_df <- function(x, i = NULL, j = NULL, keep_attrs = FALSE){
   .Call(`_cheapr_cpp_df_subset`, x, i, j, keep_attrs)
 }
-#' @rdname df_sset
+#' @rdname sset_df
 #' @export
-df_slice <- function(x, i = NULL){
+sset_row <- function(x, i = NULL){
   .Call(`_cheapr_cpp_df_slice`, x, i)
 }
-#' @rdname df_sset
+#' @rdname sset_df
 #' @export
-df_select <- function(x, j = NULL){
+sset_col <- function(x, j = NULL){
   .Call(`_cheapr_cpp_df_select`, x, j)
+}
+
+# Keep this for fastplyr otherwise it breaks dependency
+df_select <- function(x, j = NULL){
+  sset_df(x, i = NULL, j = j, keep_attrs = TRUE)
 }
