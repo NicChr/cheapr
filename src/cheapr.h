@@ -94,7 +94,7 @@ inline bool is_df(SEXP x){
 }
 
 inline R_xlen_t r_length(SEXP x){
-  return REAL(cpp11::package("base")["length"](x))[0];
+  return Rf_asReal(cpp11::package("base")["length"](x));
 }
 
 inline cpp11::function base_match = cpp11::package("base")["match"];

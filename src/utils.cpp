@@ -62,25 +62,6 @@ SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
 }
 
-// Shallow copy here means that a
-// new list is created and
-// all attributes are deep-copied
-
-// SEXP list_shallow_copy(SEXP x, bool deep_copy_attrs){
-//   if (TYPEOF(x) != VECSXP){
-//     Rf_error("Can only shallow copy lists");
-//   }
-//   R_xlen_t n = Rf_xlength(x);
-//   SEXP out = Rf_protect(Rf_allocVector(VECSXP, n));
-//   cpp_copy_attributes(x, out, deep_copy_attrs);
-//   const SEXP *p_x = VECTOR_PTR_RO(x);
-//   for (R_xlen_t i = 0; i < n; ++i){
-//     SET_VECTOR_ELT(out, i, p_x[i]);
-//   }
-//   Rf_unprotect(1);
-//   return out;
-// }
-
 // Internal-only function
 // Sum of squared-differences
 // Used in `cheapr_var()`
