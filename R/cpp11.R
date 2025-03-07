@@ -288,6 +288,10 @@ cpp_vec_length <- function(x) {
   .Call(`_cheapr_cpp_vec_length`, x)
 }
 
+cpp_address <- function(x) {
+  .Call(`_cheapr_cpp_address`, x)
+}
+
 r_copy <- function(x) {
   .Call(`_cheapr_r_copy`, x)
 }

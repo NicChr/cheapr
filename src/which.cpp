@@ -371,7 +371,7 @@ SEXP cpp_which_na(SEXP x){
     }
   }
   default: {
-    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
+    SEXP is_missing = Rf_protect(cheapr_is_na(x));
     SEXP out = Rf_protect(cpp_which_(is_missing, false));
     Rf_unprotect(2);
     return out;
@@ -547,7 +547,7 @@ SEXP cpp_which_not_na(SEXP x){
     }
   }
   default: {
-    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x));
+    SEXP is_missing = Rf_protect(cheapr_is_na(x));
     SEXP out = Rf_protect(cpp_which_(is_missing, true));
     Rf_unprotect(2);
     return out;

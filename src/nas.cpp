@@ -108,7 +108,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   }
   default: {
-    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x)); ++NP;
+    SEXP is_missing = Rf_protect(cheapr_is_na(x)); ++NP;
     SEXP r_true = Rf_protect(Rf_ScalarLogical(true)); ++NP;
     count = scalar_count(is_missing, r_true, true);
     break;
@@ -172,7 +172,7 @@ bool cpp_any_na(SEXP x, bool recursive){
   }
   }
   default: {
-    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x)); ++NP;
+    SEXP is_missing = Rf_protect(cheapr_is_na(x)); ++NP;
     SEXP any_missing = Rf_protect(cpp11::package("base")["any"](is_missing)); ++NP;
     out = Rf_asLogical(any_missing);
     break;
@@ -234,7 +234,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   }
   }
   default: {
-    SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](x)); ++NP;
+    SEXP is_missing = Rf_protect(cheapr_is_na(x)); ++NP;
     SEXP all_missing = Rf_protect(cpp11::package("base")["all"](is_missing)); ++NP;
     out = Rf_asLogical(all_missing);
     break;
@@ -418,7 +418,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
     }
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](p_x[j])); ++NP;
+      SEXP is_missing = Rf_protect(cheapr_is_na(p_x[j])); ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_xlength(is_missing); ++NP;
@@ -465,7 +465,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](p_x[j]));
+      SEXP is_missing = Rf_protect(cheapr_is_na(p_x[j]));
       ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
@@ -514,7 +514,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](p_x[j]));
+      SEXP is_missing = Rf_protect(cheapr_is_na(p_x[j]));
       cpp11::function r_any = cpp11::package("base")["any"];
       ++NP;
       if (Rf_xlength(is_missing) != num_row){
@@ -571,7 +571,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = Rf_protect(cpp11::package("cheapr")["is_na"](p_x[j]));
+      SEXP is_missing = Rf_protect(cheapr_is_na(p_x[j]));
       cpp11::function r_all = cpp11::package("base")["all"];
       ++NP;
       if (Rf_xlength(is_missing) != num_row){

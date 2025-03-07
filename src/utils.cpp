@@ -53,6 +53,11 @@ SEXP r_address(SEXP x) {
 }
 
 [[cpp11::register]]
+SEXP cpp_address(SEXP x){
+  return Rf_ScalarString(r_address(x));
+}
+
+[[cpp11::register]]
 SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
 }
@@ -124,10 +129,10 @@ double var_sum_squared_diff(SEXP x, double mu){
       //   }
       //   out = temp;
       // } else {
-        for (R_xlen_t i = 0; i < n; ++i){
-          if (cheapr_is_na_int(p_x[i])) continue;
-          out += std::pow(p_x[i] - mu, 2);
-        }
+      for (R_xlen_t i = 0; i < n; ++i){
+        if (cheapr_is_na_int(p_x[i])) continue;
+        out += std::pow(p_x[i] - mu, 2);
+      }
       break;
     }
     default: {
@@ -174,29 +179,29 @@ for (R_xlen_t i = 0; i < n; ++i) {                                              
   }                                                                                            \
 }                                                                                              \
 
-#define CHEAPR_BIN_NCODES(_IS_NA_, _NA_VAL_)                                                                    \
-for (R_xlen_t i = 0; i < n; ++i) {                                                                              \
-  p_out[i] = _NA_VAL_;                                                                                          \
-  if (!_IS_NA_(p_x[i])) {                                                                                       \
-    lo = 0;                                                                                                     \
-    hi = nb1;                                                                                                   \
-    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||                  \
-         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                                      \
-      p_out[i] = p_b[(left ? hi : lo)];                                                                         \
-    }                                                                                                           \
-    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                          \
-             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                              \
-      while (hi - lo >= 2) {                                                                                    \
-        cutpoint = (hi + lo)/2;                                                                                 \
-        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                        \
-          lo = cutpoint;                                                                                        \
-        else                                                                                                    \
-          hi = cutpoint;                                                                                        \
-      }                                                                                                         \
+#define CHEAPR_BIN_NCODES(_IS_NA_, _NA_VAL_)                                                                                       \
+for (R_xlen_t i = 0; i < n; ++i) {                                                                                                 \
+  p_out[i] = _NA_VAL_;                                                                                                             \
+  if (!_IS_NA_(p_x[i])) {                                                                                                          \
+    lo = 0;                                                                                                                        \
+    hi = nb1;                                                                                                                      \
+    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||                                     \
+         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                                                         \
+      p_out[i] = p_b[(left ? hi : lo)];                                                                                            \
+    }                                                                                                                              \
+    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                                             \
+             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                                                 \
+      while (hi - lo >= 2) {                                                                                                       \
+        cutpoint = (hi + lo)/2;                                                                                                    \
+        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                                           \
+          lo = cutpoint;                                                                                                           \
+        else                                                                                                                       \
+          hi = cutpoint;                                                                                                           \
+      }                                                                                                                            \
       p_out[i] = p_b[lo + (right && include_oob)];                                                                                 \
-    }                                                                                                           \
-  }                                                                                                             \
-}                                                                                                               \
+    }                                                                                                                              \
+  }                                                                                                                                \
+}                                                                                                                                  \
 
 [[cpp11::register]]
 SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
@@ -347,46 +352,46 @@ SEXP cpp_rev(SEXP x, bool set){
     Rf_unprotect(NP);
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
-  // We can reverse data frames in-place with the below commented-out code
-  // It will not work properly though for data.tables
+    // We can reverse data frames in-place with the below commented-out code
+    // It will not work properly though for data.tables
 
-  // case VECSXP: {
-  //   if (recursive){
-  //   rev_names = false;
-  //   out = Rf_protect(Rf_allocVector(VECSXP, n)); ++NP;
-  //   SHALLOW_DUPLICATE_ATTRIB(out, x);
-  //   for (R_xlen_t i = 0; i < n; ++i){
-  //     SET_VECTOR_ELT(out, i, cpp_rev(VECTOR_ELT(x, i), true, set));
-  //   }
-  //   break;
-  // } else if (!recursive && (!Rf_isObject(x) || is_df(x))){
-  //   out = Rf_protect(set ? x : list_shallow_copy(x, false)); ++NP;
-  //   if (!set){
-  //     // SHALLOW_DUPLICATE_ATTRIB(out, x);
-  //     cpp_copy_names(x, out, true);
-  //   }
-  //   const SEXP *p_out = VECTOR_PTR_RO(out);
-  //   for (R_xlen_t i = 0; i < half; ++i) {
-  //     k = n2 - i;
-  //     SEXP left = Rf_protect(p_out[i]);
-  //     SET_VECTOR_ELT(out, i, p_out[k]);
-  //     SET_VECTOR_ELT(out, k, left);
-  //     Rf_unprotect(1);
-  //   }
-  //     break;
-  //   }
-  // }
-  // default: {
-  //   // set rev_names to false because catch-all r_rev() will handle that
-  //   rev_names = false;
-  //   cpp11::function r_rev = cpp11::package("base")["rev"];
-  //   if (set){
-  //     Rf_unprotect(NP);
-  //     Rf_error("Can't reverse in place here");
-  //   }
-  //   out = Rf_protect(r_rev(x)); ++NP;
-  //   break;
-  // }
+    // case VECSXP: {
+    //   if (recursive){
+    //   rev_names = false;
+    //   out = Rf_protect(Rf_allocVector(VECSXP, n)); ++NP;
+    //   SHALLOW_DUPLICATE_ATTRIB(out, x);
+    //   for (R_xlen_t i = 0; i < n; ++i){
+    //     SET_VECTOR_ELT(out, i, cpp_rev(VECTOR_ELT(x, i), true, set));
+    //   }
+    //   break;
+    // } else if (!recursive && (!Rf_isObject(x) || is_df(x))){
+    //   out = Rf_protect(set ? x : list_shallow_copy(x, false)); ++NP;
+    //   if (!set){
+    //     // SHALLOW_DUPLICATE_ATTRIB(out, x);
+    //     cpp_copy_names(x, out, true);
+    //   }
+    //   const SEXP *p_out = VECTOR_PTR_RO(out);
+    //   for (R_xlen_t i = 0; i < half; ++i) {
+    //     k = n2 - i;
+    //     SEXP left = Rf_protect(p_out[i]);
+    //     SET_VECTOR_ELT(out, i, p_out[k]);
+    //     SET_VECTOR_ELT(out, k, left);
+    //     Rf_unprotect(1);
+    //   }
+    //     break;
+    //   }
+    // }
+    // default: {
+    //   // set rev_names to false because catch-all r_rev() will handle that
+    //   rev_names = false;
+    //   cpp11::function r_rev = cpp11::package("base")["rev"];
+    //   if (set){
+    //     Rf_unprotect(NP);
+    //     Rf_error("Can't reverse in place here");
+    //   }
+    //   out = Rf_protect(r_rev(x)); ++NP;
+    //   break;
+    // }
   }
   // // If x has names, reverse them too
   if (rev_names && !Rf_isNull(Rf_getAttrib(out, R_NamesSymbol))){

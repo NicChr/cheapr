@@ -709,7 +709,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     cpp_copy_attributes(x, out, false);
     Rf_unprotect(NP);
     return out;
-    return cpp11::package("cheapr")["sset"](x, 0);
+    return cheapr_sset(x, 0);
   } else {
     R_xlen_t n = Rf_xlength(x);
     R_xlen_t n_keep = n - n_vals;
@@ -814,7 +814,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     default: {
       SEXP sexp_n_vals = Rf_protect(Rf_ScalarReal(n_vals)); ++NP;
       SEXP val_locs = Rf_protect(cpp_val_find(x, value, true, sexp_n_vals)); ++NP;
-      out = Rf_protect(cpp11::package("cheapr")["sset"](x, val_locs)); ++NP;
+      out = Rf_protect(cheapr_sset(x, val_locs)); ++NP;
       break;
     }
     }

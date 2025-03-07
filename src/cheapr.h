@@ -97,6 +97,10 @@ inline R_xlen_t r_length(SEXP x){
   return REAL(cpp11::package("base")["length"](x))[0];
 }
 
+inline cpp11::function base_match = cpp11::package("base")["match"];
+inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
+inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
+
 inline bool is_base_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (

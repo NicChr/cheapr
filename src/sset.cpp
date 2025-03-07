@@ -1,6 +1,6 @@
 #include "cheapr.h"
 #include <R.h>
-#include <R_ext/Memory.h>
+// #include <R_ext/Memory.h>
 
 // Subsetting vectors and data frames
 // Includes a unique optimisation on range subsetting
@@ -610,8 +610,6 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     n_locs = n_cols;
     check = false;
   } else if (Rf_isString(locs)){
-    // If locs is a char vec, then match it into names
-    cpp11::function base_match = cpp11::package("base")["match"];
     cols = Rf_protect(base_match(locs, names)); ++NP;
   } else if (Rf_isLogical(locs)){
     // If logical then find locs using `which_()`
@@ -795,7 +793,7 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   int xn = cpp_df_nrow(x);
   int ncols = Rf_length(x);
   int NP = 0;
-  cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
+  // cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols)); ++NP;
 
@@ -918,7 +916,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
         SET_VECTOR_ELT(out, j, list_var);
         Rf_unprotect(1 + (has_names * 2));
       } else {
-        SET_VECTOR_ELT(out, j, cpp11::package("cheapr")["sset"](df_var, indices));
+        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
       }
       // Unprotecting new data frame variable
       Rf_unprotect(1);
@@ -942,7 +940,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
           SET_VECTOR_ELT(out, j, list_var);
           Rf_unprotect(1 + (has_names * 2));
         } else {
-          SET_VECTOR_ELT(out, j, cpp11::package("cheapr")["sset"](df_var, indices));
+          SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
         }
         Rf_unprotect(1);
       }

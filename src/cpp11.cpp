@@ -512,6 +512,13 @@ extern "C" SEXP _cheapr_cpp_vec_length(SEXP x) {
   END_CPP11
 }
 // utils.cpp
+SEXP cpp_address(SEXP x);
+extern "C" SEXP _cheapr_cpp_address(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_address(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// utils.cpp
 SEXP r_copy(SEXP x);
 extern "C" SEXP _cheapr_r_copy(SEXP x) {
   BEGIN_CPP11
@@ -614,6 +621,7 @@ extern "C" SEXP _cheapr_cpp_lgl_locs(SEXP x, SEXP n_true, SEXP n_false, SEXP inc
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_compact_seq_data",            (DL_FUNC) &_cheapr_compact_seq_data,            1},
+    {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
     {"_cheapr_cpp_bin",                     (DL_FUNC) &_cheapr_cpp_bin,                     6},
