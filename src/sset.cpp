@@ -550,36 +550,113 @@ SEXP exclude_elements(SEXP x, SEXP exclude) {
   Rf_unprotect(1);
   return out;
 }
-// Vector based version
-// SEXP exclude_elements(SEXP x, SEXP exclude) {
-//   int n = Rf_length(x);
-//   int m = Rf_length(exclude);
-//   int *p_excl = INTEGER(exclude);
-//   int idx;
-//
-//   // Which elements do we keep?
-//   SEXP keep = Rf_protect(Rf_allocVector(LGLSXP, n));
-//   int *p_keep = LOGICAL(keep);
-//
-//   OMP_FOR_SIMD
-//   for (int i = 0; i < n; ++i) p_keep[i] = TRUE;
-//
-//   for (int j = 0; j < m; ++j) {
-//     if (p_excl[j] == NA_INTEGER) continue;
-//     idx = std::abs(p_excl[j]);
-//     if (idx > 0 && idx <= n) p_keep[idx - 1] = FALSE;
-//   }
-//   SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
-//   int *p_out = INTEGER(out);
-//   int *p_x = INTEGER(x);
-//   int k = 0;
-//   for (int i = 0; i < n; ++i){
-//     if (p_keep[i]) p_out[k++] = p_x[i];
-//   }
-//   Rf_protect(out = Rf_lengthgets(out, k));
-//   Rf_unprotect(3);
-//   return out;
-// }
+
+// Cleans indices for subsetting
+// Removes zeros unless indices is a compact seq because that
+// is handled nicely by cpp_sset_range
+// Because of this niche difference, do not export it to users
+
+SEXP clean_indices(SEXP indices, int xn){
+  long long int llxn = xn;
+  int n = Rf_length(indices);
+  int NP = 0;
+  int zero_count = 0,
+    pos_count = 0,
+    oob_count = 0,
+    na_count = 0;
+  bool do_parallel = n >= CHEAPR_OMP_THRESHOLD;
+  int n_cores = do_parallel ? num_cores() : 1;
+
+  // If indices is a special type of ALTREP compact int sequence, we can
+  // Use a range-based subset instead
+
+  Rf_protect(indices = Rf_coerceVector(indices, INTSXP)); ++NP;
+
+  int out_size;
+  bool check_indices;
+  SEXP clean_indices;
+
+  if (is_compact_seq(indices)){
+    clean_indices = indices;
+
+    SEXP seq_data = Rf_protect(compact_seq_data(indices)); ++NP;
+    R_xlen_t from = REAL(seq_data)[0];
+    R_xlen_t to = REAL(seq_data)[1];
+    R_xlen_t by = REAL(seq_data)[2];
+    out_size = get_alt_final_sset_size(xn, from, to, by);
+    check_indices = true;
+
+  } else {
+    int *pi = INTEGER(indices);
+
+    // Counting the number of:
+    // Zeroes
+    // Out-of-bounds indices
+    // Positive indices
+    // NA indices
+    // From this we can also work out the number of negatives
+
+    if (do_parallel){
+#pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
+      for (int j = 0; j < n; ++j){
+        zero_count += (pi[j] == 0);
+        pos_count += (pi[j] > 0);
+        // oob_count counts NA as true so adjust after the fact
+        oob_count += (std::llabs(pi[j]) > llxn);
+        na_count += (pi[j] == NA_INTEGER);
+      }
+    } else {
+      OMP_FOR_SIMD
+      for (int j = 0; j < n; ++j){
+        zero_count += (pi[j] == 0);
+        pos_count += (pi[j] > 0);
+        // oob_count counts NA as true so adjust after the fact
+        oob_count += (std::llabs(pi[j]) > llxn);
+        na_count += (pi[j] == NA_INTEGER);
+      }
+    }
+    // adjust oob_count
+    oob_count = oob_count - na_count;
+    int neg_count = n - pos_count - zero_count - na_count;
+    if ( (pos_count > 0 && neg_count > 0) ||
+         (neg_count > 0 && na_count > 0)){
+      Rf_error("Cannot mix positive and negative indices");
+    }
+
+    // Should a simplified sset method be used?
+
+    check_indices = !(oob_count == 0 && na_count == 0);
+
+    if (neg_count > 0){
+      SEXP row_seq = Rf_protect(cpp_seq_len(xn)); ++NP;
+      clean_indices = Rf_protect(exclude_elements(row_seq, indices)); ++NP;
+      check_indices = false;
+    } else if (zero_count > 0){
+      SEXP zero = Rf_protect(Rf_ScalarInteger(0)); ++NP;
+      clean_indices = Rf_protect(cpp_val_remove(indices, zero)); ++NP;
+    } else {
+      clean_indices = indices;
+    }
+    out_size = Rf_length(clean_indices);
+  }
+
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, 3)); ++NP;
+
+  // There are the `Rf_Scalar` shortcuts BUT R crashes sometimes when
+  // using the scalar logical shortcuts so I avoid it
+
+  SEXP out_size_sexp = Rf_protect(Rf_allocVector(INTSXP, 1)); ++NP;
+  SEXP check_indices_sexp = Rf_protect(Rf_allocVector(LGLSXP, 1)); ++NP;
+  INTEGER(out_size_sexp)[0] = out_size;
+  LOGICAL(check_indices_sexp)[0] = check_indices;
+  SET_VECTOR_ELT(out, 0, clean_indices);
+  SET_VECTOR_ELT(out, 1, out_size_sexp);
+  SET_VECTOR_ELT(out, 2, check_indices_sexp);
+
+  Rf_unprotect(NP);
+  return out;
+}
+
 
 // Data frame subsetting
 
@@ -684,200 +761,17 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   return out;
 }
 
-SEXP clean_indices(SEXP indices, int xn){
-  long long int llxn = xn;
-  int n = Rf_length(indices);
-  int NP = 0;
-  int zero_count = 0,
-    pos_count = 0,
-    oob_count = 0,
-    na_count = 0;
-  bool do_parallel = n >= CHEAPR_OMP_THRESHOLD;
-  int n_cores = do_parallel ? num_cores() : 1;
-
-  // If indices is a special type of ALTREP compact int sequence, we can
-  // Use a range-based subset instead
-
-  Rf_protect(indices = Rf_coerceVector(indices, INTSXP)); ++NP;
-
-  int out_size;
-  bool check_indices;
-  SEXP clean_indices;
-
-  if (is_compact_seq(indices)){
-    clean_indices = indices;
-
-    SEXP seq_data = Rf_protect(compact_seq_data(indices)); ++NP;
-    R_xlen_t from = REAL(seq_data)[0];
-    R_xlen_t to = REAL(seq_data)[1];
-    R_xlen_t by = REAL(seq_data)[2];
-    out_size = get_alt_final_sset_size(xn, from, to, by);
-    check_indices = true;
-
-  } else {
-    int *pi = INTEGER(indices);
-
-    // Counting the number of:
-    // Zeroes
-    // Out-of-bounds indices
-    // Positive indices
-    // NA indices
-    // From this we can also work out the number of negatives
-
-    if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
-      for (int j = 0; j < n; ++j){
-        zero_count += (pi[j] == 0);
-        pos_count += (pi[j] > 0);
-        // oob_count counts NA as true so adjust after the fact
-        oob_count += (std::llabs(pi[j]) > llxn);
-        na_count += (pi[j] == NA_INTEGER);
-      }
-    } else {
-      OMP_FOR_SIMD
-      for (int j = 0; j < n; ++j){
-        zero_count += (pi[j] == 0);
-        pos_count += (pi[j] > 0);
-        // oob_count counts NA as true so adjust after the fact
-        oob_count += (std::llabs(pi[j]) > llxn);
-        na_count += (pi[j] == NA_INTEGER);
-      }
-    }
-    // adjust oob_count
-    oob_count = oob_count - na_count;
-    int neg_count = n - pos_count - zero_count - na_count;
-    if ( (pos_count > 0 && neg_count > 0) ||
-         (neg_count > 0 && na_count > 0)){
-      Rf_error("Cannot mix positive and negative indices");
-    }
-
-    // Should a simplified sset method be used?
-
-    check_indices = !(oob_count == 0 && na_count == 0);
-
-    if (neg_count > 0){
-      SEXP row_seq = Rf_protect(cpp_seq_len(xn)); ++NP;
-      clean_indices = Rf_protect(exclude_elements(row_seq, indices)); ++NP;
-      check_indices = false;
-    } else if (zero_count > 0){
-      SEXP zero = Rf_protect(Rf_ScalarInteger(0)); ++NP;
-      clean_indices = Rf_protect(cpp_val_remove(indices, zero)); ++NP;
-    } else {
-      clean_indices = indices;
-    }
-    out_size = Rf_length(clean_indices);
-  }
-
-  SEXP out = Rf_protect(Rf_allocVector(VECSXP, 3)); ++NP;
-
-  // There are the `Rf_Scalar` shortcuts BUT R crashes sometimes when
-  // using the scalar logical shortcuts so I avoid it
-
-  SEXP out_size_sexp = Rf_protect(Rf_allocVector(INTSXP, 1)); ++NP;
-  SEXP check_indices_sexp = Rf_protect(Rf_allocVector(LGLSXP, 1)); ++NP;
-  INTEGER(out_size_sexp)[0] = out_size;
-  LOGICAL(check_indices_sexp)[0] = check_indices;
-  SET_VECTOR_ELT(out, 0, clean_indices);
-  SET_VECTOR_ELT(out, 1, out_size_sexp);
-  SET_VECTOR_ELT(out, 2, check_indices_sexp);
-
-  Rf_unprotect(NP);
-  return out;
-
-}
-
-// This is kept to not break dependencies.
-
-[[cpp11::register]]
-SEXP cpp_sset_df(SEXP x, SEXP indices){
-  int xn = cpp_df_nrow(x);
-  int ncols = Rf_length(x);
-  int NP = 0;
-  // cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
-  const SEXP *p_x = VECTOR_PTR_RO(x);
-  SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols)); ++NP;
-
-  const SEXP clean_indices_info = Rf_protect(clean_indices(indices, xn)); ++NP;
-  Rf_protect(indices = VECTOR_ELT(clean_indices_info, 0)); ++NP;
-  int out_size = INTEGER(VECTOR_ELT(clean_indices_info, 1))[0];
-  bool check_indices = LOGICAL(VECTOR_ELT(clean_indices_info, 2))[0];
-
-  // If indices is a special type of ALTREP compact int sequence, we can
-  // Use a range-based subset instead
-
-  if (is_compact_seq(indices)){
-
-    // ALTREP integer sequence method
-
-    SEXP seq_data = Rf_protect(compact_seq_data(indices)); ++NP;
-    R_xlen_t from = REAL(seq_data)[0];
-    R_xlen_t to = REAL(seq_data)[1];
-    R_xlen_t by = REAL(seq_data)[2];
-    for (int j = 0; j < ncols; ++j){
-      SEXP df_var = Rf_protect(p_x[j]);
-      if (is_base_atomic_vec(df_var)){
-        SEXP list_var = Rf_protect(cpp_sset_range(df_var, from, to, by));
-        Rf_copyMostAttrib(df_var, list_var);
-        int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
-        if (has_names){
-          SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
-          SEXP new_names = Rf_protect(cpp_sset_range(
-            old_names, from, to, by)
-          );
-          Rf_setAttrib(list_var, R_NamesSymbol, new_names);
-        }
-        SET_VECTOR_ELT(out, j, list_var);
-        Rf_unprotect(1 + (has_names * 2));
-      } else {
-        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
-      }
-      // Unprotecting new data frame variable
-      Rf_unprotect(1);
-    }
-  } else {
-    // If Index vector is clean we can use fast subset
-
-      for (int j = 0; j < ncols; ++j){
-        SEXP df_var = Rf_protect(p_x[j]);
-        if (is_base_atomic_vec(df_var)){
-          SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, indices, check_indices));
-          Rf_copyMostAttrib(df_var, list_var);
-          int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
-          if (has_names){
-            SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
-            SEXP new_names = Rf_protect(cpp_sset_unsafe(
-              old_names, indices, check_indices
-            ));
-            Rf_setAttrib(list_var, R_NamesSymbol, new_names);
-          }
-          SET_VECTOR_ELT(out, j, list_var);
-          Rf_unprotect(1 + (has_names * 2));
-        } else {
-          SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
-        }
-        Rf_unprotect(1);
-      }
-    }
-
-  cpp_copy_names(x, out, true);
-
-  // list to data frame object
-  if (out_size > 0){
-    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
-    INTEGER(row_names)[0] = NA_INTEGER;
-    INTEGER(row_names)[1] = -out_size;
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  } else {
-    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  }
-  Rf_classgets(out, Rf_mkString("data.frame"));
-  Rf_unprotect(NP);
-  return out;
-}
-
 [[cpp11::register]]
 SEXP cpp_df_slice(SEXP x, SEXP indices){
+
+  if (!is_df(x)){
+    Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
+  }
+
+  if (Rf_isNull(indices)){
+    return x;
+  }
+
   int xn = cpp_df_nrow(x);
   int ncols = Rf_length(x);
   int NP = 0;
@@ -973,9 +867,8 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
   }
 
   int NP = 0, n_rows = cpp_df_nrow(x);
-  bool missingi = Rf_isNull(i), missingj = Rf_isNull(j);
 
-  if (!missingi && Rf_isLogical(i)){
+  if (Rf_isLogical(i)){
     if (Rf_length(i) != n_rows){
       Rf_error("`length(i)` must match `nrow(x)` when `i` is a logical vector");
     }
@@ -983,20 +876,11 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
   }
 
   // Subset columns
-  // If `j` arg is missing, we want to still create a shallow copy
-  // Which we do through `cpp_df_select()`
 
-  SEXP out;
-  if (!missingj || (missingi && missingj)){
-    out = Rf_protect(cpp_df_select(x, j)); ++NP;
-  } else {
-    out = x;
-  }
-  // Subset rows
-  if (!missingi){
-    Rf_protect(i = Rf_coerceVector(i, INTSXP)); ++NP;
-    Rf_protect(out = cpp_df_slice(out, i)); ++NP;
-  }
+  // `cpp_df_select()` always creates a shallow copy
+
+  SEXP out = Rf_protect(cpp_df_select(x, j)); ++NP;
+  Rf_protect(out = cpp_df_slice(out, i)); ++NP;
 
   if (keep_attrs){
     SEXP names = Rf_protect(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
@@ -1036,3 +920,94 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
 //   }
 //   }
 // }
+
+
+// This is kept to not break dependencies, will remove later
+
+[[cpp11::register]]
+SEXP cpp_sset_df(SEXP x, SEXP indices){
+  int xn = cpp_df_nrow(x);
+  int ncols = Rf_length(x);
+  int NP = 0;
+  // cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+  SEXP out = Rf_protect(Rf_allocVector(VECSXP, ncols)); ++NP;
+
+  const SEXP clean_indices_info = Rf_protect(clean_indices(indices, xn)); ++NP;
+  Rf_protect(indices = VECTOR_ELT(clean_indices_info, 0)); ++NP;
+  int out_size = INTEGER(VECTOR_ELT(clean_indices_info, 1))[0];
+  bool check_indices = LOGICAL(VECTOR_ELT(clean_indices_info, 2))[0];
+
+  // If indices is a special type of ALTREP compact int sequence, we can
+  // Use a range-based subset instead
+
+  if (is_compact_seq(indices)){
+
+    // ALTREP integer sequence method
+
+    SEXP seq_data = Rf_protect(compact_seq_data(indices)); ++NP;
+    R_xlen_t from = REAL(seq_data)[0];
+    R_xlen_t to = REAL(seq_data)[1];
+    R_xlen_t by = REAL(seq_data)[2];
+    for (int j = 0; j < ncols; ++j){
+      SEXP df_var = Rf_protect(p_x[j]);
+      if (is_base_atomic_vec(df_var)){
+        SEXP list_var = Rf_protect(cpp_sset_range(df_var, from, to, by));
+        Rf_copyMostAttrib(df_var, list_var);
+        int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
+        if (has_names){
+          SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+          SEXP new_names = Rf_protect(cpp_sset_range(
+            old_names, from, to, by)
+          );
+          Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+        }
+        SET_VECTOR_ELT(out, j, list_var);
+        Rf_unprotect(1 + (has_names * 2));
+      } else {
+        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+      }
+      // Unprotecting new data frame variable
+      Rf_unprotect(1);
+    }
+  } else {
+    // If Index vector is clean we can use fast subset
+
+    for (int j = 0; j < ncols; ++j){
+      SEXP df_var = Rf_protect(p_x[j]);
+      if (is_base_atomic_vec(df_var)){
+        SEXP list_var = Rf_protect(cpp_sset_unsafe(df_var, indices, check_indices));
+        Rf_copyMostAttrib(df_var, list_var);
+        int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
+        if (has_names){
+          SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+          SEXP new_names = Rf_protect(cpp_sset_unsafe(
+            old_names, indices, check_indices
+          ));
+          Rf_setAttrib(list_var, R_NamesSymbol, new_names);
+        }
+        SET_VECTOR_ELT(out, j, list_var);
+        Rf_unprotect(1 + (has_names * 2));
+      } else {
+        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+      }
+      Rf_unprotect(1);
+    }
+  }
+
+  cpp_copy_names(x, out, false);
+
+  // list to data frame object
+  if (out_size > 0){
+    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
+    INTEGER(row_names)[0] = NA_INTEGER;
+    INTEGER(row_names)[1] = -out_size;
+    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  } else {
+    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
+    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  }
+  Rf_classgets(out, Rf_mkString("data.frame"));
+  Rf_unprotect(NP);
+  return out;
+}

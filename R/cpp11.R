@@ -272,16 +272,16 @@ cpp_df_select <- function(x, locs) {
   .Call(`_cheapr_cpp_df_select`, x, locs)
 }
 
-cpp_sset_df <- function(x, indices) {
-  .Call(`_cheapr_cpp_sset_df`, x, indices)
-}
-
 cpp_df_slice <- function(x, indices) {
   .Call(`_cheapr_cpp_df_slice`, x, indices)
 }
 
 cpp_df_subset <- function(x, i, j, keep_attrs) {
   .Call(`_cheapr_cpp_df_subset`, x, i, j, keep_attrs)
+}
+
+cpp_sset_df <- function(x, indices) {
+  .Call(`_cheapr_cpp_sset_df`, x, indices)
 }
 
 cpp_vec_length <- function(x) {

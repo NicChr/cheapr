@@ -484,13 +484,6 @@ extern "C" SEXP _cheapr_cpp_df_select(SEXP x, SEXP locs) {
   END_CPP11
 }
 // sset.cpp
-SEXP cpp_sset_df(SEXP x, SEXP indices);
-extern "C" SEXP _cheapr_cpp_sset_df(SEXP x, SEXP indices) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_sset_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
-  END_CPP11
-}
-// sset.cpp
 SEXP cpp_df_slice(SEXP x, SEXP indices);
 extern "C" SEXP _cheapr_cpp_df_slice(SEXP x, SEXP indices) {
   BEGIN_CPP11
@@ -502,6 +495,13 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs);
 extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j, SEXP keep_attrs) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_df_subset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j), cpp11::as_cpp<cpp11::decay_t<bool>>(keep_attrs)));
+  END_CPP11
+}
+// sset.cpp
+SEXP cpp_sset_df(SEXP x, SEXP indices);
+extern "C" SEXP _cheapr_cpp_sset_df(SEXP x, SEXP indices) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_sset_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
   END_CPP11
 }
 // utils.cpp
