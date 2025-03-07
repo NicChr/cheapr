@@ -669,6 +669,11 @@ SEXP clean_indices(SEXP indices, int xn){
 
 [[cpp11::register]]
 SEXP cpp_df_select(SEXP x, SEXP locs){
+
+  if (!is_df(x)){
+    Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
+  }
+
   int NP = 0,
     n_cols = Rf_length(x),
     n_rows = Rf_length(Rf_getAttrib(x, R_RowNamesSymbol)),
