@@ -36,5 +36,5 @@ sset_col <- function(x, j = NULL){
 
 # Keep this for fastplyr otherwise it breaks dependency
 df_select <- function(x, j = NULL){
-  sset_df(x, i = NULL, j = j, keep_attrs = TRUE)
+  sset_df(x, i = NULL, j = missing(j) %!||% j, keep_attrs = TRUE)
 }

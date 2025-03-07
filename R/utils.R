@@ -260,3 +260,15 @@ exprs <- function(...){
 #   }
 #   `attributes<-`(collapse::vec(dots), NULL)
 # }
+
+# Turn negative indices to positives
+neg_indices_to_pos <- function(exclude, n){
+  if (n == 0){
+    integer()
+  } else {
+    which_not_in(
+      seq.int(from = -1L, to = -as.integer(n), by = -1L),
+      as.integer(exclude)
+    )
+  }
+}

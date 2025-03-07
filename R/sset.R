@@ -171,7 +171,7 @@ sset.sf <- function(x, i, j, ...){
 }
 #' @export
 sset.vctrs_rcrd <- function(x, i, ...){
-  out <- df_slice(list_as_df(x), i)
+  out <- sset_row(list_as_df(x), i)
   cpp_shallow_duplicate_attrs(x, out)
   out
 }

@@ -1,5 +1,7 @@
 # cheapr (development version)
 
+- Fixed CRAN notes on deprecated C functions.
+
 - Data frame subsetting is now faster and internally simpler. 
 Data frame negative subsetting is now cheaper.
 
