@@ -264,8 +264,8 @@ cpp_int_sign <- function(x) {
   .Call(`_cheapr_cpp_int_sign`, x)
 }
 
-cpp_sset_range <- function(x, from, to, by) {
-  .Call(`_cheapr_cpp_sset_range`, x, from, to, by)
+cpp_sset <- function(x, indices) {
+  .Call(`_cheapr_cpp_sset`, x, indices)
 }
 
 cpp_df_select <- function(x, locs) {

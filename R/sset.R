@@ -84,50 +84,38 @@ sset <- function(x, ...){
 }
 #' @export
 sset.default <- function(x, i, ...){
-  if (!missing(i) && is.logical(i)){
-    check_length(i, length(x))
-    i <- which_(i)
-  }
-  # The below line will handle a special but common
-  # case of subsetting with a fairly large altrep int sequence
-  # For non-classed objects
-  if (is_simple_atomic(x) && !missing(i) &&
-      is_compact_seq(i) && n_dots(...) == 0){
-    int_seq_data <- compact_seq_data(i)
-    from <- int_seq_data[[1]]
-    to <- int_seq_data[[2]]
-    by <- int_seq_data[[3]]
-    out <- cpp_sset_range(x, from, to, by)
-    # cpp_shallow_duplicate_attrs(x, out)
-    cpp_copy_most_attrs(x, out)
-    names(out) <- cpp_sset_range(attr(x, "names", TRUE), from, to, by)
-    out
+  if (is_simple_atomic(x) && !missing(i) && n_dots(...) == 0){
+    .Call(`_cheapr_cpp_sset`, x, i)
   } else {
+    if (!missing(i) && is.logical(i)){
+      check_length(i, length(x))
+      i <- which_(i)
+    }
     x[i, ...]
   }
 }
 #' @rdname sset
 #' @export
-sset.data.frame <- function(x, i, j, ...){
-  sset_df(x, missing(i) %!||% i , missing(j) %!||% j)
+sset.data.frame <- function(x, i = NULL, j = NULL, ...){
+  .Call(`_cheapr_cpp_df_subset`, x, i, j, FALSE)
 }
 #' @rdname sset
 #' @export
-sset.tbl_df <- function(x, i, j, ...){
-  out <- sset_df(x, missing(i) %!||% i , missing(j) %!||% j)
+sset.tbl_df <- function(x, i = NULL, j = NULL, ...){
+  out <- sset_df(x, i , j)
   class(out) <- c("tbl_df", "tbl", "data.frame")
   out
 }
 #' @rdname sset
 #' @export
-sset.POSIXlt <- function(x, i, j, ...){
-  missingi <- missing(i)
-  missingj <- missing(j)
+sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
+  missingi <- is.null(i)
+  missingj <- is.null(j)
   out <- fill_posixlt(x, classed = FALSE)
   if (missingj){
     j <- seq_along(out)
   }
-  out <- sset_df(list_as_df(out), missingi %!||% i , missingj %!||% j)
+  out <- sset_df(list_as_df(out), i , j)
   if (missingj){
     set_attr(out, "class", class(x))
     set_rm_attr(out, "row.names")
@@ -143,7 +131,7 @@ sset.POSIXlt <- function(x, i, j, ...){
 #' @rdname sset
 #' @export
 sset.data.table <- function(x, i, j, ...){
-  out <- sset_df(x, missing(i) %!||% i , missing(j) %!||% j)
+  out <- sset_df(x, i , j)
   set_attrs(out, list(
     class = class(x),
     .internal.selfref = attributes(x)[[".internal.selfref"]]
@@ -163,7 +151,7 @@ sset.data.table <- function(x, i, j, ...){
 #' @rdname sset
 #' @export
 sset.sf <- function(x, i, j, ...){
-  out <- sset_df(x, missing(i) %!||% i , missing(j) %!||% j)
+  out <- sset_df(x, i , j)
   source_attrs <- attributes(x)
   source_nms <- names(source_attrs)
   attrs_to_keep <- source_attrs[setdiff_(source_nms, c("names", "row.names"))]
