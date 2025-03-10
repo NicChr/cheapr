@@ -1,6 +1,5 @@
 #include "cheapr.h"
-#include <R.h>
-// #include <R_ext/Memory.h>
+#include <R.h> // R_Calloc
 
 // Subsetting vectors and data frames
 // Includes a unique optimisation on range subsetting
