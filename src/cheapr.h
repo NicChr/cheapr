@@ -117,7 +117,6 @@ SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 int int_div(int x, int y);
 R_xlen_t cpp_df_nrow(SEXP x);
-R_xlen_t cpp_unnested_length(SEXP x);
 SEXP xlen_to_r(R_xlen_t x);
 R_xlen_t cpp_vec_length(SEXP x);
 SEXP r_address(SEXP x);
@@ -136,6 +135,7 @@ SEXP cpp_int64_to_double(SEXP x);
 SEXP cpp_numeric_to_int64(SEXP x);
 SEXP cpp_int64_to_numeric(SEXP x);
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
+SEXP cpp_set_rm_attributes(SEXP x);
 void cpp_copy_names(SEXP source, SEXP target, bool deep_copy);
 void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy);
 SEXP cpp_sset_df(SEXP x, SEXP indices);
@@ -146,5 +146,7 @@ double round_nearest_even(double x);
 SEXP cpp_set_divide(SEXP x, SEXP y);
 SEXP cpp_val_remove(SEXP x, SEXP value);
 SEXP cpp_seq_len(R_xlen_t n);
+SEXP create_df_row_names(int n);
+SEXP shallow_copy(SEXP x);
 
 #endif

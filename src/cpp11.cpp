@@ -155,10 +155,10 @@ extern "C" SEXP _cheapr_cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths,
   END_CPP11
 }
 // lists.cpp
-SEXP cpp_r_unnested_length(SEXP x);
-extern "C" SEXP _cheapr_cpp_r_unnested_length(SEXP x) {
+SEXP cpp_unnested_length(SEXP x);
+extern "C" SEXP _cheapr_cpp_unnested_length(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_r_unnested_length(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(cpp_unnested_length(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // lists.cpp
@@ -667,7 +667,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
-    {"_cheapr_cpp_r_unnested_length",       (DL_FUNC) &_cheapr_cpp_r_unnested_length,       1},
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
     {"_cheapr_cpp_sequence",                (DL_FUNC) &_cheapr_cpp_sequence,                3},
@@ -695,6 +694,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_shallow_duplicate_attrs", (DL_FUNC) &_cheapr_cpp_shallow_duplicate_attrs, 2},
     {"_cheapr_cpp_sset_df",                 (DL_FUNC) &_cheapr_cpp_sset_df,                 2},
     {"_cheapr_cpp_sset_range",              (DL_FUNC) &_cheapr_cpp_sset_range,              4},
+    {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},
     {"_cheapr_cpp_val_remove",              (DL_FUNC) &_cheapr_cpp_val_remove,              2},
     {"_cheapr_cpp_val_replace",             (DL_FUNC) &_cheapr_cpp_val_replace,             4},
     {"_cheapr_cpp_val_set_replace",         (DL_FUNC) &_cheapr_cpp_val_set_replace,         4},
@@ -711,8 +711,11 @@ static const R_CallMethodDef CallEntries[] = {
 };
 }
 
+void api_init(DllInfo* dll);
+
 extern "C" attribute_visible void R_init_cheapr(DllInfo* dll){
   R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, FALSE);
+  api_init(dll);
   R_forceSymbols(dll, TRUE);
 }

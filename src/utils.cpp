@@ -781,6 +781,18 @@ SEXP cpp_growth_rate(SEXP x){
   return Rf_ScalarReal(growth_rate(a, b, n));
 }
 
+SEXP create_df_row_names(int n){
+  if (n > 0){
+    SEXP out = Rf_protect(Rf_allocVector(INTSXP, 2));
+    INTEGER(out)[0] = NA_INTEGER;
+    INTEGER(out)[1] = -n;
+    Rf_unprotect(1);
+    return out;
+  } else {
+    return Rf_allocVector(INTSXP, 0);
+  }
+}
+
 // SEXP cpp_c(SEXP x){
 //   if (!Rf_isVectorList(x)){
 //     Rf_error("x must be a list of vectors");

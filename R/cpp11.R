@@ -84,8 +84,8 @@ cpp_lag2 <- function(x, lag, order, run_lengths, fill, recursive) {
   .Call(`_cheapr_cpp_lag2`, x, lag, order, run_lengths, fill, recursive)
 }
 
-cpp_r_unnested_length <- function(x) {
-  .Call(`_cheapr_cpp_r_unnested_length`, x)
+cpp_unnested_length <- function(x) {
+  .Call(`_cheapr_cpp_unnested_length`, x)
 }
 
 cpp_lengths <- function(x, names) {

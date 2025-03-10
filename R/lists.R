@@ -39,7 +39,7 @@ lengths_ <- function(x, names = FALSE){
 }
 #' @export
 #' @rdname lists
-unlisted_length <- cpp_r_unnested_length
+unlisted_length <- cpp_unnested_length
 #' @export
 #' @rdname lists
 new_list <- function(length = 0L, default = NULL){

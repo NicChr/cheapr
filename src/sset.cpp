@@ -751,15 +751,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
 
   // Make a plain data frame
-  SEXP row_names;
-  if (n_rows > 0){
-    row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
-    INTEGER(row_names)[0] = NA_INTEGER;
-    INTEGER(row_names)[1] = -n_rows;
-  } else {
-    row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
-  }
-  Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
   Rf_classgets(out, Rf_mkString("data.frame"));
   Rf_setAttrib(out, R_NamesSymbol, out_names);
   Rf_unprotect(NP);
@@ -848,15 +840,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
   cpp_copy_names(x, out, true);
 
   // list to data frame object
-  if (out_size > 0){
-    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 2)); ++NP;
-    INTEGER(row_names)[0] = NA_INTEGER;
-    INTEGER(row_names)[1] = -out_size;
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  } else {
-    SEXP row_names = Rf_protect(Rf_allocVector(INTSXP, 0)); ++NP;
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  }
+  Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   Rf_classgets(out, Rf_mkString("data.frame"));
   Rf_unprotect(NP);
   return out;
