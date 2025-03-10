@@ -11,11 +11,11 @@
 \usage{
 sset(x, ...)
 
-\method{sset}{data.frame}(x, i, j, ...)
+\method{sset}{data.frame}(x, i = NULL, j = NULL, ...)
 
-\method{sset}{tbl_df}(x, i, j, ...)
+\method{sset}{tbl_df}(x, i = NULL, j = NULL, ...)
 
-\method{sset}{POSIXlt}(x, i, j, ...)
+\method{sset}{POSIXlt}(x, i = NULL, j = NULL, ...)
 
 \method{sset}{data.table}(x, i, j, ...)
 
