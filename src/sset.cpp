@@ -70,7 +70,7 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
 }
 
 // A cheaper negative subscript for integer vectors
-// expects only zero and negative elements in `exclude`
+// expects only zero-value and negative elements in `exclude`
 
 SEXP exclude_elements(SEXP x, SEXP exclude) {
   int n = Rf_length(x);
@@ -509,6 +509,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   return out;
 }
 
+// Vector subset
 // OOB, zeros and NA are checked when `check = T`
 
 SEXP sset_vec(SEXP x, SEXP indices, bool check){
@@ -676,6 +677,8 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
   Rf_unprotect(NP);
   return out;
 }
+
+// Basic and fast vector subset, exported to R
 
 [[cpp11::register]]
 SEXP cpp_sset(SEXP x, SEXP indices){
@@ -852,6 +855,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
   return out;
 }
 
+
 // Subset that does both selecting and slicing
 
 [[cpp11::register]]
@@ -887,34 +891,6 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
   Rf_unprotect(NP);
   return out;
 }
-
-// A subset method using c++ vectors
-
-// list cpp_sset(SEXP x, integers i){
-//   int xn = Rf_xlength(x);
-//   int n = i.size();
-//   switch ( TYPEOF(x) ){
-//   case INTSXP: {
-//     std::vector<int> out;
-//     int *p_x = INTEGER(x);
-//     out.reserve(n);
-//     for (int j = 0; j < n; ++j){
-//       if (i[j] > 0 && i[j] <= xn){
-//         int val = p_x[i[j] - 1];
-//         out.push_back(val);
-//       } else {
-//         out.push_back(NA_INTEGER);
-//       }
-//     }
-//       return writable::list({
-//         "out"_nm = out
-//       });
-//   }
-//   default: {
-//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-//   }
-//   }
-// }
 
 
 // This is kept to not break dependencies, will remove later
