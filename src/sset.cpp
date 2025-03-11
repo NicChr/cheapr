@@ -530,7 +530,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
   int k = 0;
 
   // Using unsigned to speed things up a bit and can safely check
-  // NAs without overflow
+  // NAs without overflow/underflow
   unsigned int xn = Rf_length(x);
   unsigned int j, na_int = NA_INTEGER;
 
@@ -790,8 +790,8 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
 
   if (check && k != n_locs){
-    Rf_protect(out = Rf_xlengthgets(out, k)); ++NP;
-    Rf_protect(out_names = Rf_xlengthgets(out_names, k)); ++NP;
+    Rf_protect(out = Rf_lengthgets(out, k)); ++NP;
+    Rf_protect(out_names = Rf_lengthgets(out_names, k)); ++NP;
   }
 
   // Make a plain data frame
