@@ -88,9 +88,9 @@ api_set_rm_attrs(SEXP x) {
 }
 
 SEXP
-api_clean_indices(SEXP indices, int xn) {
+api_exclude_elements(SEXP x, SEXP exclude) {
   try {
-    return clean_indices(indices, xn);
+    return exclude_elements(x, exclude);
   } catch (...) {
     return R_NilValue;
   }
@@ -108,5 +108,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_shallow_copy",    (DL_FUNC)api_shallow_copy);
   R_RegisterCCallable("cheapr", "api_set_add_attrs",    (DL_FUNC)api_set_add_attrs);
   R_RegisterCCallable("cheapr", "api_set_rm_attrs",    (DL_FUNC)api_set_rm_attrs);
-  R_RegisterCCallable("cheapr", "api_clean_indices",    (DL_FUNC)api_clean_indices);
+  R_RegisterCCallable("cheapr", "api_exclude_elements",    (DL_FUNC)api_exclude_elements);
 }

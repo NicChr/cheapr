@@ -65,10 +65,10 @@ set_rm_attrs(SEXP x) {
 }
 
 static inline SEXP
-clean_indices(SEXP indices, int xn) {
-  typedef SEXP fn_t(SEXP, int);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_clean_indices");
-  return fn(indices, xn);
+exclude_elements(SEXP x, SEXP exclude) {
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_exclude_elements");
+  return fn(x, exclude);
 }
 
 }
