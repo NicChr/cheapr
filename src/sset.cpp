@@ -94,6 +94,7 @@ SEXP exclude_elements(SEXP exclude, int xn) {
     if (p_excl[j] == NA_INTEGER) continue;
     if (p_excl[j] > 0){
       R_Free(p_keep);
+      Rf_unprotect(1);
       Rf_error("Cannot mix positive and negative subscripts");
     }
     idx = -p_excl[j];
