@@ -1,5 +1,8 @@
 #include "cheapr.h"
 
+// Scalar-optimised functions for R
+// Author: Nick Christofides
+
 // Relational operators
 // define CHEAPR_OP_SWITCH
 // switch(op){

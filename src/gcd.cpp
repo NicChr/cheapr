@@ -1,5 +1,11 @@
 #include "cheapr.h"
 
+// Greatest common divisor and least (smallest) common multiple in R
+// Very safe, fast, efficient and works for bit64's vectors
+// Use `gcd()` for the GCD across a vector of numbers
+// and `gcd2()` for the GCD between 2 numbers (or 2 vectors of numbers)
+
+// Author: Nick Christofides
 
 template<typename T> T cpp_sign(T x) {
   return (x > 0) - (x < 0);

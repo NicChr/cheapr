@@ -4,6 +4,8 @@
 // Subsetting vectors and data frames
 // Includes a unique optimisation on range subsetting
 
+// Author: Nick Christofides
+
 // Helper to convert altrep sequences into the final subsetted length
 
 R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_t by){

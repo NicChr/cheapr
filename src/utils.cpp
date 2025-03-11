@@ -1,5 +1,8 @@
 #include "cheapr.h"
 
+// Miscellaneous functions
+// Author: Nick Christofides
+
 int int_div(int x, int y){
   return x / y;
 }

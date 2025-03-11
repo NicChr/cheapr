@@ -1,5 +1,9 @@
 #include "cheapr.h"
 
+// NA handling functions
+// Author: Nick Christofides
+
+
 #define CHEAPR_COUNT_NA(_ISNA_)                                \
 for (R_xlen_t i = 0; i < n; ++i){                              \
   count += _ISNA_(p_x[i]);                                     \
