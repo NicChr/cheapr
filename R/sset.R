@@ -62,21 +62,6 @@
 #'      sset(df, df$x > 0),
 #'      check = FALSE) # Row names are different
 #'
-#'
-#' ## EXTRA: An easy way to incorporate cheapr into dplyr's filter()
-#' # cheapr_filter <- function(.data, ..., .by = NULL, .preserve = FALSE){
-#' #   filter_df <- .data |>
-#' #     dplyr::mutate(..., .by = {{ .by }}, .keep = "none")
-#' #   groups <- dplyr::group_vars(filter_df)
-#' #   filter_df <- cheapr::sset(filter_df, j = setdiff(names(filter_df), groups))
-#' #   n_filters <- ncol(filter_df)
-#' #   if (n_filters < 1){
-#' #     .data
-#' #   } else {
-#' #     dplyr::dplyr_row_slice(.data, cheapr::which_(Reduce(`&`, filter_df)),
-#' #                            preserve = .preserve)
-#' #   }
-#' # }
 #' @rdname sset
 #' @export
 sset <- function(x, ...){
@@ -130,7 +115,7 @@ sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
 }
 #' @rdname sset
 #' @export
-sset.data.table <- function(x, i, j, ...){
+sset.data.table <- function(x, i = NULL, j = NULL, ...){
   out <- sset_df(x, i , j)
   set_attrs(out, list(
     class = class(x),
@@ -150,7 +135,7 @@ sset.data.table <- function(x, i, j, ...){
 }
 #' @rdname sset
 #' @export
-sset.sf <- function(x, i, j, ...){
+sset.sf <- function(x, i = NULL, j = NULL, ...){
   out <- sset_df(x, i , j)
   source_attrs <- attributes(x)
   source_nms <- names(source_attrs)
@@ -158,7 +143,7 @@ sset.sf <- function(x, i, j, ...){
   set_attrs(out, attrs_to_keep, add = TRUE)
 }
 #' @export
-sset.vctrs_rcrd <- function(x, i, ...){
+sset.vctrs_rcrd <- function(x, i = NULL, ...){
   out <- sset_row(list_as_df(x), i)
   cpp_shallow_duplicate_attrs(x, out)
   out
