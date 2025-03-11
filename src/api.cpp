@@ -87,6 +87,15 @@ api_set_rm_attrs(SEXP x) {
   }
 }
 
+SEXP
+api_clean_indices(SEXP indices, int xn) {
+  try {
+    return clean_indices(indices, xn);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -99,4 +108,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_shallow_copy",    (DL_FUNC)api_shallow_copy);
   R_RegisterCCallable("cheapr", "api_set_add_attrs",    (DL_FUNC)api_set_add_attrs);
   R_RegisterCCallable("cheapr", "api_set_rm_attrs",    (DL_FUNC)api_set_rm_attrs);
+  R_RegisterCCallable("cheapr", "api_clean_indices",    (DL_FUNC)api_clean_indices);
 }

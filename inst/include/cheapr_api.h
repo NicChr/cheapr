@@ -64,6 +64,13 @@ set_rm_attrs(SEXP x) {
   return fn(x);
 }
 
+static inline SEXP
+clean_indices(SEXP indices, int xn) {
+  typedef SEXP fn_t(SEXP, int);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_clean_indices");
+  return fn(indices, xn);
+}
+
 }
 
 // -----------------------------------------------------------------------------
