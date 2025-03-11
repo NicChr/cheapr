@@ -71,11 +71,15 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
 // A cheaper negative subscript for integer vectors
 // expects only zero-value and negative elements in `exclude`
 
-SEXP exclude_elements(SEXP x, SEXP exclude) {
-  int n = Rf_length(x);
+SEXP exclude_elements(SEXP exclude, int xn) {
+
+  int n = xn;
   int m = Rf_length(exclude);
   int *p_excl = INTEGER(exclude);
   int idx;
+
+  SEXP x_seq = Rf_protect(cpp_seq_len(xn));
+  int *p_x = INTEGER(x_seq);
 
   // Which elements do we keep?
   int *p_keep = R_Calloc(n, int);
@@ -100,7 +104,6 @@ SEXP exclude_elements(SEXP x, SEXP exclude) {
   int out_size = n - exclude_count;
   SEXP out = Rf_protect(Rf_allocVector(INTSXP, out_size));
   int *p_out = INTEGER(out);
-  int *p_x = INTEGER(x);
   int i = 0, k = 0;
   while(k != out_size){
     if (p_keep[i]){
@@ -109,7 +112,7 @@ SEXP exclude_elements(SEXP x, SEXP exclude) {
     ++i;
   }
   R_Free(p_keep);
-  Rf_unprotect(1);
+  Rf_unprotect(2);
   return out;
 }
 
@@ -196,8 +199,7 @@ SEXP clean_indices(SEXP indices, int xn){
     check_indices = !(oob_count == 0 && na_count == 0 && zero_count == 0);
 
     if (neg_count > 0){
-      SEXP row_seq = Rf_protect(cpp_seq_len(xn)); ++NP;
-      clean_indices = Rf_protect(exclude_elements(row_seq, indices)); ++NP;
+      clean_indices = Rf_protect(exclude_elements(indices, xn)); ++NP;
       check_indices = false;
       out_size = Rf_length(clean_indices);
     } else {
@@ -753,7 +755,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   // Negative subscripting
   if (n_locs > 0 && INTEGER(cols)[0] != NA_INTEGER && INTEGER(cols)[0] < 0){
-    Rf_protect(cols = exclude_elements(cpp_seq_len(n_cols), cols)); ++NP;
+    Rf_protect(cols = exclude_elements(cols, n_cols)); ++NP;
     n_locs = Rf_length(cols);
     check = false;
   }

@@ -65,10 +65,10 @@ set_rm_attrs(SEXP x) {
 }
 
 static inline SEXP
-exclude_elements(SEXP x, SEXP exclude) {
-  typedef SEXP fn_t(SEXP, SEXP);
+exclude_elements(SEXP exclude, int xn) {
+  typedef SEXP fn_t(SEXP, int);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_exclude_elements");
-  return fn(x, exclude);
+  return fn(exclude, xn);
 }
 
 }

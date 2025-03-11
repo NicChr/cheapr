@@ -88,9 +88,9 @@ api_set_rm_attrs(SEXP x) {
 }
 
 SEXP
-api_exclude_elements(SEXP x, SEXP exclude) {
+api_exclude_elements(SEXP exclude, int xn) {
   try {
-    return exclude_elements(x, exclude);
+    return exclude_elements(exclude, xn);
   } catch (...) {
     return R_NilValue;
   }

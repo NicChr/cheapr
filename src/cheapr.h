@@ -148,6 +148,6 @@ SEXP cpp_val_remove(SEXP x, SEXP value);
 SEXP cpp_seq_len(R_xlen_t n);
 SEXP create_df_row_names(int n);
 SEXP shallow_copy(SEXP x);
-SEXP exclude_elements(SEXP x, SEXP exclude);
+SEXP exclude_elements(SEXP exclude, int xn);
 
 #endif
