@@ -1,4 +1,4 @@
-* Updated to version 1.0.1
+* Updated to version 1.1.0
 
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 

@@ -6,17 +6,8 @@
 
 // -----------------------------------------------------------------------------
 
-/*
- * To avoid throwing C++ exceptions across package boundaries, we catch
- * any exceptions and instead return a simple boolean indicating
- * success/failure. This loses date's specific error messages, but this
- * generally only matters for `locate_zone()`, for which the client can recreate
- * an equivalent error message as needed.
- */
-
 R_xlen_t
 api_vec_length(SEXP x) {
-  // return cpp_vec_length(x);
   try {
     return cpp_vec_length(x);
   } catch (...) {

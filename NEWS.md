@@ -1,4 +1,4 @@
-# cheapr (development version)
+# cheapr 1.1.0
 
 - Fixed CRAN notes on deprecated C functions.
 
@@ -7,6 +7,8 @@ Data frame negative subsetting is now cheaper.
 
 - New functions `sset_df`, `sset_row` and `sset_col` for row slicing and 
 col selecting with minimal overhead (~ 1 microsecond).
+
+- Some C functions have been exported and can be used in native C/C++ code.
 
 # cheapr 1.0.1
 
