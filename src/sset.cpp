@@ -535,9 +535,11 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
   int k = 0;
 
   // Using unsigned to speed things up a bit and can safely check
-  // NAs without overflow/underflow
-  unsigned int xn = Rf_length(x);
-  unsigned int j, na_int = NA_INTEGER;
+  // NAs without undefined overflow/underflow
+  unsigned int
+    j,
+    xn = Rf_length(x),
+    na_int = NA_INTEGER;
 
   SEXP out;
 
@@ -831,23 +833,17 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
 
   for (int j = 0; j < ncols; ++j){
     SEXP df_var = Rf_protect(p_x[j]);
+    SEXP names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
+    SEXP list_var;
     if (is_base_atomic_vec(df_var)){
-      SEXP list_var = Rf_protect(sset_vec(df_var, indices, check_indices));
+      list_var = Rf_protect(sset_vec(df_var, indices, check_indices));
       Rf_copyMostAttrib(df_var, list_var);
-      int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
-      if (has_names){
-        SEXP old_names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
-        SEXP new_names = Rf_protect(sset_vec(
-          old_names, indices, check_indices
-        ));
-        Rf_setAttrib(list_var, R_NamesSymbol, new_names);
-      }
-      SET_VECTOR_ELT(out, j, list_var);
-      Rf_unprotect(1 + (has_names * 2));
+      Rf_setAttrib(list_var, R_NamesSymbol, sset_vec(names, indices, check_indices));
     } else {
-      SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
+      list_var = Rf_protect(cheapr_sset(df_var, indices));
     }
-    Rf_unprotect(1);
+    SET_VECTOR_ELT(out, j, list_var);
+    Rf_unprotect(3); // Unprotect var, names and new var
   }
 
   cpp_copy_names(x, out, true);
