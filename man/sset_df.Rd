@@ -30,7 +30,7 @@ These functions are for developers that need minimal overhead when
 filtering on rows and/or cols.
 }
 \details{
-If you are unsured which functions to use then it is recommended to use
+If you are unsure which functions to use then it is recommended to use
 \code{sset()}. These low-overhead helpers do not work well with data.tables
 but should work well with basic data frames and basic tibbles.
 }
