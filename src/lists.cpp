@@ -30,7 +30,7 @@ SEXP cpp_lengths(SEXP x, bool names) {
   } else {
     const SEXP* p_x = VECTOR_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i) {
-      p_out[i] = cpp_vec_length(p_x[i]);
+      p_out[i] = vec_length(p_x[i]);
     }
   }
   if (names){
@@ -115,7 +115,7 @@ SEXP cpp_list_as_df(SEXP x) {
   } else if (n_items == 0){
     N = 0;
   } else {
-    N = cpp_vec_length(VECTOR_ELT(out, 0));
+    N = vec_length(VECTOR_ELT(out, 0));
   }
 
   SEXP df_str = Rf_protect(Rf_mkString("data.frame")); ++NP;

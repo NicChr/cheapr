@@ -484,7 +484,7 @@ prop_missing <- function(x, recursive = TRUE){
   if (recursive){
     N <- unlisted_length(x)
   } else {
-    N <- cpp_vec_length(x)
+    N <- vector_length(x)
   }
   na_count(x, recursive = recursive) / N
 }

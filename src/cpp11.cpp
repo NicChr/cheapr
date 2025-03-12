@@ -470,6 +470,13 @@ extern "C" SEXP _cheapr_cpp_int_sign(SEXP x) {
   END_CPP11
 }
 // sset.cpp
+SEXP clean_indices(SEXP indices, R_xlen_t xn);
+extern "C" SEXP _cheapr_clean_indices(SEXP indices, SEXP xn) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(clean_indices(cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(xn)));
+  END_CPP11
+}
+// sset.cpp
 SEXP cpp_sset(SEXP x, SEXP indices);
 extern "C" SEXP _cheapr_cpp_sset(SEXP x, SEXP indices) {
   BEGIN_CPP11
@@ -505,10 +512,10 @@ extern "C" SEXP _cheapr_cpp_sset_df(SEXP x, SEXP indices) {
   END_CPP11
 }
 // utils.cpp
-R_xlen_t cpp_vec_length(SEXP x);
-extern "C" SEXP _cheapr_cpp_vec_length(SEXP x) {
+SEXP cpp_vector_length(SEXP x);
+extern "C" SEXP _cheapr_cpp_vector_length(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_vec_length(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(cpp_vector_length(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // utils.cpp
@@ -620,6 +627,7 @@ extern "C" SEXP _cheapr_cpp_lgl_locs(SEXP x, SEXP n_true, SEXP n_false, SEXP inc
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
+    {"_cheapr_clean_indices",               (DL_FUNC) &_cheapr_clean_indices,               2},
     {"_cheapr_compact_seq_data",            (DL_FUNC) &_cheapr_compact_seq_data,            1},
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
@@ -698,7 +706,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_val_remove",              (DL_FUNC) &_cheapr_cpp_val_remove,              2},
     {"_cheapr_cpp_val_replace",             (DL_FUNC) &_cheapr_cpp_val_replace,             4},
     {"_cheapr_cpp_val_set_replace",         (DL_FUNC) &_cheapr_cpp_val_set_replace,         4},
-    {"_cheapr_cpp_vec_length",              (DL_FUNC) &_cheapr_cpp_vec_length,              1},
+    {"_cheapr_cpp_vector_length",           (DL_FUNC) &_cheapr_cpp_vector_length,           1},
     {"_cheapr_cpp_which_",                  (DL_FUNC) &_cheapr_cpp_which_,                  2},
     {"_cheapr_cpp_which_na",                (DL_FUNC) &_cheapr_cpp_which_na,                1},
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},

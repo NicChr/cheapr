@@ -139,7 +139,7 @@ factor_ <- function(
   }
   if (na_exclude && any_na(lvls)){
     if (order && is.null(levels)){
-      lvls <- sset(lvls, seq_len(cpp_vec_length(lvls) - 1L))
+      lvls <- sset(lvls, seq_len(vector_length(lvls) - 1L))
     } else {
       lvls <- na_rm(lvls)
     }

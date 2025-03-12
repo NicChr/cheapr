@@ -7,14 +7,17 @@ int int_div(int x, int y){
   return x / y;
 }
 
-[[cpp11::register]]
-R_xlen_t cpp_vec_length(SEXP x){
+SEXP xlen_to_r(R_xlen_t x){
+  return x > integer_max_ ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
+}
+
+R_xlen_t vec_length(SEXP x){
   if (is_df(x)){
     return cpp_df_nrow(x);
     // Is x a list?
   } else if (Rf_isVectorList(x)){
     if (Rf_inherits(x, "vctrs_rcrd")){
-      return cpp_vec_length(VECTOR_ELT(x, 0));
+      return vec_length(VECTOR_ELT(x, 0));
     } else if (Rf_inherits(x, "POSIXlt")){
       const SEXP *p_x = VECTOR_PTR_RO(x);
       R_xlen_t out = 0;
@@ -34,15 +37,16 @@ R_xlen_t cpp_vec_length(SEXP x){
   }
 }
 
+[[cpp11::register]]
+SEXP cpp_vector_length(SEXP x){
+  return xlen_to_r(vec_length(x));
+}
+
 int num_cores(){
   SEXP num_cores = Rf_protect(Rf_GetOption1(Rf_installChar(Rf_mkChar("cheapr.cores"))));
   int out = Rf_asInteger(num_cores);
   Rf_unprotect(1);
   return out >= 1 ? out : 1;
-}
-
-SEXP xlen_to_r(R_xlen_t x){
-  return x > integer_max_ ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
 }
 
 R_xlen_t cpp_df_nrow(SEXP x){

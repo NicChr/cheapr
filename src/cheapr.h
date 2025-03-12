@@ -101,7 +101,10 @@ inline cpp11::function base_match = cpp11::package("base")["match"];
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
 
-inline bool is_base_atomic_vec(SEXP x){
+
+// Definition of simple atomic vector is one in which
+// it is both atomic and all attributes data-independent
+inline bool is_simple_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (
           !Rf_isObject(x) || (
@@ -118,7 +121,7 @@ SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 int int_div(int x, int y);
 R_xlen_t cpp_df_nrow(SEXP x);
 SEXP xlen_to_r(R_xlen_t x);
-R_xlen_t cpp_vec_length(SEXP x);
+R_xlen_t vec_length(SEXP x);
 SEXP r_address(SEXP x);
 R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive);
 SEXP cpp_list_as_df(SEXP x);
@@ -138,7 +141,6 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
 SEXP cpp_set_rm_attributes(SEXP x);
 void cpp_copy_names(SEXP source, SEXP target, bool deep_copy);
 void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy);
-SEXP cpp_sset_df(SEXP x, SEXP indices);
 SEXP coerce_vector(SEXP source, SEXPTYPE type);
 bool implicit_na_coercion(SEXP x, SEXP target);
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
@@ -148,6 +150,6 @@ SEXP cpp_val_remove(SEXP x, SEXP value);
 SEXP cpp_seq_len(R_xlen_t n);
 SEXP create_df_row_names(int n);
 SEXP shallow_copy(SEXP x);
-SEXP exclude_elements(SEXP exclude, int xn);
+SEXP exclude_locs(SEXP exclude, R_xlen_t xn);
 
 #endif

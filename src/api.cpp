@@ -9,7 +9,7 @@
 R_xlen_t
 api_vec_length(SEXP x) {
   try {
-    return cpp_vec_length(x);
+    return vec_length(x);
   } catch (...) {
     return 0;
   }
@@ -79,9 +79,9 @@ api_set_rm_attrs(SEXP x) {
 }
 
 SEXP
-api_exclude_elements(SEXP exclude, int xn) {
+api_exclude_locs(SEXP exclude, R_xlen_t xn) {
   try {
-    return exclude_elements(exclude, xn);
+    return exclude_locs(exclude, xn);
   } catch (...) {
     return R_NilValue;
   }
@@ -99,5 +99,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_shallow_copy",    (DL_FUNC)api_shallow_copy);
   R_RegisterCCallable("cheapr", "api_set_add_attrs",    (DL_FUNC)api_set_add_attrs);
   R_RegisterCCallable("cheapr", "api_set_rm_attrs",    (DL_FUNC)api_set_rm_attrs);
-  R_RegisterCCallable("cheapr", "api_exclude_elements",    (DL_FUNC)api_exclude_elements);
+  R_RegisterCCallable("cheapr", "api_exclude_locs",    (DL_FUNC)api_exclude_locs);
 }

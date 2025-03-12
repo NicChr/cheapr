@@ -264,6 +264,10 @@ cpp_int_sign <- function(x) {
   .Call(`_cheapr_cpp_int_sign`, x)
 }
 
+clean_indices <- function(indices, xn) {
+  .Call(`_cheapr_clean_indices`, indices, xn)
+}
+
 cpp_sset <- function(x, indices) {
   .Call(`_cheapr_cpp_sset`, x, indices)
 }
@@ -284,8 +288,8 @@ cpp_sset_df <- function(x, indices) {
   .Call(`_cheapr_cpp_sset_df`, x, indices)
 }
 
-cpp_vec_length <- function(x) {
-  .Call(`_cheapr_cpp_vec_length`, x)
+cpp_vector_length <- function(x) {
+  .Call(`_cheapr_cpp_vector_length`, x)
 }
 
 cpp_address <- function(x) {
