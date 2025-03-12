@@ -484,6 +484,13 @@ extern "C" SEXP _cheapr_cpp_sset(SEXP x, SEXP indices) {
   END_CPP11
 }
 // sset.cpp
+SEXP cpp_rev(SEXP x, bool set);
+extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP set) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_rev(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(set)));
+  END_CPP11
+}
+// sset.cpp
 SEXP cpp_df_select(SEXP x, SEXP locs);
 extern "C" SEXP _cheapr_cpp_df_select(SEXP x, SEXP locs) {
   BEGIN_CPP11
@@ -544,13 +551,6 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right, bool include_lowest, b
 extern "C" SEXP _cheapr_cpp_bin(SEXP x, SEXP breaks, SEXP codes, SEXP right, SEXP include_lowest, SEXP include_oob) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_bin(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(breaks), cpp11::as_cpp<cpp11::decay_t<bool>>(codes), cpp11::as_cpp<cpp11::decay_t<bool>>(right), cpp11::as_cpp<cpp11::decay_t<bool>>(include_lowest), cpp11::as_cpp<cpp11::decay_t<bool>>(include_oob)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_rev(SEXP x, bool set);
-extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP set) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_rev(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(set)));
   END_CPP11
 }
 // utils.cpp

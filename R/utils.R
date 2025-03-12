@@ -172,12 +172,9 @@ r_cut_breaks <- function(x, n){
 # b) attributes aren't data-dependent and so can be all copied
 
 is_simple_atomic <- function(x){
-  (
-    is.atomic(x) && (
-      !is.object(x) || inherits(x, c("Date", "POSIXct", "factor", "integer64"))
-    )
-  ) ||
-    is.null(x)
+  is.atomic(x) && (
+    !is.object(x) || inherits(x, c("Date", "POSIXct", "factor", "integer64"))
+  )
 }
 
 # If args is a plain list of items then extract the first element of

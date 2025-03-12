@@ -272,6 +272,10 @@ cpp_sset <- function(x, indices) {
   .Call(`_cheapr_cpp_sset`, x, indices)
 }
 
+cpp_rev <- function(x, set) {
+  .Call(`_cheapr_cpp_rev`, x, set)
+}
+
 cpp_df_select <- function(x, locs) {
   .Call(`_cheapr_cpp_df_select`, x, locs)
 }
@@ -306,10 +310,6 @@ var_sum_squared_diff <- function(x, mu) {
 
 cpp_bin <- function(x, breaks, codes, right, include_lowest, include_oob) {
   .Call(`_cheapr_cpp_bin`, x, breaks, codes, right, include_lowest, include_oob)
-}
-
-cpp_rev <- function(x, set) {
-  .Call(`_cheapr_cpp_rev`, x, set)
 }
 
 cpp_if_else <- function(condition, yes, no, na) {

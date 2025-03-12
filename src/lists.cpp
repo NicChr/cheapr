@@ -34,7 +34,7 @@ SEXP cpp_lengths(SEXP x, bool names) {
     }
   }
   if (names){
-    cpp_copy_names(x, out, true);
+    cpp_copy_names(x, out, false);
   }
   Rf_unprotect(1);
   return out;
