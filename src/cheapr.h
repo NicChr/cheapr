@@ -97,7 +97,6 @@ inline R_xlen_t r_length(SEXP x){
   return Rf_asReal(cpp11::package("base")["length"](x));
 }
 
-inline cpp11::function base_match = cpp11::package("base")["match"];
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
 inline cpp11::function base_colon = cpp11::package("base")[":"];

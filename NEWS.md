@@ -1,3 +1,5 @@
+# cheapr (development version)
+
 # cheapr 1.1.0
 
 - Fixed CRAN notes on deprecated C functions.

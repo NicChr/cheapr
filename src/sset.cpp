@@ -1123,7 +1123,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     n_locs = n_cols;
     check = false;
   } else if (Rf_isString(locs)){
-    cols = Rf_protect(base_match(locs, names)); ++NP;
+    cols = Rf_protect(Rf_match(names, locs, NA_INTEGER)); ++NP;
   } else if (Rf_isLogical(locs)){
     // If logical then find locs using `which_()`
     if (Rf_length(locs) != n_cols){
