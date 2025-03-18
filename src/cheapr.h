@@ -155,7 +155,7 @@ R_xlen_t unnested_length(SEXP x);
 SEXP cpp_drop_null(SEXP l, bool always_shallow_copy);
 SEXP cpp_lengths(SEXP x, bool names);
 SEXP cpp_sset(SEXP x, SEXP indices);
-SEXP cpp_df_slice(SEXP x, SEXP indices);
+SEXP cpp_df_slice(SEXP x, SEXP indices, bool check);
 SEXP cpp_df_select(SEXP x, SEXP locs);
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
 SEXP cpp_sequence(SEXP size, SEXP from, SEXP by);

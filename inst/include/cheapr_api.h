@@ -101,10 +101,10 @@ lengths(SEXP x, bool names){
 }
 
 static inline SEXP
-df_slice(SEXP x, SEXP indices){
-  typedef SEXP fn_t(SEXP, SEXP);
+df_slice(SEXP x, SEXP indices, bool check){
+  typedef SEXP fn_t(SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_slice");
-  return fn(x, indices);
+  return fn(x, indices, check);
 }
 
 static inline SEXP

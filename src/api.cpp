@@ -124,9 +124,9 @@ api_lengths(SEXP x, bool names){
 }
 
 SEXP
-api_df_slice(SEXP x, SEXP indices){
+api_df_slice(SEXP x, SEXP indices, bool check){
   try {
-    return cpp_df_slice(x, indices);
+    return cpp_df_slice(x, indices, check);
   } catch (...) {
     return R_NilValue;
   }
@@ -135,7 +135,7 @@ api_df_slice(SEXP x, SEXP indices){
 SEXP
 api_df_select(SEXP x, SEXP locs){
   try {
-    return cpp_df_slice(x, locs);
+    return cpp_df_select(x, locs);
   } catch (...) {
     return R_NilValue;
   }

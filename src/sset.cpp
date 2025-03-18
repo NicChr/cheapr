@@ -1190,7 +1190,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 }
 
 [[cpp11::register]]
-SEXP cpp_df_slice(SEXP x, SEXP indices){
+SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
 
   if (!is_df(x)){
     Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
@@ -1209,27 +1209,38 @@ SEXP cpp_df_slice(SEXP x, SEXP indices){
 
   // Clean indices and get metadata
 
-  const SEXP clean_indices_info = Rf_protect(clean_indices(indices, xn)); ++NP;
-  Rf_protect(indices = VECTOR_ELT(clean_indices_info, 0)); ++NP;
-  int out_size = REAL(VECTOR_ELT(clean_indices_info, 1))[0];
-  bool check_indices = LOGICAL(VECTOR_ELT(clean_indices_info, 2))[0];
+  int out_size;
+  bool check_indices;
 
+  if (check){
+    const SEXP clean_indices_info = Rf_protect(clean_indices(indices, xn)); ++NP;
+    Rf_protect(indices = VECTOR_ELT(clean_indices_info, 0)); ++NP;
+    out_size = REAL(VECTOR_ELT(clean_indices_info, 1))[0];
+    check_indices = LOGICAL(VECTOR_ELT(clean_indices_info, 2))[0];
+  } else {
+    out_size = Rf_length(indices);
+    check_indices = false;
+  }
 
   // Subset columns
 
+  PROTECT_INDEX index1, index2, index3;
+  SEXP df_var, names, list_var;
+  R_ProtectWithIndex(df_var = R_NilValue, &index1); ++NP;
+  R_ProtectWithIndex(names = R_NilValue, &index2); ++NP;
+  R_ProtectWithIndex(list_var = R_NilValue, &index3); ++NP;
+
   for (int j = 0; j < ncols; ++j){
-    SEXP df_var = Rf_protect(p_x[j]);
-    SEXP names = Rf_protect(Rf_getAttrib(df_var, R_NamesSymbol));
-    SEXP list_var;
+    R_Reprotect(df_var = p_x[j], index1);
+    R_Reprotect(names = Rf_getAttrib(df_var, R_NamesSymbol), index2);
     if (is_simple_atomic_vec(df_var)){
-      list_var = Rf_protect(sset_vec(df_var, indices, check_indices));
+      R_Reprotect(list_var = sset_vec(df_var, indices, check_indices), index3);
       Rf_copyMostAttrib(df_var, list_var);
       Rf_setAttrib(list_var, R_NamesSymbol, sset_vec(names, indices, check_indices));
     } else {
-      list_var = Rf_protect(cheapr_sset(df_var, indices));
+      R_Reprotect(list_var = cheapr_sset(df_var, indices), index3);
     }
     SET_VECTOR_ELT(out, j, list_var);
-    Rf_unprotect(3); // Unprotect var, names and new var
   }
 
   cpp_copy_names(x, out, false);
@@ -1257,7 +1268,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
   // `cpp_df_select()` always creates a shallow copy
   SEXP out = Rf_protect(cpp_df_select(x, j)); ++NP;
   // Subset rows
-  Rf_protect(out = cpp_df_slice(out, i)); ++NP;
+  Rf_protect(out = cpp_df_slice(out, i, true)); ++NP;
 
   if (keep_attrs){
     SEXP names = Rf_protect(Rf_getAttrib(out, R_NamesSymbol)); ++NP;

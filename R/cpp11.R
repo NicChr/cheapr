@@ -280,8 +280,8 @@ cpp_df_select <- function(x, locs) {
   .Call(`_cheapr_cpp_df_select`, x, locs)
 }
 
-cpp_df_slice <- function(x, indices) {
-  .Call(`_cheapr_cpp_df_slice`, x, indices)
+cpp_df_slice <- function(x, indices, check) {
+  .Call(`_cheapr_cpp_df_slice`, x, indices, check)
 }
 
 cpp_df_subset <- function(x, i, j, keep_attrs) {

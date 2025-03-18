@@ -26,7 +26,7 @@ sset_df <- function(x, i = NULL, j = NULL, keep_attrs = FALSE){
 #' @rdname sset_df
 #' @export
 sset_row <- function(x, i = NULL){
-  .Call(`_cheapr_cpp_df_slice`, x, i)
+  .Call(`_cheapr_cpp_df_slice`, x, i, TRUE)
 }
 #' @rdname sset_df
 #' @export
