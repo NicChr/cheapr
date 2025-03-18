@@ -142,6 +142,13 @@ seq_len(R_xlen_t n){
   return fn(n);
 }
 
+static inline bool
+is_simple_atomic_vec(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_is_simple_atomic_vec");
+  return fn(x);
+}
+
 }
 
 // -----------------------------------------------------------------------------
