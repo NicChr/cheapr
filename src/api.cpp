@@ -87,6 +87,96 @@ api_exclude_locs(SEXP exclude, R_xlen_t xn) {
   }
 }
 
+R_xlen_t
+api_unnested_length(SEXP x){
+  try {
+    return unnested_length(x);
+  } catch (...) {
+    return (R_xlen_t) 0;
+  }
+}
+
+SEXP
+api_drop_null(SEXP l, bool always_shallow_copy) {
+  try {
+    return cpp_drop_null(l, always_shallow_copy);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_list_as_df(SEXP x){
+  try {
+    return cpp_list_as_df(x);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_lengths(SEXP x, bool names){
+  try {
+    return cpp_lengths(x, names);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_df_slice(SEXP x, SEXP indices){
+  try {
+    return cpp_df_slice(x, indices);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_df_select(SEXP x, SEXP locs){
+  try {
+    return cpp_df_slice(x, locs);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_sset(SEXP x, SEXP indices){
+  try {
+    return cpp_sset(x, indices);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_val_find(SEXP x, SEXP value, bool invert){
+  try {
+    return cpp_which_val(x, value, invert);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_sequence(SEXP size, SEXP from, SEXP by){
+  try {
+    return cpp_sequence(size, from, by);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_seq_len(R_xlen_t n){
+  try {
+    return cpp_seq_len(n);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -100,4 +190,14 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_set_add_attrs",    (DL_FUNC)api_set_add_attrs);
   R_RegisterCCallable("cheapr", "api_set_rm_attrs",    (DL_FUNC)api_set_rm_attrs);
   R_RegisterCCallable("cheapr", "api_exclude_locs",    (DL_FUNC)api_exclude_locs);
+  R_RegisterCCallable("cheapr", "api_unnested_length",    (DL_FUNC)api_unnested_length);
+  R_RegisterCCallable("cheapr", "api_drop_null",    (DL_FUNC)api_drop_null);
+  R_RegisterCCallable("cheapr", "api_list_as_df",    (DL_FUNC)api_list_as_df);
+  R_RegisterCCallable("cheapr", "api_lengths",    (DL_FUNC)api_lengths);
+  R_RegisterCCallable("cheapr", "api_df_slice",    (DL_FUNC)api_df_slice);
+  R_RegisterCCallable("cheapr", "api_df_select",    (DL_FUNC)api_df_select);
+  R_RegisterCCallable("cheapr", "api_sset",    (DL_FUNC)api_sset);
+  R_RegisterCCallable("cheapr", "api_val_find",    (DL_FUNC)api_val_find);
+  R_RegisterCCallable("cheapr", "api_sequence",    (DL_FUNC)api_sequence);
+  R_RegisterCCallable("cheapr", "api_seq_len",    (DL_FUNC)api_seq_len);
 }

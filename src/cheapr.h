@@ -151,5 +151,13 @@ SEXP cpp_seq_len(R_xlen_t n);
 SEXP create_df_row_names(int n);
 SEXP shallow_copy(SEXP x);
 SEXP exclude_locs(SEXP exclude, R_xlen_t xn);
+R_xlen_t unnested_length(SEXP x);
+SEXP cpp_drop_null(SEXP l, bool always_shallow_copy);
+SEXP cpp_lengths(SEXP x, bool names);
+SEXP cpp_sset(SEXP x, SEXP indices);
+SEXP cpp_df_slice(SEXP x, SEXP indices);
+SEXP cpp_df_select(SEXP x, SEXP locs);
+SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
+SEXP cpp_sequence(SEXP size, SEXP from, SEXP by);
 
 #endif

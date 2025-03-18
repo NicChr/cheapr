@@ -1,6 +1,7 @@
 #ifndef CHEAPR_API_H
 #define CHEAPR_API_H
 
+#include <stdbool.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
@@ -69,6 +70,76 @@ exclude_locs(SEXP exclude, R_xlen_t xn) {
   typedef SEXP fn_t(SEXP, R_xlen_t);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_exclude_locs");
   return fn(exclude, xn);
+}
+
+static inline R_xlen_t
+unnested_length(SEXP x){
+  typedef R_xlen_t fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_unnested_length");
+  return fn(x);
+}
+
+static inline SEXP
+drop_null(SEXP l, bool always_shallow_copy) {
+  typedef SEXP fn_t(SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_drop_null");
+  return fn(l, always_shallow_copy);
+}
+
+static inline SEXP
+list_as_df(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_list_as_df");
+  return fn(x);
+}
+
+static inline SEXP
+lengths(SEXP x, bool names){
+  typedef SEXP fn_t(SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_lengths");
+  return fn(x, names);
+}
+
+static inline SEXP
+df_slice(SEXP x, SEXP indices){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_slice");
+  return fn(x, indices);
+}
+
+static inline SEXP
+df_select(SEXP x, SEXP locs){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_select");
+  return fn(x, locs);
+}
+
+static inline SEXP
+sset(SEXP x, SEXP indices){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_sset");
+  return fn(x, indices);
+}
+
+static inline SEXP
+val_find(SEXP x, SEXP value, bool invert){
+  typedef SEXP fn_t(SEXP, SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_val_find");
+  return fn(x, value, invert);
+}
+
+static inline SEXP
+sequence(SEXP size, SEXP from, SEXP by){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_sequence");
+  return fn(size, from, by);
+}
+
+static inline SEXP
+seq_len(R_xlen_t n){
+  typedef SEXP fn_t(R_xlen_t);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_seq_len");
+  return fn(n);
 }
 
 }

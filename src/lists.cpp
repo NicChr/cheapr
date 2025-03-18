@@ -52,6 +52,22 @@ SEXP cpp_new_list(R_xlen_t size, SEXP default_value) {
   return out;
 }
 
+SEXP shallow_copy(SEXP x){
+  if (Rf_isVectorList(x)){
+    R_xlen_t n = Rf_xlength(x);
+    SEXP out = Rf_protect(cpp_new_list(n, R_NilValue));
+    const SEXP *p_x = VECTOR_PTR_RO(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_VECTOR_ELT(out, i, p_x[i]);
+    }
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    Rf_unprotect(1);
+    return out;
+  } else {
+    return x;
+  }
+}
+
 // Remove NULL elements from list
 
 [[cpp11::register]]
@@ -164,22 +180,6 @@ SEXP cpp_list_as_df(SEXP x) {
 //     Rf_error("x and y must either be both lists or both not lists");
 //   }
 // }
-
-SEXP shallow_copy(SEXP x){
-  if (Rf_isVectorList(x)){
-    R_xlen_t n = Rf_xlength(x);
-    SEXP out = Rf_protect(Rf_allocVector(VECSXP, n));
-    const SEXP *p_x = VECTOR_PTR_RO(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      SET_VECTOR_ELT(out, i, p_x[i]);
-    }
-    SHALLOW_DUPLICATE_ATTRIB(out, x);
-    Rf_unprotect(1);
-    return out;
-  } else {
-    return x;
-  }
-}
 
 // #define cheapr_cast_temp(x, y) cpp11::function cpp11::package("cheapr")["cheapr_cast"];
 
