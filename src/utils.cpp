@@ -656,19 +656,20 @@ SEXP create_df_row_names(int n){
   }
 }
 [[cpp11::register]]
-SEXP cpp_rep_len(SEXP x, SEXP length){
+SEXP cpp_rep_len(SEXP x, int length){
 
-  if (Rf_length(length) == 0){
-    Rf_error("Invalid `length` in %s", __func__);
-  }
+  // if (Rf_length(length) == 0){
+  //   Rf_error("Invalid `length` in %s", __func__);
+  // }
 
-  int out_size = Rf_asInteger(length);
+  // int out_size = Rf_asInteger(length);
+  int out_size = length;
 
   if (Rf_inherits(x, "data.frame")){
     // If length == nrow(x)
-    if (out_size == Rf_length(Rf_getAttrib(x, R_RowNamesSymbol))){
-      return x;
-    }
+    // if (out_size == Rf_length(Rf_getAttrib(x, R_RowNamesSymbol))){
+    //   return x;
+    // }
     int n_cols = Rf_length(x);
     SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_cols));
     SEXP var;
@@ -807,12 +808,11 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 
   SEXP r_zero = Rf_protect(Rf_ScalarInteger(0));
   if (!has_length && scalar_count(sizes, r_zero, false) > 0) n = 0;
-  SEXP r_n = Rf_protect(Rf_ScalarInteger(n));
 
   for (int i = 0; i < n_objs; ++i){
-    SET_VECTOR_ELT(out, i, cpp_rep_len(VECTOR_ELT(out, i), r_n));
+    SET_VECTOR_ELT(out, i, cpp_rep_len(VECTOR_ELT(out, i), n));
   }
-  Rf_unprotect(5);
+  Rf_unprotect(4);
   return out;
 }
 

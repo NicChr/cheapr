@@ -160,7 +160,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check);
 SEXP cpp_df_select(SEXP x, SEXP locs);
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
 SEXP cpp_sequence(SEXP size, SEXP from, SEXP by);
-SEXP cpp_rep_len(SEXP x, SEXP length);
+SEXP cpp_rep_len(SEXP x, int length);
 SEXP cpp_recycle(SEXP x, SEXP length);
 
 #endif

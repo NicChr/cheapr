@@ -590,10 +590,10 @@ extern "C" SEXP _cheapr_cpp_growth_rate(SEXP x) {
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_rep_len(SEXP x, SEXP length);
+SEXP cpp_rep_len(SEXP x, int length);
 extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_rep_len(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(length)));
+    return cpp11::as_sexp(cpp_rep_len(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(length)));
   END_CPP11
 }
 // utils.cpp

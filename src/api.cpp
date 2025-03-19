@@ -187,7 +187,7 @@ api_is_simple_atomic_vec(SEXP x){
 }
 
 SEXP
-api_rep_len(SEXP x, SEXP length){
+api_rep_len(SEXP x, int length){
   try {
     return cpp_rep_len(x, length);
   } catch (...) {
