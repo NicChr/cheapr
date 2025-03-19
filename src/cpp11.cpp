@@ -589,6 +589,20 @@ extern "C" SEXP _cheapr_cpp_growth_rate(SEXP x) {
     return cpp11::as_sexp(cpp_growth_rate(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// utils.cpp
+SEXP cpp_rep_len(SEXP x, SEXP length);
+extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_rep_len(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(length)));
+  END_CPP11
+}
+// utils.cpp
+SEXP cpp_recycle(SEXP x, SEXP length);
+extern "C" SEXP _cheapr_cpp_recycle(SEXP x, SEXP length) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_recycle(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(length)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -675,6 +689,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
+    {"_cheapr_cpp_recycle",                 (DL_FUNC) &_cheapr_cpp_recycle,                 2},
+    {"_cheapr_cpp_rep_len",                 (DL_FUNC) &_cheapr_cpp_rep_len,                 2},
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
     {"_cheapr_cpp_sequence",                (DL_FUNC) &_cheapr_cpp_sequence,                3},

@@ -31,6 +31,9 @@ recycle(Sys.Date(), 1:10)
 # Any vectors of zero-length are all recycled to zero-length
 recycle(integer(), 1:10)
 
+# Unless length is supplied
+recycle(integer(), 1:10, length = 10)
+
 # Data frame rows are recycled
 recycle(sset(iris, 1:3), length = 3 * 3)
 

@@ -60,14 +60,6 @@ cheapr_rep_len <- function(x, length.out){
   }
 }
 
-cheapr_recycle <- function(x, length){
-  if (length == vector_length(x)){
-    x
-  } else {
-    cheapr_rep_len(x, length)
-  }
-}
-
 set_attr <- cpp_set_add_attr
 set_attrs <- cpp_set_add_attributes
 set_rm_attr <- cpp_set_rm_attr
@@ -228,7 +220,7 @@ df_add_cols <- function(data, cols){
   out <- unclass(data)
   temp <- unclass(cols)
   for (col in names(temp)){
-    out[[col]] <- if (is.null(temp[[col]])) NULL else cheapr_recycle(temp[[col]], length = N)
+    out[[col]] <- if (is.null(temp[[col]])) NULL else cpp_rep_len(temp[[col]], length = N)
   }
   class(out) <- class(data)
   out

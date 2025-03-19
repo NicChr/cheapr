@@ -186,6 +186,24 @@ api_is_simple_atomic_vec(SEXP x){
   }
 }
 
+SEXP
+api_rep_len(SEXP x, SEXP length){
+  try {
+    return cpp_rep_len(x, length);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_recycle(SEXP x, SEXP length){
+  try {
+    return cpp_recycle(x, length);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -210,4 +228,6 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_sequence",    (DL_FUNC)api_sequence);
   R_RegisterCCallable("cheapr", "api_seq_len",    (DL_FUNC)api_seq_len);
   R_RegisterCCallable("cheapr", "api_is_simple_atomic_vec",    (DL_FUNC)api_is_simple_atomic_vec);
+  R_RegisterCCallable("cheapr", "api_recycle",    (DL_FUNC)api_recycle);
+  R_RegisterCCallable("cheapr", "api_rep_len",    (DL_FUNC)api_rep_len);
 }

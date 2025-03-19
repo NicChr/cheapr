@@ -100,6 +100,7 @@ inline R_xlen_t r_length(SEXP x){
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
 inline cpp11::function base_colon = cpp11::package("base")[":"];
+inline cpp11::function base_rep = cpp11::package("base")["rep"];
 
 
 // Definition of simple atomic vector is one in which
@@ -159,5 +160,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check);
 SEXP cpp_df_select(SEXP x, SEXP locs);
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
 SEXP cpp_sequence(SEXP size, SEXP from, SEXP by);
+SEXP cpp_rep_len(SEXP x, SEXP length);
+SEXP cpp_recycle(SEXP x, SEXP length);
 
 #endif

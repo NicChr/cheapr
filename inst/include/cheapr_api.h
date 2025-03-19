@@ -149,6 +149,20 @@ is_simple_atomic_vec(SEXP x){
   return fn(x);
 }
 
+static inline SEXP
+rep_len(SEXP x, SEXP length){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_rep_len");
+  return fn(x, length);
+}
+
+static inline SEXP
+recycle(SEXP x, SEXP length){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_recycle");
+  return fn(x, length);
+}
+
 }
 
 // -----------------------------------------------------------------------------

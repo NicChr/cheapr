@@ -24,7 +24,7 @@ new_df <- function(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE){
 
   # Recycle
   if (.recycle){
-    out <- do.call(function(...) recycle(..., length = .nrows), out)
+    out <- cpp_recycle(out, length = .nrows)
   }
 
   if (is.null(.nrows)){

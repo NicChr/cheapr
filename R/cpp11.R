@@ -332,6 +332,14 @@ cpp_growth_rate <- function(x) {
   .Call(`_cheapr_cpp_growth_rate`, x)
 }
 
+cpp_rep_len <- function(x, length) {
+  .Call(`_cheapr_cpp_rep_len`, x, length)
+}
+
+cpp_recycle <- function(x, length) {
+  .Call(`_cheapr_cpp_recycle`, x, length)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

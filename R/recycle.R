@@ -23,6 +23,9 @@
 #' # Any vectors of zero-length are all recycled to zero-length
 #' recycle(integer(), 1:10)
 #'
+#' # Unless length is supplied
+#' recycle(integer(), 1:10, length = 10)
+#'
 #' # Data frame rows are recycled
 #' recycle(sset(iris, 1:3), length = 3 * 3)
 #'
@@ -32,23 +35,5 @@
 #'
 #' @export
 recycle <- function (..., length = NULL){
-  out <- cpp_list_rm_null(list(...))
-  lens <- lengths_(out)
-  if (is.null(length)) {
-    if (length(lens)) {
-      N <- max(lens)
-    }
-    else {
-      N <- 0L
-    }
-  }
-  else {
-    N <- length
-  }
-  N <- N * (!collapse::anyv(lens, 0L))
-  recyclei <- which_(lens != N)
-  if (length(recyclei)){
-    out[recyclei] <- lapply(out[recyclei], cheapr_rep_len, N)
-  }
-  out
+  .Call(`_cheapr_cpp_recycle`, list(...), length)
 }
