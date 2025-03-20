@@ -64,6 +64,20 @@ extern "C" SEXP _cheapr_cpp_copy_most_attrs(SEXP source, SEXP target) {
   END_CPP11
 }
 // combine.cpp
+SEXP cpp_rep_len(SEXP x, int length);
+extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_rep_len(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(length)));
+  END_CPP11
+}
+// combine.cpp
+SEXP cpp_recycle(SEXP x, SEXP length);
+extern "C" SEXP _cheapr_cpp_recycle(SEXP x, SEXP length) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_recycle(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(length)));
+  END_CPP11
+}
+// combine.cpp
 SEXP na_init(SEXP x, int n);
 extern "C" SEXP _cheapr_na_init(SEXP x, SEXP n) {
   BEGIN_CPP11
@@ -615,20 +629,6 @@ SEXP cpp_growth_rate(SEXP x);
 extern "C" SEXP _cheapr_cpp_growth_rate(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_growth_rate(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_rep_len(SEXP x, int length);
-extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_rep_len(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(length)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_recycle(SEXP x, SEXP length);
-extern "C" SEXP _cheapr_cpp_recycle(SEXP x, SEXP length) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_recycle(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(length)));
   END_CPP11
 }
 // which.cpp

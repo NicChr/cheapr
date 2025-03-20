@@ -32,6 +32,14 @@ cpp_copy_most_attrs <- function(source, target) {
   invisible(.Call(`_cheapr_cpp_copy_most_attrs`, source, target))
 }
 
+cpp_rep_len <- function(x, length) {
+  .Call(`_cheapr_cpp_rep_len`, x, length)
+}
+
+cpp_recycle <- function(x, length) {
+  .Call(`_cheapr_cpp_recycle`, x, length)
+}
+
 na_init <- function(x, n) {
   .Call(`_cheapr_na_init`, x, n)
 }
@@ -346,14 +354,6 @@ cpp_set_or <- function(x, y) {
 
 cpp_growth_rate <- function(x) {
   .Call(`_cheapr_cpp_growth_rate`, x)
-}
-
-cpp_rep_len <- function(x, length) {
-  .Call(`_cheapr_cpp_rep_len`, x, length)
-}
-
-cpp_recycle <- function(x, length) {
-  .Call(`_cheapr_cpp_recycle`, x, length)
 }
 
 cpp_which_ <- function(x, invert) {

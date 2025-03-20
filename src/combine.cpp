@@ -1,5 +1,165 @@
 #include "cheapr.h"
 
+
+[[cpp11::register]]
+SEXP cpp_rep_len(SEXP x, int length){
+  int out_size = length;
+
+  if (Rf_inherits(x, "data.frame")){
+    int n_cols = Rf_length(x);
+    SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_cols));
+    SEXP var;
+    for (int i = 0; i < n_cols; ++i){
+      var = Rf_protect(VECTOR_ELT(x, i));
+      SET_VECTOR_ELT(out, i, cpp_rep_len(var, length));
+      Rf_unprotect(1);
+    }
+    Rf_setAttrib(out, R_NamesSymbol, Rf_getAttrib(x, R_NamesSymbol));
+    Rf_protect(out = cpp_list_as_df(out));
+    Rf_unprotect(2);
+    return out;
+  } else if (is_simple_atomic_vec(x)){
+
+    int size = Rf_length(x);
+    int n_chunks, k, m, chunk_size;
+
+    // Return x if length(x) == length
+    if (out_size == size) return x;
+
+    switch (TYPEOF(x)){
+    case LGLSXP:
+    case INTSXP: {
+      int *p_x = INTEGER(x);
+      SEXP out = Rf_protect(Rf_allocVector(TYPEOF(x), out_size));
+      int *p_out = INTEGER(out);
+
+      if (out_size > 0 && size > 0){
+        n_chunks = std::ceil(((double) out_size) / size);
+        for (int i = 0; i < n_chunks; ++i){
+          k = ( (i + 1) * size) - size;
+          m = std::min(k + size - 1, out_size - 1);
+          chunk_size = m - k + 1;
+          memmove(&p_out[k], &p_x[0], chunk_size * sizeof(int));
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        OMP_FOR_SIMD
+        for (int i = 0; i < out_size; ++i){
+          p_out[i] = NA_INTEGER;
+        }
+      }
+      SHALLOW_DUPLICATE_ATTRIB(out, x);
+      Rf_unprotect(1);
+      return out;
+    }
+    case REALSXP: {
+      double *p_x = REAL(x);
+      SEXP out = Rf_protect(Rf_allocVector(REALSXP, out_size));
+      double *p_out = REAL(out);
+
+      if (out_size > 0 && size > 0){
+        n_chunks = std::ceil(((double) out_size) / size);
+        for (int i = 0; i < n_chunks; ++i){
+          k = ( (i + 1) * size) - size;
+          m = std::min(k + size - 1, out_size - 1);
+          chunk_size = m - k + 1;
+          memmove(&p_out[k], &p_x[0], chunk_size * sizeof(double));
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        OMP_FOR_SIMD
+        for (int i = 0; i < out_size; ++i){
+          p_out[i] = NA_REAL;
+        }
+      }
+      SHALLOW_DUPLICATE_ATTRIB(out, x);
+      Rf_unprotect(1);
+      return out;
+    }
+    case STRSXP: {
+      const SEXP *p_x = STRING_PTR_RO(x);
+      SEXP out = Rf_protect(Rf_allocVector(STRSXP, out_size));
+
+      if (out_size > 0 && size > 0){
+        for (int i = 0; i < out_size; ++i){
+          SET_STRING_ELT(out, i, p_x[i % size]);
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        for (int i = 0; i < out_size; ++i){
+          SET_STRING_ELT(out, i, NA_STRING);
+        }
+      }
+      SHALLOW_DUPLICATE_ATTRIB(out, x);
+      Rf_unprotect(1);
+      return out;
+    }
+    case CPLXSXP: {
+      Rcomplex *p_x = COMPLEX(x);
+      SEXP out = Rf_protect(Rf_allocVector(CPLXSXP, out_size));
+      Rcomplex *p_out = COMPLEX(out);
+
+      if (out_size > 0 && size > 0){
+        for (int i = 0; i < out_size; ++i){
+          SET_COMPLEX_ELT(out, i, p_x[i % size]);
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        for (int i = 0; i < out_size; ++i){
+          p_out[i].r = NA_REAL;
+          p_out[i].i = NA_REAL;
+        }
+      }
+      SHALLOW_DUPLICATE_ATTRIB(out, x);
+      Rf_unprotect(1);
+      return out;
+    }
+    default: {
+      return base_rep(x, cpp11::named_arg("length.out") = length);
+    }
+    }
+  } else {
+    return base_rep(x, cpp11::named_arg("length.out") = length);
+  }
+}
+
+// Recycle elements of a list `x`
+
+[[cpp11::register]]
+SEXP cpp_recycle(SEXP x, SEXP length){
+  SEXP out = Rf_protect(cpp_drop_null(x, false));
+  SEXP sizes = Rf_protect(cpp_lengths(out, false));
+  int *p_sizes = INTEGER(sizes);
+  bool has_length = !Rf_isNull(length);
+  Rf_protect(length = Rf_coerceVector(length, INTSXP));
+
+  int n = 0;
+  int n_objs = Rf_length(out);
+
+  if (!has_length){
+    if (n_objs > 0){
+      // We calculate `max(sizes)`
+      // We won't have any NA in sizes so no NA checking is needed
+      OMP_FOR_SIMD
+      for (int i = 0; i < n_objs; ++i){
+        n = p_sizes[i] > n ? p_sizes[i] : n;
+      }
+    }
+  } else {
+    n = Rf_asInteger(length);
+  }
+
+  SEXP r_zero = Rf_protect(Rf_ScalarInteger(0));
+  if (!has_length && scalar_count(sizes, r_zero, false) > 0) n = 0;
+
+  for (int i = 0; i < n_objs; ++i){
+    SET_VECTOR_ELT(out, i, cpp_rep_len(VECTOR_ELT(out, i), n));
+  }
+  Rf_unprotect(4);
+  return out;
+}
+
+
 // Not fast but exists for low overhead C++ calls
 SEXP cpp_unique(SEXP x){
   SEXP dup = Rf_protect(Rf_duplicated(x, FALSE));
@@ -223,67 +383,6 @@ SEXP cpp_df_c(SEXP x){
   Rf_unprotect(NP);
   return out;
 }
-
-// Working version for data frames with similar col structures
-// SEXP cpp_df_c(SEXP x){
-//
-//   if (!Rf_isVectorList(x)){
-//     Rf_error("`x` must be a list of data frames");
-//   }
-//
-//   int n_frames = Rf_length(x);
-//
-//   if (n_frames == 0) return R_NilValue;
-//
-//   int NP = 0;
-//   const SEXP *p_x = VECTOR_PTR_RO(x);
-//
-//   SEXP df = p_x[0];
-//
-//   if (!Rf_inherits(df, "data.frame")){
-//     Rf_unprotect(NP); Rf_error("Can't combine data frames with non data frames");
-//   }
-//
-//   SEXP names = Rf_protect(Rf_getAttrib(df, R_NamesSymbol)); ++NP;
-//   if (Rf_any_duplicated(names, FALSE) > 0){
-//     Rf_unprotect(NP);
-//     Rf_error("data frame names aren't unique, please check");
-//   }
-//
-//   int n_cols = Rf_length(names);
-//   int out_nrows = 0;
-//   SEXP frames = Rf_protect(Rf_allocVector(VECSXP, n_frames)); ++NP;
-//   SET_VECTOR_ELT(frames, 0, df);
-//
-//   for (int i = 1; i < n_frames; ++i){
-//     df = Rf_protect(p_x[i]);
-//
-//     if (!Rf_inherits(df, "data.frame")){
-//       Rf_unprotect(NP + 1); Rf_error("Can't combine data frames with non data frames");
-//     }
-//     if (Rf_length(df) != n_cols){
-//       Rf_unprotect(NP + 1); Rf_error("All data frames must contain identically named variables");
-//     }
-//
-//     out_nrows += Rf_length(Rf_getAttrib(df, R_RowNamesSymbol));
-//     SET_VECTOR_ELT(frames, i, cpp_df_select(df, names));
-//     Rf_unprotect(1);
-//   }
-//
-//   SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_cols)); ++NP;
-//   SEXP vectors = Rf_protect(Rf_allocVector(VECSXP, n_frames)); ++NP;
-//
-//   for (int j = 0; j < n_cols; ++j){
-//     for (int i = 0; i < n_frames; ++i){
-//       SET_VECTOR_ELT(vectors, i, VECTOR_ELT(VECTOR_ELT(frames, i), j));
-//     }
-//     SET_VECTOR_ELT(out, j, cpp_c(vectors));
-//   }
-//   Rf_protect(out = cpp_list_as_df(out)); ++NP;
-//   Rf_setAttrib(out, R_NamesSymbol, names);
-//   Rf_unprotect(NP);
-//   return out;
-// }
 
 // `c()` but no concatenation of names
 [[cpp11::register]]
