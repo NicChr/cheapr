@@ -452,9 +452,8 @@ SEXP cpp_c(SEXP x){
         Rf_coerceVector(p_x[i], vector_type), temp_idx
       );
       int *p_temp = INTEGER(temp);
-      for (R_xlen_t j = 0; j < m; ++k, ++j){
-        p_out[k] = p_temp[j];
-      }
+      memmove(&p_out[k], &p_temp[0], m * sizeof(int));
+      k += m;
     }
     break;
   }
@@ -470,9 +469,8 @@ SEXP cpp_c(SEXP x){
         Rf_coerceVector(p_x[i], vector_type), temp_idx
       );
       double *p_temp = REAL(temp);
-      for (R_xlen_t j = 0; j < m; ++k, ++j){
-        p_out[k] = p_temp[j];
-      }
+      memmove(&p_out[k], &p_temp[0], m * sizeof(double));
+      k += m;
     }
     break;
   }
