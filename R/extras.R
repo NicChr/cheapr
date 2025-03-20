@@ -324,6 +324,10 @@ cast <- function(x, template){
   }
 }
 
+cheapr_c <- function(...){
+  .Call(`_cheapr_cpp_c`, list(...))
+}
+
 # is_duplicate <- function(x, .all = FALSE){
 #   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
 #   sizes <- attr(groups, "group.sizes", TRUE)

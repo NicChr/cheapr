@@ -32,6 +32,22 @@ cpp_copy_most_attrs <- function(source, target) {
   invisible(.Call(`_cheapr_cpp_copy_most_attrs`, source, target))
 }
 
+na_init <- function(x, n) {
+  .Call(`_cheapr_na_init`, x, n)
+}
+
+get_ptypes <- function(x) {
+  .Call(`_cheapr_get_ptypes`, x)
+}
+
+list_c <- function(x) {
+  .Call(`_cheapr_list_c`, x)
+}
+
+cpp_c <- function(x) {
+  .Call(`_cheapr_cpp_c`, x)
+}
+
 cpp_gcd2 <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_gcd2`, x, y, tol, na_rm)
 }

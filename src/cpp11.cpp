@@ -63,6 +63,34 @@ extern "C" SEXP _cheapr_cpp_copy_most_attrs(SEXP source, SEXP target) {
     return R_NilValue;
   END_CPP11
 }
+// combine.cpp
+SEXP na_init(SEXP x, int n);
+extern "C" SEXP _cheapr_na_init(SEXP x, SEXP n) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(na_init(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(n)));
+  END_CPP11
+}
+// combine.cpp
+SEXP get_ptypes(SEXP x);
+extern "C" SEXP _cheapr_get_ptypes(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(get_ptypes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// combine.cpp
+SEXP list_c(SEXP x);
+extern "C" SEXP _cheapr_list_c(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(list_c(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// combine.cpp
+SEXP cpp_c(SEXP x);
+extern "C" SEXP _cheapr_cpp_c(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_c(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // gcd.cpp
 double cpp_gcd2(double x, double y, double tol, bool na_rm);
 extern "C" SEXP _cheapr_cpp_gcd2(SEXP x, SEXP y, SEXP tol, SEXP na_rm) {
@@ -647,6 +675,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
     {"_cheapr_cpp_bin",                     (DL_FUNC) &_cheapr_cpp_bin,                     6},
+    {"_cheapr_cpp_c",                       (DL_FUNC) &_cheapr_cpp_c,                       1},
     {"_cheapr_cpp_col_all_na",              (DL_FUNC) &_cheapr_cpp_col_all_na,              2},
     {"_cheapr_cpp_col_any_na",              (DL_FUNC) &_cheapr_cpp_col_any_na,              2},
     {"_cheapr_cpp_col_na_counts",           (DL_FUNC) &_cheapr_cpp_col_na_counts,           2},
@@ -728,7 +757,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
+    {"_cheapr_get_ptypes",                  (DL_FUNC) &_cheapr_get_ptypes,                  1},
     {"_cheapr_is_compact_seq",              (DL_FUNC) &_cheapr_is_compact_seq,              1},
+    {"_cheapr_list_c",                      (DL_FUNC) &_cheapr_list_c,                      1},
+    {"_cheapr_na_init",                     (DL_FUNC) &_cheapr_na_init,                     2},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}

@@ -163,6 +163,13 @@ recycle(SEXP x, SEXP length){
   return fn(x, length);
 }
 
+static inline SEXP
+c(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_c");
+  return fn(x);
+}
+
 }
 
 // -----------------------------------------------------------------------------

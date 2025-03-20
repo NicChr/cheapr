@@ -657,19 +657,9 @@ SEXP create_df_row_names(int n){
 }
 [[cpp11::register]]
 SEXP cpp_rep_len(SEXP x, int length){
-
-  // if (Rf_length(length) == 0){
-  //   Rf_error("Invalid `length` in %s", __func__);
-  // }
-
-  // int out_size = Rf_asInteger(length);
   int out_size = length;
 
   if (Rf_inherits(x, "data.frame")){
-    // If length == nrow(x)
-    // if (out_size == Rf_length(Rf_getAttrib(x, R_RowNamesSymbol))){
-    //   return x;
-    // }
     int n_cols = Rf_length(x);
     SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_cols));
     SEXP var;
@@ -685,6 +675,7 @@ SEXP cpp_rep_len(SEXP x, int length){
   } else if (is_simple_atomic_vec(x)){
 
     int size = Rf_length(x);
+    int n_chunks, k, m, chunk_size;
 
     // Return x if length(x) == length
     if (out_size == size) return x;
@@ -697,9 +688,12 @@ SEXP cpp_rep_len(SEXP x, int length){
       int *p_out = INTEGER(out);
 
       if (out_size > 0 && size > 0){
-        OMP_FOR_SIMD
-        for (int i = 0; i < out_size; ++i){
-          p_out[i] = p_x[i % size];
+        n_chunks = std::ceil(((double) out_size) / size);
+        for (int i = 0; i < n_chunks; ++i){
+          k = ( (i + 1) * size) - size;
+          m = std::min(k + size - 1, out_size - 1);
+          chunk_size = m - k + 1;
+          memmove(&p_out[k], &p_x[0], chunk_size * sizeof(int));
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -718,9 +712,12 @@ SEXP cpp_rep_len(SEXP x, int length){
       double *p_out = REAL(out);
 
       if (out_size > 0 && size > 0){
-        OMP_FOR_SIMD
-        for (int i = 0; i < out_size; ++i){
-          p_out[i] = p_x[i % size];
+        n_chunks = std::ceil(((double) out_size) / size);
+        for (int i = 0; i < n_chunks; ++i){
+          k = ( (i + 1) * size) - size;
+          m = std::min(k + size - 1, out_size - 1);
+          chunk_size = m - k + 1;
+          memmove(&p_out[k], &p_x[0], chunk_size * sizeof(double));
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -779,6 +776,129 @@ SEXP cpp_rep_len(SEXP x, int length){
     return base_rep(x, cpp11::named_arg("length.out") = length);
   }
 }
+// SEXP cpp_rep_len(SEXP x, int length){
+//
+//   // if (Rf_length(length) == 0){
+//   //   Rf_error("Invalid `length` in %s", __func__);
+//   // }
+//
+//   // int out_size = Rf_asInteger(length);
+//   int out_size = length;
+//
+//   if (Rf_inherits(x, "data.frame")){
+//     // If length == nrow(x)
+//     // if (out_size == Rf_length(Rf_getAttrib(x, R_RowNamesSymbol))){
+//     //   return x;
+//     // }
+//     int n_cols = Rf_length(x);
+//     SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_cols));
+//     SEXP var;
+//     for (int i = 0; i < n_cols; ++i){
+//       var = Rf_protect(VECTOR_ELT(x, i));
+//       SET_VECTOR_ELT(out, i, cpp_rep_len(var, length));
+//       Rf_unprotect(1);
+//     }
+//     Rf_setAttrib(out, R_NamesSymbol, Rf_getAttrib(x, R_NamesSymbol));
+//     Rf_protect(out = cpp_list_as_df(out));
+//     Rf_unprotect(2);
+//     return out;
+//   } else if (is_simple_atomic_vec(x)){
+//
+//     int size = Rf_length(x);
+//
+//     // Return x if length(x) == length
+//     if (out_size == size) return x;
+//
+//     switch (TYPEOF(x)){
+//     case LGLSXP:
+//     case INTSXP: {
+//       int *p_x = INTEGER(x);
+//       SEXP out = Rf_protect(Rf_allocVector(TYPEOF(x), out_size));
+//       int *p_out = INTEGER(out);
+//
+//       if (out_size > 0 && size > 0){
+//         OMP_FOR_SIMD
+//         for (int i = 0; i < out_size; ++i){
+//           p_out[i] = p_x[i % size];
+//         }
+//         // If length > 0 but length(x) == 0 then fill with NA
+//       } else if (size == 0 && out_size > 0){
+//         OMP_FOR_SIMD
+//         for (int i = 0; i < out_size; ++i){
+//           p_out[i] = NA_INTEGER;
+//         }
+//       }
+//       SHALLOW_DUPLICATE_ATTRIB(out, x);
+//       Rf_unprotect(1);
+//       return out;
+//     }
+//     case REALSXP: {
+//       double *p_x = REAL(x);
+//       SEXP out = Rf_protect(Rf_allocVector(REALSXP, out_size));
+//       double *p_out = REAL(out);
+//
+//       if (out_size > 0 && size > 0){
+//         OMP_FOR_SIMD
+//         for (int i = 0; i < out_size; ++i){
+//           p_out[i] = p_x[i % size];
+//         }
+//         // If length > 0 but length(x) == 0 then fill with NA
+//       } else if (size == 0 && out_size > 0){
+//         OMP_FOR_SIMD
+//         for (int i = 0; i < out_size; ++i){
+//           p_out[i] = NA_REAL;
+//         }
+//       }
+//       SHALLOW_DUPLICATE_ATTRIB(out, x);
+//       Rf_unprotect(1);
+//       return out;
+//     }
+//     case STRSXP: {
+//       const SEXP *p_x = STRING_PTR_RO(x);
+//       SEXP out = Rf_protect(Rf_allocVector(STRSXP, out_size));
+//
+//       if (out_size > 0 && size > 0){
+//         for (int i = 0; i < out_size; ++i){
+//           SET_STRING_ELT(out, i, p_x[i % size]);
+//         }
+//         // If length > 0 but length(x) == 0 then fill with NA
+//       } else if (size == 0 && out_size > 0){
+//         for (int i = 0; i < out_size; ++i){
+//           SET_STRING_ELT(out, i, NA_STRING);
+//         }
+//       }
+//       SHALLOW_DUPLICATE_ATTRIB(out, x);
+//       Rf_unprotect(1);
+//       return out;
+//     }
+//     case CPLXSXP: {
+//       Rcomplex *p_x = COMPLEX(x);
+//       SEXP out = Rf_protect(Rf_allocVector(CPLXSXP, out_size));
+//       Rcomplex *p_out = COMPLEX(out);
+//
+//       if (out_size > 0 && size > 0){
+//         for (int i = 0; i < out_size; ++i){
+//           SET_COMPLEX_ELT(out, i, p_x[i % size]);
+//         }
+//         // If length > 0 but length(x) == 0 then fill with NA
+//       } else if (size == 0 && out_size > 0){
+//         for (int i = 0; i < out_size; ++i){
+//           p_out[i].r = NA_REAL;
+//           p_out[i].i = NA_REAL;
+//         }
+//       }
+//       SHALLOW_DUPLICATE_ATTRIB(out, x);
+//       Rf_unprotect(1);
+//       return out;
+//     }
+//     default: {
+//       return base_rep(x, cpp11::named_arg("length.out") = length);
+//     }
+//     }
+//   } else {
+//     return base_rep(x, cpp11::named_arg("length.out") = length);
+//   }
+// }
 
 // Recycle elements of a list `x`
 
@@ -815,6 +935,49 @@ SEXP cpp_recycle(SEXP x, SEXP length){
   Rf_unprotect(4);
   return out;
 }
+// SEXP cpp_df_c(SEXP x){
+//
+//   if (!Rf_isVectorList(x)){
+//     Rf_error("`x` must be a list of data frames");
+//   }
+//
+//   int n_frames = Rf_length(x);
+//
+//   if (n_frames == 0) return R_NilValue;
+//
+//   int NP = 0;
+//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//
+//   SEXP df = p_x[0];
+//
+//   if (!Rf_inherits(df, "data.frame")){
+//     Rf_unprotect(NP); Rf_error("Can't combine data frames with non data frames");
+//   }
+//
+//   SEXP names = Rf_protect(Rf_getAttrib(df, R_NamesSymbol)); ++NP;
+//   int n_cols = Rf_length(names);
+//   int out_nrows = 0;
+//   SEXP frames = Rf_protect(Rf_allocVector(VECSXP, n_frames)); ++NP;
+//   SET_VECTOR_ELT(frames, 0, df);
+//
+//   for (int i = 1; i < n_frames; ++i){
+//     df = Rf_protect(p_x[i]);
+//
+//     if (!Rf_inherits(df, "data.frame")){
+//       Rf_unprotect(NP + 1); Rf_error("Can't combine data frames with non data frames");
+//     }
+//     if (Rf_length(df) != n_cols){
+//       Rf_unprotect(NP + 1); Rf_error("All data frames must contain identically named variables");
+//     }
+//
+//     out_nrows += Rf_length(Rf_getAttrib(df, R_RowNamesSymbol));
+//     SET_VECTOR_ELT(frames, i, cpp_df_select(df, names));
+//     Rf_unprotect(1);
+//   }
+//
+//   SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_cols)); ++NP;
+//
+// }
 
 // SEXP cpp_c(SEXP x){
 //   if (!Rf_isVectorList(x)){
@@ -836,14 +999,15 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 //   }
 //
 //   R_xlen_t k = 0;
+//   SEXP out;
 //
 //   switch(vector_type){
 //   case NILSXP: {
-//     return R_NilValue;
+//     out = Rf_protect(R_NilValue); ++NP;
 //   }
 //   case LGLSXP:
 //   case INTSXP: {
-//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//     out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
 //     int *p_out = INTEGER(out);
 //
 //     for (R_xlen_t i = 0; i < n; ++i){
@@ -854,11 +1018,10 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 //         p_out[k] = p_temp[j];
 //       }
 //     }
-//     Rf_unprotect(NP);
-//     return out;
+//     break;
 //   }
 //   case REALSXP: {
-//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//     out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
 //     double *p_out = REAL(out);
 //
 //     for (R_xlen_t i = 0; i < n; ++i){
@@ -869,11 +1032,10 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 //         p_out[k] = p_temp[j];
 //       }
 //     }
-//     Rf_unprotect(NP);
-//     return out;
+//     break;
 //   }
 //   case STRSXP: {
-//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//     out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
 //
 //     for (R_xlen_t i = 0; i < n; ++i){
 //       R_xlen_t m = Rf_xlength(p_x[i]);
@@ -883,11 +1045,10 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 //         SET_STRING_ELT(out, k, p_temp[j]);
 //       }
 //     }
-//     Rf_unprotect(NP);
-//     return out;
+//     break;
 //   }
 //   case CPLXSXP: {
-//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//     out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
 //
 //     for (R_xlen_t i = 0; i < n; ++i){
 //       R_xlen_t m = Rf_xlength(p_x[i]);
@@ -897,11 +1058,10 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 //         SET_COMPLEX_ELT(out, k, p_temp[j]);
 //       }
 //     }
-//     Rf_unprotect(NP);
-//     return out;
+//     break;
 //   }
 //   case VECSXP: {
-//     SEXP out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
+//     out = Rf_protect(Rf_allocVector(vector_type, out_size)); ++NP;
 //
 //     for (R_xlen_t i = 0; i < n; ++i){
 //       R_xlen_t m = Rf_xlength(p_x[i]);
@@ -911,14 +1071,19 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 //         SET_VECTOR_ELT(out, k, p_temp[j]);
 //       }
 //     }
-//     Rf_unprotect(NP);
-//     return out;
+//     break;
 //   }
 //
 //   default: {
-//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(vector_type));
+//     SEXP c_char = Rf_protect(Rf_mkString("c")); ++NP;
+//     out = Rf_protect(
+//      cpp11::package("base")["do.call"](c_char, x)
+//     ); ++NP;
+//     break;
 //   }
 //   }
+//   Rf_unprotect(NP);
+//   return out;
 // }
 
 // bool cpp_all_whole_numbers(SEXP x, double tol, bool na_ignore){
