@@ -195,7 +195,6 @@ SEXP get_ptype(SEXP x){
   return out;
 }
 
-[[cpp11::register]]
 SEXP na_init(SEXP x, int n){
   SEXP ptype = Rf_protect(get_ptype(x));
   SEXP out = Rf_protect(cpp_rep_len(ptype, n));
@@ -205,7 +204,6 @@ SEXP na_init(SEXP x, int n){
 
 // Prototypes of data frame
 
-[[cpp11::register]]
 SEXP get_ptypes(SEXP x){
   int n = Rf_length(x);
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, n));
@@ -219,6 +217,83 @@ SEXP get_ptypes(SEXP x){
   Rf_unprotect(1);
   return out;
 
+}
+
+SEXP factor_as_character(SEXP x){
+  SEXP levels = Rf_protect(Rf_getAttrib(x, R_LevelsSymbol));
+  SEXP out = Rf_protect(sset_vec(levels, x, true));
+
+  Rf_unprotect(2);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_combine_levels(SEXP x){
+  if (!Rf_isVectorList(x)){
+    Rf_error("`x` must be a list of factors in %s", __func__);
+  }
+  int n = Rf_length(x);
+  SEXP levels = Rf_protect(Rf_allocVector(VECSXP, n));
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  int out_size = 0;
+
+  SEXP fct_levels;
+
+  PROTECT_INDEX fct_idx;
+  R_ProtectWithIndex(fct_levels = R_NilValue, &fct_idx);
+
+  for (int i = 0; i < n; ++i){
+    if (Rf_isFactor(p_x[i])){
+      R_Reprotect(fct_levels = Rf_getAttrib(p_x[i], R_LevelsSymbol), fct_idx);
+    } else {
+      R_Reprotect(fct_levels = base_as_character(p_x[i]), fct_idx);
+    }
+    out_size += Rf_length(fct_levels);
+    SET_VECTOR_ELT(levels, i, fct_levels);
+  }
+  SEXP out = Rf_protect(cpp_c(levels));
+  Rf_protect(out = cpp_unique(out));
+  Rf_unprotect(4);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_combine_factors(SEXP x){
+
+  if (!Rf_isVectorList(x)){
+    Rf_error("`x` must be a list of factors in %s", __func__);
+  }
+
+  int n = Rf_length(x);
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  int out_size = 0;
+
+  SEXP levels = Rf_protect(cpp_combine_levels(x));
+  SEXP chars = Rf_protect(Rf_allocVector(VECSXP, n));
+  SEXP char_vec;
+
+  PROTECT_INDEX char_vec_idx;
+  R_ProtectWithIndex(char_vec = R_NilValue, &char_vec_idx);
+
+  for (int i = 0; i < n; ++i){
+    if (Rf_isFactor(p_x[i])){
+      R_Reprotect(char_vec = factor_as_character(p_x[i]), char_vec_idx);
+    } else {
+      R_Reprotect(char_vec = base_as_character(p_x[i]), char_vec_idx);
+    }
+    out_size += Rf_length(char_vec);
+    SET_VECTOR_ELT(chars, i, char_vec);
+  }
+
+  R_Reprotect(char_vec = cpp_c(chars), char_vec_idx);
+  SEXP out = Rf_protect(cheapr_factor(char_vec,
+    cpp11::named_arg("levels") = levels,
+    cpp11::named_arg("na_exclude") = !cpp_any_na(levels, false)
+  ));
+  Rf_unprotect(4);
+  return out;
 }
 
 // Helper to concatenate plain lists
@@ -430,7 +505,7 @@ SEXP cpp_c(SEXP x){
   }
 
   if (is_factor){
-    return(cpp11::package("cheapr")["combine_factors"](x));
+    return cpp_combine_factors(x);
   }
 
   if (is_classed && !(is_date2 || is_datetime2)){

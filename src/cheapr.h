@@ -100,9 +100,11 @@ inline R_xlen_t r_length(SEXP x){
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function base_sset = cpp11::package("base")["["];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
+inline cpp11::function cheapr_factor = cpp11::package("cheapr")["factor_"];
 inline cpp11::function base_colon = cpp11::package("base")[":"];
 inline cpp11::function base_rep = cpp11::package("base")["rep"];
 inline cpp11::function base_do_call = cpp11::package("base")["do.call"];
+inline cpp11::function base_as_character = cpp11::package("base")["as.character"];
 
 
 // Definition of simple atomic vector is one in which

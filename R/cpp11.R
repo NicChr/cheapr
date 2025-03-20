@@ -40,12 +40,12 @@ cpp_recycle <- function(x, length) {
   .Call(`_cheapr_cpp_recycle`, x, length)
 }
 
-na_init <- function(x, n) {
-  .Call(`_cheapr_na_init`, x, n)
+cpp_combine_levels <- function(x) {
+  .Call(`_cheapr_cpp_combine_levels`, x)
 }
 
-get_ptypes <- function(x) {
-  .Call(`_cheapr_get_ptypes`, x)
+cpp_combine_factors <- function(x) {
+  .Call(`_cheapr_cpp_combine_factors`, x)
 }
 
 list_c <- function(x) {

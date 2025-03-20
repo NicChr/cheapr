@@ -184,31 +184,11 @@ as_list_of <- function(...){
 # Combine levels of factors
 # Converts non factors into character vectors
 combine_levels <- function(...){
-  dots <- as_list_of(...)
-  get_levels <- function(x){
-    if (is.factor(x)) attr(x, "levels", TRUE) else as.character(x)
-  }
-  # Unique combined levels
-  levels <- as.character(unlist(lapply(dots, get_levels), recursive = FALSE))
-  collapse::funique(levels)
+  cpp_combine_levels(list(...))
 }
 
 combine_factors <- function(...){
-  factors <- as_list_of(...)
-  if (length(factors) == 1){
-    return(factors[[1L]])
-  }
-  to_char <- function(x){
-    if (is.factor(x)) factor_as_character(x) else as.character(x)
-  }
-  combined_levels <- do.call(combine_levels, factors)
-  characters <- lapply(factors, to_char)
-
-  # Combine all factor elements (as character vectors)
-  factor_(
-    unlist(characters, recursive = FALSE), levels = combined_levels,
-    na_exclude = !any_na(combined_levels)
-  )
+  cpp_combine_factors(list(...))
 }
 
 
