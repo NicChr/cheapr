@@ -558,6 +558,30 @@ case REALSXP: {
   CHEAPR_REPLACE
   break;
 }
+case STRSXP: {
+  const SEXP *p_what = STRING_PTR_RO(what);
+
+  if (what_size == 1){
+    for (int i = 0; i < where_size; ++i){
+      xi = p_where[i];
+      if (xi <= 0 || xi > xn){
+        Rf_unprotect(1);
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");
+      }
+      SET_STRING_ELT(x, xi - 1, p_what[0]);
+    }
+  } else {
+    for (int i = 0; i < where_size; ++i){
+      xi = p_where[i];
+      if (xi <= 0 || xi > xn){
+        Rf_unprotect(1);
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");
+      }
+      SET_STRING_ELT(x, xi - 1, p_what[i]);
+    }
+  }
+  break;
+}
 default: {
   Rf_unprotect(1);
   Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));

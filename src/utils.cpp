@@ -655,3 +655,60 @@ SEXP create_df_row_names(int n){
     return Rf_allocVector(INTSXP, 0);
   }
 }
+
+[[cpp11::register]]
+SEXP cpp_name_repair(SEXP names, SEXP sep){
+  int NP = 0;
+  if (Rf_isNull(names)) return names;
+
+  if (TYPEOF(names) != STRSXP){
+    Rf_error("`names` must be a character vector of names in %s", __func__);
+  }
+  if (TYPEOF(sep) != STRSXP || Rf_length(sep) != 1){
+    Rf_error("`sep` must be a character vector of length 1 in %s", __func__);
+  }
+  int n = Rf_length(names);
+  SEXP is_dup = Rf_protect(Rf_duplicated(names, FALSE)); ++NP;
+  SEXP is_dup_from_last = Rf_protect(Rf_duplicated(names, TRUE)); ++NP;
+  cpp_set_or(is_dup, is_dup_from_last);
+
+  SEXP r_true = Rf_protect(Rf_allocVector(LGLSXP, 1)); ++NP;
+  LOGICAL(r_true)[0] = TRUE;
+  SEXP dup_locs = Rf_protect(cpp_which_val(is_dup, r_true, false)); ++NP;
+
+  int n_dups = Rf_length(dup_locs);
+
+  SEXP out = Rf_protect(Rf_allocVector(STRSXP, n)); ++NP;
+  cpp_set_copy_elements(names, out);
+
+  SEXP temp, replace;
+
+  if (n_dups > 0){
+    temp = Rf_protect(sset_vec(names, dup_locs, true)); ++NP;
+    replace = Rf_protect(base_paste0(temp, sep, dup_locs)); ++NP;
+    cpp_loc_set_replace(out, dup_locs, replace);
+  }
+
+  SEXP is_empty = Rf_protect(Rf_allocVector(LGLSXP, n)); ++NP;
+  int *p_is_empty = LOGICAL(is_empty);
+  Rboolean empty;
+  int n_empty = 0;
+
+  for (int i = 0; i < n; ++i){
+    empty = Rf_StringBlank(STRING_ELT(names, i));
+    n_empty += (empty == TRUE);
+    p_is_empty[i] = empty;
+  }
+
+  SEXP r_n_empty = Rf_protect(Rf_ScalarInteger(n_empty)); ++NP;
+
+  if (n_empty > 0){
+    SEXP empty_locs = Rf_protect(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
+    temp = Rf_protect(sset_vec(names, empty_locs, true)); ++NP;
+    replace = Rf_protect(base_paste0(temp, sep, empty_locs)); ++NP;
+    cpp_loc_set_replace(out, empty_locs, replace);
+  }
+
+  Rf_unprotect(NP);
+  return out;
+}

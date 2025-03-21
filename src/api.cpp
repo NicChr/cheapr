@@ -213,6 +213,15 @@ api_c(SEXP x){
   }
 }
 
+SEXP
+api_name_repair(SEXP names, SEXP sep){
+  try {
+    return cpp_name_repair(names, sep);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -240,4 +249,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_recycle",    (DL_FUNC)api_recycle);
   R_RegisterCCallable("cheapr", "api_rep_len",    (DL_FUNC)api_rep_len);
   R_RegisterCCallable("cheapr", "api_c",    (DL_FUNC)api_c);
+  R_RegisterCCallable("cheapr", "api_name_repair",    (DL_FUNC)api_name_repair);
 }

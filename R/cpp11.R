@@ -356,6 +356,10 @@ cpp_growth_rate <- function(x) {
   .Call(`_cheapr_cpp_growth_rate`, x)
 }
 
+cpp_name_repair <- function(names, sep) {
+  .Call(`_cheapr_cpp_name_repair`, names, sep)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

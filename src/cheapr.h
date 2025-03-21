@@ -105,6 +105,7 @@ inline cpp11::function base_colon = cpp11::package("base")[":"];
 inline cpp11::function base_rep = cpp11::package("base")["rep"];
 inline cpp11::function base_do_call = cpp11::package("base")["do.call"];
 inline cpp11::function base_as_character = cpp11::package("base")["as.character"];
+inline cpp11::function base_paste0 = cpp11::package("base")["paste0"];
 
 
 // Definition of simple atomic vector is one in which
@@ -168,5 +169,7 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by);
 SEXP cpp_rep_len(SEXP x, int length);
 SEXP cpp_recycle(SEXP x, SEXP length);
 SEXP cpp_c(SEXP x);
+SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what);
+SEXP cpp_name_repair(SEXP names, SEXP sep);
 
 #endif

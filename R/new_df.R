@@ -78,20 +78,7 @@ as_df <- function(x){
   out
 }
 unique_name_repair <- function(x, .sep = "..."){
-  if (is.null(x)) {
-    return(x)
-  }
-  x <- as.character(x)
-  dup <- collapse::fduplicated(x, all = TRUE)
-  which_dup <- val_find(dup, TRUE)
-  if (length(which_dup)) {
-    x[which_dup] <- paste0(x[which_dup], .sep, which_dup)
-  }
-  which_empty <- val_find(nzchar(x), TRUE, invert = TRUE)
-  if (length(which_empty)) {
-    x[which_empty] <- paste0(x[which_empty], .sep, which_empty)
-  }
-  x
+  cpp_name_repair(x, .sep)
 }
 
 #' @rdname new_df

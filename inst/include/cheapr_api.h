@@ -170,6 +170,13 @@ c(SEXP x){
   return fn(x);
 }
 
+static inline SEXP
+name_repair(SEXP names, SEXP sep){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_name_repair");
+  return fn(names, sep);
+}
+
 }
 
 // -----------------------------------------------------------------------------
