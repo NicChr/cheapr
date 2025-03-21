@@ -254,6 +254,7 @@ SEXP cpp_combine_levels(SEXP x){
   }
   SEXP out = Rf_protect(cpp_c(levels));
   Rf_protect(out = cpp_unique(out));
+  // Rf_protect(out = collapse_unique(out));
   Rf_unprotect(4);
   return out;
 }
