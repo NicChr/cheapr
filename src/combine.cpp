@@ -35,12 +35,12 @@ SEXP cpp_rep_len(SEXP x, int length){
       int *p_out = INTEGER(out);
 
       if (out_size > 0 && size > 0){
-        n_chunks = std::ceil(((double) out_size) / size);
+        n_chunks = std::ceil((static_cast<double>(out_size)) / size);
         for (int i = 0; i < n_chunks; ++i){
           k = ( (i + 1) * size) - size;
           m = std::min(k + size - 1, out_size - 1);
           chunk_size = m - k + 1;
-          memmove(&p_out[k], &p_x[0], chunk_size * sizeof(int));
+          memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(int));
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -59,12 +59,12 @@ SEXP cpp_rep_len(SEXP x, int length){
       double *p_out = REAL(out);
 
       if (out_size > 0 && size > 0){
-        n_chunks = std::ceil(((double) out_size) / size);
+        n_chunks = std::ceil((static_cast<double>(out_size)) / size);
         for (int i = 0; i < n_chunks; ++i){
           k = ( (i + 1) * size) - size;
           m = std::min(k + size - 1, out_size - 1);
           chunk_size = m - k + 1;
-          memmove(&p_out[k], &p_x[0], chunk_size * sizeof(double));
+          memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(double));
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -574,7 +574,7 @@ SEXP cpp_c(SEXP x){
         Rf_coerceVector(p_x[i], vector_type), temp_idx
       );
       int *p_temp = INTEGER(temp);
-      memmove(&p_out[k], &p_temp[0], m * sizeof(int));
+      memcpy(&p_out[k], &p_temp[0], m * sizeof(int));
       k += m;
     }
     break;
@@ -591,7 +591,7 @@ SEXP cpp_c(SEXP x){
         Rf_coerceVector(p_x[i], vector_type), temp_idx
       );
       double *p_temp = REAL(temp);
-      memmove(&p_out[k], &p_temp[0], m * sizeof(double));
+      memcpy(&p_out[k], &p_temp[0], m * sizeof(double));
       k += m;
     }
     break;
