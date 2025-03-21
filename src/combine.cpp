@@ -408,10 +408,11 @@ SEXP cpp_df_c(SEXP x){
   R_ProtectWithIndex(new_cols = R_NilValue, &new_cols_idx); ++NP;
   R_ProtectWithIndex(temp_list = Rf_allocVector(VECSXP, 2), &temp_list_idx); ++NP;
 
-  // We do 3 passes
+  // We do 2 passes
   // 1st pass: Check inputs are dfs and construct prototype list
-  // 2nd pass: initialise data frames (if need be) and order col names correctly
-  // 3rd pass: combine everything
+  // 2nd pass: initialise data frame vecs (if need be) and combine simultaneously
+
+  int out_size = df_nrow(df);
 
   for (int i = 1; i < n_frames; ++i){
     R_Reprotect(df = p_x[i], df_idx);
@@ -437,50 +438,28 @@ SEXP cpp_df_c(SEXP x){
       R_Reprotect(names = cpp_c(temp_list), names_idx);
       Rf_setAttrib(ptypes, R_NamesSymbol, names);
     }
+    out_size += df_nrow(df);
   }
 
   int n_cols = Rf_length(names);
-  int out_size = 0;
-  int nrow;
 
-  SEXP new_frame, name_locs;
-  PROTECT_INDEX new_frame_idx, name_locs_idx;
-  R_ProtectWithIndex(new_frame = R_NilValue, &new_frame_idx); ++NP;
+  SEXP vec, name_locs;
+  PROTECT_INDEX vec_idx, name_locs_idx;
+  R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
   R_ProtectWithIndex(name_locs = R_NilValue, &name_locs_idx); ++NP;
-
-  for (int i = 0; i < n_frames; ++i){
-    R_Reprotect(df = p_x[i], df_idx);
-    nrow = df_nrow(df);
-    out_size += nrow;
-
-    R_Reprotect(new_names = cpp_setdiff(
-      names, Rf_getAttrib(df, R_NamesSymbol)
-    ), new_names_idx);
-
-    if (Rf_length(new_names) > 0){
-      R_Reprotect(name_locs = Rf_match(names, new_names, NA_INTEGER), name_locs_idx);
-      R_Reprotect(new_frame = sset_vec(ptypes, name_locs, false), new_frame_idx);
-      Rf_namesgets(new_frame, new_names);
-      R_Reprotect(new_frame = cpp_list_as_df(new_frame), new_frame_idx);
-      R_Reprotect(
-        new_frame = na_init(new_frame, nrow),
-        new_frame_idx
-      );
-      SET_VECTOR_ELT(temp_list, 0, df);
-      SET_VECTOR_ELT(temp_list, 1, new_frame);
-      R_Reprotect(df = list_c(temp_list), df_idx);
-      R_Reprotect(df = cpp_list_as_df(df), df_idx);
-    }
-    R_Reprotect(df = cpp_df_select(df, names), df_idx);
-    SET_VECTOR_ELT(frames, i, df);
-  }
 
   SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_cols)); ++NP;
   SEXP vectors = Rf_protect(Rf_allocVector(VECSXP, n_frames)); ++NP;
 
   for (int j = 0; j < n_cols; ++j){
     for (int i = 0; i < n_frames; ++i){
-      SET_VECTOR_ELT(vectors, i, VECTOR_ELT(VECTOR_ELT(frames, i), j));
+      R_Reprotect(vec = get_list_element(p_x[i], CHAR(STRING_ELT(names, j))), vec_idx);
+
+      if (Rf_isNull(vec)){
+        R_Reprotect(vec = VECTOR_ELT(ptypes, j), vec_idx);
+        R_Reprotect(vec = na_init(vec, df_nrow(p_x[i])), vec_idx);
+      }
+      SET_VECTOR_ELT(vectors, i, vec);
     }
     SET_VECTOR_ELT(out, j, cpp_c(vectors));
   }

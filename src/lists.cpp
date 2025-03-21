@@ -120,6 +120,21 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
   }
 }
 
+// From writing R extensions 5.9.7
+
+SEXP get_list_element(SEXP list, const char *str){
+  SEXP out = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
+
+  for (int i = 0; i < Rf_length(list); i++){
+    if (std::strcmp(CHAR(STRING_ELT(names, i)), str) == 0){
+      out = VECTOR_ELT(list, i);
+      break;
+    }
+  }
+    return out;
+}
+
+
 [[cpp11::register]]
 SEXP cpp_list_as_df(SEXP x) {
   int N; // Number of rows

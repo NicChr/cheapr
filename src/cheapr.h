@@ -179,5 +179,6 @@ SEXP cpp_name_repair(SEXP names, SEXP sep);
 SEXP cpp_unique(SEXP x);
 SEXP cpp_setdiff(SEXP x, SEXP y);
 SEXP get_ptype(SEXP x);
+SEXP get_list_element(SEXP list, const char *str);
 
 #endif
