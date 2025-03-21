@@ -161,25 +161,50 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 }
 
 
-// Not fast but exists for low overhead C++ calls
+// Fast unique that can be used in C code
+// Doesn't return unique df rows
 SEXP cpp_unique(SEXP x){
-  SEXP dup = Rf_protect(Rf_duplicated(x, FALSE));
-  SEXP unique_locs = Rf_protect(cpp_which_(dup, true));
-  SEXP out = Rf_protect(sset_vec(x, unique_locs, false));
-  Rf_unprotect(3);
-  return out;
+
+  bool is_simple = is_simple_atomic_vec(x);
+
+  if (is_compact_seq(x)){
+    return x;
+  } else if (is_simple && Rf_length(x) < 100000){
+    SEXP dup = Rf_protect(Rf_duplicated(x, FALSE));
+    SEXP unique_locs = Rf_protect(cpp_which_(dup, true));
+    SEXP out = Rf_protect(sset_vec(x, unique_locs, false));
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    Rf_unprotect(3);
+    return out;
+  } else if (is_simple){
+    return cheapr_fast_unique(x);
+  } else {
+    return cpp11::package("base")["unique"](x);
+  }
 }
 
 SEXP cpp_setdiff(SEXP x, SEXP y){
-  Rf_protect(x = cpp_unique(x));
 
-  SEXP matches = Rf_protect(Rf_match(y, x, NA_INTEGER));
-  SEXP locs = Rf_protect(cpp_which_na(matches));
+  bool is_simple = is_simple_atomic_vec(x) && is_simple_atomic_vec(y);
 
-  SEXP out = Rf_protect(sset_vec(x, locs, false));
+  if (is_simple){
+    SEXP ux = Rf_protect(cpp_unique(x));
+    SEXP matches;
+    if (Rf_length(ux) < 100000){
+      matches = Rf_protect(Rf_match(y, ux, NA_INTEGER));
+    } else {
+      matches = Rf_protect(cheapr_fast_match(ux, y));
+    }
+    SEXP locs = Rf_protect(cpp_which_na(matches));
+    SEXP out = Rf_protect(sset_vec(ux, locs, false));
 
-  Rf_unprotect(4);
-  return out;
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    Rf_unprotect(4);
+    return out;
+  } else {
+    return cpp11::package("base")["setdiff"](x, y);
+  }
+
 }
 
 SEXP get_ptype(SEXP x){

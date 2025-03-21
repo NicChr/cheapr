@@ -241,3 +241,11 @@ neg_indices_to_pos <- function(exclude, n){
     )
   }
 }
+
+# Both below to be safely used in C++ code
+fast_match <- function(x, table, nomatch = NA_integer_){
+  collapse::fmatch(x, table, overid = 2L, nomatch = nomatch)
+}
+fast_unique <- function(x){
+  collapse::funique(x)
+}

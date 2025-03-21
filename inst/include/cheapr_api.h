@@ -177,6 +177,20 @@ name_repair(SEXP names, SEXP sep){
   return fn(names, sep);
 }
 
+static inline SEXP
+unique(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_unique");
+  return fn(x);
+}
+
+static inline SEXP
+setdiff(SEXP x, SEXP y){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_setdiff");
+  return fn(x, y);
+}
+
 }
 
 // -----------------------------------------------------------------------------
