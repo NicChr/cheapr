@@ -178,5 +178,6 @@ SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what);
 SEXP cpp_name_repair(SEXP names, SEXP sep);
 SEXP cpp_unique(SEXP x);
 SEXP cpp_setdiff(SEXP x, SEXP y);
+SEXP get_ptype(SEXP x);
 
 #endif

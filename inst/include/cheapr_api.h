@@ -191,6 +191,13 @@ setdiff(SEXP x, SEXP y){
   return fn(x, y);
 }
 
+static inline SEXP
+get_ptype(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_get_ptype");
+  return fn(x);
+}
+
 }
 
 // -----------------------------------------------------------------------------

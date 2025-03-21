@@ -240,6 +240,15 @@ api_setdiff(SEXP x, SEXP y){
   }
 }
 
+SEXP
+api_get_ptype(SEXP x){
+  try {
+    return get_ptype(x);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -270,4 +279,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_name_repair",    (DL_FUNC)api_name_repair);
   R_RegisterCCallable("cheapr", "api_unique",    (DL_FUNC)api_unique);
   R_RegisterCCallable("cheapr", "api_setdiff",    (DL_FUNC)api_setdiff);
+  R_RegisterCCallable("cheapr", "api_get_ptype",    (DL_FUNC)api_get_ptype);
 }
