@@ -14,8 +14,9 @@ SEXP cpp_rep_len(SEXP x, int length){
       SET_VECTOR_ELT(out, i, cpp_rep_len(var, length));
       Rf_unprotect(1);
     }
-    Rf_setAttrib(out, R_NamesSymbol, Rf_getAttrib(x, R_NamesSymbol));
+    Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
     Rf_protect(out = cpp_list_as_df(out));
+    Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
     Rf_unprotect(2);
     return out;
   } else if (is_simple_atomic_vec(x)){
@@ -127,7 +128,7 @@ SEXP cpp_rep_len(SEXP x, int length){
 
 [[cpp11::register]]
 SEXP cpp_recycle(SEXP x, SEXP length){
-  SEXP out = Rf_protect(cpp_drop_null(x, false));
+  SEXP out = Rf_protect(cpp_drop_null(x, true));
   SEXP sizes = Rf_protect(cpp_lengths(out, false));
   int *p_sizes = INTEGER(sizes);
   bool has_length = !Rf_isNull(length);
