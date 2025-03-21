@@ -13,7 +13,7 @@ SEXP xlen_to_r(R_xlen_t x){
 
 R_xlen_t vec_length(SEXP x){
   if (is_df(x)){
-    return cpp_df_nrow(x);
+    return df_nrow(x);
     // Is x a list?
   } else if (Rf_isVectorList(x)){
     if (Rf_inherits(x, "vctrs_rcrd")){
@@ -47,10 +47,6 @@ int num_cores(){
   int out = Rf_asInteger(num_cores);
   Rf_unprotect(1);
   return out >= 1 ? out : 1;
-}
-
-R_xlen_t cpp_df_nrow(SEXP x){
-  return Rf_xlength(Rf_getAttrib(x, R_RowNamesSymbol));
 }
 
 SEXP r_address(SEXP x) {

@@ -97,6 +97,10 @@ inline R_xlen_t r_length(SEXP x){
   return Rf_asReal(cpp11::package("base")["length"](x));
 }
 
+inline int df_nrow(SEXP x){
+  return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
+}
+
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function base_sset = cpp11::package("base")["["];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
@@ -125,7 +129,6 @@ int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 int int_div(int x, int y);
-R_xlen_t cpp_df_nrow(SEXP x);
 SEXP xlen_to_r(R_xlen_t x);
 R_xlen_t vec_length(SEXP x);
 SEXP r_address(SEXP x);

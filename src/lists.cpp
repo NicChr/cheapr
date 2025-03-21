@@ -127,7 +127,7 @@ SEXP cpp_list_as_df(SEXP x) {
   SEXP out = Rf_protect(cpp_drop_null(x, true)); ++NP;
   int n_items = Rf_length(out);
   if (is_df(x)){
-    N = cpp_df_nrow(x);
+    N = df_nrow(x);
   } else if (n_items == 0){
     N = 0;
   } else {

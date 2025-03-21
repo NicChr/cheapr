@@ -1107,7 +1107,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   int NP = 0,
     n_cols = Rf_length(x),
-    n_rows = Rf_length(Rf_getAttrib(x, R_RowNamesSymbol)),
+    n_rows = df_nrow(x),
     n_locs = Rf_length(locs);
 
   // Flag to check indices
@@ -1200,7 +1200,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
     return x;
   }
 
-  int xn = cpp_df_nrow(x);
+  int xn = df_nrow(x);
   int ncols = Rf_length(x);
   int NP = 0;
   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -1286,7 +1286,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
 
 [[cpp11::register]]
 SEXP cpp_sset_df(SEXP x, SEXP indices){
-  int xn = cpp_df_nrow(x);
+  int xn = df_nrow(x);
   int ncols = Rf_length(x);
   int NP = 0;
   // cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];

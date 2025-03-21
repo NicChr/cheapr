@@ -415,6 +415,8 @@ SEXP cpp_df_c(SEXP x){
   }
 
   int n_cols = Rf_length(names);
+  int out_size = 0;
+  int nrow;
 
   SEXP new_frame, name_locs;
   PROTECT_INDEX new_frame_idx, name_locs_idx;
@@ -423,6 +425,8 @@ SEXP cpp_df_c(SEXP x){
 
   for (int i = 0; i < n_frames; ++i){
     R_Reprotect(df = p_x[i], df_idx);
+    nrow = df_nrow(df);
+    out_size += nrow;
 
     R_Reprotect(new_names = cpp_setdiff(
       names, Rf_getAttrib(df, R_NamesSymbol)
@@ -434,7 +438,7 @@ SEXP cpp_df_c(SEXP x){
       Rf_namesgets(new_frame, new_names);
       R_Reprotect(new_frame = cpp_list_as_df(new_frame), new_frame_idx);
       R_Reprotect(
-        new_frame = na_init(new_frame, Rf_length(Rf_getAttrib(df, R_RowNamesSymbol))),
+        new_frame = na_init(new_frame, nrow),
         new_frame_idx
       );
       SET_VECTOR_ELT(temp_list, 0, df);
@@ -456,6 +460,7 @@ SEXP cpp_df_c(SEXP x){
     SET_VECTOR_ELT(out, j, cpp_c(vectors));
   }
   Rf_protect(out = cpp_list_as_df(out)); ++NP;
+  Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   Rf_namesgets(out, names);
   Rf_unprotect(NP);
   return out;
