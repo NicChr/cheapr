@@ -350,7 +350,7 @@ SEXP cpp_which_na(SEXP x){
       int i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += cheapr_is_na_cplx(p_x[i]);
+        whichi += is_na_cplx(p_x[i]);
         ++i;
       }
       YIELD(1);
@@ -363,7 +363,7 @@ SEXP cpp_which_na(SEXP x){
       R_xlen_t i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += cheapr_is_na_cplx(p_x[i]);
+        whichi += is_na_cplx(p_x[i]);
         ++i;
       }
       YIELD(1);
@@ -526,7 +526,7 @@ SEXP cpp_which_not_na(SEXP x){
       int i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += !cheapr_is_na_cplx(p_x[i]);
+        whichi += !is_na_cplx(p_x[i]);
         ++i;
       }
       YIELD(1);
@@ -539,7 +539,7 @@ SEXP cpp_which_not_na(SEXP x){
       R_xlen_t i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += !cheapr_is_na_cplx(p_x[i]);
+        whichi += !is_na_cplx(p_x[i]);
         ++i;
       }
       YIELD(1);
@@ -698,13 +698,13 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
         if (invert){
           while (whichi < out_size){
             p_out[whichi] = i + 1;
-            whichi += !cheapr_is_na_dbl(p_x[i]);
+            whichi += !is_na_dbl(p_x[i]);
             ++i;
           }
         } else {
           while (whichi < out_size){
             p_out[whichi] = i + 1;
-            whichi += cheapr_is_na_dbl(p_x[i]);
+            whichi += is_na_dbl(p_x[i]);
             ++i;
           }
         }

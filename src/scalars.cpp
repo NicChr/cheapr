@@ -95,7 +95,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
                                                                \
 
 // Alternative that works for other equality operators
-// _IS_NA_ is a arg that accepts a function like cheapr_is_na_int
+// _IS_NA_ is a arg that accepts a function like is_na_int
 // for (R_xlen_t i = 0; i < n; ++i){
 //   count += (c_op(p_x[i], _val_) && !_IS_NA_(p_x[i]));
 // }
@@ -646,7 +646,7 @@ default: {
 //
 //     if (cpp_any_na(value, true)){
 //       for (R_xlen_t i = 0; i < n; ++i){
-//         eq = cheapr_is_na_dbl(p_x[i]);
+//         eq = is_na_dbl(p_x[i]);
 //         if (eq){
 //           ++n_rm;
 //         } else {
@@ -783,7 +783,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
 
       if (cpp_any_na(value, true)){
         for (R_xlen_t i = 0; i < n; ++i){
-          eq = cheapr_is_na_dbl(p_x[i]);
+          eq = is_na_dbl(p_x[i]);
           if (!eq){
             p_out[k++] = p_x[i];
           }

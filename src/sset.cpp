@@ -298,10 +298,8 @@ SEXP clean_indices(SEXP indices, R_xlen_t xn){
   // There are the `Rf_Scalar` shortcuts BUT R crashes sometimes when
   // using the scalar logical shortcuts so I avoid it
 
-  SEXP out_size_sexp = SHIELD(new_vec(REALSXP, 1)); ++NP;
-  SEXP check_indices_sexp = SHIELD(new_vec(LGLSXP, 1)); ++NP;
-  REAL(out_size_sexp)[0] = out_size;
-  LOGICAL(check_indices_sexp)[0] = check_indices;
+  SEXP out_size_sexp = SHIELD(Rf_ScalarReal(out_size)); ++NP;
+  SEXP check_indices_sexp = SHIELD(scalar_lgl(check_indices)); ++NP;
   SET_VECTOR_ELT(out, 0, clean_indices);
   SET_VECTOR_ELT(out, 1, out_size_sexp);
   SET_VECTOR_ELT(out, 2, check_indices_sexp);

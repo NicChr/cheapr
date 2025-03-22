@@ -5,10 +5,7 @@
 
 [[cpp11::register]]
 SEXP cpp_is_simple_atomic(SEXP x){
-  SEXP out = SHIELD(new_vec(LGLSXP, 1));
-  LOGICAL(out)[0] = is_simple_atomic_vec(x);
-  YIELD(1);
-  return out;
+  return scalar_lgl(is_simple_atomic_vec(x));
 }
 
 int int_div(int x, int y){
@@ -83,7 +80,7 @@ double var_sum_squared_diff(SEXP x, double mu){
 
   // NA values are always ignored here
 
-  if (!cheapr_is_na_dbl(mu)){
+  if (!is_na_dbl(mu)){
     switch (TYPEOF(x)){
 
     case INTSXP: {
@@ -94,7 +91,7 @@ double var_sum_squared_diff(SEXP x, double mu){
       //   long long llmu = mu;
       //   long long temp1;
       //   for (R_xlen_t i = 0; i < n; ++i){
-      //     if (cheapr_is_na_int(p_x[i])) continue;
+      //     if (is_na_int(p_x[i])) continue;
       //     temp1 = p_x[i];
       //     temp2 = std::pow(temp1 - llmu, 2);
       //     temp += temp2;
@@ -102,7 +99,7 @@ double var_sum_squared_diff(SEXP x, double mu){
       //   out = temp;
       // } else {
       for (R_xlen_t i = 0; i < n; ++i){
-        if (cheapr_is_na_int(p_x[i])) continue;
+        if (is_na_int(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
       }
       break;
@@ -110,7 +107,7 @@ double var_sum_squared_diff(SEXP x, double mu){
     default: {
       double *p_x = REAL(x);
       for (R_xlen_t i = 0; i < n; ++i){
-        if (cheapr_is_na_dbl(p_x[i])) continue;
+        if (is_na_dbl(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
       }
       break;
@@ -193,7 +190,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     int *p_x = INTEGER(x);
     double *p_b = REAL(breaks);
     int *p_out = INTEGER(out);
-    CHEAPR_BIN_CODES(cheapr_is_na_int, NA_INTEGER);
+    CHEAPR_BIN_CODES(is_na_int, NA_INTEGER);
     YIELD(2);
     return out;
   } else {
@@ -202,7 +199,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     int *p_x = INTEGER(x);
     double *p_b = REAL(breaks);
     int *p_out = INTEGER(out);
-    CHEAPR_BIN_NCODES(cheapr_is_na_int, NA_INTEGER);
+    CHEAPR_BIN_NCODES(is_na_int, NA_INTEGER);
     YIELD(2);
     return out;
   }
@@ -214,7 +211,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     double *p_x = REAL(x);
     double *p_b = REAL(breaks);
     int *p_out = INTEGER(out);
-    CHEAPR_BIN_CODES(cheapr_is_na_dbl, NA_INTEGER);
+    CHEAPR_BIN_CODES(is_na_dbl, NA_INTEGER);
     YIELD(2);
     return out;
   } else {
@@ -223,7 +220,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     double *p_x = REAL(x);
     double *p_b = REAL(breaks);
     double *p_out = REAL(out);
-    CHEAPR_BIN_NCODES(cheapr_is_na_dbl, NA_REAL);
+    CHEAPR_BIN_NCODES(is_na_dbl, NA_REAL);
     YIELD(2);
     return out;
   }
@@ -674,8 +671,7 @@ SEXP cpp_name_repair(SEXP names, SEXP sep){
   SEXP is_dup_from_last = SHIELD(Rf_duplicated(names, TRUE)); ++NP;
   cpp_set_or(is_dup, is_dup_from_last);
 
-  SEXP r_true = SHIELD(new_vec(LGLSXP, 1)); ++NP;
-  LOGICAL(r_true)[0] = TRUE;
+  SEXP r_true = SHIELD(scalar_lgl(true)); ++NP;
   SEXP dup_locs = SHIELD(cpp_which_val(is_dup, r_true, false)); ++NP;
 
   int n_dups = Rf_length(dup_locs);

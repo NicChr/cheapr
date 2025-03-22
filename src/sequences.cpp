@@ -483,7 +483,7 @@ bool is_infinite(double x){
 [[cpp11::register]]
 SEXP cpp_fixed_width_breaks(double start, double end, double n,
                             bool pretty, bool expand_min, bool expand_max){
-  if (cheapr_is_na_dbl(n)){
+  if (is_na_dbl(n)){
     Rf_error("n must not be `NA`");
   }
   if (n < 1){
@@ -492,7 +492,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
   if (n >= R_PosInf){
     Rf_error("n must be finite");
   }
-  if (cheapr_is_na_dbl(start) || cheapr_is_na_dbl(end) ||
+  if (is_na_dbl(start) || is_na_dbl(end) ||
       is_infinite(start) || is_infinite(end)){
     return Rf_ScalarReal(NA_REAL);
   }

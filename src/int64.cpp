@@ -17,7 +17,7 @@ SEXP cpp_int64_to_int(SEXP x){
   int repl;
   long long int int_max = integer_max_;
   for (R_xlen_t i = 0; i < n; ++i){
-    repl = cheapr_is_na_int64(p_x[i]) || std::llabs(p_x[i]) > int_max ? NA_INTEGER : p_x[i];
+    repl = is_na_int64(p_x[i]) || std::llabs(p_x[i]) > int_max ? NA_INTEGER : p_x[i];
     p_out[i] = repl;
   }
   YIELD(1);
@@ -40,7 +40,7 @@ SEXP cpp_int64_to_double(SEXP x){
 
   double repl;
   for (R_xlen_t i = 0; i < n; ++i){
-    repl = cheapr_is_na_int64(p_x[i]) ? NA_REAL : p_x[i];
+    repl = is_na_int64(p_x[i]) ? NA_REAL : p_x[i];
     p_out[i] = repl;
   }
   YIELD(1);
@@ -63,7 +63,7 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
     long long int int_max = integer_max_;
     long long int shift_ = shift;
     for (R_xlen_t i = 0; i < n; ++i){
-      if (!cheapr_is_na_int64(p_x[i]) && ( (std::llabs(p_x[i]) + shift_) > int_max )){
+      if (!is_na_int64(p_x[i]) && ( (std::llabs(p_x[i]) + shift_) > int_max )){
         out = false;
         break;
       }
@@ -75,7 +75,7 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
     double int_max = integer_max_;
     double shift_ = shift;
     for (R_xlen_t i = 0; i < n; ++i){
-      if (!cheapr_is_na_dbl(p_x[i]) && ( (std::fabs(p_x[i]) + shift_) > int_max )){
+      if (!is_na_dbl(p_x[i]) && ( (std::fabs(p_x[i]) + shift_) > int_max )){
         out = false;
         break;
       }
@@ -117,7 +117,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     out = SHIELD(new_vec(REALSXP, n));
     long long *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
-      repl = cheapr_is_na_int(p_x[i]) ? NA_INTEGER64 : p_x[i];
+      repl = is_na_int(p_x[i]) ? NA_INTEGER64 : p_x[i];
       p_out[i] = repl;
     }
     Rf_classgets(out, Rf_mkString("integer64"));
@@ -134,7 +134,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     double temp;
     for (R_xlen_t i = 0; i < n; ++i){
       temp = p_x[i];
-      if (cheapr_is_na_dbl(temp) || (temp == R_PosInf) || temp == R_NegInf){
+      if (is_na_dbl(temp) || (temp == R_PosInf) || temp == R_NegInf){
         repl = NA_INTEGER64;
       } else {
         repl = temp;
@@ -181,7 +181,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
     int *p_x = INTEGER(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
-      if (cheapr_is_na_int(p_x[i])){
+      if (is_na_int(p_x[i])){
         SET_STRING_ELT(out, i, NA_STRING);
       } else {
         long long temp = p_x[i];
@@ -196,7 +196,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
     long long *p_x = INTEGER64_PTR(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
-      if (cheapr_is_na_int64(p_x[i])){
+      if (is_na_int64(p_x[i])){
         SET_STRING_ELT(out, i, NA_STRING);
       } else {
         long long temp = p_x[i];
@@ -210,7 +210,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
     out = SHIELD(new_vec(STRSXP, n));
     double *p_x = REAL(x);
     for (R_xlen_t i = 0; i < n; ++i){
-      if (cheapr_is_na_dbl(p_x[i])){
+      if (is_na_dbl(p_x[i])){
         SET_STRING_ELT(out, i, NA_STRING);
       } else {
         long long temp = p_x[i];

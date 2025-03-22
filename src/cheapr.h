@@ -36,29 +36,41 @@
 #define integer_max_ std::numeric_limits<int>::max()
 #endif
 
-#ifndef cheapr_is_na_int
-#define cheapr_is_na_int(x) ((bool) (x == NA_INTEGER))
-#endif
-
-#ifndef cheapr_is_na_str
-#define cheapr_is_na_str(x) ((bool) (x == NA_STRING))
-#endif
-
-#ifndef cheapr_is_na_cplx
-#define cheapr_is_na_cplx(x) ((bool) (x.r != x.r) || (x.i != x.i))
-#endif
-
-#ifndef cheapr_is_na_dbl
-#define cheapr_is_na_dbl(x) ((bool) (x != x))
-#endif
-
 #ifndef NA_INTEGER64
 #define NA_INTEGER64 LLONG_MIN
 #endif
 
-#ifndef cheapr_is_na_int64
-#define cheapr_is_na_int64(x) ((bool) (x == NA_INTEGER64))
+
+// is_na macro functions
+
+#ifndef is_na_lgl
+#define is_na_lgl(x) ((bool) (x == NA_LOGICAL))
 #endif
+
+#ifndef is_na_int
+#define is_na_int(x) ((bool) (x == NA_INTEGER))
+#endif
+
+#ifndef is_na_dbl
+#define is_na_dbl(x) ((bool) (x != x))
+#endif
+
+#ifndef is_na_str
+#define is_na_str(x) ((bool) (x == NA_STRING))
+#endif
+
+#ifndef is_na_cplx
+#define is_na_cplx(x) ((bool) (x.r != x.r) || (x.i != x.i))
+#endif
+
+#ifndef is_na_raw
+#define is_na_raw(x) ((bool) false)
+#endif
+
+#ifndef is_na_int64
+#define is_na_int64(x) ((bool) (x == NA_INTEGER64))
+#endif
+
 
 #ifndef CHEAPR_INT_TO_INT64
 #define CHEAPR_INT_TO_INT64(x) ((long long int) (x == NA_INTEGER ? NA_INTEGER64 : x))
@@ -115,6 +127,14 @@ inline R_xlen_t r_length(SEXP x){
 
 inline int df_nrow(SEXP x){
   return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
+}
+
+// Because Rf_ScalarLogical sometimes crashes R?.. Need to look into this
+inline SEXP scalar_lgl(bool x){
+  SEXP out = SHIELD(new_vec(LGLSXP, 1));
+  LOGICAL(out)[0] = x;
+  YIELD(1);
+  return out;
 }
 
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
