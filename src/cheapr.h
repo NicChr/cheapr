@@ -129,14 +129,6 @@ inline int df_nrow(SEXP x){
   return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
 }
 
-// Because Rf_ScalarLogical sometimes crashes R?.. Need to look into this
-inline SEXP scalar_lgl(bool x){
-  SEXP out = SHIELD(new_vec(LGLSXP, 1));
-  LOGICAL(out)[0] = x;
-  YIELD(1);
-  return out;
-}
-
 // Definition of simple atomic vector is one in which
 // it is both atomic and all attributes data-independent
 inline bool is_simple_atomic_vec(SEXP x){
@@ -150,6 +142,23 @@ inline bool is_simple_atomic_vec(SEXP x){
   );
 }
 
+inline bool is_bare_list(SEXP x){
+  return (!Rf_isObject(x) && TYPEOF(x) == VECSXP);
+}
+
+// Sometimes bare lists can be easily handled
+inline bool is_simple_vec(SEXP x){
+  return (is_simple_atomic_vec(x) || is_bare_list(x));
+}
+
+// Because Rf_ScalarLogical sometimes crashes R?.. Need to look into this
+inline SEXP scalar_lgl(bool x){
+  SEXP out = SHIELD(new_vec(LGLSXP, 1));
+  LOGICAL(out)[0] = x;
+  YIELD(1);
+  return out;
+}
+
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function base_sset = cpp11::package("base")["["];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
@@ -161,7 +170,6 @@ inline cpp11::function base_as_character = cpp11::package("base")["as.character"
 inline cpp11::function base_paste0 = cpp11::package("base")["paste0"];
 inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
 inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
-
 
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);

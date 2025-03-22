@@ -10,10 +10,9 @@ SEXP cpp_set_rm_attributes(SEXP x){
   SEXP names = SHIELD(Rf_getAttrib(attrs, R_NamesSymbol));
   int n = Rf_length(attrs);
   for (int i = 0; i < n; ++i){
-    SEXP attrib_nm = SHIELD(Rf_installChar(STRING_ELT(names, i)));
-    Rf_setAttrib(x, attrib_nm, R_NilValue);
+    Rf_setAttrib(x, Rf_installChar(STRING_ELT(names, i)), R_NilValue);
   }
-  YIELD(n + 2);
+  YIELD(2);
   return x;
 }
 
@@ -21,7 +20,7 @@ SEXP cpp_set_rm_attributes(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
-  SEXP attr_char = SHIELD(Rf_installChar(STRING_ELT(which, 0)));
+  SEXP attr_char = SHIELD(Rf_install(CHAR(Rf_asChar(which))));
   SEXP value2 = SHIELD(r_address(x) == r_address(value) ? Rf_duplicate(value) : value);
   Rf_setAttrib(x, attr_char, value2);
   YIELD(2);
@@ -30,9 +29,7 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
 
 [[cpp11::register]]
 SEXP cpp_set_rm_attr(SEXP x, SEXP which) {
-  SEXP attr_char = SHIELD(Rf_installChar(STRING_ELT(which, 0)));
-  Rf_setAttrib(x, attr_char, R_NilValue);
-  YIELD(1);
+  Rf_setAttrib(x, Rf_installChar(Rf_asChar(which)), R_NilValue);
   return x;
 }
 

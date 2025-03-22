@@ -78,6 +78,13 @@ extern "C" SEXP _cheapr_cpp_recycle(SEXP x, SEXP length) {
   END_CPP11
 }
 // combine.cpp
+SEXP get_ptypes(SEXP x);
+extern "C" SEXP _cheapr_get_ptypes(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(get_ptypes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// combine.cpp
 SEXP cpp_combine_levels(SEXP x);
 extern "C" SEXP _cheapr_cpp_combine_levels(SEXP x) {
   BEGIN_CPP11
@@ -553,18 +560,18 @@ extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j, SEXP keep_attrs) {
     return cpp11::as_sexp(cpp_df_subset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j), cpp11::as_cpp<cpp11::decay_t<bool>>(keep_attrs)));
   END_CPP11
 }
-// sset.cpp
-SEXP cpp_sset_df(SEXP x, SEXP indices);
-extern "C" SEXP _cheapr_cpp_sset_df(SEXP x, SEXP indices) {
+// utils.cpp
+SEXP cpp_is_simple_atomic_vec(SEXP x);
+extern "C" SEXP _cheapr_cpp_is_simple_atomic_vec(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_sset_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
+    return cpp11::as_sexp(cpp_is_simple_atomic_vec(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_is_simple_atomic(SEXP x);
-extern "C" SEXP _cheapr_cpp_is_simple_atomic(SEXP x) {
+SEXP cpp_is_simple_vec(SEXP x);
+extern "C" SEXP _cheapr_cpp_is_simple_vec(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_is_simple_atomic(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(cpp_is_simple_vec(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // utils.cpp
@@ -717,7 +724,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_int_sequence",            (DL_FUNC) &_cheapr_cpp_int_sequence,            3},
     {"_cheapr_cpp_int_sign",                (DL_FUNC) &_cheapr_cpp_int_sign,                1},
     {"_cheapr_cpp_is_na",                   (DL_FUNC) &_cheapr_cpp_is_na,                   1},
-    {"_cheapr_cpp_is_simple_atomic",        (DL_FUNC) &_cheapr_cpp_is_simple_atomic,        1},
+    {"_cheapr_cpp_is_simple_atomic_vec",    (DL_FUNC) &_cheapr_cpp_is_simple_atomic_vec,    1},
+    {"_cheapr_cpp_is_simple_vec",           (DL_FUNC) &_cheapr_cpp_is_simple_vec,           1},
     {"_cheapr_cpp_lag",                     (DL_FUNC) &_cheapr_cpp_lag,                     5},
     {"_cheapr_cpp_lag2",                    (DL_FUNC) &_cheapr_cpp_lag2,                    6},
     {"_cheapr_cpp_lag_sequence",            (DL_FUNC) &_cheapr_cpp_lag_sequence,            3},
@@ -764,7 +772,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_trunc",               (DL_FUNC) &_cheapr_cpp_set_trunc,               1},
     {"_cheapr_cpp_shallow_duplicate_attrs", (DL_FUNC) &_cheapr_cpp_shallow_duplicate_attrs, 2},
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    2},
-    {"_cheapr_cpp_sset_df",                 (DL_FUNC) &_cheapr_cpp_sset_df,                 2},
     {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},
     {"_cheapr_cpp_val_remove",              (DL_FUNC) &_cheapr_cpp_val_remove,              2},
     {"_cheapr_cpp_val_replace",             (DL_FUNC) &_cheapr_cpp_val_replace,             4},
@@ -775,6 +782,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
+    {"_cheapr_get_ptypes",                  (DL_FUNC) &_cheapr_get_ptypes,                  1},
     {"_cheapr_is_compact_seq",              (DL_FUNC) &_cheapr_is_compact_seq,              1},
     {"_cheapr_list_c",                      (DL_FUNC) &_cheapr_list_c,                      1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},

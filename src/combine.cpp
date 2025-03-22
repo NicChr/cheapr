@@ -1,5 +1,10 @@
 #include "cheapr.h"
 
+// static SEXP CHEAPR_ZERO = R_NilValue;
+// void constants_init(DllInfo* dll){
+//   CHEAPR_ZERO = Rf_ScalarInteger(0);
+//   R_PreserveObject(CHEAPR_ZERO);  // Protect from garbage collection
+// }
 
 [[cpp11::register]]
 SEXP cpp_rep_len(SEXP x, int length){
@@ -19,7 +24,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
     YIELD(2);
     return out;
-  } else if (is_simple_atomic_vec(x)){
+  } else if (is_simple_vec(x)){
 
     int size = Rf_length(x);
     int n_chunks, k, m, chunk_size;
@@ -49,7 +54,7 @@ SEXP cpp_rep_len(SEXP x, int length){
           p_out[i] = NA_INTEGER;
         }
       }
-      SHALLOW_DUPLICATE_ATTRIB(out, x);
+      Rf_copyMostAttrib(x, out);
       YIELD(1);
       return out;
     }
@@ -73,7 +78,7 @@ SEXP cpp_rep_len(SEXP x, int length){
           p_out[i] = NA_REAL;
         }
       }
-      SHALLOW_DUPLICATE_ATTRIB(out, x);
+      Rf_copyMostAttrib(x, out);
       YIELD(1);
       return out;
     }
@@ -91,7 +96,7 @@ SEXP cpp_rep_len(SEXP x, int length){
           SET_STRING_ELT(out, i, NA_STRING);
         }
       }
-      SHALLOW_DUPLICATE_ATTRIB(out, x);
+      Rf_copyMostAttrib(x, out);
       YIELD(1);
       return out;
     }
@@ -111,7 +116,25 @@ SEXP cpp_rep_len(SEXP x, int length){
           p_out[i].i = NA_REAL;
         }
       }
-      SHALLOW_DUPLICATE_ATTRIB(out, x);
+      Rf_copyMostAttrib(x, out);
+      YIELD(1);
+      return out;
+    }
+    case VECSXP: {
+      const SEXP *p_x = VECTOR_PTR_RO(x);
+      SEXP out = SHIELD(new_vec(VECSXP, out_size));
+
+      if (out_size > 0 && size > 0){
+        for (int i = 0; i < out_size; ++i){
+          SET_VECTOR_ELT(out, i, p_x[i % size]);
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        for (int i = 0; i < out_size; ++i){
+          SET_VECTOR_ELT(out, i, R_NilValue);
+        }
+      }
+      Rf_copyMostAttrib(x, out);
       YIELD(1);
       return out;
     }
@@ -173,7 +196,7 @@ SEXP cpp_unique(SEXP x){
     SEXP dup = SHIELD(Rf_duplicated(x, FALSE));
     SEXP unique_locs = SHIELD(cpp_which_(dup, true));
     SEXP out = SHIELD(sset_vec(x, unique_locs, false));
-    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    Rf_copyMostAttrib(x, out);
     YIELD(3);
     return out;
   } else if (is_simple){
@@ -198,7 +221,7 @@ SEXP cpp_setdiff(SEXP x, SEXP y){
     SEXP locs = SHIELD(cpp_which_na(matches));
     SEXP out = SHIELD(sset_vec(ux, locs, false));
 
-    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    Rf_copyMostAttrib(x, out);
     YIELD(4);
     return out;
   } else {
@@ -215,14 +238,14 @@ SEXP na_init(SEXP x, int n){
 }
 
 SEXP get_ptype(SEXP x){
-  SEXP r_zero = SHIELD(Rf_ScalarInteger(0));
+  SEXP zero = SHIELD(Rf_ScalarInteger(0));
   SEXP out;
   if (is_df(x)){
-    out = SHIELD(cpp_df_slice(x, r_zero, true));
-  } else if (is_simple_atomic_vec(x)){
-    out = SHIELD(cpp_sset(x, r_zero));
+    out = SHIELD(cpp_df_slice(x, zero, true));
+  } else if (is_simple_atomic_vec(x) || is_bare_list(x)){
+    out = SHIELD(cpp_sset(x, zero));
   } else {
-    out = SHIELD(base_sset(x, r_zero));
+    out = SHIELD(base_sset(x, zero));
   }
   YIELD(2);
   return out;
@@ -230,6 +253,7 @@ SEXP get_ptype(SEXP x){
 
 // Prototypes of data frame
 
+[[cpp11::register]]
 SEXP get_ptypes(SEXP x){
   int n = Rf_length(x);
   SEXP out = SHIELD(new_vec(VECSXP, n));
@@ -238,7 +262,7 @@ SEXP get_ptypes(SEXP x){
     SET_VECTOR_ELT(out, i, get_ptype(VECTOR_ELT(x, i)));
   }
 
-  Rf_setAttrib(out, R_NamesSymbol, Rf_getAttrib(x, R_NamesSymbol));
+  Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
 
   YIELD(1);
   return out;
@@ -515,9 +539,7 @@ SEXP cpp_c(SEXP x){
 
   if (is_classed && !(is_date2 || is_datetime2)){
     SEXP c_char = SHIELD(Rf_mkString("c"));
-    SEXP out = SHIELD(
-      cpp11::package("base")["do.call"](c_char, x)
-    );
+    SEXP out = SHIELD(base_do_call(c_char, x));
     YIELD(2);
     return out;
   }
@@ -631,7 +653,7 @@ SEXP cpp_c(SEXP x){
     Rf_classgets(out, Rf_mkChar("Date"));
   }
   if (is_datetime2){
-    SHALLOW_DUPLICATE_ATTRIB(out, p_x[first_datetime]);
+    Rf_copyMostAttrib(p_x[first_datetime], out);
   }
   YIELD(NP);
   return out;

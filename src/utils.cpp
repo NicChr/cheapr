@@ -4,8 +4,13 @@
 // Author: Nick Christofides
 
 [[cpp11::register]]
-SEXP cpp_is_simple_atomic(SEXP x){
+SEXP cpp_is_simple_atomic_vec(SEXP x){
   return scalar_lgl(is_simple_atomic_vec(x));
+}
+
+[[cpp11::register]]
+SEXP cpp_is_simple_vec(SEXP x){
+  return scalar_lgl(is_simple_vec(x));
 }
 
 int int_div(int x, int y){
@@ -380,6 +385,29 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       default: {
         SET_RAW_ELT(out, i, p_na[na_scalar ? 0 : i]);
+        break;
+      }
+      }
+    }
+    break;
+  }
+  case VECSXP: {
+    const SEXP *p_yes = VECTOR_PTR_RO(yes);
+    const SEXP *p_no = VECTOR_PTR_RO(no);
+    const SEXP *p_na = VECTOR_PTR_RO(na);
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      switch(p_x[i]){
+      case true: {
+      SET_VECTOR_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+      break;
+    }
+      case false: {
+        SET_VECTOR_ELT(out, i, p_no[no_scalar ? 0 : i]);
+        break;
+      }
+      default: {
+        SET_VECTOR_ELT(out, i, p_na[na_scalar ? 0 : i]);
         break;
       }
       }

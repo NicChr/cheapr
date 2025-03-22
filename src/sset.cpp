@@ -919,8 +919,7 @@ SEXP cpp_sset(SEXP x, SEXP indices){
 
   SEXP xnames = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
   if (!Rf_isNull(xnames)){
-    SEXP outnames = SHIELD(sset_vec(xnames, clean_indices, check_indices)); ++NP;
-    Rf_setAttrib(out, R_NamesSymbol, outnames);
+    Rf_setAttrib(out, R_NamesSymbol, sset_vec(xnames, clean_indices, check_indices));
   }
   YIELD(NP);
   return out;
@@ -1231,7 +1230,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   for (int j = 0; j < ncols; ++j){
     R_Reprotect(df_var = p_x[j], index1);
     R_Reprotect(names = Rf_getAttrib(df_var, R_NamesSymbol), index2);
-    if (is_simple_atomic_vec(df_var)){
+    if (is_simple_vec(df_var)){
       R_Reprotect(list_var = sset_vec(df_var, indices, check_indices), index3);
       Rf_copyMostAttrib(df_var, list_var);
       Rf_setAttrib(list_var, R_NamesSymbol, sset_vec(names, indices, check_indices));
@@ -1275,96 +1274,6 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
     Rf_setAttrib(out, R_NamesSymbol, names);
     Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   }
-  YIELD(NP);
-  return out;
-}
-
-
-// The below function is deprecated and only kept to not break dependencies
-
-[[cpp11::register]]
-SEXP cpp_sset_df(SEXP x, SEXP indices){
-  int xn = df_nrow(x);
-  int ncols = Rf_length(x);
-  int NP = 0;
-  const SEXP *p_x = VECTOR_PTR_RO(x);
-  SEXP out = SHIELD(new_vec(VECSXP, ncols)); ++NP;
-
-  const SEXP clean_indices_info = SHIELD(clean_indices(indices, xn)); ++NP;
-  SHIELD(indices = VECTOR_ELT(clean_indices_info, 0)); ++NP;
-  int out_size = REAL(VECTOR_ELT(clean_indices_info, 1))[0];
-  bool check_indices = LOGICAL(VECTOR_ELT(clean_indices_info, 2))[0];
-
-  // If indices is a special type of ALTREP compact int sequence, we can
-  // Use a range-based subset instead
-
-  if (is_compact_seq(indices)){
-
-    // ALTREP integer sequence method
-
-    SEXP seq_data = SHIELD(compact_seq_data(indices)); ++NP;
-    R_xlen_t from = REAL(seq_data)[0];
-    R_xlen_t to = REAL(seq_data)[1];
-    R_xlen_t by = REAL(seq_data)[2];
-    for (int j = 0; j < ncols; ++j){
-      SEXP df_var = SHIELD(p_x[j]);
-      if (is_simple_atomic_vec(df_var)){
-        SEXP list_var = SHIELD(cpp_sset_range(df_var, from, to, by));
-        Rf_copyMostAttrib(df_var, list_var);
-        int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
-        if (has_names){
-          SEXP old_names = SHIELD(Rf_getAttrib(df_var, R_NamesSymbol));
-          SEXP new_names = SHIELD(cpp_sset_range(
-            old_names, from, to, by)
-          );
-          Rf_setAttrib(list_var, R_NamesSymbol, new_names);
-        }
-        SET_VECTOR_ELT(out, j, list_var);
-        YIELD(1 + (has_names * 2));
-      } else {
-        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
-      }
-      // Unprotecting new data frame variable
-      YIELD(1);
-    }
-  } else {
-    // If Index vector is clean we can use fast subset
-
-    for (int j = 0; j < ncols; ++j){
-      SEXP df_var = SHIELD(p_x[j]);
-      if (is_simple_atomic_vec(df_var)){
-        SEXP list_var = SHIELD(sset_vec(df_var, indices, check_indices));
-        Rf_copyMostAttrib(df_var, list_var);
-        int has_names = !Rf_isNull(Rf_getAttrib(df_var, R_NamesSymbol));
-        if (has_names){
-          SEXP old_names = SHIELD(Rf_getAttrib(df_var, R_NamesSymbol));
-          SEXP new_names = SHIELD(sset_vec(
-            old_names, indices, check_indices
-          ));
-          Rf_setAttrib(list_var, R_NamesSymbol, new_names);
-        }
-        SET_VECTOR_ELT(out, j, list_var);
-        YIELD(1 + (has_names * 2));
-      } else {
-        SET_VECTOR_ELT(out, j, cheapr_sset(df_var, indices));
-      }
-      YIELD(1);
-    }
-  }
-
-  cpp_copy_names(x, out, false);
-
-  // list to data frame object
-  if (out_size > 0){
-    SEXP row_names = SHIELD(new_vec(INTSXP, 2)); ++NP;
-    INTEGER(row_names)[0] = NA_INTEGER;
-    INTEGER(row_names)[1] = -out_size;
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  } else {
-    SEXP row_names = SHIELD(new_vec(INTSXP, 0)); ++NP;
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  }
-  Rf_classgets(out, Rf_mkString("data.frame"));
   YIELD(NP);
   return out;
 }

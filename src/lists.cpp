@@ -55,7 +55,7 @@ SEXP cpp_new_list(R_xlen_t size, SEXP default_value) {
 SEXP shallow_copy(SEXP x){
   if (Rf_isVectorList(x)){
     R_xlen_t n = Rf_xlength(x);
-    SEXP out = SHIELD(cpp_new_list(n, R_NilValue));
+    SEXP out = SHIELD(new_vec(VECSXP,  n));
     const SEXP *p_x = VECTOR_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, p_x[i]);

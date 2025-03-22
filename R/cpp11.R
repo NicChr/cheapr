@@ -40,6 +40,10 @@ cpp_recycle <- function(x, length) {
   .Call(`_cheapr_cpp_recycle`, x, length)
 }
 
+get_ptypes <- function(x) {
+  .Call(`_cheapr_get_ptypes`, x)
+}
+
 cpp_combine_levels <- function(x) {
   .Call(`_cheapr_cpp_combine_levels`, x)
 }
@@ -312,12 +316,12 @@ cpp_df_subset <- function(x, i, j, keep_attrs) {
   .Call(`_cheapr_cpp_df_subset`, x, i, j, keep_attrs)
 }
 
-cpp_sset_df <- function(x, indices) {
-  .Call(`_cheapr_cpp_sset_df`, x, indices)
+cpp_is_simple_atomic_vec <- function(x) {
+  .Call(`_cheapr_cpp_is_simple_atomic_vec`, x)
 }
 
-cpp_is_simple_atomic <- function(x) {
-  .Call(`_cheapr_cpp_is_simple_atomic`, x)
+cpp_is_simple_vec <- function(x) {
+  .Call(`_cheapr_cpp_is_simple_vec`, x)
 }
 
 cpp_vector_length <- function(x) {

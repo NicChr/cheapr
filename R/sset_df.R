@@ -38,3 +38,6 @@ sset_col <- function(x, j = NULL){
 df_select <- function(x, j = NULL){
   sset_df(x, i = NULL, j = missing(j) %!||% j, keep_attrs = TRUE)
 }
+
+# Kept for reverse compatibility reasons
+cpp_sset_df <- sset_row
