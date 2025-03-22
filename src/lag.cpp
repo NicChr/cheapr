@@ -7,7 +7,7 @@
 // Where rng = length(x) - 1
 void check_order_value(unsigned int x, unsigned int rng, int n_prot){
   if (!(x <= rng)){
-    Rf_unprotect(n_prot);
+    YIELD(n_prot);
     Rf_error("order must be an integer vector of unique values between 1 and length(x)");
   }
 }
@@ -25,7 +25,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   if (ALTREP(x)){
     set = true;
   }
-  SEXP xvec = Rf_protect(altrep_materialise(x)); ++NP;
+  SEXP xvec = SHIELD(altrep_materialise(x)); ++NP;
   if (set_and_altrep){
     Rf_warning("Cannot lag an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations\n\te.g. `x <- lag_(x, set = TRUE)`");
   }
@@ -41,7 +41,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     if (fill_size >= 1){
       fill_value = Rf_asInteger(fill);
     }
-    out = Rf_protect(set ? xvec : Rf_duplicate(xvec));
+    out = SHIELD(set ? xvec : Rf_duplicate(xvec));
     ++NP;
     int *p_out = INTEGER(out);
     int *p_x = INTEGER(xvec);
@@ -55,9 +55,9 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
-      SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
+      SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
-      SEXP new_names = Rf_protect(cpp_lag(old_names, k, R_NilValue, set, recursive));
+      SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
       ++NP;
       Rf_setAttrib(out, R_NamesSymbol, new_names);
     }
@@ -67,10 +67,10 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     long long int fill_value = NA_INTEGER64;
     if (fill_size >= 1){
-      SEXP temp_fill = Rf_protect(coerce_vector(fill, CHEAPR_INT64SXP)); ++NP;
+      SEXP temp_fill = SHIELD(coerce_vector(fill, CHEAPR_INT64SXP)); ++NP;
       fill_value = INTEGER64_PTR(temp_fill)[0];
     }
-    out = Rf_protect(set ? xvec : Rf_duplicate(xvec)); ++NP;
+    out = SHIELD(set ? xvec : Rf_duplicate(xvec)); ++NP;
     long long int *p_out = INTEGER64_PTR(out);
     long long int *p_x = INTEGER64_PTR(xvec);
 
@@ -86,9 +86,9 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
-      SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
+      SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
-      SEXP new_names = Rf_protect(cpp_lag(old_names, k, R_NilValue, set, recursive));
+      SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
       ++NP;
       Rf_setAttrib(out, R_NamesSymbol, new_names);
     }
@@ -100,7 +100,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     if (fill_size >= 1){
       fill_value = Rf_asReal(fill);
     }
-    out = Rf_protect(set ? xvec : Rf_duplicate(xvec)); ++NP;
+    out = SHIELD(set ? xvec : Rf_duplicate(xvec)); ++NP;
     double *p_out = REAL(out);
     double *p_x = REAL(xvec);
     if (k >= 0){
@@ -113,9 +113,9 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
-      SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
+      SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
-      SEXP new_names = Rf_protect(cpp_lag(old_names, k, R_NilValue, set, recursive));
+      SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
       ++NP;
       Rf_setAttrib(out, R_NamesSymbol, new_names);
     }
@@ -123,12 +123,12 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   }
   case CPLXSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    SEXP fill_sexp = Rf_protect(Rf_allocVector(CPLXSXP, 1)); ++NP;
+    SEXP fill_sexp = SHIELD(new_vec(CPLXSXP, 1)); ++NP;
     Rcomplex *p_fill = COMPLEX(fill_sexp);
     p_fill[0].i = NA_REAL;
     p_fill[0].r = NA_REAL;
     Rcomplex fill_value = fill_size >= 1 ? Rf_asComplex(fill) : COMPLEX(fill_sexp)[0];
-    out = Rf_protect(set ? xvec : Rf_duplicate(xvec)); ++NP;
+    out = SHIELD(set ? xvec : Rf_duplicate(xvec)); ++NP;
     Rcomplex *p_out = COMPLEX(out);
     Rcomplex *p_x = COMPLEX(xvec);
     if (k >= 0){
@@ -140,9 +140,9 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       for (R_xlen_t i = size - 1; i >= size + k; --i) SET_COMPLEX_ELT(out, i, fill_value);
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
-      SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
+      SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
-      SEXP new_names = Rf_protect(cpp_lag(old_names, k, R_NilValue, set, recursive));
+      SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
       ++NP;
       Rf_setAttrib(out, R_NamesSymbol, new_names);
     }
@@ -150,17 +150,17 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   }
   case STRSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    SEXP fill_char = Rf_protect(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
+    SEXP fill_char = SHIELD(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
     ++NP;
-    out = Rf_protect(set ? xvec : Rf_duplicate(xvec)); ++NP;
+    out = SHIELD(set ? xvec : Rf_duplicate(xvec)); ++NP;
     const SEXP *p_out = STRING_PTR_RO(out);
     if (set){
       R_xlen_t tempi;
       // If k = 0 then no lag occurs
       if (std::abs(k) >= 1){
-        SEXP lag_temp = Rf_protect(Rf_allocVector(STRSXP, std::abs(k)));
+        SEXP lag_temp = SHIELD(new_vec(STRSXP, std::abs(k)));
         ++NP;
-        SEXP tempv = Rf_protect(Rf_allocVector(STRSXP, 1));
+        SEXP tempv = SHIELD(new_vec(STRSXP, 1));
         ++NP;
         const SEXP* __restrict__ p_lag = STRING_PTR_RO(lag_temp);
         // Positive lags
@@ -200,9 +200,9 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       }
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
-      SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
+      SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
-      SEXP new_names = Rf_protect(cpp_lag(old_names, k, R_NilValue, set, recursive));
+      SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
       ++NP;
       Rf_setAttrib(out, R_NamesSymbol, new_names);
     }
@@ -210,17 +210,17 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   }
   case RAWSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    SEXP raw_sexp = Rf_protect(Rf_coerceVector(fill, RAWSXP));
+    SEXP raw_sexp = SHIELD(coerce_vec(fill, RAWSXP));
     Rbyte fill_raw = fill_size == 0 ? RAW(Rf_ScalarRaw(0))[0] : RAW(raw_sexp)[0];
     ++NP;
-    out = Rf_protect(set ? xvec : Rf_duplicate(xvec));
+    out = SHIELD(set ? xvec : Rf_duplicate(xvec));
     ++NP;
     Rbyte *p_out = RAW(out);
     if (set){
       R_xlen_t tempi;
       // If k = 0 then no lag occurs
       if (std::abs(k) >= 1){
-        SEXP lag_temp = Rf_protect(Rf_allocVector(RAWSXP, std::abs(k)));
+        SEXP lag_temp = SHIELD(new_vec(RAWSXP, std::abs(k)));
         ++NP;
         Rbyte *p_lag = RAW(lag_temp);
         // Positive lags
@@ -262,9 +262,9 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       }
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
-      SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
+      SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
-      SEXP new_names = Rf_protect(cpp_lag(old_names, k, R_NilValue, set, recursive));
+      SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
       ++NP;
       Rf_setAttrib(out, R_NamesSymbol, new_names);
     }
@@ -273,7 +273,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   case VECSXP: {
     if (recursive){
     const SEXP *p_x = VECTOR_PTR_RO(xvec);
-    out = Rf_protect(Rf_allocVector(VECSXP, size));
+    out = SHIELD(new_vec(VECSXP, size));
     ++NP;
     SHALLOW_DUPLICATE_ATTRIB(out, xvec);
     for (R_xlen_t i = 0; i < size; ++i){
@@ -281,18 +281,18 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
     }
   } else {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    SEXP fill_value = Rf_protect(Rf_coerceVector(fill_size >= 1 ? fill : R_NilValue, VECSXP));
+    SEXP fill_value = SHIELD(coerce_vec(fill_size >= 1 ? fill : R_NilValue, VECSXP));
     ++NP;
-    out = Rf_protect(set ? xvec : Rf_allocVector(VECSXP, size));
+    out = SHIELD(set ? xvec : new_vec(VECSXP, size));
     ++NP;
     const SEXP *p_out = VECTOR_PTR_RO(out);
     if (set){
       R_xlen_t tempi;
       // If k = 0 then no lag occurs
       if (std::abs(k) >= 1){
-        SEXP lag_temp = Rf_protect(Rf_allocVector(VECSXP, std::abs(k)));
+        SEXP lag_temp = SHIELD(new_vec(VECSXP, std::abs(k)));
         ++NP;
-        SEXP tempv = Rf_protect(Rf_allocVector(VECSXP, 1));
+        SEXP tempv = SHIELD(new_vec(VECSXP, 1));
         ++NP;
         const SEXP* __restrict__ p_lag = VECTOR_PTR_RO(lag_temp);
         // Positive lags
@@ -334,9 +334,9 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       }
     }
     if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
-      SEXP old_names = Rf_protect(Rf_getAttrib(xvec, R_NamesSymbol));
+      SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
-      SEXP new_names = Rf_protect(cpp_lag(old_names, k, R_NilValue, set, recursive));
+      SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
       ++NP;
       Rf_setAttrib(out, R_NamesSymbol, new_names);
     }
@@ -344,11 +344,11 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   break;
   }
   default: {
-    Rf_unprotect(NP);
+    YIELD(NP);
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(xvec)));
   }
   }
-  Rf_unprotect(NP);
+  YIELD(NP);
   return out;
 }
 
@@ -378,15 +378,15 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   // hence order/run_lengths should remain NULL throughout each recursion
   // if they are NULL
 
-  SEXP dummy_vec1 = Rf_protect(Rf_allocVector(INTSXP, 0));
+  SEXP dummy_vec1 = SHIELD(new_vec(INTSXP, 0));
   ++NP;
-  SEXP dummy_vec2 = Rf_protect(Rf_allocVector(INTSXP, 0));
+  SEXP dummy_vec2 = SHIELD(new_vec(INTSXP, 0));
   ++NP;
-  Rf_protect(lag = Rf_coerceVector(lag, INTSXP));
+  SHIELD(lag = coerce_vec(lag, INTSXP));
   ++NP;
-  Rf_protect(order = has_order ? Rf_coerceVector(order, INTSXP) : R_NilValue);
+  SHIELD(order = has_order ? coerce_vec(order, INTSXP) : R_NilValue);
   ++NP;
-  Rf_protect(run_lengths = has_rl ? Rf_coerceVector(run_lengths, INTSXP) : R_NilValue);
+  SHIELD(run_lengths = has_rl ? coerce_vec(run_lengths, INTSXP) : R_NilValue);
   ++NP;
   // std::variant<int*, double*> p_o;
   // typedef std::conditional<true, int*, double*>::type p_o;
@@ -405,9 +405,9 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   // Macro to lag names(x)
 #define CHEAPR_LAG_R_NAMES                                                                                  \
   if (!Rf_isNull(Rf_getAttrib(x, R_NamesSymbol))){                                                          \
-    SEXP old_names = Rf_protect(Rf_getAttrib(x, R_NamesSymbol));                                            \
+    SEXP old_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));                                            \
     ++NP;                                                                                                   \
-    SEXP new_names = Rf_protect(cpp_lag2(old_names, lag, order, run_lengths, R_NilValue, recursive));       \
+    SEXP new_names = SHIELD(cpp_lag2(old_names, lag, order, run_lengths, R_NilValue, recursive));       \
     ++NP;                                                                                                   \
     Rf_setAttrib(out, R_NamesSymbol, new_names);                                                            \
   }                                                                                                         \
@@ -432,7 +432,7 @@ unsigned int o_rng = o_size - 1;
     if (fill_size >= 1){
       fill_value = Rf_asInteger(fill);
     }
-    out = Rf_protect(Rf_duplicate(x)); ++NP;
+    out = SHIELD(Rf_duplicate(x)); ++NP;
     int *p_out = INTEGER(out);
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
@@ -442,13 +442,13 @@ unsigned int o_rng = o_size - 1;
 
       // If any run-lengths are negative (or NA) we stop
       if (rl < 0){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("All run lengths must be non-NA and >= 0");
       }
 
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // int trick to calculate inclusive bounded between(x, lo, hi)
@@ -475,7 +475,7 @@ unsigned int o_rng = o_size - 1;
       }
     }
     if (run_end != size){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     CHEAPR_LAG_R_NAMES;
@@ -489,10 +489,10 @@ unsigned int o_rng = o_size - 1;
     long long int *p_x = INTEGER64_PTR(x);
     long long int fill_value = NA_INTEGER64;
     if (fill_size >= 1){
-      SEXP temp_fill = Rf_protect(coerce_vector(fill, CHEAPR_INT64SXP)); ++NP;
+      SEXP temp_fill = SHIELD(coerce_vector(fill, CHEAPR_INT64SXP)); ++NP;
       fill_value = INTEGER64_PTR(temp_fill)[0];
     }
-    out = Rf_protect(Rf_duplicate(x));
+    out = SHIELD(Rf_duplicate(x));
     ++NP;
     long long int *p_out = INTEGER64_PTR(out);
     for (int i = 0; i != rl_size; ++i){
@@ -502,13 +502,13 @@ unsigned int o_rng = o_size - 1;
 
       // If any run-lengths are negative (or NA) we stop
       if (rl < 0){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("All run lengths must be non-NA and >= 0");
       }
 
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
@@ -529,7 +529,7 @@ unsigned int o_rng = o_size - 1;
       }
     }
     if (run_end != size){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     CHEAPR_LAG_R_NAMES;
@@ -545,7 +545,7 @@ unsigned int o_rng = o_size - 1;
     if (fill_size >= 1){
       fill_value = Rf_asReal(fill);
     }
-    out = Rf_protect(Rf_duplicate(x)); ++NP;
+    out = SHIELD(Rf_duplicate(x)); ++NP;
     double *p_out = REAL(out);
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
@@ -554,13 +554,13 @@ unsigned int o_rng = o_size - 1;
 
       // If any run-lengths are negative (or NA) we stop
       if (rl < 0){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("All run lengths must be non-NA and >= 0");
       }
 
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
@@ -581,7 +581,7 @@ unsigned int o_rng = o_size - 1;
       }
     }
     if (run_end != size){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     CHEAPR_LAG_R_NAMES;
@@ -593,9 +593,9 @@ unsigned int o_rng = o_size - 1;
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const SEXP *p_x = STRING_PTR_RO(x);
-    SEXP fill_value = Rf_protect(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
+    SEXP fill_value = SHIELD(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
     ++NP;
-    out = Rf_protect(Rf_duplicate(x));
+    out = SHIELD(Rf_duplicate(x));
     ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
@@ -604,13 +604,13 @@ unsigned int o_rng = o_size - 1;
 
       // If any run-lengths are negative (or NA) we stop
       if (rl < 0){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("All run lengths must be non-NA and >= 0");
       }
 
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
@@ -631,7 +631,7 @@ unsigned int o_rng = o_size - 1;
       }
     }
     if (run_end != size){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     CHEAPR_LAG_R_NAMES;
@@ -643,13 +643,13 @@ unsigned int o_rng = o_size - 1;
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     Rcomplex *p_x = COMPLEX(x);
-    SEXP fill_sexp = Rf_protect(Rf_allocVector(CPLXSXP, 1));
+    SEXP fill_sexp = SHIELD(new_vec(CPLXSXP, 1));
     ++NP;
     Rcomplex *p_fill = COMPLEX(fill_sexp);
     p_fill[0].i = NA_REAL;
     p_fill[0].r = NA_REAL;
     Rcomplex fill_value = fill_size >= 1 ? Rf_asComplex(fill) : COMPLEX(fill_sexp)[0];
-    out = Rf_protect(Rf_duplicate(x));
+    out = SHIELD(Rf_duplicate(x));
     ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
@@ -658,13 +658,13 @@ unsigned int o_rng = o_size - 1;
 
       // If any run-lengths are negative (or NA) we stop
       if (rl < 0){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("All run lengths must be non-NA and >= 0");
       }
 
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
@@ -685,7 +685,7 @@ unsigned int o_rng = o_size - 1;
       }
     }
     if (run_end != size){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     CHEAPR_LAG_R_NAMES;
@@ -697,10 +697,10 @@ unsigned int o_rng = o_size - 1;
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     Rbyte *p_x = RAW(x);
-    SEXP raw_sexp = Rf_protect(Rf_coerceVector(fill, RAWSXP));
+    SEXP raw_sexp = SHIELD(coerce_vec(fill, RAWSXP));
     Rbyte fill_value = fill_size == 0 ? RAW(Rf_ScalarRaw(0))[0] : RAW(raw_sexp)[0];
     ++NP;
-    out = Rf_protect(Rf_duplicate(x));
+    out = SHIELD(Rf_duplicate(x));
     ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
@@ -709,13 +709,13 @@ unsigned int o_rng = o_size - 1;
 
       // If any run-lengths are negative (or NA) we stop
       if (rl < 0){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("All run lengths must be non-NA and >= 0");
       }
 
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
@@ -736,7 +736,7 @@ unsigned int o_rng = o_size - 1;
       }
     }
     if (run_end != size){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     CHEAPR_LAG_R_NAMES;
@@ -746,7 +746,7 @@ unsigned int o_rng = o_size - 1;
     if (recursive){
     int size = Rf_length(x);
     const SEXP *p_x = VECTOR_PTR_RO(x);
-    out = Rf_protect(Rf_allocVector(VECSXP, size));
+    out = SHIELD(new_vec(VECSXP, size));
     ++NP;
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (int i = 0; i < size; ++i){
@@ -758,9 +758,9 @@ unsigned int o_rng = o_size - 1;
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const SEXP *p_x = VECTOR_PTR_RO(x);
-    SEXP fill_value = Rf_protect(VECTOR_ELT(Rf_coerceVector(fill_size >= 1 ? fill : R_NilValue, VECSXP), 0));
+    SEXP fill_value = SHIELD(VECTOR_ELT(coerce_vec(fill_size >= 1 ? fill : R_NilValue, VECSXP), 0));
     ++NP;
-    out = Rf_protect(Rf_allocVector(VECSXP, size));
+    out = SHIELD(new_vec(VECSXP, size));
     ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
@@ -769,13 +769,13 @@ unsigned int o_rng = o_size - 1;
 
       // If any run-lengths are negative (or NA) we stop
       if (rl < 0){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("All run lengths must be non-NA and >= 0");
       }
 
       // If the cumulative run-length exceeds length(x) we stop
       if (run_end > size){
-        Rf_unprotect(NP);
+        YIELD(NP);
         Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
       }
       // Loop starting from the end of the previous run-length
@@ -796,7 +796,7 @@ unsigned int o_rng = o_size - 1;
       }
     }
     if (run_end != size){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("sum(run_lengths) must be equal to length(x) (%d)", size);
     }
     CHEAPR_LAG_R_NAMES;
@@ -804,10 +804,10 @@ unsigned int o_rng = o_size - 1;
   break;
   }
   default: {
-    Rf_unprotect(NP);
+    YIELD(NP);
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  Rf_unprotect(NP);
+  YIELD(NP);
   return out;
 }

@@ -45,19 +45,19 @@ for (R_xlen_t i = 0; i < n; ++i) {                                        \
 SEXP convert_int_to_real(SEXP x){
   int *p_x = INTEGER(x);
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
+  SEXP out = SHIELD(new_vec(REALSXP, n));
   double *p_out = REAL(out);
   for (int i = 0; i < n; ++i){
     p_out[i] = p_x[i] != NA_INTEGER ? (double)(p_x[i]) : NA_REAL;
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
 [[cpp11::register]]
 SEXP cpp_set_abs(SEXP x){
   cpp_check_numeric(x);
-  SEXP out = Rf_protect(check_transform_altrep(x));
+  SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   switch (TYPEOF(out)){
@@ -85,14 +85,14 @@ SEXP cpp_set_abs(SEXP x){
     break;
   }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
 [[cpp11::register]]
 SEXP cpp_set_floor(SEXP x){
   cpp_check_numeric(x);
-  SEXP out = Rf_protect(check_transform_altrep(x));
+  SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
@@ -105,14 +105,14 @@ SEXP cpp_set_floor(SEXP x){
       CHEAPR_MATH_REAL_LOOP(std::floor);
     }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
 [[cpp11::register]]
 SEXP cpp_set_ceiling(SEXP x){
   cpp_check_numeric(x);
-  SEXP out = Rf_protect(check_transform_altrep(x));
+  SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
@@ -125,14 +125,14 @@ SEXP cpp_set_ceiling(SEXP x){
       CHEAPR_MATH_REAL_LOOP(std::ceil);
     }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
 [[cpp11::register]]
 SEXP cpp_set_trunc(SEXP x){
   cpp_check_numeric(x);
-  SEXP out = Rf_protect(check_transform_altrep(x));
+  SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
@@ -145,14 +145,14 @@ SEXP cpp_set_trunc(SEXP x){
       CHEAPR_MATH_REAL_LOOP(CHEAPR_TRUNC);
     }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
 [[cpp11::register]]
 SEXP cpp_set_change_sign(SEXP x){
   cpp_check_numeric(x);
-  SEXP out = Rf_protect(check_transform_altrep(x));
+  SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   switch (TYPEOF(out)){
@@ -188,7 +188,7 @@ SEXP cpp_set_change_sign(SEXP x){
     break;
   }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -200,9 +200,9 @@ SEXP cpp_set_exp(SEXP x){
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
-    out = Rf_protect(convert_int_to_real(x));
+    out = SHIELD(convert_int_to_real(x));
   } else {
-    out = Rf_protect(check_transform_altrep(x));
+    out = SHIELD(check_transform_altrep(x));
   }
   double *p_out = REAL(out);
   if (n_cores > 1){
@@ -212,7 +212,7 @@ SEXP cpp_set_exp(SEXP x){
     OMP_FOR_SIMD
     CHEAPR_MATH_REAL_LOOP(std::exp);
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -224,9 +224,9 @@ SEXP cpp_set_sqrt(SEXP x){
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
-    out = Rf_protect(convert_int_to_real(x));
+    out = SHIELD(convert_int_to_real(x));
   } else {
-    out = Rf_protect(check_transform_altrep(x));
+    out = SHIELD(check_transform_altrep(x));
   }
   double *p_out = REAL(out);
   if (n_cores > 1){
@@ -236,7 +236,7 @@ SEXP cpp_set_sqrt(SEXP x){
     OMP_FOR_SIMD
     CHEAPR_MATH_REAL_LOOP(std::sqrt);
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -245,18 +245,18 @@ SEXP cpp_set_add(SEXP x, SEXP y){
   cpp_check_numeric(x);
   cpp_check_numeric(y);
   int NP = 0;
-  SEXP out = Rf_protect(check_transform_altrep(x)); ++NP;
+  SEXP out = SHIELD(check_transform_altrep(x)); ++NP;
   R_xlen_t xn = Rf_xlength(out);
   R_xlen_t yn = Rf_xlength(y);
   int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
   if (xn > 0){
     if (yn > xn){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("length(y) must be <= length(x)");
     }
     if (yn == 0){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("length(y) must be be non-zero");
     }
   }
@@ -279,7 +279,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
   }
   case REALSXP: {
     copy_warning();
-    Rf_protect(out = Rf_coerceVector(out, REALSXP));
+    SHIELD(out = coerce_vec(out, REALSXP));
     ++NP;
     double *p_x = REAL(out);
     double *p_y = REAL(y);
@@ -322,7 +322,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
   }
   }
   }
-  Rf_unprotect(NP);
+  YIELD(NP);
   return out;
 }
 
@@ -331,18 +331,18 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
   cpp_check_numeric(x);
   cpp_check_numeric(y);
   int NP = 0;
-  SEXP out = Rf_protect(check_transform_altrep(x));
+  SEXP out = SHIELD(check_transform_altrep(x));
   ++NP;
   R_xlen_t xn = Rf_xlength(out);
   R_xlen_t yn = Rf_xlength(y);
   int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (xn > 0){
     if (yn > xn){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("length(y) must be <= length(x)");
     }
     if (yn == 0){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("length(y) must be be non-zero");
     }
   }
@@ -364,7 +364,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
   }
   case REALSXP: {
     copy_warning();
-    Rf_protect(out = Rf_coerceVector(out, REALSXP));
+    SHIELD(out = coerce_vec(out, REALSXP));
     ++NP;
     double *p_x = REAL(out);
     double *p_y = REAL(y);
@@ -407,7 +407,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
   }
   }
   }
-  Rf_unprotect(NP);
+  YIELD(NP);
   return out;
 }
 
@@ -416,18 +416,18 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
   cpp_check_numeric(x);
   cpp_check_numeric(y);
   int NP = 0;
-  SEXP out = Rf_protect(check_transform_altrep(x));
+  SEXP out = SHIELD(check_transform_altrep(x));
   ++NP;
   R_xlen_t xn = Rf_xlength(out);
   R_xlen_t yn = Rf_xlength(y);
   int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (xn > 0){
     if (yn > xn){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("length(y) must be <= length(x)");
     }
     if (yn == 0){
-      Rf_unprotect(NP);
+      YIELD(NP);
       Rf_error("length(y) must be be non-zero");
     }
   }
@@ -449,7 +449,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
   }
   case REALSXP: {
     copy_warning();
-    Rf_protect(out = Rf_coerceVector(out, REALSXP));
+    SHIELD(out = coerce_vec(out, REALSXP));
     ++NP;
     double *p_x = REAL(out);
     double *p_y = REAL(y);
@@ -468,7 +468,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
     switch (TYPEOF(y)){
   case LGLSXP:
   case INTSXP: {
-    // Rf_protect(y = Rf_coerceVector(y, REALSXP));
+    // SHIELD(y = coerce_vec(y, REALSXP));
     // ++NP;
     double *p_x = REAL(out);
     int *p_y = INTEGER(y);
@@ -494,7 +494,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
   }
   }
   }
-  Rf_unprotect(NP);
+  YIELD(NP);
   return out;
 }
 
@@ -516,9 +516,9 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
-    out = Rf_protect(convert_int_to_real(x));
+    out = SHIELD(convert_int_to_real(x));
   } else {
-    out = Rf_protect(check_transform_altrep(x));
+    out = SHIELD(check_transform_altrep(x));
   }
   switch (TYPEOF(y)){
   case LGLSXP:
@@ -545,7 +545,7 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
     break;
   }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -567,9 +567,9 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
-    out = Rf_protect(convert_int_to_real(x));
+    out = SHIELD(convert_int_to_real(x));
   } else {
-    out = Rf_protect(check_transform_altrep(x));
+    out = SHIELD(check_transform_altrep(x));
   }
   switch (TYPEOF(y)){
   case INTSXP: {
@@ -603,7 +603,7 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
     break;
   }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -625,9 +625,9 @@ SEXP cpp_set_log(SEXP x, SEXP base){
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
-    out = Rf_protect(convert_int_to_real(x));
+    out = SHIELD(convert_int_to_real(x));
   } else {
-    out = Rf_protect(check_transform_altrep(x));
+    out = SHIELD(check_transform_altrep(x));
   }
   double *p_x = REAL(out);
   double *p_base = REAL(base);
@@ -646,7 +646,7 @@ SEXP cpp_set_log(SEXP x, SEXP base){
       NA_REAL : std::log(p_x[i]) / std::log(p_base[basei]);
     }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -654,7 +654,7 @@ SEXP cpp_set_log(SEXP x, SEXP base){
 SEXP cpp_set_round(SEXP x, SEXP digits){
   cpp_check_numeric(x);
   cpp_check_numeric(digits);
-  SEXP out = Rf_protect(check_transform_altrep(x));
+  SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t xn = Rf_xlength(out);
   R_xlen_t digitsn = Rf_xlength(digits);
   if (xn > 0){
@@ -747,7 +747,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
     }
     }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -755,7 +755,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
 SEXP cpp_int_sign(SEXP x){
   cpp_check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+  SEXP out = SHIELD(new_vec(INTSXP, n));
   int *p_out = INTEGER(out);
   int res;
   switch (TYPEOF(x)){
@@ -783,6 +783,6 @@ SEXP cpp_int_sign(SEXP x){
     break;
   }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }

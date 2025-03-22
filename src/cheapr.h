@@ -85,6 +85,22 @@
 #define CHEAPR_TYPEOF(x)  ( (SEXPTYPE) (Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x)) )
 #endif
 
+#ifndef SHIELD
+#define SHIELD(x) (Rf_protect(x))
+#endif
+
+#ifndef YIELD
+#define YIELD(n) (Rf_unprotect(n))
+#endif
+
+inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
+  return Rf_allocVector(type, n);
+}
+
+inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
+  return Rf_coerceVector(x, type);
+}
+
 inline bool is_int64(SEXP x){
   return Rf_isReal(x) && Rf_inherits(x, "integer64");
 }

@@ -9,7 +9,7 @@ SEXP cpp_int64_to_int(SEXP x){
   }
   R_xlen_t n = Rf_xlength(x);
 
-  SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+  SEXP out = SHIELD(new_vec(INTSXP, n));
   int *p_out = INTEGER(out);
 
   long long *p_x = INTEGER64_PTR(x);
@@ -20,7 +20,7 @@ SEXP cpp_int64_to_int(SEXP x){
     repl = cheapr_is_na_int64(p_x[i]) || std::llabs(p_x[i]) > int_max ? NA_INTEGER : p_x[i];
     p_out[i] = repl;
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -33,7 +33,7 @@ SEXP cpp_int64_to_double(SEXP x){
   }
   R_xlen_t n = Rf_xlength(x);
 
-  SEXP out = Rf_protect(Rf_allocVector(REALSXP, n));
+  SEXP out = SHIELD(new_vec(REALSXP, n));
   double *p_out = REAL(out);
 
   long long *p_x = INTEGER64_PTR(x);
@@ -43,7 +43,7 @@ SEXP cpp_int64_to_double(SEXP x){
     repl = cheapr_is_na_int64(p_x[i]) ? NA_REAL : p_x[i];
     p_out[i] = repl;
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -114,7 +114,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
   switch (CHEAPR_TYPEOF(x)){
   case INTSXP: {
     int *p_x = INTEGER(x);
-    out = Rf_protect(Rf_allocVector(REALSXP, n));
+    out = SHIELD(new_vec(REALSXP, n));
     long long *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
       repl = cheapr_is_na_int(p_x[i]) ? NA_INTEGER64 : p_x[i];
@@ -124,12 +124,12 @@ SEXP cpp_numeric_to_int64(SEXP x){
     break;
   }
   case CHEAPR_INT64SXP: {
-    out = Rf_protect(x);
+    out = SHIELD(x);
     break;
   }
   case REALSXP: {
     double *p_x = REAL(x);
-    out = Rf_protect(Rf_allocVector(REALSXP, n));
+    out = SHIELD(new_vec(REALSXP, n));
     long long *p_out = INTEGER64_PTR(out);
     double temp;
     for (R_xlen_t i = 0; i < n; ++i){
@@ -148,7 +148,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
@@ -177,7 +177,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
 
   switch (CHEAPR_TYPEOF(x)){
   case INTSXP: {
-    out = Rf_protect(Rf_allocVector(STRSXP, n));
+    out = SHIELD(new_vec(STRSXP, n));
     int *p_x = INTEGER(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -192,7 +192,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
     break;
   }
   case CHEAPR_INT64SXP: {
-    out = Rf_protect(Rf_allocVector(STRSXP, n));
+    out = SHIELD(new_vec(STRSXP, n));
     long long *p_x = INTEGER64_PTR(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -207,7 +207,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
     break;
   }
   case REALSXP: {
-    out = Rf_protect(Rf_allocVector(STRSXP, n));
+    out = SHIELD(new_vec(STRSXP, n));
     double *p_x = REAL(x);
     for (R_xlen_t i = 0; i < n; ++i){
       if (cheapr_is_na_dbl(p_x[i])){
@@ -224,6 +224,6 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }

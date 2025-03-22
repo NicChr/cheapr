@@ -69,7 +69,7 @@ sset <- function(x, ...){
 }
 #' @export
 sset.default <- function(x, i, ...){
-  if (is_simple_atomic(x) && n_dots(...) == 0){
+  if (cpp_is_simple_atomic(x) && n_dots(...) == 0){
     .Call(`_cheapr_cpp_sset`, x, if (missing(i)) seq_len(vector_length(x)) else i)
   } else {
     if (!missing(i) && is.logical(i)){

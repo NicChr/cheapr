@@ -21,7 +21,7 @@ SEXP cpp_unnested_length(SEXP x){
 [[cpp11::register]]
 SEXP cpp_lengths(SEXP x, bool names) {
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = Rf_protect(Rf_allocVector(INTSXP, n));
+  SEXP out = SHIELD(new_vec(INTSXP, n));
   int *p_out = INTEGER(out);
   if (!Rf_isVectorList(x)){
     for (R_xlen_t i = 0; i < n; ++i) {
@@ -36,32 +36,32 @@ SEXP cpp_lengths(SEXP x, bool names) {
   if (names){
     cpp_copy_names(x, out, false);
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
 [[cpp11::register]]
 SEXP cpp_new_list(R_xlen_t size, SEXP default_value) {
-  SEXP out = Rf_protect(Rf_allocVector(VECSXP, size));
+  SEXP out = SHIELD(new_vec(VECSXP, size));
   if (!Rf_isNull(default_value)){
     for (R_xlen_t i = 0; i < size; ++i) {
       SET_VECTOR_ELT(out, i, default_value);
     }
   }
-  Rf_unprotect(1);
+  YIELD(1);
   return out;
 }
 
 SEXP shallow_copy(SEXP x){
   if (Rf_isVectorList(x)){
     R_xlen_t n = Rf_xlength(x);
-    SEXP out = Rf_protect(cpp_new_list(n, R_NilValue));
+    SEXP out = SHIELD(cpp_new_list(n, R_NilValue));
     const SEXP *p_x = VECTOR_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, p_x[i]);
     }
     SHALLOW_DUPLICATE_ATTRIB(out, x);
-    Rf_unprotect(1);
+    YIELD(1);
     return out;
   } else {
     return x;
@@ -72,7 +72,7 @@ SEXP shallow_copy(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
-  Rf_protect(l = Rf_coerceVector(l, VECSXP));
+  SHIELD(l = coerce_vec(l, VECSXP));
   const SEXP *p_l = VECTOR_PTR_RO(l);
   int n = Rf_length(l);
   int n_null = 0;
@@ -80,7 +80,7 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
     n_null += (p_l[i] == R_NilValue);
   }
   if (n_null == 0 && !always_shallow_copy){
-    Rf_unprotect(1);
+    YIELD(1);
     return l;
   }
   int n_keep = n - n_null;
@@ -89,7 +89,7 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
 
   // Which list elements should we keep?
 
-  SEXP keep = Rf_protect(Rf_allocVector(INTSXP, n_keep));
+  SEXP keep = SHIELD(new_vec(INTSXP, n_keep));
   int *p_keep = INTEGER(keep);
   while (whichj < n_keep){
     p_keep[whichj] = j;
@@ -98,24 +98,24 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
 
   // Subset on both the list and names of the list
 
-  SEXP out = Rf_protect(Rf_allocVector(VECSXP, n_keep));
-  SEXP names = Rf_protect(Rf_getAttrib(l, R_NamesSymbol));
+  SEXP out = SHIELD(new_vec(VECSXP, n_keep));
+  SEXP names = SHIELD(Rf_getAttrib(l, R_NamesSymbol));
   bool has_names = !Rf_isNull(names);
   if (has_names){
     const SEXP *p_names = STRING_PTR_RO(names);
-    SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_keep));
+    SEXP out_names = SHIELD(new_vec(STRSXP, n_keep));
     for (int k = 0; k < n_keep; ++k) {
       SET_STRING_ELT(out_names, k, p_names[p_keep[k]]);
       SET_VECTOR_ELT(out, k, p_l[p_keep[k]]);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);
-    Rf_unprotect(5);
+    YIELD(5);
     return out;
   } else {
     for (int k = 0; k < n_keep; ++k) {
       SET_VECTOR_ELT(out, k, p_l[p_keep[k]]);
     }
-    Rf_unprotect(4);
+    YIELD(4);
     return out;
   }
 }
@@ -139,7 +139,7 @@ SEXP get_list_element(SEXP list, const char *str){
 SEXP cpp_list_as_df(SEXP x) {
   int N; // Number of rows
   int NP = 0; // Number of protects
-  SEXP out = Rf_protect(cpp_drop_null(x, true)); ++NP;
+  SEXP out = SHIELD(cpp_drop_null(x, true)); ++NP;
   int n_items = Rf_length(out);
   if (is_df(x)){
     N = df_nrow(x);
@@ -149,17 +149,17 @@ SEXP cpp_list_as_df(SEXP x) {
     N = vec_length(VECTOR_ELT(out, 0));
   }
 
-  SEXP df_str = Rf_protect(Rf_mkString("data.frame")); ++NP;
+  SEXP df_str = SHIELD(Rf_mkString("data.frame")); ++NP;
   SEXP row_names = create_df_row_names(N);
 
   // If no names then add names
   if (Rf_isNull(Rf_getAttrib(out, R_NamesSymbol))){
-    SEXP out_names = Rf_protect(Rf_allocVector(STRSXP, n_items)); ++NP;
+    SEXP out_names = SHIELD(new_vec(STRSXP, n_items)); ++NP;
     Rf_setAttrib(out, R_NamesSymbol, out_names);
   }
   Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   Rf_classgets(out, df_str);
-  Rf_unprotect(NP);
+  YIELD(NP);
   return out;
 }
 
@@ -204,14 +204,14 @@ SEXP cpp_list_as_df(SEXP x) {
 //   R_xlen_t n = Rf_xlength(x);
 //   cpp11::function cheapr_cast = cpp11::package("cheapr")["cheapr_cast"];
 //   int n_prot = 0;
-//   SEXP out = Rf_protect(Rf_allocVector(VECSXP, 2));
+//   SEXP out = SHIELD(new_vec(VECSXP, 2));
 //   ++n_prot;
 //   if (Rf_isVectorList(x) && Rf_isVectorList(y)){
-//     // SEXP a = Rf_protect(cpp_shallow_copy(x));
-//     SEXP a = Rf_protect(Rf_shallow_duplicate(x));
+//     // SEXP a = SHIELD(cpp_shallow_copy(x));
+//     SEXP a = SHIELD(Rf_shallow_duplicate(x));
 //     ++n_prot;
-//     SEXP b = Rf_protect(Rf_shallow_duplicate(y));
-//     // SEXP b = Rf_protect(cpp_shallow_copy(y));
+//     SEXP b = SHIELD(Rf_shallow_duplicate(y));
+//     // SEXP b = SHIELD(cpp_shallow_copy(y));
 //     ++n_prot;
 //     const SEXP *p_x = VECTOR_PTR_RO(a);
 //     const SEXP *p_y = VECTOR_PTR_RO(b);
@@ -221,7 +221,7 @@ SEXP cpp_list_as_df(SEXP x) {
 //       bool ylist = Rf_isVectorList(p_y[i]);
 //       if (xlist && ylist){
 //         // Recurse back through the same function at this point
-//         SEXP temp = Rf_protect(cpp_cast_common(p_x[i], p_y[i]));
+//         SEXP temp = SHIELD(cpp_cast_common(p_x[i], p_y[i]));
 //         ++n_prot;
 //         SET_VECTOR_ELT(a, i, VECTOR_ELT(temp, 0));
 //         SET_VECTOR_ELT(b, i, VECTOR_ELT(temp, 1));
@@ -236,6 +236,6 @@ SEXP cpp_list_as_df(SEXP x) {
 //     SET_VECTOR_ELT(out, 0, cheapr_cast(x, y));
 //     SET_VECTOR_ELT(out, 1, cheapr_cast(y, x));
 //   }
-//   Rf_unprotect(n_prot);
+//   YIELD(n_prot);
 //   return out;
 // }

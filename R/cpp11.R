@@ -316,6 +316,10 @@ cpp_sset_df <- function(x, indices) {
   .Call(`_cheapr_cpp_sset_df`, x, indices)
 }
 
+cpp_is_simple_atomic <- function(x) {
+  .Call(`_cheapr_cpp_is_simple_atomic`, x)
+}
+
 cpp_vector_length <- function(x) {
   .Call(`_cheapr_cpp_vector_length`, x)
 }

@@ -561,6 +561,13 @@ extern "C" SEXP _cheapr_cpp_sset_df(SEXP x, SEXP indices) {
   END_CPP11
 }
 // utils.cpp
+SEXP cpp_is_simple_atomic(SEXP x);
+extern "C" SEXP _cheapr_cpp_is_simple_atomic(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_is_simple_atomic(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// utils.cpp
 SEXP cpp_vector_length(SEXP x);
 extern "C" SEXP _cheapr_cpp_vector_length(SEXP x) {
   BEGIN_CPP11
@@ -710,6 +717,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_int_sequence",            (DL_FUNC) &_cheapr_cpp_int_sequence,            3},
     {"_cheapr_cpp_int_sign",                (DL_FUNC) &_cheapr_cpp_int_sign,                1},
     {"_cheapr_cpp_is_na",                   (DL_FUNC) &_cheapr_cpp_is_na,                   1},
+    {"_cheapr_cpp_is_simple_atomic",        (DL_FUNC) &_cheapr_cpp_is_simple_atomic,        1},
     {"_cheapr_cpp_lag",                     (DL_FUNC) &_cheapr_cpp_lag,                     5},
     {"_cheapr_cpp_lag2",                    (DL_FUNC) &_cheapr_cpp_lag2,                    6},
     {"_cheapr_cpp_lag_sequence",            (DL_FUNC) &_cheapr_cpp_lag_sequence,            3},
