@@ -137,19 +137,6 @@ inline SEXP scalar_lgl(bool x){
   return out;
 }
 
-inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
-inline cpp11::function base_sset = cpp11::package("base")["["];
-inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
-inline cpp11::function cheapr_factor = cpp11::package("cheapr")["factor_"];
-inline cpp11::function base_colon = cpp11::package("base")[":"];
-inline cpp11::function base_rep = cpp11::package("base")["rep"];
-inline cpp11::function base_do_call = cpp11::package("base")["do.call"];
-inline cpp11::function base_as_character = cpp11::package("base")["as.character"];
-inline cpp11::function base_paste0 = cpp11::package("base")["paste0"];
-inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
-inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
-
-
 // Definition of simple atomic vector is one in which
 // it is both atomic and all attributes data-independent
 inline bool is_simple_atomic_vec(SEXP x){
@@ -162,6 +149,19 @@ inline bool is_simple_atomic_vec(SEXP x){
       )
   );
 }
+
+inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
+inline cpp11::function base_sset = cpp11::package("base")["["];
+inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
+inline cpp11::function cheapr_factor = cpp11::package("cheapr")["factor_"];
+inline cpp11::function base_colon = cpp11::package("base")[":"];
+inline cpp11::function base_rep = cpp11::package("base")["rep"];
+inline cpp11::function base_do_call = cpp11::package("base")["do.call"];
+inline cpp11::function base_as_character = cpp11::package("base")["as.character"];
+inline cpp11::function base_paste0 = cpp11::package("base")["paste0"];
+inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
+inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
+
 
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);

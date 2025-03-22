@@ -5,7 +5,7 @@
 SEXP cpp_rep_len(SEXP x, int length){
   int out_size = length;
 
-  if (Rf_inherits(x, "data.frame")){
+  if (is_df(x)){
     int n_cols = Rf_length(x);
     SEXP out = SHIELD(new_vec(VECSXP, n_cols));
     SEXP var;
@@ -207,23 +207,23 @@ SEXP cpp_setdiff(SEXP x, SEXP y){
 
 }
 
+SEXP na_init(SEXP x, int n){
+  SEXP ptype = SHIELD(get_ptype(x));
+  SEXP out = SHIELD(cpp_rep_len(ptype, n));
+  YIELD(2);
+  return out;
+}
+
 SEXP get_ptype(SEXP x){
   SEXP r_zero = SHIELD(Rf_ScalarInteger(0));
   SEXP out;
-  if (Rf_inherits(x, "data.frame")){
+  if (is_df(x)){
     out = SHIELD(cpp_df_slice(x, r_zero, true));
   } else if (is_simple_atomic_vec(x)){
     out = SHIELD(cpp_sset(x, r_zero));
   } else {
     out = SHIELD(base_sset(x, r_zero));
   }
-  YIELD(2);
-  return out;
-}
-
-SEXP na_init(SEXP x, int n){
-  SEXP ptype = SHIELD(get_ptype(x));
-  SEXP out = SHIELD(cpp_rep_len(ptype, n));
   YIELD(2);
   return out;
 }
@@ -383,7 +383,7 @@ SEXP cpp_df_c(SEXP x){
   R_ProtectWithIndex(df = p_x[0], &df_idx); ++NP;
   R_ProtectWithIndex(names = Rf_getAttrib(df, R_NamesSymbol), &names_idx); ++NP;
 
-  if (!Rf_inherits(df, "data.frame")){
+  if (!is_df(df)){
     YIELD(NP); Rf_error("Can't combine data frames with non data frames");
   }
 
@@ -411,7 +411,7 @@ SEXP cpp_df_c(SEXP x){
   for (int i = 1; i < n_frames; ++i){
     R_Reprotect(df = p_x[i], df_idx);
 
-    if (!Rf_inherits(df, "data.frame")){
+    if (!is_df(df)){
       YIELD(NP); Rf_error("Can't combine data frames with non data frames");
     }
 
@@ -426,7 +426,7 @@ SEXP cpp_df_c(SEXP x){
       R_Reprotect(new_ptypes = get_ptypes(new_cols), new_ptypes_idx);
       SET_VECTOR_ELT(temp_list, 0, ptypes);
       SET_VECTOR_ELT(temp_list, 1, new_ptypes);
-      R_Reprotect(ptypes = cpp_c(temp_list), ptypes_idx);
+      R_Reprotect(ptypes = list_c(temp_list), ptypes_idx);
       SET_VECTOR_ELT(temp_list, 0, names);
       SET_VECTOR_ELT(temp_list, 1, new_names);
       R_Reprotect(names = cpp_c(temp_list), names_idx);
@@ -480,7 +480,7 @@ SEXP cpp_c(SEXP x){
   int vector_type = NILSXP;
   R_xlen_t out_size = 0;
 
-  bool is_factor = false, is_df = false, is_classed = false,
+  bool is_factor = false, is_frame = false, is_classed = false,
     is_simple = false, is_date = false, is_datetime = false;
 
 
@@ -497,7 +497,7 @@ SEXP cpp_c(SEXP x){
     if (is_datetime){
       first_datetime = std::min(i, first_datetime);
     }
-    is_df = is_df || Rf_inherits(p_x[i], "data.frame");
+    is_frame = is_frame || is_df(p_x[i]);
     is_classed = is_classed || Rf_isObject(p_x[i]);
   }
 
@@ -505,7 +505,7 @@ SEXP cpp_c(SEXP x){
   bool is_date2 = is_date && !is_datetime && (vector_type == INTSXP || vector_type == REALSXP);
   bool is_datetime2 = !is_date && is_datetime && vector_type == REALSXP;
 
-  if (is_df){
+  if (is_frame){
     return cpp_df_c(x);
   }
 
