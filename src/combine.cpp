@@ -262,8 +262,6 @@ SEXP cpp_combine_levels(SEXP x){
   SEXP levels = SHIELD(new_vec(VECSXP, n));
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
-  int out_size = 0;
-
   SEXP fct_levels;
 
   PROTECT_INDEX fct_idx;
@@ -275,7 +273,6 @@ SEXP cpp_combine_levels(SEXP x){
     } else {
       R_Reprotect(fct_levels = base_as_character(p_x[i]), fct_idx);
     }
-    out_size += Rf_length(fct_levels);
     SET_VECTOR_ELT(levels, i, fct_levels);
   }
   SEXP out = SHIELD(cpp_c(levels));
@@ -295,8 +292,6 @@ SEXP cpp_combine_factors(SEXP x){
   int n = Rf_length(x);
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
-  int out_size = 0;
-
   SEXP levels = SHIELD(cpp_combine_levels(x));
   SEXP chars = SHIELD(new_vec(VECSXP, n));
   SEXP char_vec;
@@ -310,7 +305,6 @@ SEXP cpp_combine_factors(SEXP x){
     } else {
       R_Reprotect(char_vec = base_as_character(p_x[i]), char_vec_idx);
     }
-    out_size += Rf_length(char_vec);
     SET_VECTOR_ELT(chars, i, char_vec);
   }
 
