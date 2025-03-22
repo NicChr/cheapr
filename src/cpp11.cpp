@@ -792,10 +792,12 @@ static const R_CallMethodDef CallEntries[] = {
 }
 
 void api_init(DllInfo* dll);
+void symbols_init(DllInfo* dll);
 
 extern "C" attribute_visible void R_init_cheapr(DllInfo* dll){
   R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, FALSE);
   api_init(dll);
+  symbols_init(dll);
   R_forceSymbols(dll, TRUE);
 }

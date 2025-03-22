@@ -1,6 +1,6 @@
 #include "cheapr.h"
 
-// static SEXP CHEAPR_ZERO = R_NilValue;
+// static SEXP CHEAPR_ZERO = NULL;
 // void constants_init(DllInfo* dll){
 //   CHEAPR_ZERO = Rf_ScalarInteger(0);
 //   R_PreserveObject(CHEAPR_ZERO);  // Protect from garbage collection
@@ -238,14 +238,14 @@ SEXP na_init(SEXP x, int n){
 }
 
 SEXP get_ptype(SEXP x){
-  SEXP zero = SHIELD(Rf_ScalarInteger(0));
+  SEXP CHEAPR_ZERO = SHIELD(Rf_ScalarInteger(0));
   SEXP out;
   if (is_df(x)){
-    out = SHIELD(cpp_df_slice(x, zero, true));
+    out = SHIELD(cpp_df_slice(x, CHEAPR_ZERO, true));
   } else if (is_simple_atomic_vec(x) || is_bare_list(x)){
-    out = SHIELD(cpp_sset(x, zero));
+    out = SHIELD(cpp_sset(x, CHEAPR_ZERO));
   } else {
-    out = SHIELD(base_sset(x, zero));
+    out = SHIELD(base_sset(x, CHEAPR_ZERO));
   }
   YIELD(2);
   return out;
