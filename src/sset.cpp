@@ -1289,7 +1289,6 @@ SEXP cpp_sset_df(SEXP x, SEXP indices){
   int xn = df_nrow(x);
   int ncols = Rf_length(x);
   int NP = 0;
-  // cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = SHIELD(new_vec(VECSXP, ncols)); ++NP;
 
