@@ -27,7 +27,7 @@ SEXP cpp_rep_len(SEXP x, int length){
   } else if (is_simple_vec(x)){
 
     int size = Rf_length(x);
-    int n_chunks, k, m, chunk_size;
+    int n_chunks, k, chunk_size;
 
     // Return x if length(x) == length
     if (out_size == size) return x;
@@ -39,12 +39,19 @@ SEXP cpp_rep_len(SEXP x, int length){
       SEXP out = SHIELD(new_vec(TYPEOF(x), out_size));
       int *p_out = INTEGER(out);
 
-      if (out_size > 0 && size > 0){
+      if (size == 1){
+        int val = p_x[0];
+        if (val == 0){
+          memset(p_out, 0, out_size * sizeof(int));
+        } else {
+          OMP_FOR_SIMD
+          for (int i = 0; i < out_size; ++i) p_out[i] = val;
+        }
+      } else if (out_size > 0 && size > 0){
         n_chunks = std::ceil((static_cast<double>(out_size)) / size);
         for (int i = 0; i < n_chunks; ++i){
-          k = ( (i + 1) * size) - size;
-          m = std::min(k + size - 1, out_size - 1);
-          chunk_size = m - k + 1;
+          k = i * size;
+          chunk_size = std::min(k + size, out_size) - k;
           memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(int));
         }
         // If length > 0 but length(x) == 0 then fill with NA
@@ -63,12 +70,19 @@ SEXP cpp_rep_len(SEXP x, int length){
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
       double *p_out = REAL(out);
 
-      if (out_size > 0 && size > 0){
+      if (size == 1){
+       double val = p_x[0];
+        if (val == 0.0){
+          memset(p_out, 0, out_size * sizeof(double));
+        } else {
+          OMP_FOR_SIMD
+          for (int i = 0; i < out_size; ++i) p_out[i] = val;
+        }
+      } else if (out_size > 0 && size > 0){
         n_chunks = std::ceil((static_cast<double>(out_size)) / size);
         for (int i = 0; i < n_chunks; ++i){
-          k = ( (i + 1) * size) - size;
-          m = std::min(k + size - 1, out_size - 1);
-          chunk_size = m - k + 1;
+          k = i * size;
+          chunk_size = std::min(k + size, out_size) - k;
           memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(double));
         }
         // If length > 0 but length(x) == 0 then fill with NA
@@ -86,7 +100,13 @@ SEXP cpp_rep_len(SEXP x, int length){
       const SEXP *p_x = STRING_PTR_RO(x);
       SEXP out = SHIELD(new_vec(STRSXP, out_size));
 
-      if (out_size > 0 && size > 0){
+
+      if (size == 1){
+        SEXP val = p_x[0];
+        for (int i = 0; i < out_size; ++i){
+          SET_STRING_ELT(out, i, val);
+        }
+      } else if (out_size > 0 && size > 0){
         for (int i = 0; i < out_size; ++i){
           SET_STRING_ELT(out, i, p_x[i % size]);
         }
@@ -105,7 +125,12 @@ SEXP cpp_rep_len(SEXP x, int length){
       SEXP out = SHIELD(new_vec(CPLXSXP, out_size));
       Rcomplex *p_out = COMPLEX(out);
 
-      if (out_size > 0 && size > 0){
+      if (size == 1){
+        Rcomplex val = p_x[0];
+        for (int i = 0; i < out_size; ++i){
+          SET_COMPLEX_ELT(out, i, val);
+        }
+      } else if (out_size > 0 && size > 0){
         for (int i = 0; i < out_size; ++i){
           SET_COMPLEX_ELT(out, i, p_x[i % size]);
         }
@@ -124,7 +149,12 @@ SEXP cpp_rep_len(SEXP x, int length){
       const SEXP *p_x = VECTOR_PTR_RO(x);
       SEXP out = SHIELD(new_vec(VECSXP, out_size));
 
-      if (out_size > 0 && size > 0){
+      if (size == 1){
+        SEXP val = p_x[0];
+        for (int i = 0; i < out_size; ++i){
+          SET_VECTOR_ELT(out, i, val);
+        }
+      } else if (out_size > 0 && size > 0){
         for (int i = 0; i < out_size; ++i){
           SET_VECTOR_ELT(out, i, p_x[i % size]);
         }

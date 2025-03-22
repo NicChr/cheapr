@@ -5,10 +5,9 @@
 
 static SEXP CHEAPR_CORES = NULL;
 
-[[cpp11::init]]
-void symbols_init(DllInfo* dll){
-  CHEAPR_CORES = Rf_install("cheapr.cores");
-}
+// void symbols_init(DllInfo* dll){
+//   CHEAPR_CORES = Rf_install("cheapr.cores");
+// }
 
 [[cpp11::register]]
 SEXP cpp_is_simple_atomic_vec(SEXP x){
@@ -60,9 +59,9 @@ SEXP cpp_vector_length(SEXP x){
 }
 
 int num_cores(){
-  // if (CHEAPR_CORES == NULL){
-  //   CHEAPR_CORES = Rf_install("cheapr.cores");
-  // }
+  if (CHEAPR_CORES == NULL){
+    CHEAPR_CORES = Rf_install("cheapr.cores");
+  }
   int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
   return n_cores >= 1 ? n_cores : 1;
 }
