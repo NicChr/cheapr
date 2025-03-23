@@ -52,10 +52,6 @@ cpp_combine_factors <- function(x) {
   .Call(`_cheapr_cpp_combine_factors`, x)
 }
 
-list_c <- function(x) {
-  .Call(`_cheapr_list_c`, x)
-}
-
 cpp_c <- function(x) {
   .Call(`_cheapr_cpp_c`, x)
 }
@@ -128,8 +124,16 @@ cpp_drop_null <- function(l, always_shallow_copy) {
   .Call(`_cheapr_cpp_drop_null`, l, always_shallow_copy)
 }
 
+cpp_list_assign <- function(x, values) {
+  .Call(`_cheapr_cpp_list_assign`, x, values)
+}
+
 cpp_list_as_df <- function(x) {
   .Call(`_cheapr_cpp_list_as_df`, x)
+}
+
+cpp_df_assign_cols <- function(x, cols) {
+  .Call(`_cheapr_cpp_df_assign_cols`, x, cols)
 }
 
 cpp_num_na <- function(x, recursive) {

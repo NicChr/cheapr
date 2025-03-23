@@ -52,14 +52,6 @@ tzone <- function(x){
   }
 }
 
-cheapr_rep_len <- function(x, length.out){
-  if (inherits(x, "data.frame")){
-    sset(x, rep_len(attr(x, "row.names"), length.out))
-  } else {
-    rep(x, length.out = length.out)
-  }
-}
-
 set_attr <- cpp_set_add_attr
 set_attrs <- cpp_set_add_attributes
 set_rm_attr <- cpp_set_rm_attr
@@ -178,6 +170,7 @@ combine_factors <- function(...){
 }
 
 
+# Keeping this as other packages may use it
 df_add_cols <- function(data, cols){
   if (!(is.list(cols) && !is.null(names(cols)))){
     stop("cols must be a named list")
@@ -199,22 +192,6 @@ exprs <- function(...){
 
 # Sort of the inverse of %||%
 `%!||%` <- function(x, y) if (x) NULL else y
-
-# Just a wrapper with a cheaper alternative to `c.factor()`
-# cheapr_c <- function(..., .check = TRUE){
-#   dots <- list(...)
-#   if (.check){
-#     for (vec in dots){
-#       if (is.factor(vec)){
-#         return(combine_factors(dots))
-#       }
-#       if (is.object(vec)){
-#         return(do.call(c, dots))
-#       }
-#     }
-#   }
-#   `attributes<-`(collapse::vec(dots), NULL)
-# }
 
 # Turn negative indices to positives
 neg_indices_to_pos <- function(exclude, n){

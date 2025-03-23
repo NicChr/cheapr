@@ -4,6 +4,7 @@
 \alias{lengths_}
 \alias{unlisted_length}
 \alias{new_list}
+\alias{list_assign}
 \title{List utilities}
 \usage{
 lengths_(x, names = FALSE)
@@ -11,6 +12,8 @@ lengths_(x, names = FALSE)
 unlisted_length(x)
 
 new_list(length = 0L, default = NULL)
+
+list_assign(x, values)
 }
 \arguments{
 \item{x}{A list.}
@@ -20,6 +23,8 @@ new_list(length = 0L, default = NULL)
 \item{length}{Length of list.}
 
 \item{default}{Default value for each list element.}
+
+\item{values}{A named list}
 }
 \value{
 \code{lengths_()} returns the list lengths. \cr
@@ -27,7 +32,11 @@ new_list(length = 0L, default = NULL)
 \code{new_list()} is like \code{vector("list", length)} but also allows you to specify
 a default value for each list element. This can be useful for
 initialising with a catch-all value so that when you unlist you're guaranteed
-a list of length >= to the specified length.
+a list of length >= to the specified length. \cr
+
+\code{list_assign()} is vectorised version of \verb{[[<-} that
+concatenates \code{values} to \code{x} or modifies \code{x} where the
+names match. Can be useful for modifying data frame variables.
 }
 \description{
 Functions to help work with lists.
@@ -48,4 +57,5 @@ unlisted_length(l) - na_count(l) # Number of non-NA elements
 l <- new_list(20, 0L)
 l[1:5]
 # This works well with vctrs_list_of objects
+
 }

@@ -10,7 +10,9 @@
 SEXP cpp_rep_len(SEXP x, int length){
   int out_size = length;
 
-  if (is_df(x)){
+  if (Rf_isNull(x)){
+    return R_NilValue;
+  } else if (is_df(x)){
     int n_cols = Rf_length(x);
     SEXP out = SHIELD(new_vec(VECSXP, n_cols));
     SEXP var;
@@ -213,7 +215,6 @@ SEXP cpp_recycle(SEXP x, SEXP length){
   return out;
 }
 
-
 // Fast unique that can be used in C code
 // Doesn't return unique df rows
 SEXP cpp_unique(SEXP x){
@@ -373,7 +374,6 @@ SEXP cpp_combine_factors(SEXP x){
 
 // Helper to concatenate plain lists
 
-[[cpp11::register]]
 SEXP list_c(SEXP x){
   int NP = 0;
   R_xlen_t n = Rf_xlength(x);

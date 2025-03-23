@@ -147,7 +147,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
   lgl_data <- sset_col(skim_df, lgl_vars)
   which_lgl <- which_in(out[["col"]], lgl_vars)
   lgl_out <- sset(out, which_lgl)
-  lgl_out <- df_add_cols(
+  lgl_out <- cpp_df_assign_cols(
     lgl_out,
     list(
       n_missing = NA_integer_,
@@ -174,7 +174,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
   which_num <- which_in(out[["col"]], num_vars)
   num_out <- sset(out, which_num)
-  num_out <- df_add_cols(
+  num_out <- cpp_df_assign_cols(
     num_out,
     list(
       n_missing = NA_integer_,
@@ -197,8 +197,8 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
 
   if (N > 0L && length(which_num) > 0) {
     num_summaries <- unname(lapply(num_data, numeric_summary))
-    num_out <- df_add_cols(
-      num_out, collapse::rowbind(num_summaries)
+    num_out <- cpp_df_assign_cols(
+      num_out, cpp_c(num_summaries)
     )
     if (hist){
       num_out$hist <- pluck_row(summarise_all(
@@ -212,7 +212,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
   date_data <- sset_col(skim_df, date_vars)
   which_date <- which_in(out[["col"]], date_vars)
   date_out <- sset(out, which_date)
-  date_out <- df_add_cols(
+  date_out <- cpp_df_assign_cols(
     date_out,
     list(
       n_missing = NA_integer_,
@@ -240,7 +240,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
   datetime_data <- transform_all(datetime_data, as.POSIXct)
   which_datetime <- which_in(out[["col"]], datetime_vars)
   datetime_out <- sset(out, which_datetime)
-  datetime_out <- df_add_cols(
+  datetime_out <- cpp_df_assign_cols(
     datetime_out,
     list(
       n_missing = NA_integer_,
@@ -284,7 +284,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
         ts_overviews[[i]][["col"]] <- ts_vars[i]
       }
     }
-    ts_out <- collapse::rowbind(ts_overviews)
+    ts_out <- cpp_c(ts_overviews)
   }
 
 # Categorical -------------------------------------------------------------
@@ -292,7 +292,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
   cat_data <- sset_col(skim_df, cat_vars)
   which_cat <- which_in(out[["col"]], cat_vars)
   cat_out <- sset(out, which_cat)
-  cat_out <- df_add_cols(
+  cat_out <- cpp_df_assign_cols(
     cat_out,
     list(
       n_missing = NA_integer_,
@@ -324,7 +324,7 @@ overview.data.frame <- function(x, digits = getOption("cheapr.digits", 2), hist 
   other_data <- sset_col(skim_df, other_vars)
   which_other <- which_in(out[["col"]], other_vars)
   other_out <- sset(out, which_other)
-  other_out <- df_add_cols(
+  other_out <- cpp_df_assign_cols(
     other_out,
     list(
       n_missing = NA_integer_,
@@ -509,7 +509,8 @@ summarise_all <- function(data, .fn, size = 1){
   out
 }
 pluck_row <- function(data, i = 1){
-  unlist(sset(data, i), recursive = FALSE)
+  # unlist(sset_row(data, i), recursive = FALSE)
+  cpp_c(unclass(sset_row(data, i)))
 }
 
 # Taken from skimr::skim with modifications

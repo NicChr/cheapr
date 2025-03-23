@@ -7,6 +7,7 @@
 #' @param length Length of list.
 #' @param default Default value for each list element.
 #' @param names Should names of list elements be added? Default is `FALSE`.
+#' @param values A named list
 #'
 #' @returns
 #' `lengths_()` returns the list lengths. \cr
@@ -14,7 +15,11 @@
 #' `new_list()` is like `vector("list", length)` but also allows you to specify
 #' a default value for each list element. This can be useful for
 #' initialising with a catch-all value so that when you unlist you're guaranteed
-#' a list of length >= to the specified length.
+#' a list of length >= to the specified length. \cr
+#'
+#' `list_assign()` is vectorised version of `[[<-` that
+#' concatenates `values` to `x` or modifies `x` where the
+#' names match. Can be useful for modifying data frame variables.
 #'
 #' @examples
 #' library(cheapr)
@@ -32,6 +37,7 @@
 #' l <- new_list(20, 0L)
 #' l[1:5]
 #' # This works well with vctrs_list_of objects
+#'
 #' @export
 #' @rdname lists
 lengths_ <- function(x, names = FALSE){
@@ -43,8 +49,8 @@ unlisted_length <- cpp_unnested_length
 #' @export
 #' @rdname lists
 new_list <- function(length = 0L, default = NULL){
-  if (base::length(length) != 1){
-    stop("length must be a vector of length 1")
-  }
-  cpp_new_list(as.numeric(length), default)
+  .Call(`_cheapr_cpp_new_list`, length, default)
 }
+#' @export
+#' @rdname lists
+list_assign <- cpp_list_assign
