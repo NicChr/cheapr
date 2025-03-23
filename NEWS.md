@@ -1,5 +1,13 @@
 # cheapr (development version)
 
+- New function `cheapr_c` to concatenate vectors and data frame rows together
+fast and safely.
+
+- More exported C functions.
+
+- New function `list_assign` for assigning multiple vectors to an already
+existing list.
+
 # cheapr 1.1.0
 
 - Fixed CRAN notes on deprecated C functions.

@@ -1,14 +1,14 @@
 #include "cheapr.h"
 
 R_xlen_t unnested_length(SEXP x){
-  if (!Rf_isVectorList(x)){
+  if (TYPEOF(x) != VECSXP){
     return Rf_xlength(x);
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t out = 0;
   for (R_xlen_t i = 0; i < n; ++i){
-    out += Rf_isVectorList(p_x[i]) ? unnested_length(p_x[i]) : Rf_xlength(p_x[i]);
+    out += (TYPEOF(p_x[i]) == VECSXP) ? unnested_length(p_x[i]) : Rf_xlength(p_x[i]);
   }
   return out;
 }
@@ -23,7 +23,7 @@ SEXP cpp_lengths(SEXP x, bool names) {
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(new_vec(INTSXP, n));
   int *p_out = INTEGER(out);
-  if (!Rf_isVectorList(x)){
+  if (TYPEOF(x) != VECSXP){
     for (R_xlen_t i = 0; i < n; ++i) {
       p_out[i] = 1;
     }
@@ -62,7 +62,7 @@ SEXP cpp_new_list(SEXP size, SEXP default_value) {
 }
 
 SEXP shallow_copy(SEXP x){
-  if (Rf_isVectorList(x)){
+  if (TYPEOF(x) == VECSXP){
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(new_vec(VECSXP,  n));
     const SEXP *p_x = VECTOR_PTR_RO(x);

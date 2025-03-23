@@ -41,7 +41,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
   SEXP attrs = SHIELD(Rf_isPairList(attributes) ? coerce_vec(attributes, VECSXP) : attributes);
   ++NP;
   int n = Rf_length(attrs);
-  bool attrs_are_a_list = Rf_isVectorList(attrs);
+  bool attrs_are_a_list = TYPEOF(attrs) == VECSXP;
   if (Rf_isNull(attrs) ||
       // is.null or empty list?
       (attrs_are_a_list && n == 0)){

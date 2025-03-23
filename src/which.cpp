@@ -88,7 +88,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   if (Rf_length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }
-  if (Rf_isVectorList(x)){
+  if (TYPEOF(x) == VECSXP){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   SEXP val_is_na = SHIELD(cpp_is_na(value)); ++NP;
@@ -645,7 +645,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   if (Rf_length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }
-  if (Rf_isVectorList(x)){
+  if (TYPEOF(x) == VECSXP){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
 

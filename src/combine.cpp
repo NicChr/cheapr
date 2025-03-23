@@ -223,7 +223,7 @@ SEXP cpp_unique(SEXP x){
 
   if (is_compact_seq(x)){
     return x;
-  } else if (is_simple && Rf_length(x) < 100000){
+  } else if (is_simple && Rf_length(x) < 10000){
     SEXP dup = SHIELD(Rf_duplicated(x, FALSE));
     SEXP unique_locs = SHIELD(cpp_which_(dup, true));
     SEXP out = SHIELD(sset_vec(x, unique_locs, false));
@@ -238,28 +238,45 @@ SEXP cpp_unique(SEXP x){
 }
 
 SEXP cpp_setdiff(SEXP x, SEXP y){
-
-  bool is_simple = is_simple_atomic_vec(x) && is_simple_atomic_vec(y);
-
-  if (is_simple){
-    SEXP ux = SHIELD(cpp_unique(x));
-    SEXP matches;
-    if (Rf_length(ux) < 100000){
-      matches = SHIELD(Rf_match(y, ux, NA_INTEGER));
-    } else {
-      matches = SHIELD(cheapr_fast_match(ux, y));
-    }
-    SEXP locs = SHIELD(cpp_which_na(matches));
-    SEXP out = SHIELD(sset_vec(ux, locs, false));
-
-    Rf_copyMostAttrib(x, out);
-    YIELD(4);
-    return out;
-  } else {
-    return cpp11::package("base")["setdiff"](x, y);
-  }
-
+  SEXP matches = SHIELD(Rf_match(y, x, NA_INTEGER));
+  SEXP locs = SHIELD(cpp_which_na(matches));
+  SEXP out = SHIELD(sset_vec(x, locs, false));
+  Rf_copyMostAttrib(x, out);
+  YIELD(3);
+  return out;
 }
+// SEXP cpp_setdiff(SEXP x, SEXP y, bool dups){
+//
+//   bool is_simple = is_simple_atomic_vec(x) && is_simple_atomic_vec(y);
+//
+//   int NP = 0;
+//   if (is_simple){
+//     if (!dups){
+//       SHIELD(x = cpp_unique(x)); ++NP;
+//     }
+//     SEXP matches;
+//     if (Rf_length(x) < 10000){
+//       matches = SHIELD(Rf_match(y, x, NA_INTEGER)); ++NP;
+//     } else {
+//       matches = SHIELD(cheapr_fast_match(x, y)); ++NP;
+//     }
+//     SEXP locs = SHIELD(cpp_which_na(matches)); ++NP;
+//     SEXP out = SHIELD(sset_vec(x, locs, false)); ++NP;
+//
+//     Rf_copyMostAttrib(x, out);
+//     YIELD(NP);
+//     return out;
+//   } else {
+//     if (!dups){
+//       SHIELD(x = cheapr_fast_unique(x)); ++NP;
+//     }
+//     SEXP matches = SHIELD(cheapr_fast_match(x, y)); ++NP;
+//     SEXP locs = SHIELD(cpp_which_na(matches)); ++NP;
+//     SEXP out = SHIELD(cheapr_sset(x, locs)); ++NP;
+//     YIELD(NP);
+//     return out;
+//   }
+// }
 
 SEXP na_init(SEXP x, int n){
   SEXP ptype = SHIELD(get_ptype(x));
@@ -310,7 +327,7 @@ SEXP factor_as_character(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_combine_levels(SEXP x){
-  if (!Rf_isVectorList(x)){
+  if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of factors in %s", __func__);
   }
   int n = Rf_length(x);
@@ -340,7 +357,7 @@ SEXP cpp_combine_levels(SEXP x){
 [[cpp11::register]]
 SEXP cpp_combine_factors(SEXP x){
 
-  if (!Rf_isVectorList(x)){
+  if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of factors in %s", __func__);
   }
 
@@ -420,7 +437,7 @@ SEXP list_c(SEXP x){
 // Concatenate a list of data frames
 SEXP cpp_df_c(SEXP x){
 
-  if (!Rf_isVectorList(x)){
+  if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of data frames");
   }
 
@@ -521,7 +538,7 @@ SEXP cpp_df_c(SEXP x){
 // `c()` but no concatenation of names
 [[cpp11::register]]
 SEXP cpp_c(SEXP x){
-  if (!Rf_isVectorList(x)){
+  if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of vectors");
   }
   int NP = 0;

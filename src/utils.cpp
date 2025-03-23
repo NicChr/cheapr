@@ -31,9 +31,9 @@ R_xlen_t vec_length(SEXP x){
   if (is_df(x)){
     return df_nrow(x);
     // Is x a list?
-  } else if (Rf_isVectorList(x)){
+  } else if (TYPEOF(x) == VECSXP){
     if (Rf_inherits(x, "vctrs_rcrd")){
-      return vec_length(VECTOR_ELT(x, 0));
+      return Rf_length(x) > 0 ? vec_length(VECTOR_ELT(x, 0)) : 0;
     } else if (Rf_inherits(x, "POSIXlt")){
       const SEXP *p_x = VECTOR_PTR_RO(x);
       R_xlen_t out = 0;
