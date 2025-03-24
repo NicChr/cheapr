@@ -15,7 +15,7 @@ test_that("data frames", {
 
   expect_identical(
     new_df(x = 1, y = 2, NULL, x = 3, .name_repair = TRUE),
-    list_as_df(list(`x...1` = 1, y = 2, `x...3` = 3))
+    list_as_df(list(`x_1` = 1, y = 2, `x_3` = 3))
   )
 
   # Recycling

@@ -61,6 +61,7 @@ SEXP cpp_new_list(SEXP size, SEXP default_value) {
   return out;
 }
 
+[[cpp11::register]]
 SEXP shallow_copy(SEXP x){
   if (TYPEOF(x) == VECSXP){
     R_xlen_t n = Rf_xlength(x);
@@ -479,6 +480,41 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   Rf_classgets(out, Rf_mkString("data.frame"));
   YIELD(NP);
   return out;
+}
+
+
+[[cpp11::register]]
+SEXP cpp_df_reconstruct(SEXP data, SEXP from, bool keep_attrs){
+  if (!is_df(data)){
+    Rf_error("`data` must be a `data.frame`");
+  }
+  if (!is_df(from)){
+    Rf_error("`from` must be a `data.frame`");
+  }
+
+  // Create shallow copies so that we can manipulate attributes freely
+
+  SEXP target = SHIELD(shallow_copy(data));
+  SEXP source = SHIELD(shallow_copy(from));
+
+  // The below strips any leftover attributes from `data`,
+  // I wonder if these should be kept
+
+  cpp_set_rm_attributes(target);
+
+  if (keep_attrs){
+    Rf_setAttrib(source, R_NamesSymbol, R_NilValue);
+    Rf_setAttrib(source, R_ClassSymbol, R_NilValue);
+    Rf_setAttrib(source, R_RowNamesSymbol, R_NilValue);
+    SHALLOW_DUPLICATE_ATTRIB(target, source);
+  }
+
+  // Re-add original data attributes as these cannot be changed
+  Rf_setAttrib(target, R_NamesSymbol, Rf_getAttrib(data, R_NamesSymbol));
+  Rf_setAttrib(target, R_ClassSymbol, Rf_getAttrib(from, R_ClassSymbol));
+  Rf_setAttrib(target, R_RowNamesSymbol, create_df_row_names(df_nrow(data)));
+  YIELD(2);
+  return target;
 }
 
 // void cpp_check_nested_lengths(SEXP x, SEXP y){

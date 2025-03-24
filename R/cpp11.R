@@ -40,6 +40,10 @@ cpp_recycle <- function(x, length) {
   .Call(`_cheapr_cpp_recycle`, x, length)
 }
 
+cpp_setdiff <- function(x, y) {
+  .Call(`_cheapr_cpp_setdiff`, x, y)
+}
+
 get_ptypes <- function(x) {
   .Call(`_cheapr_get_ptypes`, x)
 }
@@ -120,6 +124,10 @@ cpp_new_list <- function(size, default_value) {
   .Call(`_cheapr_cpp_new_list`, size, default_value)
 }
 
+shallow_copy <- function(x) {
+  .Call(`_cheapr_shallow_copy`, x)
+}
+
 cpp_drop_null <- function(l, always_shallow_copy) {
   .Call(`_cheapr_cpp_drop_null`, l, always_shallow_copy)
 }
@@ -134,6 +142,10 @@ cpp_list_as_df <- function(x) {
 
 cpp_df_assign_cols <- function(x, cols) {
   .Call(`_cheapr_cpp_df_assign_cols`, x, cols)
+}
+
+cpp_df_reconstruct <- function(data, from, keep_attrs) {
+  .Call(`_cheapr_cpp_df_reconstruct`, data, from, keep_attrs)
 }
 
 cpp_num_na <- function(x, recursive) {
@@ -368,8 +380,8 @@ cpp_growth_rate <- function(x) {
   .Call(`_cheapr_cpp_growth_rate`, x)
 }
 
-cpp_name_repair <- function(names, sep) {
-  .Call(`_cheapr_cpp_name_repair`, names, sep)
+cpp_name_repair <- function(names, dup_sep, empty_sep) {
+  .Call(`_cheapr_cpp_name_repair`, names, dup_sep, empty_sep)
 }
 
 cpp_which_ <- function(x, invert) {

@@ -214,9 +214,9 @@ api_c(SEXP x){
 }
 
 SEXP
-api_name_repair(SEXP names, SEXP sep){
+api_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   try {
-    return cpp_name_repair(names, sep);
+    return cpp_name_repair(names, dup_sep, empty_sep);
   } catch (...) {
     return R_NilValue;
   }

@@ -237,6 +237,7 @@ SEXP cpp_unique(SEXP x){
   }
 }
 
+[[cpp11::register]]
 SEXP cpp_setdiff(SEXP x, SEXP y){
   SEXP matches = SHIELD(Rf_match(y, x, NA_INTEGER));
   SEXP locs = SHIELD(cpp_which_na(matches));

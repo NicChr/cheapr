@@ -78,6 +78,13 @@ extern "C" SEXP _cheapr_cpp_recycle(SEXP x, SEXP length) {
   END_CPP11
 }
 // combine.cpp
+SEXP cpp_setdiff(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_setdiff(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_setdiff(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// combine.cpp
 SEXP get_ptypes(SEXP x);
 extern "C" SEXP _cheapr_get_ptypes(SEXP x) {
   BEGIN_CPP11
@@ -218,6 +225,13 @@ extern "C" SEXP _cheapr_cpp_new_list(SEXP size, SEXP default_value) {
   END_CPP11
 }
 // lists.cpp
+SEXP shallow_copy(SEXP x);
+extern "C" SEXP _cheapr_shallow_copy(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(shallow_copy(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// lists.cpp
 SEXP cpp_drop_null(SEXP l, bool always_shallow_copy);
 extern "C" SEXP _cheapr_cpp_drop_null(SEXP l, SEXP always_shallow_copy) {
   BEGIN_CPP11
@@ -243,6 +257,13 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols);
 extern "C" SEXP _cheapr_cpp_df_assign_cols(SEXP x, SEXP cols) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_df_assign_cols(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(cols)));
+  END_CPP11
+}
+// lists.cpp
+SEXP cpp_df_reconstruct(SEXP data, SEXP from, bool keep_attrs);
+extern "C" SEXP _cheapr_cpp_df_reconstruct(SEXP data, SEXP from, SEXP keep_attrs) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_df_reconstruct(cpp11::as_cpp<cpp11::decay_t<SEXP>>(data), cpp11::as_cpp<cpp11::decay_t<SEXP>>(from), cpp11::as_cpp<cpp11::decay_t<bool>>(keep_attrs)));
   END_CPP11
 }
 // nas.cpp
@@ -653,10 +674,10 @@ extern "C" SEXP _cheapr_cpp_growth_rate(SEXP x) {
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_name_repair(SEXP names, SEXP sep);
-extern "C" SEXP _cheapr_cpp_name_repair(SEXP names, SEXP sep) {
+SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep);
+extern "C" SEXP _cheapr_cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_name_repair(cpp11::as_cpp<cpp11::decay_t<SEXP>>(names), cpp11::as_cpp<cpp11::decay_t<SEXP>>(sep)));
+    return cpp11::as_sexp(cpp_name_repair(cpp11::as_cpp<cpp11::decay_t<SEXP>>(names), cpp11::as_cpp<cpp11::decay_t<SEXP>>(dup_sep), cpp11::as_cpp<cpp11::decay_t<SEXP>>(empty_sep)));
   END_CPP11
 }
 // which.cpp
@@ -714,6 +735,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_dbl_sequence",            (DL_FUNC) &_cheapr_cpp_dbl_sequence,            3},
     {"_cheapr_cpp_df_assign_cols",          (DL_FUNC) &_cheapr_cpp_df_assign_cols,          2},
     {"_cheapr_cpp_df_col_na_counts",        (DL_FUNC) &_cheapr_cpp_df_col_na_counts,        1},
+    {"_cheapr_cpp_df_reconstruct",          (DL_FUNC) &_cheapr_cpp_df_reconstruct,          3},
     {"_cheapr_cpp_df_row_na_counts",        (DL_FUNC) &_cheapr_cpp_df_row_na_counts,        1},
     {"_cheapr_cpp_df_select",               (DL_FUNC) &_cheapr_cpp_df_select,               2},
     {"_cheapr_cpp_df_slice",                (DL_FUNC) &_cheapr_cpp_df_slice,                3},
@@ -749,7 +771,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_loc_set_replace",         (DL_FUNC) &_cheapr_cpp_loc_set_replace,         3},
     {"_cheapr_cpp_matrix_col_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts,    1},
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},
-    {"_cheapr_cpp_name_repair",             (DL_FUNC) &_cheapr_cpp_name_repair,             2},
+    {"_cheapr_cpp_name_repair",             (DL_FUNC) &_cheapr_cpp_name_repair,             3},
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
@@ -779,6 +801,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_sqrt",                (DL_FUNC) &_cheapr_cpp_set_sqrt,                1},
     {"_cheapr_cpp_set_subtract",            (DL_FUNC) &_cheapr_cpp_set_subtract,            2},
     {"_cheapr_cpp_set_trunc",               (DL_FUNC) &_cheapr_cpp_set_trunc,               1},
+    {"_cheapr_cpp_setdiff",                 (DL_FUNC) &_cheapr_cpp_setdiff,                 2},
     {"_cheapr_cpp_shallow_duplicate_attrs", (DL_FUNC) &_cheapr_cpp_shallow_duplicate_attrs, 2},
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    2},
     {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},
@@ -794,6 +817,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_get_ptypes",                  (DL_FUNC) &_cheapr_get_ptypes,                  1},
     {"_cheapr_is_compact_seq",              (DL_FUNC) &_cheapr_is_compact_seq,              1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
+    {"_cheapr_shallow_copy",                (DL_FUNC) &_cheapr_shallow_copy,                1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}
 };

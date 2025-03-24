@@ -171,10 +171,10 @@ c(SEXP x){
 }
 
 static inline SEXP
-name_repair(SEXP names, SEXP sep){
-  typedef SEXP fn_t(SEXP, SEXP);
+name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_name_repair");
-  return fn(names, sep);
+  return fn(names, dup_sep, empty_sep);
 }
 
 static inline SEXP

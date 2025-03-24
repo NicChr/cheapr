@@ -693,15 +693,18 @@ SEXP create_df_row_names(int n){
 }
 
 [[cpp11::register]]
-SEXP cpp_name_repair(SEXP names, SEXP sep){
+SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   int NP = 0;
   if (Rf_isNull(names)) return names;
 
   if (TYPEOF(names) != STRSXP){
     Rf_error("`names` must be a character vector of names in %s", __func__);
   }
-  if (TYPEOF(sep) != STRSXP || Rf_length(sep) != 1){
-    Rf_error("`sep` must be a character vector of length 1 in %s", __func__);
+  if (TYPEOF(dup_sep) != STRSXP || Rf_length(dup_sep) != 1){
+    Rf_error("`dup_sep` must be a character vector of length 1 in %s", __func__);
+  }
+  if (TYPEOF(empty_sep) != STRSXP || Rf_length(empty_sep) != 1){
+    Rf_error("`empty_sep` must be a character vector of length 1 in %s", __func__);
   }
   int n = Rf_length(names);
   SEXP is_dup = SHIELD(Rf_duplicated(names, FALSE)); ++NP;
@@ -720,18 +723,18 @@ SEXP cpp_name_repair(SEXP names, SEXP sep){
 
   if (n_dups > 0){
     temp = SHIELD(sset_vec(names, dup_locs, true)); ++NP;
-    replace = SHIELD(base_paste0(temp, sep, dup_locs)); ++NP;
+    replace = SHIELD(base_paste0(temp, dup_sep, dup_locs)); ++NP;
     cpp_loc_set_replace(out, dup_locs, replace);
   }
 
   SEXP is_empty = SHIELD(new_vec(LGLSXP, n)); ++NP;
   int *p_is_empty = LOGICAL(is_empty);
-  Rboolean empty;
+  bool empty;
   int n_empty = 0;
 
   for (int i = 0; i < n; ++i){
-    empty = Rf_StringBlank(STRING_ELT(names, i));
-    n_empty += (empty == TRUE);
+    empty = (STRING_ELT(names, i) == R_BlankString);
+    n_empty += empty;
     p_is_empty[i] = empty;
   }
 
@@ -740,7 +743,7 @@ SEXP cpp_name_repair(SEXP names, SEXP sep){
   if (n_empty > 0){
     SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
     temp = SHIELD(sset_vec(names, empty_locs, true)); ++NP;
-    replace = SHIELD(base_paste0(temp, sep, empty_locs)); ++NP;
+    replace = SHIELD(base_paste0(temp, empty_sep, empty_locs)); ++NP;
     cpp_loc_set_replace(out, empty_locs, replace);
   }
 
