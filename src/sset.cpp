@@ -158,7 +158,8 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
 // checked (internal flag)
 
 [[cpp11::register]]
-SEXP clean_indices(SEXP indices, R_xlen_t xn){
+SEXP clean_indices(SEXP indices, SEXP x){
+  R_xlen_t xn = vec_length(x);
   int NP = 0;
   R_xlen_t zero_count = 0,
     pos_count = 0,
@@ -174,6 +175,19 @@ SEXP clean_indices(SEXP indices, R_xlen_t xn){
   bool check_indices = true;
   SEXP clean_indices;
 
+  if (TYPEOF(indices) == STRSXP){
+    SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+    if (Rf_isNull(names)){
+      YIELD(NP);
+      Rf_error("Cannot subset on the names of an unnamed vector");
+    }
+    if (n < 10000){
+      SHIELD(indices = Rf_match(names, indices, NA_INTEGER)); ++NP;
+    } else {
+      SHIELD(indices = cheapr_fast_match(indices, names)); ++NP;
+    }
+  }
+
   if (is_compact_seq(indices)){
     clean_indices = indices;
 
@@ -184,7 +198,7 @@ SEXP clean_indices(SEXP indices, R_xlen_t xn){
     out_size = get_alt_final_sset_size(xn, from, to, by);
     check_indices = true;
 
-  } else if (Rf_isLogical(indices)){
+  } else if (TYPEOF(indices) == LGLSXP){
     if (Rf_length(indices) != xn){
       Rf_error("`length(i)` must match `length(x)` when `i` is a logical vector");
     }
@@ -908,7 +922,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 SEXP cpp_sset(SEXP x, SEXP indices){
   int NP = 0;
 
-  SEXP indices_metadata = SHIELD(clean_indices(indices, Rf_xlength(x))); ++NP;
+  SEXP indices_metadata = SHIELD(clean_indices(indices, x)); ++NP;
   SEXP clean_indices = SHIELD(VECTOR_ELT(indices_metadata, 0)); ++NP;
   bool check_indices = LOGICAL(VECTOR_ELT(indices_metadata, 2))[0];
   SEXP out = SHIELD(sset_vec(x, clean_indices, check_indices)); ++NP;
@@ -1210,7 +1224,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   bool check_indices;
 
   if (check){
-    const SEXP clean_indices_info = SHIELD(clean_indices(indices, xn)); ++NP;
+    const SEXP clean_indices_info = SHIELD(clean_indices(indices, x)); ++NP;
     SHIELD(indices = VECTOR_ELT(clean_indices_info, 0)); ++NP;
     out_size = REAL(VECTOR_ELT(clean_indices_info, 1))[0];
     check_indices = LOGICAL(VECTOR_ELT(clean_indices_info, 2))[0];
