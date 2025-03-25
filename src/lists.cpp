@@ -241,6 +241,8 @@ SEXP get_list_element(SEXP list, const char *str){
 [[cpp11::register]]
 SEXP cpp_list_assign(SEXP x, SEXP values){
   int NP = 0;
+  int n = Rf_length(x);
+  int n_cols = Rf_length(values);
 
   SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
   SEXP col_names = SHIELD(Rf_getAttrib(values, R_NamesSymbol)); ++NP;
@@ -249,16 +251,19 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     YIELD(NP);
     Rf_error("`x` must be a list in %s", __func__);
   }
-  if (TYPEOF(values) != VECSXP || Rf_isNull(col_names)){
+  if (TYPEOF(values) != VECSXP){
     YIELD(NP);
     Rf_error("`values` must be a named list in %s", __func__);
   }
 
-  int n = Rf_length(x);
-  int n_cols = Rf_length(values);
-
   if (Rf_isNull(names)){
     SHIELD(names = new_vec(STRSXP, n)); ++NP;
+  }
+
+  bool empty_value_names = Rf_isNull(col_names);
+
+  if (empty_value_names){
+    SHIELD(col_names = new_vec(STRSXP, n_cols)); ++NP;
   }
 
   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -268,9 +273,19 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 
   // We create an int vec to keep track of locations where to add col vecs
 
-  SEXP add_locs = SHIELD(Rf_match(names, col_names, NA_INTEGER)); ++NP;
+  SEXP add_locs;
+  int n_cols_to_add;
+
+  // If values is an unnamed list then we can simply append the values
+  if (empty_value_names){
+    add_locs = SHIELD(new_vec(INTSXP, 0)); ++NP;
+    SHIELD(add_locs = cpp_rep_len(add_locs, n_cols)); ++NP;
+    n_cols_to_add = n_cols;
+  } else {
+    add_locs = SHIELD(Rf_match(names, col_names, NA_INTEGER)); ++NP;
+    n_cols_to_add = na_count(add_locs, false);
+  }
   int *p_add_locs = INTEGER(add_locs);
-  int n_cols_to_add = na_count(add_locs, false);
   int out_size = n + n_cols_to_add;
 
   int loc;
@@ -284,7 +299,6 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   }
 
   bool any_null = false;
-
   for (int j = 0; j < n_cols; ++j){
     loc = p_add_locs[j];
     any_null = any_null || Rf_isNull(p_y[j]);
@@ -307,6 +321,59 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   YIELD(NP);
   return out;
 }
+
+// Multi-assign named values using cpp11
+// Not as fast as cpp_list_assign though
+
+// cpp11::writable::list cpp_list_assign2(cpp11::writable::list x, cpp11::list values){
+//   using namespace cpp11;
+//
+//   writable::strings names = as_sexp(x.names());
+//   strings col_names = as_sexp(values.names());
+//
+//   if (TYPEOF(x) != VECSXP){
+//     stop("`x` must be a list in %s", __func__);
+//   }
+//   if (TYPEOF(values) != VECSXP || Rf_isNull(col_names)){
+//     stop("`x` must be a list in %s", __func__);
+//   }
+//
+//   int n = x.size();
+//   int n_cols = values.size();
+//
+//   if (Rf_isNull(names)){
+//     names = writable::strings(n);
+//   }
+//
+//   integers add_locs = Rf_match(names, col_names, NA_INTEGER);
+//   writable::integers null_locs;
+//
+//   int loc;
+//   for (int j = 0; j < n_cols; ++j){
+//     loc = add_locs[j];
+//     if (is_na_int(loc) && values[j] != R_NilValue){
+//       x.push_back(values[j]);
+//       names.push_back(col_names[j]);
+//     } else {
+//       if (values[j] == R_NilValue){
+//         null_locs.push_back(loc);
+//       } else {
+//         --loc;
+//         x[loc] = values[j];
+//         names[loc] = col_names[j];
+//       }
+//     }
+//   }
+//   if (null_locs.size() > 0){
+//     cpp_set_change_sign(null_locs);
+//     integers not_null_locs = exclude_locs(null_locs, x.size());
+//     x = sset_vec(x, not_null_locs, false);
+//     names = sset_vec(names, not_null_locs, false);
+//   }
+//   x.names() = names;
+//   return x;
+// }
+
 
 // Work-in-progress
 // SEXP cpp_list_assign2(SEXP x, SEXP values, SEXP locs){

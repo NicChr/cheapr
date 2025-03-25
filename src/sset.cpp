@@ -1210,8 +1210,6 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   if (Rf_isNull(indices)){
     return x;
   }
-
-  int xn = df_nrow(x);
   int ncols = Rf_length(x);
   int NP = 0;
   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -1254,7 +1252,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
     SET_VECTOR_ELT(out, j, list_var);
   }
 
-  cpp_copy_names(x, out, false);
+  Rf_setAttrib(out, R_NamesSymbol, Rf_getAttrib(x, R_NamesSymbol));
 
   // list to data frame object
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
