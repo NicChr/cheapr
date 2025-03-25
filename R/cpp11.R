@@ -308,8 +308,8 @@ cpp_int_sign <- function(x) {
   .Call(`_cheapr_cpp_int_sign`, x)
 }
 
-clean_indices <- function(indices, xn) {
-  .Call(`_cheapr_clean_indices`, indices, xn)
+clean_indices <- function(indices, x) {
+  .Call(`_cheapr_clean_indices`, indices, x)
 }
 
 cpp_sset <- function(x, indices) {

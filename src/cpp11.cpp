@@ -547,10 +547,10 @@ extern "C" SEXP _cheapr_cpp_int_sign(SEXP x) {
   END_CPP11
 }
 // sset.cpp
-SEXP clean_indices(SEXP indices, R_xlen_t xn);
-extern "C" SEXP _cheapr_clean_indices(SEXP indices, SEXP xn) {
+SEXP clean_indices(SEXP indices, SEXP x);
+extern "C" SEXP _cheapr_clean_indices(SEXP indices, SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(clean_indices(cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(xn)));
+    return cpp11::as_sexp(clean_indices(cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // sset.cpp

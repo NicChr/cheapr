@@ -167,6 +167,75 @@ SEXP get_list_element(SEXP list, const char *str){
     return out;
 }
 
+// A cpp11 pushback() method for growing a list
+// It should in theory be efficient but because of
+// cpp11's copy-on-modify, I can't figure out a way to call this function
+// in another function repeatedly without copying every time
+// To be efficient one must use push.back manually inside a loop in the same
+// function
+
+// cpp11::list add_list_element(cpp11::writable::list x, SEXP i, SEXP value){
+//
+//   cpp11::writable::strings names;
+//
+//   if (Rf_isNull(Rf_getAttrib(x, R_NamesSymbol))){
+//     names = cpp11::writable::strings(x.size());
+//     x.names() = names;
+//   } else {
+//     names = cpp11::as_sexp(x.names());
+//   }
+//
+//   int k, loc;
+//
+//   if (TYPEOF(i) == INTSXP){
+//     cpp11::integers locs = i;
+//     loc = locs[0] - 1;
+//     if (loc < x.size()){
+//       x[loc] = value;
+//     } else {
+//       if (loc > x.size()){
+//         cpp11::writable::list temp(2);
+//         cpp11::writable::list join(loc - x.size());
+//         temp[0] = x;
+//         temp[1] = join;
+//         x = list_c(temp);
+//       }
+//       x.push_back(value);
+//     }
+//   }
+//   else if (TYPEOF(i) == REALSXP){
+//     cpp11::doubles locs = i;
+//     loc = locs[0] - 1;
+//     if (loc < x.size()){
+//       x[loc] = value;
+//     } else {
+//       if (loc > x.size()){
+//         cpp11::writable::list temp(2);
+//         cpp11::writable::list join(loc - x.size());
+//         temp[0] = x;
+//         temp[1] = join;
+//         x = list_c(temp);
+//       }
+//       x.push_back(value);
+//     }
+//   } else {
+//     k = 0;
+//     cpp11::strings name = i;
+//     for (int i = 0; i < x.size(); ++i, ++k){
+//       if (names[i] == name[0]){
+//         x[i] = value;
+//         break;
+//       }
+//     }
+//     if (k == x.size()){
+//       x.push_back(value);
+//       names.push_back(name[0]);
+//       x.names() = names;
+//     }
+//   }
+//   return x;
+// }
+
 // Multi-assign named list elements
 
 [[cpp11::register]]

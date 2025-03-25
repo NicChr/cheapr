@@ -218,6 +218,7 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by);
 SEXP cpp_rep_len(SEXP x, int length);
 SEXP cpp_recycle(SEXP x, SEXP length);
 SEXP cpp_c(SEXP x);
+SEXP list_c(SEXP x);
 SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what);
 SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep);
 SEXP cpp_unique(SEXP x);

@@ -97,34 +97,53 @@ unique_name_repair <- function(x, dup_sep = "_", empty_sep = "_"){
   cpp_name_repair(x, dup_sep, empty_sep)
 }
 
-df_reconstruct <- function(data, template, ...){
-  UseMethod("df_reconstruct", template)
-}
-#' @export
-df_reconstruct.default <- function(data, template, keep_attrs = FALSE, ...){
-  cpp_df_reconstruct(data, template, keep_attrs)
-}
+# df_reconstruct <- function(data, template, ...){
+#   UseMethod("df_reconstruct", template)
+# }
+# df_reconstruct.default <- function(data, template, keep_attrs = FALSE, ...){
+#   cpp_df_reconstruct(data, template, keep_attrs)
+# }
 
-#' @export
-df_reconstruct.data.table <- function(data, template, keep_attrs = FALSE, copy_all_attrs = FALSE, ...){
-  at <- attributes(template)
-  row_names <- .row_names_info(data, type = 0L)
-  out <- collapse::qDT(shallow_copy(data), keep.attr = keep_attrs)
-
-  if (!keep_attrs){
-    cpp_set_rm_attributes(out)
-  }
-  cpp_set_add_attr(out, "names", attr(data, "names", TRUE))
-  cpp_set_add_attr(out, "row.names", row_names)
-  if (copy_all_attrs){
-    for (a in cpp_setdiff(
-      names(at), c("row.names", "names")
-    )){
-      cpp_set_add_attr(out, a, at[[a]])
-    }
-  } else {
-    cpp_set_add_attr(out, "class", at[["class"]])
-    cpp_set_add_attr(out, ".internal.selfref", at[[".internal.selfref"]])
-  }
-  out
-}
+# df_reconstruct.data.table <- function(data, template, keep_attrs = FALSE, copy_all_attrs = FALSE, ...){
+#
+#   at <- attributes(template)
+#   row_names <- .row_names_info(data, type = 0L)
+#   out <- collapse::qDT(shallow_copy(data), keep.attr = keep_attrs)
+#
+#   selfref <- attr(out, ".internal.selfref", TRUE)
+#   cpp_set_add_attr(out, "row.names", row_names)
+#
+#   if (copy_all_attrs){
+#     for (a in cpp_setdiff(
+#       names(at), c("row.names", "names", ".internal.selfref")
+#     )){
+#       cpp_set_add_attr(out, a, at[[a]])
+#     }
+#   } else {
+#     cpp_set_add_attr(out, "class", at[["class"]])
+#     cpp_set_add_attr(out, ".internal.selfref", selfref)
+#   }
+#   out
+#
+#   # at <- attributes(template)
+#   # row_names <- .row_names_info(data, type = 0L)
+#   # out <- collapse::qDT(shallow_copy(data), keep.attr = keep_attrs)
+#   # selfref <- attr(out, ".internal.selfref", TRUE)
+#   #
+#   # if (!keep_attrs){
+#   #   cpp_set_rm_attributes(out)
+#   # }
+#   # cpp_set_add_attr(out, "names", attr(data, "names", TRUE))
+#   # cpp_set_add_attr(out, "row.names", row_names)
+#   # if (copy_all_attrs){
+#   #   for (a in cpp_setdiff(
+#   #     names(at), c("row.names", "names", ".internal.selfref")
+#   #   )){
+#   #     cpp_set_add_attr(out, a, at[[a]])
+#   #   }
+#   # } else {
+#   #   cpp_set_add_attr(out, "class", at[["class"]])
+#   #   cpp_set_add_attr(out, ".internal.selfref", selfref)
+#   # }
+#   # out
+# }
