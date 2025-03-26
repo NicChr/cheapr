@@ -516,6 +516,8 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
 
   if (recycle){
     SHIELD(out = cpp_recycle(out, nrows)); ++NP;
+  } else {
+    SHIELD(out = cpp_drop_null(out, true)); ++NP;
   }
 
   SEXP row_names;
