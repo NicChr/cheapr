@@ -44,6 +44,10 @@ cpp_setdiff <- function(x, y) {
   .Call(`_cheapr_cpp_setdiff`, x, y)
 }
 
+cpp_na_init <- function(x, n) {
+  .Call(`_cheapr_cpp_na_init`, x, n)
+}
+
 get_ptypes <- function(x) {
   .Call(`_cheapr_get_ptypes`, x)
 }

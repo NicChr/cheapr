@@ -302,7 +302,8 @@ SEXP cpp_setdiff(SEXP x, SEXP y){
 //   }
 // }
 
-SEXP na_init(SEXP x, int n){
+[[cpp11::register]]
+SEXP cpp_na_init(SEXP x, int n){
   SEXP ptype = SHIELD(get_ptype(x));
   SEXP out = SHIELD(cpp_rep_len(ptype, n));
   YIELD(2);
@@ -573,7 +574,7 @@ SEXP cpp_df_c(SEXP x){
 
       if (Rf_isNull(vec)){
         R_Reprotect(vec = VECTOR_ELT(ptypes, j), vec_idx);
-        R_Reprotect(vec = na_init(vec, df_nrow(p_x[i])), vec_idx);
+        R_Reprotect(vec = cpp_na_init(vec, df_nrow(p_x[i])), vec_idx);
       }
       SET_VECTOR_ELT(vectors, i, vec);
     }

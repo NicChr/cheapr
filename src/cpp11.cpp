@@ -85,6 +85,13 @@ extern "C" SEXP _cheapr_cpp_setdiff(SEXP x, SEXP y) {
   END_CPP11
 }
 // combine.cpp
+SEXP cpp_na_init(SEXP x, int n);
+extern "C" SEXP _cheapr_cpp_na_init(SEXP x, SEXP n) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_na_init(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(n)));
+  END_CPP11
+}
+// combine.cpp
 SEXP get_ptypes(SEXP x);
 extern "C" SEXP _cheapr_get_ptypes(SEXP x) {
   BEGIN_CPP11
@@ -770,6 +777,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_loc_set_replace",         (DL_FUNC) &_cheapr_cpp_loc_set_replace,         3},
     {"_cheapr_cpp_matrix_col_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts,    1},
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},
+    {"_cheapr_cpp_na_init",                 (DL_FUNC) &_cheapr_cpp_na_init,                 2},
     {"_cheapr_cpp_name_repair",             (DL_FUNC) &_cheapr_cpp_name_repair,             3},
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
