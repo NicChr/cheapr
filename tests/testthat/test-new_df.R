@@ -7,7 +7,7 @@ test_that("data frames", {
   )
   expect_identical(
     new_df(x = 1, 2, 3),
-    structure(list(x = 1, `2` = 2, `3` = 3), row.names = c(NA, -1L), class = "data.frame")
+    structure(list(x = 1, `col_2` = 2, `col_3` = 3), row.names = c(NA, -1L), class = "data.frame")
   )
 
 

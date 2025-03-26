@@ -115,6 +115,15 @@ api_list_as_df(SEXP x){
 }
 
 SEXP
+api_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
+  try {
+    return cpp_new_df(x, nrows, recycle, name_repair);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
 api_lengths(SEXP x, bool names){
   try {
     return cpp_lengths(x, names);
@@ -265,6 +274,7 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_unnested_length",    (DL_FUNC)api_unnested_length);
   R_RegisterCCallable("cheapr", "api_drop_null",    (DL_FUNC)api_drop_null);
   R_RegisterCCallable("cheapr", "api_list_as_df",    (DL_FUNC)api_list_as_df);
+  R_RegisterCCallable("cheapr", "api_new_df",    (DL_FUNC)api_new_df);
   R_RegisterCCallable("cheapr", "api_lengths",    (DL_FUNC)api_lengths);
   R_RegisterCCallable("cheapr", "api_df_slice",    (DL_FUNC)api_df_slice);
   R_RegisterCCallable("cheapr", "api_df_select",    (DL_FUNC)api_df_select);

@@ -144,6 +144,10 @@ cpp_list_as_df <- function(x) {
   .Call(`_cheapr_cpp_list_as_df`, x)
 }
 
+cpp_new_df <- function(x, nrows, recycle, name_repair) {
+  .Call(`_cheapr_cpp_new_df`, x, nrows, recycle, name_repair)
+}
+
 cpp_df_assign_cols <- function(x, cols) {
   .Call(`_cheapr_cpp_df_assign_cols`, x, cols)
 }

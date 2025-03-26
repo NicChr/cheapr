@@ -197,6 +197,7 @@ R_xlen_t vec_length(SEXP x);
 SEXP r_address(SEXP x);
 R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive);
 SEXP cpp_list_as_df(SEXP x);
+SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair);
 SEXP cpp_is_na(SEXP x);
 SEXP cpp_which_na(SEXP x);
 SEXP cpp_which_not_na(SEXP x);

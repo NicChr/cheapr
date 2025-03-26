@@ -507,40 +507,43 @@ SEXP cpp_list_as_df(SEXP x) {
 
 // Can use in the future once I figure out how to re-write named_list() in C++
 
-// SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
-//
-//   int NP = 0;
-//
-//   SEXP out = SHIELD(shallow_copy(x)); ++NP;
-//
-//   if (recycle){
-//     SHIELD(out = cpp_recycle(out, nrows)); ++NP;
-//   }
-//
-//   SEXP row_names;
-//   if (Rf_isNull(nrows)){
-//     if (Rf_length(out) == 0){
-//       row_names = SHIELD(new_vec(INTSXP, 0)); ++NP;
-//     } else {
-//       row_names = SHIELD(create_df_row_names(vec_length(VECTOR_ELT(out, 0)))); ++NP;
-//     }
-//   } else {
-//     row_names = SHIELD(create_df_row_names(Rf_asInteger(nrows))); ++NP;
-//   }
-//
-//   SEXP out_names = SHIELD(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
-//   SHIELD(out_names = coerce_vec(out_names, STRSXP)); ++NP;
-//
-//   if (name_repair){
-//     SEXP sep = SHIELD(Rf_mkString("...")); ++NP;
-//     SHIELD(out_names = cpp_name_repair(out_names, sep)); ++NP;
-//   }
-//   Rf_setAttrib(out, R_NamesSymbol, out_names);
-//   Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-//   Rf_classgets(out, Rf_mkString("data.frame"));
-//   YIELD(NP);
-//   return out;
-// }
+[[cpp11::register]]
+SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
+
+  int NP = 0;
+
+  SEXP out = x;
+
+  if (recycle){
+    SHIELD(out = cpp_recycle(out, nrows)); ++NP;
+  }
+
+  SEXP row_names;
+
+  if (Rf_isNull(nrows)){
+    if (Rf_length(out) == 0){
+      row_names = SHIELD(new_vec(INTSXP, 0)); ++NP;
+    } else {
+      row_names = SHIELD(create_df_row_names(vec_length(VECTOR_ELT(out, 0)))); ++NP;
+    }
+  } else {
+    row_names = SHIELD(create_df_row_names(Rf_asInteger(nrows))); ++NP;
+  }
+
+  SEXP out_names = SHIELD(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
+  SHIELD(out_names = coerce_vec(out_names, STRSXP)); ++NP;
+
+  if (name_repair){
+    SEXP dup_sep = SHIELD(Rf_mkString("_")); ++NP;
+    SEXP empty_sep = SHIELD(Rf_mkString("col_")); ++NP;
+    SHIELD(out_names = cpp_name_repair(out_names, dup_sep, empty_sep)); ++NP;
+  }
+  Rf_setAttrib(out, R_NamesSymbol, out_names);
+  Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  Rf_classgets(out, Rf_mkString("data.frame"));
+  YIELD(NP);
+  return out;
+}
 
 // Multi-assign recycled variables to data frame
 
@@ -556,6 +559,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   SEXP col_names = SHIELD(Rf_getAttrib(cols, R_NamesSymbol)); ++NP;
 
   if (TYPEOF(cols) != VECSXP || Rf_isNull(col_names)){
+    YIELD(NP);
     Rf_error("`cols` must be a named list in %s", __func__);
   }
 

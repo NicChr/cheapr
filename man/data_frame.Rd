@@ -7,7 +7,7 @@
 \alias{unique_name_repair}
 \title{Cheap data frame utilities}
 \usage{
-new_df(..., .nrows = NULL, .recycle = FALSE, .name_repair = FALSE)
+new_df(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE)
 
 as_df(x)
 
@@ -22,10 +22,10 @@ unique_name_repair(x, dup_sep = "_", empty_sep = "_")
 Commonly used to initialise a 0-column data frame with rows.}
 
 \item{.recycle}{\verb{[logical(1)]} - Should arguments be recycled?
-Default is \code{FALSE}.}
+Default is \code{TRUE}.}
 
-\item{.name_repair}{\verb{[logical(1)]} - Should duplicate names be made unique?
-Default is \code{FALSE}.}
+\item{.name_repair}{\verb{[logical(1)]} - Should duplicate and empty names
+repaired and made unique? Default is \code{TRUE}.}
 
 \item{x}{An object to coerce to a \code{data.frame} or a character vector
 for \code{unique_name_repair()}.}
@@ -47,6 +47,6 @@ Cheap data frame utilities
 }
 \details{
 \code{fast_df()} is a very fast bare-bones version of \code{new_df()} that
-performs no checks and no recycling or name tidying.
-All variables must be named and of equal length.
+performs no checks and no recycling or name tidying, making it appropriate
+for very tight loops.
 }

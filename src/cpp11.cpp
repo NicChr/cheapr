@@ -260,6 +260,13 @@ extern "C" SEXP _cheapr_cpp_list_as_df(SEXP x) {
   END_CPP11
 }
 // lists.cpp
+SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair);
+extern "C" SEXP _cheapr_cpp_new_df(SEXP x, SEXP nrows, SEXP recycle, SEXP name_repair) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_new_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(nrows), cpp11::as_cpp<cpp11::decay_t<bool>>(recycle), cpp11::as_cpp<cpp11::decay_t<bool>>(name_repair)));
+  END_CPP11
+}
+// lists.cpp
 SEXP cpp_df_assign_cols(SEXP x, SEXP cols);
 extern "C" SEXP _cheapr_cpp_df_assign_cols(SEXP x, SEXP cols) {
   BEGIN_CPP11
@@ -779,6 +786,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},
     {"_cheapr_cpp_na_init",                 (DL_FUNC) &_cheapr_cpp_na_init,                 2},
     {"_cheapr_cpp_name_repair",             (DL_FUNC) &_cheapr_cpp_name_repair,             3},
+    {"_cheapr_cpp_new_df",                  (DL_FUNC) &_cheapr_cpp_new_df,                  4},
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},

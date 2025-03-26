@@ -94,6 +94,13 @@ list_as_df(SEXP x){
 }
 
 static inline SEXP
+new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
+  typedef SEXP fn_t(SEXP, SEXP, bool, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_new_df");
+  return fn(x, nrows, recycle, name_repair);
+}
+
+static inline SEXP
 lengths(SEXP x, bool names){
   typedef SEXP fn_t(SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_lengths");

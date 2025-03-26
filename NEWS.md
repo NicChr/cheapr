@@ -12,6 +12,13 @@ only in `cheapr_c` and `sset`.
 
 - More exported C functions.
 
+### Changes
+
+- `new_df` has been mostly re-written in C and now recycles and 
+repairs names by default. It also doesn't deparse expressions into strings
+where names don't exist and now simply replaces those object names with 
+`col_i` where i is the ith column containing that object.
+
 ### Deprecations
 
 - The `keep_attrs` arg of `sset_df` has been removed. Use the internal 
