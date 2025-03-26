@@ -164,6 +164,17 @@ inline bool is_bare_df(SEXP x){
     std::strcmp(CHAR(STRING_ELT(Rf_getAttrib(x, R_ClassSymbol), 0)), "data.frame") == 0;
 }
 
+inline bool is_bare_tbl(SEXP x){
+  SEXP xclass = SHIELD(Rf_getAttrib(x, R_ClassSymbol));
+
+  bool out = Rf_length(xclass) == 3 &&
+    std::strcmp(CHAR(STRING_ELT(xclass, 0)), "tbl_df") == 0 &&
+    std::strcmp(CHAR(STRING_ELT(xclass, 1)), "tbl") == 0 &&
+  std::strcmp(CHAR(STRING_ELT(xclass, 2)), "data.frame") == 0;
+  YIELD(1);
+  return out;
+}
+
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function base_sset = cpp11::package("base")["["];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];

@@ -11,7 +11,19 @@
 SEXP fast_df_reconstruct(SEXP x, SEXP source){
   if (is_bare_df(source)){
     return x;
+  } else if (is_bare_tbl(source)){
+
+    // Only copy the class if source is a plain tbl
+
+    SEXP out = SHIELD(Rf_shallow_duplicate(x));
+
+    Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
+    YIELD(1);
+    return out;
   } else {
+
+    // Method dispatch, users can write `reconstruct` methods which
+    // this will use
     return cheapr_reconstruct(x, source);
   }
 }
