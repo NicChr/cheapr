@@ -3,9 +3,7 @@
 \name{sset}
 \alias{sset}
 \alias{sset.data.frame}
-\alias{sset.tbl_df}
 \alias{sset.POSIXlt}
-\alias{sset.data.table}
 \alias{sset.sf}
 \title{Cheaper subset}
 \usage{
@@ -13,11 +11,7 @@ sset(x, ...)
 
 \method{sset}{data.frame}(x, i = NULL, j = NULL, ...)
 
-\method{sset}{tbl_df}(x, i = NULL, j = NULL, ...)
-
 \method{sset}{POSIXlt}(x, i = NULL, j = NULL, ...)
-
-\method{sset}{data.table}(x, i = NULL, j = NULL, ...)
 
 \method{sset}{sf}(x, i = NULL, j = NULL, ...)
 }

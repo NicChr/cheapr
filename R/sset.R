@@ -82,14 +82,7 @@ sset.default <- function(x, i, ...){
 #' @rdname sset
 #' @export
 sset.data.frame <- function(x, i = NULL, j = NULL, ...){
-  .Call(`_cheapr_cpp_df_subset`, x, i, j, FALSE)
-}
-#' @rdname sset
-#' @export
-sset.tbl_df <- function(x, i = NULL, j = NULL, ...){
-  out <- sset_df(x, i , j)
-  class(out) <- c("tbl_df", "tbl", "data.frame")
-  out
+  .Call(`_cheapr_cpp_df_subset`, x, i, j)
 }
 #' @rdname sset
 #' @export
@@ -110,26 +103,6 @@ sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
     set_attr(out, "balanced", TRUE)
   } else {
     set_attr(out, "balanced", NA)
-  }
-  out
-}
-#' @rdname sset
-#' @export
-sset.data.table <- function(x, i = NULL, j = NULL, ...){
-  out <- sset_df(x, i , j)
-  set_attrs(out, list(
-    class = class(x),
-    .internal.selfref = attributes(x)[[".internal.selfref"]]
-  ), add = TRUE)
-  dt_alloc <- tryCatch(get("setalloccol",
-                           asNamespace("data.table"),
-                           inherits = FALSE),
-                       error = function(e) return(".r.error"))
-  # Reserve sufficient space as data.table::truelength(out) at this point is 0
-  if (is.character(dt_alloc) && length(dt_alloc) == 1 && dt_alloc == ".r.error"){
-    out <- collapse::qDT(out)
-  } else {
-    dt_alloc(out, n = getOption("datatable.alloccol", 1024L))
   }
   out
 }

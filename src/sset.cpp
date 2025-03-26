@@ -1265,7 +1265,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
 // Subset that does both selecting and slicing
 
 [[cpp11::register]]
-SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
+SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
 
   if (!is_df(x)){
     Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
@@ -1278,14 +1278,6 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs){
   SEXP out = SHIELD(cpp_df_select(x, j)); ++NP;
   // Subset rows
   SHIELD(out = cpp_df_slice(out, i, true)); ++NP;
-
-  if (keep_attrs){
-    SEXP names = SHIELD(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
-    SEXP row_names = SHIELD(Rf_getAttrib(out, R_RowNamesSymbol)); ++NP;
-    Rf_copyMostAttrib(x, out);
-    Rf_setAttrib(out, R_NamesSymbol, names);
-    Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  }
   YIELD(NP);
   return out;
 }

@@ -144,10 +144,6 @@ cpp_df_assign_cols <- function(x, cols) {
   .Call(`_cheapr_cpp_df_assign_cols`, x, cols)
 }
 
-cpp_df_reconstruct <- function(data, from, keep_attrs) {
-  .Call(`_cheapr_cpp_df_reconstruct`, data, from, keep_attrs)
-}
-
 cpp_num_na <- function(x, recursive) {
   .Call(`_cheapr_cpp_num_na`, x, recursive)
 }
@@ -328,8 +324,8 @@ cpp_df_slice <- function(x, indices, check) {
   .Call(`_cheapr_cpp_df_slice`, x, indices, check)
 }
 
-cpp_df_subset <- function(x, i, j, keep_attrs) {
-  .Call(`_cheapr_cpp_df_subset`, x, i, j, keep_attrs)
+cpp_df_subset <- function(x, i, j) {
+  .Call(`_cheapr_cpp_df_subset`, x, i, j)
 }
 
 cpp_is_simple_atomic_vec <- function(x) {
@@ -382,6 +378,10 @@ cpp_growth_rate <- function(x) {
 
 cpp_name_repair <- function(names, dup_sep, empty_sep) {
   .Call(`_cheapr_cpp_name_repair`, names, dup_sep, empty_sep)
+}
+
+cpp_reconstruct <- function(target, source, target_attr_names, source_attr_names) {
+  .Call(`_cheapr_cpp_reconstruct`, target, source, target_attr_names, source_attr_names)
 }
 
 cpp_which_ <- function(x, invert) {

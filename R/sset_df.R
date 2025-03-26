@@ -7,8 +7,6 @@
 #' @param x A `data.frame`.
 #' @param i Rows - If `NULL` all rows are returned.
 #' @param j Cols - If `NULL` all cols are returned.
-#' @param keep_attrs Should all attributes (except for `names` and `row.names`)
-#' be kept as is? The default is `FALSE` which returns a plain data frame.
 #'
 #' @returns
 #' A data frame subsetted on rows `i` and cols `j`.
@@ -17,11 +15,14 @@
 #' If you are unsure which functions to use then it is recommended to use
 #' `sset()`. These low-overhead helpers do not work well with data.tables
 #' but should work well with basic data frames and basic tibbles.
+#' The only real difference between `sset_df` and `sset_row`/`sset_col` is that
+#' `sset_df` attempts to return a similar type of data frame as the input,
+#' whereas `sset_row` and `sset_col` always return a plain data frame.
 #'
 #' @rdname sset_df
 #' @export
-sset_df <- function(x, i = NULL, j = NULL, keep_attrs = FALSE){
-  .Call(`_cheapr_cpp_df_subset`, x, i, j, keep_attrs)
+sset_df <- function(x, i = NULL, j = NULL){
+  .Call(`_cheapr_cpp_df_subset`, x, i, j)
 }
 #' @rdname sset_df
 #' @export
@@ -36,7 +37,12 @@ sset_col <- function(x, j = NULL){
 
 # Keep this for fastplyr otherwise it breaks dependency
 df_select <- function(x, j = NULL){
-  sset_df(x, i = NULL, j = missing(j) %!||% j, keep_attrs = TRUE)
+  .Call(
+    `_cheapr_cpp_reconstruct`,
+    .Call(`_cheapr_cpp_df_subset`, x, i = NULL, missing(j) %!||% j),
+    x,
+    "names", val_rm(names(attributes(x)), "names")
+  )
 }
 
 # Kept for reverse compatibility reasons

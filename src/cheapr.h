@@ -159,6 +159,11 @@ inline SEXP scalar_lgl(bool x){
   return out;
 }
 
+inline bool is_bare_df(SEXP x){
+  return Rf_length(Rf_getAttrib(x, R_ClassSymbol)) == 1 &&
+    std::strcmp(CHAR(STRING_ELT(Rf_getAttrib(x, R_ClassSymbol), 0)), "data.frame") == 0;
+}
+
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function base_sset = cpp11::package("base")["["];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
@@ -170,6 +175,7 @@ inline cpp11::function base_as_character = cpp11::package("base")["as.character"
 inline cpp11::function base_paste0 = cpp11::package("base")["paste0"];
 inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
 inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
+inline cpp11::function cheapr_reconstruct = cpp11::package("cheapr")["reconstruct"];
 
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
@@ -225,5 +231,9 @@ SEXP cpp_unique(SEXP x);
 SEXP cpp_setdiff(SEXP x, SEXP y);
 SEXP get_ptype(SEXP x);
 SEXP get_list_element(SEXP list, const char *str);
+SEXP list_c2(SEXP x, SEXP y);
+SEXP c2(SEXP x, SEXP y);
+SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names);
+SEXP fast_df_reconstruct(SEXP x, SEXP source);
 
 #endif

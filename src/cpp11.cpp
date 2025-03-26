@@ -259,13 +259,6 @@ extern "C" SEXP _cheapr_cpp_df_assign_cols(SEXP x, SEXP cols) {
     return cpp11::as_sexp(cpp_df_assign_cols(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(cols)));
   END_CPP11
 }
-// lists.cpp
-SEXP cpp_df_reconstruct(SEXP data, SEXP from, bool keep_attrs);
-extern "C" SEXP _cheapr_cpp_df_reconstruct(SEXP data, SEXP from, SEXP keep_attrs) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_df_reconstruct(cpp11::as_cpp<cpp11::decay_t<SEXP>>(data), cpp11::as_cpp<cpp11::decay_t<SEXP>>(from), cpp11::as_cpp<cpp11::decay_t<bool>>(keep_attrs)));
-  END_CPP11
-}
 // nas.cpp
 SEXP cpp_num_na(SEXP x, bool recursive);
 extern "C" SEXP _cheapr_cpp_num_na(SEXP x, SEXP recursive) {
@@ -582,10 +575,10 @@ extern "C" SEXP _cheapr_cpp_df_slice(SEXP x, SEXP indices, SEXP check) {
   END_CPP11
 }
 // sset.cpp
-SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool keep_attrs);
-extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j, SEXP keep_attrs) {
+SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j);
+extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_df_subset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j), cpp11::as_cpp<cpp11::decay_t<bool>>(keep_attrs)));
+    return cpp11::as_sexp(cpp_df_subset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j)));
   END_CPP11
 }
 // utils.cpp
@@ -680,6 +673,13 @@ extern "C" SEXP _cheapr_cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep
     return cpp11::as_sexp(cpp_name_repair(cpp11::as_cpp<cpp11::decay_t<SEXP>>(names), cpp11::as_cpp<cpp11::decay_t<SEXP>>(dup_sep), cpp11::as_cpp<cpp11::decay_t<SEXP>>(empty_sep)));
   END_CPP11
 }
+// utils.cpp
+SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names);
+extern "C" SEXP _cheapr_cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_reconstruct(cpp11::as_cpp<cpp11::decay_t<SEXP>>(target), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target_attr_names), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source_attr_names)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -735,11 +735,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_dbl_sequence",            (DL_FUNC) &_cheapr_cpp_dbl_sequence,            3},
     {"_cheapr_cpp_df_assign_cols",          (DL_FUNC) &_cheapr_cpp_df_assign_cols,          2},
     {"_cheapr_cpp_df_col_na_counts",        (DL_FUNC) &_cheapr_cpp_df_col_na_counts,        1},
-    {"_cheapr_cpp_df_reconstruct",          (DL_FUNC) &_cheapr_cpp_df_reconstruct,          3},
     {"_cheapr_cpp_df_row_na_counts",        (DL_FUNC) &_cheapr_cpp_df_row_na_counts,        1},
     {"_cheapr_cpp_df_select",               (DL_FUNC) &_cheapr_cpp_df_select,               2},
     {"_cheapr_cpp_df_slice",                (DL_FUNC) &_cheapr_cpp_df_slice,                3},
-    {"_cheapr_cpp_df_subset",               (DL_FUNC) &_cheapr_cpp_df_subset,               4},
+    {"_cheapr_cpp_df_subset",               (DL_FUNC) &_cheapr_cpp_df_subset,               3},
     {"_cheapr_cpp_drop_null",               (DL_FUNC) &_cheapr_cpp_drop_null,               2},
     {"_cheapr_cpp_fixed_width_breaks",      (DL_FUNC) &_cheapr_cpp_fixed_width_breaks,      6},
     {"_cheapr_cpp_format_numeric_as_int64", (DL_FUNC) &_cheapr_cpp_format_numeric_as_int64, 1},
@@ -775,6 +774,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
+    {"_cheapr_cpp_reconstruct",             (DL_FUNC) &_cheapr_cpp_reconstruct,             4},
     {"_cheapr_cpp_recycle",                 (DL_FUNC) &_cheapr_cpp_recycle,                 2},
     {"_cheapr_cpp_rep_len",                 (DL_FUNC) &_cheapr_cpp_rep_len,                 2},
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},

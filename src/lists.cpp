@@ -618,114 +618,116 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   return out;
 }
 
-
-[[cpp11::register]]
-SEXP cpp_df_reconstruct(SEXP data, SEXP from, bool keep_attrs){
-  if (!is_df(data)){
-    Rf_error("`data` must be a `data.frame`");
-  }
-  if (!is_df(from)){
-    Rf_error("`from` must be a `data.frame`");
-  }
-
-  // Create shallow copies so that we can manipulate attributes freely
-
-  SEXP target = SHIELD(shallow_copy(data));
-  SEXP source = SHIELD(shallow_copy(from));
-
-  // The below strips any leftover attributes from `data`,
-  // I wonder if these should be kept
-
-  cpp_set_rm_attributes(target);
-
-  if (keep_attrs){
-    Rf_setAttrib(source, R_NamesSymbol, R_NilValue);
-    Rf_setAttrib(source, R_ClassSymbol, R_NilValue);
-    Rf_setAttrib(source, R_RowNamesSymbol, R_NilValue);
-    SHALLOW_DUPLICATE_ATTRIB(target, source);
-  }
-
-  // Re-add original data attributes as these cannot be changed
-  Rf_setAttrib(target, R_NamesSymbol, Rf_getAttrib(data, R_NamesSymbol));
-  Rf_setAttrib(target, R_ClassSymbol, Rf_getAttrib(from, R_ClassSymbol));
-  Rf_setAttrib(target, R_RowNamesSymbol, create_df_row_names(df_nrow(data)));
-  YIELD(2);
-  return target;
-}
-
-// void cpp_check_nested_lengths(SEXP x, SEXP y){
-//   R_xlen_t n1 = Rf_xlength(x);
-//   R_xlen_t n2 = Rf_xlength(y);
-//   if (n1 != n2){
-//     Rf_error("x and y must have the same length");
-//   }
-//   if (Rf_isVectorList(x) && Rf_isVectorList(y)){
-//     R_xlen_t n3, n4;
-//     const SEXP *p_x = VECTOR_PTR_RO(x);
-//     const SEXP *p_y = VECTOR_PTR_RO(y);
+// SEXP cpp_df_reconstruct(SEXP data, SEXP from){
+//   int NP = 0;
 //
-//     for (R_xlen_t i = 0; i < n1; ++i){
-//       bool xlist = Rf_isVectorList(p_x[i]);
-//       bool ylist = Rf_isVectorList(p_y[i]);
-//       int both_lists = xlist + ylist;
-//       if (both_lists == 1){
-//         Rf_error("x and y must have identical nested lengths");
-//       } else if (both_lists == 2){
-//         // Recurse back through the same function at this point
-//         cpp_check_nested_lengths(p_x[i], p_y[i]);
-//       } else {
-//         n3 = Rf_xlength(p_x[i]);
-//         n4 = Rf_xlength(p_y[i]);
-//         if (n3 != n4){
-//           Rf_error("x and y must have identical nested lengths");
-//         }
-//       }
-//     }
-//   } else if (!(!Rf_isVectorList(x) && !Rf_isVectorList(y))){
-//     Rf_error("x and y must either be both lists or both not lists");
+//   if (!is_df(data)){
+//     Rf_error("`data` must be a `data.frame` in %s", __func__);
 //   }
+//   if (!is_df(from)){
+//     Rf_error("`from` must be a `data.frame` in %s", __func__);
+//   }
+//
+//   SEXP static_data_attrs = SHIELD(new_vec(STRSXP, 2)); ++NP;
+//   SET_STRING_ELT(static_data_attrs, 0, Rf_mkChar("names"));
+//   SET_STRING_ELT(static_data_attrs, 1, Rf_mkChar("row.names"));
+//
+//   SEXP static_from_attrs = SHIELD(Rf_mkString("class")); ++NP;
+//   SEXP target = SHIELD(cpp_reconstruct(data, from, static_data_attrs, static_from_attrs)); ++NP;
+//
+//   if (Rf_inherits(from, "data.table") && Rf_inherits(target, "data.table")){
+//     SHIELD(target = cpp11::package("cheapr")["collapse_as_dt"](target)); ++NP;
+//     SEXP sorted_sym = SHIELD(Rf_install("sorted")); ++NP;
+//     Rf_setAttrib(target, sorted_sym, Rf_getAttrib(data, sorted_sym));
+//   }
+//   YIELD(NP);
+//   return target;
+// }
+// SEXP cpp_df_reconstruct(SEXP data, SEXP from, SEXP data_attr_names, SEXP from_attr_names){
+//   int NP = 0;
+//   SEXP static_data_attrs = SHIELD(new_vec(STRSXP, 2)); ++NP;
+//   SET_STRING_ELT(static_data_attrs, 0, Rf_mkChar("names"));
+//   SET_STRING_ELT(static_data_attrs, 1, Rf_mkChar("row.names"));
+//
+//   SHIELD(data_attr_names = c2(static_data_attrs, data_attr_names)); ++NP;
+//   SHIELD(from_attr_names = cpp_setdiff(from_attr_names, static_data_attrs)); ++NP;
+//
+//   SEXP target = SHIELD(cpp_reconstruct(data, from, data_attr_names, from_attr_names)); ++NP;
+//
+//   if (Rf_isNull(Rf_getAttrib(target, R_ClassSymbol))){
+//     SEXP df_class = SHIELD(Rf_mkString("data.frame")); ++NP;
+//     Rf_setAttrib(target, R_ClassSymbol, df_class);
+//   }
+//
+//   if (Rf_inherits(from, "data.table") && Rf_inherits(target, "data.table")){
+//     SHIELD(target = cpp11::package("cheapr")["collapse_as_dt"](target)); ++NP;
+//   }
+//
+//   YIELD(NP);
+//   return target;
 // }
 
-// #define cheapr_cast_temp(x, y) cpp11::function cpp11::package("cheapr")["cheapr_cast"];
-
-// SEXP cpp_cast_common(SEXP x, SEXP y){
-//   // All length checks will have been done above..
-//   // Maybe inefficient but makes things simpler
-//   R_xlen_t n = Rf_xlength(x);
-//   cpp11::function cheapr_cast = cpp11::package("cheapr")["cheapr_cast"];
-//   int n_prot = 0;
-//   SEXP out = SHIELD(new_vec(VECSXP, 2));
-//   ++n_prot;
-//   if (Rf_isVectorList(x) && Rf_isVectorList(y)){
-//     // SEXP a = SHIELD(cpp_shallow_copy(x));
-//     SEXP a = SHIELD(Rf_shallow_duplicate(x));
-//     ++n_prot;
-//     SEXP b = SHIELD(Rf_shallow_duplicate(y));
-//     // SEXP b = SHIELD(cpp_shallow_copy(y));
-//     ++n_prot;
-//     const SEXP *p_x = VECTOR_PTR_RO(a);
-//     const SEXP *p_y = VECTOR_PTR_RO(b);
+// SEXP cpp_df_reconstruct(SEXP data, SEXP from, SEXP data_attr_names, SEXP from_attr_names){
+//   int NP = 0;
 //
-//     for (R_xlen_t i = 0; i < n; ++i){
-//       bool xlist = Rf_isVectorList(p_x[i]);
-//       bool ylist = Rf_isVectorList(p_y[i]);
-//       if (xlist && ylist){
-//         // Recurse back through the same function at this point
-//         SEXP temp = SHIELD(cpp_cast_common(p_x[i], p_y[i]));
-//         ++n_prot;
-//         SET_VECTOR_ELT(a, i, VECTOR_ELT(temp, 0));
-//         SET_VECTOR_ELT(b, i, VECTOR_ELT(temp, 1));
-//       } else {
-//         SET_VECTOR_ELT(a, i, cheapr_cast(p_x[i], p_y[i]));
-//         SET_VECTOR_ELT(b, i, cheapr_cast(p_y[i], p_x[i]));
-//       }
-//     }
-//     SET_VECTOR_ELT(out, 0, a);
-//     SET_VECTOR_ELT(out, 1, b);
-//   } else {
-//     SET_VECTOR_ELT(out, 0, cheapr_cast(x, y));
-//     SET_VECTOR_ELT(out, 1, cheapr_cast(y, x));
+//   if (!is_df(data)){
+//     Rf_error("`data` must be a `data.frame` in %s", __func__);
 //   }
-//   YIELD(n_prot);
-//   return out;
+//   if (!is_df(from)){
+//     Rf_error("`from` must be a `data.frame` in %s", __func__);
+//   }
+//
+//   if (TYPEOF(data_attr_names) != STRSXP){
+//     Rf_error("`data_attr_names` must be a character vector in %s", __func__);
+//   }
+//
+//   if (TYPEOF(from_attr_names) != STRSXP){
+//     Rf_error("`from_attr_names` must be a character vector in %s", __func__);
+//   }
+//
+//   // Create shallow copies so that we can manipulate attributes freely
+//
+//   SEXP target = SHIELD(shallow_copy(data)); ++NP;
+//   SEXP source = SHIELD(shallow_copy(from)); ++NP;
+//
+//   SEXP data_attrs = SHIELD(coerce_vec(ATTRIB(target), VECSXP)); ++NP;
+//   SEXP from_attrs = SHIELD(coerce_vec(ATTRIB(source), VECSXP)); ++NP;
+//
+//   SHIELD(data_attrs = cpp_sset(data_attrs, data_attr_names)); ++NP;
+//   SHIELD(data_attrs = cpp_drop_null(data_attrs, false)); ++NP;
+//   SHIELD(from_attrs = cpp_sset(from_attrs, from_attr_names)); ++NP;
+//   SHIELD(from_attrs = cpp_drop_null(from_attrs, false)); ++NP;
+//
+//   SEXP all_attrs = SHIELD(list_c2(data_attrs, from_attrs)); ++NP;
+//
+//   // User cannot choose these two attributes
+//   SEXP static_attrs = SHIELD(new_vec(STRSXP, 2)); ++NP;
+//   SET_STRING_ELT(static_attrs, 0, Rf_mkChar("names"));
+//   SET_STRING_ELT(static_attrs, 1, Rf_mkChar("row.names"));
+//
+//   SEXP attrs_to_keep = SHIELD(
+//     cpp_setdiff(
+//       Rf_getAttrib(all_attrs, R_NamesSymbol), static_attrs
+//     )
+//   ); ++NP;
+//
+//   if (Rf_length(attrs_to_keep) != Rf_length(all_attrs)){
+//     SHIELD(all_attrs = cpp_sset(all_attrs, attrs_to_keep)); ++NP;
+//   }
+//
+//   // Clear attributes
+//   cpp_set_rm_attributes(target);
+//
+//   // Static attributes
+//   Rf_setAttrib(target, R_NamesSymbol, Rf_getAttrib(data, R_NamesSymbol));
+//   Rf_setAttrib(target, R_ClassSymbol, Rf_mkString("data.frame"));
+//   Rf_setAttrib(target, R_RowNamesSymbol, create_df_row_names(df_nrow(data)));
+//
+//   cpp_set_add_attributes(target, all_attrs, true);
+//
+//   if (Rf_inherits(from, "data.table") && Rf_inherits(target, "data.table")){
+//     SHIELD(target = cpp11::package("cheapr")["collapse_as_dt"](target)); ++NP;
+//   }
+//   YIELD(NP);
+//   return target;
 // }

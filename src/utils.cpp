@@ -750,3 +750,43 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   YIELD(NP);
   return out;
 }
+
+[[cpp11::register]]
+SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names){
+
+  SHIELD(target = Rf_shallow_duplicate(target));
+  SHIELD(source = Rf_shallow_duplicate(source));
+
+  SEXP target_attrs = SHIELD(coerce_vec(ATTRIB(target), VECSXP));
+  SEXP source_attrs = SHIELD(coerce_vec(ATTRIB(source), VECSXP));
+
+  SEXP target_names = SHIELD(Rf_getAttrib(target_attrs, R_NamesSymbol));
+  SEXP source_names = SHIELD(Rf_getAttrib(source_attrs, R_NamesSymbol));
+
+
+  // Start from clean slate - no attributes
+  cpp_set_rm_attributes(target);
+
+  for (int i = 0; i < Rf_length(target_attr_names); ++i){
+    for (int j = 0; j < Rf_length(target_attrs); ++j){
+      if (std::strcmp(CHAR(STRING_ELT(target_attr_names, i)), CHAR(STRING_ELT(target_names, j))) == 0){
+        Rf_setAttrib(target, Rf_installChar(STRING_ELT(target_attr_names, i)),
+                     VECTOR_ELT(target_attrs, j));
+        break;
+      }
+    }
+  }
+
+  for (int i = 0; i < Rf_length(source_attr_names); ++i){
+    for (int j = 0; j < Rf_length(source_attrs); ++j){
+      if (std::strcmp(CHAR(STRING_ELT(source_attr_names, i)), CHAR(STRING_ELT(source_names, j))) == 0){
+        Rf_setAttrib(target, Rf_installChar(STRING_ELT(source_attr_names, i)),
+                     VECTOR_ELT(source_attrs, j));
+        break;
+      }
+    }
+  }
+
+  YIELD(6);
+  return target;
+}

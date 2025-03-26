@@ -97,6 +97,10 @@ unique_name_repair <- function(x, dup_sep = "_", empty_sep = "_"){
   cpp_name_repair(x, dup_sep, empty_sep)
 }
 
+# df_reconstruct <- function(data, template, data_attrs_keep = "", template_attrs_keep = "class"){
+#   cpp_df_reconstruct(data, template, data_attrs_keep, template_attrs_keep)
+# }
+
 # df_reconstruct <- function(data, template, ...){
 #   UseMethod("df_reconstruct", template)
 # }

@@ -6,6 +6,16 @@
 //   R_PreserveObject(CHEAPR_ZERO);  // Protect from garbage collection
 // }
 
+// Helper to avoid repeated calls to R
+
+SEXP fast_df_reconstruct(SEXP x, SEXP source){
+  if (is_bare_df(source)){
+    return x;
+  } else {
+    return cheapr_reconstruct(x, source);
+  }
+}
+
 [[cpp11::register]]
 SEXP cpp_rep_len(SEXP x, int length){
   int out_size = length;
@@ -24,7 +34,8 @@ SEXP cpp_rep_len(SEXP x, int length){
     Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
     SHIELD(out = cpp_list_as_df(out));
     Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
-    YIELD(2);
+    SHIELD(out = fast_df_reconstruct(out, x));
+    YIELD(3);
     return out;
   } else if (is_simple_vec(x)){
 
@@ -435,6 +446,31 @@ SEXP list_c(SEXP x){
   return out;
 }
 
+// Helper to concatenate 2 lists
+
+SEXP list_c2(SEXP x, SEXP y){
+  SEXP temp = SHIELD(new_vec(VECSXP, 2));
+
+  SET_VECTOR_ELT(temp, 0, x);
+  SET_VECTOR_ELT(temp, 1, y);
+  SEXP out = SHIELD(list_c(temp));
+
+  YIELD(2);
+  return out;
+}
+
+// Helper to concatenate two vectors
+SEXP c2(SEXP x, SEXP y){
+  SEXP temp = SHIELD(new_vec(VECSXP, 2));
+
+  SET_VECTOR_ELT(temp, 0, x);
+  SET_VECTOR_ELT(temp, 1, y);
+  SEXP out = SHIELD(cpp_c(temp));
+
+  YIELD(2);
+  return out;
+}
+
 // Concatenate a list of data frames
 SEXP cpp_df_c(SEXP x){
 
@@ -458,6 +494,8 @@ SEXP cpp_df_c(SEXP x){
   if (!is_df(df)){
     YIELD(NP); Rf_error("Can't combine data frames with non data frames");
   }
+
+  SEXP df_template = df;
 
   SEXP frames = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
   SET_VECTOR_ELT(frames, 0, df);
@@ -532,6 +570,7 @@ SEXP cpp_df_c(SEXP x){
   SHIELD(out = cpp_list_as_df(out)); ++NP;
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   Rf_namesgets(out, names);
+  SHIELD(out = fast_df_reconstruct(out, df_template)); ++NP;
   YIELD(NP);
   return out;
 }

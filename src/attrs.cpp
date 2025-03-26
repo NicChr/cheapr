@@ -38,8 +38,12 @@ SEXP cpp_set_rm_attr(SEXP x, SEXP which) {
 [[cpp11::register]]
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
   int NP = 0;
-  SEXP attrs = SHIELD(Rf_isPairList(attributes) ? coerce_vec(attributes, VECSXP) : attributes);
-  ++NP;
+  SEXP attrs;
+  if (Rf_isPairList(attributes)){
+    attrs = SHIELD(coerce_vec(attributes, VECSXP)); ++NP;
+  } else {
+   attrs = attributes;
+  }
   int n = Rf_length(attrs);
   bool attrs_are_a_list = TYPEOF(attrs) == VECSXP;
   if (Rf_isNull(attrs) ||
