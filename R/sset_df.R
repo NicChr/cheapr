@@ -37,10 +37,8 @@ sset_col <- function(x, j = NULL){
 
 # Keep this for fastplyr otherwise it breaks dependency
 df_select <- function(x, j = NULL){
-  .Call(
-    `_cheapr_cpp_reconstruct`,
-    .Call(`_cheapr_cpp_df_subset`, x, i = NULL, missing(j) %!||% j),
-    x,
+  cpp_reconstruct(
+    sset_col(x, missing(j) %!||% j), x,
     "names", val_rm(names(attributes(x)), "names")
   )
 }

@@ -109,15 +109,14 @@ sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
 #' @rdname sset
 #' @export
 sset.sf <- function(x, i = NULL, j = NULL, ...){
-  out <- sset_df(x, i , j)
-  source_attrs <- attributes(x)
-  source_nms <- names(source_attrs)
-  attrs_to_keep <- source_attrs[setdiff_(source_nms, c("names", "row.names"))]
-  set_attrs(out, attrs_to_keep, add = TRUE)
+  out <- sset_df(x, i, j)
+  cpp_reconstruct(
+    out, x, c("names", "row.names"), cpp_setdiff(names(attributes(x)), c("names", "row.names"))
+  )
 }
 #' @export
 sset.vctrs_rcrd <- function(x, i = NULL, ...){
   out <- sset_row(list_as_df(x), i)
-  cpp_shallow_duplicate_attrs(x, out)
+  attributes(out) <- attributes(x)
   out
 }

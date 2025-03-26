@@ -1278,6 +1278,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
   SEXP out = SHIELD(cpp_df_select(x, j)); ++NP;
   // Subset rows
   SHIELD(out = cpp_df_slice(out, i, true)); ++NP;
+  SHIELD(out = fast_df_reconstruct(out, x)); ++NP;
   YIELD(NP);
   return out;
 }

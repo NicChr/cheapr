@@ -1,12 +1,21 @@
 # cheapr (development version)
 
-- New function `cheapr_c` to concatenate vectors and data frame rows together
-fast and safely.
+### New functions
+
+- `cheapr_c` to concatenate vectors and data frame rows together fast and safely.
+
+- `reconstruct` as a method to allow users to write methods to restore objects
+using a template. Currently only data frames are being reconstructed and 
+only in `cheapr_c` and `sset`.
+
+- `list_assign` for fast assigning multiple vectors to a list.
 
 - More exported C functions.
 
-- New function `list_assign` for assigning multiple vectors to an already
-existing list.
+### Deprecations
+
+- The `keep_attrs` arg of `sset_df` has been removed. Use the internal 
+`cpp_reconstruct` or a custom solution to keep all attributes of `x`.
 
 # cheapr 1.1.0
 
