@@ -34,24 +34,6 @@ api_is_compact_seq(SEXP x) {
 }
 
 SEXP
-api_compact_seq_data(SEXP x) {
-  try {
-    return compact_seq_data(x);
-  } catch (...) {
-    return R_NilValue;
-  }
-}
-
-SEXP
-api_shallow_copy(SEXP x) {
-  try {
-    return shallow_copy(x);
-  } catch (...) {
-    return R_NilValue;
-  }
-}
-
-SEXP
 api_set_add_attrs(SEXP x, SEXP attributes, bool add){
   try {
     return cpp_set_add_attributes(x, attributes, add);
@@ -100,6 +82,24 @@ SEXP
 api_lengths(SEXP x, bool names){
   try {
     return cpp_lengths(x, names);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_list_assign(SEXP x, SEXP values){
+  try {
+    return cpp_list_assign(x, values);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_get_list_element(SEXP list, const char *str){
+  try {
+    return get_list_element(list, str);
   } catch (...) {
     return R_NilValue;
   }
@@ -285,9 +285,7 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_vec_length",    (DL_FUNC)api_vec_length);
   R_RegisterCCallable("cheapr", "api_r_address",    (DL_FUNC)api_r_address);
   R_RegisterCCallable("cheapr", "api_is_compact_seq",    (DL_FUNC)api_is_compact_seq);
-  R_RegisterCCallable("cheapr", "api_compact_seq_data",    (DL_FUNC)api_compact_seq_data);
   R_RegisterCCallable("cheapr", "api_create_df_row_names",    (DL_FUNC)api_create_df_row_names);
-  R_RegisterCCallable("cheapr", "api_shallow_copy",    (DL_FUNC)api_shallow_copy);
   R_RegisterCCallable("cheapr", "api_set_add_attrs",    (DL_FUNC)api_set_add_attrs);
   R_RegisterCCallable("cheapr", "api_set_rm_attrs",    (DL_FUNC)api_set_rm_attrs);
   R_RegisterCCallable("cheapr", "api_exclude_locs",    (DL_FUNC)api_exclude_locs);
@@ -296,6 +294,8 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_list_as_df",    (DL_FUNC)api_list_as_df);
   R_RegisterCCallable("cheapr", "api_new_df",    (DL_FUNC)api_new_df);
   R_RegisterCCallable("cheapr", "api_lengths",    (DL_FUNC)api_lengths);
+  R_RegisterCCallable("cheapr", "api_get_list_element",    (DL_FUNC)api_get_list_element);
+  R_RegisterCCallable("cheapr", "api_list_assign",    (DL_FUNC)api_list_assign);
   R_RegisterCCallable("cheapr", "api_df_slice",    (DL_FUNC)api_df_slice);
   R_RegisterCCallable("cheapr", "api_df_select",    (DL_FUNC)api_df_select);
   R_RegisterCCallable("cheapr", "api_sset",    (DL_FUNC)api_sset);

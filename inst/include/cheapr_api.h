@@ -31,20 +31,6 @@ is_compact_seq(SEXP x) {
 }
 
 static inline SEXP
-compact_seq_data(SEXP x) {
-  typedef SEXP fn_t(SEXP);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_compact_seq_data");
-  return fn(x);
-}
-
-static inline SEXP
-shallow_copy(SEXP x) {
-  typedef SEXP fn_t(SEXP);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_shallow_copy");
-  return fn(x);
-}
-
-static inline SEXP
 set_add_attrs(SEXP x, SEXP attributes, bool add) {
   typedef SEXP fn_t(SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_set_add_attrs");
@@ -84,6 +70,20 @@ lengths(SEXP x, bool names){
   typedef SEXP fn_t(SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_lengths");
   return fn(x, names);
+}
+
+static inline SEXP
+get_list_element(SEXP list, const char *str){
+  typedef SEXP fn_t(SEXP, const char);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_get_list_element");
+  return fn(list, *str);
+}
+
+static inline SEXP
+list_assign(SEXP x, SEXP values){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_list_assign");
+  return fn(x, values);
 }
 
 static inline SEXP

@@ -619,21 +619,20 @@ SEXP cpp_df_c(SEXP x){
 SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   int NP = 0;
 
+  // Important to recycle first to avoid incorrect size calculations
+
+  if (recycle){
+    SHIELD(x = cpp_recycle(x, R_NilValue)); ++NP;
+  }
+
   SEXP out = SHIELD(cpp_list_c(x)); ++NP;
 
-  // if (Rf_length(out) == 0 && Rf_length(x) != 0){
-  //   SEXP r_nrows = SHIELD(Rf_ScalarInteger(vec_length(VECTOR_ELT(x, 0)))); ++NP;
-  //   SHIELD(out = cpp_new_df(out, r_nrows, true, false)); ++NP;
-  // } else {
-  //   SHIELD(out = cpp_list_as_df(out)); ++NP;
-  // }
-
-  SEXP r_nrows = R_NilValue;
+  SEXP r_nrows = SHIELD(R_NilValue); ++NP;
   if (Rf_length(out) == 0 && Rf_length(x) != 0){
     SHIELD(r_nrows = Rf_ScalarInteger(vec_length(VECTOR_ELT(x, 0)))); ++NP;
   }
 
-  SHIELD(out = cpp_new_df(out, r_nrows, recycle, name_repair)); ++NP;
+  SHIELD(out = cpp_new_df(out, r_nrows, false, name_repair)); ++NP;
 
   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
     SHIELD(out = fast_df_reconstruct(out, VECTOR_ELT(x, 0))); ++NP;
