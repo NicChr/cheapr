@@ -38,13 +38,6 @@ compact_seq_data(SEXP x) {
 }
 
 static inline SEXP
-create_df_row_names(int x) {
-  typedef SEXP fn_t(int);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_create_df_row_names");
-  return fn(x);
-}
-
-static inline SEXP
 shallow_copy(SEXP x) {
   typedef SEXP fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_shallow_copy");
@@ -87,38 +80,10 @@ drop_null(SEXP l, bool always_shallow_copy) {
 }
 
 static inline SEXP
-list_as_df(SEXP x){
-  typedef SEXP fn_t(SEXP);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_list_as_df");
-  return fn(x);
-}
-
-static inline SEXP
-new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
-  typedef SEXP fn_t(SEXP, SEXP, bool, bool);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_new_df");
-  return fn(x, nrows, recycle, name_repair);
-}
-
-static inline SEXP
 lengths(SEXP x, bool names){
   typedef SEXP fn_t(SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_lengths");
   return fn(x, names);
-}
-
-static inline SEXP
-df_slice(SEXP x, SEXP indices, bool check){
-  typedef SEXP fn_t(SEXP, SEXP, bool);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_slice");
-  return fn(x, indices, check);
-}
-
-static inline SEXP
-df_select(SEXP x, SEXP locs){
-  typedef SEXP fn_t(SEXP, SEXP);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_select");
-  return fn(x, locs);
 }
 
 static inline SEXP
@@ -203,6 +168,57 @@ get_ptype(SEXP x){
   typedef SEXP fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_get_ptype");
   return fn(x);
+}
+
+// Data frame functions
+
+static inline SEXP
+create_df_row_names(int x) {
+  typedef SEXP fn_t(int);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_create_df_row_names");
+  return fn(x);
+}
+
+static inline SEXP
+list_as_df(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_list_as_df");
+  return fn(x);
+}
+
+static inline SEXP
+new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
+  typedef SEXP fn_t(SEXP, SEXP, bool, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_new_df");
+  return fn(x, nrows, recycle, name_repair);
+}
+
+static inline SEXP
+df_slice(SEXP x, SEXP indices, bool check){
+  typedef SEXP fn_t(SEXP, SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_slice");
+  return fn(x, indices, check);
+}
+
+static inline SEXP
+df_select(SEXP x, SEXP locs){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_select");
+  return fn(x, locs);
+}
+
+static inline SEXP
+df_assign_cols(SEXP x, SEXP cols){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_assign_cols");
+  return fn(x, cols);
+}
+
+static inline SEXP
+df_col_c(SEXP x, bool recycle, bool name_repair){
+  typedef SEXP fn_t(SEXP, bool, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_col_c");
+  return fn(x, recycle, name_repair);
 }
 
 }

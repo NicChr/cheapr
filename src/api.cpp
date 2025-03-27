@@ -43,15 +43,6 @@ api_compact_seq_data(SEXP x) {
 }
 
 SEXP
-api_create_df_row_names(int n) {
-  try {
-    return create_df_row_names(n);
-  } catch (...) {
-    return R_NilValue;
-  }
-}
-
-SEXP
 api_shallow_copy(SEXP x) {
   try {
     return shallow_copy(x);
@@ -106,45 +97,9 @@ api_drop_null(SEXP l, bool always_shallow_copy) {
 }
 
 SEXP
-api_list_as_df(SEXP x){
-  try {
-    return cpp_list_as_df(x);
-  } catch (...) {
-    return R_NilValue;
-  }
-}
-
-SEXP
-api_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
-  try {
-    return cpp_new_df(x, nrows, recycle, name_repair);
-  } catch (...) {
-    return R_NilValue;
-  }
-}
-
-SEXP
 api_lengths(SEXP x, bool names){
   try {
     return cpp_lengths(x, names);
-  } catch (...) {
-    return R_NilValue;
-  }
-}
-
-SEXP
-api_df_slice(SEXP x, SEXP indices, bool check){
-  try {
-    return cpp_df_slice(x, indices, check);
-  } catch (...) {
-    return R_NilValue;
-  }
-}
-
-SEXP
-api_df_select(SEXP x, SEXP locs){
-  try {
-    return cpp_df_select(x, locs);
   } catch (...) {
     return R_NilValue;
   }
@@ -258,6 +213,71 @@ api_get_ptype(SEXP x){
   }
 }
 
+// Data frame functions
+
+SEXP
+api_create_df_row_names(int n) {
+  try {
+    return create_df_row_names(n);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_list_as_df(SEXP x){
+  try {
+    return cpp_list_as_df(x);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
+  try {
+    return cpp_new_df(x, nrows, recycle, name_repair);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_df_slice(SEXP x, SEXP indices, bool check){
+  try {
+    return cpp_df_slice(x, indices, check);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_df_select(SEXP x, SEXP locs){
+  try {
+    return cpp_df_select(x, locs);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_df_assign_cols(SEXP x, SEXP cols){
+  try {
+    return cpp_df_assign_cols(x, cols);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_df_col_c(SEXP x, bool recycle, bool name_repair){
+  try {
+    return cpp_df_col_c(x, recycle, name_repair);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -290,4 +310,6 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_unique",    (DL_FUNC)api_unique);
   R_RegisterCCallable("cheapr", "api_setdiff",    (DL_FUNC)api_setdiff);
   R_RegisterCCallable("cheapr", "api_get_ptype",    (DL_FUNC)api_get_ptype);
+  R_RegisterCCallable("cheapr", "api_df_assign_cols",    (DL_FUNC)api_df_assign_cols);
+  R_RegisterCCallable("cheapr", "api_df_col_c",    (DL_FUNC)api_df_col_c);
 }

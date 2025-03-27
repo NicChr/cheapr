@@ -247,5 +247,7 @@ SEXP list_c2(SEXP x, SEXP y);
 SEXP c2(SEXP x, SEXP y);
 SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names);
 SEXP fast_df_reconstruct(SEXP x, SEXP source);
+SEXP cpp_df_assign_cols(SEXP x, SEXP cols);
+SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair);
 
 #endif
