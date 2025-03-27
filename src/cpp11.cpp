@@ -113,6 +113,20 @@ extern "C" SEXP _cheapr_cpp_combine_factors(SEXP x) {
   END_CPP11
 }
 // combine.cpp
+SEXP cpp_list_c(SEXP x);
+extern "C" SEXP _cheapr_cpp_list_c(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_list_c(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// combine.cpp
+SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair);
+extern "C" SEXP _cheapr_cpp_df_col_c(SEXP x, SEXP recycle, SEXP name_repair) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_df_col_c(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(recycle), cpp11::as_cpp<cpp11::decay_t<bool>>(name_repair)));
+  END_CPP11
+}
+// combine.cpp
 SEXP cpp_c(SEXP x);
 extern "C" SEXP _cheapr_cpp_c(SEXP x) {
   BEGIN_CPP11
@@ -748,6 +762,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_count_val",               (DL_FUNC) &_cheapr_cpp_count_val,               3},
     {"_cheapr_cpp_dbl_sequence",            (DL_FUNC) &_cheapr_cpp_dbl_sequence,            3},
     {"_cheapr_cpp_df_assign_cols",          (DL_FUNC) &_cheapr_cpp_df_assign_cols,          2},
+    {"_cheapr_cpp_df_col_c",                (DL_FUNC) &_cheapr_cpp_df_col_c,                3},
     {"_cheapr_cpp_df_col_na_counts",        (DL_FUNC) &_cheapr_cpp_df_col_na_counts,        1},
     {"_cheapr_cpp_df_row_na_counts",        (DL_FUNC) &_cheapr_cpp_df_row_na_counts,        1},
     {"_cheapr_cpp_df_select",               (DL_FUNC) &_cheapr_cpp_df_select,               2},
@@ -781,6 +796,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_lgl_locs",                (DL_FUNC) &_cheapr_cpp_lgl_locs,                6},
     {"_cheapr_cpp_list_as_df",              (DL_FUNC) &_cheapr_cpp_list_as_df,              1},
     {"_cheapr_cpp_list_assign",             (DL_FUNC) &_cheapr_cpp_list_assign,             2},
+    {"_cheapr_cpp_list_c",                  (DL_FUNC) &_cheapr_cpp_list_c,                  1},
     {"_cheapr_cpp_loc_set_replace",         (DL_FUNC) &_cheapr_cpp_loc_set_replace,         3},
     {"_cheapr_cpp_matrix_col_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts,    1},
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},

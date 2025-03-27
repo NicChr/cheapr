@@ -533,7 +533,11 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
   }
 
   SEXP out_names = SHIELD(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
-  SHIELD(out_names = coerce_vec(out_names, STRSXP)); ++NP;
+  if (Rf_isNull(out_names)){
+    SHIELD(out_names = new_vec(STRSXP, Rf_length(out))); ++NP;
+  } else {
+    SHIELD(out_names = coerce_vec(out_names, STRSXP)); ++NP;
+  }
 
   if (name_repair){
     SEXP dup_sep = SHIELD(Rf_mkString("_")); ++NP;

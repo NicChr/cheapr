@@ -415,19 +415,28 @@ SEXP cpp_combine_factors(SEXP x){
 }
 
 // Helper to concatenate plain lists
+// It uses top-level names if and only if x[[i]] is not a list
 
-SEXP list_c(SEXP x){
+[[cpp11::register]]
+SEXP cpp_list_c(SEXP x){
   int NP = 0;
   R_xlen_t n = Rf_xlength(x);
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
   R_xlen_t out_size = 0;
-  for (R_xlen_t i = 0; i < n; ++i) out_size += Rf_xlength(p_x[i]);
+  for (R_xlen_t i = 0; i < n; ++i){
+    out_size += (TYPEOF(p_x[i]) == VECSXP  ? Rf_xlength(p_x[i]) : 1);
+  }
+
+  SEXP x_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+  bool x_has_names = !Rf_isNull(x_names);
 
   R_xlen_t k = 0;
   SEXP out;
 
   out = SHIELD(new_vec(VECSXP, out_size)); ++NP;
+  SEXP container_list = SHIELD(new_vec(VECSXP, 1)); ++NP;
+  Rf_setAttrib(container_list, R_NamesSymbol, R_BlankScalarString);
 
   SEXP names;
   PROTECT_INDEX nm_idx;
@@ -436,10 +445,26 @@ SEXP list_c(SEXP x){
   SEXP out_names = SHIELD(new_vec(STRSXP, out_size)); ++NP;
   bool any_names = false;
 
+  R_xlen_t m;
+
   for (R_xlen_t i = 0; i < n; ++i){
-    R_xlen_t m = Rf_xlength(p_x[i]);
-    const SEXP *p_temp = VECTOR_PTR_RO(p_x[i]);
-    R_Reprotect(names = Rf_getAttrib(p_x[i], R_NamesSymbol), nm_idx);
+    const SEXP *p_temp;
+
+    if (TYPEOF(p_x[i]) == VECSXP){
+      p_temp = VECTOR_PTR_RO(p_x[i]);
+      R_Reprotect(names = Rf_getAttrib(p_x[i], R_NamesSymbol), nm_idx);
+      m = Rf_xlength(p_x[i]);
+    } else {
+      SET_VECTOR_ELT(container_list, 0, p_x[i]);
+      if (x_has_names){
+        R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
+      } else {
+        R_Reprotect(names = R_NilValue, nm_idx);
+      }
+      p_temp = VECTOR_PTR_RO(container_list);
+      m = 1;
+    }
+
     any_names = any_names || !Rf_isNull(names);
     if (!Rf_isNull(names)){
       for (R_xlen_t j = 0; j < m; ++k, ++j){
@@ -466,7 +491,7 @@ SEXP list_c2(SEXP x, SEXP y){
 
   SET_VECTOR_ELT(temp, 0, x);
   SET_VECTOR_ELT(temp, 1, y);
-  SEXP out = SHIELD(list_c(temp));
+  SEXP out = SHIELD(cpp_list_c(temp));
 
   YIELD(2);
   return out;
@@ -549,7 +574,7 @@ SEXP cpp_df_c(SEXP x){
       R_Reprotect(new_ptypes = get_ptypes(new_cols), new_ptypes_idx);
       SET_VECTOR_ELT(temp_list, 0, ptypes);
       SET_VECTOR_ELT(temp_list, 1, new_ptypes);
-      R_Reprotect(ptypes = list_c(temp_list), ptypes_idx);
+      R_Reprotect(ptypes = cpp_list_c(temp_list), ptypes_idx);
       SET_VECTOR_ELT(temp_list, 0, names);
       SET_VECTOR_ELT(temp_list, 1, new_names);
       R_Reprotect(names = cpp_c(temp_list), names_idx);
@@ -584,6 +609,35 @@ SEXP cpp_df_c(SEXP x){
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   Rf_namesgets(out, names);
   SHIELD(out = fast_df_reconstruct(out, df_template)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+// Helper to concatenate data frames by col
+
+[[cpp11::register]]
+SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
+  int NP = 0;
+
+  SEXP out = SHIELD(cpp_list_c(x)); ++NP;
+
+  // if (Rf_length(out) == 0 && Rf_length(x) != 0){
+  //   SEXP r_nrows = SHIELD(Rf_ScalarInteger(vec_length(VECTOR_ELT(x, 0)))); ++NP;
+  //   SHIELD(out = cpp_new_df(out, r_nrows, true, false)); ++NP;
+  // } else {
+  //   SHIELD(out = cpp_list_as_df(out)); ++NP;
+  // }
+
+  SEXP r_nrows = R_NilValue;
+  if (Rf_length(out) == 0 && Rf_length(x) != 0){
+    SHIELD(r_nrows = Rf_ScalarInteger(vec_length(VECTOR_ELT(x, 0)))); ++NP;
+  }
+
+  SHIELD(out = cpp_new_df(out, r_nrows, recycle, name_repair)); ++NP;
+
+  if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
+    SHIELD(out = fast_df_reconstruct(out, VECTOR_ELT(x, 0))); ++NP;
+  }
   YIELD(NP);
   return out;
 }

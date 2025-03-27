@@ -12,11 +12,11 @@
 #' @param dup_sep `[character(1)]` A separator to use between
 #' duplicate column names and their locations. Default is `'_'`
 #' @param empty_sep `[character(1)]` A separator to use between the empty
-#' column names and their locations. Default is `'_'`
+#' column names and their locations. Default is `'col_'`
 #'
 #' @returns
 #' A `data.frame`. \cr
-#' `unique_name_repair` takes a character vector and returns unique strings by
+#' `name_repair` takes a character vector and returns unique strings by
 #' appending duplicate string locations to the duplicates.
 #' This is mostly used to create unique col names.
 #'
@@ -29,7 +29,6 @@
 #' @export
 new_df <- function(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE){
   .Call(`_cheapr_cpp_new_df`, list(...), .nrows, .recycle, .name_repair)
-
 }
 #' @rdname data_frame
 #' @export
@@ -68,6 +67,13 @@ fast_df <- function(...){
 
 #' @rdname data_frame
 #' @export
-unique_name_repair <- function(x, dup_sep = "_", empty_sep = "_"){
+name_repair <- function(x, dup_sep = "_", empty_sep = "col_"){
   cpp_name_repair(x, dup_sep, empty_sep)
+}
+#' @export
+unique_name_repair <- name_repair
+#' @rdname data_frame
+#' @export
+df_col_c <- function(..., .recycle = TRUE, .name_repair = TRUE){
+  .Call(`_cheapr_cpp_df_col_c`, list(...), .recycle, .name_repair)
 }

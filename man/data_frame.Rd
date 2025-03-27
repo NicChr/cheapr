@@ -4,7 +4,8 @@
 \alias{new_df}
 \alias{as_df}
 \alias{fast_df}
-\alias{unique_name_repair}
+\alias{name_repair}
+\alias{df_col_c}
 \title{Cheap data frame utilities}
 \usage{
 new_df(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE)
@@ -13,7 +14,9 @@ as_df(x)
 
 fast_df(...)
 
-unique_name_repair(x, dup_sep = "_", empty_sep = "_")
+name_repair(x, dup_sep = "_", empty_sep = "col_")
+
+df_col_c(..., .recycle = TRUE, .name_repair = TRUE)
 }
 \arguments{
 \item{...}{Key-value pairs.}
@@ -34,11 +37,11 @@ for \code{unique_name_repair()}.}
 duplicate column names and their locations. Default is \code{'_'}}
 
 \item{empty_sep}{\verb{[character(1)]} A separator to use between the empty
-column names and their locations. Default is \code{'_'}}
+column names and their locations. Default is \code{'col_'}}
 }
 \value{
 A \code{data.frame}. \cr
-\code{unique_name_repair} takes a character vector and returns unique strings by
+\code{name_repair} takes a character vector and returns unique strings by
 appending duplicate string locations to the duplicates.
 This is mostly used to create unique col names.
 }

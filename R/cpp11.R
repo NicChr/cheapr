@@ -60,6 +60,14 @@ cpp_combine_factors <- function(x) {
   .Call(`_cheapr_cpp_combine_factors`, x)
 }
 
+cpp_list_c <- function(x) {
+  .Call(`_cheapr_cpp_list_c`, x)
+}
+
+cpp_df_col_c <- function(x, recycle, name_repair) {
+  .Call(`_cheapr_cpp_df_col_c`, x, recycle, name_repair)
+}
+
 cpp_c <- function(x) {
   .Call(`_cheapr_cpp_c`, x)
 }

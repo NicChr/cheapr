@@ -5,6 +5,7 @@
 \alias{unlisted_length}
 \alias{new_list}
 \alias{list_assign}
+\alias{list_combine}
 \title{List utilities}
 \usage{
 lengths_(x, names = FALSE)
@@ -14,6 +15,8 @@ unlisted_length(x)
 new_list(length = 0L, default = NULL)
 
 list_assign(x, values)
+
+list_combine(...)
 }
 \arguments{
 \item{x}{A list.}
@@ -25,6 +28,8 @@ list_assign(x, values)
 \item{default}{Default value for each list element.}
 
 \item{values}{A named list}
+
+\item{...}{Objects to combine into a list.}
 }
 \value{
 \code{lengths_()} returns the list lengths. \cr
@@ -32,11 +37,15 @@ list_assign(x, values)
 \code{new_list()} is like \code{vector("list", length)} but also allows you to specify
 a default value for each list element. This can be useful for
 initialising with a catch-all value so that when you unlist you're guaranteed
-a list of length >= to the specified length. \cr
+a list of length >= to the specified length.
 
 \code{list_assign()} is vectorised version of \verb{[[<-} that
 concatenates \code{values} to \code{x} or modifies \code{x} where the
 names match. Can be useful for modifying data frame variables.
+
+\code{list_combine()} combines each element of a set of lists into a single list.
+If an element is not a list, it is treated as a length-one list.
+This happens to be very useful for combining data frame cols.
 }
 \description{
 Functions to help work with lists.

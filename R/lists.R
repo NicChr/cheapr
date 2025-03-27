@@ -8,6 +8,7 @@
 #' @param default Default value for each list element.
 #' @param names Should names of list elements be added? Default is `FALSE`.
 #' @param values A named list
+#' @param ... Objects to combine into a list.
 #'
 #' @returns
 #' `lengths_()` returns the list lengths. \cr
@@ -15,11 +16,15 @@
 #' `new_list()` is like `vector("list", length)` but also allows you to specify
 #' a default value for each list element. This can be useful for
 #' initialising with a catch-all value so that when you unlist you're guaranteed
-#' a list of length >= to the specified length. \cr
+#' a list of length >= to the specified length.
 #'
 #' `list_assign()` is vectorised version of `[[<-` that
 #' concatenates `values` to `x` or modifies `x` where the
 #' names match. Can be useful for modifying data frame variables.
+#'
+#' `list_combine()` combines each element of a set of lists into a single list.
+#' If an element is not a list, it is treated as a length-one list.
+#' This happens to be very useful for combining data frame cols.
 #'
 #' @examples
 #' library(cheapr)
@@ -54,3 +59,9 @@ new_list <- function(length = 0L, default = NULL){
 #' @export
 #' @rdname lists
 list_assign <- cpp_list_assign
+
+#' @export
+#' @rdname lists
+list_combine <- function(...){
+  cpp_list_c(list(...))
+}
