@@ -70,6 +70,7 @@ fast_df <- function(...){
 name_repair <- function(x, dup_sep = "_", empty_sep = "col_"){
   cpp_name_repair(x, dup_sep, empty_sep)
 }
+#' @rdname data_frame
 #' @export
 unique_name_repair <- name_repair
 #' @rdname data_frame

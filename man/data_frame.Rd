@@ -5,6 +5,7 @@
 \alias{as_df}
 \alias{fast_df}
 \alias{name_repair}
+\alias{unique_name_repair}
 \alias{df_col_c}
 \title{Cheap data frame utilities}
 \usage{
@@ -15,6 +16,8 @@ as_df(x)
 fast_df(...)
 
 name_repair(x, dup_sep = "_", empty_sep = "col_")
+
+unique_name_repair(x, dup_sep = "_", empty_sep = "col_")
 
 df_col_c(..., .recycle = TRUE, .name_repair = TRUE)
 }
