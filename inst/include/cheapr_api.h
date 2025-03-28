@@ -100,10 +100,10 @@ val_find(SEXP x, SEXP value, bool invert){
   return fn(x, value, invert);
 }
 static inline SEXP
-loc_set_replace(SEXP x, SEXP where, SEXP what, bool check){
-  typedef SEXP fn_t(SEXP, SEXP, SEXP, bool);
+loc_set_replace(SEXP x, SEXP where, SEXP what){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_loc_set_replace");
-  return fn(x, where, what, check);
+  return fn(x, where, what);
 }
 
 static inline SEXP

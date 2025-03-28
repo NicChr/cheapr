@@ -498,7 +498,7 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
 // or handle long vectors
 
 [[cpp11::register]]
-SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what, bool check){
+SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){
   if (TYPEOF(x) != TYPEOF(what)){
     Rf_error("`typeof(x)` must match `typeof(what)`");
   }
@@ -523,7 +523,7 @@ SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what, bool check){
   if (what_size == 1){                                                                                      \
     for (int i = 0; i < where_size; ++i){                                                                   \
       xi = p_where[i];                                                                                      \
-      if (check && (xi <= 0 || xi > xn)){                                                                   \
+      if (xi <= 0 || xi > xn){                                                                   \
         YIELD(1);                                                                                           \
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");                    \
       }                                                                                                     \
@@ -532,7 +532,7 @@ SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what, bool check){
   } else {                                                                                                  \
     for (int i = 0; i < where_size; ++i){                                                                   \
       xi = p_where[i];                                                                                      \
-      if (check && (xi <= 0 || xi > xn)){                                                                   \
+      if (xi <= 0 || xi > xn){                                                                   \
         YIELD(1);                                                                                           \
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");                    \
       }                                                                                                     \
@@ -564,7 +564,7 @@ case STRSXP: {
   if (what_size == 1){
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (check && (xi <= 0 || xi > xn)){
+      if (xi <= 0 || xi > xn){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
@@ -573,7 +573,7 @@ case STRSXP: {
   } else {
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (check && (xi <= 0 || xi > xn)){
+      if (xi <= 0 || xi > xn){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
@@ -588,7 +588,7 @@ case CPLXSXP: {
   if (what_size == 1){
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (check && (xi <= 0 || xi > xn)){
+      if (xi <= 0 || xi > xn){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
@@ -597,7 +597,7 @@ case CPLXSXP: {
   } else {
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (check && (xi <= 0 || xi > xn)){
+      if (xi <= 0 || xi > xn){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
@@ -612,7 +612,7 @@ case RAWSXP: {
   if (what_size == 1){
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (check && (xi <= 0 || xi > xn)){
+      if (xi <= 0 || xi > xn){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
@@ -621,7 +621,7 @@ case RAWSXP: {
   } else {
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (check && (xi <= 0 || xi > xn)){
+      if (xi <= 0 || xi > xn){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
@@ -636,7 +636,7 @@ case VECSXP: {
   if (what_size == 1){
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (check && (xi <= 0 || xi > xn)){
+      if (xi <= 0 || xi > xn){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
@@ -645,7 +645,7 @@ case VECSXP: {
   } else {
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (check && (xi <= 0 || xi > xn)){
+      if (xi <= 0 || xi > xn){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }

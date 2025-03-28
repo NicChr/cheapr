@@ -220,8 +220,8 @@ cpp_val_set_replace <- function(x, value, replace, recursive) {
   .Call(`_cheapr_cpp_val_set_replace`, x, value, replace, recursive)
 }
 
-cpp_loc_set_replace <- function(x, where, what, check) {
-  .Call(`_cheapr_cpp_loc_set_replace`, x, where, what, check)
+cpp_loc_set_replace <- function(x, where, what) {
+  .Call(`_cheapr_cpp_loc_set_replace`, x, where, what)
 }
 
 cpp_val_remove <- function(x, value) {

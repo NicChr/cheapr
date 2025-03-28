@@ -124,9 +124,9 @@ api_val_find(SEXP x, SEXP value, bool invert){
 }
 
 SEXP
-api_loc_set_replace(SEXP x, SEXP where, SEXP what, bool check){
+api_loc_set_replace(SEXP x, SEXP where, SEXP what){
   try {
-    return cpp_loc_set_replace(x, where, what, check);
+    return cpp_loc_set_replace(x, where, what);
   } catch (...) {
     return R_NilValue;
   }

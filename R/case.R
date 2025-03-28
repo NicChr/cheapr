@@ -120,7 +120,7 @@ case <- function(..., .default = NULL){
       # 3. Do `lgl_or | lgl` to keep track of evaluated `TRUE` elements
 
       cpp_set_copy_elements(source = lgl, target = lgl3)
-      cpp_loc_set_replace(lgl3, val_find(lgl_or, TRUE), FALSE, TRUE)
+      cpp_loc_set_replace(lgl3, val_find(lgl_or, TRUE), FALSE)
       cpp_set_or(lgl_or, lgl)
 
       true_locs <- val_find(lgl3, TRUE)
