@@ -498,7 +498,7 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
 // or handle long vectors
 
 [[cpp11::register]]
-SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){
+SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what, bool check){
   if (TYPEOF(x) != TYPEOF(what)){
     Rf_error("`typeof(x)` must match `typeof(what)`");
   }
@@ -509,36 +509,36 @@ SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){
   }
   SHIELD(x = altrep_materialise(x));
 
-  long long int xn = Rf_xlength(x);
+  std::uint_fast64_t xn = Rf_xlength(x);
   int where_size = Rf_length(where);
   int what_size = Rf_length(what);
   if (what_size != 1 && where_size != what_size){
     YIELD(1);
     Rf_error("`what` must be either length 1 or `length(where)`");
   }
-  long long int xi;
+  std::uint_fast64_t xi;
 
 
-#define CHEAPR_REPLACE                                                                           \
-  if (what_size == 1){                                                                           \
-    for (int i = 0; i < where_size; ++i){                                                        \
-      xi = p_where[i];                                                                           \
-      if (xi <= 0 || xi > xn){                                                                   \
-        YIELD(1);                                                                         \
-        Rf_error("where must be an integer vector of values between 1 and `length(x)`");         \
-      }                                                                                          \
-      p_x[xi - 1] = p_what[0];                                                                   \
-    }                                                                                            \
-  } else {                                                                                       \
-    for (int i = 0; i < where_size; ++i){                                                        \
-      xi = p_where[i];                                                                           \
-      if (xi <= 0 || xi > xn){                                                                   \
-        YIELD(1);                                                                         \
-        Rf_error("where must be an integer vector of values between 1 and `length(x)`");         \
-      }                                                                                          \
-      p_x[xi - 1] = p_what[i];                                                                   \
-    }                                                                                            \
-  }                                                                                              \
+#define CHEAPR_REPLACE                                                                                      \
+  if (what_size == 1){                                                                                      \
+    for (int i = 0; i < where_size; ++i){                                                                   \
+      xi = p_where[i];                                                                                      \
+      if (check && (xi <= 0 || xi > xn)){                                                                   \
+        YIELD(1);                                                                                           \
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");                    \
+      }                                                                                                     \
+      p_x[xi - 1] = p_what[0];                                                                              \
+    }                                                                                                       \
+  } else {                                                                                                  \
+    for (int i = 0; i < where_size; ++i){                                                                   \
+      xi = p_where[i];                                                                                      \
+      if (check && (xi <= 0 || xi > xn)){                                                                   \
+        YIELD(1);                                                                                           \
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");                    \
+      }                                                                                                     \
+      p_x[xi - 1] = p_what[i];                                                                              \
+    }                                                                                                       \
+  }                                                                                                         \
 
 
 switch (TYPEOF(x)){
@@ -564,7 +564,7 @@ case STRSXP: {
   if (what_size == 1){
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (xi <= 0 || xi > xn){
+      if (check && (xi <= 0 || xi > xn)){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
@@ -573,11 +573,83 @@ case STRSXP: {
   } else {
     for (int i = 0; i < where_size; ++i){
       xi = p_where[i];
-      if (xi <= 0 || xi > xn){
+      if (check && (xi <= 0 || xi > xn)){
         YIELD(1);
         Rf_error("where must be an integer vector of values between 1 and `length(x)`");
       }
       SET_STRING_ELT(x, xi - 1, p_what[i]);
+    }
+  }
+  break;
+}
+case CPLXSXP: {
+  Rcomplex *p_what = COMPLEX(what);
+
+  if (what_size == 1){
+    for (int i = 0; i < where_size; ++i){
+      xi = p_where[i];
+      if (check && (xi <= 0 || xi > xn)){
+        YIELD(1);
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");
+      }
+      SET_COMPLEX_ELT(x, xi - 1, p_what[0]);
+    }
+  } else {
+    for (int i = 0; i < where_size; ++i){
+      xi = p_where[i];
+      if (check && (xi <= 0 || xi > xn)){
+        YIELD(1);
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");
+      }
+      SET_COMPLEX_ELT(x, xi - 1, p_what[i]);
+    }
+  }
+  break;
+}
+case RAWSXP: {
+  Rbyte *p_what = RAW(what);
+
+  if (what_size == 1){
+    for (int i = 0; i < where_size; ++i){
+      xi = p_where[i];
+      if (check && (xi <= 0 || xi > xn)){
+        YIELD(1);
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");
+      }
+      SET_RAW_ELT(x, xi - 1, p_what[0]);
+    }
+  } else {
+    for (int i = 0; i < where_size; ++i){
+      xi = p_where[i];
+      if (check && (xi <= 0 || xi > xn)){
+        YIELD(1);
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");
+      }
+      SET_RAW_ELT(x, xi - 1, p_what[i]);
+    }
+  }
+  break;
+}
+case VECSXP: {
+  const SEXP *p_what = VECTOR_PTR_RO(what);
+
+  if (what_size == 1){
+    for (int i = 0; i < where_size; ++i){
+      xi = p_where[i];
+      if (check && (xi <= 0 || xi > xn)){
+        YIELD(1);
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");
+      }
+      SET_VECTOR_ELT(x, xi - 1, p_what[0]);
+    }
+  } else {
+    for (int i = 0; i < where_size; ++i){
+      xi = p_where[i];
+      if (check && (xi <= 0 || xi > xn)){
+        YIELD(1);
+        Rf_error("where must be an integer vector of values between 1 and `length(x)`");
+      }
+      SET_VECTOR_ELT(x, xi - 1, p_what[i]);
     }
   }
   break;

@@ -99,6 +99,12 @@ val_find(SEXP x, SEXP value, bool invert){
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_val_find");
   return fn(x, value, invert);
 }
+static inline SEXP
+loc_set_replace(SEXP x, SEXP where, SEXP what, bool check){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_loc_set_replace");
+  return fn(x, where, what, check);
+}
 
 static inline SEXP
 sequence(SEXP size, SEXP from, SEXP by){

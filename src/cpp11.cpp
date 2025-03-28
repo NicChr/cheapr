@@ -393,10 +393,10 @@ extern "C" SEXP _cheapr_cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, SE
   END_CPP11
 }
 // scalars.cpp
-SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what);
-extern "C" SEXP _cheapr_cpp_loc_set_replace(SEXP x, SEXP where, SEXP what) {
+SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what, bool check);
+extern "C" SEXP _cheapr_cpp_loc_set_replace(SEXP x, SEXP where, SEXP what, SEXP check) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_loc_set_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(what)));
+    return cpp11::as_sexp(cpp_loc_set_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(what), cpp11::as_cpp<cpp11::decay_t<bool>>(check)));
   END_CPP11
 }
 // scalars.cpp
@@ -797,7 +797,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_list_as_df",              (DL_FUNC) &_cheapr_cpp_list_as_df,              1},
     {"_cheapr_cpp_list_assign",             (DL_FUNC) &_cheapr_cpp_list_assign,             2},
     {"_cheapr_cpp_list_c",                  (DL_FUNC) &_cheapr_cpp_list_c,                  1},
-    {"_cheapr_cpp_loc_set_replace",         (DL_FUNC) &_cheapr_cpp_loc_set_replace,         3},
+    {"_cheapr_cpp_loc_set_replace",         (DL_FUNC) &_cheapr_cpp_loc_set_replace,         4},
     {"_cheapr_cpp_matrix_col_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts,    1},
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},
     {"_cheapr_cpp_na_init",                 (DL_FUNC) &_cheapr_cpp_na_init,                 2},
