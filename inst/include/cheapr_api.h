@@ -127,6 +127,13 @@ is_simple_atomic_vec(SEXP x){
   return fn(x);
 }
 
+static inline bool
+is_simple_vec(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_is_simple_vec");
+  return fn(x);
+}
+
 static inline SEXP
 rep_len(SEXP x, int length){
   typedef SEXP fn_t(SEXP, int);
