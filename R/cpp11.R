@@ -324,10 +324,6 @@ clean_indices <- function(indices, x) {
   .Call(`_cheapr_clean_indices`, indices, x)
 }
 
-cpp_sset <- function(x, indices) {
-  .Call(`_cheapr_cpp_sset`, x, indices)
-}
-
 cpp_rev <- function(x, set) {
   .Call(`_cheapr_cpp_rev`, x, set)
 }
@@ -342,6 +338,10 @@ cpp_df_slice <- function(x, indices, check) {
 
 cpp_df_subset <- function(x, i, j) {
   .Call(`_cheapr_cpp_df_subset`, x, i, j)
+}
+
+cpp_sset <- function(x, indices, check) {
+  .Call(`_cheapr_cpp_sset`, x, indices, check)
 }
 
 cpp_is_simple_atomic_vec <- function(x) {

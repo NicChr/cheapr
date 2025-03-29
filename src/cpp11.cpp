@@ -575,13 +575,6 @@ extern "C" SEXP _cheapr_clean_indices(SEXP indices, SEXP x) {
   END_CPP11
 }
 // sset.cpp
-SEXP cpp_sset(SEXP x, SEXP indices);
-extern "C" SEXP _cheapr_cpp_sset(SEXP x, SEXP indices) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_sset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices)));
-  END_CPP11
-}
-// sset.cpp
 SEXP cpp_rev(SEXP x, bool set);
 extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP set) {
   BEGIN_CPP11
@@ -607,6 +600,13 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j);
 extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_df_subset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j)));
+  END_CPP11
+}
+// sset.cpp
+SEXP cpp_sset(SEXP x, SEXP indices, bool check);
+extern "C" SEXP _cheapr_cpp_sset(SEXP x, SEXP indices, SEXP check) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_sset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<bool>>(check)));
   END_CPP11
 }
 // utils.cpp
@@ -835,7 +835,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_trunc",               (DL_FUNC) &_cheapr_cpp_set_trunc,               1},
     {"_cheapr_cpp_setdiff",                 (DL_FUNC) &_cheapr_cpp_setdiff,                 2},
     {"_cheapr_cpp_shallow_duplicate_attrs", (DL_FUNC) &_cheapr_cpp_shallow_duplicate_attrs, 2},
-    {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    2},
+    {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    3},
     {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},
     {"_cheapr_cpp_val_remove",              (DL_FUNC) &_cheapr_cpp_val_remove,              2},
     {"_cheapr_cpp_val_replace",             (DL_FUNC) &_cheapr_cpp_val_replace,             4},

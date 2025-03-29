@@ -69,8 +69,8 @@ sset <- function(x, ...){
 }
 #' @export
 sset.default <- function(x, i, ...){
-  if (cpp_is_simple_vec(x) && n_dots(...) == 0){
-    .Call(`_cheapr_cpp_sset`, x, if (missing(i)) seq_len(vector_length(x)) else i)
+  if (n_dots(...) == 0){
+    .Call(`_cheapr_cpp_sset`, x, if (missing(i)) seq_len(vector_length(x)) else i, TRUE)
   } else {
     if (!missing(i) && is.logical(i)){
       check_length(i, length(x))

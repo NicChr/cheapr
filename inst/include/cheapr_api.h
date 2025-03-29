@@ -94,10 +94,17 @@ list_assign(SEXP x, SEXP values){
 }
 
 static inline SEXP
-sset(SEXP x, SEXP indices){
-  typedef SEXP fn_t(SEXP, SEXP);
+sset(SEXP x, SEXP indices, bool check){
+  typedef SEXP fn_t(SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_sset");
-  return fn(x, indices);
+  return fn(x, indices, check);
+}
+
+static inline SEXP
+sset_vec(SEXP x, SEXP indices, bool check){
+  typedef SEXP fn_t(SEXP, SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_sset_vec");
+  return fn(x, indices, check);
 }
 
 static inline SEXP

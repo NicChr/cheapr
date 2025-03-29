@@ -288,7 +288,7 @@ cheapr_var <- function(x, na.rm = TRUE){
 #' @export
 cheapr_rev <- function(x){
   if (cpp_is_simple_vec(x)){
-    .Call(`_cheapr_cpp_sset`, x, length(x):0)
+    .Call(`_cheapr_cpp_sset`, x, length(x):0, TRUE)
   } else {
     sset(x, vector_length(x):0)
   }

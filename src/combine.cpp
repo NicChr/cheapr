@@ -316,7 +316,7 @@ SEXP get_ptype(SEXP x){
   if (is_df(x)){
     out = SHIELD(cpp_df_slice(x, CHEAPR_ZERO, true));
   } else if (is_simple_atomic_vec(x) || is_bare_list(x)){
-    out = SHIELD(cpp_sset(x, CHEAPR_ZERO));
+    out = SHIELD(cpp_sset(x, CHEAPR_ZERO, true));
   } else {
     out = SHIELD(base_sset(x, CHEAPR_ZERO));
   }

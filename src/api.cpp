@@ -114,9 +114,18 @@ api_get_list_element(SEXP list, const char *str){
 }
 
 SEXP
-api_sset(SEXP x, SEXP indices){
+api_sset(SEXP x, SEXP indices, bool check){
   try {
-    return cpp_sset(x, indices);
+    return cpp_sset(x, indices, check);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
+api_sset_vec(SEXP x, SEXP indices, bool check){
+  try {
+    return sset_vec(x, indices, check);
   } catch (...) {
     return R_NilValue;
   }
@@ -325,6 +334,7 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_df_slice",    (DL_FUNC)api_df_slice);
   R_RegisterCCallable("cheapr", "api_df_select",    (DL_FUNC)api_df_select);
   R_RegisterCCallable("cheapr", "api_sset",    (DL_FUNC)api_sset);
+  R_RegisterCCallable("cheapr", "api_sset_vec",    (DL_FUNC)api_sset_vec);
   R_RegisterCCallable("cheapr", "api_val_find",    (DL_FUNC)api_val_find);
   R_RegisterCCallable("cheapr", "api_loc_set_replace",    (DL_FUNC)api_loc_set_replace);
   R_RegisterCCallable("cheapr", "api_sequence",    (DL_FUNC)api_sequence);
