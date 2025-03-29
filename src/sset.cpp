@@ -1288,6 +1288,61 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
     YIELD(NP);
     return out;
   } else {
-    return base_sset(x, indices);
+    // Normally we would use base_sset here BUT
+    // we want to dispatch on some of sset's methods
+    // This can all be re-worked and simplified by passing `...` to cpp_sset
+    // from sset.defualt
+    return cheapr_sset(x, indices);
+  }
+}
+
+
+#define CHEAPR_SLICE_LOC(PTR_FUN, SCALAR_FUN, i)               \
+  return SCALAR_FUN(PTR_FUN(x)[i]);
+
+// 0-based scalar subset
+SEXP slice_loc(SEXP x, R_xlen_t i){
+
+  if (!is_simple_vec(x)){
+    SEXP loc;
+    if (i <= integer_max_){
+      loc = SHIELD(Rf_ScalarInteger(i + 1));
+    } else {
+      loc = SHIELD(Rf_ScalarReal(i + 1.0));
+    }
+    SEXP out = cpp_sset(x, loc, false);
+    Rf_unprotect(1);
+    return out;
+  }
+
+  switch ( TYPEOF(x) ){
+
+  case NILSXP: {
+    return R_NilValue;
+  }
+  case LGLSXP: {
+    return scalar_lgl(LOGICAL(x)[i]);
+  }
+  case INTSXP: {
+    return Rf_ScalarInteger(INTEGER(x)[i]);
+  }
+  case REALSXP: {
+    return Rf_ScalarReal(REAL(x)[i]);
+  }
+  case STRSXP: {
+    return Rf_ScalarString(STRING_ELT(x, i));
+  }
+  case CPLXSXP: {
+    return Rf_ScalarComplex(COMPLEX(x)[i]);
+  }
+  case RAWSXP: {
+    return Rf_ScalarRaw(RAW(x)[i]);
+  }
+  case VECSXP: {
+    return VECTOR_ELT(x, i);
+  }
+  default: {
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+  }
   }
 }

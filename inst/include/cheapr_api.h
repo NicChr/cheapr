@@ -108,6 +108,13 @@ sset_vec(SEXP x, SEXP indices, bool check){
 }
 
 static inline SEXP
+slice_loc(SEXP x, R_xlen_t i){
+  typedef SEXP fn_t(SEXP, R_xlen_t);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_slice_loc");
+  return fn(x, i);
+}
+
+static inline SEXP
 val_find(SEXP x, SEXP value, bool invert){
   typedef SEXP fn_t(SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_val_find");

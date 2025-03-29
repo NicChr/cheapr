@@ -258,5 +258,6 @@ SEXP fast_df_reconstruct(SEXP x, SEXP source);
 SEXP cpp_df_assign_cols(SEXP x, SEXP cols);
 SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair);
 SEXP cpp_list_assign(SEXP x, SEXP values);
+SEXP slice_loc(SEXP x, R_xlen_t i);
 
 #endif
