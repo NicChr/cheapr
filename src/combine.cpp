@@ -339,8 +339,50 @@ SEXP get_ptypes(SEXP x){
 
   YIELD(1);
   return out;
-
 }
+
+// SEXP cpp_cast(SEXP x, SEXP y){
+  // int NP = 0;
+  //
+  // SEXP x_cls = Rf_getAttrib(x, R_ClassSymbol);
+  // SEXP y_cls = Rf_getAttrib(y, R_ClassSymbol);
+  //
+  // SHIELD(x_cls = coerce_vec(x_cls, STRSXP)); ++NP;
+  // SHIELD(y_cls = coerce_vec(y_cls, STRSXP)); ++NP;
+  //
+  // if ( (TYPEOF(x) == TYPEOF(y)) && (Rf_length(x_cls) == Rf_length(y_cls))){
+  //
+  //   bool class_identical = true;
+  //
+  //   for (int i = 0; i < Rf_length(x_cls); ++i){
+  //     if (std::strcmp(CHAR(STRING_ELT(x_cls, i)), CHAR(STRING_ELT(y_cls, i))) != 0){
+  //       class_identical = false; break;
+  //     }
+  //   }
+  //   if (class_identical){
+  //     YIELD(NP);
+  //     return x;
+  //   }
+  // }
+  //
+  // if (is_simple_vec(x) && is_simple_vec(y) &&
+  //     !Rf_inherits(x, "factor") && !Rf_inherits(y, "factor")){
+  //     if (CHEAPR_TYPEOF(x) >= CHEAPR_TYPEOF(y)){
+  //       SEXP out = SHIELD(new_vec(TYPEOF(x), Rf_xlength(x))); ++NP;
+  //       Rf_copyMostAttrib(y, out);
+  //       YIELD(NP);
+  //       return out;
+  //     } else {
+  //       SEXP out = SHIELD(coerce_vector(x, CHEAPR_TYPEOF(y))); ++NP;
+  //       Rf_copyMostAttrib(y, out);
+  //       YIELD(NP);
+  //       return out;
+  //     }
+  // } else {
+  //   YIELD(NP);
+  //   Rf_error("Can't convert `x` based on `y` in %s", __func__);
+  // }
+// }
 
 SEXP factor_as_character(SEXP x){
   SEXP levels = SHIELD(Rf_getAttrib(x, R_LevelsSymbol));

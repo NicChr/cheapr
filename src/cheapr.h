@@ -129,8 +129,15 @@ inline int df_nrow(SEXP x){
   return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
 }
 
-// Definition of simple atomic vector is one in which
-// it is both atomic and all attributes data-independent
+// Definition of simple vector is one in which
+// - It is a vector or it is a list with no class
+// - Attributes are data-independent
+//
+// Care must be taken when combining different simple vectors
+// as attributes may only be applicable within a single vector
+// e.g. for factors (different levels) and POSIXct (different timezones)
+//
+
 inline bool is_simple_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (
@@ -198,6 +205,7 @@ SEXP r_address(SEXP x);
 R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive);
 SEXP cpp_list_as_df(SEXP x);
 SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair);
+SEXP cpp_new_list(SEXP length, SEXP default_value);
 SEXP cpp_is_na(SEXP x);
 SEXP cpp_which_na(SEXP x);
 SEXP cpp_which_not_na(SEXP x);

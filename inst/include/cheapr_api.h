@@ -73,6 +73,13 @@ lengths(SEXP x, bool names){
 }
 
 static inline SEXP
+new_list(SEXP length, SEXP default_value){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_new_list");
+  return fn(length, default_value);
+}
+
+static inline SEXP
 get_list_element(SEXP list, const char *str){
   typedef SEXP fn_t(SEXP, const char);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_get_list_element");
