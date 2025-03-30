@@ -1266,7 +1266,10 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
 [[cpp11::register]]
 SEXP cpp_sset(SEXP x, SEXP indices, bool check){
   if (is_df(x)){
-    return cpp_df_slice(x, indices, check);
+    SEXP out = SHIELD(cpp_df_slice(x, indices, check));
+    SHIELD(out = fast_df_reconstruct(out, x));
+    YIELD(2);
+    return out;
   } else if (is_simple_vec(x)){
     int NP = 0;
 

@@ -75,6 +75,9 @@ name_repair <- function(x, dup_sep = "_", empty_sep = "col_"){
 unique_name_repair <- name_repair
 #' @rdname data_frame
 #' @export
-df_col_c <- function(..., .recycle = TRUE, .name_repair = TRUE){
+col_c <- function(..., .recycle = TRUE, .name_repair = TRUE){
   .Call(`_cheapr_cpp_df_col_c`, list(...), .recycle, .name_repair)
 }
+#' @rdname data_frame
+#' @export
+row_c <- cheapr_c

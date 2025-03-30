@@ -66,12 +66,12 @@ test_that("scalars", {
 
   expect_identical(
     na_rm(
-      fast_df(
+      new_df(
         x = rep(NA, 5),
         y = rep(NA, 5)
       )
     ),
-    fast_df(x = logical(), y = logical())
+    new_df(x = logical(), y = logical())
   )
 
   with_local_seed(

@@ -312,14 +312,7 @@ SEXP cpp_na_init(SEXP x, int n){
 
 SEXP get_ptype(SEXP x){
   SEXP CHEAPR_ZERO = SHIELD(Rf_ScalarInteger(0));
-  SEXP out;
-  if (is_df(x)){
-    out = SHIELD(cpp_df_slice(x, CHEAPR_ZERO, true));
-  } else if (is_simple_atomic_vec(x) || is_bare_list(x)){
-    out = SHIELD(cpp_sset(x, CHEAPR_ZERO, true));
-  } else {
-    out = SHIELD(base_sset(x, CHEAPR_ZERO));
-  }
+  SEXP out = SHIELD(cpp_sset(x, CHEAPR_ZERO, true));
   YIELD(2);
   return out;
 }
@@ -384,12 +377,8 @@ SEXP get_ptypes(SEXP x){
   // }
 // }
 
-SEXP factor_as_character(SEXP x){
-  SEXP levels = SHIELD(Rf_getAttrib(x, R_LevelsSymbol));
-  SEXP out = SHIELD(sset_vec(levels, x, true));
-
-  YIELD(2);
-  return out;
+SEXP cpp_factor_as_character(SEXP x){
+  return sset_vec(Rf_getAttrib(x, R_LevelsSymbol), x, true);
 }
 
 [[cpp11::register]]
@@ -416,7 +405,6 @@ SEXP cpp_combine_levels(SEXP x){
   }
   SEXP out = SHIELD(cpp_c(levels));
   SHIELD(out = cpp_unique(out));
-  // SHIELD(out = collapse_unique(out));
   YIELD(4);
   return out;
 }
@@ -440,7 +428,7 @@ SEXP cpp_combine_factors(SEXP x){
 
   for (int i = 0; i < n; ++i){
     if (Rf_isFactor(p_x[i])){
-      R_Reprotect(char_vec = factor_as_character(p_x[i]), char_vec_idx);
+      R_Reprotect(char_vec = cpp_factor_as_character(p_x[i]), char_vec_idx);
     } else {
       R_Reprotect(char_vec = base_as_character(p_x[i]), char_vec_idx);
     }

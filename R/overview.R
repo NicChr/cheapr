@@ -557,7 +557,7 @@ numeric_summary <- function(x){
   n <- length(x)
   if (n == 0){
     return(
-      fast_df(
+      new_df(
         n_missing = NA_integer_,
         p_complete = NA_real_,
         n_unique = NA_integer_,
@@ -610,7 +610,7 @@ numeric_summary <- function(x){
   sd <- sqrt(var)
   iqr <- p75 - p25
 
-  fast_df(
+  new_df(
     n_missing = n_missing,
     p_complete = p_complete,
     n_unique = n_unique,

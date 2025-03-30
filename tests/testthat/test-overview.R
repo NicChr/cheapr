@@ -20,10 +20,11 @@ test_that("overview", {
          1.59003458564609, 0.52747123961581, -0.699964248520901, -0.44330920205848,
          -1.23317865134766, -2.3631591543418, 0.858336607111522, 1.50765939182219,
          0.0275182238317008)
-  df <- fast_df(
+  df <- new_df(
     y = ts(x),
     x = ts(x),
-    z = ts(matrix(rep(x, 5), ncol = 5))
+    z = ts(matrix(rep(x, 5), ncol = 5)),
+    .recycle = FALSE
   )
   expect_snapshot(overview(df))
   expect_snapshot(overview(ts(matrix(x, ncol = 5))))

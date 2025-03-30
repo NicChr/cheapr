@@ -8,7 +8,7 @@
 using a template. Currently only data frames are being reconstructed and 
 only in `cheapr_c` and `sset`.
 
-- `df_col_c` as a way to combine data frames cols and vectors into a data frame.
+- `col_c` as a way to combine data frames cols and vectors into a data frame.
 
 - `list_combine` as a way to combine elements from 
 multiple lists into a single list.

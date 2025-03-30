@@ -1,8 +1,8 @@
 test_that("data frames", {
-  expect_identical(fast_df(), new_df())
-  expect_identical(fast_df(x = 1, y = 2, z = 3), new_df(x = 1, y = 2, z = 3))
+  expect_identical(new_df(), fast_df())
+  expect_identical(new_df(x = 1, y = 2, z = 3), fast_df(x = 1, y = 2, z = 3))
   expect_identical(
-    fast_df(x = 1, 2, 3),
+    new_df(x = 1, 2, 3, .name_repair = FALSE),
     structure(list(x = 1, 2, 3), row.names = c(NA, -1L), class = "data.frame")
   )
   expect_identical(
@@ -22,7 +22,7 @@ test_that("data frames", {
 
   expect_identical(
     new_df(x = 1:3, y = 1:9, .recycle = TRUE),
-    fast_df(x = rep_len(1:3, 9), y = 1:9)
+    new_df(x = rep_len(1:3, 9), y = 1:9)
   )
 
   # Coercion
@@ -33,11 +33,11 @@ test_that("data frames", {
   x <- 1:5
   expect_identical(
     as_df(x),
-    fast_df(value = x)
+    new_df(value = x)
   )
   expect_identical(
     as_df(matrix(1:10, ncol = 2)),
-    fast_df(V1 = 1:5, V2 = 6:10)
+    new_df(V1 = 1:5, V2 = 6:10)
   )
 
   expect_identical(
