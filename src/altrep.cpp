@@ -34,7 +34,6 @@ SEXP alt_data1(SEXP x){
   }
 }
 
-[[cpp11::register]]
 bool is_compact_seq(SEXP x){
   if (!is_altrep(x)) return false;
   SEXP alt_class_sym = alt_class(x);
