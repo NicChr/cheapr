@@ -1242,7 +1242,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
 // Subset that does both selecting and slicing
 
 [[cpp11::register]]
-SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
+SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check){
 
   if (!is_df(x)){
     Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
@@ -1254,7 +1254,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
   // `cpp_df_select()` always creates a shallow copy
   SEXP out = SHIELD(cpp_df_select(x, j)); ++NP;
   // Subset rows
-  SHIELD(out = cpp_df_slice(out, i, true)); ++NP;
+  SHIELD(out = cpp_df_slice(out, i, check)); ++NP;
   SHIELD(out = fast_df_reconstruct(out, x)); ++NP;
   YIELD(NP);
   return out;
@@ -1265,12 +1265,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j){
 
 [[cpp11::register]]
 SEXP cpp_sset(SEXP x, SEXP indices, bool check){
-  if (is_df(x)){
-    SEXP out = SHIELD(cpp_df_slice(x, indices, check));
-    SHIELD(out = fast_df_reconstruct(out, x));
-    YIELD(2);
-    return out;
-  } else if (is_simple_vec(x)){
+  if (is_simple_vec(x)){
     int NP = 0;
 
     if (check){
@@ -1290,11 +1285,31 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
     }
     YIELD(NP);
     return out;
+  } else if (is_df(x)){
+    return cpp_df_subset(x, indices, R_NilValue, check);
+    // SEXP out = SHIELD(cpp_df_slice(x, indices, check));
+    // SHIELD(out = fast_df_reconstruct(out, x));
+    // YIELD(2);
+    // return out;
   } else {
     // Normally we would use base_sset here BUT
     // we want to dispatch on some of sset's methods
     // This can all be re-worked and simplified by passing `...` to cpp_sset
-    // from sset.defualt
+    // from sset.default
+
+    ////// IMPORTANT //////
+    // The reason this doesn't result in infinite recursion is because
+    // both this function and sset.default check that `x` is a simple vec
+
+    // This can be more safely avoided by
+    // writing an internal dispatch method in R
+    // e.g. sset can be a non-generic function that calls an
+    // internal generic function, e.g. `cheapr_sset`
+    // I don't like this approach as much because the user can't see
+    // all the available arguments like `j` as its hidden by the dots `...`
+    // So as previously stated, fastest is to handle the args in C but
+    // I don't currently know how to! :)
+
     return cheapr_sset(x, indices);
   }
 }

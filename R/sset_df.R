@@ -22,7 +22,7 @@
 #' @rdname sset_df
 #' @export
 sset_df <- function(x, i = NULL, j = NULL){
-  .Call(`_cheapr_cpp_df_subset`, x, i, j)
+  .Call(`_cheapr_cpp_df_subset`, x, i, j, TRUE)
 }
 #' @rdname sset_df
 #' @export

@@ -2,25 +2,25 @@
 
 // Altrep utils
 
-bool is_altrep(SEXP x){
+inline bool is_altrep(SEXP x){
   return ALTREP(x);
 }
+
+// Symbols
+static SEXP CHEAPR_COMPACT_INTSEQ = NULL;
+static SEXP CHEAPR_COMPACT_REALSEQ = NULL;
+static SEXP CHEAPR_BASE = NULL;
+
 SEXP alt_class(SEXP x){
   if (is_altrep(x)){
-    SEXP alt_attribs = SHIELD(coerce_vec(ATTRIB(ALTREP_CLASS(x)), VECSXP));
-    SEXP out = SHIELD(coerce_vec(VECTOR_ELT(alt_attribs, 0), STRSXP));
-    YIELD(2);
-    return out;
+    return CAR(ATTRIB(ALTREP_CLASS(x)));
   } else {
     return R_NilValue;
   }
 }
 SEXP alt_pkg(SEXP x){
   if (is_altrep(x)){
-    SEXP alt_attribs = SHIELD(coerce_vec(ATTRIB(ALTREP_CLASS(x)), VECSXP));
-    SEXP out = SHIELD(coerce_vec(VECTOR_ELT(alt_attribs, 1), STRSXP));
-    YIELD(2);
-    return out;
+    return CADR(ATTRIB(ALTREP_CLASS(x)));
   } else {
     return R_NilValue;
   }
@@ -37,30 +37,22 @@ SEXP alt_data1(SEXP x){
 [[cpp11::register]]
 bool is_compact_seq(SEXP x){
   if (!is_altrep(x)) return false;
-  SEXP alt_class_nm = SHIELD(alt_class(x));
-  SEXP alt_pkg_nm = SHIELD(alt_pkg(x));
-  SEXP intseq_char = SHIELD(Rf_mkChar("compact_intseq"));
-  SEXP realseq_char = SHIELD(Rf_mkChar("compact_realseq"));
-  SEXP base_char = SHIELD(Rf_mkChar("base"));
-  bool out = (STRING_ELT(alt_class_nm, 0) == intseq_char ||
-              STRING_ELT(alt_class_nm, 0) == realseq_char) &&
-              STRING_ELT(alt_pkg_nm, 0) == base_char;
-  YIELD(5);
-  return out;
-}
+  SEXP alt_class_sym = alt_class(x);
+  SEXP alt_pkg_sym = alt_pkg(x);
 
-// bool is_compact_seq(SEXP x){
-//   if (!is_altrep(x)) return false;
-//   SEXP alt_attribs = SHIELD(coerce_vec(ATTRIB(ALTREP_CLASS(x)), VECSXP));
-//   std::string alt_class_str = CHAR(PRINTNAME(VECTOR_ELT(alt_attribs, 0)));
-//   std::string alt_pkg_str = CHAR(PRINTNAME(VECTOR_ELT(alt_attribs, 1)));
-//   std::string intseq_str = "compact_intseq";
-//   std::string realseq_str = "compact_realseq";
-//   std::string base_str = "base";
-//   bool out = alt_pkg_str == base_str && (alt_class_str == intseq_str || alt_class_str == realseq_str);
-//   YIELD(1);
-//   return out;
-// }
+  if (CHEAPR_COMPACT_INTSEQ == NULL){
+    CHEAPR_COMPACT_INTSEQ = Rf_install("compact_intseq");
+  }
+  if (CHEAPR_COMPACT_REALSEQ == NULL){
+    CHEAPR_COMPACT_REALSEQ = Rf_install("compact_realseq");
+  }
+  if (CHEAPR_BASE == NULL){
+    CHEAPR_BASE = Rf_install("base");
+  }
+  return (alt_class_sym == CHEAPR_COMPACT_INTSEQ ||
+          alt_class_sym == CHEAPR_COMPACT_REALSEQ) &&
+          alt_pkg_sym == CHEAPR_BASE;
+}
 
 [[cpp11::register]]
 SEXP compact_seq_data(SEXP x){
@@ -88,7 +80,7 @@ SEXP altrep_materialise(SEXP x) {
   // } else {
   //  return x;
   // }
-  return ALTREP(x) ? Rf_duplicate(x) : x;
+  return is_altrep(x) ? Rf_duplicate(x) : x;
   // Even after using DATAPTR, ALTREP(x) == TRUE ?
   // if (ALTREP(x)) DATAPTR(x);
   // return x;

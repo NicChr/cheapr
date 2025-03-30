@@ -596,10 +596,10 @@ extern "C" SEXP _cheapr_cpp_df_slice(SEXP x, SEXP indices, SEXP check) {
   END_CPP11
 }
 // sset.cpp
-SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j);
-extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j) {
+SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check);
+extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j, SEXP check) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_df_subset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j)));
+    return cpp11::as_sexp(cpp_df_subset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j), cpp11::as_cpp<cpp11::decay_t<bool>>(check)));
   END_CPP11
 }
 // sset.cpp
@@ -767,7 +767,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_df_row_na_counts",        (DL_FUNC) &_cheapr_cpp_df_row_na_counts,        1},
     {"_cheapr_cpp_df_select",               (DL_FUNC) &_cheapr_cpp_df_select,               2},
     {"_cheapr_cpp_df_slice",                (DL_FUNC) &_cheapr_cpp_df_slice,                3},
-    {"_cheapr_cpp_df_subset",               (DL_FUNC) &_cheapr_cpp_df_subset,               3},
+    {"_cheapr_cpp_df_subset",               (DL_FUNC) &_cheapr_cpp_df_subset,               4},
     {"_cheapr_cpp_drop_null",               (DL_FUNC) &_cheapr_cpp_drop_null,               2},
     {"_cheapr_cpp_fixed_width_breaks",      (DL_FUNC) &_cheapr_cpp_fixed_width_breaks,      6},
     {"_cheapr_cpp_format_numeric_as_int64", (DL_FUNC) &_cheapr_cpp_format_numeric_as_int64, 1},

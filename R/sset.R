@@ -82,7 +82,7 @@ sset.default <- function(x, i, ...){
 #' @rdname sset
 #' @export
 sset.data.frame <- function(x, i = NULL, j = NULL, ...){
-  .Call(`_cheapr_cpp_df_subset`, x, i, j)
+  .Call(`_cheapr_cpp_df_subset`, x, i, j, TRUE)
 }
 #' @rdname sset
 #' @export

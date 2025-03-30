@@ -336,8 +336,8 @@ cpp_df_slice <- function(x, indices, check) {
   .Call(`_cheapr_cpp_df_slice`, x, indices, check)
 }
 
-cpp_df_subset <- function(x, i, j) {
-  .Call(`_cheapr_cpp_df_subset`, x, i, j)
+cpp_df_subset <- function(x, i, j, check) {
+  .Call(`_cheapr_cpp_df_subset`, x, i, j, check)
 }
 
 cpp_sset <- function(x, indices, check) {
