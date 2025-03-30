@@ -4,10 +4,6 @@ is_compact_seq <- function(x) {
   .Call(`_cheapr_is_compact_seq`, x)
 }
 
-compact_seq_data <- function(x) {
-  .Call(`_cheapr_compact_seq_data`, x)
-}
-
 cpp_set_rm_attributes <- function(x) {
   .Call(`_cheapr_cpp_set_rm_attributes`, x)
 }

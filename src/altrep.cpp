@@ -54,7 +54,6 @@ bool is_compact_seq(SEXP x){
           alt_pkg_sym == CHEAPR_BASE;
 }
 
-[[cpp11::register]]
 SEXP compact_seq_data(SEXP x){
   if (!is_compact_seq(x)){
     Rf_error("x must be an altrep compact_intseq");

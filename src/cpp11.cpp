@@ -12,13 +12,6 @@ extern "C" SEXP _cheapr_is_compact_seq(SEXP x) {
     return cpp11::as_sexp(is_compact_seq(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// altrep.cpp
-SEXP compact_seq_data(SEXP x);
-extern "C" SEXP _cheapr_compact_seq_data(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(compact_seq_data(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
 // attrs.cpp
 SEXP cpp_set_rm_attributes(SEXP x);
 extern "C" SEXP _cheapr_cpp_set_rm_attributes(SEXP x) {
@@ -747,7 +740,6 @@ extern "C" SEXP _cheapr_cpp_lgl_locs(SEXP x, SEXP n_true, SEXP n_false, SEXP inc
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_clean_indices",               (DL_FUNC) &_cheapr_clean_indices,               2},
-    {"_cheapr_compact_seq_data",            (DL_FUNC) &_cheapr_compact_seq_data,            1},
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
