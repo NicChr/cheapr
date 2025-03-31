@@ -198,6 +198,13 @@ setdiff(SEXP x, SEXP y){
 }
 
 static inline SEXP
+intersect(SEXP x, SEXP y, bool unique){
+  typedef SEXP fn_t(SEXP, SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_intersect");
+  return fn(x, y, unique);
+}
+
+static inline SEXP
 get_ptype(SEXP x){
   typedef SEXP fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_get_ptype");

@@ -269,6 +269,20 @@ SEXP cpp_setdiff(SEXP x, SEXP y){
   YIELD(3);
   return out;
 }
+
+SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
+  if (unique){
+    SHIELD(x = cpp_unique(x));
+  } else {
+    SHIELD(x);
+  }
+  SEXP matches = SHIELD(Rf_match(y, x, NA_INTEGER));
+  SEXP locs = SHIELD(cpp_which_not_na(matches));
+  SEXP out = SHIELD(sset_vec(x, locs, false));
+  Rf_copyMostAttrib(x, out);
+  YIELD(4);
+  return out;
+}
 // SEXP cpp_setdiff(SEXP x, SEXP y, bool dups){
 //
 //   bool is_simple = is_simple_atomic_vec(x) && is_simple_atomic_vec(y);

@@ -248,6 +248,15 @@ api_setdiff(SEXP x, SEXP y){
 }
 
 SEXP
+api_intersect(SEXP x, SEXP y, bool unique){
+  try {
+    return cpp_intersect(x, y, unique);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
 api_get_ptype(SEXP x){
   try {
     return get_ptype(x);
@@ -357,6 +366,7 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_name_repair",    (DL_FUNC)api_name_repair);
   R_RegisterCCallable("cheapr", "api_unique",    (DL_FUNC)api_unique);
   R_RegisterCCallable("cheapr", "api_setdiff",    (DL_FUNC)api_setdiff);
+  R_RegisterCCallable("cheapr", "api_intersect",    (DL_FUNC)api_intersect);
   R_RegisterCCallable("cheapr", "api_get_ptype",    (DL_FUNC)api_get_ptype);
   R_RegisterCCallable("cheapr", "api_df_assign_cols",    (DL_FUNC)api_df_assign_cols);
   R_RegisterCCallable("cheapr", "api_df_col_c",    (DL_FUNC)api_df_col_c);
