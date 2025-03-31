@@ -790,3 +790,54 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
   YIELD(6);
   return target;
 }
+
+// Coalesce a list of string vectors
+
+[[cpp11::register]]
+SEXP cpp_str_coalesce(SEXP x){
+  if (TYPEOF(x) != VECSXP){
+    Rf_error("`x` must be a list of character vectors in %s", __func__);
+  }
+
+  int n = Rf_xlength(x);
+
+  R_xlen_t out_size = 0;
+
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  for (R_xlen_t i = 0; i < n; ++i){
+    if (Rf_xlength(p_x[i]) == 0){
+     return Rf_allocVector(STRSXP, 0);
+    }
+    if (TYPEOF(p_x[i]) != STRSXP){
+      Rf_error("All elements of `x` must be character vectors in %s", __func__);
+    }
+    out_size = std::max(out_size, Rf_xlength(p_x[i]));
+  }
+
+
+  SEXP out = SHIELD(Rf_allocVector(STRSXP, out_size));
+
+  SEXP inner_char;
+  PROTECT_INDEX inner_char_idx;
+
+  R_ProtectWithIndex(inner_char = R_BlankString, &inner_char_idx);
+
+
+  for (R_xlen_t i = 0; i < out_size; ++i){
+    for (R_xlen_t j = 0; j < n; ++j){
+      R_Reprotect(inner_char = STRING_ELT(p_x[j], i % Rf_xlength(p_x[j])), inner_char_idx);
+      if (inner_char != R_BlankString){
+        SET_STRING_ELT(out, i, inner_char);
+        break;
+      }
+    }
+  }
+
+  YIELD(2);
+  return out;
+
+
+}
+
+

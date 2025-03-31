@@ -392,6 +392,10 @@ cpp_reconstruct <- function(target, source, target_attr_names, source_attr_names
   .Call(`_cheapr_cpp_reconstruct`, target, source, target_attr_names, source_attr_names)
 }
 
+cpp_str_coalesce <- function(x) {
+  .Call(`_cheapr_cpp_str_coalesce`, x)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }
