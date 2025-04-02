@@ -141,6 +141,15 @@ api_val_find(SEXP x, SEXP value, bool invert){
 }
 
 SEXP
+api_val_remove(SEXP x, SEXP value){
+  try {
+    return cpp_val_remove(x, value);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
 api_slice_loc(SEXP x, R_xlen_t i){
   try {
     return slice_loc(x, i);
@@ -355,6 +364,7 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_sset_vec",    (DL_FUNC)api_sset_vec);
   R_RegisterCCallable("cheapr", "api_slice_loc",    (DL_FUNC)api_slice_loc);
   R_RegisterCCallable("cheapr", "api_val_find",    (DL_FUNC)api_val_find);
+  R_RegisterCCallable("cheapr", "api_val_remove",    (DL_FUNC)api_val_remove);
   R_RegisterCCallable("cheapr", "api_loc_set_replace",    (DL_FUNC)api_loc_set_replace);
   R_RegisterCCallable("cheapr", "api_sequence",    (DL_FUNC)api_sequence);
   R_RegisterCCallable("cheapr", "api_seq_len",    (DL_FUNC)api_seq_len);

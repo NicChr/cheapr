@@ -120,6 +120,14 @@ val_find(SEXP x, SEXP value, bool invert){
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_val_find");
   return fn(x, value, invert);
 }
+
+static inline SEXP
+val_remove(SEXP x, SEXP value){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_val_remove");
+  return fn(x, value);
+}
+
 static inline SEXP
 loc_set_replace(SEXP x, SEXP where, SEXP what){
   typedef SEXP fn_t(SEXP, SEXP, SEXP);

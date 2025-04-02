@@ -1321,7 +1321,7 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
 // 0-based scalar subset
 SEXP slice_loc(SEXP x, R_xlen_t i){
 
-  if (!is_simple_vec(x)){
+  if (Rf_isObject(x)){
     SEXP loc;
     if (i <= integer_max_){
       loc = SHIELD(Rf_ScalarInteger(i + 1));
