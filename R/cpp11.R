@@ -28,10 +28,6 @@ cpp_rep_len <- function(x, length) {
   .Call(`_cheapr_cpp_rep_len`, x, length)
 }
 
-cpp_rep <- function(x, times) {
-  .Call(`_cheapr_cpp_rep`, x, times)
-}
-
 cpp_recycle <- function(x, length) {
   .Call(`_cheapr_cpp_recycle`, x, length)
 }

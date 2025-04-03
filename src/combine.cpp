@@ -199,7 +199,6 @@ SEXP cpp_rep_len(SEXP x, int length){
   }
 }
 
-[[cpp11::register]]
 SEXP cpp_rep(SEXP x, SEXP times){
 
   R_xlen_t n = vec_length(x);

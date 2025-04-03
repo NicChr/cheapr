@@ -57,13 +57,6 @@ extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
   END_CPP11
 }
 // combine.cpp
-SEXP cpp_rep(SEXP x, SEXP times);
-extern "C" SEXP _cheapr_cpp_rep(SEXP x, SEXP times) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_rep(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(times)));
-  END_CPP11
-}
-// combine.cpp
 SEXP cpp_recycle(SEXP x, SEXP length);
 extern "C" SEXP _cheapr_cpp_recycle(SEXP x, SEXP length) {
   BEGIN_CPP11
@@ -807,7 +800,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
     {"_cheapr_cpp_reconstruct",             (DL_FUNC) &_cheapr_cpp_reconstruct,             4},
     {"_cheapr_cpp_recycle",                 (DL_FUNC) &_cheapr_cpp_recycle,                 2},
-    {"_cheapr_cpp_rep",                     (DL_FUNC) &_cheapr_cpp_rep,                     2},
     {"_cheapr_cpp_rep_len",                 (DL_FUNC) &_cheapr_cpp_rep_len,                 2},
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
