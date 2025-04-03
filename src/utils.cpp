@@ -82,6 +82,48 @@ SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
 }
 
+double cpp_sum(SEXP x){
+
+  R_xlen_t n = Rf_xlength(x);
+  switch (CHEAPR_TYPEOF(x)){
+
+  case LGLSXP:
+  case INTSXP: {
+
+    int *p_x = INTEGER(x);
+    int sum = 0;
+
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      sum = is_na_int(sum) || is_na_int(p_x[i]) ? NA_INTEGER : sum + p_x[i];
+    }
+    return sum == NA_INTEGER ? NA_REAL : sum;
+  }
+  case CHEAPR_INT64SXP: {
+
+    long long int *p_x = INTEGER64_PTR(x);
+    long long int sum = 0;
+
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      sum = is_na_int64(sum) || is_na_int64(p_x[i]) ? NA_INTEGER64 : sum + p_x[i];
+    }
+    return sum == NA_INTEGER64 ? NA_REAL : sum;
+  }
+  default: {
+
+    double *p_x = REAL(x);
+    double sum = 0;
+
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      sum = is_na_dbl(sum) || is_na_dbl(p_x[i]) ? NA_REAL : sum + p_x[i];
+    }
+    return sum;
+  }
+  }
+}
+
 // Internal-only function
 // Sum of squared-differences
 // Used in `cheapr_var()`
@@ -807,7 +849,7 @@ SEXP cpp_str_coalesce(SEXP x){
 
   for (R_xlen_t i = 0; i < n; ++i){
     if (Rf_xlength(p_x[i]) == 0){
-     return Rf_allocVector(STRSXP, 0);
+      return Rf_allocVector(STRSXP, 0);
     }
     if (TYPEOF(p_x[i]) != STRSXP){
       Rf_error("All elements of `x` must be character vectors in %s", __func__);

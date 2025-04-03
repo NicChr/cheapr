@@ -37,11 +37,8 @@ SEXP cpp_rep_len(SEXP x, int length){
   } else if (is_df(x)){
     int n_cols = Rf_length(x);
     SEXP out = SHIELD(new_vec(VECSXP, n_cols));
-    SEXP var;
     for (int i = 0; i < n_cols; ++i){
-      var = SHIELD(VECTOR_ELT(x, i));
-      SET_VECTOR_ELT(out, i, cpp_rep_len(var, length));
-      YIELD(1);
+      SET_VECTOR_ELT(out, i, cpp_rep_len(VECTOR_ELT(x, i), length));
     }
     Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
     SHIELD(out = cpp_list_as_df(out));
@@ -200,6 +197,117 @@ SEXP cpp_rep_len(SEXP x, int length){
   } else {
     return base_rep(x, cpp11::named_arg("length.out") = length);
   }
+}
+SEXP cpp_rep(SEXP x, SEXP times){
+
+  R_xlen_t n = vec_length(x);
+
+  R_xlen_t out_size;
+  R_xlen_t n_times = Rf_xlength(times);
+  SHIELD(times = coerce_vector(times, INTSXP));
+
+  if (n_times == 1){
+    out_size = n * INTEGER(times)[0];
+    SEXP out = SHIELD(cpp_rep_len(x, out_size));
+    YIELD(2);
+    return out;
+  } else {
+    int *p_times = INTEGER(times);
+    if (n_times != n){
+      YIELD(1);
+      Rf_error("`times` must be length 1 or `vector_length(x)` in %s", __func__);
+    }
+
+    if (Rf_isNull(x)){
+      YIELD(1);
+      return R_NilValue;
+    } else if (is_df(x)){
+      SEXP row_names = SHIELD(cpp_seq_len(df_nrow(x)));
+      SHIELD(row_names = cpp_rep(row_names, times));
+      SEXP out = SHIELD(cpp_sset(x, row_names, true));
+      YIELD(4);
+      return out;
+    } else if (is_simple_vec(x)){
+      SEXP out = SHIELD(new_vec(INTSXP, cpp_sum(times)));
+      switch (TYPEOF(x)){
+      case LGLSXP:
+      case INTSXP: {
+        int *p_x = INTEGER(x);
+        int *p_out = INTEGER(out);
+        R_xlen_t k = 0;
+        for (R_xlen_t i = 0; i < n; ++i){
+          for (int j = 0; j < p_times[i]; ++j, ++k) p_out[k] = p_x[i];
+        }
+        Rf_copyMostAttrib(x, out);
+        YIELD(2);
+        return out;
+      }
+      case REALSXP: {
+        double *p_x = REAL(x);
+        double *p_out = REAL(out);
+        R_xlen_t k = 0;
+        for (R_xlen_t i = 0; i < n; ++i){
+          for (int j = 0; j < p_times[i]; ++j, ++k) p_out[k] = p_x[i];
+        }
+        Rf_copyMostAttrib(x, out);
+        YIELD(2);
+        return out;
+      }
+      case STRSXP: {
+        const SEXP *p_x = STRING_PTR_RO(x);
+        R_xlen_t k = 0;
+        for (R_xlen_t i = 0; i < n; ++i){
+          for (int j = 0; j < p_times[i]; ++j, ++k) SET_STRING_ELT(out, k, p_x[i]);
+        }
+        Rf_copyMostAttrib(x, out);
+        YIELD(2);
+        return out;
+      }
+      case CPLXSXP: {
+        const Rcomplex *p_x = COMPLEX(x);
+        R_xlen_t k = 0;
+        for (R_xlen_t i = 0; i < n; ++i){
+          for (int j = 0; j < p_times[i]; ++j, ++k) SET_COMPLEX_ELT(out, k, p_x[i]);
+        }
+        Rf_copyMostAttrib(x, out);
+        YIELD(2);
+        return out;
+      }
+      case VECSXP: {
+        const SEXP *p_x = VECTOR_PTR_RO(x);
+        R_xlen_t k = 0;
+        for (R_xlen_t i = 0; i < n; ++i){
+          for (int j = 0; j < p_times[i]; ++j, ++k) SET_VECTOR_ELT(out, k, p_x[i]);
+        }
+        Rf_copyMostAttrib(x, out);
+        YIELD(2);
+        return out;
+      }
+      default: {
+        SEXP out = SHIELD(base_rep(x, times));
+        YIELD(3);
+        return out;
+      }
+      }
+    } else {
+      SEXP out = SHIELD(base_rep(x, times));
+      YIELD(2);
+      return out;
+    }
+  }
+  // SEXP temp_list = SHIELD(new_vec(VECSXP, n_times));
+  // SEXP temp;
+  // PROTECT_INDEX temp_idx;
+  // R_ProtectWithIndex(temp = R_NilValue, &temp_idx);
+  //
+  // for (R_xlen_t i = 0; i < n_times; ++i){
+  //   R_Reprotect(temp = slice_loc(x, i), temp_idx);
+  //   SET_VECTOR_ELT(temp_list, i, cpp_rep_len(temp, p_times[i]));
+  // }
+  //
+  // SEXP out = SHIELD(cpp_c(temp_list));
+  // YIELD(4);
+  // return out;
 }
 
 // Recycle elements of a list `x`

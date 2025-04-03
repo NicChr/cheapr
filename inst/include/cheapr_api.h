@@ -171,6 +171,13 @@ rep_len(SEXP x, int length){
 }
 
 static inline SEXP
+rep(SEXP x, SEXP times){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_rep");
+  return fn(x, times);
+}
+
+static inline SEXP
 recycle(SEXP x, SEXP length){
   typedef SEXP fn_t(SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_recycle");

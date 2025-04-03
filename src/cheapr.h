@@ -242,6 +242,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs);
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
 SEXP cpp_sequence(SEXP size, SEXP from, SEXP by);
 SEXP cpp_rep_len(SEXP x, int length);
+SEXP cpp_rep(SEXP x, SEXP times);
 SEXP cpp_recycle(SEXP x, SEXP length);
 SEXP cpp_c(SEXP x);
 SEXP cpp_list_c(SEXP x);
@@ -260,5 +261,6 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols);
 SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair);
 SEXP cpp_list_assign(SEXP x, SEXP values);
 SEXP slice_loc(SEXP x, R_xlen_t i);
+double cpp_sum(SEXP x);
 
 #endif
