@@ -185,6 +185,13 @@ c(SEXP x){
 }
 
 static inline SEXP
+list_c(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_list_c");
+  return fn(x);
+}
+
+static inline SEXP
 name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   typedef SEXP fn_t(SEXP, SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_name_repair");
