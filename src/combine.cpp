@@ -198,6 +198,8 @@ SEXP cpp_rep_len(SEXP x, int length){
     return base_rep(x, cpp11::named_arg("length.out") = length);
   }
 }
+
+[[cpp11::register]]
 SEXP cpp_rep(SEXP x, SEXP times){
 
   R_xlen_t n = vec_length(x);
@@ -222,11 +224,20 @@ SEXP cpp_rep(SEXP x, SEXP times){
       YIELD(1);
       return R_NilValue;
     } else if (is_df(x)){
-      SEXP row_names = SHIELD(cpp_seq_len(df_nrow(x)));
-      SHIELD(row_names = cpp_rep(row_names, times));
-      SEXP out = SHIELD(cpp_sset(x, row_names, true));
-      YIELD(4);
-      return out;
+      if (Rf_length(x) == 0){
+        SEXP out = SHIELD(Rf_shallow_duplicate(x));
+        Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(cpp_sum(times)));
+        SHIELD(out = fast_df_reconstruct(out, x));
+        YIELD(3);
+        return out;
+      } else {
+        SEXP row_names = SHIELD(cpp_seq_len(df_nrow(x)));
+        SHIELD(row_names = cpp_rep(row_names, times));
+        SEXP out = SHIELD(cpp_sset(x, row_names, true));
+        YIELD(4);
+        return out;
+      }
+
     } else if (is_simple_vec(x)){
       SEXP out = SHIELD(new_vec(INTSXP, cpp_sum(times)));
       switch (TYPEOF(x)){
