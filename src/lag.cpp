@@ -54,7 +54,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
-    if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
+    if (!is_null(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
       SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
@@ -85,7 +85,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
-    if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
+    if (!is_null(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
       SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
@@ -112,7 +112,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
-    if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
+    if (!is_null(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
       SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
@@ -139,7 +139,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) SET_COMPLEX_ELT(out, i, fill_value);
     }
-    if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
+    if (!is_null(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
       SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
@@ -199,7 +199,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
         for (R_xlen_t i = size + k - 1; i >= 0; --i) SET_STRING_ELT(out, i, p_x[i - k]);
       }
     }
-    if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
+    if (!is_null(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
       SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
@@ -261,7 +261,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
         }
       }
     }
-    if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
+    if (!is_null(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
       SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
@@ -333,7 +333,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
         }
       }
     }
-    if (!Rf_isNull(Rf_getAttrib(xvec, R_NamesSymbol))){
+    if (!is_null(Rf_getAttrib(xvec, R_NamesSymbol))){
       SEXP old_names = SHIELD(Rf_getAttrib(xvec, R_NamesSymbol));
       ++NP;
       SEXP new_names = SHIELD(cpp_lag(old_names, k, R_NilValue, set, recursive));
@@ -365,8 +365,8 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   if (lag_size < 1){
     Rf_error("lag must be a non-zero length integer vector");
   }
-  bool has_order = !Rf_isNull(order);
-  bool has_rl = !Rf_isNull(run_lengths);
+  bool has_order = !is_null(order);
+  bool has_rl = !is_null(run_lengths);
   bool recycle_lag = lag_size != 1;
 
   // When order is NULL we run through x from left to right (as usual)
@@ -404,7 +404,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
 
   // Macro to lag names(x)
 #define CHEAPR_LAG_R_NAMES                                                                                  \
-  if (!Rf_isNull(Rf_getAttrib(x, R_NamesSymbol))){                                                          \
+  if (!is_null(Rf_getAttrib(x, R_NamesSymbol))){                                                          \
     SEXP old_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));                                            \
     ++NP;                                                                                                   \
     SEXP new_names = SHIELD(cpp_lag2(old_names, lag, order, run_lengths, R_NilValue, recursive));       \

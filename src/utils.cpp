@@ -737,7 +737,7 @@ SEXP create_df_row_names(int n){
 [[cpp11::register]]
 SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   int NP = 0;
-  if (Rf_isNull(names)) return names;
+  if (is_null(names)) return names;
 
   if (TYPEOF(names) != STRSXP){
     Rf_error("`names` must be a character vector of names in %s", __func__);

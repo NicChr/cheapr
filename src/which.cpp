@@ -656,7 +656,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     Rf_error("Value has been implicitly converted to NA, please check");
   }
 
-  R_xlen_t n_vals = Rf_isNull(n_values) ? scalar_count(x, value, false) : Rf_asReal(n_values);
+  R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : Rf_asReal(n_values);
   R_xlen_t out_size = invert ? n - n_vals : n_vals;
   R_xlen_t whichi = 0;
   R_xlen_t i = 0;

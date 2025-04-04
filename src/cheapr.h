@@ -105,6 +105,10 @@
 #define YIELD(n) (Rf_unprotect(n))
 #endif
 
+inline bool is_null(SEXP x){
+  return TYPEOF(x) == NILSXP;
+}
+
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
 }

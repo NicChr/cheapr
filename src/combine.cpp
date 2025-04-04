@@ -32,7 +32,7 @@ SEXP fast_df_reconstruct(SEXP x, SEXP source){
 SEXP cpp_rep_len(SEXP x, int length){
   int out_size = length;
 
-  if (Rf_isNull(x)){
+  if (is_null(x)){
     return R_NilValue;
   } else if (is_df(x)){
     int n_cols = Rf_length(x);
@@ -219,7 +219,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
       Rf_error("`times` must be length 1 or `vector_length(x)` in %s", __func__);
     }
 
-    if (Rf_isNull(x)){
+    if (is_null(x)){
       YIELD(1);
       return R_NilValue;
     } else if (is_df(x)){
@@ -327,7 +327,7 @@ SEXP cpp_recycle(SEXP x, SEXP length){
   SEXP out = SHIELD(cpp_drop_null(x, true));
   SEXP sizes = SHIELD(cpp_lengths(out, false));
   int *p_sizes = INTEGER(sizes);
-  bool has_length = !Rf_isNull(length);
+  bool has_length = !is_null(length);
   SHIELD(length = coerce_vec(length, INTSXP));
 
   int n = 0;
@@ -591,7 +591,7 @@ SEXP cpp_list_c(SEXP x){
   }
 
   SEXP x_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
-  bool x_has_names = !Rf_isNull(x_names);
+  bool x_has_names = !is_null(x_names);
 
   R_xlen_t k = 0;
   SEXP out;
@@ -627,8 +627,8 @@ SEXP cpp_list_c(SEXP x){
       m = 1;
     }
 
-    any_names = any_names || !Rf_isNull(names);
-    if (!Rf_isNull(names)){
+    any_names = any_names || !is_null(names);
+    if (!is_null(names)){
       for (R_xlen_t j = 0; j < m; ++k, ++j){
         SET_VECTOR_ELT(out, k, p_temp[j]);
         SET_STRING_ELT(out_names, k, STRING_ELT(names, j));
@@ -759,7 +759,7 @@ SEXP cpp_df_c(SEXP x){
     for (int i = 0; i < n_frames; ++i){
       R_Reprotect(vec = get_list_element(p_x[i], CHAR(STRING_ELT(names, j))), vec_idx);
 
-      if (Rf_isNull(vec)){
+      if (is_null(vec)){
         R_Reprotect(vec = VECTOR_ELT(ptypes, j), vec_idx);
         R_Reprotect(vec = cpp_na_init(vec, df_nrow(p_x[i])), vec_idx);
       }

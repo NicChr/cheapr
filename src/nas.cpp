@@ -865,7 +865,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
 SEXP matrix_rownames(SEXP x) {
   SEXP dimnames = SHIELD(Rf_getAttrib(x, R_DimNamesSymbol));
 
-  if (Rf_isNull(dimnames) ||
+  if (is_null(dimnames) ||
       TYPEOF(dimnames) != VECSXP ||
       Rf_length(dimnames) != 2){
     YIELD(1);
@@ -877,7 +877,7 @@ SEXP matrix_rownames(SEXP x) {
 SEXP matrix_colnames(SEXP x) {
   SEXP dimnames = SHIELD(Rf_getAttrib(x, R_DimNamesSymbol));
 
-  if (Rf_isNull(dimnames) ||
+  if (is_null(dimnames) ||
       TYPEOF(dimnames) != VECSXP ||
       Rf_length(dimnames) != 2){
     YIELD(1);

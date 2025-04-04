@@ -177,7 +177,7 @@ SEXP clean_indices(SEXP indices, SEXP x){
 
   if (TYPEOF(indices) == STRSXP){
     SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
-    if (Rf_isNull(names)){
+    if (is_null(names)){
       YIELD(NP);
       Rf_error("Cannot subset on the names of an unnamed vector");
     }
@@ -909,7 +909,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
     }
     }
   }
-  if (!Rf_isNull(out) && out_size != n){
+  if (!is_null(out) && out_size != n){
     SHIELD(out = Rf_xlengthgets(out, out_size)); ++NP;
   }
   YIELD(NP);
@@ -1055,7 +1055,7 @@ SEXP cpp_rev(SEXP x, bool set){
     // }
   }
   // // If x has names, reverse them too
-  if (rev_names && !Rf_isNull(Rf_getAttrib(out, R_NamesSymbol))){
+  if (rev_names && !is_null(Rf_getAttrib(out, R_NamesSymbol))){
     SEXP old_names = SHIELD(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
     // should be okay to rev in-place here because we already copied the names
     Rf_setAttrib(out, R_NamesSymbol, cpp_rev(old_names, true));
@@ -1105,7 +1105,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   SEXP cols;
 
-  if (Rf_isNull(locs)){
+  if (is_null(locs)){
     // If NULL then select all cols
     cols = SHIELD(cpp_seq_len(n_cols)); ++NP;
     n_locs = n_cols;
@@ -1184,7 +1184,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
     Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
   }
 
-  if (Rf_isNull(indices)){
+  if (is_null(indices)){
     return x;
   }
   int ncols = Rf_length(x);
@@ -1280,7 +1280,7 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
     // Subset names
 
     SEXP xnames = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
-    if (!Rf_isNull(xnames)){
+    if (!is_null(xnames)){
       Rf_setAttrib(out, R_NamesSymbol, sset_vec(xnames, indices, check));
     }
     YIELD(NP);

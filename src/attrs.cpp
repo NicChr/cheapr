@@ -46,7 +46,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
   }
   int n = Rf_length(attrs);
   bool attrs_are_a_list = TYPEOF(attrs) == VECSXP;
-  if (Rf_isNull(attrs) ||
+  if (is_null(attrs) ||
       // is.null or empty list?
       (attrs_are_a_list && n == 0)){
     if (add){
@@ -58,7 +58,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
     }
   }
   SEXP names = SHIELD(Rf_getAttrib(attrs, R_NamesSymbol)); ++NP;
-  if (!attrs_are_a_list || Rf_isNull(names)){
+  if (!attrs_are_a_list || is_null(names)){
     YIELD(NP);
     Rf_error("attributes must be a named list");
   }
@@ -89,7 +89,7 @@ void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy){
 void cpp_copy_names(SEXP source, SEXP target, bool deep_copy){
   SEXP source_nms = SHIELD(Rf_getAttrib(source, R_NamesSymbol));
   SEXP target_nms = SHIELD(deep_copy ? Rf_duplicate(source_nms) : source_nms);
-  if (!Rf_isNull(source_nms)){
+  if (!is_null(source_nms)){
     Rf_setAttrib(target, R_NamesSymbol, target_nms);
   }
   YIELD(2);
