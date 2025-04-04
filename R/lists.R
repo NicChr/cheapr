@@ -11,8 +11,8 @@
 #' @param ... Objects to combine into a list.
 #'
 #' @returns
-#' `lengths_()` returns the list lengths. \cr
-#' `unlisted_length()` is an alternative to `length(unlist(x))`. \cr
+#' `list_lengths()` returns the list lengths. \cr
+#' `unlisted_length()` is a fast alternative to `length(unlist(x))`. \cr
 #' `new_list()` is like `vector("list", length)` but also allows you to specify
 #' a default value for each list element. This can be useful for
 #' initialising with a catch-all value so that when you unlist you're guaranteed
@@ -25,6 +25,9 @@
 #' `list_combine()` combines each element of a set of lists into a single list.
 #' If an element is not a list, it is treated as a length-one list.
 #' This happens to be very useful for combining data frame cols.
+#'
+#'
+#' `list_drop_null()` removes `NULL` list elements very quickly.
 #'
 #' @examples
 #' library(cheapr)
@@ -45,9 +48,12 @@
 #'
 #' @export
 #' @rdname lists
-lengths_ <- function(x, names = FALSE){
+list_lengths <- function(x, names = FALSE){
   .Call(`_cheapr_cpp_lengths`, x, names)
 }
+#' @export
+#' @rdname lists
+lengths_ <- list_lengths
 #' @export
 #' @rdname lists
 unlisted_length <- cpp_unnested_length
@@ -64,4 +70,10 @@ list_assign <- cpp_list_assign
 #' @rdname lists
 list_combine <- function(...){
   cpp_list_c(list(...))
+}
+
+#' @export
+#' @rdname lists
+list_drop_null <- function(x){
+  .Call(`_cheapr_cpp_drop_null`, x, FALSE)
 }
