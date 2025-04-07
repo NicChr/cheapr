@@ -1112,6 +1112,16 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     check = false;
   } else if (Rf_isString(locs)){
     cols = SHIELD(Rf_match(names, locs, NA_INTEGER)); ++NP;
+    if (cpp_any_na(cols, false)){
+      for (int i = 0; i < Rf_length(cols); ++i){
+        if (is_na_int(INTEGER(cols)[i])){
+          const char *bad_loc = CHAR(STRING_ELT(locs, i));
+          YIELD(NP);
+          Rf_error("Column %s does not exist", bad_loc);
+        }
+      }
+    }
+    check = false;
   } else if (Rf_isLogical(locs)){
     // If logical then find locs using `which_()`
     if (Rf_length(locs) != n_cols){
@@ -1145,19 +1155,27 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   if (check){
     for (int i = 0; i < n_locs; ++i) {
       col = p_cols[i];
-      if (col != NA_INTEGER && col >= 1 && col <= n_cols){
-        SET_VECTOR_ELT(out, k, p_x[col - 1]);
-        SET_STRING_ELT(out_names, k, p_names[col - 1]);
+      if (col == NA_INTEGER){
+        YIELD(NP);
+        Rf_error("Cannot select `NA` column locations in %s", __func__);
+      } else if (col >= 1 && col <= n_cols){
+        --col;
+        SET_VECTOR_ELT(out, k, p_x[col]);
+        SET_STRING_ELT(out_names, k, p_names[col]);
         ++k;
-      } else if (col != NA_INTEGER && col < 0){
+      } else if (col < 0){
         // This can only happen when there is a mix of pos & neg
         // but wasn't captured by the negative subscripting section
         // because that only looks to see if the 1st element is neg
-        Rf_error("Cannot mix positive and negative subscripts");
+        YIELD(NP);
+        Rf_error("Cannot mix positive and negative subscripts in %s", __func__);
+      } else if (col != 0){
+        YIELD(NP);
+        Rf_error("There is no column location %d: ", col);
       }
     }
   } else {
-    for (int i = 0; i < n_locs; ++i) {
+    for (int i = 0; i < n_locs; ++i){
       col = p_cols[i];
       SET_VECTOR_ELT(out, i, p_x[col - 1]);
       SET_STRING_ELT(out_names, i, p_names[col - 1]);

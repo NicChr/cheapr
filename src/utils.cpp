@@ -921,11 +921,6 @@ SEXP cpp_str_coalesce(SEXP x){
       }
     }
   }
-
   YIELD(2);
   return out;
-
-
 }
-
-
