@@ -1,19 +1,5 @@
 #include "cheapr.h"
 
-double r_sum(SEXP x, bool na_rm = false){
-  cpp11::function base_sum = cpp11::package("base")["sum"];
-  return Rf_asReal(base_sum(x, cpp11::named_arg("na.rm") = na_rm));
-}
-
-double r_min(SEXP x){
-  cpp11::function base_min = cpp11::package("base")["min"];
-  double out = R_PosInf;
-  if (Rf_xlength(x) > 0){
-    out = Rf_asReal(base_min(x));
-  }
-  return out;
-}
-
 // My version of base::sequence()
 
 [[cpp11::register]]
@@ -24,8 +10,8 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
   if (size_n > 0 && (from_n <= 0 || by_n <= 0)){
     Rf_error("from and by must both have length > 0");
   }
-  double out_size = r_sum(size, false);
-  double min_size = r_min(size);
+  double out_size = cpp_sum(size);
+  double min_size = cpp_min(size);
   if (!(out_size == out_size)){
     Rf_error("size must not contain NA values");
   }
@@ -90,8 +76,8 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
     Rf_error("from and by must both have length > 0");
   }
   // To recycle we would need to do sum * remainder of the sum over n
-  double out_size = r_sum(size, false);
-  double min_size = r_min(size);
+  double out_size = cpp_sum(size);
+  double min_size = cpp_min(size);
   if (!(out_size == out_size)){
     Rf_error("size must not contain NA values");
   }
@@ -219,12 +205,13 @@ SEXP cpp_window_sequence(SEXP size,
                          bool ascending = true) {
   int size_n = Rf_length(size);
   SEXP size_sexp = SHIELD(coerce_vec(size, INTSXP));
-  if (r_min(size_sexp) < 0){
+  R_xlen_t min_size = cpp_min(size_sexp);
+  if (min_size < 0){
     YIELD(1);
     Rf_error("size must be a vector of non-negative integers");
   }
   k = std::fmax(k, 0);
-  R_xlen_t N = r_sum(size_sexp, false);
+  R_xlen_t N = cpp_sum(size_sexp);
   SEXP out = SHIELD(new_vec(INTSXP, N));
   int *p_out = INTEGER(out);
   int *p_size = INTEGER(size_sexp);
@@ -290,13 +277,14 @@ SEXP cpp_window_sequence(SEXP size,
 [[cpp11::register]]
 SEXP cpp_lag_sequence(SEXP size, double k, bool partial = false) {
   SHIELD(size = coerce_vec(size, INTSXP));
-  if (r_min(size) < 0){
+  R_xlen_t min_size = cpp_min(size);
+  if (min_size < 0){
     YIELD(1);
     Rf_error("size must be a vector of non-negative integers");
   }
   int size_n = Rf_length(size);
   k = std::fmax(k, 0);
-  SEXP out = SHIELD(new_vec(INTSXP, r_sum(size, false)));
+  SEXP out = SHIELD(new_vec(INTSXP, cpp_sum(size)));
   int *p_out = INTEGER(out);
   int *p_size = INTEGER(size);
   R_xlen_t index = 0;
@@ -329,13 +317,14 @@ SEXP cpp_lag_sequence(SEXP size, double k, bool partial = false) {
 [[cpp11::register]]
 SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
   SHIELD(size = coerce_vec(size, INTSXP));
-  if (r_min(size) < 0){
+  R_xlen_t min_size = cpp_min(size);
+  if (min_size < 0){
     YIELD(1);
     Rf_error("size must be a vector of non-negative integers");
   }
   int size_n = Rf_length(size);
   k = std::fmax(k, 0);
-  SEXP out = SHIELD(new_vec(INTSXP, r_sum(size, false)));
+  SEXP out = SHIELD(new_vec(INTSXP, cpp_sum(size)));
   int *p_out = INTEGER(out);
   int *p_size = INTEGER(size);
   R_xlen_t index = 0;
@@ -373,11 +362,12 @@ SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
 SEXP cpp_sequence_id(SEXP size){
   int size_n = Rf_length(size);
   SEXP size_sexp = SHIELD(coerce_vec(size, INTSXP));
-  if (r_min(size_sexp) < 0){
+  R_xlen_t min_size = cpp_min(size_sexp);
+  if (min_size < 0){
     YIELD(1);
     Rf_error("size must be a vector of non-negative integers");
   }
-  R_xlen_t N = r_sum(size_sexp, false);
+  R_xlen_t N = cpp_sum(size_sexp);
   SEXP out = SHIELD(new_vec(INTSXP, N));
   int *p_out = INTEGER(out);
   int *p_size = INTEGER(size_sexp);

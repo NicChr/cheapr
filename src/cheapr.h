@@ -266,5 +266,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair);
 SEXP cpp_list_assign(SEXP x, SEXP values);
 SEXP slice_loc(SEXP x, R_xlen_t i);
 double cpp_sum(SEXP x);
+double cpp_min(SEXP x);
+SEXP cpp_str_coalesce(SEXP x);
 
 #endif

@@ -124,6 +124,52 @@ double cpp_sum(SEXP x){
   }
 }
 
+double cpp_min(SEXP x){
+
+  R_xlen_t n = Rf_xlength(x);
+  switch (CHEAPR_TYPEOF(x)){
+
+  case LGLSXP:
+  case INTSXP: {
+
+    if (n == 0) return R_PosInf;
+
+    int *p_x = INTEGER(x);
+    int out = integer_max_;
+
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      out = is_na_int(out) || is_na_int(p_x[i]) ? NA_INTEGER : std::min(out, p_x[i]);
+    }
+    return out == NA_INTEGER ? NA_REAL : out;
+  }
+  case CHEAPR_INT64SXP: {
+
+    if (n == 0) return R_PosInf;
+
+    long long int *p_x = INTEGER64_PTR(x);
+    long long int out = LLONG_MAX;
+
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      out = is_na_int64(out) || is_na_int64(p_x[i]) ? NA_INTEGER64 : std::min(out, p_x[i]);
+    }
+    return out == NA_INTEGER64 ? NA_REAL : out;
+  }
+  default: {
+
+    double *p_x = REAL(x);
+    double out = R_PosInf;
+
+    OMP_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      out = is_na_dbl(out) || is_na_dbl(p_x[i]) ? NA_REAL : std::min(out, p_x[i]);
+    }
+    return out;
+  }
+  }
+}
+
 // Internal-only function
 // Sum of squared-differences
 // Used in `cheapr_var()`

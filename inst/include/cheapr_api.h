@@ -151,14 +151,14 @@ seq_len(R_xlen_t n){
 
 static inline bool
 is_simple_atomic_vec(SEXP x){
-  typedef SEXP fn_t(SEXP);
+  typedef bool fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_is_simple_atomic_vec");
   return fn(x);
 }
 
 static inline bool
 is_simple_vec(SEXP x){
-  typedef SEXP fn_t(SEXP);
+  typedef bool fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_is_simple_vec");
   return fn(x);
 }
@@ -282,6 +282,13 @@ df_col_c(SEXP x, bool recycle, bool name_repair){
   typedef SEXP fn_t(SEXP, bool, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_col_c");
   return fn(x, recycle, name_repair);
+}
+
+static inline SEXP
+str_coalesce(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_str_coalesce");
+  return fn(x);
 }
 
 }

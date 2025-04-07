@@ -357,6 +357,15 @@ api_df_col_c(SEXP x, bool recycle, bool name_repair){
   }
 }
 
+SEXP
+api_str_coalesce(SEXP x){
+  try {
+    return cpp_str_coalesce(x);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -400,4 +409,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_get_ptype",    (DL_FUNC)api_get_ptype);
   R_RegisterCCallable("cheapr", "api_df_assign_cols",    (DL_FUNC)api_df_assign_cols);
   R_RegisterCCallable("cheapr", "api_df_col_c",    (DL_FUNC)api_df_col_c);
+  R_RegisterCCallable("cheapr", "api_str_coalesce",    (DL_FUNC)api_str_coalesce);
 }
