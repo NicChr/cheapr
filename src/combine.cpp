@@ -239,7 +239,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
       }
 
     } else if (is_simple_vec(x)){
-      SEXP out = SHIELD(new_vec(INTSXP, cpp_sum(times)));
+      SEXP out = SHIELD(new_vec(TYPEOF(x), cpp_sum(times)));
       switch (TYPEOF(x)){
       case LGLSXP:
       case INTSXP: {
