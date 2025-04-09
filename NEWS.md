@@ -18,6 +18,8 @@ multiple lists into a single list.
 
 - `list_assign` for fast assigning multiple vectors to a list.
 
+- `list_drop_null` to quickly drop `NULL` elements.
+
 - More exported C functions.
 
 ### Changes
