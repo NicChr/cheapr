@@ -179,7 +179,7 @@ df_add_cols <- function(data, cols){
   out <- unclass(data)
   temp <- unclass(cols)
   for (col in names(temp)){
-    out[[col]] <- if (is.null(temp[[col]])) NULL else cpp_rep_len(temp[[col]], length = N)
+    out[[col]] <- if (is.null(temp[[col]])) NULL else cheapr_rep_len(temp[[col]], N)
   }
   class(out) <- class(data)
   out

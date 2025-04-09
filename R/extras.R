@@ -355,13 +355,3 @@ cast <- function(x, template){
 #   }
 #   out
 # }
-cheapr_rep <- cpp_rep
-cheapr_rep_each <- function(x, each){
-  if (length(each) == 1L){
-    if (each == 1){
-      return(x)
-    }
-    each <- cpp_rep_len(each, vector_length(x))
-  }
-  cheapr_rep(x, each)
-}

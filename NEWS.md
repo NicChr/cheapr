@@ -2,6 +2,9 @@
 
 ### New functions
 
+- `cheapr_rep`, `cheapr_rep_len` and `cheapr_rep_each` to repeat out vectors 
+efficiently.
+
 - `cheapr_c` to concatenate vectors and data frame rows together fast and safely.
 
 - `reconstruct` as a method to allow users to write methods to restore objects

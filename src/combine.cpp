@@ -321,6 +321,21 @@ SEXP cpp_rep(SEXP x, SEXP times){
   // return out;
 }
 
+[[cpp11::register]]
+SEXP cpp_rep_each(SEXP x, SEXP each){
+  int NP = 0;
+  SHIELD(each = coerce_vector(each, INTSXP)); ++NP;
+  if (Rf_length(each) == 1){
+    if (INTEGER(each)[0] == 1){
+      return x;
+    }
+    SHIELD(each = cpp_rep_len(each, vec_length(x))); ++NP;
+  }
+  SEXP out = SHIELD(cpp_rep(x, each)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
 // Recycle elements of a list `x`
 
 [[cpp11::register]]

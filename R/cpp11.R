@@ -32,6 +32,10 @@ cpp_rep <- function(x, times) {
   .Call(`_cheapr_cpp_rep`, x, times)
 }
 
+cpp_rep_each <- function(x, each) {
+  .Call(`_cheapr_cpp_rep_each`, x, each)
+}
+
 cpp_recycle <- function(x, length) {
   .Call(`_cheapr_cpp_recycle`, x, length)
 }
