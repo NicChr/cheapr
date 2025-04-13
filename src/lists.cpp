@@ -164,7 +164,7 @@ SEXP get_list_element(SEXP list, const char *str){
       break;
     }
   }
-    return out;
+  return out;
 }
 
 // A cpp11 pushback() method for growing a list
@@ -320,6 +320,16 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   Rf_setAttrib(out, R_NamesSymbol, out_names);
   YIELD(NP);
   return out;
+}
+
+[[cpp11::register]]
+cpp11::list cpp_list_loc_assign(cpp11::writable::list x, int where, SEXP value){
+  int n = x.size();
+  if (where > n || where < 1){
+    cpp11::stop("`where (%d) is outside of bounds [%d, %d]", where, 1, n);
+  }
+  x[where - 1] = value;
+  return x;
 }
 
 // Multi-assign named values using cpp11
@@ -628,3 +638,4 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   YIELD(NP);
   return out;
 }
+

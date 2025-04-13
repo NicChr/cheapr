@@ -267,6 +267,13 @@ extern "C" SEXP _cheapr_cpp_list_assign(SEXP x, SEXP values) {
   END_CPP11
 }
 // lists.cpp
+cpp11::list cpp_list_loc_assign(cpp11::writable::list x, int where, SEXP value);
+extern "C" SEXP _cheapr_cpp_list_loc_assign(SEXP x, SEXP where, SEXP value) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_list_loc_assign(cpp11::as_cpp<cpp11::decay_t<cpp11::writable::list>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value)));
+  END_CPP11
+}
+// lists.cpp
 SEXP cpp_list_as_df(SEXP x);
 extern "C" SEXP _cheapr_cpp_list_as_df(SEXP x) {
   BEGIN_CPP11
@@ -803,6 +810,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_list_as_df",              (DL_FUNC) &_cheapr_cpp_list_as_df,              1},
     {"_cheapr_cpp_list_assign",             (DL_FUNC) &_cheapr_cpp_list_assign,             2},
     {"_cheapr_cpp_list_c",                  (DL_FUNC) &_cheapr_cpp_list_c,                  1},
+    {"_cheapr_cpp_list_loc_assign",         (DL_FUNC) &_cheapr_cpp_list_loc_assign,         3},
     {"_cheapr_cpp_loc_set_replace",         (DL_FUNC) &_cheapr_cpp_loc_set_replace,         3},
     {"_cheapr_cpp_matrix_col_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts,    1},
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},
