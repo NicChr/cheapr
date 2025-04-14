@@ -1,4 +1,5 @@
 #include "cheapr.h"
+#include <vector>
 
 // static SEXP CHEAPR_ZERO = NULL;
 // void constants_init(DllInfo* dll){
@@ -604,7 +605,7 @@ SEXP cpp_list_c(SEXP x){
 
   R_xlen_t out_size = 0;
   for (R_xlen_t i = 0; i < n; ++i){
-    out_size += (TYPEOF(p_x[i]) == VECSXP  ? Rf_xlength(p_x[i]) : 1);
+    out_size += (TYPEOF(p_x[i]) == VECSXP ? Rf_xlength(p_x[i]) : 1);
   }
 
   SEXP x_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
@@ -804,7 +805,73 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
     SHIELD(x = cpp_recycle(x, R_NilValue)); ++NP;
   }
 
-  SEXP out = SHIELD(cpp_list_c(x)); ++NP;
+  int n = Rf_length(x);
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  int out_ncols = 0;
+
+  SEXP container_list = SHIELD(new_vec(VECSXP, 1)); ++NP;
+  Rf_setAttrib(container_list, R_NamesSymbol, R_BlankScalarString);
+
+  std::vector<const SEXP *> df_pointers(n);
+
+  for (int i = 0; i < n; ++i){
+    if (is_df(p_x[i])){
+      df_pointers[i] = VECTOR_PTR_RO(p_x[i]);
+      out_ncols += Rf_length(p_x[i]);
+    } else {
+      df_pointers[i] = VECTOR_PTR_RO(container_list);
+      ++out_ncols;
+    }
+  }
+
+  SEXP x_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+  bool x_has_names = !is_null(x_names);
+
+  SEXP out = SHIELD(new_vec(VECSXP, out_ncols)); ++NP;
+
+  SEXP names;
+  PROTECT_INDEX nm_idx;
+  R_ProtectWithIndex(names = R_NilValue, &nm_idx); ++NP;
+
+  SEXP out_names = SHIELD(new_vec(STRSXP, out_ncols)); ++NP;
+  bool any_names = false;
+
+  int m;
+  int k = 0;
+
+  for (int i = 0; i < n; ++i){
+
+    const SEXP *p_temp = df_pointers[i];
+
+    if (is_df(p_x[i])){
+      R_Reprotect(names = Rf_getAttrib(p_x[i], R_NamesSymbol), nm_idx);
+      m = Rf_length(p_x[i]);
+    } else {
+      SET_VECTOR_ELT(container_list, 0, p_x[i]);
+      if (x_has_names){
+        R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
+      } else {
+        R_Reprotect(names = R_NilValue, nm_idx);
+      }
+      m = 1;
+    }
+
+    any_names = any_names || !is_null(names);
+    if (!is_null(names)){
+      for (int j = 0; j < m; ++k, ++j){
+        SET_VECTOR_ELT(out, k, p_temp[j]);
+        SET_STRING_ELT(out_names, k, STRING_ELT(names, j));
+      }
+    } else {
+      for (int j = 0; j < m; ++k, ++j){
+        SET_VECTOR_ELT(out, k, p_temp[j]);
+      }
+    }
+  }
+  if (any_names){
+    Rf_namesgets(out, out_names);
+  }
 
   SEXP r_nrows = SHIELD(R_NilValue); ++NP;
   if (Rf_length(out) == 0 && Rf_length(x) != 0){
@@ -819,6 +886,96 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   YIELD(NP);
   return out;
 }
+// SEXP cpp_df_col_c2(SEXP x, bool recycle, bool name_repair){
+//   int NP = 0;
+//
+//   // Important to recycle first to avoid incorrect size calculations
+//
+//   if (recycle){
+//     SHIELD(x = cpp_recycle(x, R_NilValue)); ++NP;
+//   }
+//
+//   int n = Rf_length(x);
+//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//
+//   int out_ncols = 0;
+//
+//   SEXP container_list = SHIELD(new_vec(VECSXP, 1)); ++NP;
+//   Rf_setAttrib(container_list, R_NamesSymbol, R_BlankScalarString);
+//
+//   std::vector<const SEXP *> df_pointers(n);
+//   std::vector<int> ncols(n);
+//   for (int i = 0; i < n; ++i){
+//     if (is_df(p_x[i])){
+//       df_pointers[i] = VECTOR_PTR_RO(p_x[i]);
+//       ncols[i] = Rf_length(p_x[i]);
+//     } else {
+//       df_pointers[i] = VECTOR_PTR_RO(container_list);
+//       ncols[i] = 1;
+//     }
+//     out_ncols += ncols[i];
+//   }
+//
+//   SEXP x_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+//   bool x_has_names = !is_null(x_names);
+//
+//   SEXP out = SHIELD(new_vec(VECSXP, out_ncols)); ++NP;
+//
+//   SEXP names;
+//   PROTECT_INDEX nm_idx;
+//   R_ProtectWithIndex(names = R_NilValue, &nm_idx); ++NP;
+//
+//   SEXP out_names = SHIELD(new_vec(STRSXP, out_ncols)); ++NP;
+//   bool any_names = false;
+//
+//   int m;
+//   int k = 0;
+//
+//   for (int i = 0; i < n; ++i){
+//
+//     const SEXP *p_temp = df_pointers[i];
+//     m = ncols[i];
+//
+//     if (is_df(p_x[i])){
+//       R_Reprotect(names = Rf_getAttrib(p_x[i], R_NamesSymbol), nm_idx);
+//     } else {
+//       SET_VECTOR_ELT(container_list, 0, p_x[i]);
+//       if (x_has_names){
+//         R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
+//       } else {
+//         R_Reprotect(names = R_NilValue, nm_idx);
+//       }
+//     }
+//
+//     any_names = any_names || !is_null(names);
+//     if (!is_null(names)){
+//       for (int j = 0; j < m; ++k, ++j){
+//         SET_VECTOR_ELT(out, k, p_temp[j]);
+//         SET_STRING_ELT(out_names, k, STRING_ELT(names, j));
+//       }
+//     } else {
+//       for (int j = 0; j < m; ++k, ++j){
+//         SET_VECTOR_ELT(out, k, p_temp[j]);
+//       }
+//     }
+//   }
+//   if (any_names){
+//     Rf_namesgets(out, out_names);
+//   }
+//
+//   SEXP r_nrows = SHIELD(R_NilValue); ++NP;
+//   if (Rf_length(out) == 0 && Rf_length(x) != 0){
+//     SHIELD(r_nrows = Rf_ScalarInteger(vec_length(VECTOR_ELT(x, 0)))); ++NP;
+//   }
+//
+//   SHIELD(out = cpp_new_df(out, r_nrows, false, name_repair)); ++NP;
+//
+//   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
+//     SHIELD(out = fast_df_reconstruct(out, VECTOR_ELT(x, 0))); ++NP;
+//   }
+//   YIELD(NP);
+//   return out;
+// }
 
 // `c()` but no concatenation of names
 [[cpp11::register]]
