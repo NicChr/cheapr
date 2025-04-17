@@ -818,10 +818,11 @@ SEXP cpp_df_c(SEXP x){
   SEXP vectors = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
 
   const SEXP *p_ptypes = VECTOR_PTR_RO(ptypes);
+  const SEXP *p_names = VECTOR_PTR_RO(names);
 
   for (int j = 0; j < n_cols; ++j){
     for (int i = 0; i < n_frames; ++i){
-      R_Reprotect(vec = get_list_element(p_x[i], CHAR(STRING_ELT(names, j))), vec_idx);
+      R_Reprotect(vec = get_list_element(p_x[i], CHAR(p_names[j])), vec_idx);
 
       if (is_null(vec)){
         R_Reprotect(vec = cpp_na_init(p_ptypes[j], df_nrow(p_x[i])), vec_idx);
