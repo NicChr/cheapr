@@ -19,7 +19,7 @@ SEXP cpp_set_rm_attributes(SEXP x){
 [[cpp11::register]]
 SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
   SEXP attr_char = SHIELD(Rf_install(CHAR(Rf_asChar(which))));
-  SEXP value2 = SHIELD(r_address(x) == r_address(value) ? Rf_duplicate(value) : value);
+  SEXP value2 = SHIELD(address_equal(x, value) ? Rf_duplicate(value) : value);
   Rf_setAttrib(x, attr_char, value2);
   YIELD(2);
   return x;
@@ -53,7 +53,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
     for (int i = 0; i < Rf_length(names); ++i){
       if (p_names[i] != R_BlankString){
         SEXP attr_nm = SHIELD(Rf_installChar(p_names[i])); ++NP;
-        if (r_address(x) == r_address(p_attributes[i])){
+        if (address_equal(x, p_attributes[i])){
           SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
           Rf_setAttrib(x, attr_nm, dup_attr);
         } else {
@@ -67,7 +67,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
     SEXP current = attributes;
 
     while (!is_null(current)){
-      if (r_address(x) == r_address(CAR(current))){
+      if (address_equal(x, CAR(current))){
        SEXP dup_attr = SHIELD(Rf_duplicate(CAR(current))); ++NP;
        Rf_setAttrib(x, TAG(current), dup_attr);
       } else {

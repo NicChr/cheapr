@@ -2,24 +2,26 @@
 % Please edit documentation in R/reconstruct.R
 \name{reconstruct}
 \alias{reconstruct}
-\alias{reconstruct.default}
 \alias{reconstruct.data.frame}
 \alias{reconstruct.data.table}
 \title{Reconstruct an object from a template}
 \usage{
-reconstruct(x, template)
+reconstruct(x, template, ...)
 
-\method{reconstruct}{default}(x, template)
+\method{reconstruct}{data.frame}(x, template, shallow_copy = TRUE, ...)
 
-\method{reconstruct}{data.frame}(x, template)
-
-\method{reconstruct}{data.table}(x, template)
+\method{reconstruct}{data.table}(x, template, shallow_copy = TRUE, ...)
 }
 \arguments{
 \item{x}{An object in which carefully selected attributes
 will be copied into from \code{template}.}
 
 \item{template}{A template object used to copy attributes into \code{x}.}
+
+\item{...}{Further arguments passed onto methods.}
+
+\item{shallow_copy}{Should \code{x} be shallow copied before reconstructing?
+Default is \code{TRUE}.}
 }
 \value{
 An object similar to \code{template}.

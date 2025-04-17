@@ -1,39 +1,77 @@
 #include "cheapr.h"
 #include <vector>
 
-// static SEXP CHEAPR_ZERO = NULL;
+// static cpp11::writable::integers CHEAPR_ZERO(1);
 // void constants_init(DllInfo* dll){
-//   CHEAPR_ZERO = Rf_ScalarInteger(0);
-//   R_PreserveObject(CHEAPR_ZERO);  // Protect from garbage collection
+//   CHEAPR_ZERO[0] = 0;
 // }
 
 // Helper to avoid repeated calls to R
-SEXP df_reconstruct(SEXP x, SEXP source){
-  if (is_bare_df(source)){
-    if (is_bare_df(x)){
-      return x;
-    } else {
-      SEXP out = SHIELD(Rf_shallow_duplicate(x));
-      Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
-      YIELD(1);
-      return out;
-    }
-  } else if (is_bare_tbl(source)){
+// SEXP reconstruct(SEXP x, SEXP source){
+//   if (is_df(x)){
+//     if (is_bare_df(source)){
+//       if (is_bare_df(x)){
+//         return x;
+//       } else {
+//         SEXP out = SHIELD(Rf_shallow_duplicate(x));
+//         Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
+//         YIELD(1);
+//         return out;
+//       }
+//     } else if (is_bare_tbl(source)){
+//
+//       // Only copy the class if source is a plain tbl
+//
+//       if (is_bare_tbl(x)){
+//         return x;
+//       } else {
+//         SEXP out = SHIELD(Rf_shallow_duplicate(x));
+//         Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
+//         YIELD(1);
+//         return out;
+//       }
+//     } else {
+//
+//       // Method dispatch, users can write `reconstruct` methods which
+//       // this will use
+//       return cheapr_reconstruct(x, source);
+//     }
+//   } else {
+//     return cheapr_reconstruct(x, source);
+//   }
+// }
 
-    // Only copy the class if source is a plain tbl
+[[cpp11::register]]
+SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy){
+  if (is_df(x)){
+    if (is_bare_df(source)){
+      if (!shallow_copy && is_bare_df(x)){
+        return x;
+      } else {
+        SEXP out = SHIELD(shallow_copy ? Rf_shallow_duplicate(x) : x);
+        Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
+        YIELD(1);
+        return out;
+      }
+    } else if (is_bare_tbl(source)){
 
-    if (is_bare_tbl(x)){
-      return x;
+      // Only copy the class if source is a plain tbl
+
+      if (!shallow_copy && is_bare_tbl(x)){
+        return x;
+      } else {
+        SEXP out = SHIELD(shallow_copy ? Rf_shallow_duplicate(x) : x);
+        Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
+        YIELD(1);
+        return out;
+      }
     } else {
-      SEXP out = SHIELD(Rf_shallow_duplicate(x));
-      Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
-      YIELD(1);
-      return out;
+
+      // Method dispatch, users can write `reconstruct` methods which
+      // this will use
+      return cheapr_reconstruct(x, source, cpp11::named_arg("shallow_copy") = shallow_copy);
     }
   } else {
-
-    // Method dispatch, users can write `reconstruct` methods which
-    // this will use
     return cheapr_reconstruct(x, source);
   }
 }
@@ -53,7 +91,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
     SHIELD(out = cpp_list_as_df(out));
     Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
-    SHIELD(out = df_reconstruct(out, x));
+    SHIELD(out = reconstruct(out, x, false));
     YIELD(3);
     return out;
   } else if (is_simple_vec(x)){
@@ -237,7 +275,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
       if (Rf_length(x) == 0){
         SEXP out = SHIELD(Rf_shallow_duplicate(x));
         Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(cpp_sum(times)));
-        SHIELD(out = df_reconstruct(out, x));
+        SHIELD(out = reconstruct(out, x, false));
         YIELD(3);
         return out;
       } else {
@@ -470,10 +508,7 @@ SEXP cpp_na_init(SEXP x, int n){
 }
 
 SEXP get_ptype(SEXP x){
-  SEXP CHEAPR_ZERO = SHIELD(Rf_ScalarInteger(0));
-  SEXP out = SHIELD(cpp_sset(x, CHEAPR_ZERO, true));
-  YIELD(2);
-  return out;
+  return slice_loc(x, 0);
 }
 
 // Prototypes of data frame
@@ -782,13 +817,14 @@ SEXP cpp_df_c(SEXP x){
   SEXP out = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
   SEXP vectors = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
 
+  const SEXP *p_ptypes = VECTOR_PTR_RO(ptypes);
+
   for (int j = 0; j < n_cols; ++j){
     for (int i = 0; i < n_frames; ++i){
       R_Reprotect(vec = get_list_element(p_x[i], CHAR(STRING_ELT(names, j))), vec_idx);
 
       if (is_null(vec)){
-        R_Reprotect(vec = VECTOR_ELT(ptypes, j), vec_idx);
-        R_Reprotect(vec = cpp_na_init(vec, df_nrow(p_x[i])), vec_idx);
+        R_Reprotect(vec = cpp_na_init(p_ptypes[j], df_nrow(p_x[i])), vec_idx);
       }
       SET_VECTOR_ELT(vectors, i, vec);
     }
@@ -797,7 +833,7 @@ SEXP cpp_df_c(SEXP x){
   SHIELD(out = cpp_list_as_df(out)); ++NP;
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   Rf_namesgets(out, names);
-  SHIELD(out = df_reconstruct(out, df_template)); ++NP;
+  SHIELD(out = reconstruct(out, df_template, false)); ++NP;
   YIELD(NP);
   return out;
 }
@@ -890,7 +926,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   SHIELD(out = cpp_new_df(out, r_nrows, false, name_repair)); ++NP;
 
   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
-    SHIELD(out = df_reconstruct(out, VECTOR_ELT(x, 0))); ++NP;
+    SHIELD(out = reconstruct(out, VECTOR_ELT(x, 0), false)); ++NP;
   }
   YIELD(NP);
   return out;
@@ -980,7 +1016,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 //   SHIELD(out = cpp_new_df(out, r_nrows, false, name_repair)); ++NP;
 //
 //   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
-//     SHIELD(out = df_reconstruct(out, VECTOR_ELT(x, 0))); ++NP;
+//     SHIELD(out = reconstruct(out, VECTOR_ELT(x, 0))); ++NP;
 //   }
 //   YIELD(NP);
 //   return out;

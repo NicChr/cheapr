@@ -3,6 +3,9 @@
 #' @param x An object in which carefully selected attributes
 #' will be copied into from `template`.
 #' @param template A template object used to copy attributes into `x`.
+#' @param shallow_copy Should `x` be shallow copied before reconstructing?
+#' Default is `TRUE`.
+#' @param ... Further arguments passed onto methods.
 #'
 #' @details
 #' In R attributes are difficult to work with. One big reason for this is
@@ -22,24 +25,28 @@
 #'
 #' @rdname reconstruct
 #' @export
-reconstruct <- function(x, template){
+reconstruct <- function(x, template, ...){
   UseMethod("reconstruct", template)
 }
+# reconstruct.default <- function(x, template, shallow_copy = TRUE, ...){
+#   cpp_reconstruct(
+#     x, template, c("names", "dim", "dimnames", "row.names", "tsp", "comment"),
+#     cpp_setdiff(
+#       names(attributes(template)),
+#       c("names", "dim", "dimnames", "row.names", "tsp", "comment")
+#     ), shallow_copy
+#   )
+# }
 #' @rdname reconstruct
 #' @export
-reconstruct.default <- function(x, template){
-  cpp_reconstruct(x, template, "", names(attributes(template)))
+reconstruct.data.frame <- function(x, template, shallow_copy = TRUE, ...){
+  .Call(`_cheapr_cpp_reconstruct`, x, template, c("names", "row.names"), "class", shallow_copy)
 }
 #' @rdname reconstruct
 #' @export
-reconstruct.data.frame <- function(x, template){
-  cpp_reconstruct(x, template, c("names", "row.names"), "class")
-}
-#' @rdname reconstruct
-#' @export
-reconstruct.data.table <- function(x, template){
+reconstruct.data.table <- function(x, template, shallow_copy = TRUE, ...){
   collapse::qDT(
-    cpp_reconstruct(x, template, c("names", "row.names", "sorted"), "class"),
+    cpp_reconstruct(x, template, c("names", "row.names", "sorted"), "class", shallow_copy),
     class = class(template)
   )
 }

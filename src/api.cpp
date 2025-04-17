@@ -141,15 +141,6 @@ api_val_remove(SEXP x, SEXP value){
 }
 
 SEXP
-api_slice_loc(SEXP x, R_xlen_t i){
-  try {
-    return slice_loc(x, i);
-  } catch (...) {
-    return R_NilValue;
-  }
-}
-
-SEXP
 api_loc_set_replace(SEXP x, SEXP where, SEXP what){
   try {
     return cpp_loc_set_replace(x, where, what);
@@ -389,7 +380,6 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_df_subset",    (DL_FUNC)api_df_subset);
   R_RegisterCCallable("cheapr", "api_sset",    (DL_FUNC)api_sset);
   R_RegisterCCallable("cheapr", "api_sset_vec",    (DL_FUNC)api_sset_vec);
-  R_RegisterCCallable("cheapr", "api_slice_loc",    (DL_FUNC)api_slice_loc);
   R_RegisterCCallable("cheapr", "api_val_find",    (DL_FUNC)api_val_find);
   R_RegisterCCallable("cheapr", "api_val_remove",    (DL_FUNC)api_val_remove);
   R_RegisterCCallable("cheapr", "api_loc_set_replace",    (DL_FUNC)api_loc_set_replace);

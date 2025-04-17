@@ -50,6 +50,13 @@ extern "C" SEXP _cheapr_cpp_copy_most_attrs(SEXP source, SEXP target) {
   END_CPP11
 }
 // combine.cpp
+SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy);
+extern "C" SEXP _cheapr_reconstruct(SEXP x, SEXP source, SEXP shallow_copy) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(reconstruct(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<bool>>(shallow_copy)));
+  END_CPP11
+}
+// combine.cpp
 SEXP cpp_rep_len(SEXP x, int length);
 extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
   BEGIN_CPP11
@@ -709,10 +716,10 @@ extern "C" SEXP _cheapr_cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names);
-extern "C" SEXP _cheapr_cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names) {
+SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names, bool shallow_copy);
+extern "C" SEXP _cheapr_cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names, SEXP shallow_copy) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_reconstruct(cpp11::as_cpp<cpp11::decay_t<SEXP>>(target), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target_attr_names), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source_attr_names)));
+    return cpp11::as_sexp(cpp_reconstruct(cpp11::as_cpp<cpp11::decay_t<SEXP>>(target), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target_attr_names), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source_attr_names), cpp11::as_cpp<cpp11::decay_t<bool>>(shallow_copy)));
   END_CPP11
 }
 // utils.cpp
@@ -820,7 +827,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
-    {"_cheapr_cpp_reconstruct",             (DL_FUNC) &_cheapr_cpp_reconstruct,             4},
+    {"_cheapr_cpp_reconstruct",             (DL_FUNC) &_cheapr_cpp_reconstruct,             5},
     {"_cheapr_cpp_recycle",                 (DL_FUNC) &_cheapr_cpp_recycle,                 2},
     {"_cheapr_cpp_rep",                     (DL_FUNC) &_cheapr_cpp_rep,                     2},
     {"_cheapr_cpp_rep_each",                (DL_FUNC) &_cheapr_cpp_rep_each,                2},
@@ -865,6 +872,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
     {"_cheapr_get_ptypes",                  (DL_FUNC) &_cheapr_get_ptypes,                  1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
+    {"_cheapr_reconstruct",                 (DL_FUNC) &_cheapr_reconstruct,                 3},
     {"_cheapr_shallow_copy",                (DL_FUNC) &_cheapr_shallow_copy,                1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}

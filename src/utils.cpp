@@ -840,14 +840,18 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 }
 
 [[cpp11::register]]
-SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names){
+SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names,
+                     bool shallow_copy){
 
-  if (std::strcmp(CHAR(r_address(target)), CHAR(r_address(source))) == 0){
+  if (!shallow_copy && address_equal(target, source)){
     return target;
   }
 
-  SHIELD(target = Rf_shallow_duplicate(target));
-  SHIELD(source = Rf_shallow_duplicate(source));
+  int NP = 0;
+
+  if (shallow_copy){
+    SHIELD(target = Rf_shallow_duplicate(target)); ++NP;
+  }
 
   SEXP target_attrs = ATTRIB(target);
   SEXP source_attrs = ATTRIB(source);
@@ -866,7 +870,7 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
     while (!is_null(current)){
       tag = TAG(current);
       nm = STRING_ELT(target_attr_names, i);
-      tag_nm = Rf_translateCharUTF8(PRINTNAME(tag));
+      tag_nm = CHAR(PRINTNAME(tag));
       if (std::strcmp(tag_nm, CHAR(nm)) == 0){
         Rf_setAttrib(target, tag, CAR(current));
         break;
@@ -880,7 +884,7 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
     while (!is_null(current)){
       tag = TAG(current);
       nm = STRING_ELT(source_attr_names, i);
-      tag_nm = Rf_translateCharUTF8(PRINTNAME(tag));
+      tag_nm = CHAR(PRINTNAME(tag));
       if (std::strcmp(tag_nm, CHAR(nm)) == 0){
         Rf_setAttrib(target, tag, CAR(current));
         break;
@@ -889,7 +893,7 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
     }
   }
 
-  YIELD(2);
+  YIELD(NP);
   return target;
 }
 

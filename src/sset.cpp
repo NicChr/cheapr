@@ -1101,7 +1101,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Flag to check indices
   bool check = true;
 
-  SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+  SEXP names = Rf_getAttrib(x, R_NamesSymbol);
 
   SEXP cols;
 
@@ -1190,7 +1190,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Make a plain data frame
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
   Rf_classgets(out, Rf_mkString("data.frame"));
-  Rf_setAttrib(out, R_NamesSymbol, out_names);
+  Rf_namesgets(out, out_names);
   YIELD(NP);
   return out;
 }
@@ -1273,7 +1273,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check){
   SEXP out = SHIELD(cpp_df_select(x, j)); ++NP;
   // Subset rows
   SHIELD(out = cpp_df_slice(out, i, check)); ++NP;
-  SHIELD(out = df_reconstruct(out, x)); ++NP;
+  SHIELD(out = reconstruct(out, x, false)); ++NP;
   YIELD(NP);
   return out;
 }
@@ -1306,7 +1306,7 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
   } else if (is_df(x)){
     return cpp_df_subset(x, indices, R_NilValue, check);
     // SEXP out = SHIELD(cpp_df_slice(x, indices, check));
-    // SHIELD(out = df_reconstruct(out, x));
+    // SHIELD(out = reconstruct(out, x));
     // YIELD(2);
     // return out;
   } else {
@@ -1336,20 +1336,34 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
 #define CHEAPR_SLICE_LOC(PTR_FUN, SCALAR_FUN, i)               \
   return SCALAR_FUN(PTR_FUN(x)[i]);
 
-// 0-based scalar subset
+// scalar subset
 SEXP slice_loc(SEXP x, R_xlen_t i){
+
+  if (i < 0){
+    Rf_error("`i` must be >= 0");
+  }
 
   if (Rf_isObject(x)){
     SEXP loc;
     if (i <= integer_max_){
-      loc = SHIELD(Rf_ScalarInteger(i + 1));
+      loc = SHIELD(Rf_ScalarInteger(i));
     } else {
-      loc = SHIELD(Rf_ScalarReal(i + 1.0));
+      loc = SHIELD(Rf_ScalarReal(i));
     }
-    SEXP out = cpp_sset(x, loc, false);
-    Rf_unprotect(1);
+    SEXP out = SHIELD(cpp_sset(x, loc, true));
+    YIELD(2);
     return out;
   }
+
+  if (i == 0){
+    return new_vec(TYPEOF(x), 0);
+  }
+
+  if (i > Rf_xlength(x)){
+    return cpp_na_init(x, 1);
+  }
+
+  --i;
 
   switch ( TYPEOF(x) ){
 
