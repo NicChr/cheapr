@@ -284,6 +284,13 @@ str_coalesce(SEXP x){
   return fn(x);
 }
 
+static inline SEXP
+reconstruct(SEXP x, SEXP source, bool shallow_copy){
+  typedef SEXP fn_t(SEXP, SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_reconstruct");
+  return fn(x, source, shallow_copy);
+}
+
 }
 
 // -----------------------------------------------------------------------------
