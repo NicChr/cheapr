@@ -331,6 +331,15 @@ api_df_select(SEXP x, SEXP locs){
 }
 
 SEXP
+api_df_subset(SEXP x, SEXP i, SEXP j, bool check){
+  try {
+    return cpp_df_subset(x, i, j, check);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+SEXP
 api_df_assign_cols(SEXP x, SEXP cols){
   try {
     return cpp_df_assign_cols(x, cols);
@@ -377,6 +386,7 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_list_assign",    (DL_FUNC)api_list_assign);
   R_RegisterCCallable("cheapr", "api_df_slice",    (DL_FUNC)api_df_slice);
   R_RegisterCCallable("cheapr", "api_df_select",    (DL_FUNC)api_df_select);
+  R_RegisterCCallable("cheapr", "api_df_subset",    (DL_FUNC)api_df_subset);
   R_RegisterCCallable("cheapr", "api_sset",    (DL_FUNC)api_sset);
   R_RegisterCCallable("cheapr", "api_sset_vec",    (DL_FUNC)api_sset_vec);
   R_RegisterCCallable("cheapr", "api_slice_loc",    (DL_FUNC)api_slice_loc);

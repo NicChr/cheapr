@@ -1273,7 +1273,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check){
   SEXP out = SHIELD(cpp_df_select(x, j)); ++NP;
   // Subset rows
   SHIELD(out = cpp_df_slice(out, i, check)); ++NP;
-  SHIELD(out = fast_df_reconstruct(out, x)); ++NP;
+  SHIELD(out = df_reconstruct(out, x)); ++NP;
   YIELD(NP);
   return out;
 }
@@ -1306,7 +1306,7 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
   } else if (is_df(x)){
     return cpp_df_subset(x, indices, R_NilValue, check);
     // SEXP out = SHIELD(cpp_df_slice(x, indices, check));
-    // SHIELD(out = fast_df_reconstruct(out, x));
+    // SHIELD(out = df_reconstruct(out, x));
     // YIELD(2);
     // return out;
   } else {

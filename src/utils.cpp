@@ -842,40 +842,54 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 [[cpp11::register]]
 SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names){
 
+  if (std::strcmp(CHAR(r_address(target)), CHAR(r_address(source))) == 0){
+    return target;
+  }
+
   SHIELD(target = Rf_shallow_duplicate(target));
   SHIELD(source = Rf_shallow_duplicate(source));
 
-  SEXP target_attrs = SHIELD(coerce_vec(ATTRIB(target), VECSXP));
-  SEXP source_attrs = SHIELD(coerce_vec(ATTRIB(source), VECSXP));
-
-  SEXP target_names = SHIELD(Rf_getAttrib(target_attrs, R_NamesSymbol));
-  SEXP source_names = SHIELD(Rf_getAttrib(source_attrs, R_NamesSymbol));
-
+  SEXP target_attrs = ATTRIB(target);
+  SEXP source_attrs = ATTRIB(source);
 
   // Start from clean slate - no attributes
   cpp_set_rm_attributes(target);
 
+  SEXP tag = R_NilValue;
+  SEXP current = R_NilValue;
+  SEXP nm = R_NilValue;
+
+  const char *tag_nm;
+
   for (int i = 0; i < Rf_length(target_attr_names); ++i){
-    for (int j = 0; j < Rf_length(target_attrs); ++j){
-      if (std::strcmp(CHAR(STRING_ELT(target_attr_names, i)), CHAR(STRING_ELT(target_names, j))) == 0){
-        Rf_setAttrib(target, Rf_installChar(STRING_ELT(target_attr_names, i)),
-                     VECTOR_ELT(target_attrs, j));
+    current = target_attrs;
+    while (!is_null(current)){
+      tag = TAG(current);
+      nm = STRING_ELT(target_attr_names, i);
+      tag_nm = Rf_translateCharUTF8(PRINTNAME(tag));
+      if (std::strcmp(tag_nm, CHAR(nm)) == 0){
+        Rf_setAttrib(target, tag, CAR(current));
         break;
       }
+      current = CDR(current);
     }
   }
 
   for (int i = 0; i < Rf_length(source_attr_names); ++i){
-    for (int j = 0; j < Rf_length(source_attrs); ++j){
-      if (std::strcmp(CHAR(STRING_ELT(source_attr_names, i)), CHAR(STRING_ELT(source_names, j))) == 0){
-        Rf_setAttrib(target, Rf_installChar(STRING_ELT(source_attr_names, i)),
-                     VECTOR_ELT(source_attrs, j));
+    current = source_attrs;
+    while (!is_null(current)){
+      tag = TAG(current);
+      nm = STRING_ELT(source_attr_names, i);
+      tag_nm = Rf_translateCharUTF8(PRINTNAME(tag));
+      if (std::strcmp(tag_nm, CHAR(nm)) == 0){
+        Rf_setAttrib(target, tag, CAR(current));
         break;
       }
+      current = CDR(current);
     }
   }
 
-  YIELD(6);
+  YIELD(2);
   return target;
 }
 

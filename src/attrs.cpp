@@ -6,13 +6,11 @@
 
 [[cpp11::register]]
 SEXP cpp_set_rm_attributes(SEXP x){
-  SEXP attrs = SHIELD(ATTRIB(x));
-  SEXP names = SHIELD(Rf_getAttrib(attrs, R_NamesSymbol));
-  int n = Rf_length(attrs);
-  for (int i = 0; i < n; ++i){
-    Rf_setAttrib(x, Rf_installChar(STRING_ELT(names, i)), R_NilValue);
+  SEXP current = ATTRIB(x);
+  while (!is_null(current)){
+    Rf_setAttrib(x, TAG(current), R_NilValue);
+    current = CDR(current);
   }
-  YIELD(2);
   return x;
 }
 
@@ -29,7 +27,7 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
 
 [[cpp11::register]]
 SEXP cpp_set_rm_attr(SEXP x, SEXP which) {
-  Rf_setAttrib(x, Rf_installChar(Rf_asChar(which)), R_NilValue);
+  Rf_setAttrib(x, Rf_installChar(STRING_ELT(which, 0)), R_NilValue);
   return x;
 }
 
@@ -37,45 +35,51 @@ SEXP cpp_set_rm_attr(SEXP x, SEXP which) {
 
 [[cpp11::register]]
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
-  int NP = 0;
-  SEXP attrs;
-  if (Rf_isPairList(attributes)){
-    attrs = SHIELD(coerce_vec(attributes, VECSXP)); ++NP;
-  } else {
-   attrs = attributes;
-  }
-  int n = Rf_length(attrs);
-  bool attrs_are_a_list = TYPEOF(attrs) == VECSXP;
-  if (is_null(attrs) ||
-      // is.null or empty list?
-      (attrs_are_a_list && n == 0)){
-    if (add){
-      YIELD(NP);
-      return x;
-    } else {
-      YIELD(NP);
-      return cpp_set_rm_attributes(x);
-    }
-  }
-  SEXP names = SHIELD(Rf_getAttrib(attrs, R_NamesSymbol)); ++NP;
-  if (!attrs_are_a_list || is_null(names)){
-    YIELD(NP);
-    Rf_error("attributes must be a named list");
-  }
+
   if (!add) cpp_set_rm_attributes(x);
-  const SEXP *p_attributes = VECTOR_PTR_RO(attrs);
-  const SEXP *p_names = STRING_PTR_RO(names);
-  for (int i = 0; i < n; ++i){
-    SEXP attr_nm = SHIELD(Rf_installChar(p_names[i])); ++NP;
-    if (r_address(x) == r_address(p_attributes[i])){
-      SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
-      Rf_setAttrib(x, attr_nm, dup_attr);
-    } else {
-      Rf_setAttrib(x, attr_nm, p_attributes[i]);
+
+  int NP = 0;
+
+  if (is_null(attributes)){
+    return x;
+  } else if (TYPEOF(attributes) == VECSXP){
+    SEXP names = Rf_getAttrib(attributes, R_NamesSymbol);
+    if (is_null(names)){
+      Rf_error("attributes must be a named list");
     }
+    const SEXP *p_attributes = VECTOR_PTR_RO(attributes);
+    const SEXP *p_names = STRING_PTR_RO(names);
+
+    for (int i = 0; i < Rf_length(names); ++i){
+      if (p_names[i] != R_BlankString){
+        SEXP attr_nm = SHIELD(Rf_installChar(p_names[i])); ++NP;
+        if (r_address(x) == r_address(p_attributes[i])){
+          SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
+          Rf_setAttrib(x, attr_nm, dup_attr);
+        } else {
+          Rf_setAttrib(x, attr_nm, p_attributes[i]);
+        }
+      }
+    }
+    YIELD(NP);
+    return x;
+  } else if (TYPEOF(attributes) == LISTSXP){
+    SEXP current = attributes;
+
+    while (!is_null(current)){
+      if (r_address(x) == r_address(CAR(current))){
+       SEXP dup_attr = SHIELD(Rf_duplicate(CAR(current))); ++NP;
+       Rf_setAttrib(x, TAG(current), dup_attr);
+      } else {
+        Rf_setAttrib(x, TAG(current), CAR(current));
+      }
+     current = CDR(current);
+    }
+    YIELD(NP);
+    return x;
+  } else {
+    Rf_error("`attributes` must be a named list");
   }
-  YIELD(NP);
-  return x;
 }
 
 // Copy attributes from source to target
@@ -87,12 +91,12 @@ void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy){
 
 // Copy names from source to target
 void cpp_copy_names(SEXP source, SEXP target, bool deep_copy){
-  SEXP source_nms = SHIELD(Rf_getAttrib(source, R_NamesSymbol));
+  SEXP source_nms = Rf_getAttrib(source, R_NamesSymbol);
   SEXP target_nms = SHIELD(deep_copy ? Rf_duplicate(source_nms) : source_nms);
   if (!is_null(source_nms)){
     Rf_setAttrib(target, R_NamesSymbol, target_nms);
   }
-  YIELD(2);
+  YIELD(1);
 }
 
 [[cpp11::register]]

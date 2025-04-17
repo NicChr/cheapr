@@ -805,6 +805,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     return x;
   } else if (n_vals == Rf_xlength(x)){
     SEXP out = SHIELD(new_vec(TYPEOF(x), 0)); ++NP;
+
     cpp_copy_attributes(x, out, false);
     YIELD(NP);
     return out;

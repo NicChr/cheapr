@@ -264,6 +264,13 @@ df_select(SEXP x, SEXP locs){
 }
 
 static inline SEXP
+df_subset(SEXP x, SEXP i, SEXP j, bool check){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_subset");
+  return fn(x, i, j, check);
+}
+
+static inline SEXP
 df_assign_cols(SEXP x, SEXP cols){
   typedef SEXP fn_t(SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_assign_cols");
