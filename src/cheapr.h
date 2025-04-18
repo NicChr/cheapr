@@ -115,7 +115,6 @@ SEXP r_address(SEXP x);
 R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive);
 SEXP cpp_list_as_df(SEXP x);
 SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair);
-SEXP cpp_new_list(SEXP length, SEXP default_value);
 SEXP cpp_is_na(SEXP x);
 SEXP cpp_which_na(SEXP x);
 SEXP cpp_which_not_na(SEXP x);
@@ -175,6 +174,7 @@ double cpp_sum(SEXP x);
 double cpp_min(SEXP x);
 SEXP cpp_str_coalesce(SEXP x);
 SEXP cpp_na_init(SEXP x, int n);
+SEXP new_list(R_xlen_t length, SEXP default_value);
 
 inline bool is_null(SEXP x){
   return TYPEOF(x) == NILSXP;

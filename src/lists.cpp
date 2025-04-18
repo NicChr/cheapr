@@ -40,8 +40,19 @@ SEXP cpp_lengths(SEXP x, bool names) {
   return out;
 }
 
+SEXP new_list(R_xlen_t length, SEXP default_value){
+  SEXP out = SHIELD(new_vec(VECSXP, length));
+  if (!is_null(default_value)){
+    for (R_xlen_t i = 0; i < length; ++i) {
+      SET_VECTOR_ELT(out, i, default_value);
+    }
+  }
+  YIELD(1);
+  return out;
+}
+
 [[cpp11::register]]
-SEXP cpp_new_list(SEXP size, SEXP default_value) {
+SEXP cpp_new_list(SEXP size, SEXP default_value){
   if (Rf_length(size) != 1){
    Rf_error("`size` must be a vector of length 1");
   }
@@ -51,14 +62,7 @@ SEXP cpp_new_list(SEXP size, SEXP default_value) {
   } else {
     out_size = Rf_asReal(size);
   }
-  SEXP out = SHIELD(new_vec(VECSXP, out_size));
-  if (!is_null(default_value)){
-    for (R_xlen_t i = 0; i < out_size; ++i) {
-      SET_VECTOR_ELT(out, i, default_value);
-    }
-  }
-  YIELD(1);
-  return out;
+  return new_list(out_size, default_value);
 }
 
 [[cpp11::register]]
@@ -638,4 +642,3 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   YIELD(NP);
   return out;
 }
-

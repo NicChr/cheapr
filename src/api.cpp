@@ -87,9 +87,9 @@ api_lengths(SEXP x, bool names){
   }
 }
 SEXP
-api_new_list(SEXP length, SEXP default_value){
+api_new_list(R_xlen_t length, SEXP default_value){
   try {
-    return cpp_new_list(length, default_value);
+    return new_list(length, default_value);
   } catch (...) {
     return R_NilValue;
   }
