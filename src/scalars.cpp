@@ -143,9 +143,9 @@ case REALSXP: {
 case CHEAPR_INT64SXP: {
   if (implicit_na_coercion(value, x)) break;
   SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
-  long long int val = INTEGER64_PTR(value)[0];
-  long long int *p_x = INTEGER64_PTR(x);
-  // int (*c_op)(long long int, long long int);
+  int_fast64_t val = INTEGER64_PTR(value)[0];
+  int_fast64_t *p_x = INTEGER64_PTR(x);
+  // int (*c_op)(int_fast64_t, int_fast64_t);
   // CHEAPR_OP_SWITCH;
   if (n_cores > 1){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
@@ -313,10 +313,10 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
     SHIELD(replace = coerce_vector(replace, CHEAPR_INT64SXP)); ++NP;
     SEXP temp = SHIELD(new_vec(REALSXP, 0)); ++NP;
-    long long *p_out = INTEGER64_PTR(temp);
-    long long val = INTEGER64_PTR(value)[0];
-    long long repl = INTEGER64_PTR(replace)[0];
-    long long *p_x = INTEGER64_PTR(x);
+    int_fast64_t *p_out = INTEGER64_PTR(temp);
+    int_fast64_t val = INTEGER64_PTR(value)[0];
+    int_fast64_t repl = INTEGER64_PTR(replace)[0];
+    int_fast64_t *p_x = INTEGER64_PTR(x);
     for (R_xlen_t i = 0; i < n; ++i){
       eq = p_x[i] == val;
       if (!any_eq && eq){
@@ -446,9 +446,9 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
     SHIELD(replace = coerce_vector(replace, CHEAPR_INT64SXP)); ++NP;
 
-    long long val = INTEGER64_PTR(value)[0];
-    long long repl = INTEGER64_PTR(replace)[0];
-    long long *p_x = INTEGER64_PTR(x);
+    int_fast64_t val = INTEGER64_PTR(value)[0];
+    int_fast64_t repl = INTEGER64_PTR(replace)[0];
+    int_fast64_t *p_x = INTEGER64_PTR(x);
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
       if (p_x[i] == val) p_x[i] = repl;
@@ -502,14 +502,14 @@ SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){
   }
   SHIELD(x = altrep_materialise(x));
 
-  uint_fast64_t xn = Rf_xlength(x);
+  int_fast64_t xn = Rf_xlength(x);
   int where_size = Rf_length(where);
   int what_size = Rf_length(what);
   if (what_size != 1 && where_size != what_size){
     YIELD(1);
     Rf_error("`what` must be either length 1 or `length(where)`");
   }
-  uint_fast64_t xi;
+  int_fast64_t xi;
 
 
 #define CHEAPR_REPLACE                                                                                      \
@@ -739,9 +739,9 @@ default: {
 //   }
 //     temp = SHIELD(new_vec(TYPEOF(x), n)); ++NP;
 //     SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
-//     long long int val = INTEGER64_PTR(value)[0];
-//     long long int *p_x = INTEGER64_PTR(x);
-//     long long int *p_temp = INTEGER64_PTR(temp);
+//     int_fast64_t val = INTEGER64_PTR(value)[0];
+//     int_fast64_t *p_x = INTEGER64_PTR(x);
+//     int_fast64_t *p_temp = INTEGER64_PTR(temp);
 //
 //     for (R_xlen_t i = 0; i < n; ++i){
 //       eq = p_x[i] == val;
@@ -872,9 +872,9 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
-      long long int val = INTEGER64_PTR(value)[0];
-      long long int *p_x = INTEGER64_PTR(x);
-      long long int *p_out = INTEGER64_PTR(out);
+      int_fast64_t val = INTEGER64_PTR(value)[0];
+      int_fast64_t *p_x = INTEGER64_PTR(x);
+      int_fast64_t *p_out = INTEGER64_PTR(out);
 
       for (R_xlen_t i = 0; i < n; ++i){
         eq = p_x[i] == val;

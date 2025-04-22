@@ -101,8 +101,8 @@ double cpp_sum(SEXP x){
   }
   case CHEAPR_INT64SXP: {
 
-    long long int *p_x = INTEGER64_PTR(x);
-    long long int sum = 0;
+    int_fast64_t *p_x = INTEGER64_PTR(x);
+    int_fast64_t sum = 0;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -147,8 +147,8 @@ double cpp_min(SEXP x){
 
     if (n == 0) return R_PosInf;
 
-    long long int *p_x = INTEGER64_PTR(x);
-    long long int out = LLONG_MAX;
+    int_fast64_t *p_x = INTEGER64_PTR(x);
+    int_fast64_t out = LLONG_MAX;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -188,10 +188,10 @@ double var_sum_squared_diff(SEXP x, double mu){
     case INTSXP: {
       int *p_x = INTEGER(x);
       // if (std::abs(mu - std::round(mu)) < std::numeric_limits<double>::epsilon()){
-      //   long long temp = 0;
-      //   long long temp2;
-      //   long long llmu = mu;
-      //   long long temp1;
+      //   int_fast64_t temp = 0;
+      //   int_fast64_t temp2;
+      //   int_fast64_t llmu = mu;
+      //   int_fast64_t temp1;
       //   for (R_xlen_t i = 0; i < n; ++i){
       //     if (is_na_int(p_x[i])) continue;
       //     temp1 = p_x[i];
@@ -750,8 +750,8 @@ SEXP cpp_growth_rate(SEXP x){
     break;
   }
   case CHEAPR_INT64SXP: {
-    long long int x_n = INTEGER64_PTR(x)[n - 1];
-    long long int x_1 = INTEGER64_PTR(x)[0];
+    int_fast64_t x_n = INTEGER64_PTR(x)[n - 1];
+    int_fast64_t x_1 = INTEGER64_PTR(x)[0];
     a = R_SCALAR_AS_DOUBLE(x_1, NA_INTEGER64);
     b = R_SCALAR_AS_DOUBLE(x_n, NA_INTEGER64);
     break;

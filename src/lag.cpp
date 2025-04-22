@@ -65,23 +65,23 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   }
   case CHEAPR_INT64SXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    long long int fill_value = NA_INTEGER64;
+    int_fast64_t fill_value = NA_INTEGER64;
     if (fill_size >= 1){
       SEXP temp_fill = SHIELD(coerce_vector(fill, CHEAPR_INT64SXP)); ++NP;
       fill_value = INTEGER64_PTR(temp_fill)[0];
     }
     out = SHIELD(set ? xvec : Rf_duplicate(xvec)); ++NP;
-    long long int *p_out = INTEGER64_PTR(out);
-    long long int *p_x = INTEGER64_PTR(xvec);
+    int_fast64_t *p_out = INTEGER64_PTR(out);
+    int_fast64_t *p_x = INTEGER64_PTR(xvec);
 
-    // sizeof(long long int) == sizeof(double), both are 8 bytes
+    // sizeof(int_fast64_t) == sizeof(double), both are 8 bytes
 
     if (k >= 0){
-      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(long long int));
+      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int_fast64_t));
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
-      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(long long int));
+      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int_fast64_t));
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
@@ -486,15 +486,15 @@ unsigned int o_rng = o_size - 1;
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    long long int *p_x = INTEGER64_PTR(x);
-    long long int fill_value = NA_INTEGER64;
+    int_fast64_t *p_x = INTEGER64_PTR(x);
+    int_fast64_t fill_value = NA_INTEGER64;
     if (fill_size >= 1){
       SEXP temp_fill = SHIELD(coerce_vector(fill, CHEAPR_INT64SXP)); ++NP;
       fill_value = INTEGER64_PTR(temp_fill)[0];
     }
     out = SHIELD(Rf_duplicate(x));
     ++NP;
-    long long int *p_out = INTEGER64_PTR(out);
+    int_fast64_t *p_out = INTEGER64_PTR(out);
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
       rl = has_rl ? p_rl[i] : size; // Current run-length

@@ -12,7 +12,7 @@
 #define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
 #endif
 #ifndef INTEGER64_PTR
-#define INTEGER64_PTR(x) ((long long*) REAL(x))
+#define INTEGER64_PTR(x) ((int_fast64_t*) REAL(x))
 #endif
 
 #ifdef _OPENMP
@@ -37,7 +37,7 @@
 #endif
 
 #ifndef NA_INTEGER64
-#define NA_INTEGER64 LLONG_MIN
+#define NA_INTEGER64 std::numeric_limits<int_fast64_t>::min()
 #endif
 
 
@@ -73,10 +73,10 @@
 
 
 #ifndef CHEAPR_INT_TO_INT64
-#define CHEAPR_INT_TO_INT64(x) ((long long int) (x == NA_INTEGER ? NA_INTEGER64 : x))
+#define CHEAPR_INT_TO_INT64(x) ((int_fast64_t) (x == NA_INTEGER ? NA_INTEGER64 : x))
 #endif
 #ifndef CHEAPR_DBL_TO_INT64
-#define CHEAPR_DBL_TO_INT64(x) ((long long int) (x != x ? NA_INTEGER64 : x))
+#define CHEAPR_DBL_TO_INT64(x) ((int_fast64_t) (x != x ? NA_INTEGER64 : x))
 #endif
 #ifndef CHEAPR_INT64_TO_INT
 #define CHEAPR_INT64_TO_INT(x) ((int) (x == NA_INTEGER64 ? NA_INTEGER : x))
