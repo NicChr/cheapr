@@ -188,7 +188,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
-    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+    SEXP val = SHIELD(as_utf8_char(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);
@@ -592,9 +592,9 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
     SET_VECTOR_ELT(out, 2, na_locs);
 
     SEXP names = SHIELD(new_vec(STRSXP, 3));
-    SET_STRING_ELT(names, 0, Rf_mkChar("true"));
-    SET_STRING_ELT(names, 1, Rf_mkChar("false"));
-    SET_STRING_ELT(names, 2, Rf_mkChar("na"));
+    SET_STRING_ELT(names, 0, make_utf8_char("true"));
+    SET_STRING_ELT(names, 1, make_utf8_char("false"));
+    SET_STRING_ELT(names, 2, make_utf8_char("na"));
     Rf_setAttrib(out, R_NamesSymbol, names);
 
     YIELD(5);
@@ -627,9 +627,9 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
     SET_VECTOR_ELT(out, 2, na_locs);
 
     SEXP names = SHIELD(new_vec(STRSXP, 3));
-    SET_STRING_ELT(names, 0, Rf_mkChar("true"));
-    SET_STRING_ELT(names, 1, Rf_mkChar("false"));
-    SET_STRING_ELT(names, 2, Rf_mkChar("na"));
+    SET_STRING_ELT(names, 0, make_utf8_char("true"));
+    SET_STRING_ELT(names, 1, make_utf8_char("false"));
+    SET_STRING_ELT(names, 2, make_utf8_char("na"));
     Rf_setAttrib(out, R_NamesSymbol, names);
 
     YIELD(5);
@@ -764,7 +764,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
-    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+    SEXP val = SHIELD(as_utf8_char(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);

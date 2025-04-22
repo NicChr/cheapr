@@ -542,7 +542,7 @@ SEXP get_ptypes(SEXP x){
   //   bool class_identical = true;
   //
   //   for (int i = 0; i < Rf_length(x_cls); ++i){
-  //     if (std::strcmp(CHAR(STRING_ELT(x_cls, i)), CHAR(STRING_ELT(y_cls, i))) != 0){
+  //     if (std::strcmp(utf8_char(STRING_ELT(x_cls, i)), utf8_char(STRING_ELT(y_cls, i))) != 0){
   //       class_identical = false; break;
   //     }
   //   }
@@ -681,7 +681,7 @@ SEXP cpp_list_c(SEXP x){
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
       if (x_has_names){
-        R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
+        R_Reprotect(names = scalar_utf8_str(STRING_ELT(x_names, i)), nm_idx);
       } else {
         R_Reprotect(names = R_NilValue, nm_idx);
       }
@@ -822,7 +822,7 @@ SEXP cpp_df_c(SEXP x){
 
   for (int j = 0; j < n_cols; ++j){
     for (int i = 0; i < n_frames; ++i){
-      R_Reprotect(vec = get_list_element(p_x[i], CHAR(p_names[j])), vec_idx);
+      R_Reprotect(vec = get_list_element(p_x[i], utf8_char(p_names[j])), vec_idx);
 
       if (is_null(vec)){
         R_Reprotect(vec = cpp_na_init(p_ptypes[j], df_nrow(p_x[i])), vec_idx);
@@ -896,7 +896,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
       if (x_has_names){
-        R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
+        R_Reprotect(names = scalar_utf8_str(STRING_ELT(x_names, i)), nm_idx);
       } else {
         R_Reprotect(names = R_NilValue, nm_idx);
       }
@@ -987,7 +987,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 //     } else {
 //       SET_VECTOR_ELT(container_list, 0, p_x[i]);
 //       if (x_has_names){
-//         R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
+//         R_Reprotect(names = scalar_utf8_str(STRING_ELT(x_names, i)), nm_idx);
 //       } else {
 //         R_Reprotect(names = R_NilValue, nm_idx);
 //       }
@@ -1073,7 +1073,7 @@ SEXP cpp_c(SEXP x){
   }
 
   if (is_classed && !(is_date2 || is_datetime2)){
-    SEXP c_char = SHIELD(Rf_mkString("c"));
+    SEXP c_char = SHIELD(make_utf8_str("c"));
     SEXP out = SHIELD(base_do_call(c_char, x));
     YIELD(2);
     return out;
@@ -1179,13 +1179,13 @@ SEXP cpp_c(SEXP x){
   }
 
   default: {
-    SEXP c_char = SHIELD(Rf_mkString("c")); ++NP;
+    SEXP c_char = SHIELD(make_utf8_str("c")); ++NP;
     out = SHIELD(base_do_call(c_char, x)); ++NP;
     break;
   }
   }
   if (is_date2){
-    Rf_classgets(out, Rf_mkChar("Date"));
+    Rf_classgets(out, make_utf8_str("Date"));
   }
   if (is_datetime2){
     Rf_copyMostAttrib(p_x[first_datetime], out);

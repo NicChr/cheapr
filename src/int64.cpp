@@ -120,7 +120,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
       repl = is_na_int(p_x[i]) ? NA_INTEGER64 : p_x[i];
       p_out[i] = repl;
     }
-    Rf_classgets(out, Rf_mkString("integer64"));
+    Rf_classgets(out, make_utf8_str("integer64"));
     break;
   }
   case CHEAPR_INT64SXP: {
@@ -134,14 +134,14 @@ SEXP cpp_numeric_to_int64(SEXP x){
     double temp;
     for (R_xlen_t i = 0; i < n; ++i){
       temp = p_x[i];
-      if (is_na_dbl(temp) || (temp == R_PosInf) || temp == R_NegInf){
+      if (is_na_dbl(temp) || temp == R_PosInf || temp == R_NegInf){
         repl = NA_INTEGER64;
       } else {
         repl = temp;
       }
       p_out[i] = repl;
     }
-    Rf_classgets(out, Rf_mkString("integer64"));
+    Rf_classgets(out, make_utf8_str("integer64"));
     break;
   }
   default: {
@@ -186,7 +186,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         long long temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+        SET_STRING_ELT(out, i, make_utf8_char(s.c_str()));
       }
     }
     break;
@@ -201,7 +201,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         long long temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+        SET_STRING_ELT(out, i, make_utf8_char(s.c_str()));
       }
     }
     break;
@@ -215,7 +215,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         long long temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, Rf_mkChar(s.c_str()));
+        SET_STRING_ELT(out, i, make_utf8_char(s.c_str()));
       }
     }
     break;

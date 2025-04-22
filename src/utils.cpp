@@ -69,7 +69,7 @@ int num_cores(){
 SEXP r_address(SEXP x) {
   static char buf[1000];
   snprintf(buf, 1000, "%p", (void*) x);
-  return Rf_mkChar(buf);
+  return make_utf8_char(buf);
 }
 
 [[cpp11::register]]
@@ -549,18 +549,18 @@ SEXP cpp_lgl_count(SEXP x){
 
   SEXP out = SHIELD(new_vec(n > integer_max_ ? REALSXP : INTSXP, 3));
   SEXP names = SHIELD(new_vec(STRSXP, 3));
-  SET_STRING_ELT(names, 0, Rf_mkChar("true"));
-  SET_STRING_ELT(names, 1, Rf_mkChar("false"));
-  SET_STRING_ELT(names, 2, Rf_mkChar("na"));
+  SET_STRING_ELT(names, 0, make_utf8_char("true"));
+  SET_STRING_ELT(names, 1, make_utf8_char("false"));
+  SET_STRING_ELT(names, 2, make_utf8_char("na"));
 
   if (n > integer_max_){
-    SET_REAL_ELT(out, 0, (double) ntrue);
-    SET_REAL_ELT(out, 1, (double) nfalse);
-    SET_REAL_ELT(out, 2, (double) nna);
+    SET_REAL_ELT(out, 0, static_cast<double>(ntrue));
+    SET_REAL_ELT(out, 1, static_cast<double>(nfalse));
+    SET_REAL_ELT(out, 2, static_cast<double>(nna));
   } else {
-    SET_INTEGER_ELT(out, 0, (int) ntrue);
-    SET_INTEGER_ELT(out, 1, (int) nfalse);
-    SET_INTEGER_ELT(out, 2, (int) nna);
+    SET_INTEGER_ELT(out, 0, static_cast<int>(ntrue));
+    SET_INTEGER_ELT(out, 1, static_cast<int>(nfalse));
+    SET_INTEGER_ELT(out, 2, static_cast<int>(nna));
   }
 
   Rf_setAttrib(out, R_NamesSymbol, names);
@@ -861,17 +861,19 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
 
   SEXP tag = R_NilValue;
   SEXP current = R_NilValue;
-  SEXP nm = R_NilValue;
 
   const char *tag_nm;
+  const char *attr_nm;
 
   for (int i = 0; i < Rf_length(target_attr_names); ++i){
     current = target_attrs;
     while (!is_null(current)){
+
       tag = TAG(current);
-      nm = STRING_ELT(target_attr_names, i);
-      tag_nm = CHAR(PRINTNAME(tag));
-      if (std::strcmp(tag_nm, CHAR(nm)) == 0){
+      attr_nm = utf8_char(STRING_ELT(target_attr_names, i));
+      tag_nm = utf8_char(PRINTNAME(tag));
+
+      if (std::strcmp(tag_nm, attr_nm) == 0){
         Rf_setAttrib(target, tag, CAR(current));
         break;
       }
@@ -882,10 +884,12 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
   for (int i = 0; i < Rf_length(source_attr_names); ++i){
     current = source_attrs;
     while (!is_null(current)){
+
       tag = TAG(current);
-      nm = STRING_ELT(source_attr_names, i);
-      tag_nm = CHAR(PRINTNAME(tag));
-      if (std::strcmp(tag_nm, CHAR(nm)) == 0){
+      attr_nm = utf8_char(STRING_ELT(source_attr_names, i));
+      tag_nm = utf8_char(PRINTNAME(tag));
+
+      if (std::strcmp(tag_nm, attr_nm) == 0){
         Rf_setAttrib(target, tag, CAR(current));
         break;
       }

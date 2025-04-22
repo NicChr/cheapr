@@ -18,7 +18,10 @@ SEXP cpp_set_rm_attributes(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
-  SEXP attr_char = SHIELD(Rf_install(CHAR(Rf_asChar(which))));
+  if (Rf_length(which) != 1){
+    Rf_error("`which` must be a character vector of length 1 in %s", __func__);
+  }
+  SEXP attr_char = SHIELD(Rf_install(utf8_char(STRING_ELT(which, 0))));
   SEXP value2 = SHIELD(address_equal(x, value) ? Rf_duplicate(value) : value);
   Rf_setAttrib(x, attr_char, value2);
   YIELD(2);

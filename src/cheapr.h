@@ -85,6 +85,8 @@
 #define CHEAPR_INT64_TO_DBL(x) ((double) (x == NA_INTEGER64 ? NA_REAL : x))
 #endif
 
+#define scalar_coerce(_x_, _is_na_fn_, _na_val_) (_is_na_fn_(_x_) ? _na_val_ : _x_)
+
 #ifndef CHEAPR_OMP_THRESHOLD
 #define CHEAPR_OMP_THRESHOLD 100000
 #endif
@@ -175,6 +177,26 @@ double cpp_min(SEXP x);
 SEXP cpp_str_coalesce(SEXP x);
 SEXP cpp_na_init(SEXP x, int n);
 SEXP new_list(R_xlen_t length, SEXP default_value);
+
+inline SEXP make_utf8_char(const char *x){
+  return Rf_mkCharCE(x, CE_UTF8);
+}
+
+inline const char* utf8_char(SEXP x){
+  return Rf_translateCharUTF8(x);
+}
+
+inline SEXP make_utf8_str(const char *x){
+  return Rf_mkString(CHAR(Rf_mkCharCE(x, CE_UTF8)));
+}
+
+inline SEXP scalar_utf8_str(SEXP x){
+  return Rf_mkString(Rf_translateCharUTF8(x));
+}
+
+inline SEXP as_utf8_char(SEXP x){
+  return Rf_mkCharCE(CHAR(Rf_asChar(x)), CE_UTF8);
+}
 
 inline bool is_null(SEXP x){
   return TYPEOF(x) == NILSXP;

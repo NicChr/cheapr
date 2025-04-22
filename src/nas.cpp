@@ -429,7 +429,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
         SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 CHAR(STRING_ELT(names, j)), element_length, int_nrows);
+                 utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
       }
       int *p_is_missing = LOGICAL(is_missing);
       for (int k = 0; k < num_row; ++k){
@@ -477,7 +477,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
         SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 CHAR(STRING_ELT(names, j)), element_length, int_nrows);
+                 utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
       }
       int *p_is_missing = LOGICAL(is_missing);
       for (int k = 0; k < num_row; ++k){
@@ -527,7 +527,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
         SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 CHAR(STRING_ELT(names, j)), element_length, int_nrows);
+                 utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
       }
       SEXP r_any_true = SHIELD(r_any(is_missing)); ++NP;
       p_out[j] = Rf_asLogical(r_any_true);
@@ -584,7 +584,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
         SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 CHAR(STRING_ELT(names, j)), element_length, int_nrows);
+                 utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
       }
       SEXP r_all_true = SHIELD(r_all(is_missing)); ++NP;
       p_out[j] = Rf_asLogical(r_all_true);

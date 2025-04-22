@@ -1104,25 +1104,26 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   SEXP names = Rf_getAttrib(x, R_NamesSymbol);
 
   SEXP cols;
+  int loc_type = TYPEOF(locs);
 
-  if (is_null(locs)){
+  if (loc_type == NILSXP){
     // If NULL then select all cols
     cols = SHIELD(cpp_seq_len(n_cols)); ++NP;
     n_locs = n_cols;
     check = false;
-  } else if (Rf_isString(locs)){
+  } else if (loc_type == STRSXP){
     cols = SHIELD(Rf_match(names, locs, NA_INTEGER)); ++NP;
     if (cpp_any_na(cols, false)){
       for (int i = 0; i < Rf_length(cols); ++i){
         if (is_na_int(INTEGER(cols)[i])){
-          const char *bad_loc = CHAR(STRING_ELT(locs, i));
+          const char *bad_loc = utf8_char(STRING_ELT(locs, i));
           YIELD(NP);
           Rf_error("Column %s does not exist", bad_loc);
         }
       }
     }
     check = false;
-  } else if (Rf_isLogical(locs)){
+  } else if (loc_type == LGLSXP){
     // If logical then find locs using `which_()`
     if (Rf_length(locs) != n_cols){
       YIELD(NP);
@@ -1189,7 +1190,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   // Make a plain data frame
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
-  Rf_classgets(out, Rf_mkString("data.frame"));
+  Rf_classgets(out, make_utf8_str("data.frame"));
   Rf_namesgets(out, out_names);
   YIELD(NP);
   return out;
@@ -1251,7 +1252,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
 
   // list to data frame object
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
-  Rf_classgets(out, Rf_mkString("data.frame"));
+  Rf_classgets(out, make_utf8_str("data.frame"));
   YIELD(NP);
   return out;
 }
@@ -1305,10 +1306,6 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
     return out;
   } else if (is_df(x)){
     return cpp_df_subset(x, indices, R_NilValue, check);
-    // SEXP out = SHIELD(cpp_df_slice(x, indices, check));
-    // SHIELD(out = reconstruct(out, x));
-    // YIELD(2);
-    // return out;
   } else {
     // Normally we would use base_sset here BUT
     // we want to dispatch on some of sset's methods
@@ -1331,10 +1328,6 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
     return cheapr_sset(x, indices);
   }
 }
-
-
-#define CHEAPR_SLICE_LOC(PTR_FUN, SCALAR_FUN, i)               \
-  return SCALAR_FUN(PTR_FUN(x)[i]);
 
 // scalar subset
 SEXP slice_loc(SEXP x, R_xlen_t i){
@@ -1380,7 +1373,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
     return Rf_ScalarReal(REAL(x)[i]);
   }
   case STRSXP: {
-    return Rf_ScalarString(STRING_ELT(x, i));
+    return scalar_utf8_str(STRING_ELT(x, i));
   }
   case CPLXSXP: {
     return Rf_ScalarComplex(COMPLEX(x)[i]);

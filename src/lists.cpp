@@ -58,9 +58,9 @@ SEXP cpp_new_list(SEXP size, SEXP default_value){
   }
   R_xlen_t out_size;
   if (TYPEOF(size) == INTSXP){
-    out_size = Rf_asInteger(size);
+    out_size = INTEGER(size)[0];
   } else {
-    out_size = Rf_asReal(size);
+    out_size = REAL(size)[0];
   }
   return new_list(out_size, default_value);
 }
@@ -163,7 +163,7 @@ SEXP get_list_element(SEXP list, const char *str){
   SEXP out = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
 
   for (int i = 0; i < Rf_length(list); ++i){
-    if (std::strcmp(CHAR(STRING_ELT(names, i)), str) == 0){
+    if (std::strcmp(utf8_char(STRING_ELT(names, i)), str) == 0){
       out = VECTOR_ELT(list, i);
       break;
     }
@@ -248,17 +248,16 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   int n = Rf_length(x);
   int n_cols = Rf_length(values);
 
-  SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
-  SEXP col_names = SHIELD(Rf_getAttrib(values, R_NamesSymbol)); ++NP;
 
   if (TYPEOF(x) != VECSXP){
-    YIELD(NP);
     Rf_error("`x` must be a list in %s", __func__);
   }
   if (TYPEOF(values) != VECSXP){
-    YIELD(NP);
     Rf_error("`values` must be a named list in %s", __func__);
   }
+
+  SEXP names = Rf_getAttrib(x, R_NamesSymbol);
+  SEXP col_names = Rf_getAttrib(values, R_NamesSymbol);
 
   if (is_null(names)){
     SHIELD(names = new_vec(STRSXP, n)); ++NP;
@@ -484,7 +483,7 @@ cpp11::list cpp_list_loc_assign(cpp11::writable::list x, int where, SEXP value){
 //   SHIELD(out = cpp_recycle(out, r_nrows));
 //
 //   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(nrows));
-//   Rf_classgets(out, Rf_mkString("data.frame"));
+//   Rf_classgets(out, scalar_utf8_str("data.frame"));
 //   YIELD(3);
 //   return out;
 // }
@@ -505,7 +504,7 @@ SEXP cpp_list_as_df(SEXP x) {
     N = vec_length(VECTOR_ELT(out, 0));
   }
 
-  SEXP df_str = SHIELD(Rf_mkString("data.frame")); ++NP;
+  SEXP df_str = SHIELD(make_utf8_str("data.frame")); ++NP;
   SEXP row_names = SHIELD(create_df_row_names(N)); ++NP;
 
   // If no names then add names
@@ -554,13 +553,13 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
   }
 
   if (name_repair){
-    SEXP dup_sep = SHIELD(Rf_mkString("_")); ++NP;
-    SEXP empty_sep = SHIELD(Rf_mkString("col_")); ++NP;
+    SEXP dup_sep = SHIELD(make_utf8_str("_")); ++NP;
+    SEXP empty_sep = SHIELD(make_utf8_str("col_")); ++NP;
     SHIELD(out_names = cpp_name_repair(out_names, dup_sep, empty_sep)); ++NP;
   }
   Rf_setAttrib(out, R_NamesSymbol, out_names);
   Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  Rf_classgets(out, Rf_mkString("data.frame"));
+  Rf_classgets(out, make_utf8_str("data.frame"));
   YIELD(NP);
   return out;
 }
@@ -637,7 +636,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   }
   Rf_setAttrib(out, R_NamesSymbol, out_names);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
-  Rf_classgets(out, Rf_mkString("data.frame"));
+  Rf_classgets(out, make_utf8_str("data.frame"));
   SHIELD(out = reconstruct(out, x, false)); ++NP;
   YIELD(NP);
   return out;

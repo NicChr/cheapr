@@ -159,18 +159,11 @@ case CHEAPR_INT64SXP: {
 case STRSXP: {
   if (implicit_na_coercion(value, x)) break;
   SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
-  SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+  SEXP val = SHIELD(as_utf8_char(value)); ++NP;
   const SEXP *p_x = STRING_PTR_RO(x);
   // int (*c_op)(SEXP, SEXP);
   // CHEAPR_OP_SWITCH;
-
-  if (n_cores > 1){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-    CHEAPR_VAL_COUNT(val);
-  } else {
-#pragma omp for simd
-    CHEAPR_VAL_COUNT(val);
-  }
+  CHEAPR_VAL_COUNT(val);
   break;
 }
 case VECSXP: {
@@ -347,8 +340,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
     SHIELD(replace = coerce_vector(replace, STRSXP)); ++NP;
-    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
-    SEXP repl = SHIELD(Rf_asChar(replace)); ++NP;
+    SEXP val = SHIELD(as_utf8_char(value)); ++NP;
+    SEXP repl = SHIELD(as_utf8_char(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -466,8 +459,8 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
     SHIELD(replace = coerce_vector(replace, STRSXP)); ++NP;
-    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
-    SEXP repl = SHIELD(Rf_asChar(replace)); ++NP;
+    SEXP val = SHIELD(as_utf8_char(value)); ++NP;
+    SEXP repl = SHIELD(as_utf8_char(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -509,14 +502,14 @@ SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){
   }
   SHIELD(x = altrep_materialise(x));
 
-  std::uint_fast64_t xn = Rf_xlength(x);
+  uint_fast64_t xn = Rf_xlength(x);
   int where_size = Rf_length(where);
   int what_size = Rf_length(what);
   if (what_size != 1 && where_size != what_size){
     YIELD(1);
     Rf_error("`what` must be either length 1 or `length(where)`");
   }
-  std::uint_fast64_t xi;
+  uint_fast64_t xi;
 
 
 #define CHEAPR_REPLACE                                                                                      \
@@ -769,7 +762,7 @@ default: {
 //   }
 //     temp = SHIELD(new_vec(TYPEOF(x), n)); ++NP;
 //     SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
-//     SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+//     SEXP val = SHIELD(as_utf8_char(value)); ++NP;
 //     const SEXP *p_x = STRING_PTR_RO(x);
 //
 //     for (R_xlen_t i = 0; i < n; ++i){
@@ -899,7 +892,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
-      SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+      SEXP val = SHIELD(as_utf8_char(value)); ++NP;
       const SEXP *p_x = STRING_PTR_RO(x);
 
       for (R_xlen_t i = 0; i < n; ++i){
