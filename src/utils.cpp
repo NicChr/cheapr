@@ -843,14 +843,15 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names,
                      bool shallow_copy){
 
-  if (!shallow_copy && address_equal(target, source)){
-    return target;
-  }
-
   int NP = 0;
 
   if (shallow_copy){
     SHIELD(target = Rf_shallow_duplicate(target)); ++NP;
+  }
+
+  if (address_equal(target, source)){
+    YIELD(NP);
+    return target;
   }
 
   SEXP target_attrs = ATTRIB(target);
@@ -862,18 +863,16 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
   SEXP tag = R_NilValue;
   SEXP current = R_NilValue;
 
-  const char *tag_nm;
-  const char *attr_nm;
+  const SEXP *p_ta = STRING_PTR_RO(target_attr_names);
+  const SEXP *p_sa = STRING_PTR_RO(source_attr_names);
 
   for (int i = 0; i < Rf_length(target_attr_names); ++i){
     current = target_attrs;
     while (!is_null(current)){
 
       tag = TAG(current);
-      attr_nm = utf8_char(STRING_ELT(target_attr_names, i));
-      tag_nm = utf8_char(PRINTNAME(tag));
 
-      if (std::strcmp(tag_nm, attr_nm) == 0){
+      if (chars_equal(PRINTNAME(tag), p_ta[i])){
         Rf_setAttrib(target, tag, CAR(current));
         break;
       }
@@ -886,10 +885,8 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
     while (!is_null(current)){
 
       tag = TAG(current);
-      attr_nm = utf8_char(STRING_ELT(source_attr_names, i));
-      tag_nm = utf8_char(PRINTNAME(tag));
 
-      if (std::strcmp(tag_nm, attr_nm) == 0){
+      if (chars_equal(PRINTNAME(tag), p_sa[i])){
         Rf_setAttrib(target, tag, CAR(current));
         break;
       }

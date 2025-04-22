@@ -198,6 +198,11 @@ inline SEXP as_utf8_char(SEXP x){
   return Rf_mkCharCE(CHAR(Rf_asChar(x)), CE_UTF8);
 }
 
+inline bool chars_equal(SEXP x, SEXP y){
+  return std::strcmp(utf8_char(x), utf8_char(y)) == 0;
+}
+
+
 inline bool is_null(SEXP x){
   return TYPEOF(x) == NILSXP;
 }
