@@ -178,12 +178,12 @@ SEXP cpp_str_coalesce(SEXP x);
 SEXP cpp_na_init(SEXP x, int n);
 SEXP new_list(R_xlen_t length, SEXP default_value);
 
-inline SEXP make_utf8_char(const char *x){
-  return Rf_mkCharCE(x, CE_UTF8);
-}
-
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
+}
+
+inline SEXP make_utf8_char(const char *x){
+  return Rf_mkCharCE(x, CE_UTF8);
 }
 
 inline SEXP make_utf8_str(const char *x){

@@ -28,7 +28,9 @@ SEXP xlen_to_r(R_xlen_t x){
 }
 
 R_xlen_t vec_length(SEXP x){
-  if (is_df(x)){
+  if (!Rf_isObject(x) || Rf_isVectorAtomic(x)){
+    return Rf_xlength(x);
+  } else if (is_df(x)){
     return df_nrow(x);
     // Is x a list?
   } else if (TYPEOF(x) == VECSXP){
@@ -49,7 +51,7 @@ R_xlen_t vec_length(SEXP x){
     }
     // Catch-all
   } else {
-    return Rf_xlength(x);
+    return r_length(x);
   }
 }
 

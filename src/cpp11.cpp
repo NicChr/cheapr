@@ -589,6 +589,13 @@ extern "C" SEXP _cheapr_clean_indices(SEXP indices, SEXP x) {
   END_CPP11
 }
 // sset.cpp
+SEXP sset_vec(SEXP x, SEXP indices, bool check);
+extern "C" SEXP _cheapr_sset_vec(SEXP x, SEXP indices, SEXP check) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(sset_vec(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<bool>>(check)));
+  END_CPP11
+}
+// sset.cpp
 SEXP cpp_rev(SEXP x, bool set);
 extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP set) {
   BEGIN_CPP11
@@ -874,6 +881,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_reconstruct",                 (DL_FUNC) &_cheapr_reconstruct,                 3},
     {"_cheapr_shallow_copy",                (DL_FUNC) &_cheapr_shallow_copy,                1},
+    {"_cheapr_sset_vec",                    (DL_FUNC) &_cheapr_sset_vec,                    3},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}
 };
