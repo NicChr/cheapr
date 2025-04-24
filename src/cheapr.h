@@ -141,7 +141,7 @@ SEXP cpp_set_divide(SEXP x, SEXP y);
 SEXP cpp_val_remove(SEXP x, SEXP value);
 SEXP cpp_seq_len(R_xlen_t n);
 SEXP create_df_row_names(int n);
-SEXP shallow_copy(SEXP x);
+SEXP cpp_shallow_copy(SEXP x);
 SEXP exclude_locs(SEXP exclude, R_xlen_t xn);
 R_xlen_t unnested_length(SEXP x);
 SEXP cpp_drop_null(SEXP l, bool always_shallow_copy);
@@ -177,6 +177,7 @@ double cpp_min(SEXP x);
 SEXP cpp_str_coalesce(SEXP x);
 SEXP cpp_na_init(SEXP x, int n);
 SEXP new_list(R_xlen_t length, SEXP default_value);
+void set_list_as_df(SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);

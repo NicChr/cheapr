@@ -66,20 +66,8 @@ SEXP cpp_new_list(SEXP size, SEXP default_value){
 }
 
 [[cpp11::register]]
-SEXP shallow_copy(SEXP x){
-  if (TYPEOF(x) == VECSXP){
-    R_xlen_t n = Rf_xlength(x);
-    SEXP out = SHIELD(new_vec(VECSXP,  n));
-    const SEXP *p_x = VECTOR_PTR_RO(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      SET_VECTOR_ELT(out, i, p_x[i]);
-    }
-    SHALLOW_DUPLICATE_ATTRIB(out, x);
-    YIELD(1);
-    return out;
-  } else {
-    return x;
-  }
+SEXP cpp_shallow_copy(SEXP x){
+  return Rf_shallow_duplicate(x);
 }
 
 // Remove NULL elements from list
@@ -288,7 +276,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     add_locs = SHIELD(Rf_match(names, col_names, NA_INTEGER)); ++NP;
     n_cols_to_add = na_count(add_locs, false);
   }
-  int *p_add_locs = INTEGER(add_locs);
+  int* __restrict__ p_add_locs = INTEGER(add_locs);
   int out_size = n + n_cols_to_add;
 
   int loc;
@@ -518,6 +506,31 @@ SEXP cpp_list_as_df(SEXP x) {
   return out;
 }
 
+void set_list_as_df(SEXP x) {
+  int N; // Number of rows
+  int NP = 0; // Number of protects
+  int n_items = Rf_length(x);
+  if (is_df(x)){
+    N = df_nrow(x);
+  } else if (n_items == 0){
+    N = 0;
+  } else {
+    N = vec_length(VECTOR_ELT(x, 0));
+  }
+
+  SEXP df_str = SHIELD(make_utf8_str("data.frame")); ++NP;
+  SEXP row_names = SHIELD(create_df_row_names(N)); ++NP;
+
+  // If no names then add names
+  if (is_null(Rf_getAttrib(x, R_NamesSymbol))){
+    SEXP out_names = SHIELD(new_vec(STRSXP, n_items)); ++NP;
+    Rf_setAttrib(x, R_NamesSymbol, out_names);
+  }
+  Rf_setAttrib(x, R_RowNamesSymbol, row_names);
+  Rf_classgets(x, df_str);
+  YIELD(NP);
+}
+
 // Can use in the future once I figure out how to re-write named_list() in C++
 
 [[cpp11::register]]
@@ -574,11 +587,10 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
     Rf_error("`x` must be a `data.frame` in %s", __func__);
   }
 
-  SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
-  SEXP col_names = SHIELD(Rf_getAttrib(cols, R_NamesSymbol)); ++NP;
+  SEXP names = Rf_getAttrib(x, R_NamesSymbol);
+  SEXP col_names = Rf_getAttrib(cols, R_NamesSymbol);
 
   if (TYPEOF(cols) != VECSXP || is_null(col_names)){
-    YIELD(NP);
     Rf_error("`cols` must be a named list in %s", __func__);
   }
 
@@ -594,11 +606,10 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   // We create an int vec to keep track of locations where to add col vecs
 
   SEXP add_locs = SHIELD(Rf_match(names, col_names, NA_INTEGER)); ++NP;
-  int *p_add_locs = INTEGER(add_locs);
+  int* __restrict__ p_add_locs = INTEGER(add_locs);
   int n_cols_to_add = na_count(add_locs, false);
   int out_size = n + n_cols_to_add;
 
-  int loc;
   SEXP out = SHIELD(new_vec(VECSXP, out_size)); ++NP;
   SEXP out_names = SHIELD(new_vec(STRSXP, out_size)); ++NP;
 
@@ -610,14 +621,12 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
 
   bool any_null = false;
 
-  SEXP vec;
-  PROTECT_INDEX vec_idx;
-
-  R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
+  int loc;
+  SEXP vec = R_NilValue;
 
   for (int j = 0; j < n_cols; ++j){
     loc = p_add_locs[j];
-    R_Reprotect(vec = p_cols[j], vec_idx);
+    vec = p_cols[j];
     any_null = any_null || is_null(vec);
     if (is_na_int(loc)){
       SET_VECTOR_ELT(out, n, cpp_rep_len(vec, n_rows));

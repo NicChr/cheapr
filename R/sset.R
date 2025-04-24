@@ -94,14 +94,13 @@ sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
   }
   out <- sset_df(list_as_df(out), i , j)
   if (missingj){
-    set_attr(out, "class", class(x))
-    set_rm_attr(out, "row.names")
+    attrs_add(out, class = class(x), row.names = NULL, .set = TRUE)
   }
-  set_attr(out, "tzone", attr(x, "tzone"))
+  attrs_add(out, tzone = attr(x, "tzone"), .set = TRUE)
   if (posixlt_is_balanced(x)){
-    set_attr(out, "balanced", TRUE)
+    attrs_add(out, balanced = TRUE, .set = TRUE)
   } else {
-    set_attr(out, "balanced", NA)
+    attrs_add(out, balanced = NA, .set = TRUE)
   }
   out
 }
@@ -116,6 +115,5 @@ sset.sf <- function(x, i = NULL, j = NULL, ...){
 #' @export
 sset.vctrs_rcrd <- function(x, i = NULL, ...){
   out <- sset_row(list_as_df(x), i)
-  attributes(out) <- attributes(x)
-  out
+  cpp_set_add_attributes(out, attributes(x), add = FALSE)
 }

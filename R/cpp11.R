@@ -48,6 +48,10 @@ cpp_setdiff <- function(x, y) {
   .Call(`_cheapr_cpp_setdiff`, x, y)
 }
 
+cpp_intersect <- function(x, y, unique) {
+  .Call(`_cheapr_cpp_intersect`, x, y, unique)
+}
+
 cpp_na_init <- function(x, n) {
   .Call(`_cheapr_cpp_na_init`, x, n)
 }
@@ -140,8 +144,8 @@ cpp_new_list <- function(size, default_value) {
   .Call(`_cheapr_cpp_new_list`, size, default_value)
 }
 
-shallow_copy <- function(x) {
-  .Call(`_cheapr_shallow_copy`, x)
+cpp_shallow_copy <- function(x) {
+  .Call(`_cheapr_cpp_shallow_copy`, x)
 }
 
 cpp_drop_null <- function(l, always_shallow_copy) {

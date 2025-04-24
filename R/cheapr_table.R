@@ -58,9 +58,7 @@ cheapr_table <- function(..., names = TRUE, order = FALSE, na_exclude = FALSE,
   } else {
     out <- do.call(collapse::qtab, c(factors, list(dnn = NULL)), envir = parent.frame())
     if (!classed){
-      cpp_set_rm_attr(out, "class")
-      cpp_set_rm_attr(out, "sorted")
-      cpp_set_rm_attr(out, "weighted")
+      attrs_add(out, class = NULL, sorted = NULL, weighted = NULL, .set = TRUE)
     }
   }
   out

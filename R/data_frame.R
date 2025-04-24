@@ -37,7 +37,7 @@ as_df <- function(x){
     out <- x
     class(out) <- "data.frame"
   } else if (is.null(x) || (is.atomic(x) && length(dim(x)) < 2)){
-    out <- cpp_list_rm_null(list(name = names(x), value = x))
+    out <- list_drop_null(list(name = names(x), value = x))
     attr(out, "row.names") <- .set_row_names(NROW(x))
     class(out) <- "data.frame"
   } else {

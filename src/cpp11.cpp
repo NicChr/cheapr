@@ -92,6 +92,13 @@ extern "C" SEXP _cheapr_cpp_setdiff(SEXP x, SEXP y) {
   END_CPP11
 }
 // combine.cpp
+SEXP cpp_intersect(SEXP x, SEXP y, bool unique);
+extern "C" SEXP _cheapr_cpp_intersect(SEXP x, SEXP y, SEXP unique) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_intersect(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y), cpp11::as_cpp<cpp11::decay_t<bool>>(unique)));
+  END_CPP11
+}
+// combine.cpp
 SEXP cpp_na_init(SEXP x, int n);
 extern "C" SEXP _cheapr_cpp_na_init(SEXP x, SEXP n) {
   BEGIN_CPP11
@@ -253,10 +260,10 @@ extern "C" SEXP _cheapr_cpp_new_list(SEXP size, SEXP default_value) {
   END_CPP11
 }
 // lists.cpp
-SEXP shallow_copy(SEXP x);
-extern "C" SEXP _cheapr_shallow_copy(SEXP x) {
+SEXP cpp_shallow_copy(SEXP x);
+extern "C" SEXP _cheapr_cpp_shallow_copy(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(shallow_copy(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(cpp_shallow_copy(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // lists.cpp
@@ -808,6 +815,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_int64_to_numeric",        (DL_FUNC) &_cheapr_cpp_int64_to_numeric,        1},
     {"_cheapr_cpp_int_sequence",            (DL_FUNC) &_cheapr_cpp_int_sequence,            3},
     {"_cheapr_cpp_int_sign",                (DL_FUNC) &_cheapr_cpp_int_sign,                1},
+    {"_cheapr_cpp_intersect",               (DL_FUNC) &_cheapr_cpp_intersect,               3},
     {"_cheapr_cpp_is_na",                   (DL_FUNC) &_cheapr_cpp_is_na,                   1},
     {"_cheapr_cpp_is_simple_atomic_vec",    (DL_FUNC) &_cheapr_cpp_is_simple_atomic_vec,    1},
     {"_cheapr_cpp_is_simple_vec",           (DL_FUNC) &_cheapr_cpp_is_simple_vec,           1},
@@ -864,6 +872,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_subtract",            (DL_FUNC) &_cheapr_cpp_set_subtract,            2},
     {"_cheapr_cpp_set_trunc",               (DL_FUNC) &_cheapr_cpp_set_trunc,               1},
     {"_cheapr_cpp_setdiff",                 (DL_FUNC) &_cheapr_cpp_setdiff,                 2},
+    {"_cheapr_cpp_shallow_copy",            (DL_FUNC) &_cheapr_cpp_shallow_copy,            1},
     {"_cheapr_cpp_shallow_duplicate_attrs", (DL_FUNC) &_cheapr_cpp_shallow_duplicate_attrs, 2},
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    3},
     {"_cheapr_cpp_str_coalesce",            (DL_FUNC) &_cheapr_cpp_str_coalesce,            1},
@@ -880,7 +889,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_get_ptypes",                  (DL_FUNC) &_cheapr_get_ptypes,                  1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_reconstruct",                 (DL_FUNC) &_cheapr_reconstruct,                 3},
-    {"_cheapr_shallow_copy",                (DL_FUNC) &_cheapr_shallow_copy,                1},
     {"_cheapr_sset_vec",                    (DL_FUNC) &_cheapr_sset_vec,                    3},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}

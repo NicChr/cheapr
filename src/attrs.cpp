@@ -29,7 +29,7 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
 }
 
 [[cpp11::register]]
-SEXP cpp_set_rm_attr(SEXP x, SEXP which) {
+SEXP cpp_set_rm_attr(SEXP x, SEXP which){
   Rf_setAttrib(x, Rf_installChar(STRING_ELT(which, 0)), R_NilValue);
   return x;
 }
@@ -46,6 +46,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
   if (is_null(attributes)){
     return x;
   } else if (TYPEOF(attributes) == VECSXP){
+    if (Rf_length(attributes) == 0) return x;
     SEXP names = Rf_getAttrib(attributes, R_NamesSymbol);
     if (is_null(names)){
       Rf_error("attributes must be a named list");
@@ -55,7 +56,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
     for (int i = 0; i < Rf_length(names); ++i){
       if (p_names[i] != R_BlankString){
-        SEXP attr_nm = SHIELD(Rf_installChar(p_names[i])); ++NP;
+        SEXP attr_nm = SHIELD(Rf_install(utf8_char(p_names[i]))); ++NP;
         if (address_equal(x, p_attributes[i])){
           SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
           Rf_setAttrib(x, attr_nm, dup_attr);
@@ -71,8 +72,8 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
     while (!is_null(current)){
       if (address_equal(x, CAR(current))){
-       SEXP dup_attr = SHIELD(Rf_duplicate(CAR(current))); ++NP;
-       Rf_setAttrib(x, TAG(current), dup_attr);
+        SEXP dup_attr = SHIELD(Rf_duplicate(CAR(current))); ++NP;
+        Rf_setAttrib(x, TAG(current), dup_attr);
       } else {
         Rf_setAttrib(x, TAG(current), CAR(current));
       }

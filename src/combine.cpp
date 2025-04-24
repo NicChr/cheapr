@@ -89,10 +89,10 @@ SEXP cpp_rep_len(SEXP x, int length){
       SET_VECTOR_ELT(out, i, cpp_rep_len(VECTOR_ELT(x, i), length));
     }
     Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
-    SHIELD(out = cpp_list_as_df(out));
+    set_list_as_df(out);
     Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
     SHIELD(out = reconstruct(out, x, false));
-    YIELD(3);
+    YIELD(2);
     return out;
   } else if (is_simple_vec(x)){
 
@@ -432,10 +432,15 @@ SEXP cpp_unique(SEXP x){
   } else if (is_simple && Rf_length(x) < 10000){
     SEXP dup = SHIELD(Rf_duplicated(x, FALSE));
     SEXP unique_locs = SHIELD(cpp_which_(dup, true));
-    SEXP out = SHIELD(sset_vec(x, unique_locs, false));
-    Rf_copyMostAttrib(x, out);
-    YIELD(3);
-    return out;
+    if (Rf_length(unique_locs) == Rf_length(x)){
+      YIELD(2);
+      return x;
+    } else {
+      SEXP out = SHIELD(sset_vec(x, unique_locs, false));
+      Rf_copyMostAttrib(x, out);
+      YIELD(3);
+      return out;
+    }
   } else if (is_simple){
     return cheapr_fast_unique(x);
   } else {
@@ -447,12 +452,18 @@ SEXP cpp_unique(SEXP x){
 SEXP cpp_setdiff(SEXP x, SEXP y){
   SEXP matches = SHIELD(Rf_match(y, x, NA_INTEGER));
   SEXP locs = SHIELD(cpp_which_na(matches));
-  SEXP out = SHIELD(sset_vec(x, locs, false));
-  Rf_copyMostAttrib(x, out);
-  YIELD(3);
-  return out;
+  if (Rf_xlength(locs) == Rf_xlength(x)){
+    YIELD(2);
+    return x;
+  } else {
+    SEXP out = SHIELD(sset_vec(x, locs, false));
+    Rf_copyMostAttrib(x, out);
+    YIELD(3);
+    return out;
+  }
 }
 
+[[cpp11::register]]
 SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
   if (unique){
     SHIELD(x = cpp_unique(x));
@@ -461,10 +472,15 @@ SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
   }
   SEXP matches = SHIELD(Rf_match(y, x, NA_INTEGER));
   SEXP locs = SHIELD(cpp_which_not_na(matches));
-  SEXP out = SHIELD(sset_vec(x, locs, false));
-  Rf_copyMostAttrib(x, out);
-  YIELD(4);
-  return out;
+  if (Rf_xlength(locs) == Rf_xlength(x)){
+    YIELD(3);
+    return x;
+  } else {
+    SEXP out = SHIELD(sset_vec(x, locs, false));
+    Rf_copyMostAttrib(x, out);
+    YIELD(4);
+    return out;
+  }
 }
 // SEXP cpp_setdiff(SEXP x, SEXP y, bool dups){
 //
@@ -591,7 +607,7 @@ SEXP cpp_combine_levels(SEXP x){
 
   for (int i = 0; i < n; ++i){
     if (Rf_isFactor(p_x[i])){
-      R_Reprotect(fct_levels = Rf_getAttrib(p_x[i], R_LevelsSymbol), fct_idx);
+      fct_levels = Rf_getAttrib(p_x[i], R_LevelsSymbol);
     } else {
       R_Reprotect(fct_levels = base_as_character(p_x[i]), fct_idx);
     }
@@ -831,7 +847,7 @@ SEXP cpp_df_c(SEXP x){
     }
     SET_VECTOR_ELT(out, j, cpp_c(vectors));
   }
-  SHIELD(out = cpp_list_as_df(out)); ++NP;
+  set_list_as_df(out);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   Rf_namesgets(out, names);
   SHIELD(out = reconstruct(out, df_template, false)); ++NP;
@@ -1080,6 +1096,7 @@ SEXP cpp_c(SEXP x){
   }
 
   R_xlen_t k = 0;
+  R_xlen_t m = 0;
   SEXP out, temp;
 
   PROTECT_INDEX temp_idx;
@@ -1093,49 +1110,50 @@ SEXP cpp_c(SEXP x){
   }
   case LGLSXP:
   case INTSXP: {
-    out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-    int *p_out = INTEGER(out);
 
-    for (int i = 0; i < n; ++i){
-      R_xlen_t m = Rf_xlength(p_x[i]);
-      R_Reprotect(
-        temp = TYPEOF(p_x[i]) == vector_type ?
-      p_x[i] :
-        coerce_vec(p_x[i], vector_type), temp_idx
-      );
-      int *p_temp = INTEGER(temp);
+    out = SHIELD(new_vec(vector_type, out_size)); ++NP;
+    int* __restrict__ p_out = INTEGER(out);
+
+    for (int i = 0; i < n; ++i, k += m){
+      if (TYPEOF(p_x[i]) == vector_type){
+        temp = p_x[i];
+      } else {
+        R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
+      }
+      m = Rf_xlength(temp);
+      const int *p_temp = INTEGER(temp);
       memcpy(&p_out[k], &p_temp[0], m * sizeof(int));
-      k += m;
     }
     break;
   }
   case REALSXP: {
-    out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-    double *p_out = REAL(out);
 
-    for (int i = 0; i < n; ++i){
-      R_xlen_t m = Rf_xlength(p_x[i]);
-      R_Reprotect(
-        temp = TYPEOF(p_x[i]) == vector_type ?
-      p_x[i] :
-        coerce_vec(p_x[i], vector_type), temp_idx
-      );
-      double *p_temp = REAL(temp);
+    out = SHIELD(new_vec(vector_type, out_size)); ++NP;
+    double* __restrict__ p_out = REAL(out);
+
+    for (int i = 0; i < n; ++i, k += m){
+      if (TYPEOF(p_x[i]) == vector_type){
+        temp = p_x[i];
+      } else {
+        R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
+      }
+      m = Rf_xlength(temp);
+      const double *p_temp = REAL(temp);
       memcpy(&p_out[k], &p_temp[0], m * sizeof(double));
-      k += m;
     }
     break;
   }
   case STRSXP: {
+
     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
 
     for (int i = 0; i < n; ++i){
-      R_xlen_t m = Rf_xlength(p_x[i]);
-      R_Reprotect(
-        temp = TYPEOF(p_x[i]) == vector_type ?
-      p_x[i] :
-        coerce_vec(p_x[i], vector_type), temp_idx
-      );
+      if (TYPEOF(p_x[i]) == vector_type){
+        temp = p_x[i];
+      } else {
+        R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
+      }
+      m = Rf_xlength(temp);
       const SEXP *p_temp = STRING_PTR_RO(temp);
       for (R_xlen_t j = 0; j < m; ++k, ++j){
         SET_STRING_ELT(out, k, p_temp[j]);
@@ -1144,15 +1162,16 @@ SEXP cpp_c(SEXP x){
     break;
   }
   case CPLXSXP: {
+
     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
 
     for (int i = 0; i < n; ++i){
-      R_xlen_t m = Rf_xlength(p_x[i]);
-      R_Reprotect(
-        temp = TYPEOF(p_x[i]) == vector_type ?
-      p_x[i] :
-        coerce_vec(p_x[i], vector_type), temp_idx
-      );
+      if (TYPEOF(p_x[i]) == vector_type){
+        temp = p_x[i];
+      } else {
+        R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
+      }
+      m = Rf_xlength(temp);
       Rcomplex *p_temp = COMPLEX(temp);
       for (R_xlen_t j = 0; j < m; ++k, ++j){
         SET_COMPLEX_ELT(out, k, p_temp[j]);
@@ -1161,15 +1180,16 @@ SEXP cpp_c(SEXP x){
     break;
   }
   case VECSXP: {
+
     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
 
     for (int i = 0; i < n; ++i){
-      R_xlen_t m = Rf_xlength(p_x[i]);
-      R_Reprotect(
-        temp = TYPEOF(p_x[i]) == vector_type ?
-      p_x[i] :
-        coerce_vec(p_x[i], vector_type), temp_idx
-      );
+      if (TYPEOF(p_x[i]) == vector_type){
+        temp = p_x[i];
+      } else {
+        R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
+      }
+      m = Rf_xlength(temp);
       const SEXP *p_temp = VECTOR_PTR_RO(temp);
       for (R_xlen_t j = 0; j < m; ++k, ++j){
         SET_VECTOR_ELT(out, k, p_temp[j]);

@@ -92,7 +92,7 @@ case <- function(..., .default = NULL){
 
   # Initialise a logical that will keep track of
   # which conditions have been met
-  lgl_or <- r_copy(lgl)
+  lgl_or <- deep_copy(lgl)
 
   if (n_conditions >= 2){
     lgl3 <- logical(length(lgl))

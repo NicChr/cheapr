@@ -24,7 +24,7 @@ named_list <- function(..., .keep_null = TRUE){
     names(dots) <- dot_nms
   }
   if (!.keep_null){
-    dots <- cpp_list_rm_null(dots)
+    dots <- list_drop_null(dots)
   }
   dots
 }
