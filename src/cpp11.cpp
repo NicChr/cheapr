@@ -589,20 +589,6 @@ extern "C" SEXP _cheapr_cpp_int_sign(SEXP x) {
   END_CPP11
 }
 // sset.cpp
-SEXP clean_indices(SEXP indices, SEXP x);
-extern "C" SEXP _cheapr_clean_indices(SEXP indices, SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(clean_indices(cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// sset.cpp
-SEXP sset_vec(SEXP x, SEXP indices, bool check);
-extern "C" SEXP _cheapr_sset_vec(SEXP x, SEXP indices, SEXP check) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(sset_vec(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<bool>>(check)));
-  END_CPP11
-}
-// sset.cpp
 SEXP cpp_rev(SEXP x, bool set);
 extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP set) {
   BEGIN_CPP11
@@ -781,7 +767,6 @@ extern "C" SEXP _cheapr_cpp_lgl_locs(SEXP x, SEXP n_true, SEXP n_false, SEXP inc
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_cheapr_clean_indices",               (DL_FUNC) &_cheapr_clean_indices,               2},
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
@@ -889,7 +874,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_get_ptypes",                  (DL_FUNC) &_cheapr_get_ptypes,                  1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_reconstruct",                 (DL_FUNC) &_cheapr_reconstruct,                 3},
-    {"_cheapr_sset_vec",                    (DL_FUNC) &_cheapr_sset_vec,                    3},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}
 };
