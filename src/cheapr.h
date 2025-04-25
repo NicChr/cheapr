@@ -219,7 +219,7 @@ inline SEXP make_utf8_char(const char *x){
 }
 
 inline SEXP make_utf8_str(const char *x){
-  return Rf_mkString(CHAR(Rf_mkCharCE(x, CE_UTF8)));
+  return Rf_ScalarString(Rf_mkCharCE(x, CE_UTF8));
 }
 
 inline SEXP scalar_utf8_str(SEXP x){
