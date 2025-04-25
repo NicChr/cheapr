@@ -39,7 +39,8 @@ sset_col <- function(x, j = NULL){
 df_select <- function(x, j = NULL){
   cpp_reconstruct(
     sset_col(x, missing(j) %!||% j), x,
-    "names", val_rm(names(attributes(x)), "names")
+    "names", val_rm(names(attributes(x)), "names"),
+    TRUE
   )
 }
 

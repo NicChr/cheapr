@@ -54,9 +54,11 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
     const SEXP *p_attributes = VECTOR_PTR_RO(attributes);
     const SEXP *p_names = STRING_PTR_RO(names);
 
+    SEXP attr_nm = R_NilValue;
+
     for (int i = 0; i < Rf_length(names); ++i){
       if (p_names[i] != R_BlankString){
-        SEXP attr_nm = SHIELD(Rf_install(utf8_char(p_names[i]))); ++NP;
+        attr_nm = Rf_install(utf8_char(p_names[i]));
         if (address_equal(x, p_attributes[i])){
           SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
           Rf_setAttrib(x, attr_nm, dup_attr);

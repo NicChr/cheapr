@@ -109,11 +109,10 @@ sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
 sset.sf <- function(x, i = NULL, j = NULL, ...){
   out <- sset_df(x, i, j)
   cpp_reconstruct(
-    out, x, c("names", "row.names"), vec_setdiff(names(attributes(x)), c("names", "row.names"))
+    out, x, c("names", "row.names"), vec_setdiff(names(attributes(x)), c("names", "row.names")), FALSE
   )
 }
 #' @export
 sset.vctrs_rcrd <- function(x, i = NULL, ...){
-  out <- sset_row(list_as_df(x), i)
-  cpp_set_add_attributes(out, attributes(x), add = FALSE)
+  .Call(`_cheapr_cpp_set_add_attributes`, sset_row(list_as_df(x), i), attributes(x), TRUE)
 }
