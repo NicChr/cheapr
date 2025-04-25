@@ -516,9 +516,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_x = COMPLEX(x);
+    const Rcomplex *p_x = COMPLEX(x);
     out = SHIELD(new_vec(CPLXSXP, out_size)); ++NP;
-    Rcomplex *p_out = COMPLEX(out);
+    Rcomplex* __restrict__ p_out = COMPLEX(out);
     if (double_loop){
       memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(Rcomplex));
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(Rcomplex));
@@ -703,7 +703,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       break;
     }
     case CPLXSXP: {
-      Rcomplex *p_x = COMPLEX(x);
+      const Rcomplex *p_x = COMPLEX(x);
       out = SHIELD(new_vec(CPLXSXP, n));
       Rcomplex *p_out = COMPLEX(out);
       if (check){
@@ -725,12 +725,16 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
         }
       } else {
-        for (int_fast64_t i = 0; i < n; ++i) SET_COMPLEX_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
+        OMP_FOR_SIMD
+        for (int_fast64_t i = 0; i < n; ++i){
+          p_out[i].r = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].r;
+          p_out[i].i = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].i;
+        }
       }
       break;
     }
     case RAWSXP: {
-      Rbyte *p_x = RAW(x);
+      const Rbyte *p_x = RAW(x);
       out = SHIELD(new_vec(RAWSXP, n));
       if (check){
         for (int_fast64_t i = 0; i < n; ++i){
@@ -853,7 +857,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       break;
     }
     case CPLXSXP: {
-      Rcomplex *p_x = COMPLEX(x);
+      const Rcomplex *p_x = COMPLEX(x);
       out = SHIELD(new_vec(CPLXSXP, n));
       Rcomplex *p_out = COMPLEX(out);
       if (check){
@@ -875,12 +879,16 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
         }
       } else {
-        for (int i = 0; i < n; ++i) SET_COMPLEX_ELT(out, i, p_x[pind[i] - 1]);
+        OMP_FOR_SIMD
+        for (int i = 0; i < n; ++i){
+          p_out[i].r = p_x[pind[i] - 1].r;
+          p_out[i].i = p_x[pind[i] - 1].i;
+        }
       }
       break;
     }
     case RAWSXP: {
-      Rbyte *p_x = RAW(x);
+      const Rbyte *p_x = RAW(x);
       out = SHIELD(new_vec(RAWSXP, n));
       if (check){
         for (int i = 0; i < n; ++i){

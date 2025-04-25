@@ -449,16 +449,21 @@ SEXP cpp_unique(SEXP x){
 }
 
 [[cpp11::register]]
-SEXP cpp_setdiff(SEXP x, SEXP y){
+SEXP cpp_setdiff(SEXP x, SEXP y, bool unique){
+  if (unique){
+    SHIELD(x = cpp_unique(x));
+  } else {
+    SHIELD(x);
+  }
   SEXP matches = SHIELD(Rf_match(y, x, NA_INTEGER));
   SEXP locs = SHIELD(cpp_which_na(matches));
   if (Rf_xlength(locs) == Rf_xlength(x)){
-    YIELD(2);
+    YIELD(3);
     return x;
   } else {
     SEXP out = SHIELD(sset_vec(x, locs, false));
     Rf_copyMostAttrib(x, out);
-    YIELD(3);
+    YIELD(4);
     return out;
   }
 }
@@ -805,7 +810,8 @@ SEXP cpp_df_c(SEXP x){
 
     R_Reprotect(new_names = cpp_setdiff(
       Rf_getAttrib(df, R_NamesSymbol),
-      Rf_getAttrib(ptypes, R_NamesSymbol)
+      Rf_getAttrib(ptypes, R_NamesSymbol),
+      false
     ), new_names_idx);
 
     // Adjust prototype list

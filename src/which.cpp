@@ -5,14 +5,14 @@
 
 // Count the number of true values
 
-R_xlen_t count_true(int *px, R_xlen_t n){
+R_xlen_t count_true(const int* __restrict__ px, R_xlen_t n){
   R_xlen_t size = 0;
   if (n >= CHEAPR_OMP_THRESHOLD){
 #pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
     for (R_xlen_t j = 0; j < n; ++j) size += (px[j] == TRUE);
     return size;
   } else {
-#pragma omp for simd
+    OMP_FOR_SIMD
     for (R_xlen_t j = 0; j < n; ++j) size += (px[j] == TRUE);
     return size;
   }
@@ -33,14 +33,14 @@ while (whichi < out_size){                                     \
 [[cpp11::register]]
 SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
-  int *p_x = LOGICAL(x);
+  const int* __restrict__ p_x = LOGICAL(x);
   bool is_long = (n > integer_max_);
   if (invert){
     if (is_long){
       R_xlen_t size = count_true(p_x, n);
       R_xlen_t out_size = n - size;
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double *p_out = REAL(out);
+      double* __restrict__ p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
       CHEAPR_WHICH_VAL_INVERTED(TRUE);
@@ -50,7 +50,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       int size = count_true(p_x, n);
       int out_size = n - size;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int *p_out = INTEGER(out);
+      int* __restrict__ p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
       CHEAPR_WHICH_VAL_INVERTED(TRUE);
@@ -61,7 +61,7 @@ SEXP cpp_which_(SEXP x, bool invert){
     if (is_long){
       R_xlen_t out_size = count_true(p_x, n);
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double *p_out = REAL(out);
+      double* __restrict__ p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
       CHEAPR_WHICH_VAL(TRUE);
@@ -70,7 +70,7 @@ SEXP cpp_which_(SEXP x, bool invert){
     } else {
       int out_size = count_true(p_x, n);
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int *p_out = INTEGER(out);
+      int* __restrict__ p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
       CHEAPR_WHICH_VAL(TRUE);
@@ -93,11 +93,14 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   }
   SEXP val_is_na = SHIELD(cpp_is_na(value)); ++NP;
   if (Rf_asLogical(val_is_na)){
-    YIELD(NP);
     if (invert){
-      return cpp_which_not_na(x);
+      SEXP out = SHIELD(cpp_which_not_na(x)); ++NP;
+      YIELD(NP);
+      return out;
     } else {
-      return cpp_which_na(x);
+      SEXP out = SHIELD(cpp_which_na(x)); ++NP;
+      YIELD(NP);
+      return out;
     }
   }
 
@@ -113,20 +116,19 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   switch ( CHEAPR_TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
-    ++NP;
+    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
     int val = Rf_asInteger(value);
-    int *p_x = INTEGER(x);
+    const int* __restrict__ p_x = INTEGER(x);
     if (is_long){
-      double *p_out = REAL(out);
+      double* __restrict__ p_out = REAL(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
         CHEAPR_WHICH_VAL(val);
       }
     } else {
-      int *p_out = INTEGER(out);
+      int* __restrict__ p_out = INTEGER(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
@@ -137,20 +139,19 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     return out;
   }
   case REALSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
-    ++NP;
+    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = coerce_vector(value, REALSXP)); ++NP;
     double val = Rf_asReal(value);
-    double *p_x = REAL(x);
+    const double* __restrict__ p_x = REAL(x);
     if (is_long){
-      double *p_out = REAL(out);
+      double* __restrict__ p_out = REAL(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
         CHEAPR_WHICH_VAL(val);
       }
     } else {
-      int *p_out = INTEGER(out);
+      int* __restrict__ p_out = INTEGER(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
@@ -161,20 +162,19 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     return out;
   }
   case CHEAPR_INT64SXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
-    ++NP;
+    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
     int_fast64_t val = INTEGER64_PTR(value)[0];
-    int_fast64_t *p_x = INTEGER64_PTR(x);
+    const int_fast64_t* __restrict__ p_x = INTEGER64_PTR(x);
     if (is_long){
-      double *p_out = REAL(out);
+      double* __restrict__ p_out = REAL(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
         CHEAPR_WHICH_VAL(val);
       }
     } else {
-      int *p_out = INTEGER(out);
+      int* __restrict__ p_out = INTEGER(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
@@ -185,8 +185,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     return out;
   }
   case STRSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
-    ++NP;
+    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
     SEXP val = SHIELD(as_utf8_char(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -223,18 +222,16 @@ SEXP cpp_which_na(SEXP x){
   bool is_short = (n <= integer_max_);
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
-    SEXP out = SHIELD(new_vec(INTSXP, 0));
-    YIELD(1);
-    return out;
+    return new_vec(INTSXP, 0);
   }
   case LGLSXP:
   case INTSXP: {
     R_xlen_t count = na_count(x, true);
-    int *p_x = INTEGER(x);
+    const int* __restrict__ p_x = INTEGER(x);
     if (is_short){
       int out_size = count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int *p_out = INTEGER(out);
+      int* __restrict__ p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
       CHEAPR_WHICH_VAL(NA_INTEGER);
@@ -243,7 +240,7 @@ SEXP cpp_which_na(SEXP x){
     } else {
       R_xlen_t out_size = count;
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double *p_out = REAL(out);
+      double* __restrict__ p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
       CHEAPR_WHICH_VAL(NA_INTEGER);
@@ -253,11 +250,11 @@ SEXP cpp_which_na(SEXP x){
   }
   case CHEAPR_INT64SXP: {
     R_xlen_t count = na_count(x, true);
-    int_fast64_t *p_x = INTEGER64_PTR(x);
+    const int_fast64_t* __restrict__ p_x = INTEGER64_PTR(x);
     if (is_short){
       int out_size = count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int *p_out = INTEGER(out);
+      int* __restrict__ p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
       while (whichi < out_size){
@@ -269,7 +266,7 @@ SEXP cpp_which_na(SEXP x){
     } else {
       R_xlen_t out_size = count;
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double *p_out = REAL(out);
+      double* __restrict__ p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
       while (whichi < out_size){
@@ -282,11 +279,11 @@ SEXP cpp_which_na(SEXP x){
   }
   case REALSXP: {
     R_xlen_t count = na_count(x, true);
-    double *p_x = REAL(x);
+    const double* __restrict__ p_x = REAL(x);
     if (is_short){
       int out_size = count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int *p_out = INTEGER(out);
+      int* __restrict__ p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
       while (whichi < out_size){
@@ -299,7 +296,7 @@ SEXP cpp_which_na(SEXP x){
     } else {
       R_xlen_t out_size = count;
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double *p_out = REAL(out);
+      double* __restrict__ p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
       while (whichi < out_size){
@@ -392,7 +389,7 @@ SEXP cpp_which_not_na(SEXP x){
   case LGLSXP:
   case INTSXP: {
     R_xlen_t count = na_count(x, true);
-    int *p_x = INTEGER(x);
+    const int* __restrict__ p_x = INTEGER(x);
     if (is_short){
       int out_size = n - count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
@@ -415,7 +412,7 @@ SEXP cpp_which_not_na(SEXP x){
   }
   case CHEAPR_INT64SXP: {
     R_xlen_t count = na_count(x, true);
-    int_fast64_t *p_x = INTEGER64_PTR(x);
+    const int_fast64_t* __restrict__ p_x = INTEGER64_PTR(x);
     if (is_short){
       int out_size = n - count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
@@ -444,7 +441,7 @@ SEXP cpp_which_not_na(SEXP x){
   }
   case REALSXP: {
     R_xlen_t count = na_count(x, true);
-    double *p_x = REAL(x);
+    const double* __restrict__ p_x = REAL(x);
     if (is_short){
       int out_size = n - count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));

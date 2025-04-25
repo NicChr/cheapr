@@ -248,9 +248,9 @@ api_unique(SEXP x){
 }
 
 SEXP
-api_setdiff(SEXP x, SEXP y){
+api_setdiff(SEXP x, SEXP y, bool unique){
   try {
-    return cpp_setdiff(x, y);
+    return cpp_setdiff(x, y, unique);
   } catch (...) {
     return R_NilValue;
   }

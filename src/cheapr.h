@@ -85,7 +85,38 @@
 #define CHEAPR_INT64_TO_DBL(x) ((double) (x == NA_INTEGER64 ? NA_REAL : x))
 #endif
 
-#define scalar_coerce(_x_, _is_na_fn_, _na_val_) (_is_na_fn_(_x_) ? _na_val_ : _x_)
+template<typename T>
+bool is_na(T x);
+
+template<>
+inline bool is_na<int>(int x) {
+  return x == NA_INTEGER;
+}
+template<>
+inline bool is_na<double>(double x) {
+  return x != x;
+}
+template<>
+inline bool is_na<int_fast64_t>(int_fast64_t x) {
+  return x == NA_INTEGER64;
+}
+template<>
+inline bool is_na<Rcomplex>(Rcomplex x){
+  return is_na<double>(x.r) || is_na<double>(x.i);
+}
+template<>
+inline bool is_na<Rbyte>(Rbyte x){
+  return false;
+}
+
+template<int SEXPTYPE>
+bool is_na_sexp(SEXP x);
+
+// Specialization for CHARSXP (R's string type)
+template<>
+inline bool is_na_sexp<CHARSXP>(SEXP x) {
+  return x == NA_STRING;
+}
 
 #ifndef CHEAPR_OMP_THRESHOLD
 #define CHEAPR_OMP_THRESHOLD 100000
@@ -161,7 +192,7 @@ SEXP cpp_list_c(SEXP x);
 SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what);
 SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep);
 SEXP cpp_unique(SEXP x);
-SEXP cpp_setdiff(SEXP x, SEXP y);
+SEXP cpp_setdiff(SEXP x, SEXP y, bool unique);
 SEXP cpp_intersect(SEXP x, SEXP y, bool unique);
 SEXP get_ptype(SEXP x);
 SEXP get_list_element(SEXP list, const char *str);

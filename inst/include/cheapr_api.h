@@ -199,10 +199,10 @@ unique(SEXP x){
 }
 
 static inline SEXP
-setdiff(SEXP x, SEXP y){
-  typedef SEXP fn_t(SEXP, SEXP);
+setdiff(SEXP x, SEXP y, bool unique){
+  typedef SEXP fn_t(SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_setdiff");
-  return fn(x, y);
+  return fn(x, y, unique);
 }
 
 static inline SEXP

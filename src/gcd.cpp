@@ -172,7 +172,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
-    int *p_x = INTEGER(x);
+    const int *p_x = INTEGER(x);
     SEXP out = SHIELD(new_vec(INTSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
       int gcd = p_x[0];
@@ -194,9 +194,9 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     return out;
   }
   case CHEAPR_INT64SXP: {
+    const int_fast64_t *p_x = INTEGER64_PTR(x);
     SEXP out = SHIELD(new_vec(REALSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
-      int_fast64_t *p_x = INTEGER64_PTR(x);
       int_fast64_t gcd = p_x[0];
       int_fast64_t agcd;
       for (R_xlen_t i = 1; i < n; ++i) {
@@ -216,7 +216,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     return out;
   }
   default: {
-    double *p_x = REAL(x);
+    const double *p_x = REAL(x);
     SEXP out = SHIELD(new_vec(REALSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
       double gcd = p_x[0];

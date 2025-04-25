@@ -85,10 +85,10 @@ extern "C" SEXP _cheapr_cpp_recycle(SEXP x, SEXP length) {
   END_CPP11
 }
 // combine.cpp
-SEXP cpp_setdiff(SEXP x, SEXP y);
-extern "C" SEXP _cheapr_cpp_setdiff(SEXP x, SEXP y) {
+SEXP cpp_setdiff(SEXP x, SEXP y, bool unique);
+extern "C" SEXP _cheapr_cpp_setdiff(SEXP x, SEXP y, SEXP unique) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_setdiff(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+    return cpp11::as_sexp(cpp_setdiff(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y), cpp11::as_cpp<cpp11::decay_t<bool>>(unique)));
   END_CPP11
 }
 // combine.cpp
@@ -871,7 +871,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_sqrt",                (DL_FUNC) &_cheapr_cpp_set_sqrt,                1},
     {"_cheapr_cpp_set_subtract",            (DL_FUNC) &_cheapr_cpp_set_subtract,            2},
     {"_cheapr_cpp_set_trunc",               (DL_FUNC) &_cheapr_cpp_set_trunc,               1},
-    {"_cheapr_cpp_setdiff",                 (DL_FUNC) &_cheapr_cpp_setdiff,                 2},
+    {"_cheapr_cpp_setdiff",                 (DL_FUNC) &_cheapr_cpp_setdiff,                 3},
     {"_cheapr_cpp_shallow_copy",            (DL_FUNC) &_cheapr_cpp_shallow_copy,            1},
     {"_cheapr_cpp_shallow_duplicate_attrs", (DL_FUNC) &_cheapr_cpp_shallow_duplicate_attrs, 2},
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    3},

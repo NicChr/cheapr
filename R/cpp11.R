@@ -44,8 +44,8 @@ cpp_recycle <- function(x, length) {
   .Call(`_cheapr_cpp_recycle`, x, length)
 }
 
-cpp_setdiff <- function(x, y) {
-  .Call(`_cheapr_cpp_setdiff`, x, y)
+cpp_setdiff <- function(x, y, unique) {
+  .Call(`_cheapr_cpp_setdiff`, x, y, unique)
 }
 
 cpp_intersect <- function(x, y, unique) {

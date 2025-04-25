@@ -143,6 +143,7 @@ x <- rnorm(10^6) |>
 options(cheapr.cores = 4)
 mark(is.na(x), is_na(x))
 options(cheapr.cores = 1)
+mark(is.na(x), is_na(x))
 
 ### posixlt method is much faster
 hours <- as.POSIXlt(seq.int(0, length.out = 10^6, by = 3600),

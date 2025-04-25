@@ -109,7 +109,7 @@ sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
 sset.sf <- function(x, i = NULL, j = NULL, ...){
   out <- sset_df(x, i, j)
   cpp_reconstruct(
-    out, x, c("names", "row.names"), cpp_setdiff(names(attributes(x)), c("names", "row.names"))
+    out, x, c("names", "row.names"), vec_setdiff(names(attributes(x)), c("names", "row.names"))
   )
 }
 #' @export

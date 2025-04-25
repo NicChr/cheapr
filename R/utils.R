@@ -212,3 +212,10 @@ fast_match <- function(x, table, nomatch = NA_integer_){
 fast_unique <- function(x){
   collapse::funique(x)
 }
+
+vec_setdiff <- function(x, y, unique = FALSE){
+  .Call(`_cheapr_cpp_setdiff`, x, y, unique)
+}
+vec_intersect <- function(x, y, unique = FALSE){
+  .Call(`_cheapr_cpp_intersect`, x, y, unique)
+}
