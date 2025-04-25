@@ -234,6 +234,10 @@ inline bool chars_equal(SEXP x, SEXP y){
   return std::strcmp(utf8_char(x), utf8_char(y)) == 0;
 }
 
+inline SEXP install_utf8(const char *x){
+  return Rf_installChar(Rf_mkCharCE(x, CE_UTF8));
+}
+
 
 inline bool is_null(SEXP x){
   return TYPEOF(x) == NILSXP;

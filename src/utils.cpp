@@ -62,7 +62,7 @@ SEXP cpp_vector_length(SEXP x){
 
 int num_cores(){
   if (CHEAPR_CORES == NULL){
-    CHEAPR_CORES = Rf_install("cheapr.cores");
+    CHEAPR_CORES = install_utf8("cheapr.cores");
   }
   int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
   return n_cores >= 1 ? n_cores : 1;

@@ -40,13 +40,13 @@ bool is_compact_seq(SEXP x){
   SEXP alt_pkg_sym = alt_pkg(x);
 
   if (CHEAPR_COMPACT_INTSEQ == NULL){
-    CHEAPR_COMPACT_INTSEQ = Rf_install("compact_intseq");
+    CHEAPR_COMPACT_INTSEQ = install_utf8("compact_intseq");
   }
   if (CHEAPR_COMPACT_REALSEQ == NULL){
-    CHEAPR_COMPACT_REALSEQ = Rf_install("compact_realseq");
+    CHEAPR_COMPACT_REALSEQ = install_utf8("compact_realseq");
   }
   if (CHEAPR_BASE == NULL){
-    CHEAPR_BASE = Rf_install("base");
+    CHEAPR_BASE = install_utf8("base");
   }
   return (alt_class_sym == CHEAPR_COMPACT_INTSEQ ||
           alt_class_sym == CHEAPR_COMPACT_REALSEQ) &&
