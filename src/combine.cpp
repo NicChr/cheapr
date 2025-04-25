@@ -423,7 +423,7 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 
 // Fast unique that can be used in C code
 // Doesn't return unique df rows
-SEXP cpp_unique(SEXP x){
+SEXP cpp_unique(SEXP x, bool names){
 
   bool is_simple = is_simple_atomic_vec(x);
 
@@ -438,20 +438,38 @@ SEXP cpp_unique(SEXP x){
     } else {
       SEXP out = SHIELD(sset_vec(x, unique_locs, false));
       Rf_copyMostAttrib(x, out);
+      if (names){
+        Rf_namesgets(out, sset_vec(Rf_getAttrib(x, R_NamesSymbol), unique_locs, false));
+      }
       YIELD(3);
       return out;
     }
   } else if (is_simple){
-    return cheapr_fast_unique(x);
+    SEXP out = SHIELD(cheapr_fast_unique(x));
+    if (names){
+      Rf_namesgets(out, cheapr_fast_unique(Rf_getAttrib(x, R_NamesSymbol)));
+    }
+    YIELD(1);
+    return out;
   } else {
-    return cpp11::package("base")["unique"](x);
+    SEXP out = SHIELD(cpp11::package("base")["unique"](x));
+    if (names){
+      SEXP names = cpp11::package("base")["names"](x);
+      SHIELD(names = cheapr_fast_unique(names));
+      SHIELD(out = cpp11::package("base")["names<-"](out, names));
+      YIELD(3);
+      return out;
+    } else {
+      YIELD(1);
+      return out;
+    }
   }
 }
 
 [[cpp11::register]]
 SEXP cpp_setdiff(SEXP x, SEXP y, bool unique){
   if (unique){
-    SHIELD(x = cpp_unique(x));
+    SHIELD(x = cpp_unique(x, true));
   } else {
     SHIELD(x);
   }
@@ -461,7 +479,7 @@ SEXP cpp_setdiff(SEXP x, SEXP y, bool unique){
     YIELD(3);
     return x;
   } else {
-    SEXP out = SHIELD(sset_vec(x, locs, false));
+    SEXP out = SHIELD(cpp_sset(x, locs, false));
     Rf_copyMostAttrib(x, out);
     YIELD(4);
     return out;
@@ -471,7 +489,7 @@ SEXP cpp_setdiff(SEXP x, SEXP y, bool unique){
 [[cpp11::register]]
 SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
   if (unique){
-    SHIELD(x = cpp_unique(x));
+    SHIELD(x = cpp_unique(x, true));
   } else {
     SHIELD(x);
   }
@@ -481,7 +499,7 @@ SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
     YIELD(3);
     return x;
   } else {
-    SEXP out = SHIELD(sset_vec(x, locs, false));
+    SEXP out = SHIELD(cpp_sset(x, locs, false));
     Rf_copyMostAttrib(x, out);
     YIELD(4);
     return out;
@@ -619,7 +637,7 @@ SEXP cpp_combine_levels(SEXP x){
     SET_VECTOR_ELT(levels, i, fct_levels);
   }
   SEXP out = SHIELD(cpp_c(levels));
-  SHIELD(out = cpp_unique(out));
+  SHIELD(out = cpp_unique(out, false));
   YIELD(4);
   return out;
 }

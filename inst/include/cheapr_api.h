@@ -192,10 +192,10 @@ name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 }
 
 static inline SEXP
-unique(SEXP x){
-  typedef SEXP fn_t(SEXP);
+unique(SEXP x, bool names){
+  typedef SEXP fn_t(SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_unique");
-  return fn(x);
+  return fn(x, names);
 }
 
 static inline SEXP

@@ -239,9 +239,9 @@ api_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 }
 
 SEXP
-api_unique(SEXP x){
+api_unique(SEXP x, bool names){
   try {
-    return cpp_unique(x);
+    return cpp_unique(x, names);
   } catch (...) {
     return R_NilValue;
   }

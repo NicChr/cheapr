@@ -1837,20 +1837,22 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
   if (is_simple_vec(x)){
     int NP = 0;
 
+    bool check2 = check;
+
     if (check){
       SEXP indices_metadata = SHIELD(clean_indices(indices, x, false)); ++NP;
       SHIELD(indices = VECTOR_ELT(indices_metadata, 0)); ++NP;
-      check = LOGICAL(VECTOR_ELT(indices_metadata, 2))[0];
+      check2 = LOGICAL(VECTOR_ELT(indices_metadata, 2))[0];
     }
 
-    SEXP out = SHIELD(sset_vec(x, indices, check)); ++NP;
+    SEXP out = SHIELD(sset_vec(x, indices, check2)); ++NP;
     Rf_copyMostAttrib(x, out);
 
     // Subset names
 
     SEXP xnames = Rf_getAttrib(x, R_NamesSymbol);
     if (!is_null(xnames)){
-      Rf_setAttrib(out, R_NamesSymbol, sset_vec(xnames, indices, check));
+      Rf_setAttrib(out, R_NamesSymbol, sset_vec(xnames, indices, check2));
     }
     YIELD(NP);
     return out;
