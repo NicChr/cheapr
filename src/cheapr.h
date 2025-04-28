@@ -222,14 +222,6 @@ inline SEXP make_utf8_str(const char *x){
   return Rf_ScalarString(Rf_mkCharCE(x, CE_UTF8));
 }
 
-inline SEXP scalar_utf8_str(SEXP x){
-  return Rf_mkString(Rf_translateCharUTF8(x));
-}
-
-inline SEXP as_utf8_char(SEXP x){
-  return Rf_mkCharCE(CHAR(Rf_asChar(x)), CE_UTF8);
-}
-
 inline bool chars_equal(SEXP x, SEXP y){
   return std::strcmp(utf8_char(x), utf8_char(y)) == 0;
 }

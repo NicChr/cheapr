@@ -720,7 +720,7 @@ SEXP cpp_list_c(SEXP x){
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
       if (x_has_names){
-        R_Reprotect(names = scalar_utf8_str(STRING_ELT(x_names, i)), nm_idx);
+        R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
       } else {
         R_Reprotect(names = R_NilValue, nm_idx);
       }
@@ -936,7 +936,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
       if (x_has_names){
-        R_Reprotect(names = scalar_utf8_str(STRING_ELT(x_names, i)), nm_idx);
+        R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
       } else {
         R_Reprotect(names = R_NilValue, nm_idx);
       }

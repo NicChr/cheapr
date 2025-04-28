@@ -159,7 +159,7 @@ case CHEAPR_INT64SXP: {
 case STRSXP: {
   if (implicit_na_coercion(value, x)) break;
   SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
-  SEXP val = SHIELD(as_utf8_char(value)); ++NP;
+  SEXP val = SHIELD(Rf_asChar(value)); ++NP;
   const SEXP *p_x = STRING_PTR_RO(x);
   // int (*c_op)(SEXP, SEXP);
   // CHEAPR_OP_SWITCH;
@@ -340,8 +340,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
     SHIELD(replace = coerce_vector(replace, STRSXP)); ++NP;
-    SEXP val = SHIELD(as_utf8_char(value)); ++NP;
-    SEXP repl = SHIELD(as_utf8_char(replace)); ++NP;
+    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+    SEXP repl = SHIELD(Rf_asChar(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -459,8 +459,8 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
     SHIELD(replace = coerce_vector(replace, STRSXP)); ++NP;
-    SEXP val = SHIELD(as_utf8_char(value)); ++NP;
-    SEXP repl = SHIELD(as_utf8_char(replace)); ++NP;
+    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+    SEXP repl = SHIELD(Rf_asChar(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -762,7 +762,7 @@ default: {
 //   }
 //     temp = SHIELD(new_vec(TYPEOF(x), n)); ++NP;
 //     SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
-//     SEXP val = SHIELD(as_utf8_char(value)); ++NP;
+//     SEXP val = SHIELD(Rf_asChar(value)); ++NP;
 //     const SEXP *p_x = STRING_PTR_RO(x);
 //
 //     for (R_xlen_t i = 0; i < n; ++i){
@@ -892,7 +892,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
-      SEXP val = SHIELD(as_utf8_char(value)); ++NP;
+      SEXP val = SHIELD(Rf_asChar(value)); ++NP;
       const SEXP *p_x = STRING_PTR_RO(x);
 
       for (R_xlen_t i = 0; i < n; ++i){

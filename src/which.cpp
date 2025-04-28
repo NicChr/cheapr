@@ -187,7 +187,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   case STRSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
-    SEXP val = SHIELD(as_utf8_char(value)); ++NP;
+    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);
@@ -761,7 +761,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
     SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
-    SEXP val = SHIELD(as_utf8_char(value)); ++NP;
+    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);

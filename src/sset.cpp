@@ -1925,7 +1925,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
     return Rf_ScalarReal(REAL(x)[i]);
   }
   case STRSXP: {
-    return scalar_utf8_str(STRING_ELT(x, i));
+    return Rf_ScalarString(STRING_ELT(x, i));
   }
   case CPLXSXP: {
     return Rf_ScalarComplex(COMPLEX(x)[i]);

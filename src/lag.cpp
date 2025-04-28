@@ -150,7 +150,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
   }
   case STRSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    SEXP fill_char = SHIELD(fill_size >= 1 ? as_utf8_char(fill) : NA_STRING);
+    SEXP fill_char = SHIELD(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
     ++NP;
     out = SHIELD(set ? xvec : Rf_duplicate(xvec)); ++NP;
     const SEXP *p_out = STRING_PTR_RO(out);
@@ -593,7 +593,7 @@ unsigned int o_rng = o_size - 1;
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const SEXP *p_x = STRING_PTR_RO(x);
-    SEXP fill_value = SHIELD(fill_size >= 1 ? as_utf8_char(fill) : NA_STRING);
+    SEXP fill_value = SHIELD(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING);
     ++NP;
     out = SHIELD(Rf_duplicate(x));
     ++NP;
