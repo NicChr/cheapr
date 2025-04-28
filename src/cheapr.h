@@ -85,39 +85,6 @@
 #define CHEAPR_INT64_TO_DBL(x) ((double) (x == NA_INTEGER64 ? NA_REAL : x))
 #endif
 
-template<typename T>
-bool is_na(T x);
-
-template<>
-inline bool is_na<int>(int x) {
-  return x == NA_INTEGER;
-}
-template<>
-inline bool is_na<double>(double x) {
-  return x != x;
-}
-template<>
-inline bool is_na<int_fast64_t>(int_fast64_t x) {
-  return x == NA_INTEGER64;
-}
-template<>
-inline bool is_na<Rcomplex>(Rcomplex x){
-  return is_na<double>(x.r) || is_na<double>(x.i);
-}
-template<>
-inline bool is_na<Rbyte>(Rbyte x){
-  return false;
-}
-
-template<int SEXPTYPE>
-bool is_na_sexp(SEXP x);
-
-// Specialization for CHARSXP (R's string type)
-template<>
-inline bool is_na_sexp<CHARSXP>(SEXP x) {
-  return x == NA_STRING;
-}
-
 #ifndef CHEAPR_OMP_THRESHOLD
 #define CHEAPR_OMP_THRESHOLD 100000
 #endif
@@ -127,7 +94,7 @@ inline bool is_na_sexp<CHARSXP>(SEXP x) {
 #endif
 
 #ifndef CHEAPR_TYPEOF
-#define CHEAPR_TYPEOF(x)  ( (SEXPTYPE) (Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x)) )
+#define CHEAPR_TYPEOF(x) ( (SEXPTYPE) (Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x)) )
 #endif
 
 #ifndef SHIELD

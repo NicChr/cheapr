@@ -48,7 +48,7 @@ SEXP convert_int_to_real(SEXP x){
   SEXP out = SHIELD(new_vec(REALSXP, n));
   double *p_out = REAL(out);
   for (int i = 0; i < n; ++i){
-    p_out[i] = p_x[i] != NA_INTEGER ? (double)(p_x[i]) : NA_REAL;
+    p_out[i] = p_x[i] != NA_INTEGER ? static_cast<double>(p_x[i]) : NA_REAL;
   }
   YIELD(1);
   return out;
