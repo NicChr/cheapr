@@ -33,22 +33,6 @@ extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add
     return cpp11::as_sexp(cpp_set_add_attributes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(attributes), cpp11::as_cpp<cpp11::decay_t<bool>>(add)));
   END_CPP11
 }
-// attrs.cpp
-void cpp_shallow_duplicate_attrs(SEXP source, SEXP target);
-extern "C" SEXP _cheapr_cpp_shallow_duplicate_attrs(SEXP source, SEXP target) {
-  BEGIN_CPP11
-    cpp_shallow_duplicate_attrs(cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target));
-    return R_NilValue;
-  END_CPP11
-}
-// attrs.cpp
-void cpp_copy_most_attrs(SEXP source, SEXP target);
-extern "C" SEXP _cheapr_cpp_copy_most_attrs(SEXP source, SEXP target) {
-  BEGIN_CPP11
-    cpp_copy_most_attrs(cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target));
-    return R_NilValue;
-  END_CPP11
-}
 // combine.cpp
 SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy);
 extern "C" SEXP _cheapr_reconstruct(SEXP x, SEXP source, SEXP shallow_copy) {
@@ -777,7 +761,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_col_na_counts",           (DL_FUNC) &_cheapr_cpp_col_na_counts,           2},
     {"_cheapr_cpp_combine_factors",         (DL_FUNC) &_cheapr_cpp_combine_factors,         1},
     {"_cheapr_cpp_combine_levels",          (DL_FUNC) &_cheapr_cpp_combine_levels,          1},
-    {"_cheapr_cpp_copy_most_attrs",         (DL_FUNC) &_cheapr_cpp_copy_most_attrs,         2},
     {"_cheapr_cpp_count_val",               (DL_FUNC) &_cheapr_cpp_count_val,               3},
     {"_cheapr_cpp_dbl_sequence",            (DL_FUNC) &_cheapr_cpp_dbl_sequence,            3},
     {"_cheapr_cpp_df_assign_cols",          (DL_FUNC) &_cheapr_cpp_df_assign_cols,          2},
@@ -858,7 +841,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_trunc",               (DL_FUNC) &_cheapr_cpp_set_trunc,               1},
     {"_cheapr_cpp_setdiff",                 (DL_FUNC) &_cheapr_cpp_setdiff,                 3},
     {"_cheapr_cpp_shallow_copy",            (DL_FUNC) &_cheapr_cpp_shallow_copy,            1},
-    {"_cheapr_cpp_shallow_duplicate_attrs", (DL_FUNC) &_cheapr_cpp_shallow_duplicate_attrs, 2},
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    3},
     {"_cheapr_cpp_str_coalesce",            (DL_FUNC) &_cheapr_cpp_str_coalesce,            1},
     {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},

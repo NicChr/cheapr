@@ -162,7 +162,7 @@ SEXP cpp_unique(SEXP x, bool names);
 SEXP cpp_setdiff(SEXP x, SEXP y, bool unique);
 SEXP cpp_intersect(SEXP x, SEXP y, bool unique);
 SEXP get_ptype(SEXP x);
-SEXP get_list_element(SEXP list, const char *str);
+SEXP get_list_element(SEXP list, SEXP str);
 SEXP list_c2(SEXP x, SEXP y);
 SEXP c2(SEXP x, SEXP y);
 SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy);
@@ -189,14 +189,9 @@ inline SEXP make_utf8_str(const char *x){
   return Rf_ScalarString(Rf_mkCharCE(x, CE_UTF8));
 }
 
-inline bool chars_equal(SEXP x, SEXP y){
-  return std::strcmp(utf8_char(x), utf8_char(y)) == 0;
-}
-
 inline SEXP install_utf8(const char *x){
   return Rf_installChar(Rf_mkCharCE(x, CE_UTF8));
 }
-
 
 inline bool is_null(SEXP x){
   return TYPEOF(x) == NILSXP;
@@ -293,7 +288,7 @@ inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_uniqu
 inline cpp11::function cheapr_reconstruct = cpp11::package("cheapr")["reconstruct"];
 
 inline bool address_equal(SEXP x, SEXP y){
-  return std::strcmp(CHAR(r_address(x)), CHAR(r_address(y))) == 0;
+  return r_address(x) == r_address(y);
 }
 
 #endif

@@ -16,14 +16,6 @@ cpp_set_add_attributes <- function(x, attributes, add) {
   .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
-cpp_shallow_duplicate_attrs <- function(source, target) {
-  invisible(.Call(`_cheapr_cpp_shallow_duplicate_attrs`, source, target))
-}
-
-cpp_copy_most_attrs <- function(source, target) {
-  invisible(.Call(`_cheapr_cpp_copy_most_attrs`, source, target))
-}
-
 reconstruct <- function(x, source, shallow_copy) {
   .Call(`_cheapr_reconstruct`, x, source, shallow_copy)
 }

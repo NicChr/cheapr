@@ -22,7 +22,7 @@ SEXP cpp_unnested_length(SEXP x){
 SEXP cpp_lengths(SEXP x, bool names) {
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(new_vec(INTSXP, n));
-  int *p_out = INTEGER(out);
+  int* __restrict__ p_out = INTEGER(out);
   if (TYPEOF(x) != VECSXP){
     for (R_xlen_t i = 0; i < n; ++i) {
       p_out[i] = 1;
@@ -74,7 +74,6 @@ SEXP cpp_shallow_copy(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
-  SHIELD(l = coerce_vec(l, VECSXP));
   const SEXP *p_l = VECTOR_PTR_RO(l);
   int n = Rf_length(l);
   int n_null = 0;
@@ -82,7 +81,6 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
     n_null += is_null(p_l[i]);
   }
   if (n_null == 0 && !always_shallow_copy){
-    YIELD(1);
     return l;
   }
   int n_keep = n - n_null;
@@ -92,7 +90,7 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
   // Which list elements should we keep?
 
   SEXP keep = SHIELD(new_vec(INTSXP, n_keep));
-  int *p_keep = INTEGER(keep);
+  int* __restrict__ p_keep = INTEGER(keep);
   while (whichj < n_keep){
     p_keep[whichj] = j;
     whichj += !is_null(p_l[j++]);
@@ -101,7 +99,7 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
   // Subset on both the list and names of the list
 
   SEXP out = SHIELD(new_vec(VECSXP, n_keep));
-  SEXP names = SHIELD(Rf_getAttrib(l, R_NamesSymbol));
+  SEXP names = Rf_getAttrib(l, R_NamesSymbol);
   bool has_names = !is_null(names);
   if (has_names){
     const SEXP *p_names = STRING_PTR_RO(names);
@@ -111,13 +109,13 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
       SET_VECTOR_ELT(out, k, p_l[p_keep[k]]);
     }
     Rf_setAttrib(out, R_NamesSymbol, out_names);
-    YIELD(5);
+    YIELD(3);
     return out;
   } else {
     for (int k = 0; k < n_keep; ++k) {
       SET_VECTOR_ELT(out, k, p_l[p_keep[k]]);
     }
-    YIELD(4);
+    YIELD(2);
     return out;
   }
 }
@@ -136,7 +134,7 @@ SEXP which_not_null(SEXP x){
   // Which list elements should we keep?
 
   SEXP keep = SHIELD(new_vec(INTSXP, n_keep));
-  int *p_keep = INTEGER(keep);
+  int* __restrict__ p_keep = INTEGER(keep);
   while (whichj < n_keep){
     p_keep[whichj] = j + 1;
     whichj += !is_null(p_x[j++]);
@@ -145,19 +143,18 @@ SEXP which_not_null(SEXP x){
   return keep;
 }
 
-// From writing R extensions 5.9.7
-
-SEXP get_list_element(SEXP list, const char *str){
+SEXP get_list_element(SEXP list, SEXP str){
   SEXP out = R_NilValue, names = Rf_getAttrib(list, R_NamesSymbol);
 
   for (int i = 0; i < Rf_length(list); ++i){
-    if (std::strcmp(utf8_char(STRING_ELT(names, i)), str) == 0){
+    if (STRING_ELT(names, i) == str){
       out = VECTOR_ELT(list, i);
       break;
     }
   }
   return out;
 }
+
 
 // A cpp11 pushback() method for growing a list
 // It should in theory be efficient but because of

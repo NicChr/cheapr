@@ -952,21 +952,20 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         const int* __restrict__ p_x = INTEGER(x);
         out = SHIELD(new_vec(xtype, n));
         int* __restrict__ p_out = INTEGER(out);
-
-          OMP_FOR_SIMD
-          for (int_fast64_t i = 0; i < n; ++i){
-            p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
-          }
+        OMP_FOR_SIMD
+        for (int_fast64_t i = 0; i < n; ++i){
+          p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
+        }
         break;
       }
       case REALSXP: {
         const double* __restrict__ p_x = REAL(x);
         out = SHIELD(new_vec(REALSXP, n));
         double* __restrict__ p_out = REAL(out);
-          OMP_FOR_SIMD
-          for (int_fast64_t i = 0; i < n; ++i){
-            p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
-          }
+        OMP_FOR_SIMD
+        for (int_fast64_t i = 0; i < n; ++i){
+          p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
+        }
         break;
       }
       case STRSXP: {
@@ -979,7 +978,6 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         const Rcomplex* __restrict__ p_x = COMPLEX(x);
         out = SHIELD(new_vec(CPLXSXP, n));
         Rcomplex* __restrict__ p_out = COMPLEX(out);
-        OMP_FOR_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i].r = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].r;
           p_out[i].i = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].i;
@@ -1021,37 +1019,36 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         const int* __restrict__ p_x = INTEGER(x);
         out = SHIELD(new_vec(xtype, n));
         int* __restrict__ p_out = INTEGER(out);
-          OMP_FOR_SIMD
-          for (int i = 0; i < n; ++i){
-            p_out[i] = p_x[pind[i] - 1];
-          }
+        OMP_FOR_SIMD
+        for (int i = 0; i < n; ++i){
+          p_out[i] = p_x[pind[i] - 1];
+        }
         break;
       }
       case REALSXP: {
         const double* __restrict__ p_x = REAL(x);
         out = SHIELD(new_vec(REALSXP, n));
         double* __restrict__ p_out = REAL(out);
-          OMP_FOR_SIMD
-          for (int i = 0; i < n; ++i){
-            p_out[i] = p_x[pind[i] - 1];
-          }
+        OMP_FOR_SIMD
+        for (int i = 0; i < n; ++i){
+          p_out[i] = p_x[pind[i] - 1];
+        }
         break;
       }
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
         out = SHIELD(new_vec(STRSXP, n));
-          for (int i = 0; i < n; ++i) SET_STRING_ELT(out, i, p_x[pind[i] - 1]);
+        for (int i = 0; i < n; ++i) SET_STRING_ELT(out, i, p_x[pind[i] - 1]);
         break;
       }
       case CPLXSXP: {
         const Rcomplex* __restrict__ p_x = COMPLEX(x);
         out = SHIELD(new_vec(CPLXSXP, n));
         Rcomplex* __restrict__ p_out = COMPLEX(out);
-          OMP_FOR_SIMD
-          for (int i = 0; i < n; ++i){
-            p_out[i].r = p_x[pind[i] - 1].r;
-            p_out[i].i = p_x[pind[i] - 1].i;
-          }
+        for (int i = 0; i < n; ++i){
+          p_out[i].r = p_x[pind[i] - 1].r;
+          p_out[i].i = p_x[pind[i] - 1].i;
+        }
         break;
       }
       case RAWSXP: {
@@ -1076,393 +1073,6 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
     }
   }
 }
-// SEXP sset_vec(SEXP x, SEXP indices, bool check){
-//
-//   if (is_compact_seq(indices)){
-//     SEXP seq_data = SHIELD(compact_seq_data(indices));
-//     R_xlen_t from = REAL(seq_data)[0];
-//     R_xlen_t to = REAL(seq_data)[1];
-//     R_xlen_t by = REAL(seq_data)[2];
-//     SEXP out = SHIELD(cpp_sset_range(x, from, to, by));
-//     YIELD(2);
-//     return out;
-//   }
-//
-//   SEXP out;
-//
-//   int xtype = TYPEOF(x);
-//
-//   if (Rf_xlength(x) > integer_max_){
-//
-//     int_fast64_t xn = Rf_xlength(x);
-//
-//     int_fast64_t
-//     n = Rf_xlength(indices), out_size = n, k = 0, j;
-//
-//     const double* pind = REAL(indices);
-//
-//     switch ( xtype ){
-//
-//     case NILSXP: {
-//       out = SHIELD(R_NilValue);
-//       break;
-//     }
-//     case LGLSXP:
-//     case INTSXP: {
-//       const int* p_x = INTEGER(x);
-//       out = SHIELD(new_vec(xtype, n));
-//       int* __restrict__ p_out = INTEGER(out);
-//
-//       if (check){
-//         for (int_fast64_t i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             p_out[k++] = (pind[i] != pind[i] || j > xn) ? NA_INTEGER : p_x[j - 1];
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         OMP_FOR_SIMD
-//         for (int_fast64_t i = 0; i < n; ++i){
-//           p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
-//         }
-//       }
-//       break;
-//     }
-//     case REALSXP: {
-//       const double* p_x = REAL(x);
-//       out = SHIELD(new_vec(REALSXP, n));
-//       double* __restrict__ p_out = REAL(out);
-//       if (check){
-//         for (int_fast64_t i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             p_out[k++] = (pind[i] != pind[i] || j > xn) ? NA_REAL : p_x[j - 1];
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         OMP_FOR_SIMD
-//         for (int_fast64_t i = 0; i < n; ++i){
-//           p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
-//         }
-//       }
-//       break;
-//     }
-//     case STRSXP: {
-//       const SEXP *p_x = STRING_PTR_RO(x);
-//       out = SHIELD(new_vec(STRSXP, n));
-//
-//       if (check){
-//         for (int_fast64_t i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             SET_STRING_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? NA_STRING : p_x[j - 1]);
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         for (int_fast64_t i = 0; i < n; ++i) SET_STRING_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
-//       }
-//       break;
-//     }
-//     case CPLXSXP: {
-//       const Rcomplex* p_x = COMPLEX(x);
-//       out = SHIELD(new_vec(CPLXSXP, n));
-//       Rcomplex* __restrict__ p_out = COMPLEX(out);
-//       if (check){
-//         for (int_fast64_t i = 0; i < n; ++i){
-//
-//           j = pind[i];
-//
-//           if (j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             if (pind[i] != pind[i] || j > xn){
-//               p_out[k].r = NA_REAL;
-//               p_out[k].i = NA_REAL;
-//             } else {
-//               p_out[k].r = p_x[j - 1].r;
-//               p_out[k].i = p_x[j - 1].i;
-//             }
-//             ++k;
-//           } else {
-//             --out_size;
-//           }
-//
-//         }
-//       } else {
-//         OMP_FOR_SIMD
-//         for (int_fast64_t i = 0; i < n; ++i){
-//           p_out[i].r = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].r;
-//           p_out[i].i = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].i;
-//         }
-//       }
-//       break;
-//     }
-//     case RAWSXP: {
-//       const Rbyte *p_x = RAW(x);
-//       out = SHIELD(new_vec(RAWSXP, n));
-//       if (check){
-//         for (int_fast64_t i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             SET_RAW_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? 0 : p_x[j - 1]);
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         for (int_fast64_t i = 0; i < n; ++i) SET_RAW_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
-//       }
-//       break;
-//     }
-//     case VECSXP: {
-//       const SEXP *p_x = VECTOR_PTR_RO(x);
-//       out = SHIELD(new_vec(VECSXP, n));
-//       if (check){
-//         for (int_fast64_t i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             SET_VECTOR_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? R_NilValue : p_x[j - 1]);
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         for (int_fast64_t i = 0; i < n; ++i) SET_VECTOR_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
-//       }
-//       break;
-//     }
-//     default: {
-//       YIELD(1);
-//       Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(xtype));
-//     }
-//     }
-//     if (!is_null(out) && out_size != n){
-//       SHIELD(out = Rf_xlengthgets(out, out_size));
-//       YIELD(2);
-//       return out;
-//     } else {
-//       YIELD(1);
-//       return out;
-//     }
-//   } else {
-//
-//     int xn = Rf_xlength(x);
-//
-//     int
-//     n = Rf_xlength(indices), out_size = n, k = 0, j;
-//
-//     const int *pind = INTEGER(indices);
-//     switch ( xtype ){
-//
-//     case NILSXP: {
-//       out = SHIELD(R_NilValue);
-//       break;
-//     }
-//     case LGLSXP:
-//     case INTSXP: {
-//       const int* p_x = INTEGER(x);
-//       out = SHIELD(new_vec(xtype, n));
-//       int* __restrict__ p_out = INTEGER(out);
-//
-//       if (check){
-//         for (int i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j != NA_INTEGER && j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             p_out[k++] = (j == NA_INTEGER || j > xn) ? NA_INTEGER : p_x[j - 1];
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         OMP_FOR_SIMD
-//         for (int i = 0; i < n; ++i){
-//           p_out[i] = p_x[pind[i] - 1];
-//         }
-//       }
-//       break;
-//     }
-//     case REALSXP: {
-//       const double* p_x = REAL(x);
-//       out = SHIELD(new_vec(REALSXP, n));
-//       double* __restrict__ p_out = REAL(out);
-//       if (check){
-//         for (int i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j != NA_INTEGER && j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             p_out[k++] = (j == NA_INTEGER || j > xn) ? NA_REAL : p_x[j - 1];
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         OMP_FOR_SIMD
-//         for (int i = 0; i < n; ++i){
-//           p_out[i] = p_x[pind[i] - 1];
-//         }
-//       }
-//       break;
-//     }
-//     case STRSXP: {
-//       const SEXP *p_x = STRING_PTR_RO(x);
-//       out = SHIELD(new_vec(STRSXP, n));
-//
-//       if (check){
-//         for (int i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j != NA_INTEGER && j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             SET_STRING_ELT(out, k++, (j == NA_INTEGER || j > xn) ? NA_STRING : p_x[j - 1]);
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         for (int i = 0; i < n; ++i) SET_STRING_ELT(out, i, p_x[pind[i] - 1]);
-//       }
-//       break;
-//     }
-//     case CPLXSXP: {
-//       const Rcomplex* p_x = COMPLEX(x);
-//       out = SHIELD(new_vec(CPLXSXP, n));
-//       Rcomplex* __restrict__ p_out = COMPLEX(out);
-//       if (check){
-//         for (int i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j != NA_INTEGER && j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             if (j == NA_INTEGER || j > xn){
-//               p_out[k].r = NA_REAL;
-//               p_out[k].i = NA_REAL;
-//             } else {
-//               p_out[k].r = p_x[j - 1].r;
-//               p_out[k].i = p_x[j - 1].i;
-//             }
-//             ++k;
-//           } else {
-//             --out_size;
-//           }
-//
-//         }
-//       } else {
-//         OMP_FOR_SIMD
-//         for (int i = 0; i < n; ++i){
-//           p_out[i].r = p_x[pind[i] - 1].r;
-//           p_out[i].i = p_x[pind[i] - 1].i;
-//         }
-//       }
-//       break;
-//     }
-//     case RAWSXP: {
-//       const Rbyte *p_x = RAW(x);
-//       out = SHIELD(new_vec(RAWSXP, n));
-//       if (check){
-//         for (int i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j != NA_INTEGER && j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             SET_RAW_ELT(out, k++, (j == NA_INTEGER || j > xn) ? 0 : p_x[j - 1]);
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         for (int i = 0; i < n; ++i) SET_RAW_ELT(out, i, p_x[pind[i] - 1]);
-//       }
-//       break;
-//     }
-//     case VECSXP: {
-//       const SEXP *p_x = VECTOR_PTR_RO(x);
-//       out = SHIELD(new_vec(VECSXP, n));
-//       if (check){
-//         for (int i = 0; i < n; ++i){
-//           j = pind[i];
-//           if (j != NA_INTEGER && j < 0){
-//             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
-//             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
-//             YIELD(3);
-//             return out2;
-//           } else if (j != 0){
-//             SET_VECTOR_ELT(out, k++, (j == NA_INTEGER || j > xn) ? R_NilValue : p_x[j - 1]);
-//           } else {
-//             --out_size;
-//           }
-//         }
-//       } else {
-//         for (int i = 0; i < n; ++i) SET_VECTOR_ELT(out, i, p_x[pind[i] - 1]);
-//       }
-//       break;
-//     }
-//     default: {
-//       YIELD(1);
-//       Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(xtype));
-//     }
-//     }
-//     if (!is_null(out) && out_size != n){
-//       SHIELD(out = Rf_lengthgets(out, out_size));
-//       YIELD(2);
-//       return out;
-//     } else {
-//       YIELD(1);
-//       return out;
-//     }
-//   }
-// }
 
 // Safe and very efficient reverse in-place (or with copy)
 
@@ -1528,10 +1138,9 @@ SEXP cpp_rev(SEXP x, bool set){
     const SEXP *p_out = STRING_PTR_RO(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
-      SEXP left = SHIELD(p_out[i]);
+      SEXP left = p_out[i];
       SET_STRING_ELT(out, i, p_out[k]);
       SET_STRING_ELT(out, k, left);
-      YIELD(1);
     }
     break;
   }
@@ -1604,26 +1213,13 @@ SEXP cpp_rev(SEXP x, bool set){
   }
   // // If x has names, reverse them too
   if (rev_names && !is_null(Rf_getAttrib(out, R_NamesSymbol))){
-    SEXP old_names = SHIELD(Rf_getAttrib(out, R_NamesSymbol)); ++NP;
+    SEXP old_names = Rf_getAttrib(out, R_NamesSymbol);
     // should be okay to rev in-place here because we already copied the names
     Rf_setAttrib(out, R_NamesSymbol, cpp_rev(old_names, true));
   }
   YIELD(NP);
   return out;
 }
-
-// SEXP cpp_cheapr_rev(SEXP x){
-//   SEXP indices = SHIELD(base_colon(vec_length(x), 0));
-//   SEXP out;
-//   if (is_simple_atomic_vec(x)){
-//     out = SHIELD(cpp_sset(x, indices));
-//   } else {
-//     out = SHIELD(cheapr_sset(x, indices));
-//   }
-//   YIELD(2);
-//   return out;
-// }
-
 
 // Data frame subsetting
 

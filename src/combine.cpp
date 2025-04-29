@@ -786,10 +786,10 @@ SEXP cpp_df_c(SEXP x){
   int NP = 0;
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
-  SEXP df, names;
-  PROTECT_INDEX df_idx, names_idx;
+  SEXP df = p_x[0];
 
-  R_ProtectWithIndex(df = p_x[0], &df_idx); ++NP;
+  SEXP names;
+  PROTECT_INDEX names_idx;
   R_ProtectWithIndex(names = Rf_getAttrib(df, R_NamesSymbol), &names_idx); ++NP;
 
   if (!is_df(df)){
@@ -799,7 +799,7 @@ SEXP cpp_df_c(SEXP x){
   SEXP df_template = df;
 
   SEXP frames = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
-  SET_VECTOR_ELT(frames, 0, df);
+  SET_VECTOR_ELT(frames, 0, df_template);
 
   SEXP ptypes, new_names, new_ptypes, new_cols,
   temp_list;
@@ -820,7 +820,7 @@ SEXP cpp_df_c(SEXP x){
   int out_size = df_nrow(df);
 
   for (int i = 1; i < n_frames; ++i){
-    R_Reprotect(df = p_x[i], df_idx);
+    df = p_x[i];
 
     if (!is_df(df)){
       YIELD(NP); Rf_error("Can't combine data frames with non data frames");
@@ -862,7 +862,7 @@ SEXP cpp_df_c(SEXP x){
 
   for (int j = 0; j < n_cols; ++j){
     for (int i = 0; i < n_frames; ++i){
-      R_Reprotect(vec = get_list_element(p_x[i], utf8_char(p_names[j])), vec_idx);
+      vec = get_list_element(p_x[i], p_names[j]);
 
       if (is_null(vec)){
         R_Reprotect(vec = cpp_na_init(p_ptypes[j], df_nrow(p_x[i])), vec_idx);

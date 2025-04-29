@@ -7,7 +7,7 @@
 [[cpp11::register]]
 SEXP cpp_set_rm_attributes(SEXP x){
   SEXP current = ATTRIB(x);
-  while (!is_null(current)){
+  while (current != R_NilValue){
     Rf_setAttrib(x, TAG(current), R_NilValue);
     current = CDR(current);
   }
@@ -103,13 +103,4 @@ void cpp_copy_names(SEXP source, SEXP target, bool deep_copy){
     Rf_setAttrib(target, R_NamesSymbol, target_nms);
   }
   YIELD(1);
-}
-
-[[cpp11::register]]
-void cpp_shallow_duplicate_attrs(SEXP source, SEXP target){
-  SHALLOW_DUPLICATE_ATTRIB(target, source);
-}
-[[cpp11::register]]
-void cpp_copy_most_attrs(SEXP source, SEXP target){
-  Rf_copyMostAttrib(source, target);
 }

@@ -868,13 +868,16 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
   const SEXP *p_ta = STRING_PTR_RO(target_attr_names);
   const SEXP *p_sa = STRING_PTR_RO(source_attr_names);
 
-  for (int i = 0; i < Rf_length(target_attr_names); ++i){
+  const int n_target = Rf_length(target_attr_names);
+  const int n_source = Rf_length(source_attr_names);
+
+  for (int i = 0; i < n_target; ++i){
     current = target_attrs;
     while (!is_null(current)){
 
       tag = TAG(current);
 
-      if (chars_equal(PRINTNAME(tag), p_ta[i])){
+      if (PRINTNAME(tag) == p_ta[i]){
         Rf_setAttrib(target, tag, CAR(current));
         break;
       }
@@ -882,13 +885,13 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
     }
   }
 
-  for (int i = 0; i < Rf_length(source_attr_names); ++i){
+  for (int i = 0; i < n_source; ++i){
     current = source_attrs;
     while (!is_null(current)){
 
       tag = TAG(current);
 
-      if (chars_equal(PRINTNAME(tag), p_sa[i])){
+      if (PRINTNAME(tag) == p_sa[i]){
         Rf_setAttrib(target, tag, CAR(current));
         break;
       }

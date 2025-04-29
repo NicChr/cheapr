@@ -32,7 +32,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   case LGLSXP:
   case INTSXP: {
-    const int* const p_x = INTEGER(x);
+    const int* __restrict__ const p_x = INTEGER(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_int(p_x[i]);
@@ -43,7 +43,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case CHEAPR_INT64SXP: {
-    int_fast64_t *p_x = INTEGER64_PTR(x);
+    const int_fast64_t* __restrict__ const p_x = INTEGER64_PTR(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_int64(p_x[i]);
@@ -54,7 +54,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case REALSXP: {
-    double *p_x = REAL(x);
+    const double* __restrict__ const p_x = REAL(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_dbl(p_x[i]);
@@ -78,7 +78,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_x = COMPLEX(x);
+    const Rcomplex* __restrict__ const p_x = COMPLEX(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_cplx(p_x[i]);

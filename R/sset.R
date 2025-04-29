@@ -114,5 +114,5 @@ sset.sf <- function(x, i = NULL, j = NULL, ...){
 }
 #' @export
 sset.vctrs_rcrd <- function(x, i = NULL, ...){
-  .Call(`_cheapr_cpp_set_add_attributes`, sset_row(list_as_df(x), i), attributes(x), TRUE)
+  .Call(`_cheapr_cpp_set_add_attributes`, sset_row(list_as_df(x), i), attributes(x), FALSE)
 }
