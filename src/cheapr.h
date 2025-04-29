@@ -1,5 +1,5 @@
-#ifndef cheapr_cpp_funs
-#define cheapr_cpp_funs
+#ifndef cheapr_h
+#define cheapr_h
 
 #include <cpp11.hpp>
 #include <Rinternals.h>
