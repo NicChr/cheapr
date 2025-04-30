@@ -19,30 +19,21 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
     Rf_error("size must be a vector of non-negative integers");
   }
   SEXP out = SHIELD(new_vec(INTSXP, out_size));
-  int *p_out = INTEGER(out);
+  int* __restrict__ p_out = INTEGER(out);
   R_xlen_t index = 0, interrupt_counter = 0;
-  int fj;
-  int bj;
-  int start;
-  int increment;
-  int seq_size;
-  double seq_end;
+  int fj = 0, bj = 0;
+  int start, increment, seq_size;
+
   if (size_n > 0){
-    int *p_size = INTEGER(size);
-    int *p_from = INTEGER(from);
-    int *p_by = INTEGER(by);
-    for (int j = 0; j < size_n; ++j){
+    const int *p_size = INTEGER(size);
+    const int *p_from = INTEGER(from);
+    const int *p_by = INTEGER(by);
+    for (int j = 0; j < size_n; ++j, ++fj, ++bj){
       seq_size = p_size[j];
-      fj = j % from_n;
-      bj = j % by_n;
+      fj = (fj == from_n) ? 0 : fj;
+      bj = (bj == by_n) ? 0 : bj;
       start = p_from[fj];
       increment = p_by[bj];
-      // Throw error if integer overflow
-      seq_end = ( (std::fmax(seq_size - 1, 0.0)) * increment ) + start;
-      if (std::fabs(seq_end) > integer_max_){
-        YIELD(1);
-        Rf_error("Integer overflow value of %g in sequence %d", seq_end, j + 1);
-      }
       if (start == NA_INTEGER){
         YIELD(1);
         Rf_error("from contains NA values");
@@ -51,21 +42,78 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
         YIELD(1);
         Rf_error("by contains NA values");
       }
-      for (int i = 0; i < seq_size; ++i){
+      for (int i = 0; i < seq_size; ++i, ++index, ++interrupt_counter, start += increment){
         if (interrupt_counter == 100000000){
           R_CheckUserInterrupt();
           interrupt_counter = 0;
         }
         p_out[index] = start;
-        start += increment;
-        ++index;
-        ++interrupt_counter;
       }
     }
   }
   YIELD(1);
   return out;
 }
+// SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
+//   int size_n = Rf_length(size);
+//   int from_n = Rf_length(from);
+//   int by_n = Rf_length(by);
+//   if (size_n > 0 && (from_n <= 0 || by_n <= 0)){
+//     Rf_error("from and by must both have length > 0");
+//   }
+//   double out_size = cpp_sum(size);
+//   double min_size = cpp_min(size);
+//   if (!(out_size == out_size)){
+//     Rf_error("size must not contain NA values");
+//   }
+//   if (min_size < 0){
+//     Rf_error("size must be a vector of non-negative integers");
+//   }
+//   SEXP out = SHIELD(new_vec(INTSXP, out_size));
+//   int* __restrict__ p_out = INTEGER(out);
+//   R_xlen_t index = 0, interrupt_counter = 0;
+//   int fj = 0, bj = 0;
+//   int_fast64_t start, increment, seq_size, seq_end;
+//   const int_fast64_t int_max = integer_max_;
+//   const int_fast64_t zero = 0;
+//   const int_fast64_t na_int = NA_INTEGER;
+//
+//   if (size_n > 0){
+//     const int *p_size = INTEGER(size);
+//     const int *p_from = INTEGER(from);
+//     const int *p_by = INTEGER(by);
+//     for (int j = 0; j < size_n; ++j, ++fj, ++bj){
+//       seq_size = p_size[j];
+//       fj = (fj == from_n) ? 0 : fj;
+//       bj = (bj == by_n) ? 0 : bj;
+//       start = p_from[fj];
+//       increment = p_by[bj];
+//       // Throw error if integer overflow
+//       seq_end = ( std::max(seq_size - 1, zero) * increment ) + start;
+//       if (std::abs(seq_end) > int_max){
+//         YIELD(1);
+//         Rf_error("Integer overflow value of %g in sequence %d", static_cast<double>(seq_end), j + 1);
+//       }
+//       if (start == na_int){
+//         YIELD(1);
+//         Rf_error("from contains NA values");
+//       }
+//       if (increment == na_int){
+//         YIELD(1);
+//         Rf_error("by contains NA values");
+//       }
+//       for (int i = 0; i < seq_size; ++i, ++index, ++interrupt_counter, start += increment){
+//         if (interrupt_counter == 100000000){
+//           R_CheckUserInterrupt();
+//           interrupt_counter = 0;
+//         }
+//         p_out[index] = static_cast<int>(start);
+//       }
+//     }
+//   }
+//   YIELD(1);
+//   return out;
+// }
 
 [[cpp11::register]]
 SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
@@ -85,22 +133,22 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
     Rf_error("size must be a vector of non-negative integers");
   }
   SEXP out = SHIELD(new_vec(REALSXP, out_size));
-  double *p_out = REAL(out);
+  double* __restrict__ p_out = REAL(out);
   R_xlen_t index = 0, interrupt_counter = 0;
-  int fj;
-  int bj;
+  int fj = 0;
+  int bj = 0;
   int seq_size;
   double start;
   double increment;
   if (size_n > 0){
-    int *p_size = INTEGER(size);
-    double *p_from = REAL(from);
-    double *p_by = REAL(by);
-    for (int j = 0; j < size_n; ++j){
+    const int *p_size = INTEGER(size);
+    const double *p_from = REAL(from);
+    const double *p_by = REAL(by);
+    for (int j = 0; j < size_n; ++j, ++fj, ++bj){
 
       seq_size = p_size[j];
-      fj = j % from_n;
-      bj = j % by_n;
+      fj = (fj == from_n) ? 0 : fj;
+      bj = (bj == by_n) ? 0 : bj;
       start = p_from[fj];
       increment = p_by[bj];
       if (!(start == start)){
@@ -111,14 +159,12 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
         YIELD(1);
         Rf_error("by contains NA values");
       }
-      for (int i = 0; i < seq_size; ++i){
+      for (int i = 0; i < seq_size; ++i, ++index, ++interrupt_counter){
         if (interrupt_counter == 100000000){
           R_CheckUserInterrupt();
           interrupt_counter = 0;
         }
         p_out[index] = ( start + (i * increment) );
-        ++index;
-        ++interrupt_counter;
       }
     }
   }
@@ -135,19 +181,26 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by) {
   case INTSXP: {
     switch (TYPEOF(by)){
   case INTSXP: {
-    int n = std::max(std::max(size_n, from_n), by_n);
-    double seq_end;
+    int_fast64_t start, increment, seq_size, seq_end;
+    int_fast64_t int_max = integer_max_;
+    int_fast64_t zero = 0;
     bool out_is_integer = true;
-    int *p_size = INTEGER(size);
-    int *p_from = INTEGER(from);
-    int *p_by = INTEGER(by);
+    const int *p_size = INTEGER(size);
+    const int *p_from = INTEGER(from);
+    const int *p_by = INTEGER(by);
 
     // Checking that the sequence values are integers
     // Only do the loop if vectors are not zero-length
     if (size_n > 0 && from_n > 0 && by_n > 0){
-      for (int i = 0; i < n; ++i){
-        seq_end = (std::fmax(p_size[i % size_n] - 1.0, 0.0) * p_by[i % by_n]) + p_from[i % from_n];
-        if (seq_end > integer_max_){
+      int j = 0, k = 0;
+      for (int i = 0; i < size_n; ++i, ++j, ++k){
+        seq_size = p_size[i];
+        j = (j == by_n) ? 0 : j;
+        k = (k == from_n) ? 0 : k;
+        increment = p_by[j];
+        start = p_from[k];
+        seq_end = (std::max(seq_size - 1, zero) * increment) + start;
+        if (seq_end > int_max){
           out_is_integer = false;
           break;
         }
@@ -386,14 +439,14 @@ SEXP cpp_sequence_id(SEXP size){
 SEXP cpp_seq_len(R_xlen_t n){
   if (n > integer_max_){
     SEXP out = SHIELD(new_vec(REALSXP, n));
-    double *p_out = REAL(out);
+    double* __restrict__ p_out = REAL(out);
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) p_out[i] = 1.0 + i;
     YIELD(1);
     return out;
   } else {
     SEXP out = SHIELD(new_vec(INTSXP, n));
-    int *p_out = INTEGER(out);
+    int* __restrict__ p_out = INTEGER(out);
     OMP_FOR_SIMD
     for (int i = 0; i < n; ++i) p_out[i] = i + 1;
     YIELD(1);

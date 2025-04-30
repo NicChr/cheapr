@@ -90,14 +90,6 @@ sequence_ <- function(size, from = 1L, by = 1L, add_id = FALSE){
   }
   out
 }
-# Like base::sequence() but c++
-integer_sequence <- function(size, from = 1L, by = 1L){
-  cpp_int_sequence(as.integer(size), as.integer(from), as.integer(by))
-}
-# Like base::sequence() but with support for double increments and long vectors
-double_sequence <- function(size, from = 1, by = 1){
-  cpp_dbl_sequence(as.integer(size), as.double(from), as.double(by))
-}
 #' @rdname sequences
 #' @export
 seq_id <- cpp_sequence_id

@@ -87,19 +87,21 @@ SEXP r_copy(SEXP x){
 double cpp_sum(SEXP x){
 
   R_xlen_t n = Rf_xlength(x);
+
+  double sum = 0;
+
   switch (CHEAPR_TYPEOF(x)){
 
   case LGLSXP:
   case INTSXP: {
 
     int *p_x = INTEGER(x);
-    int sum = 0;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_na_int(sum) || is_na_int(p_x[i]) ? NA_INTEGER : sum + p_x[i];
+      sum = is_na_dbl(sum) || is_na_int(p_x[i]) ? NA_REAL : sum + p_x[i];
     }
-    return sum == NA_INTEGER ? NA_REAL : sum;
+    break;
   }
   case CHEAPR_INT64SXP: {
 
@@ -108,9 +110,9 @@ double cpp_sum(SEXP x){
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_na_int64(sum) || is_na_int64(p_x[i]) ? NA_INTEGER64 : sum + p_x[i];
+      sum = is_na_dbl(sum) || is_na_int64(p_x[i]) ? NA_REAL : sum + p_x[i];
     }
-    return sum == NA_INTEGER64 ? NA_REAL : sum;
+    break;
   }
   default: {
 
@@ -119,11 +121,12 @@ double cpp_sum(SEXP x){
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_na_dbl(sum) || is_na_dbl(p_x[i]) ? NA_REAL : sum + p_x[i];
+      sum += p_x[i];
     }
-    return sum;
+    break;
   }
   }
+  return sum;
 }
 
 double cpp_min(SEXP x){
