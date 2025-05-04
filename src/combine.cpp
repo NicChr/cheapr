@@ -1101,7 +1101,7 @@ SEXP cpp_c(SEXP x){
   case INTSXP: {
 
     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-    int* __restrict__ p_out = INTEGER(out);
+    int* RESTRICT p_out = INTEGER(out);
 
     for (int i = 0; i < n; ++i, k += m){
       if (TYPEOF(p_x[i]) == vector_type){
@@ -1118,7 +1118,7 @@ SEXP cpp_c(SEXP x){
   case REALSXP: {
 
     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-    double* __restrict__ p_out = REAL(out);
+    double* RESTRICT p_out = REAL(out);
 
     for (int i = 0; i < n; ++i, k += m){
       if (TYPEOF(p_x[i]) == vector_type){

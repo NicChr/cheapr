@@ -19,7 +19,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
     Rf_error("size must be a vector of non-negative integers");
   }
   SEXP out = SHIELD(new_vec(INTSXP, out_size));
-  int* __restrict__ p_out = INTEGER(out);
+  int* RESTRICT p_out = INTEGER(out);
   R_xlen_t index = 0, interrupt_counter = 0;
   int fj = 0, bj = 0;
   int start, increment, seq_size;
@@ -70,7 +70,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
 //     Rf_error("size must be a vector of non-negative integers");
 //   }
 //   SEXP out = SHIELD(new_vec(INTSXP, out_size));
-//   int* __restrict__ p_out = INTEGER(out);
+//   int* RESTRICT p_out = INTEGER(out);
 //   R_xlen_t index = 0, interrupt_counter = 0;
 //   int fj = 0, bj = 0;
 //   int_fast64_t start, increment, seq_size, seq_end;
@@ -133,7 +133,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
     Rf_error("size must be a vector of non-negative integers");
   }
   SEXP out = SHIELD(new_vec(REALSXP, out_size));
-  double* __restrict__ p_out = REAL(out);
+  double* RESTRICT p_out = REAL(out);
   R_xlen_t index = 0, interrupt_counter = 0;
   int fj = 0;
   int bj = 0;
@@ -439,14 +439,14 @@ SEXP cpp_sequence_id(SEXP size){
 SEXP cpp_seq_len(R_xlen_t n){
   if (n > integer_max_){
     SEXP out = SHIELD(new_vec(REALSXP, n));
-    double* __restrict__ p_out = REAL(out);
+    double* RESTRICT p_out = REAL(out);
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) p_out[i] = 1.0 + i;
     YIELD(1);
     return out;
   } else {
     SEXP out = SHIELD(new_vec(INTSXP, n));
-    int* __restrict__ p_out = INTEGER(out);
+    int* RESTRICT p_out = INTEGER(out);
     OMP_FOR_SIMD
     for (int i = 0; i < n; ++i) p_out[i] = i + 1;
     YIELD(1);

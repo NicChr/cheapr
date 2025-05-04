@@ -455,9 +455,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case LGLSXP:
   case INTSXP: {
-    const int* __restrict__ p_x = INTEGER(x);
+    const int* RESTRICT p_x = INTEGER(x);
     out = SHIELD(new_vec(TYPEOF(x), out_size)); ++NP;
-    int* __restrict__ p_out = INTEGER(out);
+    int* RESTRICT p_out = INTEGER(out);
     if (double_loop){
       memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(int));
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(int));
@@ -476,9 +476,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case REALSXP: {
-    const double* __restrict__ p_x = REAL(x);
+    const double* RESTRICT p_x = REAL(x);
     out = SHIELD(new_vec(REALSXP, out_size)); ++NP;
-    double* __restrict__ p_out = REAL(out);
+    double* RESTRICT p_out = REAL(out);
     if (double_loop){
       memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(double));
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(double));
@@ -526,9 +526,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case CPLXSXP: {
-    const Rcomplex* __restrict__ p_x = COMPLEX(x);
+    const Rcomplex* RESTRICT p_x = COMPLEX(x);
     out = SHIELD(new_vec(CPLXSXP, out_size)); ++NP;
-    Rcomplex* __restrict__ p_out = COMPLEX(out);
+    Rcomplex* RESTRICT p_out = COMPLEX(out);
     if (double_loop){
       memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(Rcomplex));
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(Rcomplex));
@@ -652,7 +652,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case INTSXP: {
         const int* p_x = INTEGER(x);
         out = SHIELD(new_vec(xtype, n));
-        int* __restrict__ p_out = INTEGER(out);
+        int* RESTRICT p_out = INTEGER(out);
 
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
@@ -672,7 +672,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case REALSXP: {
         const double* p_x = REAL(x);
         out = SHIELD(new_vec(REALSXP, n));
-        double* __restrict__ p_out = REAL(out);
+        double* RESTRICT p_out = REAL(out);
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -710,7 +710,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case CPLXSXP: {
         const Rcomplex* p_x = COMPLEX(x);
         out = SHIELD(new_vec(CPLXSXP, n));
-        Rcomplex* __restrict__ p_out = COMPLEX(out);
+        Rcomplex* RESTRICT p_out = COMPLEX(out);
           for (int_fast64_t i = 0; i < n; ++i){
 
             j = pind[i];
@@ -803,7 +803,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case INTSXP: {
         const int* p_x = INTEGER(x);
         out = SHIELD(new_vec(xtype, n));
-        int* __restrict__ p_out = INTEGER(out);
+        int* RESTRICT p_out = INTEGER(out);
           for (int i = 0; i < n; ++i){
             j = pind[i];
             if (j != NA_INTEGER && j < 0){
@@ -822,7 +822,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case REALSXP: {
         const double* p_x = REAL(x);
         out = SHIELD(new_vec(REALSXP, n));
-        double* __restrict__ p_out = REAL(out);
+        double* RESTRICT p_out = REAL(out);
           for (int i = 0; i < n; ++i){
             j = pind[i];
             if (j != NA_INTEGER && j < 0){
@@ -859,7 +859,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case CPLXSXP: {
         const Rcomplex* p_x = COMPLEX(x);
         out = SHIELD(new_vec(CPLXSXP, n));
-        Rcomplex* __restrict__ p_out = COMPLEX(out);
+        Rcomplex* RESTRICT p_out = COMPLEX(out);
           for (int i = 0; i < n; ++i){
             j = pind[i];
             if (j != NA_INTEGER && j < 0){
@@ -939,7 +939,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
       int_fast64_t n = Rf_xlength(indices);
 
-      const double* __restrict__ pind = REAL(indices);
+      const double* RESTRICT pind = REAL(indices);
 
       switch ( xtype ){
 
@@ -949,9 +949,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case LGLSXP:
       case INTSXP: {
-        const int* __restrict__ p_x = INTEGER(x);
+        const int* RESTRICT p_x = INTEGER(x);
         out = SHIELD(new_vec(xtype, n));
-        int* __restrict__ p_out = INTEGER(out);
+        int* RESTRICT p_out = INTEGER(out);
         OMP_FOR_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
@@ -959,9 +959,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case REALSXP: {
-        const double* __restrict__ p_x = REAL(x);
+        const double* RESTRICT p_x = REAL(x);
         out = SHIELD(new_vec(REALSXP, n));
-        double* __restrict__ p_out = REAL(out);
+        double* RESTRICT p_out = REAL(out);
         OMP_FOR_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
@@ -975,9 +975,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex* __restrict__ p_x = COMPLEX(x);
+        const Rcomplex* RESTRICT p_x = COMPLEX(x);
         out = SHIELD(new_vec(CPLXSXP, n));
-        Rcomplex* __restrict__ p_out = COMPLEX(out);
+        Rcomplex* RESTRICT p_out = COMPLEX(out);
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i].r = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].r;
           p_out[i].i = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].i;
@@ -1007,7 +1007,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
       int n = Rf_length(indices);
 
-      const int* __restrict__ pind = INTEGER(indices);
+      const int* RESTRICT pind = INTEGER(indices);
       switch ( xtype ){
 
       case NILSXP: {
@@ -1016,9 +1016,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case LGLSXP:
       case INTSXP: {
-        const int* __restrict__ p_x = INTEGER(x);
+        const int* RESTRICT p_x = INTEGER(x);
         out = SHIELD(new_vec(xtype, n));
-        int* __restrict__ p_out = INTEGER(out);
+        int* RESTRICT p_out = INTEGER(out);
         OMP_FOR_SIMD
         for (int i = 0; i < n; ++i){
           p_out[i] = p_x[pind[i] - 1];
@@ -1026,9 +1026,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case REALSXP: {
-        const double* __restrict__ p_x = REAL(x);
+        const double* RESTRICT p_x = REAL(x);
         out = SHIELD(new_vec(REALSXP, n));
-        double* __restrict__ p_out = REAL(out);
+        double* RESTRICT p_out = REAL(out);
         OMP_FOR_SIMD
         for (int i = 0; i < n; ++i){
           p_out[i] = p_x[pind[i] - 1];
@@ -1042,9 +1042,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex* __restrict__ p_x = COMPLEX(x);
+        const Rcomplex* RESTRICT p_x = COMPLEX(x);
         out = SHIELD(new_vec(CPLXSXP, n));
-        Rcomplex* __restrict__ p_out = COMPLEX(out);
+        Rcomplex* RESTRICT p_out = COMPLEX(out);
         for (int i = 0; i < n; ++i){
           p_out[i].r = p_x[pind[i] - 1].r;
           p_out[i].i = p_x[pind[i] - 1].i;
@@ -1542,7 +1542,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
 // SEXP foo(T px, T pi, int n) {
 //   if constexpr (SEXPTYPE == INTSXP) {
 //     SEXP out = SHIELD(new_vec(INTSXP, n));
-//     int* __restrict__ p_out = INTEGER(out);
+//     int* RESTRICT p_out = INTEGER(out);
 //     OMP_FOR_SIMD
 //     for (int i = 0; i < n; ++i){
 //       p_out[i] = px[pi[i] - 1];
@@ -1560,7 +1560,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
 //
 //   std::vector<int*> int_ptrs(n);
 //   SEXP sizes = Rf_protect(Rf_allocVector(INTSXP, n));
-//   int* __restrict__ p_sizes = INTEGER(sizes);
+//   int* RESTRICT p_sizes = INTEGER(sizes);
 //   const SEXP *p_list = VECTOR_PTR_RO(list);
 //
 //   SEXP int_vec;

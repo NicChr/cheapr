@@ -10,9 +10,9 @@ SEXP cpp_int64_to_int(SEXP x){
   R_xlen_t n = Rf_xlength(x);
 
   SEXP out = SHIELD(new_vec(INTSXP, n));
-  int* __restrict__ p_out = INTEGER(out);
+  int* RESTRICT p_out = INTEGER(out);
 
-  const int_fast64_t* __restrict__ p_x = INTEGER64_PTR(x);
+  const int_fast64_t* RESTRICT p_x = INTEGER64_PTR(x);
 
   int_fast64_t int_max = integer_max_;
 
@@ -33,9 +33,9 @@ SEXP cpp_int64_to_double(SEXP x){
   R_xlen_t n = Rf_xlength(x);
 
   SEXP out = SHIELD(new_vec(REALSXP, n));
-  double* __restrict__ p_out = REAL(out);
+  double* RESTRICT p_out = REAL(out);
 
-  const int_fast64_t* __restrict__ p_x = INTEGER64_PTR(x);
+  const int_fast64_t* RESTRICT p_x = INTEGER64_PTR(x);
 
   double repl;
   for (R_xlen_t i = 0; i < n; ++i){
@@ -58,7 +58,7 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int_fast64_t* __restrict__ p_x = INTEGER64_PTR(x);
+    const int_fast64_t* RESTRICT p_x = INTEGER64_PTR(x);
     int_fast64_t int_max = integer_max_;
     int_fast64_t shift_ = shift;
     for (R_xlen_t i = 0; i < n; ++i){
@@ -70,7 +70,7 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
     break;
   }
   case REALSXP: {
-    const double* __restrict__ p_x = REAL(x);
+    const double* RESTRICT p_x = REAL(x);
     double int_max = integer_max_;
     double shift_ = shift;
     for (R_xlen_t i = 0; i < n; ++i){

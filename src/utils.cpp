@@ -191,7 +191,7 @@ double var_sum_squared_diff(SEXP x, double mu){
     switch (TYPEOF(x)){
 
     case INTSXP: {
-      int *p_x = INTEGER(x);
+      const int *p_x = INTEGER(x);
       // if (std::abs(mu - std::round(mu)) < std::numeric_limits<double>::epsilon()){
       //   int_fast64_t temp = 0;
       //   int_fast64_t temp2;
@@ -212,7 +212,7 @@ double var_sum_squared_diff(SEXP x, double mu){
       break;
     }
     default: {
-      double *p_x = REAL(x);
+      const double *p_x = REAL(x);
       for (R_xlen_t i = 0; i < n; ++i){
         if (is_na_dbl(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
@@ -296,7 +296,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
     const int *p_x = INTEGER(x);
     const double *p_b = REAL(breaks);
-    int* __restrict__ p_out = INTEGER(out);
+    int* RESTRICT p_out = INTEGER(out);
     CHEAPR_BIN_CODES(is_na_int, NA_INTEGER);
     YIELD(2);
     return out;
@@ -305,7 +305,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
     const int *p_x = INTEGER(x);
     const double *p_b = REAL(breaks);
-    int* __restrict__ p_out = INTEGER(out);
+    int* RESTRICT p_out = INTEGER(out);
     CHEAPR_BIN_NCODES(is_na_int, NA_INTEGER);
     YIELD(2);
     return out;
@@ -317,7 +317,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
     const double *p_x = REAL(x);
     const double *p_b = REAL(breaks);
-    int* __restrict__ p_out = INTEGER(out);
+    int* RESTRICT p_out = INTEGER(out);
     CHEAPR_BIN_CODES(is_na_dbl, NA_INTEGER);
     YIELD(2);
     return out;
@@ -326,7 +326,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
     const double *p_x = REAL(x);
     const double *p_b = REAL(breaks);
-    double* __restrict__ p_out = REAL(out);
+    double* RESTRICT p_out = REAL(out);
     CHEAPR_BIN_NCODES(is_na_dbl, NA_REAL);
     YIELD(2);
     return out;
@@ -375,7 +375,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   }
   case LGLSXP:
   case INTSXP: {
-    int* __restrict__ p_out = INTEGER(out);
+    int* RESTRICT p_out = INTEGER(out);
     const int *p_yes = INTEGER(yes);
     const int *p_no = INTEGER(no);
     const int *p_na = INTEGER(na);
@@ -399,7 +399,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     break;
   }
   case REALSXP: {
-    double* __restrict__ p_out = REAL(out);
+    double* RESTRICT p_out = REAL(out);
     const double *p_yes = REAL(yes);
     const double *p_no = REAL(no);
     const double *p_na = REAL(na);
@@ -530,7 +530,7 @@ SEXP cpp_lgl_count(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
-  int *p_x = LOGICAL(x);
+  const int *p_x = LOGICAL(x);
 
   R_xlen_t i;
   R_xlen_t ntrue = 0, nfalse = 0;
@@ -667,8 +667,8 @@ SEXP cpp_set_or(SEXP x, SEXP y){
 
   R_xlen_t i, yi;
 
-  int *p_x = LOGICAL(x);
-  int *p_y = LOGICAL(y);
+  int* RESTRICT p_x = LOGICAL(x);
+  const int* RESTRICT p_y = LOGICAL(y);
 
 
   for (i = yi = 0; i < n; yi = (++yi == yn) ? 0 : yi, ++i){

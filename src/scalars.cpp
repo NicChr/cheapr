@@ -111,7 +111,7 @@ case INTSXP: {
   if (implicit_na_coercion(value, x)) break;
   SHIELD(value = coerce_vector(value, INTSXP)); ++NP;
   int val = Rf_asInteger(value);
-  const int* __restrict__ p_x = INTEGER(x);
+  const int* RESTRICT p_x = INTEGER(x);
   // int (*c_op)(int, int);
   // CHEAPR_OP_SWITCH;
   if (n_cores > 1){
@@ -127,7 +127,7 @@ case REALSXP: {
   if (implicit_na_coercion(value, x)) break;
   SHIELD(value = coerce_vector(value, REALSXP)); ++NP;
   double val = Rf_asReal(value);
-  const double* __restrict__ p_x = REAL(x);
+  const double* RESTRICT p_x = REAL(x);
   // int (*c_op)(double, double);
   // CHEAPR_OP_SWITCH;
   if (n_cores > 1){
@@ -144,7 +144,7 @@ case CHEAPR_INT64SXP: {
   if (implicit_na_coercion(value, x)) break;
   SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
   int_fast64_t val = INTEGER64_PTR(value)[0];
-  const int_fast64_t* __restrict__ p_x = INTEGER64_PTR(x);
+  const int_fast64_t* RESTRICT p_x = INTEGER64_PTR(x);
   // int (*c_op)(int_fast64_t, int_fast64_t);
   // CHEAPR_OP_SWITCH;
   if (n_cores > 1){

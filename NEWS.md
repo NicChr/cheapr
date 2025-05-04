@@ -2,14 +2,20 @@
 
 ### New functions
 
+- `attrs_add` and `attrs_rm` to allow for adding and removing attributes, 
+both normally and in-place.
+
+- `shallow_copy` and `deep_copy` for shallow and full copies of R objects.
+
+- `address` to retried the memory address of an R object.
+
 - `cheapr_rep`, `cheapr_rep_len` and `cheapr_rep_each` to repeat out vectors 
 efficiently.
 
 - `cheapr_c` to concatenate vectors and data frame rows together fast and safely.
 
 - `reconstruct` as a method to allow users to write methods to restore objects
-using a template. Currently only data frames are being reconstructed and 
-only in `cheapr_c` and `sset`.
+using a template. Currently only data frames are being reconstructed.
 
 - `col_c` as a way to combine data frames cols and vectors into a data frame.
 

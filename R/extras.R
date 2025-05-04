@@ -111,7 +111,7 @@ setdiff_ <- function(x, y, dups = TRUE){
   if (!dups){
     x <- collapse::funique(x)
   }
-  sset(x, which_not_in(x, y))
+  cpp_sset(x, which_not_in(x, y), TRUE)
 }
 #' @rdname extras
 #' @export
@@ -119,7 +119,7 @@ intersect_ <- function(x, y, dups = TRUE){
   if (!dups){
     x <- collapse::funique(x)
   }
-  sset(x, which_in(x, y))
+  cpp_sset(x, which_in(x, y), TRUE)
 }
 #' @rdname extras
 #' @export
@@ -234,7 +234,7 @@ deframe_ <- function(x){
 #' @rdname extras
 #' @export
 sample_ <- function(x, size = vector_length(x), replace = FALSE, prob = NULL){
-  sset(x, sample.int(vector_length(x), size, replace, prob))
+  cpp_sset(x, sample.int(vector_length(x), size, replace, prob), TRUE)
 }
 #' @rdname extras
 #' @export
@@ -287,7 +287,7 @@ cheapr_var <- function(x, na.rm = TRUE){
 #' @rdname extras
 #' @export
 cheapr_rev <- function(x){
-  .Call(`_cheapr_cpp_sset`, x, vector_length(x):0, TRUE)
+  .Call(`_cheapr_cpp_sset`, x, .Call(`_cheapr_cpp_vector_length`, x):0, TRUE)
 }
 cheapr_sd <- function(x, na.rm = TRUE){
   sqrt(cheapr_var(x, na.rm = na.rm))

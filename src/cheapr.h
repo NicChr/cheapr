@@ -4,6 +4,12 @@
 #include <cpp11.hpp>
 #include <Rinternals.h>
 
+#ifdef _MSC_VER
+#define RESTRICT __restrict
+#else
+#define RESTRICT __restrict__
+#endif
+
 #ifndef R_NO_REMAP
 #define R_NO_REMAP
 #endif

@@ -72,7 +72,7 @@ case <- function(..., .default = NULL){
   }
 
   if (length(lgl) < length(rhs)){
-    lgl <- recycle(lgl, length = length(rhs))[[1]]
+    lgl <- cheapr_rep_len(lgl, length(rhs))
   }
   if (!length(rhs) %in% c(1, length(lgl))){
     stop("rhs must be of length 1 or length of lhs")
@@ -109,7 +109,7 @@ case <- function(..., .default = NULL){
         stop("All LHS expressions must be logical vectors")
       }
 
-      lgl <- recycle(lgl, length = out_size)[[1]]
+      lgl <- cheapr_rep_len(lgl, out_size)
       if (!length(rhs) %in% c(1, out_size)){
         stop("rhs must be of length 1 or length of lhs")
       }
@@ -218,7 +218,7 @@ val_match <- function(.x, ..., .default = NULL){
   if (rhs_all_scalars && (n_exprs > 3 || !all_same_type)){
 
     # Pre-allocate key-value pairs
-      keys <- rep_len(.x[NA_integer_], n_exprs)
+      keys <- cheapr_rep_len(.x[NA_integer_], n_exprs)
       values <- keys
 
       # Assign keys and values
@@ -249,12 +249,12 @@ val_match <- function(.x, ..., .default = NULL){
     # Create a vector filled with `.default` if given, otherwise NA
 
     if (!is.null(.default)){
-      out <- if (length(.default) != 1) .default else rep_len(.default, N)
+      out <- if (length(.default) != 1) .default else cheapr_rep_len(.default, N)
     } else {
       if (n_exprs == 0){
-        out <- rep_len(.x[NA_integer_], N)
+        out <- cheapr_rep_len(.x[NA_integer_], N)
       } else {
-        out <- rep_len(rhs_list[[1L]][NA_integer_], N)
+        out <- cheapr_rep_len(rhs_list[[1L]][NA_integer_], N)
       }
     }
 
