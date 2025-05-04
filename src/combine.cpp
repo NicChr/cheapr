@@ -6,41 +6,6 @@
 //   CHEAPR_ZERO[0] = 0;
 // }
 
-// Helper to avoid repeated calls to R
-// SEXP reconstruct(SEXP x, SEXP source){
-//   if (is_df(x)){
-//     if (is_bare_df(source)){
-//       if (is_bare_df(x)){
-//         return x;
-//       } else {
-//         SEXP out = SHIELD(Rf_shallow_duplicate(x));
-//         Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
-//         YIELD(1);
-//         return out;
-//       }
-//     } else if (is_bare_tbl(source)){
-//
-//       // Only copy the class if source is a plain tbl
-//
-//       if (is_bare_tbl(x)){
-//         return x;
-//       } else {
-//         SEXP out = SHIELD(Rf_shallow_duplicate(x));
-//         Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
-//         YIELD(1);
-//         return out;
-//       }
-//     } else {
-//
-//       // Method dispatch, users can write `reconstruct` methods which
-//       // this will use
-//       return cheapr_reconstruct(x, source);
-//     }
-//   } else {
-//     return cheapr_reconstruct(x, source);
-//   }
-// }
-
 [[cpp11::register]]
 SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy){
   if (is_df(x)){

@@ -36,6 +36,10 @@
 #define integer_max_ std::numeric_limits<int>::max()
 #endif
 
+#ifndef integer64_max_
+#define integer64_max_ std::numeric_limits<int_fast64_t>::max()
+#endif
+
 #ifndef NA_INTEGER64
 #define NA_INTEGER64 std::numeric_limits<int_fast64_t>::min()
 #endif
@@ -259,19 +263,19 @@ inline SEXP scalar_lgl(bool x){
 }
 
 inline bool is_bare_df(SEXP x){
-  return Rf_length(Rf_getAttrib(x, R_ClassSymbol)) == 1 &&
-    std::strcmp(CHAR(STRING_ELT(Rf_getAttrib(x, R_ClassSymbol), 0)), "data.frame") == 0;
+  SEXP cls = Rf_getAttrib(x, R_ClassSymbol);
+  return Rf_length(cls) == 1 &&
+    std::strcmp(CHAR(STRING_ELT(cls, 0)), "data.frame") == 0;
 }
 
 inline bool is_bare_tbl(SEXP x){
-  SEXP xclass = SHIELD(Rf_getAttrib(x, R_ClassSymbol));
+  SEXP xclass = Rf_getAttrib(x, R_ClassSymbol);
+  const SEXP *p_x = STRING_PTR_RO(xclass);
 
-  bool out = Rf_length(xclass) == 3 &&
-    std::strcmp(CHAR(STRING_ELT(xclass, 0)), "tbl_df") == 0 &&
-    std::strcmp(CHAR(STRING_ELT(xclass, 1)), "tbl") == 0 &&
-  std::strcmp(CHAR(STRING_ELT(xclass, 2)), "data.frame") == 0;
-  YIELD(1);
-  return out;
+  return Rf_length(xclass) == 3 &&
+    std::strcmp(CHAR(p_x[0]), "tbl_df") == 0 &&
+    std::strcmp(CHAR(p_x[1]), "tbl") == 0 &&
+    std::strcmp(CHAR(p_x[2]), "data.frame") == 0;
 }
 
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];

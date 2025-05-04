@@ -139,7 +139,7 @@ int_fast64_t cpp_lcm2_int64(int_fast64_t x, int_fast64_t y, bool na_rm){
   // divides x by a whole number
 
   int_fast64_t res = std::llabs(x) / cpp_gcd2_int64(x, y, false);
-  if (y != 0 && (std::llabs(res) > (LLONG_MAX / std::llabs(y)))){
+  if (y != 0 && (std::llabs(res) > (integer64_max_ / std::llabs(y)))){
     Rf_error("64-bit integer overflow, please use doubles");
   } else {
     return (res * std::llabs(y));

@@ -153,7 +153,7 @@ double cpp_min(SEXP x){
     if (n == 0) return R_PosInf;
 
     int_fast64_t *p_x = INTEGER64_PTR(x);
-    int_fast64_t out = LLONG_MAX;
+    int_fast64_t out = integer64_max_;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -294,18 +294,18 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     if (codes){
     SEXP out = SHIELD(new_vec(INTSXP, n));
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
-    int *p_x = INTEGER(x);
-    double *p_b = REAL(breaks);
-    int *p_out = INTEGER(out);
+    const int *p_x = INTEGER(x);
+    const double *p_b = REAL(breaks);
+    int* __restrict__ p_out = INTEGER(out);
     CHEAPR_BIN_CODES(is_na_int, NA_INTEGER);
     YIELD(2);
     return out;
   } else {
     SEXP out = SHIELD(Rf_duplicate(x));
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
-    int *p_x = INTEGER(x);
-    double *p_b = REAL(breaks);
-    int *p_out = INTEGER(out);
+    const int *p_x = INTEGER(x);
+    const double *p_b = REAL(breaks);
+    int* __restrict__ p_out = INTEGER(out);
     CHEAPR_BIN_NCODES(is_na_int, NA_INTEGER);
     YIELD(2);
     return out;
@@ -315,18 +315,18 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     if (codes){
     SEXP out = SHIELD(new_vec(INTSXP, n));
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
-    double *p_x = REAL(x);
-    double *p_b = REAL(breaks);
-    int *p_out = INTEGER(out);
+    const double *p_x = REAL(x);
+    const double *p_b = REAL(breaks);
+    int* __restrict__ p_out = INTEGER(out);
     CHEAPR_BIN_CODES(is_na_dbl, NA_INTEGER);
     YIELD(2);
     return out;
   } else {
     SEXP out = SHIELD(Rf_duplicate(x));
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
-    double *p_x = REAL(x);
-    double *p_b = REAL(breaks);
-    double *p_out = REAL(out);
+    const double *p_x = REAL(x);
+    const double *p_b = REAL(breaks);
+    double* __restrict__ p_out = REAL(out);
     CHEAPR_BIN_NCODES(is_na_dbl, NA_REAL);
     YIELD(2);
     return out;
@@ -366,7 +366,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   bool no_scalar = no_size == 1;
   bool na_scalar = na_size == 1;
 
-  int *p_x = LOGICAL(condition);
+  const int *p_x = LOGICAL(condition);
   SEXP out = SHIELD(new_vec(TYPEOF(yes), n)); ++NP;
 
   switch (TYPEOF(yes)){
@@ -375,10 +375,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   }
   case LGLSXP:
   case INTSXP: {
-    int *p_out = INTEGER(out);
-    int *p_yes = INTEGER(yes);
-    int *p_no = INTEGER(no);
-    int *p_na = INTEGER(na);
+    int* __restrict__ p_out = INTEGER(out);
+    const int *p_yes = INTEGER(yes);
+    const int *p_no = INTEGER(no);
+    const int *p_na = INTEGER(na);
 
     for (R_xlen_t i = 0; i < n; ++i){
       switch(p_x[i]){
@@ -395,16 +395,14 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
         break;
       }
       }
-      // p_out[i] = p_x[i] == NA_LOGICAL ? na_val : p_x[i] ?
-      // p_yes[yes_scalar ? 0 : i] : p_no[no_scalar ? 0 : i];
     }
     break;
   }
   case REALSXP: {
-    double *p_out = REAL(out);
-    double *p_yes = REAL(yes);
-    double *p_no = REAL(no);
-    double *p_na = REAL(na);
+    double* __restrict__ p_out = REAL(out);
+    const double *p_yes = REAL(yes);
+    const double *p_no = REAL(no);
+    const double *p_na = REAL(na);
 
     for (R_xlen_t i = 0; i < n; ++i){
       switch(p_x[i]){
@@ -448,9 +446,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_yes = COMPLEX(yes);
-    Rcomplex *p_no = COMPLEX(no);
-    Rcomplex *p_na = COMPLEX(na);
+    const Rcomplex *p_yes = COMPLEX(yes);
+    const Rcomplex *p_no = COMPLEX(no);
+    const Rcomplex *p_na = COMPLEX(na);
 
     for (R_xlen_t i = 0; i < n; ++i){
       switch(p_x[i]){
@@ -471,9 +469,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     break;
   }
   case RAWSXP: {
-    Rbyte *p_yes = RAW(yes);
-    Rbyte *p_no = RAW(no);
-    Rbyte *p_na = RAW(na);
+    const Rbyte *p_yes = RAW(yes);
+    const Rbyte *p_no = RAW(no);
+    const Rbyte *p_na = RAW(na);
 
     for (R_xlen_t i = 0; i < n; ++i){
       switch(p_x[i]){
@@ -951,3 +949,126 @@ SEXP cpp_str_coalesce(SEXP x){
   YIELD(2);
   return out;
 }
+
+// Keep this for now, may use in the future
+
+// #include <cpp11.hpp>
+// #include "cheapr.h"
+// #include <R.h>
+// #include <Rinternals.h>
+// #include <functional>
+// #include <unordered_map>
+//
+// struct sexp_metadata {
+//   void* getter;                                 // Direct pointer to data (e.g., INTEGER(x))
+//   std::function<void(R_xlen_t, void*)> setter;    // Setter function (kept for flexibility)
+//   void* ptr_to_x;                                 // Pointer to the SEXP object x
+//   int type_id;
+// };
+//
+// // Helper function to create metadata for a specific SEXPTYPE (compile-time)
+// template<int SEXPTYPE>
+// sexp_metadata create_metadata(SEXP x) {
+//   sexp_metadata metadata;
+//   metadata.ptr_to_x = static_cast<void*>(x);      // Store pointer to x
+//   metadata.type_id = SEXPTYPE;
+//
+//   if constexpr (SEXPTYPE == INTSXP) {
+//     void* data = static_cast<void*>(INTEGER(x));  // Single pointer for integer data
+//     metadata.getter = data;
+//     metadata.setter = [data](R_xlen_t i, void* value) {
+//       static_cast<int*>(data)[i] = *static_cast<int*>(value);
+//     };
+//   } else if constexpr (SEXPTYPE == REALSXP) {
+//     void* data = static_cast<void*>(REAL(x));  // Single pointer for integer data
+//     metadata.getter = data;
+//     metadata.setter = [data](R_xlen_t i, void* value) {
+//       static_cast<double*>(data)[i] = *static_cast<double*>(value);
+//     };
+//   } else if constexpr (SEXPTYPE == LGLSXP) {
+//     void* data = static_cast<void*>(LOGICAL(x));  // Single pointer for integer data
+//     metadata.getter = data;
+//     metadata.setter = [data](R_xlen_t i, void* value) {
+//       static_cast<int*>(data)[i] = *static_cast<int*>(value);
+//     };
+//   } else if constexpr (SEXPTYPE == STRSXP) {
+//     void* data = const_cast<void*>(reinterpret_cast<const void*>(STRING_PTR_RO(x)));
+//     metadata.getter = data;
+//     metadata.setter = [x](R_xlen_t i, void* value) {
+//       SET_STRING_ELT(x, i, static_cast<SEXP>(value));
+//     };
+//   } else {
+//     Rf_error("Unknown SEXP type");
+//   }
+//
+//   return metadata;
+// }
+//
+// // Function to get metadata based on runtime TYPEOF(x)
+// sexp_metadata get_sexp_metadata(SEXP x) {
+//   int type = TYPEOF(x);
+//   switch (type) {
+//   case INTSXP:
+//     return create_metadata<INTSXP>(x);
+//   case REALSXP:
+//     return create_metadata<REALSXP>(x);
+//   case LGLSXP:
+//     return create_metadata<LGLSXP>(x);
+//   case STRSXP:
+//     return create_metadata<STRSXP>(x);
+//   default:
+//     Rf_error("Unsupported SEXP type: %s", Rf_type2char(TYPEOF(x)));
+//   }
+// }
+// R_xlen_t foo(SEXP x){
+//   sexp_metadata metadata = get_sexp_metadata(x);
+//
+//   R_xlen_t count = 0;
+//
+//   auto* data = static_cast<int*>(metadata.getter);
+//
+//   OMP_FOR_SIMD
+//   for (R_xlen_t i = 0; i < Rf_xlength(x); ++i){
+//     count += is_na_int(data[i]);
+//   }
+//   return count;
+// }
+// R_xlen_t bar(SEXP x){
+//   sexp_metadata metadata = get_sexp_metadata(x);
+//
+//   R_xlen_t count = 0;
+//
+//   // auto* data = static_cast<int*>(metadata.getter);
+//   //
+//   // int val = 1;
+//   //
+//   // OMP_FOR_SIMD
+//   // for (R_xlen_t i = 0; i < Rf_xlength(x); ++i){
+//   //   metadata.setter(i, static_cast<void*>(&val));
+//   // }
+//
+//   auto* data = static_cast<SEXP*>(metadata.getter);
+//
+//   SEXP val = Rf_protect(Rf_mkChar("ok"));
+//
+//   for (R_xlen_t i = 0; i < Rf_xlength(x); ++i){
+//     metadata.setter(i, static_cast<void*>(val));
+//   }
+//   YIELD(1);
+//   return count;
+// }
+// R_xlen_t foobar(SEXP x){
+//   sexp_metadata metadata = get_sexp_metadata(x);
+//
+//   R_xlen_t count = 0;
+//
+//   auto* data = static_cast<SEXP*>(metadata.getter);
+//
+//   SEXP val = Rf_protect(Rf_mkChar("ok"));
+//
+//   for (R_xlen_t i = 0; i < Rf_xlength(x); ++i){
+//     SET_STRING_ELT(x, i, val);
+//   }
+//   YIELD(1);
+//   return count;
+// }

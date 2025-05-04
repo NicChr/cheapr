@@ -1537,3 +1537,65 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
   }
   }
 }
+
+// template<int SEXPTYPE, typename T>
+// SEXP foo(T px, T pi, int n) {
+//   if constexpr (SEXPTYPE == INTSXP) {
+//     SEXP out = SHIELD(new_vec(INTSXP, n));
+//     int* __restrict__ p_out = INTEGER(out);
+//     OMP_FOR_SIMD
+//     for (int i = 0; i < n; ++i){
+//       p_out[i] = px[pi[i] - 1];
+//     }
+//     YIELD(1);
+//     return out;
+//   } else {
+//     Rf_error("error");
+//   }
+// }
+// SEXP test(SEXP x, SEXP list) {
+//
+//
+//   int n = Rf_length(list);
+//
+//   std::vector<int*> int_ptrs(n);
+//   SEXP sizes = Rf_protect(Rf_allocVector(INTSXP, n));
+//   int* __restrict__ p_sizes = INTEGER(sizes);
+//   const SEXP *p_list = VECTOR_PTR_RO(list);
+//
+//   SEXP int_vec;
+//
+//   for (int i = 0; i < n; ++i){
+//     int_vec = p_list[i];
+//     p_sizes[i] = Rf_length(int_vec);
+//     int_ptrs[i] = INTEGER(int_vec);
+//   }
+//
+//   int* p_x = INTEGER(x);
+//
+//   SEXP temp;
+//   PROTECT_INDEX idx;
+//   R_ProtectWithIndex(temp = R_NilValue, &idx);
+//   for (int i = 0; i < n; ++i){
+//     R_Reprotect(temp = foo<INTSXP>(p_x, int_ptrs[i], p_sizes[i]), idx);
+//   }
+//   YIELD(2);
+//   return temp;
+// }
+// SEXP test2(SEXP x, SEXP list) {
+//
+//
+//   int n = Rf_length(list);
+//   const SEXP *p_list = VECTOR_PTR_RO(list);
+//
+//   int* p_x = INTEGER(x);
+//
+//   SEXP temp;
+//   PROTECT_INDEX idx;
+//   R_ProtectWithIndex(temp = R_NilValue, &idx);
+//   for (int i = 0; i < n; ++i){
+//     R_Reprotect(temp = sset_vec(x, p_list[i], false), idx);
+//   }
+//   YIELD(1);
+//   return temp;
+// }
