@@ -140,10 +140,6 @@ cpp_list_assign <- function(x, values) {
   .Call(`_cheapr_cpp_list_assign`, x, values)
 }
 
-cpp_list_loc_assign <- function(x, where, value) {
-  .Call(`_cheapr_cpp_list_loc_assign`, x, where, value)
-}
-
 cpp_list_as_df <- function(x) {
   .Call(`_cheapr_cpp_list_as_df`, x)
 }
