@@ -82,17 +82,20 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
   R_xlen_t i = 0, k = 0;
 
   // Which elements do we keep?
-  int *p_keep = R_Calloc(n, int);
+  // Use unsigned int
+  // as recommended in Writing R Extensions
+  // section 1.6.4 Portable C and C++ code
+  int* RESTRICT p_keep = R_Calloc(static_cast<uint_least64_t>(n), int);
 
   OMP_FOR_SIMD
-  for (int i = 0; i < n; ++i) p_keep[i] = TRUE;
+  for (int i = 0; i < n; ++i) p_keep[i] = 1;
 
   SEXP x_seq = SHIELD(cpp_seq_len(xn));
 
   if (xn > integer_max_){
     SHIELD(exclude = coerce_vec(exclude, REALSXP));
-    double *p_x = REAL(x_seq);
-    double *p_excl = REAL(exclude);
+    double* RESTRICT p_x = REAL(x_seq);
+    double* RESTRICT p_excl = REAL(exclude);
 
     for (int j = 0; j < m; ++j) {
       if (p_excl[j] != p_excl[j]) continue;
@@ -103,16 +106,16 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       }
       idx = -p_excl[j];
       // Check keep array for already assigned FALSE to avoid double counting
-      if (idx > 0 && idx <= n && p_keep[idx - 1] == TRUE){
-        p_keep[idx - 1] = FALSE;
+      if (idx > 0 && idx <= n && p_keep[idx - 1] == 1){
+        p_keep[idx - 1] = 0;
         ++exclude_count;
       }
     }
     out_size = n - exclude_count;
     SEXP out = SHIELD(new_vec(REALSXP, out_size));
-    double *p_out = REAL(out);
+    double* RESTRICT p_out = REAL(out);
     while(k != out_size){
-      if (p_keep[i]){
+      if (p_keep[i] == 1){
         p_out[k++] = p_x[i];
       }
       ++i;
@@ -121,8 +124,8 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     YIELD(3);
     return out;
   } else {
-    int *p_x = INTEGER(x_seq);
-    int *p_excl = INTEGER(exclude);
+    int* RESTRICT p_x = INTEGER(x_seq);
+    int* RESTRICT p_excl = INTEGER(exclude);
 
     for (int j = 0; j < m; ++j) {
       if (p_excl[j] == NA_INTEGER) continue;
@@ -133,16 +136,16 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       }
       idx = -p_excl[j];
       // Check keep array for already assigned FALSE to avoid double counting
-      if (idx > 0 && idx <= n && p_keep[idx - 1] == TRUE){
-        p_keep[idx - 1] = FALSE;
+      if (idx > 0 && idx <= n && p_keep[idx - 1] == 1){
+        p_keep[idx - 1] = 0;
         ++exclude_count;
       }
     }
     out_size = n - exclude_count;
     SEXP out = SHIELD(new_vec(INTSXP, out_size));
-    int *p_out = INTEGER(out);
+    int* RESTRICT p_out = INTEGER(out);
     while(k != out_size){
-      if (p_keep[i]){
+      if (p_keep[i] == 1){
         p_out[k++] = p_x[i];
       }
       ++i;
