@@ -90,24 +90,10 @@ extern "C" SEXP _cheapr_cpp_na_init(SEXP x, SEXP n) {
   END_CPP11
 }
 // combine.cpp
-SEXP get_ptypes(SEXP x);
-extern "C" SEXP _cheapr_get_ptypes(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(get_ptypes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// combine.cpp
 SEXP cpp_combine_levels(SEXP x);
 extern "C" SEXP _cheapr_cpp_combine_levels(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_combine_levels(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// combine.cpp
-SEXP cpp_combine_factors(SEXP x);
-extern "C" SEXP _cheapr_cpp_combine_factors(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_combine_factors(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // combine.cpp
@@ -409,20 +395,6 @@ SEXP cpp_val_remove(SEXP x, SEXP value);
 extern "C" SEXP _cheapr_cpp_val_remove(SEXP x, SEXP value) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_val_remove(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value)));
-  END_CPP11
-}
-// sequences.cpp
-SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by);
-extern "C" SEXP _cheapr_cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_int_sequence(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size), cpp11::as_cpp<cpp11::decay_t<SEXP>>(from), cpp11::as_cpp<cpp11::decay_t<SEXP>>(by)));
-  END_CPP11
-}
-// sequences.cpp
-SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by);
-extern "C" SEXP _cheapr_cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_dbl_sequence(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size), cpp11::as_cpp<cpp11::decay_t<SEXP>>(from), cpp11::as_cpp<cpp11::decay_t<SEXP>>(by)));
   END_CPP11
 }
 // sequences.cpp
@@ -759,10 +731,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_col_all_na",              (DL_FUNC) &_cheapr_cpp_col_all_na,              2},
     {"_cheapr_cpp_col_any_na",              (DL_FUNC) &_cheapr_cpp_col_any_na,              2},
     {"_cheapr_cpp_col_na_counts",           (DL_FUNC) &_cheapr_cpp_col_na_counts,           2},
-    {"_cheapr_cpp_combine_factors",         (DL_FUNC) &_cheapr_cpp_combine_factors,         1},
     {"_cheapr_cpp_combine_levels",          (DL_FUNC) &_cheapr_cpp_combine_levels,          1},
     {"_cheapr_cpp_count_val",               (DL_FUNC) &_cheapr_cpp_count_val,               3},
-    {"_cheapr_cpp_dbl_sequence",            (DL_FUNC) &_cheapr_cpp_dbl_sequence,            3},
     {"_cheapr_cpp_df_assign_cols",          (DL_FUNC) &_cheapr_cpp_df_assign_cols,          2},
     {"_cheapr_cpp_df_col_c",                (DL_FUNC) &_cheapr_cpp_df_col_c,                3},
     {"_cheapr_cpp_df_col_na_counts",        (DL_FUNC) &_cheapr_cpp_df_col_na_counts,        1},
@@ -781,7 +751,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_int64_to_double",         (DL_FUNC) &_cheapr_cpp_int64_to_double,         1},
     {"_cheapr_cpp_int64_to_int",            (DL_FUNC) &_cheapr_cpp_int64_to_int,            1},
     {"_cheapr_cpp_int64_to_numeric",        (DL_FUNC) &_cheapr_cpp_int64_to_numeric,        1},
-    {"_cheapr_cpp_int_sequence",            (DL_FUNC) &_cheapr_cpp_int_sequence,            3},
     {"_cheapr_cpp_int_sign",                (DL_FUNC) &_cheapr_cpp_int_sign,                1},
     {"_cheapr_cpp_intersect",               (DL_FUNC) &_cheapr_cpp_intersect,               3},
     {"_cheapr_cpp_is_na",                   (DL_FUNC) &_cheapr_cpp_is_na,                   1},
@@ -853,7 +822,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
-    {"_cheapr_get_ptypes",                  (DL_FUNC) &_cheapr_get_ptypes,                  1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_reconstruct",                 (DL_FUNC) &_cheapr_reconstruct,                 3},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},

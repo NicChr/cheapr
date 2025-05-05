@@ -48,16 +48,8 @@ cpp_na_init <- function(x, n) {
   .Call(`_cheapr_cpp_na_init`, x, n)
 }
 
-get_ptypes <- function(x) {
-  .Call(`_cheapr_get_ptypes`, x)
-}
-
 cpp_combine_levels <- function(x) {
   .Call(`_cheapr_cpp_combine_levels`, x)
-}
-
-cpp_combine_factors <- function(x) {
-  .Call(`_cheapr_cpp_combine_factors`, x)
 }
 
 cpp_list_c <- function(x) {
@@ -230,14 +222,6 @@ cpp_loc_set_replace <- function(x, where, what) {
 
 cpp_val_remove <- function(x, value) {
   .Call(`_cheapr_cpp_val_remove`, x, value)
-}
-
-cpp_int_sequence <- function(size, from, by) {
-  .Call(`_cheapr_cpp_int_sequence`, size, from, by)
-}
-
-cpp_dbl_sequence <- function(size, from, by) {
-  .Call(`_cheapr_cpp_dbl_sequence`, size, from, by)
 }
 
 cpp_sequence <- function(size, from, by) {

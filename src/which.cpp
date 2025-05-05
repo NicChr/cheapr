@@ -789,8 +789,53 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
 }
 
 
-// 2 more which() alternatives
-// list cpp_which2(SEXP x){
+// 4 alternatives
+
+// Alternative 1 - Using standard R vectors
+// allocate n elements and then shorten
+
+// SEXP cpp_which1(SEXP x){
+//   int n = Rf_length(x);
+//   const int* __restrict__ p_x = LOGICAL(x);
+//   SEXP out = SHIELD(new_vec(INTSXP, n));
+//   int* __restrict__ p_out = INTEGER(out);
+//   int k = 0;
+//   for (int i = 0; i < n; ++i){
+//     if (p_x[i] == TRUE) p_out[k++] = i + 1;
+//   }
+//   SHIELD(out = Rf_lengthgets(out, k));
+//   YIELD(2);
+//   return out;
+// }
+
+// Allocate n/2 elements and push/pop as necessary
+
+// cpp11::integers cpp_which2(cpp11::logicals x){
+//   int n = x.size();
+//   const int* __restrict__ p_x = LOGICAL(x);
+//   int m = n / 2;
+//   cpp11::writable::integers out(m);
+//   int *p_out = INTEGER(out);
+//   int k = 0, l = 0;
+//   // k keeps track of how many elements we've added to out
+//   // l keeps track of how many elements we've removed
+//   for (int i = 0; i < n; ++i){
+//     if (p_x[i] == TRUE){
+//       if (k >= (m - l)){
+//         out.push_back(i + 1);
+//       } else {
+//         p_out[k] = i + 1;
+//       }
+//       ++k;
+//     } else if (k < (m - l)){
+//       out.pop_back();
+//       ++l;
+//     }
+//   }
+//   return out;
+// }
+
+// list cpp_which3(SEXP x){
 //   int n = Rf_xlength(x);
 //   int *p_x = LOGICAL(x);
 //   // std::vector<int> out;
@@ -814,7 +859,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
 //   });
 // }
 //
-// SEXP cpp_which3(SEXP x){
+// SEXP cpp_which4(SEXP x){
 //   int n = Rf_xlength(x);
 //   int *p_x = LOGICAL(x);
 //   int size = 0;

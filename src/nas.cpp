@@ -545,7 +545,9 @@ SEXP cpp_col_any_na(SEXP x, bool names){
     }
     }
   }
-  if (names) cpp_copy_names(x, out, false);
+  if (names){
+    Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
+  }
   YIELD(NP);
   return out;
 }
@@ -602,7 +604,9 @@ SEXP cpp_col_all_na(SEXP x, bool names){
     }
     }
   }
-  if (names) cpp_copy_names(x, out, false);
+  if (names){
+    Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
+  }
   YIELD(NP);
   return out;
 }
@@ -929,7 +933,9 @@ SEXP cpp_col_na_counts(SEXP x, bool names){
     }
   } else {
     out = SHIELD(cpp_df_col_na_counts(x)); ++NP;
-    if (names) cpp_copy_names(x, out, false);
+    if (names){
+      Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
+    }
   }
   YIELD(NP);
   return out;

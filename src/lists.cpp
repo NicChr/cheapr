@@ -34,7 +34,7 @@ SEXP cpp_lengths(SEXP x, bool names) {
     }
   }
   if (names){
-    cpp_copy_names(x, out, false);
+    Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
   }
   YIELD(1);
   return out;
@@ -494,8 +494,7 @@ SEXP cpp_list_as_df(SEXP x) {
 
   // If no names then add names
   if (is_null(Rf_getAttrib(out, R_NamesSymbol))){
-    SEXP out_names = SHIELD(new_vec(STRSXP, n_items)); ++NP;
-    Rf_setAttrib(out, R_NamesSymbol, out_names);
+    Rf_namesgets(out, new_vec(STRSXP, n_items));
   }
   Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   Rf_classgets(out, df_str);
@@ -503,6 +502,8 @@ SEXP cpp_list_as_df(SEXP x) {
   return out;
 }
 
+
+// Same as above but always in-place so assuming no NULL elements
 void set_list_as_df(SEXP x) {
   int N; // Number of rows
   int NP = 0; // Number of protects
@@ -520,8 +521,7 @@ void set_list_as_df(SEXP x) {
 
   // If no names then add names
   if (is_null(Rf_getAttrib(x, R_NamesSymbol))){
-    SEXP out_names = SHIELD(new_vec(STRSXP, n_items)); ++NP;
-    Rf_setAttrib(x, R_NamesSymbol, out_names);
+    Rf_namesgets(x, new_vec(STRSXP, n_items));
   }
   Rf_setAttrib(x, R_RowNamesSymbol, row_names);
   Rf_classgets(x, df_str);

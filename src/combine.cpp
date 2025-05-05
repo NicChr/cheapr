@@ -517,7 +517,6 @@ SEXP get_ptype(SEXP x){
 
 // Prototypes of data frame
 
-[[cpp11::register]]
 SEXP get_ptypes(SEXP x){
   int n = Rf_length(x);
   SEXP out = SHIELD(new_vec(VECSXP, n));
@@ -607,7 +606,6 @@ SEXP cpp_combine_levels(SEXP x){
   return out;
 }
 
-[[cpp11::register]]
 SEXP cpp_combine_factors(SEXP x){
 
   if (TYPEOF(x) != VECSXP){

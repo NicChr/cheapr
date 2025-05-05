@@ -165,10 +165,6 @@ combine_levels <- function(...){
   cpp_combine_levels(list(...))
 }
 
-combine_factors <- function(...){
-  cpp_combine_factors(list(...))
-}
-
 
 # Keeping this as other packages may use it
 df_add_cols <- function(data, cols){
@@ -187,7 +183,7 @@ df_add_cols <- function(data, cols){
 
 # unevaluated expression list
 exprs <- function(...){
-  as.list(substitute(alist(...)))[-1]
+  as.list(substitute(alist(...)))[-1L]
 }
 
 # Sort of the inverse of %||%

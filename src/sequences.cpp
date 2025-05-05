@@ -2,7 +2,6 @@
 
 // My version of base::sequence()
 
-[[cpp11::register]]
 SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
   int size_n = Rf_length(size);
   int from_n = Rf_length(from);
@@ -54,68 +53,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
   YIELD(1);
   return out;
 }
-// SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
-//   int size_n = Rf_length(size);
-//   int from_n = Rf_length(from);
-//   int by_n = Rf_length(by);
-//   if (size_n > 0 && (from_n <= 0 || by_n <= 0)){
-//     Rf_error("from and by must both have length > 0");
-//   }
-//   double out_size = cpp_sum(size);
-//   double min_size = cpp_min(size);
-//   if (!(out_size == out_size)){
-//     Rf_error("size must not contain NA values");
-//   }
-//   if (min_size < 0){
-//     Rf_error("size must be a vector of non-negative integers");
-//   }
-//   SEXP out = SHIELD(new_vec(INTSXP, out_size));
-//   int* RESTRICT p_out = INTEGER(out);
-//   R_xlen_t index = 0, interrupt_counter = 0;
-//   int fj = 0, bj = 0;
-//   int_fast64_t start, increment, seq_size, seq_end;
-//   const int_fast64_t int_max = integer_max_;
-//   const int_fast64_t zero = 0;
-//   const int_fast64_t na_int = NA_INTEGER;
-//
-//   if (size_n > 0){
-//     const int *p_size = INTEGER(size);
-//     const int *p_from = INTEGER(from);
-//     const int *p_by = INTEGER(by);
-//     for (int j = 0; j < size_n; ++j, ++fj, ++bj){
-//       seq_size = p_size[j];
-//       fj = (fj == from_n) ? 0 : fj;
-//       bj = (bj == by_n) ? 0 : bj;
-//       start = p_from[fj];
-//       increment = p_by[bj];
-//       // Throw error if integer overflow
-//       seq_end = ( std::max(seq_size - 1, zero) * increment ) + start;
-//       if (std::abs(seq_end) > int_max){
-//         YIELD(1);
-//         Rf_error("Integer overflow value of %g in sequence %d", static_cast<double>(seq_end), j + 1);
-//       }
-//       if (start == na_int){
-//         YIELD(1);
-//         Rf_error("from contains NA values");
-//       }
-//       if (increment == na_int){
-//         YIELD(1);
-//         Rf_error("by contains NA values");
-//       }
-//       for (int i = 0; i < seq_size; ++i, ++index, ++interrupt_counter, start += increment){
-//         if (interrupt_counter == 100000000){
-//           R_CheckUserInterrupt();
-//           interrupt_counter = 0;
-//         }
-//         p_out[index] = static_cast<int>(start);
-//       }
-//     }
-//   }
-//   YIELD(1);
-//   return out;
-// }
 
-[[cpp11::register]]
 SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
   int size_n = Rf_length(size);
   int from_n = Rf_length(from);
@@ -732,7 +670,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
 
       out = SHIELD(cpp_dbl_sequence(seq_size, seq_from, seq_width));
       int seq_n = n_breaks;
-      double *p_out = REAL(out);
+      double* RESTRICT p_out = REAL(out);
       OMP_FOR_SIMD
       for (int i = 0; i < seq_n; ++i) p_out[i] = p_out[i] / scale_adj;
     }

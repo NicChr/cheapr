@@ -87,20 +87,3 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
     Rf_error("`attributes` must be a named list");
   }
 }
-
-// Copy attributes from source to target
-void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy){
-  SEXP target_attrs = SHIELD(deep_copy ? Rf_duplicate(ATTRIB(source)) : ATTRIB(source));
-  cpp_set_add_attributes(target, target_attrs, false);
-  YIELD(1);
-}
-
-// Copy names from source to target
-void cpp_copy_names(SEXP source, SEXP target, bool deep_copy){
-  SEXP source_nms = Rf_getAttrib(source, R_NamesSymbol);
-  SEXP target_nms = SHIELD(deep_copy ? Rf_duplicate(source_nms) : source_nms);
-  if (!is_null(source_nms)){
-    Rf_setAttrib(target, R_NamesSymbol, target_nms);
-  }
-  YIELD(1);
-}

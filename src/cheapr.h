@@ -139,8 +139,6 @@ SEXP cpp_numeric_to_int64(SEXP x);
 SEXP cpp_int64_to_numeric(SEXP x);
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
 SEXP cpp_set_rm_attributes(SEXP x);
-void cpp_copy_names(SEXP source, SEXP target, bool deep_copy);
-void cpp_copy_attributes(SEXP source, SEXP target, bool deep_copy);
 SEXP coerce_vector(SEXP source, SEXPTYPE type);
 bool implicit_na_coercion(SEXP x, SEXP target);
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
@@ -204,7 +202,7 @@ inline SEXP install_utf8(const char *x){
 }
 
 inline bool is_null(SEXP x){
-  return TYPEOF(x) == NILSXP;
+  return x == R_NilValue;
 }
 
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){

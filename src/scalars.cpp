@@ -695,7 +695,7 @@ default: {
 //       }
 //     }
 //     out = SHIELD(Rf_xlengthgets(temp, n - n_rm)); ++NP;
-//     cpp_copy_attributes(x, out, false);
+//     cpp_set_add_attributes(out, ATTRIB(x), false);
 //     break;
 //   }
 //   case REALSXP: {
@@ -729,7 +729,7 @@ default: {
 //       }
 //     }
 //     out = SHIELD(Rf_xlengthgets(temp, n - n_rm)); ++NP;
-//     cpp_copy_attributes(x, out, false);
+//     cpp_set_add_attributes(out, ATTRIB(x), false);
 //     break;
 //   }
 //   case CHEAPR_INT64SXP: {
@@ -752,7 +752,7 @@ default: {
 //       }
 //     }
 //     out = SHIELD(Rf_xlengthgets(temp, n - n_rm)); ++NP;
-//     cpp_copy_attributes(x, out, false);
+//     cpp_set_add_attributes(out, ATTRIB(x), false);
 //     break;
 //   }
 //   case STRSXP: {
@@ -774,7 +774,7 @@ default: {
 //       }
 //     }
 //     out = SHIELD(Rf_xlengthgets(temp, n - n_rm)); ++NP;
-//     cpp_copy_attributes(x, out, false);
+//     cpp_set_add_attributes(out, ATTRIB(x), false);
 //     break;
 //   }
 //   default: {
@@ -799,7 +799,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
   } else if (n_vals == Rf_xlength(x)){
     SEXP out = SHIELD(new_vec(TYPEOF(x), 0)); ++NP;
 
-    cpp_copy_attributes(x, out, false);
+    cpp_set_add_attributes(out, ATTRIB(x), false);
     YIELD(NP);
     return out;
     return cheapr_sset(x, 0);
@@ -833,7 +833,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
           p_out[k++] = p_x[i];
         }
       }
-      cpp_copy_attributes(x, out, false);
+      cpp_set_add_attributes(out, ATTRIB(x), false);
       break;
     }
     case REALSXP: {
@@ -862,7 +862,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
           }
         }
       }
-      cpp_copy_attributes(x, out, false);
+      cpp_set_add_attributes(out, ATTRIB(x), false);
       break;
     }
     case CHEAPR_INT64SXP: {
@@ -882,7 +882,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
           p_out[k++] = p_x[i];
         }
       }
-      cpp_copy_attributes(x, out, false);
+      cpp_set_add_attributes(out, ATTRIB(x), false);
       break;
     }
     case STRSXP: {
@@ -901,7 +901,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
           SET_STRING_ELT(out, k++, p_x[i]);
         }
       }
-      cpp_copy_attributes(x, out, false);
+      cpp_set_add_attributes(out, ATTRIB(x), false);
       break;
     }
     default: {
