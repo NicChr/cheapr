@@ -366,6 +366,14 @@ api_reconstruct(SEXP x, SEXP source, bool shallow_copy){
   }
 }
 
+SEXP
+api_semi_copy(SEXP x){
+  try {
+    return cpp_semi_copy(x);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
 
 // -----------------------------------------------------------------------------
 
@@ -411,4 +419,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_df_col_c",    (DL_FUNC)api_df_col_c);
   R_RegisterCCallable("cheapr", "api_str_coalesce",    (DL_FUNC)api_str_coalesce);
   R_RegisterCCallable("cheapr", "api_reconstruct",    (DL_FUNC)api_reconstruct);
+  R_RegisterCCallable("cheapr", "api_semi_copy",    (DL_FUNC)api_semi_copy);
 }

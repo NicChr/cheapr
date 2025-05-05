@@ -79,9 +79,35 @@ SEXP cpp_address(SEXP x){
   return Rf_ScalarString(r_address(x));
 }
 
+
+// Deep copy of data and attributes
+
 [[cpp11::register]]
 SEXP r_copy(SEXP x){
   return Rf_duplicate(x);
+}
+
+
+// Shallow copy of data and attributes
+
+[[cpp11::register]]
+SEXP cpp_shallow_copy(SEXP x){
+  return Rf_shallow_duplicate(x);
+}
+
+
+// Full copy of data and shallow copy of attributes
+
+[[cpp11::register]]
+SEXP cpp_semi_copy(SEXP x){
+  SEXP out = SHIELD(Rf_shallow_duplicate(x));
+  cpp_set_rm_attributes(out);
+  SHIELD(out = Rf_duplicate(out));
+  SHALLOW_DUPLICATE_ATTRIB(out, x);
+  // SEXP attrs = SHIELD(Rf_shallow_duplicate(ATTRIB(x)));
+  // cpp_set_add_attributes(out, attrs, false);
+  YIELD(2);
+  return out;
 }
 
 double cpp_sum(SEXP x){

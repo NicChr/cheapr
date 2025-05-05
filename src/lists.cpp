@@ -65,11 +65,6 @@ SEXP cpp_new_list(SEXP size, SEXP default_value){
   return new_list(out_size, default_value);
 }
 
-[[cpp11::register]]
-SEXP cpp_shallow_copy(SEXP x){
-  return Rf_shallow_duplicate(x);
-}
-
 // Remove NULL elements from list
 
 [[cpp11::register]]

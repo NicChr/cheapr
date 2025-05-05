@@ -3,23 +3,29 @@
 \name{copy}
 \alias{copy}
 \alias{shallow_copy}
+\alias{semi_copy}
 \alias{deep_copy}
 \title{Copy R objects}
 \usage{
 shallow_copy(x)
 
+semi_copy(x)
+
 deep_copy(x)
 }
 \arguments{
-\item{x}{An object to shallow or deep copy.}
+\item{x}{An object to shallow, semi, or deep copy.}
 }
 \value{
-A shallow or deep copied R object.
+A shallow, semi or deep copied R object.
 }
 \description{
 \code{shallow_copy()} and \code{deep_copy()} are just wrappers to the
 R C API functions \code{Rf_shallow_duplicate()} and \code{Rf_duplicate()}
-respectively.
+respectively. \code{semi_copy()} is something in between whereby it
+fully copies the data but only shallow copies the attributes.
+}
+\details{
 Shallow duplicates are mainly useful for adding attributes to objects
 in-place as well assigning vectors to shallow copied lists in-place.
 
@@ -27,6 +33,13 @@ Deep copies are generally useful for ensuring an object is fully
 duplicated, including all attributes associated with it.
 Deep copies are generally expensive and should be
 used with care.
+
+To summarise:
+\itemize{
+\item \code{shallow_copy} - Shallow copies data and attributes
+\item \code{semi_copy} - Deep copies data and shallow copies attributes
+\item \code{deep_copy} - Deep copies both data and attributes
+}
 
 It is recommended to use these functions only if you know what you are doing.
 }

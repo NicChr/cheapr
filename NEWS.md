@@ -5,7 +5,8 @@
 - `attrs_add` and `attrs_rm` to allow for adding and removing attributes, 
 both normally and in-place.
 
-- `shallow_copy` and `deep_copy` for shallow and full copies of R objects.
+- `shallow_copy`, `semi_copy` and `deep_copy` for shallow 
+and full copies of R objects.
 
 - `address` to retried the memory address of an R object.
 

@@ -230,13 +230,6 @@ extern "C" SEXP _cheapr_cpp_new_list(SEXP size, SEXP default_value) {
   END_CPP11
 }
 // lists.cpp
-SEXP cpp_shallow_copy(SEXP x);
-extern "C" SEXP _cheapr_cpp_shallow_copy(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_shallow_copy(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// lists.cpp
 SEXP cpp_drop_null(SEXP l, bool always_shallow_copy);
 extern "C" SEXP _cheapr_cpp_drop_null(SEXP l, SEXP always_shallow_copy) {
   BEGIN_CPP11
@@ -608,6 +601,20 @@ extern "C" SEXP _cheapr_r_copy(SEXP x) {
   END_CPP11
 }
 // utils.cpp
+SEXP cpp_shallow_copy(SEXP x);
+extern "C" SEXP _cheapr_cpp_shallow_copy(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_shallow_copy(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// utils.cpp
+SEXP cpp_semi_copy(SEXP x);
+extern "C" SEXP _cheapr_cpp_semi_copy(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_semi_copy(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// utils.cpp
 double var_sum_squared_diff(SEXP x, double mu);
 extern "C" SEXP _cheapr_var_sum_squared_diff(SEXP x, SEXP mu) {
   BEGIN_CPP11
@@ -778,6 +785,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_rep_len",                 (DL_FUNC) &_cheapr_cpp_rep_len,                 2},
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
+    {"_cheapr_cpp_semi_copy",               (DL_FUNC) &_cheapr_cpp_semi_copy,               1},
     {"_cheapr_cpp_sequence",                (DL_FUNC) &_cheapr_cpp_sequence,                3},
     {"_cheapr_cpp_sequence_id",             (DL_FUNC) &_cheapr_cpp_sequence_id,             1},
     {"_cheapr_cpp_set_abs",                 (DL_FUNC) &_cheapr_cpp_set_abs,                 1},

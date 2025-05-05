@@ -3,7 +3,10 @@
 #' @description
 #' `shallow_copy()` and `deep_copy()` are just wrappers to the
 #' R C API functions `Rf_shallow_duplicate()` and `Rf_duplicate()`
-#' respectively.
+#' respectively. `semi_copy()` is something in between whereby it
+#' fully copies the data but only shallow copies the attributes.
+#'
+#' @details
 #' Shallow duplicates are mainly useful for adding attributes to objects
 #' in-place as well assigning vectors to shallow copied lists in-place.
 #'
@@ -12,11 +15,18 @@
 #' Deep copies are generally expensive and should be
 #' used with care.
 #'
+#' To summarise:
+#'
+#' * `shallow_copy` - Shallow copies data and attributes
+#' * `semi_copy` - Deep copies data and shallow copies attributes
+#' * `deep_copy` - Deep copies both data and attributes
+#'
 #' It is recommended to use these functions only if you know what you are doing.
 #'
-#' @param x An object to shallow or deep copy.
+#' @param x An object to shallow, semi, or deep copy.
 #'
-#' @returns A shallow or deep copied R object.
+#' @returns
+#' A shallow, semi or deep copied R object.
 #'
 #' @name copy
 #'
@@ -59,6 +69,11 @@
 #' @export
 shallow_copy <- function(x){
   .Call(`_cheapr_cpp_shallow_copy`, x)
+}
+#' @rdname copy
+#' @export
+semi_copy <- function(x){
+  .Call(`_cheapr_cpp_semi_copy`, x)
 }
 #' @rdname copy
 #' @export

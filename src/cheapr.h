@@ -184,6 +184,7 @@ SEXP cpp_str_coalesce(SEXP x);
 SEXP cpp_na_init(SEXP x, int n);
 SEXP new_list(R_xlen_t length, SEXP default_value);
 void set_list_as_df(SEXP x);
+SEXP cpp_semi_copy(SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);

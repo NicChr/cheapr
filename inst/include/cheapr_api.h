@@ -291,6 +291,13 @@ reconstruct(SEXP x, SEXP source, bool shallow_copy){
   return fn(x, source, shallow_copy);
 }
 
+static inline SEXP
+semi_copy(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_semi_copy");
+  return fn(x);
+}
+
 }
 
 // -----------------------------------------------------------------------------

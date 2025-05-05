@@ -128,10 +128,6 @@ cpp_new_list <- function(size, default_value) {
   .Call(`_cheapr_cpp_new_list`, size, default_value)
 }
 
-cpp_shallow_copy <- function(x) {
-  .Call(`_cheapr_cpp_shallow_copy`, x)
-}
-
 cpp_drop_null <- function(l, always_shallow_copy) {
   .Call(`_cheapr_cpp_drop_null`, l, always_shallow_copy)
 }
@@ -342,6 +338,14 @@ cpp_address <- function(x) {
 
 r_copy <- function(x) {
   .Call(`_cheapr_r_copy`, x)
+}
+
+cpp_shallow_copy <- function(x) {
+  .Call(`_cheapr_cpp_shallow_copy`, x)
+}
+
+cpp_semi_copy <- function(x) {
+  .Call(`_cheapr_cpp_semi_copy`, x)
 }
 
 var_sum_squared_diff <- function(x, mu) {
