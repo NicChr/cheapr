@@ -7,6 +7,7 @@
 #' @param x A `data.frame`.
 #' @param i Rows - If `NULL` all rows are returned.
 #' @param j Cols - If `NULL` all cols are returned.
+#' @param ... Unused.
 #'
 #' @returns
 #' A data frame subsetted on rows `i` and cols `j`.
@@ -21,7 +22,7 @@
 #'
 #' @rdname sset_df
 #' @export
-sset_df <- function(x, i = NULL, j = NULL){
+sset_df <- function(x, i = NULL, j = NULL, ...){
   .Call(`_cheapr_cpp_df_subset`, x, i, j, TRUE)
 }
 #' @rdname sset_df

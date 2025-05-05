@@ -6,7 +6,7 @@
 \alias{sset_col}
 \title{Fast functions for data frame subsetting}
 \usage{
-sset_df(x, i = NULL, j = NULL)
+sset_df(x, i = NULL, j = NULL, ...)
 
 sset_row(x, i = NULL)
 
@@ -18,6 +18,8 @@ sset_col(x, j = NULL)
 \item{i}{Rows - If \code{NULL} all rows are returned.}
 
 \item{j}{Cols - If \code{NULL} all cols are returned.}
+
+\item{...}{Unused.}
 }
 \value{
 A data frame subsetted on rows \code{i} and cols \code{j}.
