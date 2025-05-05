@@ -286,10 +286,13 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     SET_STRING_ELT(out_names, i, p_names[i]);
   }
 
-  bool any_null = false;
+  cpp11::writable::integers null_locs;
+
   for (int j = 0; j < n_cols; ++j){
     loc = p_add_locs[j];
-    any_null = any_null || is_null(p_y[j]);
+    if (is_null(p_y[j])){
+      null_locs.push_back(loc);
+    }
     if (is_na_int(loc)){
       SET_VECTOR_ELT(out, n, p_y[j]);
       SET_STRING_ELT(out_names, n, p_col_names[j]);
@@ -300,8 +303,13 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
       SET_STRING_ELT(out_names, loc, p_col_names[j]);
     }
   }
-  if (any_null){
-    SEXP keep = SHIELD(which_not_null(out)); ++NP;
+  if (null_locs.size() != 0){
+    int n_null = null_locs.size();
+    int *p_null_locs = INTEGER(null_locs);
+    for (int i = 0; i < n_null; ++i){
+      p_null_locs[i] = -p_null_locs[i];
+    }
+    SEXP keep = SHIELD(exclude_locs(null_locs, n_cols)); ++NP;
     SHIELD(out = sset_vec(out, keep, false)); ++NP;
     SHIELD(out_names = sset_vec(out_names, keep, false)); ++NP;
   }
