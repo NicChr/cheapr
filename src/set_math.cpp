@@ -3,7 +3,7 @@
 // Basic math operations by reference
 // All NA and NaN values are ignored
 
-void cpp_check_numeric(SEXP x){
+void check_numeric(SEXP x){
   if (!(Rf_isNumeric(x) && !Rf_isObject(x))){
     Rf_error("x must be a numeric vector");
   }
@@ -56,7 +56,7 @@ SEXP convert_int_to_real(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_abs(SEXP x){
-  cpp_check_numeric(x);
+  check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
@@ -91,7 +91,7 @@ SEXP cpp_set_abs(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_floor(SEXP x){
-  cpp_check_numeric(x);
+  check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
@@ -111,7 +111,7 @@ SEXP cpp_set_floor(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_ceiling(SEXP x){
-  cpp_check_numeric(x);
+  check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
@@ -131,7 +131,7 @@ SEXP cpp_set_ceiling(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_trunc(SEXP x){
-  cpp_check_numeric(x);
+  check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
@@ -151,7 +151,7 @@ SEXP cpp_set_trunc(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_change_sign(SEXP x){
-  cpp_check_numeric(x);
+  check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
@@ -194,7 +194,7 @@ SEXP cpp_set_change_sign(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_exp(SEXP x){
-  cpp_check_numeric(x);
+  check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   SEXP out;
@@ -218,7 +218,7 @@ SEXP cpp_set_exp(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_sqrt(SEXP x){
-  cpp_check_numeric(x);
+  check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   SEXP out;
@@ -242,8 +242,8 @@ SEXP cpp_set_sqrt(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_set_add(SEXP x, SEXP y){
-  cpp_check_numeric(x);
-  cpp_check_numeric(y);
+  check_numeric(x);
+  check_numeric(y);
   int NP = 0;
   SEXP out = SHIELD(check_transform_altrep(x)); ++NP;
   R_xlen_t xn = Rf_xlength(out);
@@ -328,8 +328,8 @@ SEXP cpp_set_add(SEXP x, SEXP y){
 
 [[cpp11::register]]
 SEXP cpp_set_subtract(SEXP x, SEXP y){
-  cpp_check_numeric(x);
-  cpp_check_numeric(y);
+  check_numeric(x);
+  check_numeric(y);
   int NP = 0;
   SEXP out = SHIELD(check_transform_altrep(x));
   ++NP;
@@ -413,8 +413,8 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
 
 [[cpp11::register]]
 SEXP cpp_set_multiply(SEXP x, SEXP y){
-  cpp_check_numeric(x);
-  cpp_check_numeric(y);
+  check_numeric(x);
+  check_numeric(y);
   int NP = 0;
   SEXP out = SHIELD(check_transform_altrep(x));
   ++NP;
@@ -500,8 +500,8 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
 
 [[cpp11::register]]
 SEXP cpp_set_divide(SEXP x, SEXP y){
-  cpp_check_numeric(x);
-  cpp_check_numeric(y);
+  check_numeric(x);
+  check_numeric(y);
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t yn = Rf_xlength(y);
   int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
@@ -551,8 +551,8 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
 
 [[cpp11::register]]
 SEXP cpp_set_pow(SEXP x, SEXP y){
-  cpp_check_numeric(x);
-  cpp_check_numeric(y);
+  check_numeric(x);
+  check_numeric(y);
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t yn = Rf_xlength(y);
   int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
@@ -609,8 +609,8 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
 
 [[cpp11::register]]
 SEXP cpp_set_log(SEXP x, SEXP base){
-  cpp_check_numeric(x);
-  cpp_check_numeric(base);
+  check_numeric(x);
+  check_numeric(base);
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t basen = Rf_xlength(base);
   if (xn > 0){
@@ -652,8 +652,8 @@ SEXP cpp_set_log(SEXP x, SEXP base){
 
 [[cpp11::register]]
 SEXP cpp_set_round(SEXP x, SEXP digits){
-  cpp_check_numeric(x);
-  cpp_check_numeric(digits);
+  check_numeric(x);
+  check_numeric(digits);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t xn = Rf_xlength(out);
   R_xlen_t digitsn = Rf_xlength(digits);
@@ -753,19 +753,19 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
 
 [[cpp11::register]]
 SEXP cpp_int_sign(SEXP x){
-  cpp_check_numeric(x);
+  check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(new_vec(INTSXP, n));
-  int *p_out = INTEGER(out);
+  int* RESTRICT p_out = INTEGER(out);
   int res;
   switch (TYPEOF(x)){
   case LGLSXP: {
-    int *p_x = INTEGER(x);
+    int* RESTRICT p_x = INTEGER(x);
     memmove(&p_out[0], &p_x[0], n * sizeof(int));
     break;
   }
   case INTSXP: {
-    int *p_x = INTEGER(x);
+    int* RESTRICT p_x = INTEGER(x);
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) {
       res = p_x[i] == NA_INTEGER ? NA_INTEGER : (p_x[i] > 0) - (p_x[i] < 0);
@@ -774,7 +774,7 @@ SEXP cpp_int_sign(SEXP x){
     break;
   }
   case REALSXP: {
-    double *p_x = REAL(x);
+    double* RESTRICT p_x = REAL(x);
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) {
       res = p_x[i] != p_x[i] ? NA_INTEGER : (p_x[i] > 0) - (p_x[i] < 0);

@@ -487,7 +487,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(double));
     } else {
       if (by > 0){
-        memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(double));
+        memmove(&p_out[0], &p_x[istart - 1], static_cast<uint_least64_t>(in_bounds_size * sizeof(double)));
         OMP_FOR_SIMD
         for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = NA_REAL;
       } else {
