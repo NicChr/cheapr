@@ -44,8 +44,8 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       fill_value = Rf_asInteger(fill);
     }
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    int *p_out = INTEGER(out);
-    int *p_x = INTEGER(xvec);
+    int* RESTRICT p_out = INTEGER(out);
+    int* RESTRICT p_x = INTEGER(xvec);
     if (k >= 0){
       memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
       OMP_FOR_SIMD
@@ -69,8 +69,8 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       fill_value = INTEGER64_PTR(temp_fill)[0];
     }
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    int_fast64_t *p_out = INTEGER64_PTR(out);
-    int_fast64_t *p_x = INTEGER64_PTR(xvec);
+    int_fast64_t* RESTRICT p_out = INTEGER64_PTR(out);
+    int_fast64_t* RESTRICT p_x = INTEGER64_PTR(xvec);
 
     // sizeof(int_fast64_t) == sizeof(double), both are 8 bytes
 
@@ -96,8 +96,8 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive) {
       fill_value = Rf_asReal(fill);
     }
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    double *p_out = REAL(out);
-    double *p_x = REAL(xvec);
+    double* RESTRICT p_out = REAL(out);
+    double* RESTRICT p_x = REAL(xvec);
     if (k >= 0){
       memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
       OMP_FOR_SIMD
