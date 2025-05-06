@@ -6,12 +6,26 @@
 
 
 // Taken from Writing R Extensions
+// void CLEAR_ATTRIB(SEXP x){
+//   SET_ATTRIB(x, R_NilValue);
+//   SET_OBJECT(x, 0);
+//   UNSET_S4_OBJECT(x);
+// }
+
+
+// Can't use the above because UNSET_S4_OBJECT is non-API
+// and cant use CLEAR_ATTRIB because it's only available in latest R
+// Also can't remove S4 bit in-place using any method
+// The only way to basically do it is to copy R's header files and
+// manipulate SEXP info directly
 
 [[cpp11::register]]
 SEXP cpp_set_rm_attributes(SEXP x){
-  SET_ATTRIB(x, R_NilValue);
-  SET_OBJECT(x, 0);
-  UNSET_S4_OBJECT(x);
+  SEXP current = ATTRIB(x);
+  while (current != R_NilValue){
+    Rf_setAttrib(x, TAG(current), R_NilValue);
+    current = CDR(current);
+  }
   return x;
 }
 
