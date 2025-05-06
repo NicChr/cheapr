@@ -253,7 +253,7 @@ double cpp_sum(SEXP x){
   case LGLSXP:
   case INTSXP: {
 
-    int *p_x = INTEGER(x);
+    const int* RESTRICT p_x = INTEGER(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -263,8 +263,7 @@ double cpp_sum(SEXP x){
   }
   case CHEAPR_INT64SXP: {
 
-    int_fast64_t *p_x = INTEGER64_PTR(x);
-    int_fast64_t sum = 0;
+    const int_fast64_t* RESTRICT p_x = INTEGER64_PTR(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -274,13 +273,10 @@ double cpp_sum(SEXP x){
   }
   default: {
 
-    double *p_x = REAL(x);
-    double sum = 0;
+    const double* RESTRICT p_x = REAL(x);
 
     OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i){
-      sum += p_x[i];
-    }
+    for (R_xlen_t i = 0; i < n; ++i) sum += p_x[i];
     break;
   }
   }
