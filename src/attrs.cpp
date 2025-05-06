@@ -4,13 +4,14 @@
 // There is a check to ensure that attributes are copied when they are the same
 // object as x
 
+
+// Taken from Writing R Extensions
+
 [[cpp11::register]]
 SEXP cpp_set_rm_attributes(SEXP x){
-  SEXP current = ATTRIB(x);
-  while (current != R_NilValue){
-    Rf_setAttrib(x, TAG(current), R_NilValue);
-    current = CDR(current);
-  }
+  SET_ATTRIB(x, R_NilValue);
+  SET_OBJECT(x, 0);
+  UNSET_S4_OBJECT(x);
   return x;
 }
 

@@ -78,7 +78,7 @@ SEXP altrep_materialise(SEXP x) {
   // } else {
   //  return x;
   // }
-  return is_altrep(x) ? Rf_duplicate(x) : x;
+  return is_altrep(x) ? cpp_semi_copy(x) : x;
   // Even after using DATAPTR, ALTREP(x) == TRUE ?
   // if (ALTREP(x)) DATAPTR(x);
   // return x;

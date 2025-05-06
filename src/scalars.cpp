@@ -248,7 +248,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
       eq = p_x[i] == val;
       if (!any_eq && eq){
         any_eq = true;
-        out = SHIELD(Rf_duplicate(x)); ++NP;
+        out = SHIELD(cpp_semi_copy(x)); ++NP;
         // Change where pointer is pointing to
         p_out = INTEGER(out);
       }
@@ -277,7 +277,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
         eq = p_x[i] != p_x[i];
         if (!any_eq && eq){
           any_eq = true;
-          out = SHIELD(Rf_duplicate(x)); ++NP;
+          out = SHIELD(cpp_semi_copy(x)); ++NP;
           // Change where pointer is pointing to
           p_out = REAL(out);
         }
@@ -292,7 +292,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
         eq = p_x[i] == val;
         if (!any_eq && eq){
           any_eq = true;
-          out = SHIELD(Rf_duplicate(x)); ++NP;
+          out = SHIELD(cpp_semi_copy(x)); ++NP;
           // Change where pointer is pointing to
           p_out = REAL(out);
         }
@@ -321,7 +321,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
       eq = p_x[i] == val;
       if (!any_eq && eq){
         any_eq = true;
-        out = SHIELD(Rf_duplicate(x)); ++NP;
+        out = SHIELD(cpp_semi_copy(x)); ++NP;
         // Change where pointer is pointing to
         p_out = INTEGER64_PTR(out);
       }
@@ -348,7 +348,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
       eq = p_x[i] == val;
       if (!any_eq && eq){
         any_eq = true;
-        out = SHIELD(Rf_duplicate(x)); ++NP;
+        out = SHIELD(cpp_semi_copy(x)); ++NP;
       }
       if (eq) SET_STRING_ELT(out, i, repl);
     }
@@ -369,8 +369,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
       SET_VECTOR_ELT(out, i, cpp_val_replace(VECTOR_ELT(out, i), value, replace, true));
     }
     // Copy attributes from x to y
-    SEXP attrs = SHIELD(coerce_vec(ATTRIB(x), VECSXP)); ++NP;
-    cpp_set_add_attributes(out, attrs, true);
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
     break;
   }
   }

@@ -458,7 +458,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case LGLSXP:
   case INTSXP: {
-    const int* RESTRICT p_x = INTEGER(x);
+    int* RESTRICT p_x = INTEGER(x);
     out = SHIELD(new_vec(TYPEOF(x), out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     if (double_loop){
@@ -466,7 +466,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(int));
     } else {
       if (by > 0){
-        memmove(p_out, p_x + (istart - 1), in_bounds_size * sizeof(int));
+        memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(int));
         OMP_FOR_SIMD
         for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = NA_INTEGER;
       } else {
@@ -479,7 +479,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case REALSXP: {
-    const double* RESTRICT p_x = REAL(x);
+    double* RESTRICT p_x = REAL(x);
     out = SHIELD(new_vec(REALSXP, out_size)); ++NP;
     double* RESTRICT p_out = REAL(out);
     if (double_loop){
@@ -487,7 +487,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(double));
     } else {
       if (by > 0){
-        memmove(p_out, p_x + (istart - 1), in_bounds_size * sizeof(double));
+        memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(double));
         OMP_FOR_SIMD
         for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = NA_REAL;
       } else {
@@ -529,7 +529,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case CPLXSXP: {
-    const Rcomplex* RESTRICT p_x = COMPLEX(x);
+    Rcomplex* RESTRICT p_x = COMPLEX(x);
     out = SHIELD(new_vec(CPLXSXP, out_size)); ++NP;
     Rcomplex* RESTRICT p_out = COMPLEX(out);
     if (double_loop){
@@ -537,7 +537,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(Rcomplex));
     } else {
       if (by > 0){
-        memmove(p_out, &p_x[istart - 1], in_bounds_size * sizeof(Rcomplex));
+        memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(Rcomplex));
         for (R_xlen_t i = 0; i < n_oob; ++i){
           R_xlen_t tempi = in_bounds_size + i;
           p_out[tempi].r = NA_REAL;
@@ -1095,6 +1095,7 @@ SEXP cpp_rev(SEXP x, bool set){
   int NP = 0;
   bool rev_names = true;
   bool is_altrep = ALTREP(x);
+  bool set_names = set;
   if (set && is_altrep){
     Rf_warning("Cannot update an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations");
   }
@@ -1104,6 +1105,7 @@ SEXP cpp_rev(SEXP x, bool set){
   // and avoids a second copy
   if (is_altrep){
     set = true;
+    set_names = false;
   }
   SEXP out;
   switch (TYPEOF(x)){
@@ -1113,8 +1115,8 @@ SEXP cpp_rev(SEXP x, bool set){
   }
   case LGLSXP:
   case INTSXP: {
-    out = SHIELD(set ? x : Rf_duplicate(x)); ++NP;
-    int *p_out = INTEGER(out);
+    out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
+    int* RESTRICT p_out = INTEGER(out);
     int left;
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
@@ -1125,8 +1127,8 @@ SEXP cpp_rev(SEXP x, bool set){
     break;
   }
   case REALSXP: {
-    out = SHIELD(set ? x : Rf_duplicate(x)); ++NP;
-    double *p_out = REAL(out);
+    out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
+    double* RESTRICT p_out = REAL(out);
     double left;
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
@@ -1137,7 +1139,7 @@ SEXP cpp_rev(SEXP x, bool set){
     break;
   }
   case STRSXP: {
-    out = SHIELD(set ? x : Rf_duplicate(x)); ++NP;
+    out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
     const SEXP *p_out = STRING_PTR_RO(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
@@ -1148,7 +1150,7 @@ SEXP cpp_rev(SEXP x, bool set){
     break;
   }
   case CPLXSXP: {
-    out = SHIELD(set ? x : Rf_duplicate(x)); ++NP;
+    out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
     Rcomplex *p_out = COMPLEX(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
@@ -1159,7 +1161,7 @@ SEXP cpp_rev(SEXP x, bool set){
     break;
   }
   case RAWSXP: {
-    out = SHIELD(set ? x : Rf_duplicate(x)); ++NP;
+    out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
     Rbyte *p_out = RAW(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
@@ -1214,11 +1216,10 @@ SEXP cpp_rev(SEXP x, bool set){
     //   break;
     // }
   }
-  // // If x has names, reverse them too
-  if (rev_names && !is_null(Rf_getAttrib(out, R_NamesSymbol))){
-    SEXP old_names = Rf_getAttrib(out, R_NamesSymbol);
-    // should be okay to rev in-place here because we already copied the names
-    Rf_setAttrib(out, R_NamesSymbol, cpp_rev(old_names, true));
+  // If x has names, reverse them too
+  SEXP old_names = Rf_getAttrib(out, R_NamesSymbol);
+  if (rev_names && !is_null(old_names)){
+    Rf_namesgets(out, cpp_rev(old_names, set_names));
   }
   YIELD(NP);
   return out;

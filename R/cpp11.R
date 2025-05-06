@@ -336,6 +336,10 @@ cpp_address <- function(x) {
   .Call(`_cheapr_cpp_address`, x)
 }
 
+cpp_set_copy_elements <- function(source, target) {
+  invisible(.Call(`_cheapr_cpp_set_copy_elements`, source, target))
+}
+
 r_copy <- function(x) {
   .Call(`_cheapr_r_copy`, x)
 }
@@ -362,10 +366,6 @@ cpp_if_else <- function(condition, yes, no, na) {
 
 cpp_lgl_count <- function(x) {
   .Call(`_cheapr_cpp_lgl_count`, x)
-}
-
-cpp_set_copy_elements <- function(source, target) {
-  invisible(.Call(`_cheapr_cpp_set_copy_elements`, source, target))
 }
 
 cpp_set_or <- function(x, y) {

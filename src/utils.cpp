@@ -79,6 +79,60 @@ SEXP cpp_address(SEXP x){
   return Rf_ScalarString(r_address(x));
 }
 
+// Copy atomic elements from source to target
+
+[[cpp11::register]]
+void cpp_set_copy_elements(SEXP source, SEXP target){
+  if (TYPEOF(source) != TYPEOF(target)){
+    Rf_error("`typeof(target)` must match `typeof(source)`");
+  }
+  R_xlen_t n = Rf_xlength(source);
+
+  if (n != Rf_xlength(target)){
+    Rf_error("target and source must have the same length");
+  }
+
+  switch (TYPEOF(source)){
+  case NILSXP: {
+    break;
+  }
+  case LGLSXP:
+  case INTSXP: {
+    int *p_source = INTEGER(source);
+    int *p_target = INTEGER(target);
+    memmove(&p_target[0], &p_source[0], n * sizeof(int));
+    break;
+  }
+  case REALSXP: {
+    double *p_source = REAL(source);
+    double *p_target = REAL(target);
+    memmove(&p_target[0], &p_source[0], n * sizeof(double));
+    break;
+  }
+  case STRSXP: {
+    const SEXP *p_source = STRING_PTR_RO(source);
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_STRING_ELT(target, i, p_source[i]);
+    }
+    break;
+  }
+  case CPLXSXP: {
+    Rcomplex *p_source = COMPLEX(source);
+    Rcomplex *p_target = COMPLEX(target);
+    memmove(&p_target[0], &p_source[0], n * sizeof(Rcomplex));
+    break;
+  }
+  case RAWSXP: {
+    Rbyte *p_source = RAW(source);
+    Rbyte *p_target = RAW(target);
+    memmove(&p_target[0], &p_source[0], n * sizeof(Rbyte));
+    break;
+  }
+  default: {
+    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(source)));
+  }
+  }
+}
 
 // Deep copy of data and attributes
 
@@ -100,14 +154,92 @@ SEXP cpp_shallow_copy(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_semi_copy(SEXP x){
-  SEXP out = SHIELD(Rf_shallow_duplicate(x));
-  cpp_set_rm_attributes(out);
-  SHIELD(out = Rf_duplicate(out));
-  SHALLOW_DUPLICATE_ATTRIB(out, x);
-  // SEXP attrs = SHIELD(Rf_shallow_duplicate(ATTRIB(x)));
-  // cpp_set_add_attributes(out, attrs, false);
-  YIELD(2);
-  return out;
+
+  // If no attributes then we can just full-copy immediately
+
+  if (is_null(ATTRIB(x))){
+    return Rf_duplicate(x);
+  }
+
+  bool altrep = ALTREP(x);
+
+  if (!altrep && TYPEOF(x) == VECSXP){
+
+    // Lists
+
+    R_xlen_t n = Rf_xlength(x);
+    SEXP out = SHIELD(new_vec(VECSXP, n));
+    const SEXP *p_x = VECTOR_PTR_RO(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_VECTOR_ELT(out, i, Rf_duplicate(p_x[i]));
+    }
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    YIELD(1);
+    return out;
+  } else if (!altrep && cpp_is_simple_atomic_vec(x)){
+
+    // Atomic vectors
+
+    SEXP out = SHIELD(new_vec(TYPEOF(x), Rf_xlength(x)));
+    cpp_set_copy_elements(x, out);
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    YIELD(1);
+    return out;
+  } else {
+
+    // All other R objects
+    // This method sometimes full copies twice
+    // So I don't use it for non-ALTREP atomic vectors
+
+    SEXP out = SHIELD(Rf_shallow_duplicate(x));
+    cpp_set_rm_attributes(out);
+    SHIELD(out = Rf_duplicate(out));
+    SHALLOW_DUPLICATE_ATTRIB(out, x);
+    YIELD(2);
+    return out;
+  }
+}
+
+// SEXP cpp_semi_copy(SEXP x){
+//   SEXP attrs = ATTRIB(x);
+//   if (is_null(attrs)){
+//     return Rf_duplicate(x);
+//   }
+//   SEXP out = SHIELD(Rf_shallow_duplicate(x));
+//   cpp_set_rm_attributes(out);
+//   SHIELD(out = Rf_duplicate(out));
+//   SHALLOW_DUPLICATE_ATTRIB(out, x);
+//   // SHIELD(attrs = Rf_shallow_duplicate(attrs));
+//   // cpp_set_add_attributes(out, attrs, false);
+//   YIELD(2);
+//   return out;
+// }
+
+// The below causes strange issues
+
+// SEXP cpp_semi_copy(SEXP x){
+//   SEXP attrs = ATTRIB(x);
+//   if (is_null(attrs)){
+//     return Rf_duplicate(x);
+//   }
+//   cpp_set_rm_attributes(x);
+//   SEXP out = SHIELD(Rf_duplicate(x));
+//   SEXP new_attrs = SHIELD(Rf_shallow_duplicate(attrs));
+//
+//   // Re-add attributes back to x
+//   cpp_set_add_attributes(x, attrs, false);
+//   cpp_set_add_attributes(out, new_attrs, false);
+//
+//   YIELD(2);
+//   return out;
+// }
+
+void rm_attrs(SEXP x){
+  SEXP current = ATTRIB(x);
+  while (current != R_NilValue){
+    Rf_setAttrib(x, TAG(current), R_NilValue);
+    current = CDR(current);
+  }
 }
 
 double cpp_sum(SEXP x){
@@ -327,7 +459,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     YIELD(2);
     return out;
   } else {
-    SEXP out = SHIELD(Rf_duplicate(x));
+    SEXP out = SHIELD(cpp_semi_copy(x));
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
     const int *p_x = INTEGER(x);
     const double *p_b = REAL(breaks);
@@ -348,7 +480,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     YIELD(2);
     return out;
   } else {
-    SEXP out = SHIELD(Rf_duplicate(x));
+    SEXP out = SHIELD(cpp_semi_copy(x));
     SHIELD(breaks = coerce_vec(breaks, REALSXP));
     const double *p_x = REAL(x);
     const double *p_b = REAL(breaks);
@@ -596,61 +728,6 @@ SEXP cpp_lgl_count(SEXP x){
 
   YIELD(2);
   return out;
-}
-
-// Copy atomic elements from source to target
-
-[[cpp11::register]]
-void cpp_set_copy_elements(SEXP source, SEXP target){
-  if (TYPEOF(source) != TYPEOF(target)){
-    Rf_error("`typeof(target)` must match `typeof(source)`");
-  }
-  R_xlen_t n = Rf_xlength(source);
-
-  if (n != Rf_xlength(target)){
-    Rf_error("target and source must have the same length");
-  }
-
-  switch (TYPEOF(source)){
-  case NILSXP: {
-    break;
-  }
-  case LGLSXP:
-  case INTSXP: {
-    int *p_source = INTEGER(source);
-    int *p_target = INTEGER(target);
-    memmove(&p_target[0], &p_source[0], n * sizeof(int));
-    break;
-  }
-  case REALSXP: {
-    double *p_source = REAL(source);
-    double *p_target = REAL(target);
-    memmove(&p_target[0], &p_source[0], n * sizeof(double));
-    break;
-  }
-  case STRSXP: {
-    const SEXP *p_source = STRING_PTR_RO(source);
-    for (R_xlen_t i = 0; i < n; ++i){
-      SET_STRING_ELT(target, i, p_source[i]);
-    }
-    break;
-  }
-  case CPLXSXP: {
-    Rcomplex *p_source = COMPLEX(source);
-    Rcomplex *p_target = COMPLEX(target);
-    memmove(&p_target[0], &p_source[0], n * sizeof(Rcomplex));
-    break;
-  }
-  case RAWSXP: {
-    Rbyte *p_source = RAW(source);
-    Rbyte *p_target = RAW(target);
-    memmove(&p_target[0], &p_source[0], n * sizeof(Rbyte));
-    break;
-  }
-  default: {
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(source)));
-  }
-  }
 }
 
 // Essentially `x & y` but updates x by reference

@@ -594,6 +594,14 @@ extern "C" SEXP _cheapr_cpp_address(SEXP x) {
   END_CPP11
 }
 // utils.cpp
+void cpp_set_copy_elements(SEXP source, SEXP target);
+extern "C" SEXP _cheapr_cpp_set_copy_elements(SEXP source, SEXP target) {
+  BEGIN_CPP11
+    cpp_set_copy_elements(cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target));
+    return R_NilValue;
+  END_CPP11
+}
+// utils.cpp
 SEXP r_copy(SEXP x);
 extern "C" SEXP _cheapr_r_copy(SEXP x) {
   BEGIN_CPP11
@@ -640,14 +648,6 @@ SEXP cpp_lgl_count(SEXP x);
 extern "C" SEXP _cheapr_cpp_lgl_count(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_lgl_count(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// utils.cpp
-void cpp_set_copy_elements(SEXP source, SEXP target);
-extern "C" SEXP _cheapr_cpp_set_copy_elements(SEXP source, SEXP target) {
-  BEGIN_CPP11
-    cpp_set_copy_elements(cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target));
-    return R_NilValue;
   END_CPP11
 }
 // utils.cpp
