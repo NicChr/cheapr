@@ -48,10 +48,12 @@ SEXP cpp_rep_len(SEXP x, int length){
   if (is_null(x)){
     return R_NilValue;
   } else if (is_df(x)){
+    if (out_size == df_nrow(x)) return x;
     int n_cols = Rf_length(x);
     SEXP out = SHIELD(new_vec(VECSXP, n_cols));
+    const SEXP *p_x = VECTOR_PTR_RO(x);
     for (int i = 0; i < n_cols; ++i){
-      SET_VECTOR_ELT(out, i, cpp_rep_len(VECTOR_ELT(x, i), length));
+      SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
     }
     Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
     set_list_as_df(out);
@@ -72,7 +74,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     case INTSXP: {
       int *p_x = INTEGER(x);
       SEXP out = SHIELD(new_vec(TYPEOF(x), out_size));
-      int *p_out = INTEGER(out);
+      int* RESTRICT p_out = INTEGER(out);
 
       if (size == 1){
         int val = p_x[0];
@@ -83,7 +85,7 @@ SEXP cpp_rep_len(SEXP x, int length){
           for (int i = 0; i < out_size; ++i) p_out[i] = val;
         }
       } else if (out_size > 0 && size > 0){
-        n_chunks = std::ceil((static_cast<double>(out_size)) / size);
+        n_chunks = std::ceil(static_cast<double>(out_size) / size);
         for (int i = 0; i < n_chunks; ++i){
           k = i * size;
           chunk_size = std::min(k + size, out_size) - k;
@@ -103,7 +105,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     case REALSXP: {
       double *p_x = REAL(x);
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double *p_out = REAL(out);
+      double* RESTRICT p_out = REAL(out);
 
       if (size == 1){
        double val = p_x[0];
@@ -379,8 +381,9 @@ SEXP cpp_recycle(SEXP x, SEXP length){
   SEXP r_zero = SHIELD(Rf_ScalarInteger(0));
   if (!has_length && scalar_count(sizes, r_zero, false) > 0) n = 0;
 
+  const SEXP *p_out = VECTOR_PTR_RO(out);
   for (int i = 0; i < n_objs; ++i){
-    SET_VECTOR_ELT(out, i, cpp_rep_len(VECTOR_ELT(out, i), n));
+    SET_VECTOR_ELT(out, i, cpp_rep_len(p_out[i], n));
   }
   YIELD(4);
   return out;
