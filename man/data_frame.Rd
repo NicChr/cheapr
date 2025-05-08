@@ -4,25 +4,28 @@
 \alias{new_df}
 \alias{as_df}
 \alias{fast_df}
+\alias{list_as_df}
 \alias{name_repair}
 \alias{unique_name_repair}
 \alias{col_c}
 \alias{row_c}
 \title{Cheap data frame utilities}
 \usage{
-new_df(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE)
+new_df(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE, .args = NULL)
 
 as_df(x)
 
-fast_df(...)
+fast_df(..., .args = NULL)
+
+list_as_df(x)
 
 name_repair(x, dup_sep = "_", empty_sep = "col_")
 
 unique_name_repair(x, dup_sep = "_", empty_sep = "col_")
 
-col_c(..., .recycle = TRUE, .name_repair = TRUE)
+col_c(..., .recycle = TRUE, .name_repair = TRUE, .args = NULL)
 
-row_c(...)
+row_c(..., .args = NULL)
 }
 \arguments{
 \item{...}{Key-value pairs.}
@@ -35,6 +38,8 @@ Default is \code{TRUE}.}
 
 \item{.name_repair}{\verb{[logical(1)]} - Should duplicate and empty names
 repaired and made unique? Default is \code{TRUE}.}
+
+\item{.args}{An alternative to \code{...} for easier programming with lists.}
 
 \item{x}{An object to coerce to a \code{data.frame} or a character vector
 for \code{unique_name_repair()}.}

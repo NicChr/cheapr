@@ -13,6 +13,7 @@
 #' duplicate column names and their locations. Default is `'_'`
 #' @param empty_sep `[character(1)]` A separator to use between the empty
 #' column names and their locations. Default is `'col_'`
+#' @param .args An alternative to `...` for easier programming with lists.
 #'
 #' @returns
 #' A `data.frame`. \cr
@@ -27,8 +28,9 @@
 #'
 #' @rdname data_frame
 #' @export
-new_df <- function(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE){
-  .Call(`_cheapr_cpp_new_df`, list(...), .nrows, .recycle, .name_repair)
+new_df <- function(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE, .args = NULL){
+  .Call(`_cheapr_cpp_new_df`, .Call(`_cheapr_cpp_list_args`, list(...), .args),
+        .nrows, .recycle, .name_repair)
 }
 #' @rdname data_frame
 #' @export
@@ -61,9 +63,13 @@ as_df <- function(x){
 
 #' @rdname data_frame
 #' @export
-fast_df <- function(...){
-  .Call(`_cheapr_cpp_list_as_df`, list(...))
+fast_df <- function(..., .args = NULL){
+  .Call(`_cheapr_cpp_list_as_df`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
 }
+
+#' @rdname data_frame
+#' @export
+list_as_df <- cpp_list_as_df
 
 #' @rdname data_frame
 #' @export
@@ -75,8 +81,11 @@ name_repair <- function(x, dup_sep = "_", empty_sep = "col_"){
 unique_name_repair <- name_repair
 #' @rdname data_frame
 #' @export
-col_c <- function(..., .recycle = TRUE, .name_repair = TRUE){
-  .Call(`_cheapr_cpp_df_col_c`, list(...), .recycle, .name_repair)
+col_c <- function(..., .recycle = TRUE, .name_repair = TRUE, .args = NULL){
+  .Call(
+    `_cheapr_cpp_df_col_c`, .Call(`_cheapr_cpp_list_args`, list(...), .args),
+    .recycle, .name_repair
+  )
 }
 #' @rdname data_frame
 #' @export

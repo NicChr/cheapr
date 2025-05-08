@@ -6,7 +6,7 @@
 \alias{attrs_rm}
 \title{Add and remove attributes}
 \usage{
-attrs_add(x, ..., .set = FALSE)
+attrs_add(x, ..., .set = FALSE, .args = NULL)
 
 attrs_rm(x, .set = FALSE)
 }
@@ -17,6 +17,8 @@ attrs_rm(x, .set = FALSE)
 
 \item{.set}{Should attributes be added in-place without shallow-copying \code{x}?
 Default is \code{FALSE}.}
+
+\item{.args}{An alternative to \code{...} for easier programming with lists.}
 }
 \value{
 The object \code{x} with attributes removed or added.

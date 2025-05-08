@@ -23,8 +23,6 @@ allv2 <- function(x, value){
   collapse::allv(x, value)
 }
 
-list_as_df <- cpp_list_as_df
-
 check_length <- function(x, n){
   if (length(x) != n){
     stop(paste(deparse2(substitute(x)), "must have length", n))

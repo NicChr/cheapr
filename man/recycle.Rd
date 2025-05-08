@@ -4,12 +4,14 @@
 \alias{recycle}
 \title{Recycle objects to a common size}
 \usage{
-recycle(..., length = NULL)
+recycle(..., length = NULL, .args = NULL)
 }
 \arguments{
 \item{...}{Objects to recycle.}
 
 \item{length}{Optional length to recycle objects to.}
+
+\item{.args}{An alternative to \code{...} for easier programming with lists.}
 }
 \value{
 A list of recycled R objects.

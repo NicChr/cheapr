@@ -388,6 +388,10 @@ cpp_str_coalesce <- function(x) {
   .Call(`_cheapr_cpp_str_coalesce`, x)
 }
 
+cpp_list_args <- function(args1, args2) {
+  .Call(`_cheapr_cpp_list_args`, args1, args2)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

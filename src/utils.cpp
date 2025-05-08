@@ -1171,3 +1171,18 @@ SEXP cpp_str_coalesce(SEXP x){
 //   YIELD(1);
 //   return count;
 // }
+
+[[cpp11::register]]
+SEXP cpp_list_args(SEXP args1, SEXP args2){
+  bool use_dots = Rf_length(args1) != 0;
+  bool use_list = args2 != R_NilValue;
+
+  if (use_dots && use_list){
+    Rf_error("Please supply either `...` or `.args` in %s", __func__);
+  }
+  if (use_list && (TYPEOF(args2) != VECSXP || Rf_isObject(args2))){
+    Rf_error("`.args` must be a plain list in %s", __func__);
+  }
+  return use_list ? args2 : args1;
+}
+

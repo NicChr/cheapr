@@ -685,6 +685,13 @@ extern "C" SEXP _cheapr_cpp_str_coalesce(SEXP x) {
     return cpp11::as_sexp(cpp_str_coalesce(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// utils.cpp
+SEXP cpp_list_args(SEXP args1, SEXP args2);
+extern "C" SEXP _cheapr_cpp_list_args(SEXP args1, SEXP args2) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_list_args(cpp11::as_cpp<cpp11::decay_t<SEXP>>(args1), cpp11::as_cpp<cpp11::decay_t<SEXP>>(args2)));
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -766,6 +773,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_lengths",                 (DL_FUNC) &_cheapr_cpp_lengths,                 2},
     {"_cheapr_cpp_lgl_count",               (DL_FUNC) &_cheapr_cpp_lgl_count,               1},
     {"_cheapr_cpp_lgl_locs",                (DL_FUNC) &_cheapr_cpp_lgl_locs,                6},
+    {"_cheapr_cpp_list_args",               (DL_FUNC) &_cheapr_cpp_list_args,               2},
     {"_cheapr_cpp_list_as_df",              (DL_FUNC) &_cheapr_cpp_list_as_df,              1},
     {"_cheapr_cpp_list_assign",             (DL_FUNC) &_cheapr_cpp_list_assign,             2},
     {"_cheapr_cpp_list_c",                  (DL_FUNC) &_cheapr_cpp_list_c,                  1},
