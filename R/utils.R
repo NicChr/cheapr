@@ -59,7 +59,7 @@ cpp_list_rm_null <- function(x, always_shallow_copy = TRUE){
   cpp_drop_null(x, always_shallow_copy)
 }
 list_is_df_like <- function(x){
-  collapse::fnunique(lengths_(x)) <= 1
+  collapse::fnunique(list_lengths(x)) <= 1
 }
 posixlt_is_balanced <- function(x){
   isTRUE(attr(x, "balanced")) && list_is_df_like(x)
@@ -68,8 +68,7 @@ fill_posixlt <- function(x, classed = TRUE){
   if (!inherits(x, "POSIXlt")){
     stop("x must be a POSIXlt")
   }
-  out <- unclass(x)
-  out <- do.call(recycle, out)
+  out <- recycle(.args = unclass(x))
   attributes(out) <- attributes(x)
   if (!posixlt_is_balanced(x)){
     attr(out, "balanced") <- NA
