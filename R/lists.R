@@ -9,6 +9,7 @@
 #' @param names Should names of list elements be added? Default is `FALSE`.
 #' @param values A named list
 #' @param ... Objects to combine into a list.
+#' @param .args An alternative to `...` for easier programming with lists.
 #'
 #' @returns
 #' `list_lengths()` returns the list lengths. \cr
@@ -68,8 +69,8 @@ list_assign <- cpp_list_assign
 
 #' @export
 #' @rdname lists
-list_combine <- function(...){
-  cpp_list_c(list(...))
+list_combine <- function(..., .args = NULL){
+  cpp_list_c(.Call(`_cheapr_cpp_list_args`, list(...), .args))
 }
 
 #' @export

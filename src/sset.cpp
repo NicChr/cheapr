@@ -95,7 +95,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
   if (xn > integer_max_){
     SHIELD(exclude = coerce_vec(exclude, REALSXP));
     double* RESTRICT p_x = REAL(x_seq);
-    double* RESTRICT p_excl = REAL(exclude);
+    double *p_excl = REAL(exclude);
 
     for (int j = 0; j < m; ++j) {
       if (p_excl[j] != p_excl[j]) continue;
@@ -125,7 +125,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     return out;
   } else {
     int* RESTRICT p_x = INTEGER(x_seq);
-    int* RESTRICT p_excl = INTEGER(exclude);
+    int *p_excl = INTEGER(exclude);
 
     for (int j = 0; j < m; ++j) {
       if (p_excl[j] == NA_INTEGER) continue;
@@ -177,7 +177,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   SEXP clean_indices = R_NilValue;
 
   if (TYPEOF(indices) == STRSXP){
-    SEXP names = Rf_getAttrib(x, R_NamesSymbol);
+    SEXP names = get_names(x);
     if (is_null(names)){
       YIELD(NP);
       Rf_error("Cannot subset on the names of an unnamed vector");
@@ -458,7 +458,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case LGLSXP:
   case INTSXP: {
-    int* RESTRICT p_x = INTEGER(x);
+    const int *p_x = INTEGER(x);
     out = SHIELD(new_vec(TYPEOF(x), out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     if (double_loop){
@@ -479,7 +479,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case REALSXP: {
-    double* RESTRICT p_x = REAL(x);
+    const double *p_x = REAL(x);
     out = SHIELD(new_vec(REALSXP, out_size)); ++NP;
     double* RESTRICT p_out = REAL(out);
     if (double_loop){
@@ -529,7 +529,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case CPLXSXP: {
-    Rcomplex* RESTRICT p_x = COMPLEX(x);
+    Rcomplex *p_x = COMPLEX(x);
     out = SHIELD(new_vec(CPLXSXP, out_size)); ++NP;
     Rcomplex* RESTRICT p_out = COMPLEX(out);
     if (double_loop){
@@ -632,7 +632,6 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
   SEXP out = R_NilValue;
   int xtype = TYPEOF(x);
-
 
   if (check){
 
@@ -942,7 +941,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
       int_fast64_t n = Rf_xlength(indices);
 
-      const double* RESTRICT pind = REAL(indices);
+      const double *pind = REAL(indices);
 
       switch ( xtype ){
 
@@ -952,7 +951,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case LGLSXP:
       case INTSXP: {
-        const int* RESTRICT p_x = INTEGER(x);
+        const int *p_x = INTEGER(x);
         out = SHIELD(new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
         OMP_FOR_SIMD
@@ -962,7 +961,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case REALSXP: {
-        const double* RESTRICT p_x = REAL(x);
+        const double *p_x = REAL(x);
         out = SHIELD(new_vec(REALSXP, n));
         double* RESTRICT p_out = REAL(out);
         OMP_FOR_SIMD
@@ -978,7 +977,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex* RESTRICT p_x = COMPLEX(x);
+        const Rcomplex *p_x = COMPLEX(x);
         out = SHIELD(new_vec(CPLXSXP, n));
         Rcomplex* RESTRICT p_out = COMPLEX(out);
         for (int_fast64_t i = 0; i < n; ++i){
@@ -1010,7 +1009,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
       int n = Rf_length(indices);
 
-      const int* RESTRICT pind = INTEGER(indices);
+      const int *pind = INTEGER(indices);
       switch ( xtype ){
 
       case NILSXP: {
@@ -1019,7 +1018,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case LGLSXP:
       case INTSXP: {
-        const int* RESTRICT p_x = INTEGER(x);
+        const int *p_x = INTEGER(x);
         out = SHIELD(new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
         OMP_FOR_SIMD
@@ -1029,7 +1028,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case REALSXP: {
-        const double* RESTRICT p_x = REAL(x);
+        const double *p_x = REAL(x);
         out = SHIELD(new_vec(REALSXP, n));
         double* RESTRICT p_out = REAL(out);
         OMP_FOR_SIMD
@@ -1045,7 +1044,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex* RESTRICT p_x = COMPLEX(x);
+        const Rcomplex *p_x = COMPLEX(x);
         out = SHIELD(new_vec(CPLXSXP, n));
         Rcomplex* RESTRICT p_out = COMPLEX(out);
         for (int i = 0; i < n; ++i){
@@ -1086,16 +1085,13 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 // Keeping this implementation as it works seamlessly for in-place and
 // normal reverse
 
-[[cpp11::register]]
-SEXP cpp_rev(SEXP x, bool set){
+SEXP rev(SEXP x, bool set){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t half = int_div(n, 2);
   R_xlen_t n2 = n - 1; // Offset n for 0-indexing
   R_xlen_t k;
   int NP = 0;
-  bool rev_names = true;
   bool is_altrep = ALTREP(x);
-  bool set_names = set;
   if (set && is_altrep){
     Rf_warning("Cannot update an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations");
   }
@@ -1105,7 +1101,6 @@ SEXP cpp_rev(SEXP x, bool set){
   // and avoids a second copy
   if (is_altrep){
     set = true;
-    set_names = false;
   }
   SEXP out;
   switch (TYPEOF(x)){
@@ -1216,12 +1211,15 @@ SEXP cpp_rev(SEXP x, bool set){
     //   break;
     // }
   }
-  // If x has names, reverse them too
-  SEXP old_names = Rf_getAttrib(out, R_NamesSymbol);
-  if (rev_names && !is_null(old_names)){
-    Rf_namesgets(out, cpp_rev(old_names, set_names));
-  }
   YIELD(NP);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_rev(SEXP x, bool set){
+  SEXP out = SHIELD(rev(x, set));
+  set_names(out, rev(get_names(x), set && !ALTREP(x)));
+  YIELD(1);
   return out;
 }
 
@@ -1249,7 +1247,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Flag to check indices
   bool check = true;
 
-  SEXP names = Rf_getAttrib(x, R_NamesSymbol);
+  SEXP names = get_names(x);
 
   SEXP cols;
   int loc_type = TYPEOF(locs);
@@ -1341,7 +1339,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Make a plain data frame
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
   Rf_classgets(out, make_utf8_str("data.frame"));
-  Rf_namesgets(out, out_names);
+  set_names(out, out_names);
   YIELD(NP);
   return out;
 }
@@ -1387,18 +1385,18 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
 
   for (int j = 0; j < ncols; ++j){
     df_var = p_x[j];
-    names = Rf_getAttrib(df_var, R_NamesSymbol);
+    names = get_names(df_var);
     if (is_simple_vec(df_var)){
       R_Reprotect(list_var = sset_vec(df_var, indices, check_indices), index);
       Rf_copyMostAttrib(df_var, list_var);
-      Rf_setAttrib(list_var, R_NamesSymbol, sset_vec(names, indices, check_indices));
+      set_names(list_var, sset_vec(names, indices, check_indices));
     } else {
       R_Reprotect(list_var = cheapr_sset(df_var, indices), index);
     }
     SET_VECTOR_ELT(out, j, list_var);
   }
 
-  Rf_setAttrib(out, R_NamesSymbol, Rf_getAttrib(x, R_NamesSymbol));
+  set_names(out, get_names(x));
 
   // list to data frame object
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
@@ -1449,11 +1447,7 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
     Rf_copyMostAttrib(x, out);
 
     // Subset names
-
-    SEXP xnames = Rf_getAttrib(x, R_NamesSymbol);
-    if (!is_null(xnames)){
-      Rf_setAttrib(out, R_NamesSymbol, sset_vec(xnames, indices, check2));
-    }
+    set_names(out, sset_vec(get_names(x), indices, check2));
     YIELD(NP);
     return out;
   } else if (is_df(x)){

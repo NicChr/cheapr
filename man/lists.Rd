@@ -20,7 +20,7 @@ new_list(length = 0L, default = NULL)
 
 list_assign(x, values)
 
-list_combine(...)
+list_combine(..., .args = NULL)
 
 list_drop_null(x)
 }
@@ -36,6 +36,8 @@ list_drop_null(x)
 \item{values}{A named list}
 
 \item{...}{Objects to combine into a list.}
+
+\item{.args}{An alternative to \code{...} for easier programming with lists.}
 }
 \value{
 \code{list_lengths()} returns the list lengths. \cr

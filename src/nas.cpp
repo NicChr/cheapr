@@ -32,7 +32,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   case LGLSXP:
   case INTSXP: {
-    const int* RESTRICT const p_x = INTEGER(x);
+    const int *p_x = INTEGER(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_int(p_x[i]);
@@ -43,7 +43,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int_fast64_t* RESTRICT const p_x = INTEGER64_PTR(x);
+    const int_fast64_t *p_x = INTEGER64_PTR(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_int64(p_x[i]);
@@ -54,7 +54,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case REALSXP: {
-    const double* RESTRICT const p_x = REAL(x);
+    const double *p_x = REAL(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_dbl(p_x[i]);
@@ -78,7 +78,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case CPLXSXP: {
-    const Rcomplex* RESTRICT const p_x = COMPLEX(x);
+    const Rcomplex *p_x = COMPLEX(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_cplx(p_x[i]);
@@ -419,7 +419,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       if (Rf_length(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_length(is_missing); ++NP;
-        SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));
+        SEXP names = SHIELD(get_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
                  utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
@@ -467,7 +467,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
       if (Rf_length(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_length(is_missing); ++NP;
-        SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));
+        SEXP names = SHIELD(get_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
                  utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
@@ -517,7 +517,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_xlength(is_missing); ++NP;
-        SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));
+        SEXP names = SHIELD(get_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
                  utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
@@ -546,7 +546,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
     }
   }
   if (names){
-    Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
+    set_names(out, get_names(x));
   }
   YIELD(NP);
   return out;
@@ -576,7 +576,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_xlength(is_missing); ++NP;
-        SEXP names = SHIELD(Rf_getAttrib(x, R_NamesSymbol));
+        SEXP names = SHIELD(get_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
                  utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
@@ -605,7 +605,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
     }
   }
   if (names){
-    Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
+    set_names(out, get_names(x));
   }
   YIELD(NP);
   return out;
@@ -900,13 +900,13 @@ SEXP cpp_row_na_counts(SEXP x, bool names){
     out = SHIELD(cpp_matrix_row_na_counts(x)); ++NP;
     if (names){
       SEXP row_names = SHIELD(Rf_duplicate(matrix_rownames(x))); ++NP;
-      Rf_setAttrib(out, R_NamesSymbol, row_names);
+      set_names(out, row_names);
     }
   } else {
     out = SHIELD(cpp_df_row_na_counts(x)); ++NP;
     if (names){
       SEXP row_names = SHIELD(Rf_duplicate(Rf_getAttrib(x, R_RowNamesSymbol))); ++NP;
-      Rf_setAttrib(out, R_NamesSymbol, row_names);
+      set_names(out, row_names);
     }
   }
   YIELD(NP);
@@ -929,12 +929,12 @@ SEXP cpp_col_na_counts(SEXP x, bool names){
     out = SHIELD(cpp_matrix_col_na_counts(x)); ++NP;
     if (names){
       SEXP col_names = SHIELD(Rf_duplicate(matrix_colnames(x))); ++NP;
-      Rf_setAttrib(out, R_NamesSymbol, col_names);
+      set_names(out, col_names);
     }
   } else {
     out = SHIELD(cpp_df_col_na_counts(x)); ++NP;
     if (names){
-      Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
+      set_names(out, get_names(x));
     }
   }
   YIELD(NP);

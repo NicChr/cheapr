@@ -209,6 +209,13 @@ extern "C" SEXP _cheapr_cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths,
   END_CPP11
 }
 // lists.cpp
+SEXP cpp_list_args(SEXP args1, SEXP args2);
+extern "C" SEXP _cheapr_cpp_list_args(SEXP args1, SEXP args2) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_list_args(cpp11::as_cpp<cpp11::decay_t<SEXP>>(args1), cpp11::as_cpp<cpp11::decay_t<SEXP>>(args2)));
+  END_CPP11
+}
+// lists.cpp
 SEXP cpp_unnested_length(SEXP x);
 extern "C" SEXP _cheapr_cpp_unnested_length(SEXP x) {
   BEGIN_CPP11
@@ -683,13 +690,6 @@ SEXP cpp_str_coalesce(SEXP x);
 extern "C" SEXP _cheapr_cpp_str_coalesce(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_str_coalesce(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_list_args(SEXP args1, SEXP args2);
-extern "C" SEXP _cheapr_cpp_list_args(SEXP args1, SEXP args2) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_list_args(cpp11::as_cpp<cpp11::decay_t<SEXP>>(args1), cpp11::as_cpp<cpp11::decay_t<SEXP>>(args2)));
   END_CPP11
 }
 // which.cpp

@@ -62,7 +62,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
     return x;
   } else if (TYPEOF(attributes) == VECSXP){
     if (Rf_length(attributes) == 0) return x;
-    SEXP names = Rf_getAttrib(attributes, R_NamesSymbol);
+    SEXP names = get_names(attributes);
     if (is_null(names)){
       Rf_error("attributes must be a named list");
     }

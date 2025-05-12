@@ -157,12 +157,6 @@ as_list_of <- function(...){
   }
 }
 
-# Combine levels of factors
-# Converts non factors into character vectors
-combine_levels <- function(...){
-  cpp_combine_levels(list(...))
-}
-
 
 # Keeping this as other packages may use it
 df_add_cols <- function(data, cols){

@@ -760,12 +760,12 @@ SEXP cpp_int_sign(SEXP x){
   int res;
   switch (TYPEOF(x)){
   case LGLSXP: {
-    int* RESTRICT p_x = INTEGER(x);
+    const int *p_x = LOGICAL(x);
     memmove(&p_out[0], &p_x[0], n * sizeof(int));
     break;
   }
   case INTSXP: {
-    int* RESTRICT p_x = INTEGER(x);
+    const int *p_x = INTEGER(x);
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) {
       res = p_x[i] == NA_INTEGER ? NA_INTEGER : (p_x[i] > 0) - (p_x[i] < 0);
@@ -774,7 +774,7 @@ SEXP cpp_int_sign(SEXP x){
     break;
   }
   case REALSXP: {
-    double* RESTRICT p_x = REAL(x);
+    double *p_x = REAL(x);
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) {
       res = p_x[i] != p_x[i] ? NA_INTEGER : (p_x[i] > 0) - (p_x[i] < 0);

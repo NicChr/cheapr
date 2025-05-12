@@ -253,7 +253,7 @@ double cpp_sum(SEXP x){
   case LGLSXP:
   case INTSXP: {
 
-    const int* RESTRICT p_x = INTEGER(x);
+    const int *p_x = INTEGER(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -263,7 +263,7 @@ double cpp_sum(SEXP x){
   }
   case CHEAPR_INT64SXP: {
 
-    const int_fast64_t* RESTRICT p_x = INTEGER64_PTR(x);
+    const int_fast64_t *p_x = INTEGER64_PTR(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -273,7 +273,7 @@ double cpp_sum(SEXP x){
   }
   default: {
 
-    const double* RESTRICT p_x = REAL(x);
+    const double *p_x = REAL(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) sum += p_x[i];
@@ -720,7 +720,7 @@ SEXP cpp_lgl_count(SEXP x){
     SET_INTEGER_ELT(out, 2, static_cast<int>(nna));
   }
 
-  Rf_setAttrib(out, R_NamesSymbol, names);
+  set_names(out, names);
 
   YIELD(2);
   return out;
@@ -766,8 +766,8 @@ SEXP cpp_set_or(SEXP x, SEXP y){
 
   R_xlen_t i, yi;
 
-  int* RESTRICT p_x = LOGICAL(x);
-  const int* RESTRICT p_y = LOGICAL(y);
+  int *p_x = LOGICAL(x);
+  const int *p_y = LOGICAL(y);
 
 
   for (i = yi = 0; i < n; yi = (++yi == yn) ? 0 : yi, ++i){
@@ -1171,18 +1171,3 @@ SEXP cpp_str_coalesce(SEXP x){
 //   YIELD(1);
 //   return count;
 // }
-
-[[cpp11::register]]
-SEXP cpp_list_args(SEXP args1, SEXP args2){
-  bool use_dots = Rf_length(args1) != 0;
-  bool use_list = args2 != R_NilValue;
-
-  if (use_dots && use_list){
-    Rf_error("Please supply either `...` or `.args` in %s", __func__);
-  }
-  if (use_list && (TYPEOF(args2) != VECSXP || Rf_isObject(args2))){
-    Rf_error("`.args` must be a plain list in %s", __func__);
-  }
-  return use_list ? args2 : args1;
-}
-

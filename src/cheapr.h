@@ -283,6 +283,15 @@ inline bool is_bare_tbl(SEXP x){
     std::strcmp(CHAR(p_x[2]), "data.frame") == 0;
 }
 
+// Can't use `Rf_namesgets(x, R_NilValue)`
+// as it adds empty names instead of NULL
+inline void set_names(SEXP x, SEXP names){
+  names == R_NilValue ? Rf_setAttrib(x, R_NamesSymbol, R_NilValue) : Rf_namesgets(x, names);
+}
+inline SEXP get_names(SEXP x){
+  return Rf_getAttrib(x, R_NamesSymbol);
+}
+
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
 inline cpp11::function base_sset = cpp11::package("base")["["];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];

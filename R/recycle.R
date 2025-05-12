@@ -19,6 +19,7 @@
 #' @examples
 #' library(cheapr)
 #'
+#' # Recycles both to size 10
 #' recycle(Sys.Date(), 1:10)
 #'
 #' # Any vectors of zero-length are all recycled to zero-length
@@ -28,11 +29,11 @@
 #' recycle(integer(), 1:10, length = 10)
 #'
 #' # Data frame rows are recycled
-#' recycle(sset(iris, 1:3), length = 3 * 3)
+#' recycle(sset(iris, 1:3), length = 9)
 #'
-#' # To recycle list items, use `do.call()`
+#' # To recycle objects in a list, use `.args`
 #' my_list <- list(from = 1L, to = 10L, by = seq(0.1, 1, 0.1))
-#' do.call(recycle, my_list)
+#' recycle(.args = my_list)
 #'
 #' @export
 recycle <- function (..., length = NULL, .args = NULL){

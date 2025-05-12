@@ -55,7 +55,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     for (int i = 0; i < n_cols; ++i){
       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
     }
-    Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
+    set_names(out, get_names(x));
     set_list_as_df(out);
     Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
     SHIELD(out = reconstruct(out, x, false));
@@ -407,7 +407,7 @@ SEXP cpp_unique(SEXP x, bool names){
       SEXP out = SHIELD(sset_vec(x, unique_locs, false));
       Rf_copyMostAttrib(x, out);
       if (names){
-        Rf_namesgets(out, sset_vec(Rf_getAttrib(x, R_NamesSymbol), unique_locs, false));
+        set_names(out, sset_vec(get_names(x), unique_locs, false));
       }
       YIELD(3);
       return out;
@@ -415,7 +415,7 @@ SEXP cpp_unique(SEXP x, bool names){
   } else if (is_simple){
     SEXP out = SHIELD(cheapr_fast_unique(x));
     if (names){
-      Rf_namesgets(out, cheapr_fast_unique(Rf_getAttrib(x, R_NamesSymbol)));
+      set_names(out, cheapr_fast_unique(get_names(x)));
     }
     YIELD(1);
     return out;
@@ -528,7 +528,7 @@ SEXP get_ptypes(SEXP x){
     SET_VECTOR_ELT(out, i, get_ptype(VECTOR_ELT(x, i)));
   }
 
-  Rf_namesgets(out, Rf_getAttrib(x, R_NamesSymbol));
+  set_names(out, get_names(x));
 
   YIELD(1);
   return out;
@@ -657,7 +657,7 @@ SEXP cpp_list_c(SEXP x){
     out_size += (TYPEOF(p_x[i]) == VECSXP ? Rf_xlength(p_x[i]) : 1);
   }
 
-  SEXP x_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+  SEXP x_names = SHIELD(get_names(x)); ++NP;
   bool x_has_names = !is_null(x_names);
 
   R_xlen_t k = 0;
@@ -665,7 +665,7 @@ SEXP cpp_list_c(SEXP x){
 
   out = SHIELD(new_vec(VECSXP, out_size)); ++NP;
   SEXP container_list = SHIELD(new_vec(VECSXP, 1)); ++NP;
-  Rf_setAttrib(container_list, R_NamesSymbol, R_BlankScalarString);
+  set_names(container_list, R_BlankScalarString);
 
   SEXP names;
   PROTECT_INDEX nm_idx;
@@ -681,7 +681,7 @@ SEXP cpp_list_c(SEXP x){
 
     if (TYPEOF(p_x[i]) == VECSXP){
       p_temp = VECTOR_PTR_RO(p_x[i]);
-      R_Reprotect(names = Rf_getAttrib(p_x[i], R_NamesSymbol), nm_idx);
+      names = get_names(p_x[i]);
       m = Rf_xlength(p_x[i]);
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
@@ -707,7 +707,7 @@ SEXP cpp_list_c(SEXP x){
     }
   }
   if (any_names){
-    Rf_namesgets(out, out_names);
+    set_names(out, out_names);
   }
   YIELD(NP);
   return out;
@@ -756,7 +756,7 @@ SEXP cpp_df_c(SEXP x){
 
   SEXP names;
   PROTECT_INDEX names_idx;
-  R_ProtectWithIndex(names = Rf_getAttrib(df, R_NamesSymbol), &names_idx); ++NP;
+  R_ProtectWithIndex(names = get_names(df), &names_idx); ++NP;
 
   if (!is_df(df)){
     YIELD(NP); Rf_error("Can't combine data frames with non data frames");
@@ -793,9 +793,7 @@ SEXP cpp_df_c(SEXP x){
     }
 
     R_Reprotect(new_names = cpp_setdiff(
-      Rf_getAttrib(df, R_NamesSymbol),
-      Rf_getAttrib(ptypes, R_NamesSymbol),
-      false
+      get_names(df), get_names(ptypes), false
     ), new_names_idx);
 
     // Adjust prototype list
@@ -808,7 +806,7 @@ SEXP cpp_df_c(SEXP x){
       SET_VECTOR_ELT(temp_list, 0, names);
       SET_VECTOR_ELT(temp_list, 1, new_names);
       R_Reprotect(names = cpp_c(temp_list), names_idx);
-      Rf_setAttrib(ptypes, R_NamesSymbol, names);
+      set_names(ptypes, names);
     }
     out_size += df_nrow(df);
   }
@@ -839,7 +837,7 @@ SEXP cpp_df_c(SEXP x){
   }
   set_list_as_df(out);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
-  Rf_namesgets(out, names);
+  set_names(out, names);
   SHIELD(out = reconstruct(out, df_template, false)); ++NP;
   YIELD(NP);
   return out;
@@ -863,7 +861,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   int out_ncols = 0;
 
   SEXP container_list = SHIELD(new_vec(VECSXP, 1)); ++NP;
-  Rf_setAttrib(container_list, R_NamesSymbol, R_BlankScalarString);
+  set_names(container_list, R_BlankScalarString);
 
   std::vector<const SEXP *> df_pointers(n);
 
@@ -877,7 +875,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
     }
   }
 
-  SEXP x_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+  SEXP x_names = SHIELD(get_names(x)); ++NP;
   bool x_has_names = !is_null(x_names);
 
   SEXP out = SHIELD(new_vec(VECSXP, out_ncols)); ++NP;
@@ -897,7 +895,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
     const SEXP *p_temp = df_pointers[i];
 
     if (is_df(p_x[i])){
-      R_Reprotect(names = Rf_getAttrib(p_x[i], R_NamesSymbol), nm_idx);
+      names = get_names(p_x[i]);
       m = Rf_length(p_x[i]);
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
@@ -922,7 +920,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
     }
   }
   if (any_names){
-    Rf_namesgets(out, out_names);
+    set_names(out, out_names);
   }
 
   SEXP r_nrows = SHIELD(R_NilValue); ++NP;
@@ -968,7 +966,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 //     out_ncols += ncols[i];
 //   }
 //
-//   SEXP x_names = SHIELD(Rf_getAttrib(x, R_NamesSymbol)); ++NP;
+//   SEXP x_names = SHIELD(get_names(x)); ++NP;
 //   bool x_has_names = !is_null(x_names);
 //
 //   SEXP out = SHIELD(new_vec(VECSXP, out_ncols)); ++NP;
@@ -1012,7 +1010,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 //     }
 //   }
 //   if (any_names){
-//     Rf_namesgets(out, out_names);
+//     set_names(out, out_names);
 //   }
 //
 //   SEXP r_nrows = SHIELD(R_NilValue); ++NP;

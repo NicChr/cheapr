@@ -116,6 +116,10 @@ cpp_lag2 <- function(x, lag, order, run_lengths, fill, recursive) {
   .Call(`_cheapr_cpp_lag2`, x, lag, order, run_lengths, fill, recursive)
 }
 
+cpp_list_args <- function(args1, args2) {
+  .Call(`_cheapr_cpp_list_args`, args1, args2)
+}
+
 cpp_unnested_length <- function(x) {
   .Call(`_cheapr_cpp_unnested_length`, x)
 }
@@ -386,10 +390,6 @@ cpp_reconstruct <- function(target, source, target_attr_names, source_attr_names
 
 cpp_str_coalesce <- function(x) {
   .Call(`_cheapr_cpp_str_coalesce`, x)
-}
-
-cpp_list_args <- function(args1, args2) {
-  .Call(`_cheapr_cpp_list_args`, args1, args2)
 }
 
 cpp_which_ <- function(x, invert) {
