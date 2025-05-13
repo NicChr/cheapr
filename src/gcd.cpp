@@ -354,14 +354,12 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     SHIELD(x = coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = coerce_vec(y, INTSXP)); ++NP;
     SEXP out = SHIELD(new_vec(INTSXP, n)); ++NP;
-    int *p_out = INTEGER(out);
-    int *p_x = INTEGER(x);
-    int *p_y = INTEGER(y);
-    R_xlen_t xi;
-    R_xlen_t yi;
-    for (R_xlen_t i = 0; i < n; ++i) {
-      xi = i % xn;
-      yi = i % yn;
+    int* RESTRICT p_out = INTEGER(out);
+    const int *p_x = INTEGER(x);
+    const int *p_y = INTEGER(y);
+    for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
+    xi = (++xi == xn) ? 0 : xi,
+      yi = (++yi == yn) ? 0 : yi, ++i){
       p_out[i] = cpp_gcd2_int(p_x[xi], p_y[yi], na_rm);
     }
     YIELD(NP);
@@ -371,14 +369,12 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     SHIELD(x = coerce_vec(x, REALSXP)); ++NP;
     SHIELD(y = coerce_vec(y, REALSXP)); ++NP;
     SEXP out = SHIELD(new_vec(REALSXP, n)); ++NP;
-    double *p_out = REAL(out);
-    double *p_x = REAL(x);
-    double *p_y = REAL(y);
-    R_xlen_t xi;
-    R_xlen_t yi;
-    for (R_xlen_t i = 0; i < n; ++i) {
-      xi = i % xn;
-      yi = i % yn;
+    double* RESTRICT p_out = REAL(out);
+    const double *p_x = REAL(x);
+    const double *p_y = REAL(y);
+    for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
+    xi = (++xi == xn) ? 0 : xi,
+      yi = (++yi == yn) ? 0 : yi, ++i){
       p_out[i] = cpp_gcd2(p_x[xi], p_y[yi], tol, na_rm);
     }
     YIELD(NP);
@@ -415,14 +411,12 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     SHIELD(x = coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = coerce_vec(y, INTSXP)); ++NP;
     SEXP out = SHIELD(new_vec(INTSXP, n)); ++NP;
-    int *p_out = INTEGER(out);
-    int *p_x = INTEGER(x);
-    int *p_y = INTEGER(y);
-    R_xlen_t xi;
-    R_xlen_t yi;
-    for (R_xlen_t i = 0; i < n; ++i) {
-      xi = i % xn;
-      yi = i % yn;
+    int* RESTRICT p_out = INTEGER(out);
+    const int *p_x = INTEGER(x);
+    const int *p_y = INTEGER(y);
+    for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
+    xi = (++xi == xn) ? 0 : xi,
+      yi = (++yi == yn) ? 0 : yi, ++i){
       dbl_lcm = cpp_lcm2_int(p_x[xi], p_y[yi], na_rm);
       if (!(dbl_lcm == dbl_lcm) || std::fabs(dbl_lcm) > int_max){
         p_out[i] = NA_INTEGER;
@@ -438,14 +432,12 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     SHIELD(x = coerce_vec(x, REALSXP)); ++NP;
     SHIELD(y = coerce_vec(y, REALSXP)); ++NP;
     SEXP out = SHIELD(new_vec(REALSXP, n)); ++NP;
-    double *p_out = REAL(out);
-    double *p_x = REAL(x);
-    double *p_y = REAL(y);
-    R_xlen_t xi;
-    R_xlen_t yi;
-    for (R_xlen_t i = 0; i < n; ++i) {
-      xi = i % xn;
-      yi = i % yn;
+    double* RESTRICT p_out = REAL(out);
+    const double *p_x = REAL(x);
+    const double *p_y = REAL(y);
+    for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
+    xi = (++xi == xn) ? 0 : xi,
+      yi = (++yi == yn) ? 0 : yi, ++i){
       p_out[i] = cpp_lcm2(p_x[xi], p_y[yi], tol, na_rm);
     }
     YIELD(NP);

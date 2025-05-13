@@ -563,7 +563,7 @@ test_that("lags and lead with set = TRUE", {
 
 test_that("Dynamic lags by-group", {
   set.seed(1239)
-  df <- data.frame(x = sample.int(5, 20, TRUE),
+  df <- data.frame(x = sample.int(10, 20, TRUE),
                    g = sample.int(3, 20, TRUE),
                    lags = sample(c(0, 1, 2), 20, TRUE))
 
@@ -583,6 +583,30 @@ test_that("Dynamic lags by-group", {
 res2 <- lag2_(df$x, order = o, run_lengths = rls, n = df$lags)
 
 expect_identical(res, res2)
+})
+
+test_that("Dynamic recycled lags by-group", {
+  set.seed(1239)
+  df <- data.frame(x = sample.int(10, 20, TRUE),
+                   g = sample.int(3, 20, TRUE),
+                   lags = rep_len(c(1, -1), 20))
+
+  o <- order(df$g)
+  rls <- as.integer(table(df$g))
+
+  # Somewhat ugly by-group calculation
+  # order(order(x)) will return sort(x) back to its original order
+  res <- unname(
+    do.call(
+      c,
+      lapply(split(df, df$g),
+             function(x) base_lag(x$x, x$lags))
+    )
+  )[order(o)]
+
+  res2 <- lag2_(df$x, order = o, run_lengths = rls, n = c(1, -1))
+
+  expect_identical(res, res2)
 })
 
 test_that("oob lag", {

@@ -14,7 +14,7 @@ SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? Rf_shallow_duplicate(x) : x);
-        Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
+        Rf_classgets(out, Rf_getAttrib(source, R_ClassSymbol));
         YIELD(1);
         return out;
       }
@@ -26,7 +26,7 @@ SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? Rf_shallow_duplicate(x) : x);
-        Rf_setAttrib(out, R_ClassSymbol, Rf_getAttrib(source, R_ClassSymbol));
+        Rf_classgets(out, Rf_getAttrib(source, R_ClassSymbol));
         YIELD(1);
         return out;
       }
@@ -72,7 +72,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     switch (TYPEOF(x)){
     case LGLSXP:
     case INTSXP: {
-      int *p_x = INTEGER(x);
+      const int *p_x = INTEGER(x);
       SEXP out = SHIELD(new_vec(TYPEOF(x), out_size));
       int* RESTRICT p_out = INTEGER(out);
 
@@ -103,7 +103,7 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     case REALSXP: {
-      double *p_x = REAL(x);
+      const double *p_x = REAL(x);
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
       double* RESTRICT p_out = REAL(out);
 
@@ -137,15 +137,14 @@ SEXP cpp_rep_len(SEXP x, int length){
       const SEXP *p_x = STRING_PTR_RO(x);
       SEXP out = SHIELD(new_vec(STRSXP, out_size));
 
-
       if (size == 1){
         SEXP val = p_x[0];
         for (int i = 0; i < out_size; ++i){
           SET_STRING_ELT(out, i, val);
         }
       } else if (out_size > 0 && size > 0){
-        for (int i = 0; i < out_size; ++i){
-          SET_STRING_ELT(out, i, p_x[i % size]);
+        for (int i = 0, xi = 0; i < out_size; xi = (++xi == size) ? 0 : xi, ++i){
+          SET_STRING_ELT(out, i, p_x[xi]);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -168,8 +167,8 @@ SEXP cpp_rep_len(SEXP x, int length){
           SET_COMPLEX_ELT(out, i, val);
         }
       } else if (out_size > 0 && size > 0){
-        for (int i = 0; i < out_size; ++i){
-          SET_COMPLEX_ELT(out, i, p_x[i % size]);
+        for (int i = 0, xi = 0; i < out_size; xi = (++xi == size) ? 0 : xi, ++i){
+          SET_COMPLEX_ELT(out, i, p_x[xi]);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -192,8 +191,8 @@ SEXP cpp_rep_len(SEXP x, int length){
           SET_VECTOR_ELT(out, i, val);
         }
       } else if (out_size > 0 && size > 0){
-        for (int i = 0; i < out_size; ++i){
-          SET_VECTOR_ELT(out, i, p_x[i % size]);
+        for (int i = 0, xi = 0; i < out_size; xi = (++xi == size) ? 0 : xi, ++i){
+          SET_VECTOR_ELT(out, i, p_x[xi]);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
