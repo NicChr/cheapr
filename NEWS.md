@@ -12,7 +12,7 @@ both normally and in-place.
 - `shallow_copy`, `semi_copy` and `deep_copy` for shallow 
 and full copies of R objects.
 
-- `address` to retried the memory address of an R object.
+- `address` to retrieve the memory address of an R object.
 
 - `cheapr_rep`, `cheapr_rep_len` and `cheapr_rep_each` to repeat out vectors 
 efficiently.
