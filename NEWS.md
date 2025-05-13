@@ -1,4 +1,4 @@
-# cheapr (development version)
+# cheapr 1.2.0
 
 This version of cheapr sees many speed improvements and new features.
 
@@ -27,7 +27,7 @@ using a template. Currently only data frames are being reconstructed.
 - `list_combine` as a way to combine elements from 
 multiple lists into a single list.
 
-- `list_assign` for fast assigning multiple vectors to a list.
+- `list_assign` for fast assigning multiple elements to a list.
 
 - `list_drop_null` to quickly drop `NULL` elements.
 
