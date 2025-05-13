@@ -34,6 +34,10 @@ duplicated, including all attributes associated with it.
 Deep copies are generally expensive and should be
 used with care.
 
+\code{semi_copy()} deep copies everything except the attributes.
+This is experimental but in theory should be much more efficient and
+generally preferred to \code{deep_copy()}.
+
 To summarise:
 \itemize{
 \item \code{shallow_copy} - Shallow copies data and attributes

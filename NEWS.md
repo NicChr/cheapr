@@ -1,6 +1,10 @@
 # cheapr (development version)
 
+This version of cheapr sees many speed improvements and new features.
+
 ### New functions
+
+- `list_as_df` for fast converting lists into data frames.
 
 - `attrs_add` and `attrs_rm` to allow for adding and removing attributes, 
 both normally and in-place.
@@ -35,6 +39,16 @@ multiple lists into a single list.
 repairs names by default. It also doesn't deparse expressions into strings
 where names don't exist and now simply replaces those object names with 
 `col_i` where i is the ith column containing that object.
+
+### New features
+
+- `.args` has been added in many places as an alternative to the dots argument
+`...` 
+It allows you to supply a list of objects instead of supplying them in the 
+usual way. This can be useful when you already have a list and want to pass them
+as arguments very efficiently. For example, `cheapr_c(.args = list(x, y))` is 
+equivalent to `do.call(cheapr_c, list(x, y))` and `cheapr_c(x, y)`.
+
 
 ### Deprecations
 

@@ -15,6 +15,10 @@
 #' Deep copies are generally expensive and should be
 #' used with care.
 #'
+#' `semi_copy()` deep copies everything except the attributes.
+#' This is experimental but in theory should be much more efficient and
+#' generally preferred to `deep_copy()`.
+#'
 #' To summarise:
 #'
 #' * `shallow_copy` - Shallow copies data and attributes
