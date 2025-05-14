@@ -1,5 +1,7 @@
 * Updated to version 1.2.0
 
+* rchk issues have been fixed.
+
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
  * We saw 0 new problems
