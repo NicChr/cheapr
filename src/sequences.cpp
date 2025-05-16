@@ -464,6 +464,7 @@ bool is_infinite(double x){
 [[cpp11::register]]
 SEXP cpp_fixed_width_breaks(double start, double end, double n,
                             bool pretty, bool expand_min, bool expand_max){
+  int NP = 0;
   if (is_na_dbl(n)){
     Rf_error("n must not be `NA`");
   }
@@ -511,11 +512,11 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     }
     adj_start = start - (rng_width / 1000.0);
     adj_end = end + (rng_width / 1000.0);
-    SEXP size = SHIELD(Rf_ScalarInteger(n + 1.0));
-    SEXP from = SHIELD(Rf_ScalarReal(adj_start));
-    SEXP by = SHIELD(Rf_ScalarReal(seq_width(n + 1.0, adj_start, adj_end)));
-    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by));
-    YIELD(4);
+    SEXP size = SHIELD(Rf_ScalarInteger(n + 1.0)); ++NP;
+    SEXP from = SHIELD(Rf_ScalarReal(adj_start)); ++NP;
+    SEXP by = SHIELD(Rf_ScalarReal(seq_width(n + 1.0, adj_start, adj_end))); ++NP;
+    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by)); ++NP;
+    YIELD(NP);
     return out;
   }
 
@@ -529,11 +530,11 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     if (expand_max){
       ++out_size;
     }
-    SEXP size_sexp = SHIELD(Rf_ScalarInteger(out_size));
-    SEXP start_sexp = SHIELD(Rf_ScalarReal(start));
-    SEXP width_sexp = SHIELD(Rf_ScalarReal(bin_width));
-    SEXP out = SHIELD(cpp_dbl_sequence(size_sexp, start_sexp, width_sexp));
-    YIELD(4);
+    SEXP size_sexp = SHIELD(Rf_ScalarInteger(out_size)); ++NP;
+    SEXP start_sexp = SHIELD(Rf_ScalarReal(start)); ++NP;
+    SEXP width_sexp = SHIELD(Rf_ScalarReal(bin_width)); ++NP;
+    SEXP out = SHIELD(cpp_dbl_sequence(size_sexp, start_sexp, width_sexp)); ++NP;
+    YIELD(NP);
     return out;
 
   } else {
@@ -656,26 +657,26 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       adj_width = round_nearest_even(adj_width);
       adj_start = round_nearest_even(adj_start);
 
-      seq_size = SHIELD(Rf_ScalarInteger(n_breaks));
-      seq_from = SHIELD(Rf_ScalarInteger(adj_start));
-      seq_width = SHIELD(Rf_ScalarInteger(adj_width));
+      seq_size = SHIELD(Rf_ScalarInteger(n_breaks)); ++NP;
+      seq_from = SHIELD(Rf_ScalarInteger(adj_start)); ++NP;
+      seq_width = SHIELD(Rf_ScalarInteger(adj_width)); ++NP;
 
-      out = SHIELD(cpp_int_sequence(seq_size, seq_from, seq_width));
+      out = SHIELD(cpp_int_sequence(seq_size, seq_from, seq_width)); ++NP;
     }
 
     if (scale_up){
-      seq_size = SHIELD(Rf_ScalarInteger(n_breaks));
-      seq_from = SHIELD(Rf_ScalarReal(adj_start));
-      seq_width = SHIELD(Rf_ScalarReal(adj_width));
+      seq_size = SHIELD(Rf_ScalarInteger(n_breaks)); ++NP;
+      seq_from = SHIELD(Rf_ScalarReal(adj_start)); ++NP;
+      seq_width = SHIELD(Rf_ScalarReal(adj_width)); ++NP;
 
-      out = SHIELD(cpp_dbl_sequence(seq_size, seq_from, seq_width));
+      out = SHIELD(cpp_dbl_sequence(seq_size, seq_from, seq_width)); ++NP;
       int seq_n = n_breaks;
       double* RESTRICT p_out = REAL(out);
       OMP_FOR_SIMD
       for (int i = 0; i < seq_n; ++i) p_out[i] = p_out[i] / scale_adj;
     }
 
-    YIELD(4);
+    YIELD(NP);
     return out;
   }
 }
