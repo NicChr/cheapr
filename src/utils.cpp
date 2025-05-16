@@ -1,4 +1,5 @@
 #include "cheapr.h"
+#include <R.h> // R_Calloc
 
 // Miscellaneous functions
 // Author: Nick Christofides
@@ -1172,21 +1173,28 @@ SEXP cpp_str_coalesce(SEXP x){
 //   return count;
 // }
 
-// R's internal tabulate with no checks whatsoever
-// SEXP cpp_tabulate(SEXP x, int n_bins){
-//
-//   R_xlen_t n = Rf_xlength(x);
-//
-//   SEXP out = SHIELD(new_vec(INTSXP, n_bins));
-//   const int *p_x = INTEGER(x);
-//   int* RESTRICT p_out = INTEGER(out);
-//
-//   memset(p_out, 0, n_bins * sizeof(int));
-//
-//   OMP_FOR_SIMD
-//   for (R_xlen_t i = 0 ; i < n; ++i){
-//     p_out[p_x[i] - 1]++;
-//   }
-//   YIELD(1);
-//   return out;
-// }
+// R's internal tabulate with faster unsigned int check
+[[cpp11::register]]
+SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
+
+  if (n_bins > integer_max_){
+    Rf_error("`n_bins` must be < 2^31 in %s", __func__);
+  }
+  R_xlen_t n = Rf_xlength(x);
+
+  SEXP out = SHIELD(new_vec(INTSXP, n_bins));
+  const int *p_x = INTEGER_RO(x);
+  int* RESTRICT p_out = INTEGER(out);
+
+  // Initialise counts to 0
+  memset(p_out, 0, n_bins * sizeof(int));
+
+  OMP_FOR_SIMD
+  for (R_xlen_t i = 0 ; i < n; ++i){
+    if (static_cast<uint32_t>(p_x[i]) <= n_bins){
+      ++p_out[p_x[i] - 1];
+    }
+  }
+  YIELD(1);
+  return out;
+}

@@ -13,11 +13,18 @@
 #' `FALSE`.
 #' @param na_exclude Should `NA` values be excluded? Default is `FALSE`.
 #' @param classed Should a `table` object be returned? Default is `FALSE`
+#' @param sort Should groups be sorted? Default is `FALSE`.
+#'
+#' @details
+#' `cheapr_table()` tries to match the behaviour of `table()` where possible.
+#' `counts()` alternatively works only for atomic vectors and
+#' is faster, returning a `data.frame` of counts.
 #'
 #' @returns
 #' A named integer vector if one object is supplied, otherwise an
 #' array.
 #'
+#' @rdname cheapr_table
 #' @export
 cheapr_table <- function(..., names = TRUE, order = FALSE, na_exclude = FALSE,
                          classed = FALSE){
@@ -63,28 +70,36 @@ cheapr_table <- function(..., names = TRUE, order = FALSE, na_exclude = FALSE,
   }
   out
 }
-
-# counts <- function(x, sort = FALSE){
-#   if (!cpp_is_simple_atomic_vec(x)){
-#     stop("`x` must be an atomic vector")
-#   }
-#   if (sort){
-#     groups <- collapse::GRP(
-#       x, sort = TRUE, return.order = FALSE, return.groups = TRUE
-#     )
-#     n_groups <- groups[["N.groups"]]
-#     starts <- groups[["group.starts"]]
-#     ids <- groups[["group.id"]]
-#     keys <- groups[["groups"]][[1L]]
-#   } else {
-#     groups <- collapse::group(x, starts = TRUE)
-#     ids <- groups
-#     n_groups <- attr(groups, "N.groups", TRUE)
-#     starts <- attr(groups, "starts", TRUE)
-#     keys <- cheapr::sset(x, starts)
-#   }
-#   new_df(
-#     key = keys,
-#     count = cpp_tabulate(ids, n_groups)
-#   )
-# }
+#' @rdname cheapr_table
+#' @export
+counts <- function(x, sort = is.factor(x)){
+  if (!cpp_is_simple_atomic_vec(x)){
+    stop("`x` must be an atomic vector")
+  }
+  if (sort && is.factor(x)){
+    lvls <- attr(x, "levels", TRUE)
+    keys <- levels_factor(x)
+    ids <- x
+    n_groups <- length(keys)
+  } else {
+    if (sort){
+      groups <- collapse::GRP(
+        x, sort = TRUE, return.order = FALSE, return.groups = TRUE
+      )
+      n_groups <- groups[["N.groups"]]
+      starts <- groups[["group.starts"]]
+      ids <- groups[["group.id"]]
+      keys <- groups[["groups"]][[1L]]
+    } else {
+      groups <- collapse::group(x, starts = TRUE)
+      ids <- groups
+      n_groups <- attr(groups, "N.groups", TRUE)
+      starts <- attr(groups, "starts", TRUE)
+      keys <- cpp_sset(x, starts, if (n_groups == 0 || length(n_groups) == 0) TRUE else FALSE)
+    }
+  }
+  fast_df(
+    key = keys,
+    count = cpp_tabulate(ids, n_groups)
+  )
+}

@@ -2,6 +2,7 @@
 % Please edit documentation in R/cheapr_table.R
 \name{cheapr_table}
 \alias{cheapr_table}
+\alias{counts}
 \title{Fast frequency tables - Still experimental}
 \usage{
 cheapr_table(
@@ -11,6 +12,8 @@ cheapr_table(
   na_exclude = FALSE,
   classed = FALSE
 )
+
+counts(x, sort = is.factor(x))
 }
 \arguments{
 \item{...}{\verb{>=1} objects that can be converted to a factor through
@@ -24,6 +27,8 @@ cheapr_table(
 \item{na_exclude}{Should \code{NA} values be excluded? Default is \code{FALSE}.}
 
 \item{classed}{Should a \code{table} object be returned? Default is \code{FALSE}}
+
+\item{sort}{Should groups be sorted? Default is \code{FALSE}.}
 }
 \value{
 A named integer vector if one object is supplied, otherwise an
@@ -33,4 +38,9 @@ array.
 This is not a one-to-one copy of \code{base::table()} as some behaviours differ.
 It is more flexible as it accepts inputs such as data frames and
 \code{vctrs_rcrd} objects.
+}
+\details{
+\code{cheapr_table()} tries to match the behaviour of \code{table()} where possible.
+\code{counts()} alternatively works only for atomic vectors and
+is faster, returning a \code{data.frame} of counts.
 }
