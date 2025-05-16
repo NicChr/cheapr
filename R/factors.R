@@ -400,8 +400,8 @@ levels_lump <- function(x, n, prop, other_category = "Other",
 levels_count <- function(x){
   check_is_factor(x)
   names <- attr(x, "levels")
-  out <- tabulate(x, nbins = length(names))
-  new_df(name = names, count = out, prop = out / sum(out))
+  out <- cpp_tabulate(x, length(names))
+  fast_df(name = names, count = out, prop = out / sum(out))
 }
 # Generic factor conversion to data representation
 factor_as_type <- function(x, type){

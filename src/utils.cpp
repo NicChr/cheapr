@@ -1189,9 +1189,11 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   // Initialise counts to 0
   memset(p_out, 0, n_bins * sizeof(int));
 
+  uint32_t one = 1;
+
   OMP_FOR_SIMD
   for (R_xlen_t i = 0 ; i < n; ++i){
-    if (static_cast<uint32_t>(p_x[i]) <= n_bins){
+    if ((static_cast<uint32_t>(p_x[i]) - one) < n_bins){
       ++p_out[p_x[i] - 1];
     }
   }

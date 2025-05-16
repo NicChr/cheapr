@@ -51,7 +51,7 @@ cheapr_table <- function(..., names = TRUE, order = FALSE, na_exclude = FALSE,
   if (length(factors) == 1){
     f <- factors[[1L]]
     lvls <- attr(f, "levels")
-    out <- tabulate(f, nbins = length(lvls))
+    out <- cpp_tabulate(f, length(lvls))
     if (names){
       dim_names <- list(lvls)
       names(dim_names) <- names(vecs)
