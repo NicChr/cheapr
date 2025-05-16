@@ -28,6 +28,8 @@ counts(x, sort = is.factor(x))
 
 \item{classed}{Should a \code{table} object be returned? Default is \code{FALSE}}
 
+\item{x}{A vector.}
+
 \item{sort}{Should groups be sorted? Default is \code{FALSE}.}
 }
 \value{

@@ -13,6 +13,7 @@
 #' `FALSE`.
 #' @param na_exclude Should `NA` values be excluded? Default is `FALSE`.
 #' @param classed Should a `table` object be returned? Default is `FALSE`
+#' @param x A vector.
 #' @param sort Should groups be sorted? Default is `FALSE`.
 #'
 #' @details
