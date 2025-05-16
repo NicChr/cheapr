@@ -63,3 +63,28 @@ cheapr_table <- function(..., names = TRUE, order = FALSE, na_exclude = FALSE,
   }
   out
 }
+
+# counts <- function(x, sort = FALSE){
+#   if (!cpp_is_simple_atomic_vec(x)){
+#     stop("`x` must be an atomic vector")
+#   }
+#   if (sort){
+#     groups <- collapse::GRP(
+#       x, sort = TRUE, return.order = FALSE, return.groups = TRUE
+#     )
+#     n_groups <- groups[["N.groups"]]
+#     starts <- groups[["group.starts"]]
+#     ids <- groups[["group.id"]]
+#     keys <- groups[["groups"]][[1L]]
+#   } else {
+#     groups <- collapse::group(x, starts = TRUE)
+#     ids <- groups
+#     n_groups <- attr(groups, "N.groups", TRUE)
+#     starts <- attr(groups, "starts", TRUE)
+#     keys <- cheapr::sset(x, starts)
+#   }
+#   new_df(
+#     key = keys,
+#     count = cpp_tabulate(ids, n_groups)
+#   )
+# }

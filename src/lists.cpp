@@ -36,7 +36,7 @@ SEXP cpp_unnested_length(SEXP x){
 }
 
 [[cpp11::register]]
-SEXP cpp_lengths(SEXP x, bool names) {
+SEXP cpp_lengths(SEXP x, bool names){
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(new_vec(INTSXP, n));
   int *p_out = INTEGER(out);
@@ -50,10 +50,11 @@ SEXP cpp_lengths(SEXP x, bool names) {
       p_out[i] = vec_length(p_x[i]);
     }
   }
+  SEXP x_names = SHIELD(get_names(x));
   if (names){
-    set_names(out, get_names(x));
+    set_names(out, x_names);
   }
-  YIELD(1);
+  YIELD(2);
   return out;
 }
 
@@ -111,7 +112,7 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
   // Subset on both the list and names of the list
 
   SEXP out = SHIELD(new_vec(VECSXP, n_keep));
-  SEXP names = get_names(l);
+  SEXP names = SHIELD(get_names(l));
   bool has_names = !is_null(names);
   if (has_names){
     const SEXP *p_names = STRING_PTR_RO(names);
@@ -121,13 +122,13 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy) {
       SET_VECTOR_ELT(out, k, p_l[p_keep[k]]);
     }
     set_names(out, out_names);
-    YIELD(3);
+    YIELD(4);
     return out;
   } else {
     for (int k = 0; k < n_keep; ++k) {
       SET_VECTOR_ELT(out, k, p_l[p_keep[k]]);
     }
-    YIELD(2);
+    YIELD(3);
     return out;
   }
 }
@@ -253,8 +254,8 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     Rf_error("`values` must be a named list in %s", __func__);
   }
 
-  SEXP names = get_names(x);
-  SEXP col_names = get_names(values);
+  SEXP names = SHIELD(get_names(x)); ++NP;
+  SEXP col_names = SHIELD(get_names(values)); ++NP;
 
   if (is_null(names)){
     SHIELD(names = new_vec(STRSXP, n)); ++NP;
@@ -503,8 +504,10 @@ SEXP cpp_list_as_df(SEXP x) {
   SEXP row_names = SHIELD(create_df_row_names(N)); ++NP;
 
   // If no names then add names
-  if (is_null(get_names(out))){
-    set_names(out, new_vec(STRSXP, n_items));
+  SEXP names = SHIELD(get_names(out)); ++NP;
+  if (is_null(names)){
+    SHIELD(names = new_vec(STRSXP, n_items)); ++NP;
+    set_names(out, names);
   }
   Rf_setAttrib(out, R_RowNamesSymbol, row_names);
   Rf_classgets(out, df_str);
@@ -530,8 +533,10 @@ void set_list_as_df(SEXP x) {
   SEXP row_names = SHIELD(create_df_row_names(N)); ++NP;
 
   // If no names then add names
-  if (is_null(get_names(x))){
-    set_names(x, new_vec(STRSXP, n_items));
+  SEXP names = SHIELD(get_names(x)); ++NP;
+  if (is_null(names)){
+    SHIELD(names = new_vec(STRSXP, n_items)); ++NP;
+    set_names(x, names);
   }
   Rf_setAttrib(x, R_RowNamesSymbol, row_names);
   Rf_classgets(x, df_str);
@@ -594,8 +599,8 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
     Rf_error("`x` must be a `data.frame` in %s", __func__);
   }
 
-  SEXP names = get_names(x);
-  SEXP col_names = get_names(cols);
+  SEXP names = SHIELD(get_names(x)); ++NP;
+  SEXP col_names = SHIELD(get_names(cols)); ++NP;
 
   if (TYPEOF(cols) != VECSXP || is_null(col_names)){
     Rf_error("`cols` must be a named list in %s", __func__);

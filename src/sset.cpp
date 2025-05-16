@@ -177,7 +177,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   SEXP clean_indices = R_NilValue;
 
   if (TYPEOF(indices) == STRSXP){
-    SEXP names = get_names(x);
+    SEXP names = SHIELD(get_names(x)); ++NP;
     if (is_null(names)){
       YIELD(NP);
       Rf_error("Cannot subset on the names of an unnamed vector");
@@ -1224,8 +1224,10 @@ SEXP rev(SEXP x, bool set){
 [[cpp11::register]]
 SEXP cpp_rev(SEXP x, bool set){
   SEXP out = SHIELD(rev(x, set));
-  set_names(out, rev(get_names(x), set && !ALTREP(x)));
-  YIELD(1);
+  SEXP names = SHIELD(get_names(x));
+  SHIELD(names = rev(names, set && !ALTREP(x)));
+  set_names(out, names);
+  YIELD(3);
   return out;
 }
 
@@ -1253,7 +1255,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Flag to check indices
   bool check = true;
 
-  SEXP names = get_names(x);
+  SEXP names = SHIELD(get_names(x)); ++NP;
 
   SEXP cols;
   int loc_type = TYPEOF(locs);
@@ -1365,7 +1367,6 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = SHIELD(new_vec(VECSXP, ncols)); ++NP;
 
-
   // Clean indices and get metadata
 
   int out_size;
@@ -1383,26 +1384,28 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
 
   // Subset columns
 
-  PROTECT_INDEX index;
-  SEXP list_var;
-  R_ProtectWithIndex(list_var = R_NilValue, &index); ++NP;
+  PROTECT_INDEX list_var_idx, names_idx;
+  SEXP list_var, names;
+  R_ProtectWithIndex(list_var = R_NilValue, &list_var_idx); ++NP;
+  R_ProtectWithIndex(names = R_NilValue, &names_idx); ++NP;
 
-  SEXP df_var, names;
+  SEXP df_var = R_NilValue;
 
   for (int j = 0; j < ncols; ++j){
     df_var = p_x[j];
-    names = get_names(df_var);
+    R_Reprotect(names = get_names(df_var), names_idx);
     if (is_simple_vec(df_var)){
-      R_Reprotect(list_var = sset_vec(df_var, indices, check_indices), index);
+      R_Reprotect(list_var = sset_vec(df_var, indices, check_indices), list_var_idx);
       Rf_copyMostAttrib(df_var, list_var);
       set_names(list_var, sset_vec(names, indices, check_indices));
     } else {
-      R_Reprotect(list_var = cheapr_sset(df_var, indices), index);
+      R_Reprotect(list_var = cheapr_sset(df_var, indices), list_var_idx);
     }
     SET_VECTOR_ELT(out, j, list_var);
   }
 
-  set_names(out, get_names(x));
+  R_Reprotect(names = get_names(x), names_idx);
+  set_names(out, names);
 
   // list to data frame object
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
@@ -1453,7 +1456,9 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
     Rf_copyMostAttrib(x, out);
 
     // Subset names
-    set_names(out, sset_vec(get_names(x), indices, check2));
+    SEXP names = SHIELD(get_names(x)); ++NP;
+    SHIELD(names = sset_vec(names, indices, check2)); ++NP;
+    set_names(out, names);
     YIELD(NP);
     return out;
   } else if (is_df(x)){

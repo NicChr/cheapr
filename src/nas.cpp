@@ -512,8 +512,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
       SEXP is_missing = SHIELD(cheapr_is_na(p_x[j]));
-      cpp11::function r_any = cpp11::package("base")["any"];
-      ++NP;
+      cpp11::function r_any = cpp11::package("base")["any"]; ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_xlength(is_missing); ++NP;
@@ -545,8 +544,9 @@ SEXP cpp_col_any_na(SEXP x, bool names){
     }
     }
   }
+  SEXP x_names = SHIELD(get_names(x)); ++NP;
   if (names){
-    set_names(out, get_names(x));
+    set_names(out, x_names);
   }
   YIELD(NP);
   return out;
@@ -604,8 +604,9 @@ SEXP cpp_col_all_na(SEXP x, bool names){
     }
     }
   }
+  SEXP x_names = SHIELD(get_names(x)); ++NP;
   if (names){
-    set_names(out, get_names(x));
+    set_names(out, x_names);
   }
   YIELD(NP);
   return out;
@@ -933,8 +934,9 @@ SEXP cpp_col_na_counts(SEXP x, bool names){
     }
   } else {
     out = SHIELD(cpp_df_col_na_counts(x)); ++NP;
+    SEXP x_names = SHIELD(get_names(x)); ++NP;
     if (names){
-      set_names(out, get_names(x));
+      set_names(out, x_names);
     }
   }
   YIELD(NP);

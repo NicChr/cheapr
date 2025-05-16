@@ -1171,3 +1171,22 @@ SEXP cpp_str_coalesce(SEXP x){
 //   YIELD(1);
 //   return count;
 // }
+
+// R's internal tabulate with no checks whatsoever
+// SEXP cpp_tabulate(SEXP x, int n_bins){
+//
+//   R_xlen_t n = Rf_xlength(x);
+//
+//   SEXP out = SHIELD(new_vec(INTSXP, n_bins));
+//   const int *p_x = INTEGER(x);
+//   int* RESTRICT p_out = INTEGER(out);
+//
+//   memset(p_out, 0, n_bins * sizeof(int));
+//
+//   OMP_FOR_SIMD
+//   for (R_xlen_t i = 0 ; i < n; ++i){
+//     p_out[p_x[i] - 1]++;
+//   }
+//   YIELD(1);
+//   return out;
+// }

@@ -283,20 +283,22 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
 
 [[cpp11::register]]
 SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive){
+  int NP = 0;
   SEXP out = R_NilValue;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
     const SEXP *p_x = VECTOR_PTR_RO(x);
-    out = SHIELD(new_vec(VECSXP, size));
+    out = SHIELD(new_vec(VECSXP, size)); ++NP;
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (R_xlen_t i = 0; i < size; ++i){
       SET_VECTOR_ELT(out, i, cpp_lag(p_x[i], k, fill, set && !ALTREP(p_x[i]), true));
     }
   } else {
-    out = SHIELD(lag(x, k, fill, set));
-    set_names(out, lag(get_names(x), k, fill, set && !ALTREP(x)));
+    out = SHIELD(lag(x, k, fill, set)); ++NP;
+    SEXP names = SHIELD(get_names(x)); ++NP;
+    set_names(out, lag(names, k, fill, set && !ALTREP(x)));
   }
-  YIELD(1);
+  YIELD(NP);
   return out;
 }
 
@@ -721,19 +723,21 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
 
 [[cpp11::register]]
 SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool recursive){
+  int NP = 0;
   SEXP out = R_NilValue;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
     const SEXP *p_x = VECTOR_PTR_RO(x);
-    out = SHIELD(new_vec(VECSXP, size));
+    out = SHIELD(new_vec(VECSXP, size)); ++NP;
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (R_xlen_t i = 0; i < size; ++i){
       SET_VECTOR_ELT(out, i, cpp_lag2(p_x[i], lag, order, run_lengths, fill, true));
     }
   } else {
-    out = SHIELD(lag2(x, lag, order, run_lengths, fill));
-    set_names(out, lag2(get_names(x), lag, order, run_lengths, fill));
+    SEXP names = SHIELD(get_names(x)); ++NP;
+    out = SHIELD(lag2(x, lag, order, run_lengths, fill)); ++NP;
+    set_names(out, lag2(names, lag, order, run_lengths, fill));
   }
-  YIELD(1);
+  YIELD(NP);
   return out;
 }

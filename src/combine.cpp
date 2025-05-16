@@ -55,11 +55,12 @@ SEXP cpp_rep_len(SEXP x, int length){
     for (int i = 0; i < n_cols; ++i){
       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
     }
-    set_names(out, get_names(x));
+    SEXP names = SHIELD(get_names(x));
+    set_names(out, names);
     set_list_as_df(out);
     Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
     SHIELD(out = reconstruct(out, x, false));
-    YIELD(2);
+    YIELD(3);
     return out;
   } else if (is_simple_vec(x)){
 
@@ -69,7 +70,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     // Return x if length(x) == length
     if (out_size == size) return x;
 
-    switch (TYPEOF(x)){
+    switch (CHEAPR_TYPEOF(x)){
     case LGLSXP:
     case INTSXP: {
       const int *p_x = INTEGER(x);
@@ -96,6 +97,37 @@ SEXP cpp_rep_len(SEXP x, int length){
         OMP_FOR_SIMD
         for (int i = 0; i < out_size; ++i){
           p_out[i] = NA_INTEGER;
+        }
+      }
+      Rf_copyMostAttrib(x, out);
+      YIELD(1);
+      return out;
+    }
+    case CHEAPR_INT64SXP: {
+      const int_fast64_t *p_x = INTEGER64_PTR(x);
+      SEXP out = SHIELD(new_vec(REALSXP, out_size));
+      int_fast64_t* RESTRICT p_out = INTEGER64_PTR(out);
+
+      if (size == 1){
+        int_fast64_t val = p_x[0];
+        if (val == 0){
+          memset(p_out, 0, out_size * sizeof(int_fast64_t));
+        } else {
+          OMP_FOR_SIMD
+          for (int i = 0; i < out_size; ++i) p_out[i] = val;
+        }
+      } else if (out_size > 0 && size > 0){
+        n_chunks = std::ceil((static_cast<double>(out_size)) / size);
+        for (int i = 0; i < n_chunks; ++i){
+          k = i * size;
+          chunk_size = std::min(k + size, out_size) - k;
+          memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(int_fast64_t));
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        OMP_FOR_SIMD
+        for (int i = 0; i < out_size; ++i){
+          p_out[i] = NA_INTEGER64;
         }
       }
       Rf_copyMostAttrib(x, out);
@@ -320,19 +352,6 @@ SEXP cpp_rep(SEXP x, SEXP times){
       return out;
     }
   }
-  // SEXP temp_list = SHIELD(new_vec(VECSXP, n_times));
-  // SEXP temp;
-  // PROTECT_INDEX temp_idx;
-  // R_ProtectWithIndex(temp = R_NilValue, &temp_idx);
-  //
-  // for (R_xlen_t i = 0; i < n_times; ++i){
-  //   R_Reprotect(temp = slice_loc(x, i), temp_idx);
-  //   SET_VECTOR_ELT(temp_list, i, cpp_rep_len(temp, p_times[i]));
-  // }
-  //
-  // SEXP out = SHIELD(cpp_c(temp_list));
-  // YIELD(4);
-  // return out;
 }
 
 [[cpp11::register]]
@@ -392,42 +411,48 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 // Doesn't return unique df rows
 SEXP cpp_unique(SEXP x, bool names){
 
+  int NP = 0;
+
   bool is_simple = is_simple_atomic_vec(x);
 
   if (is_compact_seq(x)){
     return x;
   } else if (is_simple && Rf_length(x) < 10000){
-    SEXP dup = SHIELD(Rf_duplicated(x, FALSE));
-    SEXP unique_locs = SHIELD(cpp_which_(dup, true));
+    SEXP dup = SHIELD(Rf_duplicated(x, FALSE)); ++NP;
+    SEXP unique_locs = SHIELD(cpp_which_(dup, true)); ++NP;
     if (Rf_length(unique_locs) == Rf_length(x)){
-      YIELD(2);
+      YIELD(NP);
       return x;
     } else {
-      SEXP out = SHIELD(sset_vec(x, unique_locs, false));
+      SEXP out = SHIELD(sset_vec(x, unique_locs, false)); ++NP;
       Rf_copyMostAttrib(x, out);
       if (names){
-        set_names(out, sset_vec(get_names(x), unique_locs, false));
+        SEXP names = SHIELD(get_names(x)); ++NP;
+        SHIELD(names = sset_vec(names, unique_locs, false)); ++NP;
+        set_names(out, names);
       }
-      YIELD(3);
+      YIELD(NP);
       return out;
     }
   } else if (is_simple){
-    SEXP out = SHIELD(cheapr_fast_unique(x));
+    SEXP out = SHIELD(cheapr_fast_unique(x)); ++NP;
     if (names){
-      set_names(out, cheapr_fast_unique(get_names(x)));
+      SEXP names = SHIELD(get_names(x)); ++NP;
+      SHIELD(names = cheapr_fast_unique(names)); ++NP;
+      set_names(out, names);
     }
-    YIELD(1);
+    YIELD(NP);
     return out;
   } else {
-    SEXP out = SHIELD(cpp11::package("base")["unique"](x));
+    SEXP out = SHIELD(cpp11::package("base")["unique"](x)); ++NP;
     if (names){
-      SEXP names = cpp11::package("base")["names"](x);
-      SHIELD(names = cheapr_fast_unique(names));
-      SHIELD(out = cpp11::package("base")["names<-"](out, names));
-      YIELD(3);
+      SEXP names = SHIELD(cpp11::package("base")["names"](x)); ++NP;
+      SHIELD(names = cheapr_fast_unique(names)); ++NP;
+      SHIELD(out = cpp11::package("base")["names<-"](out, names)); ++NP;
+      YIELD(NP);
       return out;
     } else {
-      YIELD(1);
+      YIELD(NP);
       return out;
     }
   }
@@ -527,9 +552,10 @@ SEXP get_ptypes(SEXP x){
     SET_VECTOR_ELT(out, i, get_ptype(VECTOR_ELT(x, i)));
   }
 
-  set_names(out, get_names(x));
+  SEXP names = SHIELD(get_names(x));
+  set_names(out, names);
 
-  YIELD(1);
+  YIELD(2);
   return out;
 }
 
@@ -680,7 +706,7 @@ SEXP cpp_list_c(SEXP x){
 
     if (TYPEOF(p_x[i]) == VECSXP){
       p_temp = VECTOR_PTR_RO(p_x[i]);
-      names = get_names(p_x[i]);
+      R_Reprotect(names = get_names(p_x[i]), nm_idx);
       m = Rf_xlength(p_x[i]);
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
@@ -767,16 +793,18 @@ SEXP cpp_df_c(SEXP x){
   SET_VECTOR_ELT(frames, 0, df_template);
 
   SEXP ptypes, new_names, new_ptypes, new_cols,
-  temp_list;
+  temp_list, df_names, ptype_names;
   PROTECT_INDEX
   new_names_idx, ptypes_idx, new_ptypes_idx, new_cols_idx,
-  temp_list_idx;
+  temp_list_idx, df_names_idx, ptype_names_idx;
 
   R_ProtectWithIndex(ptypes = get_ptypes(df), &ptypes_idx); ++NP;
   R_ProtectWithIndex(new_names = R_NilValue, &new_names_idx); ++NP;
   R_ProtectWithIndex(new_ptypes = R_NilValue, &new_ptypes_idx); ++NP;
   R_ProtectWithIndex(new_cols = R_NilValue, &new_cols_idx); ++NP;
   R_ProtectWithIndex(temp_list = new_vec(VECSXP, 2), &temp_list_idx); ++NP;
+  R_ProtectWithIndex(df_names = R_NilValue, &df_names_idx); ++NP;
+  R_ProtectWithIndex(ptype_names = R_NilValue, &ptype_names_idx); ++NP;
 
   // We do 2 passes
   // 1st pass: Check inputs are dfs and construct prototype list
@@ -791,8 +819,11 @@ SEXP cpp_df_c(SEXP x){
       YIELD(NP); Rf_error("Can't combine data frames with non data frames");
     }
 
+    R_Reprotect(df_names = get_names(df), df_names_idx);
+    R_Reprotect(ptype_names = get_names(ptypes), ptype_names_idx);
+
     R_Reprotect(new_names = cpp_setdiff(
-      get_names(df), get_names(ptypes), false
+      df_names, ptype_names, false
     ), new_names_idx);
 
     // Adjust prototype list
@@ -894,7 +925,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
     const SEXP *p_temp = df_pointers[i];
 
     if (is_df(p_x[i])){
-      names = get_names(p_x[i]);
+      R_Reprotect(names = get_names(p_x[i]), nm_idx);
       m = Rf_length(p_x[i]);
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
@@ -1049,18 +1080,21 @@ SEXP cpp_c(SEXP x){
   // We use the tz info of the first datetime vec to copy to final result
   int first_datetime = integer_max_;
 
+  SEXP elem = R_NilValue;
+
   for (int i = 0; i < n; ++i){
-    vector_type = std::max(vector_type, TYPEOF(p_x[i]));
-    out_size += Rf_xlength(p_x[i]);
-    is_factor = is_factor || Rf_isFactor(p_x[i]);
-    is_simple = is_simple || is_simple_atomic_vec(p_x[i]);
-    is_date = is_date || Rf_inherits(p_x[i], "Date");
-    is_datetime = is_datetime || Rf_inherits(p_x[i], "POSIXct");
+    elem = p_x[i];
+    vector_type = std::max(vector_type, TYPEOF(elem));
+    out_size += Rf_xlength(elem);
+    is_factor = is_factor || Rf_isFactor(elem);
+    is_simple = is_simple || is_simple_atomic_vec(elem);
+    is_date = is_date || Rf_inherits(elem, "Date");
+    is_datetime = is_datetime || Rf_inherits(elem, "POSIXct");
     if (is_datetime){
       first_datetime = std::min(i, first_datetime);
     }
-    is_frame = is_frame || is_df(p_x[i]);
-    is_classed = is_classed || Rf_isObject(p_x[i]);
+    is_frame = is_frame || is_df(elem);
+    is_classed = is_classed || Rf_isObject(elem);
   }
 
   // Date vectors can be ints but datetimes can't
