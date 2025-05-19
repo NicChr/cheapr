@@ -1200,3 +1200,94 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   YIELD(1);
   return out;
 }
+
+// SEXP cpp_group_starts(SEXP group_id, int n_groups){
+//
+//   int n = Rf_length(group_id);
+//
+//   SEXP out = SHIELD(new_vec(INTSXP, n_groups));
+//   const int *p_group_id = INTEGER_RO(group_id);
+//   int* RESTRICT p_out = INTEGER(out);
+//
+//   // Initialise counts to 0
+//   OMP_FOR_SIMD
+//   for (int j = 0; j < n_groups; ++j){
+//     p_out[j] = integer_max_;
+//   }
+//   int curr_group;
+//   OMP_FOR_SIMD
+//   for (int i = 0; i < n; ++i){
+//     curr_group = p_group_id[i] - 1;
+//     p_out[curr_group] = std::min(p_out[curr_group], i + 1);
+//   }
+//   YIELD(1);
+//   return out;
+// }
+
+// Fast unique values given you have already calculated
+// the ordered group ids and number of groups
+
+// SEXP cpp_get_unique(SEXP x, SEXP group_id, int n_groups){
+//
+//   int NP = 0;
+//
+//   if (!cpp_is_simple_atomic_vec(x)){
+//     Rf_error("`x` must be a simple atomic vector in %s", __func__);
+//   }
+//
+//   int n = Rf_length(group_id);
+//
+//   uint32_t xtype = TYPEOF(x);
+//   const int *p_group_id = INTEGER_RO(group_id);
+//
+//   SEXP group_starts = SHIELD(new_vec(INTSXP, n_groups)); ++NP;
+//   int* RESTRICT p_group_starts = INTEGER(group_starts);
+//
+//   SEXP out = R_NilValue;
+//
+//   OMP_FOR_SIMD
+//   for (int j = 0; j < n_groups; ++j){
+//     p_group_starts[j] = integer_max_;
+//   }
+//
+//   uint_fast32_t curr_group, start_loc;
+//
+//   switch (xtype){
+//   case INTSXP: {
+//     out = SHIELD(new_vec(xtype, n_groups)); ++NP;
+//     const int *p_x = INTEGER_RO(x);
+//     int* RESTRICT p_out = INTEGER(out);
+//
+//     for (int i = 0; i < n; ++i){
+//       curr_group = p_group_id[i] - 1;
+//       start_loc = std::min(p_group_starts[curr_group], i);
+//       p_out[curr_group] = p_x[start_loc];
+//     }
+//     break;
+//   }
+//   // case NILSXP: {
+//   //
+//   // }
+//   // case NILSXP: {
+//   //
+//   // }
+//   // case NILSXP: {
+//   //
+//   // }
+//   // case NILSXP: {
+//   //
+//   // }
+//   // case NILSXP: {
+//   //
+//   // }
+//   // case NILSXP: {
+//   //
+//   // }
+//   default: {
+//     YIELD(NP);
+//     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(xtype));
+//   }
+//   }
+//   YIELD(NP);
+//   return out;
+// }

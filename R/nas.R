@@ -96,9 +96,16 @@ is_na.default <- function(x){
 #' @rdname is_na
 #' @export
 is_na.POSIXlt <- function(x){
-  row_any_na(list_as_df(do.call(recycle, unclass(x)[
-    c("sec", "min", "hour", "mday",
-      "mon", "year", "wday", "yday")])))
+  row_any_na(
+    list_as_df(
+      recycle(
+        .args = unclass(x)[c(
+          "sec", "min", "hour", "mday",
+          "mon", "year", "wday", "yday"
+        )]
+      )
+    )
+  )
 }
 #' @rdname is_na
 #' @export

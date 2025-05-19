@@ -78,29 +78,46 @@ counts <- function(x, sort = is.factor(x)){
     stop("`x` must be an atomic vector")
   }
   if (sort && is.factor(x)){
-    lvls <- attr(x, "levels", TRUE)
     keys <- levels_factor(x)
-    ids <- x
-    n_groups <- length(keys)
+    counts <- cpp_tabulate(x, length(keys))
   } else {
-    if (sort){
-      groups <- collapse::GRP(
-        x, sort = TRUE, return.order = FALSE, return.groups = TRUE
-      )
-      n_groups <- groups[["N.groups"]]
-      starts <- groups[["group.starts"]]
-      ids <- groups[["group.id"]]
-      keys <- groups[["groups"]][[1L]]
-    } else {
-      groups <- collapse::group(x, starts = TRUE)
-      ids <- groups
-      n_groups <- attr(groups, "N.groups", TRUE)
-      starts <- attr(groups, "starts", TRUE)
-      keys <- cpp_sset(x, starts, if (n_groups == 0 || length(n_groups) == 0) TRUE else FALSE)
-    }
+    groups <- collapse::GRP(
+      x, sort = sort, return.order = FALSE, return.groups = TRUE
+    )
+    keys <- groups[["groups"]][[1L]]
+    counts <- groups[["group.sizes"]]
   }
   fast_df(
     key = keys,
-    count = cpp_tabulate(ids, n_groups)
+    count = counts
   )
 }
+# counts2 <- function(x, sort = is.factor(x)){
+#   if (!cpp_is_simple_atomic_vec(x)){
+#     stop("`x` must be an atomic vector")
+#   }
+#   if (sort && is.factor(x)){
+#     lvls <- attr(x, "levels", TRUE)
+#     keys <- levels_factor(x)
+#     ids <- x
+#     n_groups <- length(keys)
+#   } else {
+#     if (sort){
+#       groups <- collapse::qG(x, sort = TRUE, na.exclude = FALSE)
+#       ids <- groups
+#       n_groups <- attr(groups, "N.groups", TRUE)
+#       starts <- cpp_group_starts(groups, n_groups)
+#       keys <- cpp_sset(x, starts, if (n_groups == 0 || length(n_groups) == 0) TRUE else FALSE)
+#     } else {
+#       groups <- collapse::group(x, starts = TRUE)
+#       ids <- groups
+#       n_groups <- attr(groups, "N.groups", TRUE)
+#       starts <- attr(groups, "starts", TRUE)
+#       keys <- cpp_sset(x, starts, if (n_groups == 0 || length(n_groups) == 0) TRUE else FALSE)
+#     }
+#   }
+#   fast_df(
+#     key = keys,
+#     count = cpp_tabulate(ids, n_groups)
+#   )
+# }

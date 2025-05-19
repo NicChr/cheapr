@@ -32,7 +32,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   case LGLSXP:
   case INTSXP: {
-    const int *p_x = INTEGER(x);
+    const int *p_x = INTEGER_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_int(p_x[i]);
@@ -54,7 +54,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case REALSXP: {
-    const double *p_x = REAL(x);
+    const double *p_x = REAL_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_dbl(p_x[i]);
@@ -78,7 +78,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case CPLXSXP: {
-    const Rcomplex *p_x = COMPLEX(x);
+    const Rcomplex *p_x = COMPLEX_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_cplx(p_x[i]);
@@ -354,48 +354,42 @@ SEXP cpp_df_row_na_counts(SEXP x){
     Rf_error("x must be a data frame");
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
-  int num_col = Rf_length(x);
   int NP = 0;
+  int num_col = Rf_length(x);
   int num_row = df_nrow(x);
   SEXP out = SHIELD(new_vec(INTSXP, num_row)); ++NP;
-  int *p_out = INTEGER(out);
+  int* RESTRICT p_out = INTEGER(out);
   memset(p_out, 0, num_row * sizeof(int));
-  int n_cores = num_row >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
-  bool do_parallel = n_cores > 1;
   for (int j = 0; j < num_col; ++j){
-    switch ( TYPEOF(p_x[j]) ){
+    switch ( CHEAPR_TYPEOF(p_x[j]) ){
     case LGLSXP:
     case INTSXP: {
-      int *p_xj = INTEGER(p_x[j]);
-#pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for simd
+      const int *p_xj = INTEGER_RO(p_x[j]);
+      OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_na_int(p_xj[i]);
       }
       break;
     }
-    case REALSXP: {
-      if (is_int64(p_x[j])){
-      int_fast64_t *p_xj = (int_fast64_t *) REAL(p_x[j]);
-#pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for simd
+    case CHEAPR_INT64SXP: {
+      const int_fast64_t *p_xj = INTEGER64_PTR(p_x[j]);
+      OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_na_int64(p_xj[i]);
       }
-    } else {
-      double *p_xj = REAL(p_x[j]);
-#pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for simd
+     break;
+    }
+    case REALSXP: {
+      const double *p_xj = REAL_RO(p_x[j]);
+      OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_na_dbl(p_xj[i]);
       }
-    }
       break;
     }
     case STRSXP: {
       const SEXP *p_xj = STRING_PTR_RO(p_x[j]);
-#pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for simd
+      OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_na_str(p_xj[i]);
       }
@@ -405,9 +399,8 @@ SEXP cpp_df_row_na_counts(SEXP x){
       break;
     }
     case CPLXSXP: {
-      Rcomplex *p_xj = COMPLEX(p_x[j]);
-#pragma omp parallel num_threads(n_cores) if(do_parallel)
-#pragma omp for simd
+      const Rcomplex *p_xj = COMPLEX_RO(p_x[j]);
+      OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_na_cplx(p_xj[i]);
       }
@@ -424,7 +417,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
                  utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
       }
-      int *p_is_missing = LOGICAL(is_missing);
+      const int* RESTRICT p_is_missing = LOGICAL_RO(is_missing);
       for (int k = 0; k < num_row; ++k){
         p_out[k] += p_is_missing[k];
       }
@@ -462,8 +455,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = SHIELD(cheapr_is_na(p_x[j]));
-      ++NP;
+      SEXP is_missing = SHIELD(cheapr_is_na(p_x[j])); ++NP;
       if (Rf_length(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_length(is_missing); ++NP;
