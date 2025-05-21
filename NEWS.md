@@ -7,6 +7,7 @@
 ### New features
 
 - Fast function `counts` to generate counts of unique values.
+- New sset method for fast subsetting integer64 vectors.
 
 # cheapr 1.2.0
 

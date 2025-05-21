@@ -114,5 +114,17 @@ sset.sf <- function(x, i = NULL, j = NULL, ...){
 }
 #' @export
 sset.vctrs_rcrd <- function(x, i = NULL, ...){
-  .Call(`_cheapr_cpp_set_add_attributes`, sset_row(list_as_df(x), i), attributes(x), FALSE)
+  .Call(
+    `_cheapr_cpp_set_add_attributes`,
+    sset_row(list_as_df(x), i), shallow_copy(attributes(x)), FALSE
+  )
+}
+
+#' @export
+sset.integer64 <- function(x, i = NULL, ...){
+  attrs_add(
+    cpp_sset(unclass(x), i, TRUE),
+    .args = shallow_copy(attributes(x)),
+    .set = TRUE
+  )
 }
