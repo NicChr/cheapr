@@ -62,7 +62,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     SHIELD(out = reconstruct(out, x, false));
     YIELD(3);
     return out;
-  } else if (is_simple_vec(x)){
+  } else if (is_simple_vec2(x)){
 
     int size = Rf_length(x);
     int n_chunks, k, chunk_size;
@@ -284,7 +284,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
         return out;
       }
 
-    } else if (is_simple_vec(x)){
+    } else if (is_simple_vec2(x)){
       SEXP out = SHIELD(new_vec(TYPEOF(x), cpp_sum(times)));
       switch (TYPEOF(x)){
       case LGLSXP:

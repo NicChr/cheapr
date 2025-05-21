@@ -206,3 +206,15 @@ vec_setdiff <- function(x, y, unique = FALSE){
 vec_intersect <- function(x, y, unique = FALSE){
   .Call(`_cheapr_cpp_intersect`, x, y, unique)
 }
+
+# my_unique <- function(x, sort = FALSE){
+#   ids <- collapse::qG(x, sort = sort, na.exclude = FALSE)
+#   n_groups <- attr(ids, "N.groups", TRUE)
+#   cpp_get_unique(x, ids, n_groups)
+# }
+
+# my_unique2 <- function(x, sort = FALSE){
+#   ids <- collapse::qG(x, sort = sort, na.exclude = FALSE)
+#   n_groups <- attr(ids, "N.groups", TRUE)
+#   cpp_sset(x, cpp_group_starts(ids, n_groups), FALSE)
+# }

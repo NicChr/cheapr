@@ -1201,6 +1201,262 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   return out;
 }
 
+// Type-7 quantile assuming x is already sorted
+// template<typename T>
+// double quantile(const T *p_x, double n, double prob){
+//
+//   if (prob < 0.0 || prob > 1.0){
+//     Rf_error("quantile probs must be between [0, 1]");
+//   }
+//
+//   if (n == 0.0){
+//     return NA_REAL;
+//   }
+//
+//   if (prob == 0.0){
+//     return p_x[0];
+//   }
+//
+//   if (prob == 1.0){
+//     return p_x[static_cast<R_xlen_t>(n) - 1];
+//   }
+//
+//   double m = 1.0 - prob;
+//   R_xlen_t j = std::floor((n * prob) + m);
+//   double gamma = (n * prob) + m - j;
+//
+//   if (j >= n) j = n - 1;
+//
+//   return (1.0 - gamma) * p_x[j - 1] + gamma * p_x[j];
+// }
+
+// double cpp_quantile(SEXP x, double prob){
+//   switch (CHEAPR_TYPEOF(x)){
+//   case INTSXP: {
+//     const int *p_x = INTEGER_RO(x);
+//     return quantile<int>(p_x, Rf_xlength(x), prob);
+//   }
+//   case CHEAPR_INT64SXP: {
+//     const int_fast64_t *p_x = INTEGER64_PTR(x);
+//     return quantile<int_fast64_t>(p_x, Rf_xlength(x), prob);
+//   }
+//   default: {
+//     const double *p_x = REAL_RO(x);
+//     return quantile<double>(p_x, Rf_xlength(x), prob);
+//   }
+//   }
+// }
+
+// Numeric summary (assuming x has been pre-sorted with NAs removed)
+// cpp11::list numeric_summary_stats(cpp11::sexp x){
+//
+//   using namespace cpp11;
+//
+//   int n = Rf_xlength(x);
+//
+//   if (n == 0){
+//     Rf_error("`x` must be a non-zero length numeric vector");
+//   }
+//
+//   int n_unique = 1;
+//   double sum = 0;
+//   double mean;
+//   double p0;
+//   double p25;
+//   double p50;
+//   double p75;
+//   double p100;
+//   double iqr;
+//   double var = 0;
+//   double sd;
+//
+//   switch (TYPEOF(x)){
+//   case INTSXP: {
+//
+//     const int *p_x = INTEGER_RO(x);
+//
+//     sum = p_x[0];
+//
+//     OMP_FOR_SIMD
+//     for (int i = 1; i < n; ++i){
+//       sum += p_x[i];
+//       n_unique += p_x[i] != p_x[i - 1];
+//     }
+//
+//     mean = sum / n;
+//     p0 = p_x[0];
+//     p25 = quantile<int>(p_x, n, 0.25);
+//     p50 = quantile<int>(p_x, n, 0.5);
+//     p75 = quantile<int>(p_x, n, 0.75);
+//     p100 = p_x[n - 1];
+//     iqr = p75 - p25;
+//
+//     // Calculate variance
+//     for (int i = 0; i < n; ++i){
+//       var += std::pow(p_x[i] - mean, 2);
+//     }
+//     var /= n - 1;
+//     sd = std::sqrt(var);
+//     break;
+//   }
+//   default: {
+//     const double *p_x = REAL_RO(x);
+//
+//     sum = p_x[0];
+//
+//     OMP_FOR_SIMD
+//     for (int i = 1; i < n; ++i){
+//       sum += p_x[i];
+//       n_unique += p_x[i] != p_x[i - 1];
+//     }
+//
+//     mean = sum / n;
+//     p0 = p_x[0];
+//     p25 = quantile<double>(p_x, n, 0.25);
+//     p50 = quantile<double>(p_x, n, 0.5);
+//     p75 = quantile<double>(p_x, n, 0.75);
+//     p100 = p_x[n - 1];
+//     iqr = p75 - p25;
+//
+//     // Calculate variance
+//     for (int i = 0; i < n; ++i){
+//       var += std::pow(p_x[i] - mean, 2);
+//     }
+//     var /= n - 1;
+//     sd = std::sqrt(var);
+//     break;
+//   }
+//   }
+//
+//   return writable::list(
+//   {
+//       "n_unique"_nm = as_sexp(n_unique),
+//       "mean"_nm = as_sexp(mean),
+//       "p0"_nm = as_sexp(p0),
+//       "p25"_nm = as_sexp(p25),
+//       "p50"_nm = as_sexp(p50),
+//       "p75"_nm = as_sexp(p75),
+//       "p100"_nm = as_sexp(p100),
+//       "iqr"_nm = as_sexp(iqr),
+//       "sd"_nm = as_sexp(sd)
+//   }
+//   );
+// }
+
+// SEXP sort_without_nas(SEXP x){
+//   SEXP order = SHIELD(
+//     cpp11::package("base")["order"](
+//         x,
+//         cpp11::named_arg("method") = "radix",
+//         cpp11::named_arg("na.last") = cpp11::as_sexp(NA_INTEGER)
+//     )
+//   );
+//   SEXP out = SHIELD(sset_vec(x, order, false));
+//   YIELD(2);
+//   return out;
+// }
+// cpp11::list numeric_summary_stats2(cpp11::sexp x){
+//
+//   using namespace cpp11;
+//
+//   int n_missing = na_count(x, false);
+//   double p_complete = 1 - (n_missing / Rf_length(x));
+//
+//   sexp x_sorted = sort_without_nas(x);
+//
+//   int n = Rf_xlength(x_sorted);
+//
+//   if (n == 0){
+//     Rf_error("`x` must be a non-zero length numeric vector");
+//   }
+//
+//   int n_unique = 1;
+//   double sum = 0;
+//   double mean;
+//   double p0;
+//   double p25;
+//   double p50;
+//   double p75;
+//   double p100;
+//   double iqr;
+//   double var = 0;
+//   double sd;
+//
+//   switch (TYPEOF(x_sorted)){
+//   case INTSXP: {
+//
+//     const int* RESTRICT p_x = INTEGER_RO(x_sorted);
+//
+//     sum = p_x[0];
+//
+//     OMP_FOR_SIMD
+//     for (int i = 1; i < n; ++i){
+//       sum += p_x[i];
+//       n_unique += p_x[i] != p_x[i - 1];
+//     }
+//
+//     mean = sum / n;
+//     p0 = p_x[0];
+//     p25 = quantile<int>(p_x, n, 0.25);
+//     p50 = quantile<int>(p_x, n, 0.5);
+//     p75 = quantile<int>(p_x, n, 0.75);
+//     p100 = p_x[n - 1];
+//     iqr = p75 - p25;
+//
+//     // Calculate variance
+//     for (int i = 0; i < n; ++i){
+//       var += std::pow(p_x[i] - mean, 2);
+//     }
+//     var /= n - 1;
+//     sd = std::sqrt(var);
+//     break;
+//   }
+//   default: {
+//     const double* RESTRICT p_x = REAL_RO(x_sorted);
+//
+//     sum = p_x[0];
+//
+//     OMP_FOR_SIMD
+//     for (int i = 1; i < n; ++i){
+//       sum += p_x[i];
+//       n_unique += p_x[i] != p_x[i - 1];
+//     }
+//
+//     mean = sum / n;
+//     p0 = p_x[0];
+//     p25 = quantile<double>(p_x, n, 0.25);
+//     p50 = quantile<double>(p_x, n, 0.5);
+//     p75 = quantile<double>(p_x, n, 0.75);
+//     p100 = p_x[n - 1];
+//     iqr = p75 - p25;
+//
+//     // Calculate variance
+//     for (int i = 0; i < n; ++i){
+//       var += std::pow(p_x[i] - mean, 2);
+//     }
+//     var /= n - 1;
+//     sd = std::sqrt(var);
+//     break;
+//   }
+//   }
+//
+//   return writable::list(
+//   {
+//     "n_missing"_nm = as_sexp(n_missing),
+//       "p_complete"_nm = as_sexp(p_complete),
+//       "n_unique"_nm = as_sexp(n_unique),
+//       "mean"_nm = as_sexp(mean),
+//       "p0"_nm = as_sexp(p0),
+//       "p25"_nm = as_sexp(p25),
+//       "p50"_nm = as_sexp(p50),
+//       "p75"_nm = as_sexp(p75),
+//       "p100"_nm = as_sexp(p100),
+//       "iqr"_nm = as_sexp(iqr),
+//       "sd"_nm = as_sexp(sd)
+//   }
+//   );
+// }
+
 // SEXP cpp_group_starts(SEXP group_id, int n_groups){
 //
 //   int n = Rf_length(group_id);
@@ -1265,24 +1521,17 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 //     }
 //     break;
 //   }
-//   // case NILSXP: {
-//   //
-//   // }
-//   // case NILSXP: {
-//   //
-//   // }
-//   // case NILSXP: {
-//   //
-//   // }
-//   // case NILSXP: {
-//   //
-//   // }
-//   // case NILSXP: {
-//   //
-//   // }
-//   // case NILSXP: {
-//   //
-//   // }
+//   case REALSXP: {
+//     out = SHIELD(new_vec(xtype, n_groups)); ++NP;
+//     const double *p_x = REAL_RO(x);
+//     double* RESTRICT p_out = REAL(out);
+//
+//     for (int i = 0; i < n; ++i){
+//       curr_group = p_group_id[i] - 1;
+//       p_out[curr_group] = p_x[std::min(p_group_starts[curr_group], i)];
+//     }
+//     break;
+//   }
 //   default: {
 //     YIELD(NP);
 //     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(xtype));

@@ -244,7 +244,7 @@ inline bool is_simple_atomic_vec(SEXP x){
       Rf_isVectorAtomic(x) && (
           !Rf_isObject(x) || (
               Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
-              Rf_inherits(x, "POSIXct") || Rf_inherits(x, "integer64")
+              Rf_inherits(x, "POSIXct")
           )
       )
   );
@@ -257,6 +257,14 @@ inline bool is_bare_list(SEXP x){
 // Sometimes bare lists can be easily handled
 inline bool is_simple_vec(SEXP x){
   return (is_simple_atomic_vec(x) || is_bare_list(x));
+}
+
+inline bool is_simple_atomic_vec2(SEXP x){
+  return is_simple_atomic_vec(x) || is_int64(x);
+}
+
+inline bool is_simple_vec2(SEXP x){
+  return is_simple_vec(x) || is_int64(x);
 }
 
 // Because Rf_ScalarLogical sometimes crashes R?.. Need to look into this

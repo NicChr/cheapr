@@ -647,3 +647,19 @@ pretty_round <- function(x, decimal_digits = 2, signif_digits = 2, threshold = 1
 #   b <- utils::tail(x, n = 1)
 #   cpp_growth_rate(as.double(a), as.double(b), length(time) / freq)
 # }
+
+# Efficient summary statistics
+# numeric_summary2 <- function(x){
+#
+#   n_missing <- na_count(x)
+#   p_complete <- 1 - (n_missing / length(x))
+#   out <- list(
+#     n_missing = n_missing,
+#     p_complete = p_complete
+#   )
+#   stats <- numeric_summary_stats(sort(x, na = NA, method = "radix"))
+#   list_as_df(list_assign(out, stats))
+# }
+# numeric_summary3 <- function(x){
+#   list_as_df(numeric_summary_stats2(x))
+# }
