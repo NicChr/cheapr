@@ -944,8 +944,8 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 }
 
 [[cpp11::register]]
-SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names,
-                     bool shallow_copy){
+SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
+                 SEXP source_attr_names, bool shallow_copy){
 
   int NP = 0;
 

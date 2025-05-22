@@ -16,8 +16,8 @@ cpp_set_add_attributes <- function(x, attributes, add) {
   .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
-reconstruct <- function(x, source, shallow_copy) {
-  .Call(`_cheapr_reconstruct`, x, source, shallow_copy)
+rebuild <- function(x, source, shallow_copy) {
+  .Call(`_cheapr_rebuild`, x, source, shallow_copy)
 }
 
 cpp_rep_len <- function(x, length) {
@@ -384,8 +384,8 @@ cpp_name_repair <- function(names, dup_sep, empty_sep) {
   .Call(`_cheapr_cpp_name_repair`, names, dup_sep, empty_sep)
 }
 
-cpp_reconstruct <- function(target, source, target_attr_names, source_attr_names, shallow_copy) {
-  .Call(`_cheapr_cpp_reconstruct`, target, source, target_attr_names, source_attr_names, shallow_copy)
+cpp_rebuild <- function(target, source, target_attr_names, source_attr_names, shallow_copy) {
+  .Call(`_cheapr_cpp_rebuild`, target, source, target_attr_names, source_attr_names, shallow_copy)
 }
 
 cpp_str_coalesce <- function(x) {

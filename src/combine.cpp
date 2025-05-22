@@ -7,7 +7,7 @@
 // }
 
 [[cpp11::register]]
-SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy){
+SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
   if (is_df(x)){
     if (is_bare_df(source)){
       if (!shallow_copy && is_bare_df(x)){
@@ -32,12 +32,12 @@ SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy){
       }
     } else {
 
-      // Method dispatch, users can write `reconstruct` methods which
+      // Method dispatch, users can write `rebuild` methods which
       // this will use
-      return cheapr_reconstruct(x, source, cpp11::named_arg("shallow_copy") = shallow_copy);
+      return cheapr_rebuild(x, source, cpp11::named_arg("shallow_copy") = shallow_copy);
     }
   } else {
-    return cheapr_reconstruct(x, source);
+    return cheapr_rebuild(x, source);
   }
 }
 
@@ -59,7 +59,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     set_names(out, names);
     set_list_as_df(out);
     Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
-    SHIELD(out = reconstruct(out, x, false));
+    SHIELD(out = rebuild(out, x, false));
     YIELD(3);
     return out;
   } else if (is_simple_vec2(x)){
@@ -273,7 +273,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
       if (Rf_length(x) == 0){
         SEXP out = SHIELD(Rf_shallow_duplicate(x));
         Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(cpp_sum(times)));
-        SHIELD(out = reconstruct(out, x, false));
+        SHIELD(out = rebuild(out, x, false));
         YIELD(3);
         return out;
       } else {
@@ -868,7 +868,7 @@ SEXP cpp_df_c(SEXP x){
   set_list_as_df(out);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   set_names(out, names);
-  SHIELD(out = reconstruct(out, df_template, false)); ++NP;
+  SHIELD(out = rebuild(out, df_template, false)); ++NP;
   YIELD(NP);
   return out;
 }
@@ -961,7 +961,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   SHIELD(out = cpp_new_df(out, r_nrows, false, name_repair)); ++NP;
 
   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
-    SHIELD(out = reconstruct(out, VECTOR_ELT(x, 0), false)); ++NP;
+    SHIELD(out = rebuild(out, VECTOR_ELT(x, 0), false)); ++NP;
   }
   YIELD(NP);
   return out;
@@ -1051,7 +1051,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 //   SHIELD(out = cpp_new_df(out, r_nrows, false, name_repair)); ++NP;
 //
 //   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
-//     SHIELD(out = reconstruct(out, VECTOR_ELT(x, 0))); ++NP;
+//     SHIELD(out = rebuild(out, VECTOR_ELT(x, 0))); ++NP;
 //   }
 //   YIELD(NP);
 //   return out;

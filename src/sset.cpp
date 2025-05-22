@@ -1431,7 +1431,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check){
   SEXP out = SHIELD(cpp_df_select(x, j)); ++NP;
   // Subset rows
   SHIELD(out = cpp_df_slice(out, i, check)); ++NP;
-  SHIELD(out = reconstruct(out, x, false)); ++NP;
+  SHIELD(out = rebuild(out, x, false)); ++NP;
   YIELD(NP);
   return out;
 }

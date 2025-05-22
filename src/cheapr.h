@@ -173,7 +173,7 @@ SEXP get_ptype(SEXP x);
 SEXP get_list_element(SEXP list, SEXP str);
 SEXP list_c2(SEXP x, SEXP y);
 SEXP c2(SEXP x, SEXP y);
-SEXP reconstruct(SEXP x, SEXP source, bool shallow_copy);
+SEXP rebuild(SEXP x, SEXP source, bool shallow_copy);
 SEXP cpp_df_assign_cols(SEXP x, SEXP cols);
 SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair);
 SEXP cpp_list_assign(SEXP x, SEXP values);
@@ -311,7 +311,7 @@ inline cpp11::function base_as_character = cpp11::package("base")["as.character"
 inline cpp11::function base_paste0 = cpp11::package("base")["paste0"];
 inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
 inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
-inline cpp11::function cheapr_reconstruct = cpp11::package("cheapr")["reconstruct"];
+inline cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
 
 inline bool address_equal(SEXP x, SEXP y){
   return r_address(x) == r_address(y);

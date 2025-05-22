@@ -658,7 +658,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   set_names(out, out_names);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
   Rf_classgets(out, make_utf8_str("data.frame"));
-  SHIELD(out = reconstruct(out, x, false)); ++NP;
+  SHIELD(out = rebuild(out, x, false)); ++NP;
   YIELD(NP);
   return out;
 }
