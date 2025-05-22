@@ -1009,9 +1009,12 @@ SEXP cpp_reconstruct(SEXP target, SEXP source, SEXP target_attr_names, SEXP sour
 
 [[cpp11::register]]
 SEXP cpp_str_coalesce(SEXP x){
+
   if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of character vectors in %s", __func__);
   }
+
+  cpp11::writable::integers null_locs;
 
   uint_fast64_t n = Rf_xlength(x);
   uint_fast64_t out_size = 0;
@@ -1020,16 +1023,40 @@ SEXP cpp_str_coalesce(SEXP x){
   const SEXP *p_x = VECTOR_PTR_RO(x);
   std::vector<const SEXP*> str_ptrs(n);
 
+  SEXP char_vec = R_NilValue;
+  uint32_t xtype;
+
   for (uint_fast64_t i = 0; i < n; ++i){
-    if (TYPEOF(p_x[i]) != STRSXP){
-      SET_VECTOR_ELT(x, i, base_as_character(p_x[i]));
+    char_vec = p_x[i];
+    xtype = TYPEOF(char_vec);
+    if (xtype == NILSXP){
+      null_locs.push_back(-(i + 1));
+    } else {
+      if (xtype != STRSXP){
+        SET_VECTOR_ELT(x, i, base_as_character(char_vec));
+        char_vec = VECTOR_ELT(x, i);
+      }
+      m = Rf_xlength(char_vec);
+      if (m == 0){
+        return Rf_allocVector(STRSXP, 0);
+      }
+      str_ptrs[i] = STRING_PTR_RO(char_vec);
+      out_size = std::max(out_size, m);
     }
-    m = Rf_xlength(p_x[i]);
-    if (m == 0){
-      return Rf_allocVector(STRSXP, 0);
+  }
+
+  // If we have NULL elements, drop them and re-calculate pointers
+  if (null_locs.size() != 0){
+    SHIELD(x = cpp_sset(x, null_locs, true));
+    n -= null_locs.size();
+    p_x = VECTOR_PTR_RO(x);
+
+    for (uint_fast64_t i = 0; i < n; ++i){
+      str_ptrs[i] = STRING_PTR_RO(p_x[i]);
     }
-    str_ptrs[i] = STRING_PTR_RO(p_x[i]);
-    out_size = std::max(out_size, m);
+    str_ptrs.resize(n);
+  } else {
+    SHIELD(x);
   }
 
   SEXP out = SHIELD(Rf_allocVector(STRSXP, out_size));
@@ -1054,7 +1081,7 @@ SEXP cpp_str_coalesce(SEXP x){
       }
     }
   }
-  YIELD(1);
+  YIELD(2);
   return out;
 }
 
