@@ -237,11 +237,19 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     default: {
+      if (r_length(x) == length){
+      return x;
+    } else {
       return base_rep(x, cpp11::named_arg("length.out") = length);
     }
     }
+    }
   } else {
-    return base_rep(x, cpp11::named_arg("length.out") = length);
+    if (r_length(x) == length){
+      return x;
+    } else {
+      return base_rep(x, cpp11::named_arg("length.out") = length);
+    }
   }
 }
 
