@@ -123,7 +123,7 @@ sset.vctrs_rcrd <- function(x, i = NULL, ...){
 #' @export
 sset.integer64 <- function(x, i = NULL, ...){
   attrs_add(
-    cpp_sset(unclass(x), i, TRUE),
+    cpp_sset(unclass(x), if (is.null(i)) seq_along(x) else i, TRUE),
     .args = shallow_copy(attributes(x)),
     .set = TRUE
   )
