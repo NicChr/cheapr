@@ -1014,6 +1014,7 @@ SEXP cpp_str_coalesce(SEXP x){
     Rf_error("`x` must be a list of character vectors in %s", __func__);
   }
 
+  uint32_t NP = 0;
   uint_fast64_t n = Rf_xlength(x);
   uint_fast64_t out_size = 0;
   uint_fast64_t m;
@@ -1024,11 +1025,18 @@ SEXP cpp_str_coalesce(SEXP x){
   SEXP char_vec = R_NilValue;
   uint32_t xtype;
 
+  bool shallow_duplicated = false;
+
   for (uint_fast64_t i = 0; i < n; ++i){
     char_vec = p_x[i];
     xtype = TYPEOF(char_vec);
 
     if (xtype != STRSXP){
+      if (!shallow_duplicated){
+        SHIELD(x = Rf_shallow_duplicate(x)); ++NP;
+        p_x = VECTOR_PTR_RO(x);
+        shallow_duplicated = true;
+      }
       SET_VECTOR_ELT(x, i, base_as_character(char_vec));
       char_vec = p_x[i];
     }
@@ -1038,13 +1046,14 @@ SEXP cpp_str_coalesce(SEXP x){
     if (xtype != NILSXP){
       m = Rf_xlength(char_vec);
       if (m == 0){
+        YIELD(NP);
         return Rf_allocVector(STRSXP, 0);
       }
       out_size = std::max(out_size, m);
     }
   }
 
-  SEXP out = SHIELD(Rf_allocVector(STRSXP, out_size));
+  SEXP out = SHIELD(Rf_allocVector(STRSXP, out_size)); ++NP;
 
   SEXP inner_char = R_BlankString;
 
@@ -1067,7 +1076,7 @@ SEXP cpp_str_coalesce(SEXP x){
       }
     }
   }
-  YIELD(1);
+  YIELD(NP);
   return out;
 }
 
