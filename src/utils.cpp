@@ -1,3 +1,4 @@
+#include <vector>
 #include "cheapr.h"
 #include <R.h> // R_Calloc
 
@@ -1012,41 +1013,48 @@ SEXP cpp_str_coalesce(SEXP x){
     Rf_error("`x` must be a list of character vectors in %s", __func__);
   }
 
-  int n = Rf_xlength(x);
-
-  R_xlen_t out_size = 0;
+  uint_fast64_t n = Rf_xlength(x);
+  uint_fast64_t out_size = 0;
+  uint_fast64_t m;
 
   const SEXP *p_x = VECTOR_PTR_RO(x);
+  std::vector<const SEXP*> str_ptrs(n);
 
-  for (R_xlen_t i = 0; i < n; ++i){
-    if (Rf_xlength(p_x[i]) == 0){
+  for (uint_fast64_t i = 0; i < n; ++i){
+    if (TYPEOF(p_x[i]) != STRSXP){
+      SET_VECTOR_ELT(x, i, base_as_character(p_x[i]));
+    }
+    m = Rf_xlength(p_x[i]);
+    if (m == 0){
       return Rf_allocVector(STRSXP, 0);
     }
-    if (TYPEOF(p_x[i]) != STRSXP){
-      Rf_error("All elements of `x` must be character vectors in %s", __func__);
-    }
-    out_size = std::max(out_size, Rf_xlength(p_x[i]));
+    str_ptrs[i] = STRING_PTR_RO(p_x[i]);
+    out_size = std::max(out_size, m);
   }
-
 
   SEXP out = SHIELD(Rf_allocVector(STRSXP, out_size));
 
-  SEXP inner_char;
-  PROTECT_INDEX inner_char_idx;
+  SEXP inner_char = R_BlankString;
 
-  R_ProtectWithIndex(inner_char = R_BlankString, &inner_char_idx);
+  uint_fast64_t n_nas;
 
-
-  for (R_xlen_t i = 0; i < out_size; ++i){
-    for (R_xlen_t j = 0; j < n; ++j){
-      R_Reprotect(inner_char = STRING_ELT(p_x[j], i % Rf_xlength(p_x[j])), inner_char_idx);
-      if (inner_char != R_BlankString){
+  for (uint_fast64_t i = 0; i < out_size; ++i){
+    n_nas = 0;
+    for (uint_fast64_t j = 0; j < n; ++j){
+      m = Rf_xlength(p_x[j]);
+      inner_char = str_ptrs[j][i % m];
+      n_nas += inner_char == NA_STRING;
+      if (!(inner_char == R_BlankString || inner_char == NA_STRING)){
         SET_STRING_ELT(out, i, inner_char);
         break;
       }
+      // If all ith elements are NA, then return NA
+      if (n_nas == n){
+        SET_STRING_ELT(out, i, NA_STRING);
+      }
     }
   }
-  YIELD(2);
+  YIELD(1);
   return out;
 }
 
@@ -1540,3 +1548,4 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 //   YIELD(NP);
 //   return out;
 // }
+

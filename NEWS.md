@@ -7,6 +7,9 @@
 ### New features
 
 - Fast function `counts` to generate counts of unique values.
+
+- `str_coalesce` as a vectorised way of finding first non-empty string.
+
 - New sset method for fast subsetting integer64 vectors.
 
 # cheapr 1.2.0
