@@ -1014,8 +1014,6 @@ SEXP cpp_str_coalesce(SEXP x){
     Rf_error("`x` must be a list of character vectors in %s", __func__);
   }
 
-  cpp11::writable::integers null_locs;
-
   uint_fast64_t n = Rf_xlength(x);
   uint_fast64_t out_size = 0;
   uint_fast64_t m;
@@ -1029,34 +1027,21 @@ SEXP cpp_str_coalesce(SEXP x){
   for (uint_fast64_t i = 0; i < n; ++i){
     char_vec = p_x[i];
     xtype = TYPEOF(char_vec);
-    if (xtype == NILSXP){
-      null_locs.push_back(-(i + 1));
-    } else {
-      if (xtype != STRSXP){
-        SET_VECTOR_ELT(x, i, base_as_character(char_vec));
-        char_vec = VECTOR_ELT(x, i);
-      }
+
+    if (xtype != STRSXP){
+      SET_VECTOR_ELT(x, i, base_as_character(char_vec));
+      char_vec = p_x[i];
+    }
+
+    str_ptrs[i] = STRING_PTR_RO(char_vec);
+
+    if (xtype != NILSXP){
       m = Rf_xlength(char_vec);
       if (m == 0){
         return Rf_allocVector(STRSXP, 0);
       }
-      str_ptrs[i] = STRING_PTR_RO(char_vec);
       out_size = std::max(out_size, m);
     }
-  }
-
-  // If we have NULL elements, drop them and re-calculate pointers
-  if (null_locs.size() != 0){
-    SHIELD(x = cpp_sset(x, null_locs, true));
-    n -= null_locs.size();
-    p_x = VECTOR_PTR_RO(x);
-
-    for (uint_fast64_t i = 0; i < n; ++i){
-      str_ptrs[i] = STRING_PTR_RO(p_x[i]);
-    }
-    str_ptrs.resize(n);
-  } else {
-    SHIELD(x);
   }
 
   SEXP out = SHIELD(Rf_allocVector(STRSXP, out_size));
@@ -1069,6 +1054,7 @@ SEXP cpp_str_coalesce(SEXP x){
     n_nas = 0;
     for (uint_fast64_t j = 0; j < n; ++j){
       m = Rf_xlength(p_x[j]);
+      if (m == 0) continue;
       inner_char = str_ptrs[j][i % m];
       n_nas += inner_char == NA_STRING;
       if (!(inner_char == R_BlankString || inner_char == NA_STRING)){
@@ -1081,7 +1067,7 @@ SEXP cpp_str_coalesce(SEXP x){
       }
     }
   }
-  YIELD(2);
+  YIELD(1);
   return out;
 }
 
