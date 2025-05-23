@@ -65,3 +65,6 @@ rebuild.data.table <- function(x, template, shallow_copy = TRUE, ...){
   )
 }
 
+# To not break dependency
+cpp_reconstruct <- cpp_rebuild
+
