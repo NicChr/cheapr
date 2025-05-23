@@ -699,13 +699,6 @@ extern "C" SEXP _cheapr_cpp_tabulate(SEXP x, SEXP n_bins) {
     return cpp11::as_sexp(cpp_tabulate(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<uint32_t>>(n_bins)));
   END_CPP11
 }
-// utils.cpp
-double get_na_int64();
-extern "C" SEXP _cheapr_get_na_int64() {
-  BEGIN_CPP11
-    return cpp11::as_sexp(get_na_int64());
-  END_CPP11
-}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -845,7 +838,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
-    {"_cheapr_get_na_int64",                (DL_FUNC) &_cheapr_get_na_int64,                0},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_rebuild",                     (DL_FUNC) &_cheapr_rebuild,                     3},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},

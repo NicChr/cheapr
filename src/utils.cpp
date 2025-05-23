@@ -1142,8 +1142,3 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   YIELD(1);
   return out;
 }
-
-[[cpp11::register]]
-double get_na_int64(){
-  return NA_INTEGER64;
-}
