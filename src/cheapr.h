@@ -142,7 +142,6 @@ SEXP cpp_set_rm_attributes(SEXP x);
 SEXP coerce_vector(SEXP source, SEXPTYPE type);
 bool implicit_na_coercion(SEXP x, SEXP target);
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
-double round_nearest_even(double x);
 SEXP cpp_set_divide(SEXP x, SEXP y);
 SEXP cpp_val_remove(SEXP x, SEXP value);
 SEXP cpp_seq_len(R_xlen_t n);
@@ -298,6 +297,10 @@ inline void set_names(SEXP x, SEXP names){
 }
 inline SEXP get_names(SEXP x){
   return Rf_getAttrib(x, R_NamesSymbol);
+}
+
+inline double round_nearest_even(double x){
+  return x - std::remainder(x, 1.0);
 }
 
 inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
