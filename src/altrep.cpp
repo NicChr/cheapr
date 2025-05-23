@@ -73,11 +73,6 @@ SEXP compact_seq_data(SEXP x){
 }
 
 SEXP altrep_materialise(SEXP x) {
-  // if (ALTREP(x)){
-  //   return TYPEOF(x) == VECSXP ? list_shallow_copy(x, false) : Rf_duplicate(x);
-  // } else {
-  //  return x;
-  // }
   return is_altrep(x) ? cpp_semi_copy(x) : x;
   // Even after using DATAPTR, ALTREP(x) == TRUE ?
   // if (ALTREP(x)) DATAPTR(x);

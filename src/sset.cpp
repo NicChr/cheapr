@@ -1176,46 +1176,6 @@ SEXP rev(SEXP x, bool set){
     YIELD(NP);
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
-    // We can reverse data frames in-place with the below commented-out code
-    // It will not work properly though for data.tables
-
-    // case VECSXP: {
-    //   if (recursive){
-    //   rev_names = false;
-    //   out = SHIELD(new_vec(VECSXP, n)); ++NP;
-    //   SHALLOW_DUPLICATE_ATTRIB(out, x);
-    //   for (R_xlen_t i = 0; i < n; ++i){
-    //     SET_VECTOR_ELT(out, i, cpp_rev(VECTOR_ELT(x, i), true, set));
-    //   }
-    //   break;
-    // } else if (!recursive && (!Rf_isObject(x) || is_df(x))){
-    //   out = SHIELD(set ? x : list_shallow_copy(x, false)); ++NP;
-    //   if (!set){
-    //     // SHALLOW_DUPLICATE_ATTRIB(out, x);
-    //     cpp_copy_names(x, out, true);
-    //   }
-    //   const SEXP *p_out = VECTOR_PTR_RO(out);
-    //   for (R_xlen_t i = 0; i < half; ++i) {
-    //     k = n2 - i;
-    //     SEXP left = SHIELD(p_out[i]);
-    //     SET_VECTOR_ELT(out, i, p_out[k]);
-    //     SET_VECTOR_ELT(out, k, left);
-    //     YIELD(1);
-    //   }
-    //     break;
-    //   }
-    // }
-    // default: {
-    //   // set rev_names to false because catch-all r_rev() will handle that
-    //   rev_names = false;
-    //   cpp11::function r_rev = cpp11::package("base")["rev"];
-    //   if (set){
-    //     YIELD(NP);
-    //     Rf_error("Can't reverse in place here");
-    //   }
-    //   out = SHIELD(r_rev(x)); ++NP;
-    //   break;
-    // }
   }
   YIELD(NP);
   return out;
@@ -1561,50 +1521,4 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
 //   } else {
 //     Rf_error("error");
 //   }
-// }
-// SEXP test(SEXP x, SEXP list) {
-//
-//
-//   int n = Rf_length(list);
-//
-//   std::vector<int*> int_ptrs(n);
-//   SEXP sizes = Rf_protect(Rf_allocVector(INTSXP, n));
-//   int* RESTRICT p_sizes = INTEGER(sizes);
-//   const SEXP *p_list = VECTOR_PTR_RO(list);
-//
-//   SEXP int_vec;
-//
-//   for (int i = 0; i < n; ++i){
-//     int_vec = p_list[i];
-//     p_sizes[i] = Rf_length(int_vec);
-//     int_ptrs[i] = INTEGER(int_vec);
-//   }
-//
-//   int* p_x = INTEGER(x);
-//
-//   SEXP temp;
-//   PROTECT_INDEX idx;
-//   R_ProtectWithIndex(temp = R_NilValue, &idx);
-//   for (int i = 0; i < n; ++i){
-//     R_Reprotect(temp = foo<INTSXP>(p_x, int_ptrs[i], p_sizes[i]), idx);
-//   }
-//   YIELD(2);
-//   return temp;
-// }
-// SEXP test2(SEXP x, SEXP list) {
-//
-//
-//   int n = Rf_length(list);
-//   const SEXP *p_list = VECTOR_PTR_RO(list);
-//
-//   int* p_x = INTEGER(x);
-//
-//   SEXP temp;
-//   PROTECT_INDEX idx;
-//   R_ProtectWithIndex(temp = R_NilValue, &idx);
-//   for (int i = 0; i < n; ++i){
-//     R_Reprotect(temp = sset_vec(x, p_list[i], false), idx);
-//   }
-//   YIELD(1);
-//   return temp;
 // }
