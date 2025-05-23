@@ -22,7 +22,7 @@ int int_div(int x, int y){
 }
 
 SEXP xlen_to_r(R_xlen_t x){
-  return x > integer_max_ ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
+  return x > integer32_max_ ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
 }
 
 R_xlen_t vec_length(SEXP x){
@@ -219,7 +219,7 @@ double cpp_sum(SEXP x){
   }
   case CHEAPR_INT64SXP: {
 
-    const int_fast64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -250,7 +250,7 @@ double cpp_min(SEXP x){
     if (n == 0) return R_PosInf;
 
     int *p_x = INTEGER(x);
-    int out = integer_max_;
+    int out = integer32_max_;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -262,8 +262,8 @@ double cpp_min(SEXP x){
 
     if (n == 0) return R_PosInf;
 
-    int_fast64_t *p_x = INTEGER64_PTR(x);
-    int_fast64_t out = integer64_max_;
+    int64_t *p_x = INTEGER64_PTR(x);
+    int64_t out = integer64_max_;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -647,13 +647,13 @@ SEXP cpp_lgl_count(SEXP x){
   }
   R_xlen_t nna = n - ntrue - nfalse;
 
-  SEXP out = SHIELD(new_vec(n > integer_max_ ? REALSXP : INTSXP, 3));
+  SEXP out = SHIELD(new_vec(n > integer32_max_ ? REALSXP : INTSXP, 3));
   SEXP names = SHIELD(new_vec(STRSXP, 3));
   SET_STRING_ELT(names, 0, make_utf8_char("true"));
   SET_STRING_ELT(names, 1, make_utf8_char("false"));
   SET_STRING_ELT(names, 2, make_utf8_char("na"));
 
-  if (n > integer_max_){
+  if (n > integer32_max_){
     SET_REAL_ELT(out, 0, static_cast<double>(ntrue));
     SET_REAL_ELT(out, 1, static_cast<double>(nfalse));
     SET_REAL_ELT(out, 2, static_cast<double>(nna));
@@ -766,8 +766,8 @@ SEXP cpp_growth_rate(SEXP x){
     break;
   }
   case CHEAPR_INT64SXP: {
-    int_fast64_t x_n = INTEGER64_PTR(x)[n - 1];
-    int_fast64_t x_1 = INTEGER64_PTR(x)[0];
+    int64_t x_n = INTEGER64_PTR(x)[n - 1];
+    int64_t x_1 = INTEGER64_PTR(x)[0];
     a = R_SCALAR_AS_DOUBLE(x_1, NA_INTEGER64);
     b = R_SCALAR_AS_DOUBLE(x_n, NA_INTEGER64);
     break;
@@ -1119,7 +1119,7 @@ SEXP cpp_str_coalesce(SEXP x){
 [[cpp11::register]]
 SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
-  if (n_bins > integer_max_){
+  if (n_bins > integer32_max_){
     Rf_error("`n_bins` must be < 2^31 in %s", __func__);
   }
   R_xlen_t n = Rf_xlength(x);
@@ -1141,4 +1141,9 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   }
   YIELD(1);
   return out;
+}
+
+[[cpp11::register]]
+double get_na_int64(){
+  return NA_INTEGER64;
 }

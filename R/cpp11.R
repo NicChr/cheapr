@@ -396,6 +396,10 @@ cpp_tabulate <- function(x, n_bins) {
   .Call(`_cheapr_cpp_tabulate`, x, n_bins)
 }
 
+get_na_int64 <- function() {
+  .Call(`_cheapr_get_na_int64`)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

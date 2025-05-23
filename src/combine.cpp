@@ -104,14 +104,14 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     case CHEAPR_INT64SXP: {
-      const int_fast64_t *p_x = INTEGER64_PTR(x);
+      const int64_t *p_x = INTEGER64_PTR(x);
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      int_fast64_t* RESTRICT p_out = INTEGER64_PTR(out);
+      int64_t* RESTRICT p_out = INTEGER64_PTR(out);
 
       if (size == 1){
-        int_fast64_t val = p_x[0];
+        int64_t val = p_x[0];
         if (val == 0){
-          memset(p_out, 0, out_size * sizeof(int_fast64_t));
+          memset(p_out, 0, out_size * sizeof(int64_t));
         } else {
           OMP_FOR_SIMD
           for (int i = 0; i < out_size; ++i) p_out[i] = val;
@@ -121,7 +121,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         for (int i = 0; i < n_chunks; ++i){
           k = i * size;
           chunk_size = std::min(k + size, out_size) - k;
-          memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(int_fast64_t));
+          memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(int64_t));
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -953,7 +953,7 @@ SEXP cpp_c(SEXP x){
 
 
   // We use the tz info of the first datetime vec to copy to final result
-  int first_datetime = integer_max_;
+  int first_datetime = integer32_max_;
 
   SEXP elem = R_NilValue;
 

@@ -1,4 +1,4 @@
-* Updated to version 1.2.0
+* Updated to version 1.3.0
 
 * rchk issues have been fixed.
 

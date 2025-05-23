@@ -43,7 +43,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int_fast64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_int64(p_x[i]);
@@ -132,7 +132,7 @@ bool cpp_any_na(SEXP x, bool recursive){
     break;
   }
   case CHEAPR_INT64SXP: {
-    int_fast64_t *p_x = INTEGER64_PTR(x);
+    int64_t *p_x = INTEGER64_PTR(x);
     CHEAPR_ANY_NA(is_na_int64);
     break;
   }
@@ -194,7 +194,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
     break;
   }
   case CHEAPR_INT64SXP: {
-    int_fast64_t *p_x = INTEGER64_PTR(x);
+    int64_t *p_x = INTEGER64_PTR(x);
     CHEAPR_ALL_NA(is_na_int64);
     break;
   }
@@ -272,7 +272,7 @@ SEXP cpp_is_na(SEXP x){
   case CHEAPR_INT64SXP: {
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
-    const int_fast64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR(x);
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
@@ -372,7 +372,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       break;
     }
     case CHEAPR_INT64SXP: {
-      const int_fast64_t *p_xj = INTEGER64_PTR(p_x[j]);
+      const int64_t *p_xj = INTEGER64_PTR(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_na_int64(p_xj[i]);
@@ -636,7 +636,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //       }
 //       case REALSXP: {
 //         if (is_int64(p_x[j])){
-//         int_fast64_t *p_xj = (int_fast64_t *) REAL(p_x[j]);
+//         int64_t *p_xj = (int64_t *) REAL(p_x[j]);
 //         if (is_na_int64(p_xj[i])){
 //           row_has_na = true;
 //           break;
@@ -727,7 +727,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       break;
     }
     case CHEAPR_INT64SXP: {
-      int_fast64_t *p_x = INTEGER64_PTR(x);
+      int64_t *p_x = INTEGER64_PTR(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
         p_out[rowi] += is_na_int64(p_x[i]);
@@ -802,7 +802,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
       break;
     }
     case CHEAPR_INT64SXP: {
-      int_fast64_t *p_x = INTEGER64_PTR(x);
+      int64_t *p_x = INTEGER64_PTR(x);
       for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
         new_col = rowi == num_row;
         if (new_col){
