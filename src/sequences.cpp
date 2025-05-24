@@ -464,7 +464,7 @@ bool is_infinite(double x){
 [[cpp11::register]]
 SEXP cpp_fixed_width_breaks(double start, double end, double n,
                             bool pretty, bool expand_min, bool expand_max){
-  int NP = 0;
+  int32_t NP = 0;
   if (is_na_dbl(n)){
     Rf_error("n must not be `NA`");
   }

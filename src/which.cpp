@@ -82,7 +82,7 @@ SEXP cpp_which_(SEXP x, bool invert){
 
 [[cpp11::register]]
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
   bool is_long = (n > integer_max_);
   if (Rf_length(value) != 1){
@@ -634,7 +634,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
 
 // like cpp_which_val but an optional n_values arg to skip counting
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
   bool is_long = (n > integer_max_);
   if (Rf_length(value) != 1){

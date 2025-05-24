@@ -364,7 +364,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
 
 [[cpp11::register]]
 SEXP cpp_rep_each(SEXP x, SEXP each){
-  int NP = 0;
+  int32_t NP = 0;
   SHIELD(each = coerce_vector(each, INTSXP)); ++NP;
   if (Rf_length(each) == 1){
     if (INTEGER(each)[0] == 1){
@@ -419,7 +419,7 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 // Doesn't return unique df rows
 SEXP cpp_unique(SEXP x, bool names){
 
-  int NP = 0;
+  int32_t NP = 0;
 
   bool is_simple = is_simple_atomic_vec(x);
 
@@ -509,7 +509,7 @@ SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
 //
 //   bool is_simple = is_simple_atomic_vec(x) && is_simple_atomic_vec(y);
 //
-//   int NP = 0;
+//   int32_t NP = 0;
 //   if (is_simple){
 //     if (!dups){
 //       SHIELD(x = cpp_unique(x)); ++NP;
@@ -638,7 +638,7 @@ SEXP cpp_combine_factors(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_list_c(SEXP x){
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
@@ -739,7 +739,7 @@ SEXP cpp_df_c(SEXP x){
 
   if (n_frames == 0) return R_NilValue;
 
-  int NP = 0;
+  int32_t NP = 0;
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
   SEXP df = p_x[0];
@@ -842,7 +842,7 @@ SEXP cpp_df_c(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
-  int NP = 0;
+  int32_t NP = 0;
 
   // Important to recycle first to avoid incorrect size calculations
 
@@ -938,7 +938,7 @@ SEXP cpp_c(SEXP x){
   if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of vectors");
   }
-  int NP = 0;
+  int32_t NP = 0;
   int n = Rf_length(x);
   const SEXP *p_x = VECTOR_PTR_RO(x);
   if (n == 1){

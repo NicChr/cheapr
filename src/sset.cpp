@@ -162,7 +162,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
 
 SEXP clean_indices(SEXP indices, SEXP x, bool count){
   R_xlen_t xn = vec_length(x);
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t zero_count = 0,
     pos_count = 0,
     oob_count = 0,
@@ -339,7 +339,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
 // Also works with negative-indexing
 
 SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
   if (by != 1 && by != -1){
     Rf_error("by increment must be 1 or -1");
@@ -1096,7 +1096,7 @@ SEXP rev(SEXP x, bool set){
   R_xlen_t half = int_div(n, 2);
   R_xlen_t n2 = n - 1; // Offset n for 0-indexing
   R_xlen_t k;
-  int NP = 0;
+  int32_t NP = 0;
   bool is_altrep = ALTREP(x);
   if (set && is_altrep){
     Rf_warning("Cannot update an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations");
@@ -1207,7 +1207,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
   }
 
-  int NP = 0,
+  int32_t NP = 0,
     n_cols = Rf_length(x),
     n_rows = df_nrow(x),
     n_locs = Rf_length(locs);
@@ -1323,7 +1323,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
     return x;
   }
   int ncols = Rf_length(x);
-  int NP = 0;
+  int32_t NP = 0;
   const SEXP *p_x = VECTOR_PTR_RO(x);
   SEXP out = SHIELD(new_vec(VECSXP, ncols)); ++NP;
 
@@ -1384,7 +1384,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check){
     Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
   }
 
-  int NP = 0;
+  int32_t NP = 0;
 
   // Subset columns
   // `cpp_df_select()` always creates a shallow copy
@@ -1402,7 +1402,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check){
 [[cpp11::register]]
 SEXP cpp_sset(SEXP x, SEXP indices, bool check){
   if (is_simple_vec(x)){
-    int NP = 0;
+    int32_t NP = 0;
 
     bool check2 = check;
 

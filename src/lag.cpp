@@ -6,7 +6,7 @@
 SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   R_xlen_t size = Rf_xlength(x);
   R_xlen_t fill_size = Rf_xlength(fill);
-  int NP = 0;
+  int32_t NP = 0;
   if (fill_size > 1){
     Rf_error("fill size must be NULL or length 1");
   }
@@ -283,7 +283,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
 
 [[cpp11::register]]
 SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive){
-  int NP = 0;
+  int32_t NP = 0;
   SEXP out = R_NilValue;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
@@ -307,7 +307,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
   int rl_size = Rf_length(run_lengths);
   int lag_size = Rf_length(lag);
   int fill_size = Rf_length(fill);
-  int NP = 0;
+  int32_t NP = 0;
   if (fill_size > 1){
     Rf_error("fill size must be NULL or length 1");
   }
@@ -723,7 +723,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
 
 [[cpp11::register]]
 SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool recursive){
-  int NP = 0;
+  int32_t NP = 0;
   SEXP out = R_NilValue;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);

@@ -23,7 +23,7 @@ for (R_xlen_t i = 0; i < n; ++i){                              \
 R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
-  int NP = 0;
+  int32_t NP = 0;
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   bool do_parallel = n_cores > 1;
   switch ( CHEAPR_TYPEOF(x) ){
@@ -118,7 +118,7 @@ SEXP cpp_num_na(SEXP x, bool recursive){
 
 [[cpp11::register]]
 bool cpp_any_na(SEXP x, bool recursive){
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
   bool out = false;
   switch ( CHEAPR_TYPEOF(x) ){
@@ -176,7 +176,7 @@ bool cpp_any_na(SEXP x, bool recursive){
 
 [[cpp11::register]]
 bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
   bool out = true;
   if (n == 0){
@@ -354,7 +354,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
     Rf_error("x must be a data frame");
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
-  int NP = 0;
+  int32_t NP = 0;
   int num_col = Rf_length(x);
   int num_row = df_nrow(x);
   SEXP out = SHIELD(new_vec(INTSXP, num_row)); ++NP;
@@ -446,7 +446,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
   int num_col = Rf_length(x);
-  int NP = 0;
+  int32_t NP = 0;
   int num_row = df_nrow(x);
   SEXP out = SHIELD(new_vec(INTSXP, num_col)); ++NP;
   int *p_out = INTEGER(out);
@@ -492,7 +492,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
-  int NP = 0;
+  int32_t NP = 0;
   int num_row = df_nrow(x);
   int num_col = Rf_length(x);
 
@@ -551,7 +551,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
   }
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
-  int NP = 0;
+  int32_t NP = 0;
   int num_row = df_nrow(x);
   int num_col = Rf_length(x);
 
@@ -613,7 +613,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //   }
 //   const SEXP *p_x = VECTOR_PTR_RO(x);
 //
-//   int NP = 0;
+//   int32_t NP = 0;
 //   int num_row = df_nrow(x);
 //   int num_col = Rf_length(x);
 //
@@ -886,7 +886,7 @@ SEXP cpp_row_na_counts(SEXP x, bool names){
     Rf_error("x must be a matrix or data frame");
   }
 
-  int NP = 0;
+  int32_t NP = 0;
 
   SEXP out;
   if (is_matrix){
@@ -915,7 +915,7 @@ SEXP cpp_col_na_counts(SEXP x, bool names){
     Rf_error("x must be a matrix or data frame");
   }
 
-  int NP = 0;
+  int32_t NP = 0;
 
   SEXP out;
   if (is_matrix){

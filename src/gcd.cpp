@@ -166,7 +166,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   if (tol < 0 || tol >= 1){
     Rf_error("tol must be >= 0 and < 1");
   }
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
 
   switch(CHEAPR_TYPEOF(x)){
@@ -252,7 +252,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     Rf_error("tol must be >= 0 and < 1");
   }
   R_xlen_t n = Rf_xlength(x);
-  int NP = 0;
+  int32_t NP = 0;
 
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
@@ -336,7 +336,7 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   if (tol < 0 || tol >= 1){
     Rf_error("tol must be >= 0 and < 1");
   }
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t yn = Rf_xlength(y);
   R_xlen_t n = std::max(xn, yn);
@@ -388,7 +388,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   if (tol < 0 || tol >= 1){
     Rf_error("tol must be >= 0 and < 1");
   }
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t yn = Rf_xlength(y);
   R_xlen_t n = std::max(xn, yn);

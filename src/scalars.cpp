@@ -74,7 +74,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
-  int NP = 0;
+  int32_t NP = 0;
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
   SEXP val_is_na = SHIELD(cpp_is_na(value)); ++NP;
@@ -212,7 +212,7 @@ SEXP cpp_count_val(SEXP x, SEXP value, bool recursive){
 
 [[cpp11::register]]
 SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
 
   if (Rf_length(value) != 1){
@@ -384,7 +384,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
 
 [[cpp11::register]]
 SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
 
   if (Rf_length(value) != 1){
@@ -660,7 +660,7 @@ default: {
 [[cpp11::register]]
 SEXP cpp_val_remove(SEXP x, SEXP value){
   check_atomic(x);
-  int NP = 0;
+  int32_t NP = 0;
   R_xlen_t n_vals = scalar_count(x, value, true);
   if (n_vals == 0){
     return x;

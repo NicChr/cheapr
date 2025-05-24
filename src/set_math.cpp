@@ -244,7 +244,7 @@ SEXP cpp_set_sqrt(SEXP x){
 SEXP cpp_set_add(SEXP x, SEXP y){
   check_numeric(x);
   check_numeric(y);
-  int NP = 0;
+  int32_t NP = 0;
   SEXP out = SHIELD(check_transform_altrep(x)); ++NP;
   uint_fast64_t xn = Rf_xlength(out);
   uint_fast64_t yn = Rf_xlength(y);
@@ -320,7 +320,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
 SEXP cpp_set_subtract(SEXP x, SEXP y){
   check_numeric(x);
   check_numeric(y);
-  int NP = 0;
+  int32_t NP = 0;
   SEXP out = SHIELD(check_transform_altrep(x)); ++NP;
   uint_fast64_t xn = Rf_xlength(out);
   uint_fast64_t yn = Rf_xlength(y);
@@ -396,7 +396,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
 SEXP cpp_set_multiply(SEXP x, SEXP y){
   check_numeric(x);
   check_numeric(y);
-  int NP = 0;
+  int32_t NP = 0;
   SEXP out = SHIELD(check_transform_altrep(x)); ++NP;
   uint_fast64_t xn = Rf_xlength(out);
   uint_fast64_t yn = Rf_xlength(y);

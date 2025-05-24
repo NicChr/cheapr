@@ -65,7 +65,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
   if (!add) clear_attributes(x);
 
-  int NP = 0;
+  int32_t NP = 0;
 
   if (is_null(attributes)){
     return x;

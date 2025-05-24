@@ -434,7 +434,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
 
 [[cpp11::register]]
 SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
-  int NP = 0; // count num protections
+  int32_t NP = 0; // count num protections
   if (TYPEOF(condition) != LGLSXP){
     Rf_error("condition must be a logical vector");
   }
@@ -798,7 +798,7 @@ SEXP create_df_row_names(int n){
 
 [[cpp11::register]]
 SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
-  int NP = 0;
+  int32_t NP = 0;
   if (is_null(names)) return names;
 
   if (TYPEOF(names) != STRSXP){
@@ -859,7 +859,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
                  SEXP source_attr_names, bool shallow_copy){
 
-  int NP = 0;
+  int32_t NP = 0;
 
   if (shallow_copy){
     SHIELD(target = Rf_shallow_duplicate(target)); ++NP;
@@ -926,7 +926,7 @@ SEXP cpp_str_coalesce(SEXP x){
     Rf_error("`x` must be a list of character vectors in %s", __func__);
   }
 
-  int NP = 0;
+  int32_t NP = 0;
   uint_fast64_t n = Rf_xlength(x);
   uint_fast64_t out_size = 0;
   uint_fast64_t m;

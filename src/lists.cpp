@@ -251,7 +251,7 @@ SEXP get_list_element(SEXP list, SEXP str){
 
 [[cpp11::register]]
 SEXP cpp_list_assign(SEXP x, SEXP values){
-  int NP = 0;
+  int32_t NP = 0;
   int n = Rf_length(x);
   int n_cols = Rf_length(values);
 
@@ -396,7 +396,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 
 // Work-in-progress
 // SEXP cpp_list_assign2(SEXP x, SEXP values, SEXP locs){
-//   int NP = 0;
+//   int32_t NP = 0;
 //
 //   SEXP names = SHIELD(get_names(x)); ++NP;
 //   SEXP col_names = SHIELD(Rf_getAttrib(values, R_NamesSymbol)); ++NP;
@@ -499,7 +499,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 [[cpp11::register]]
 SEXP cpp_list_as_df(SEXP x) {
   int N; // Number of rows
-  int NP = 0; // Number of protects
+  int32_t NP = 0; // Number of protects
   SEXP out = SHIELD(cpp_drop_null(x, true)); ++NP;
   int n_items = Rf_length(out);
   if (is_df(x)){
@@ -529,7 +529,7 @@ SEXP cpp_list_as_df(SEXP x) {
 // Same as above but always in-place so assuming no NULL elements
 void set_list_as_df(SEXP x) {
   int N; // Number of rows
-  int NP = 0; // Number of protects
+  int32_t NP = 0; // Number of protects
   int n_items = Rf_length(x);
   if (is_df(x)){
     N = df_nrow(x);
@@ -558,7 +558,7 @@ void set_list_as_df(SEXP x) {
 [[cpp11::register]]
 SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
 
-  int NP = 0;
+  int32_t NP = 0;
 
   SEXP out = x;
 
@@ -603,7 +603,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
 
 [[cpp11::register]]
 SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
-  int NP = 0;
+  int32_t NP = 0;
 
   if (!is_df(x)){
     Rf_error("`x` must be a `data.frame` in %s", __func__);
