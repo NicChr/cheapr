@@ -382,9 +382,9 @@ SEXP cpp_rep_each(SEXP x, SEXP each){
 
 [[cpp11::register]]
 SEXP cpp_recycle(SEXP x, SEXP length){
-  SEXP out = SHIELD(cpp_drop_null(x, true));
+  SEXP out = SHIELD(cpp_drop_null(x, false));
   SEXP sizes = SHIELD(cpp_lengths(out, false));
-  int *p_sizes = INTEGER(sizes);
+  const int *p_sizes = INTEGER(sizes);
   bool has_length = !is_null(length);
   SHIELD(length = coerce_vec(length, INTSXP));
 
@@ -953,7 +953,7 @@ SEXP cpp_c(SEXP x){
 
 
   // We use the tz info of the first datetime vec to copy to final result
-  int first_datetime = integer32_max_;
+  int first_datetime = integer_max_;
 
   SEXP elem = R_NilValue;
 

@@ -14,7 +14,7 @@ SEXP cpp_int64_to_int(SEXP x){
 
   const int64_t *p_x = INTEGER64_PTR(x);
 
-  int64_t int_max = integer32_max_;
+  int64_t int_max = integer_max_;
 
   for (R_xlen_t i = 0; i < n; ++i){
     p_out[i] = is_na_int64(p_x[i]) || std::llabs(p_x[i]) > int_max ? NA_INTEGER : p_x[i];
@@ -59,7 +59,7 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
   }
   case CHEAPR_INT64SXP: {
     const int64_t *p_x = INTEGER64_PTR(x);
-    int64_t int_max = integer32_max_;
+    int64_t int_max = integer_max_;
     int64_t shift_ = shift;
     for (R_xlen_t i = 0; i < n; ++i){
       if (!is_na_int64(p_x[i]) && ( (std::llabs(p_x[i]) + shift_) > int_max )){
@@ -71,7 +71,7 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
   }
   case REALSXP: {
     const double *p_x = REAL(x);
-    double int_max = integer32_max_;
+    double int_max = integer_max_;
     double shift_ = shift;
     for (R_xlen_t i = 0; i < n; ++i){
       if (!is_na_dbl(p_x[i]) && ( (std::fabs(p_x[i]) + shift_) > int_max )){

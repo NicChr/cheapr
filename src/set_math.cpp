@@ -34,6 +34,7 @@ for (R_xlen_t i = 0; i < n; ++i) {                                        \
 
 
 #define CHEAPR_TRUNC(x) (std::trunc(x) + 0.0)
+#define CHEAPR_SIGN(x) ((x > 0) - (x < 0))
 
 // Convert integer vector to plain double vector
 
@@ -686,10 +687,9 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
 [[cpp11::register]]
 SEXP cpp_int_sign(SEXP x){
   check_numeric(x);
-  R_xlen_t n = Rf_xlength(x);
+  uint_fast64_t n = Rf_xlength(x);
   SEXP out = SHIELD(new_vec(INTSXP, n));
   int* RESTRICT p_out = INTEGER(out);
-  int res;
   switch (TYPEOF(x)){
   case LGLSXP: {
     const int *p_x = LOGICAL(x);
@@ -699,18 +699,16 @@ SEXP cpp_int_sign(SEXP x){
   case INTSXP: {
     const int *p_x = INTEGER(x);
     OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i) {
-      res = p_x[i] == NA_INTEGER ? NA_INTEGER : (p_x[i] > 0) - (p_x[i] < 0);
-      p_out[i] = res;
+    for (uint_fast64_t i = 0; i < n; ++i) {
+      p_out[i] = is_na_int(p_x[i]) ? NA_INTEGER : static_cast<int>(CHEAPR_SIGN(p_x[i]));
     }
     break;
   }
   case REALSXP: {
     double *p_x = REAL(x);
     OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i) {
-      res = p_x[i] != p_x[i] ? NA_INTEGER : (p_x[i] > 0) - (p_x[i] < 0);
-      p_out[i] = res;
+    for (uint_fast64_t i = 0; i < n; ++i) {
+      p_out[i] = is_na_dbl(p_x[i]) ? NA_INTEGER : static_cast<int>(CHEAPR_SIGN(p_x[i]));
     }
     break;
   }

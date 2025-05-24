@@ -22,7 +22,7 @@ int int_div(int x, int y){
 }
 
 SEXP xlen_to_r(R_xlen_t x){
-  return x > integer32_max_ ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
+  return x > integer_max_ ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
 }
 
 R_xlen_t vec_length(SEXP x){
@@ -190,7 +190,7 @@ SEXP cpp_semi_copy(SEXP x){
     // So I don't use it for non-ALTREP atomic vectors
 
     SEXP out = SHIELD(Rf_shallow_duplicate(x));
-    cpp_set_rm_attributes(out);
+    clear_attributes(out);
     SHIELD(out = Rf_duplicate(out));
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     YIELD(2);
@@ -250,7 +250,7 @@ double cpp_min(SEXP x){
     if (n == 0) return R_PosInf;
 
     int *p_x = INTEGER(x);
-    int out = integer32_max_;
+    int out = integer_max_;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -647,13 +647,13 @@ SEXP cpp_lgl_count(SEXP x){
   }
   R_xlen_t nna = n - ntrue - nfalse;
 
-  SEXP out = SHIELD(new_vec(n > integer32_max_ ? REALSXP : INTSXP, 3));
+  SEXP out = SHIELD(new_vec(n > integer_max_ ? REALSXP : INTSXP, 3));
   SEXP names = SHIELD(new_vec(STRSXP, 3));
   SET_STRING_ELT(names, 0, make_utf8_char("true"));
   SET_STRING_ELT(names, 1, make_utf8_char("false"));
   SET_STRING_ELT(names, 2, make_utf8_char("na"));
 
-  if (n > integer32_max_){
+  if (n > integer_max_){
     SET_REAL_ELT(out, 0, static_cast<double>(ntrue));
     SET_REAL_ELT(out, 1, static_cast<double>(nfalse));
     SET_REAL_ELT(out, 2, static_cast<double>(nna));
@@ -874,7 +874,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
   SEXP source_attrs = ATTRIB(source);
 
   // Start from clean slate - no attributes
-  cpp_set_rm_attributes(target);
+  clear_attributes(target);
 
   SEXP tag = R_NilValue;
   SEXP current = R_NilValue;
@@ -926,7 +926,7 @@ SEXP cpp_str_coalesce(SEXP x){
     Rf_error("`x` must be a list of character vectors in %s", __func__);
   }
 
-  uint32_t NP = 0;
+  int NP = 0;
   uint_fast64_t n = Rf_xlength(x);
   uint_fast64_t out_size = 0;
   uint_fast64_t m;
@@ -1119,7 +1119,7 @@ SEXP cpp_str_coalesce(SEXP x){
 [[cpp11::register]]
 SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
-  if (n_bins > integer32_max_){
+  if (n_bins > integer_max_){
     Rf_error("`n_bins` must be < 2^31 in %s", __func__);
   }
   R_xlen_t n = Rf_xlength(x);

@@ -5,15 +5,15 @@
 
 // Count the number of true values
 
-R_xlen_t count_true(const int* RESTRICT px, R_xlen_t n){
-  R_xlen_t size = 0;
+R_xlen_t count_true(const int* px, uint_fast64_t n){
+  uint_fast64_t size = 0;
   if (n >= CHEAPR_OMP_THRESHOLD){
 #pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
-    for (R_xlen_t j = 0; j < n; ++j) size += (px[j] == TRUE);
+    for (uint_fast64_t j = 0; j != n; ++j) size += (px[j] == 1);
     return size;
   } else {
     OMP_FOR_SIMD
-    for (R_xlen_t j = 0; j < n; ++j) size += (px[j] == TRUE);
+    for (uint_fast64_t j = 0; j != n; ++j) size += (px[j] == 1);
     return size;
   }
 }
@@ -33,8 +33,8 @@ while (whichi < out_size){                                     \
 [[cpp11::register]]
 SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
-  const int *p_x = LOGICAL(x);
-  bool is_long = (n > integer32_max_);
+  const int *p_x = LOGICAL_RO(x);
+  bool is_long = (n > integer_max_);
   if (invert){
     if (is_long){
       R_xlen_t size = count_true(p_x, n);
@@ -84,7 +84,7 @@ SEXP cpp_which_(SEXP x, bool invert){
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   int NP = 0;
   R_xlen_t n = Rf_xlength(x);
-  bool is_long = (n > integer32_max_);
+  bool is_long = (n > integer_max_);
   if (Rf_length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }
@@ -219,7 +219,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
 [[cpp11::register]]
 SEXP cpp_which_na(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  bool is_short = (n <= integer32_max_);
+  bool is_short = (n <= integer_max_);
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
     return new_vec(INTSXP, 0);
@@ -379,7 +379,7 @@ SEXP cpp_which_na(SEXP x){
 [[cpp11::register]]
 SEXP cpp_which_not_na(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  bool is_short = (n <= integer32_max_);
+  bool is_short = (n <= integer_max_);
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
     return new_vec(INTSXP, 0);
@@ -559,7 +559,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
   R_xlen_t n = Rf_xlength(x);
   int *p_x = LOGICAL(x);
 
-  if (n > integer32_max_){
+  if (n > integer_max_){
     SEXP true_locs = SHIELD(new_vec(REALSXP, include_true ? n_true : 0));
     SEXP false_locs = SHIELD(new_vec(REALSXP, include_false ? n_false : 0));
     SEXP na_locs = SHIELD(new_vec(REALSXP, include_na ? (n - n_true - n_false) : 0));
@@ -636,7 +636,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   int NP = 0;
   R_xlen_t n = Rf_xlength(x);
-  bool is_long = (n > integer32_max_);
+  bool is_long = (n > integer_max_);
   if (Rf_length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }

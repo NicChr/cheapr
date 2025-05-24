@@ -38,10 +38,12 @@
 #define OMP_PARALLEL_FOR_SIMD
 #endif
 
-#ifndef integer32_max_
-#define integer32_max_ std::numeric_limits<int32_t>::max()
+// Not always guaranteed to be 32-bits
+#ifndef integer_max_
+#define integer_max_ std::numeric_limits<int>::max()
 #endif
 
+// Guaranteed to be 64-bits
 #ifndef integer64_max_
 #define integer64_max_ std::numeric_limits<int64_t>::max()
 #endif
@@ -184,6 +186,7 @@ SEXP cpp_na_init(SEXP x, int n);
 SEXP new_list(R_xlen_t length, SEXP default_value);
 void set_list_as_df(SEXP x);
 SEXP cpp_semi_copy(SEXP x);
+void clear_attributes(SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
