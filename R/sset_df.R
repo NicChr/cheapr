@@ -35,15 +35,3 @@ sset_row <- function(x, i = NULL){
 sset_col <- function(x, j = NULL){
   .Call(`_cheapr_cpp_df_select`, x, j)
 }
-
-# Keep this for fastplyr otherwise it breaks dependency
-df_select <- function(x, j = NULL){
-  cpp_rebuild(
-    sset_col(x, missing(j) %!||% j), x,
-    "names", val_rm(names(attributes(x)), "names"),
-    TRUE
-  )
-}
-
-# Kept for reverse compatibility reasons
-cpp_sset_df <- sset_row

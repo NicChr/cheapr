@@ -338,6 +338,193 @@ You can also calculate the sequence sizes using `seq_size()`
 seq_size(start, end, increments)
 ```
 
+## Math in-place
+
+cheapr provides a full set of common math functions that can transform
+numeric vectors in-place (no copies)
+
+```{r}
+(x <- seq(0, 5, by = 0.5))
+
+# x is modified in-place
+set_add(x, 10);x
+set_subtract(x, 10);x
+set_multiply(x, 10);x
+set_divide(x, 10);x
+
+set_change_sign(x);x
+set_abs(x);x
+set_round(x);x
+set_log(x);x
+```
+
+These in-place functions are not always faster than using normal R
+math functions. This becomes apparent when performing multiple operations
+which R can process simultaneously.
+
+```{r}
+x <- rnorm(10^6)
+mark(
+  x * 10 * 20 + 1 - 1 , 
+  set_subtract(set_add(set_multiply(set_multiply(x, 10), 20), 1), 1)
+)
+```
+
+### `.args`
+
+cheapr now provides `.args` as a means of providing a list of arguments instead of `...`. 
+This is designed to replace the use of `do.call()`.
+
+In practice this means that users can either supply objects directly to the dots
+`...` or as a list of objects.
+
+
+```{r}
+# The below lines are equivalent
+cheapr_c(1, 2, 3)
+cheapr_c(.args = list(1, 2, 3))
+```
+
+A very common scenario is having a list of objects that you would like to combine
+into a vector. 
+Normally one would call `do.call(c, x)` but it is much more efficient 
+to use the `.args` argument in `cheapr_c()`.
+
+```{r}
+x <- rep(list(0), 10^5)
+
+mark(
+  do.call(c, x),
+  cheapr_c(.args = x)
+)
+
+# Matches the speed of `unlist()` without removing attributes
+unlist(list(Sys.Date()), recursive = FALSE)
+cheapr_c(.args = list(Sys.Date()))
+```
+
+## Recycling
+
+Fast base-R style recycling using `recycle()`
+
+```{r}
+recycle(letters, pi)
+
+# Data frame rows are recycled
+recycle(vector = 1:10, data = cars)
+
+# Using .args
+recycle(.args = list(letters, pi))
+```
+
+Sizes are recycled to the common maximum, except when a vector
+is length 0 (excluding NULL which is ignored), in which case they are all recycled
+to length 0.
+
+```{r}
+recycle(a = 1:3, b = 1:10, c = iris, d = numeric())
+```
+
+## Copying
+
+cheapr provides some helpers in the form of `shallow_copy`, 
+`semi_copy` and `deep_copy`.
+
+```{r}
+mark(shallow_copy(iris))
+mark(deep_copy(iris))
+mark(semi_copy(iris))
+```
+
+### `shallow_copy` 
+
+Shallow-copies list elements and attributes. When given an atomic vector
+it full copies the vector and so is mostly useful for lists.
+
+### `deep_copy`
+
+Full (deep) copies everything, including attributes.
+
+### `semi_copy`
+
+Like `deep_copy` it deep-copies everything, excluding attributes, which it 
+shallow copies. In practice this turns out to be more efficient.
+
+`semi_copy()` vs `deep_copy()`
+
+```{r}
+df <- new_df(x = integer(10^6))
+attr(df, "my_attr") <- integer(10^6)
+
+# Take note of the memory allocation
+mark(
+  semi_copy(df), # Only deep copies the data
+  deep_copy(df) # Deep copies "my_attr" as well
+)
+```
+
+### Attributes
+
+With cheapr you can add and remove attributes flexibly
+using `attrs_add()`. 
+
+To remove all attributes, use `attrs_rm()`. 
+
+To remove specific attributes, use `attrs_add(attr = NULL)`.
+
+```{r}
+(x <- attrs_add(1:10, .length = 10, .type = "integer"))
+
+attrs_add(x, .type = NULL) # Remove specific attribute '.type'
+attrs_rm(x) # Clear all attributes
+
+# With .args
+y <- 11:20
+attrs_add(y, .args = attributes(x))
+```
+
+Both functions allow setting attributes in-place. This turns out to be very useful
+in avoiding implicit copies that R performs when it detects that the data
+has been modified.
+
+This must be used with care to not overwrite an existing object's attributes.
+Therefore it is best-practice to only use in-place attribute manipulation on
+fresh objects, i.e objects that you can ensure are newly created.
+
+```{r}
+add_length_class <- function(x){
+  attr(x, ".length") <- length(x)
+  attr(x, ".class") <- class(x)
+  x
+}
+add_length_class_in_place <- function(x){
+  attrs_add(
+    x, .length = length(x), .class = class(x),
+    .set = TRUE
+  )
+}
+
+# Notice the memory allocations
+# we expect only 3.81 MB to be allocated
+mark(
+  add_length_class(integer(10^6)),
+  add_length_class_in_place(integer(10^6)),
+  iterations = 1
+)
+mark(
+  add_length_class(integer(10^6)),
+  add_length_class_in_place(integer(10^6)),
+  iterations = 1
+)
+  
+
+# R detected that the vector we created had been modified (because it was)
+# and created a copy
+# When we add the attributes in-place to our fresh object, no copies are
+# made
+```
+
+
 ## 'Cheaper' Base R alternatives
 
 ### which

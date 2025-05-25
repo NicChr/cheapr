@@ -50,14 +50,6 @@ tzone <- function(x){
   }
 }
 
-set_attr <- cpp_set_add_attr
-set_attrs <- cpp_set_add_attributes
-set_rm_attr <- cpp_set_rm_attr
-set_rm_attrs <- cpp_set_rm_attributes
-
-cpp_list_rm_null <- function(x, always_shallow_copy = TRUE){
-  cpp_drop_null(x, always_shallow_copy)
-}
 list_is_df_like <- function(x){
   collapse::fnunique(list_lengths(x)) <= 1
 }
@@ -127,9 +119,6 @@ n_dots <- function(...){
   nargs()
 }
 
-# Keep this in-case anyone was using it
-fill_with_na <- na_insert
-
 # The breaks the `cut(x, n)` produces
 r_cut_breaks <- function(x, n){
   check_length(n, 1)
@@ -156,22 +145,6 @@ as_list_of <- function(...){
   }
 }
 
-
-# Keeping this as other packages may use it
-df_add_cols <- function(data, cols){
-  if (!(is.list(cols) && !is.null(names(cols)))){
-    stop("cols must be a named list")
-  }
-  N <- length(attr(data, "row.names"))
-  out <- unclass(data)
-  temp <- unclass(cols)
-  for (col in names(temp)){
-    out[[col]] <- if (is.null(temp[[col]])) NULL else cheapr_rep_len(temp[[col]], N)
-  }
-  class(out) <- class(data)
-  out
-}
-
 # unevaluated expression list
 exprs <- function(...){
   as.list(substitute(alist(...)))[-1L]
@@ -179,18 +152,6 @@ exprs <- function(...){
 
 # Sort of the inverse of %||%
 `%!||%` <- function(x, y) if (x) NULL else y
-
-# Turn negative indices to positives
-neg_indices_to_pos <- function(exclude, n){
-  if (n == 0){
-    integer()
-  } else {
-    which_not_in(
-      seq.int(from = -1L, to = -as.integer(n), by = -1L),
-      as.integer(exclude)
-    )
-  }
-}
 
 # Both below to be safely used in C++ code
 fast_match <- function(x, table, nomatch = NA_integer_){

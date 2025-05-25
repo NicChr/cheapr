@@ -74,7 +74,7 @@ cheapr_table <- function(..., names = TRUE, order = FALSE, na_exclude = FALSE,
 #' @rdname cheapr_table
 #' @export
 counts <- function(x, sort = is.factor(x)){
-  if (!cpp_is_simple_atomic_vec(x)){
+  if (!is.atomic(x)){
     stop("`x` must be an atomic vector")
   }
   if (sort && is.factor(x)){
