@@ -32,6 +32,7 @@ attrs_modify <- function(x, ..., .set = FALSE, .args = NULL){
     )
   }
 }
+#' @rdname attrs
 #' @export
 attrs_add <- attrs_modify
 #' @rdname attrs
@@ -43,5 +44,6 @@ attrs_clear <- function(x, .set = FALSE){
     `attributes<-`(x, NULL)
   }
 }
+#' @rdname attrs
 #' @export
 attrs_rm <- attrs_clear

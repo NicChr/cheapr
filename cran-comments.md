@@ -1,6 +1,6 @@
-* Updated to version 1.3.0
+* Updated to version 1.3.1
 
-* rchk issues have been fixed.
+* A bug where `recycle` modified lists in-place has been fixed.
 
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
