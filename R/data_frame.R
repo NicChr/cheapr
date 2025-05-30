@@ -36,8 +36,11 @@ new_df <- function(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE, .ar
 #' @export
 as_df <- function(x){
   if (inherits(x, "data.frame")){
-    out <- x
-    class(out) <- "data.frame"
+    out <- new_df(
+      .args = unclass(x),
+      .nrows = length(attr(x, "row.names")),
+      .recycle = FALSE, .name_repair = FALSE
+    )
   } else if (is.null(x) || (is.atomic(x) && length(dim(x)) < 2)){
     out <- list_drop_null(list(name = names(x), value = x))
     attr(out, "row.names") <- .set_row_names(NROW(x))
@@ -45,7 +48,7 @@ as_df <- function(x){
   } else {
     # Plain list
     if (!is.object(x) && is.list(x)){
-      out <- list_as_df(cpp_recycle(x, NULL))
+      out <- list_as_df(recycle(.args = x))
     } else {
       out <- as.data.frame(x, stringsAsFactors = FALSE)
     }

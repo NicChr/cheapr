@@ -88,7 +88,7 @@ SEXP cpp_new_list(SEXP size, SEXP default_value){
 [[cpp11::register]]
 SEXP cpp_drop_null(SEXP l, bool always_shallow_copy){
   const SEXP *p_l = VECTOR_PTR_RO(l);
-  uint_fast64_t n = Rf_length(l);
+  uint_fast64_t n = Rf_xlength(l);
   uint_fast64_t n_null = 0;
 
   OMP_FOR_SIMD

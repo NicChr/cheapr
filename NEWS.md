@@ -1,5 +1,12 @@
 # cheapr (development version)
 
+### Bug fixes
+
+- Make sure `recycle` doesn't modify lists in-place.
+
+- `as_df` now always returns a plain `data.frame` with only 3 attributes,
+'names', 'row.names' and 'class'.
+
 # cheapr 1.3.0
 
 ### Bug fixes

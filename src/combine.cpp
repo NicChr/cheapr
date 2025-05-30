@@ -382,7 +382,7 @@ SEXP cpp_rep_each(SEXP x, SEXP each){
 
 [[cpp11::register]]
 SEXP cpp_recycle(SEXP x, SEXP length){
-  SEXP out = SHIELD(cpp_drop_null(x, false));
+  SEXP out = SHIELD(cpp_drop_null(x, true));
   SEXP sizes = SHIELD(cpp_lengths(out, false));
   const int *p_sizes = INTEGER(sizes);
   bool has_length = !is_null(length);
