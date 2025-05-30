@@ -2,13 +2,13 @@
 % Please edit documentation in R/attrs.R
 \name{attrs}
 \alias{attrs}
-\alias{attrs_add}
-\alias{attrs_rm}
+\alias{attrs_modify}
+\alias{attrs_clear}
 \title{Add and remove attributes}
 \usage{
-attrs_add(x, ..., .set = FALSE, .args = NULL)
+attrs_modify(x, ..., .set = FALSE, .args = NULL)
 
-attrs_rm(x, .set = FALSE)
+attrs_clear(x, .set = FALSE)
 }
 \arguments{
 \item{x}{Object to add/remove attributes.}

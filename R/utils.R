@@ -150,6 +150,7 @@ exprs <- function(...){
   as.list(substitute(alist(...)))[-1L]
 }
 
+`%||%` <- function(x, y) if (is.null(x)) y else x
 # Sort of the inverse of %||%
 `%!||%` <- function(x, y) if (x) NULL else y
 

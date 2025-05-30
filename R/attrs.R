@@ -20,15 +20,28 @@
 #'
 #' @rdname attrs
 #' @export
-attrs_add <- function(x, ..., .set = FALSE, .args = NULL){
-  .Call(
-    `_cheapr_cpp_set_add_attributes`,
-    if (.set) x else .Call(`_cheapr_cpp_shallow_copy`, x),
-    .Call(`_cheapr_cpp_list_args`, list(...), .args), TRUE
-  )
+attrs_modify <- function(x, ..., .set = FALSE, .args = NULL){
+  if (.set){
+    .Call( `_cheapr_cpp_set_add_attributes`, x, .Call(`_cheapr_cpp_list_args`, list(...), .args), TRUE)
+  } else {
+    `attributes<-`(
+      x, list_assign(
+        attributes(x) %||% list(),
+        .Call(`_cheapr_cpp_list_args`, list(...), .args)
+      )
+    )
+  }
 }
+#' @export
+attrs_add <- attrs_modify
 #' @rdname attrs
 #' @export
-attrs_rm <- function(x, .set = FALSE){
-  .Call(`_cheapr_cpp_set_rm_attributes`, if (.set) x else .Call(`_cheapr_cpp_shallow_copy`, x))
+attrs_clear <- function(x, .set = FALSE){
+  if (.set){
+    .Call(`_cheapr_cpp_set_rm_attributes`, x)
+  } else {
+    `attributes<-`(x, NULL)
+  }
 }
+#' @export
+attrs_rm <- attrs_clear
