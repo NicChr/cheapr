@@ -187,6 +187,7 @@ SEXP new_list(R_xlen_t length, SEXP default_value);
 void set_list_as_df(SEXP x);
 SEXP cpp_semi_copy(SEXP x);
 void clear_attributes(SEXP x);
+uint_fast64_t null_count(SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);

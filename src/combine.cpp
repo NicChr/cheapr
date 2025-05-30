@@ -382,36 +382,57 @@ SEXP cpp_rep_each(SEXP x, SEXP each){
 
 [[cpp11::register]]
 SEXP cpp_recycle(SEXP x, SEXP length){
-  SEXP out = SHIELD(cpp_drop_null(x, true));
-  SEXP sizes = SHIELD(cpp_lengths(out, false));
-  const int *p_sizes = INTEGER(sizes);
+
+  int32_t NP = 0;
+  int xn = Rf_length(x);
+  int n_objs = xn - static_cast<int>(null_count(x));
+
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+  SEXP out = SHIELD(new_vec(VECSXP, n_objs)); ++NP;
+  SEXP sizes = SHIELD(cpp_lengths(x, false)); ++NP;
+  const int* RESTRICT p_sizes = INTEGER_RO(sizes);
   bool has_length = !is_null(length);
-  SHIELD(length = coerce_vec(length, INTSXP));
+  SHIELD(length = coerce_vec(length, INTSXP)); ++NP;
 
   int n = 0;
-  int n_objs = Rf_length(out);
 
   if (!has_length){
     if (n_objs > 0){
+      n = -1;
       // We calculate `max(sizes)`
       // We won't have any NA in sizes so no NA checking is needed
-      OMP_FOR_SIMD
-      for (int i = 0; i < n_objs; ++i){
-        n = p_sizes[i] > n ? p_sizes[i] : n;
+      for (int i = 0; i < xn; ++i){
+        if (is_null(p_x[i])) continue;
+        n = n == 0 ? 0 : std::max(n, p_sizes[i]);
       }
     }
   } else {
     n = Rf_asInteger(length);
   }
 
-  SEXP r_zero = SHIELD(Rf_ScalarInteger(0));
-  if (!has_length && scalar_count(sizes, r_zero, false) > 0) n = 0;
+  int k = 0;
 
-  const SEXP *p_out = VECTOR_PTR_RO(out);
-  for (int i = 0; i < n_objs; ++i){
-    SET_VECTOR_ELT(out, i, cpp_rep_len(p_out[i], n));
+  SEXP names = SHIELD(get_names(x)); ++NP;
+  SEXP new_names = R_NilValue;
+
+  if (xn == n_objs || is_null(names)){
+    for (int i = 0; i < xn; ++i){
+      if (is_null(p_x[i])) continue;
+      SET_VECTOR_ELT(out, k++, cpp_rep_len(p_x[i], n));
+    }
+    set_names(out, names);
+  } else {
+    new_names = SHIELD(new_vec(STRSXP, n_objs)); ++NP;
+    const SEXP *p_names = STRING_PTR_RO(names);
+    for (int i = 0; i < xn; ++i){
+      if (is_null(p_x[i])) continue;
+      SET_VECTOR_ELT(out, k, cpp_rep_len(p_x[i], n));
+      SET_STRING_ELT(new_names, k++, p_names[i]);
+    }
+    set_names(out, new_names);
   }
-  YIELD(4);
+
+  YIELD(NP);
   return out;
 }
 
