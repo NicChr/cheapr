@@ -39,7 +39,7 @@ SEXP cpp_unnested_length(SEXP x){
 SEXP cpp_lengths(SEXP x, bool names){
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(new_vec(INTSXP, n));
-  int *p_out = INTEGER(out);
+  int* RESTRICT p_out = INTEGER(out);
   if (TYPEOF(x) != VECSXP){
     for (R_xlen_t i = 0; i < n; ++i) {
       p_out[i] = 1;
@@ -83,7 +83,6 @@ SEXP cpp_new_list(SEXP size, SEXP default_value){
   return new_list(out_size, default_value);
 }
 
-
 uint_fast64_t null_count(SEXP x){
   uint_fast64_t n = Rf_xlength(x);
   const SEXP *p_x = VECTOR_PTR_RO(x);
@@ -91,7 +90,6 @@ uint_fast64_t null_count(SEXP x){
   for (uint_fast64_t i = 0; i < n; ++i) n_null += is_null(p_x[i]);
   return n_null;
 }
-
 
 // Remove NULL elements from list
 
