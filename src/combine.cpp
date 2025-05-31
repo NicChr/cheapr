@@ -402,8 +402,14 @@ SEXP cpp_recycle(SEXP x, SEXP length){
       // We calculate `max(sizes)`
       // We won't have any NA in sizes so no NA checking is needed
       for (int i = 0; i < xn; ++i){
-        if (is_null(p_x[i])) continue;
-        n = n == 0 ? 0 : std::max(n, p_sizes[i]);
+        if (is_null(p_x[i])){
+          continue;
+        } else if (p_sizes[i] == 0){
+          n = 0;
+          break;
+        } else {
+          n = std::max(n, p_sizes[i]);
+        }
       }
     }
   } else {
