@@ -104,9 +104,9 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy){
     if (!always_shallow_copy && is_bare_list(l)){
       return l;
     } else {
-      SEXP out = SHIELD(Rf_shallow_duplicate(l));
+      SEXP out = SHIELD(new_vec(VECSXP, n));
+      for (uint_fast64_t i = 0; i < n; ++i) SET_VECTOR_ELT(out, i, p_l[i]);
       SEXP names = SHIELD(get_names(l));
-      clear_attributes(out);
       set_names(out, names);
       YIELD(2);
       return out;

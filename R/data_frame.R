@@ -14,6 +14,7 @@
 #' @param empty_sep `[character(1)]` A separator to use between the empty
 #' column names and their locations. Default is `'col_'`
 #' @param .args An alternative to `...` for easier programming with lists.
+#' @param cols A list of values to add or modify data frame `x`.
 #'
 #' @returns
 #' A `data.frame`. \cr
@@ -36,32 +37,22 @@ new_df <- function(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE, .ar
 #' @export
 as_df <- function(x){
   if (inherits(x, "data.frame")){
-    out <- new_df(
-      .args = unclass(x),
-      .nrows = length(attr(x, "row.names")),
-      .recycle = FALSE, .name_repair = FALSE
-    )
+    return(cpp_new_df(x, length(attr(x, "row.names")), FALSE, FALSE))
   } else if (is.null(x) || (is.atomic(x) && length(dim(x)) < 2)){
     out <- list_drop_null(list(name = names(x), value = x))
     attr(out, "row.names") <- .set_row_names(NROW(x))
     class(out) <- "data.frame"
+    return(out)
   } else {
     # Plain list
     if (!is.object(x) && is.list(x)){
-      out <- list_as_df(recycle(.args = x))
+      return(new_df(.args = x, .recycle = TRUE, .name_repair = TRUE))
     } else {
       out <- as.data.frame(x, stringsAsFactors = FALSE)
-    }
-    if (is.null(names(out))){
-      names(out) <- paste0("col_", seq_along(out))
-    }
-    non_empty <- nzchar(names(out))
-    if (!all(non_empty)){
-      empty <- which_(non_empty, invert = TRUE)
-      names(out)[empty] <- paste0("col_", empty)
+      names(out) <- str_coalesce(names(out), paste0("col_", seq_along(out)))
+      return(out)
     }
   }
-  out
 }
 
 #' @rdname data_frame
@@ -69,6 +60,10 @@ as_df <- function(x){
 fast_df <- function(..., .args = NULL){
   .Call(`_cheapr_cpp_list_as_df`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
 }
+
+#' @rdname data_frame
+#' @export
+df_modify <- cpp_df_assign_cols
 
 #' @rdname data_frame
 #' @export

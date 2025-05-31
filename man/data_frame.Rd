@@ -4,6 +4,7 @@
 \alias{new_df}
 \alias{as_df}
 \alias{fast_df}
+\alias{df_modify}
 \alias{list_as_df}
 \alias{name_repair}
 \alias{unique_name_repair}
@@ -16,6 +17,8 @@ new_df(..., .nrows = NULL, .recycle = TRUE, .name_repair = TRUE, .args = NULL)
 as_df(x)
 
 fast_df(..., .args = NULL)
+
+df_modify(x, cols)
 
 list_as_df(x)
 
@@ -43,6 +46,8 @@ repaired and made unique? Default is \code{TRUE}.}
 
 \item{x}{An object to coerce to a \code{data.frame} or a character vector
 for \code{unique_name_repair()}.}
+
+\item{cols}{A list of values to add or modify data frame \code{x}.}
 
 \item{dup_sep}{\verb{[character(1)]} A separator to use between
 duplicate column names and their locations. Default is \code{'_'}}

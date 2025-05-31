@@ -12,6 +12,10 @@
 - `attrs_add` and `attrs_rm` have been renamed to `attrs_modify` and 
 `attrs_clear` respectively to convey their intent more clearly.
 
+### New features
+
+- `df_modify` as a fast way to modify and add columns to a data frame.
+
 # cheapr 1.3.0
 
 ### Bug fixes
