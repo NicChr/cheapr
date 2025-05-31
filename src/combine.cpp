@@ -416,6 +416,8 @@ SEXP cpp_recycle(SEXP x, SEXP length){
     n = Rf_asInteger(length);
   }
 
+  n = std::max(n, 0);
+
   int k = 0;
 
   SEXP names = SHIELD(get_names(x)); ++NP;
