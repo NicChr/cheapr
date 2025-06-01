@@ -66,6 +66,9 @@ new_list <- function(length = 0L, default = NULL){
 #' @export
 #' @rdname lists
 list_assign <- cpp_list_assign
+#' @export
+#' @rdname lists
+list_modify <- list_assign
 
 #' @export
 #' @rdname lists

@@ -6,6 +6,7 @@
 \alias{unlisted_length}
 \alias{new_list}
 \alias{list_assign}
+\alias{list_modify}
 \alias{list_combine}
 \alias{list_drop_null}
 \title{List utilities}
@@ -19,6 +20,8 @@ unlisted_length(x)
 new_list(length = 0L, default = NULL)
 
 list_assign(x, values)
+
+list_modify(x, values)
 
 list_combine(..., .args = NULL)
 

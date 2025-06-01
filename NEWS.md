@@ -4,13 +4,13 @@
 
 - Fixed a bug where `recycle` sometimes modified lists in-place.
 
-- `as_df` now always returns a plain `data.frame` with only 3 attributes,
-'names', 'row.names' and 'class'.
-
 ### Changes
 
 - `attrs_add` and `attrs_rm` have been renamed to `attrs_modify` and 
 `attrs_clear` respectively to convey their intent more clearly.
+
+- `as_df` now always returns a plain `data.frame` with only 3 attributes,
+'names', 'row.names' and 'class'.
 
 ### New features
 
