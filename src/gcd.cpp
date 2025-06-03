@@ -139,7 +139,7 @@ int64_t cpp_lcm2_int64(int64_t x, int64_t y, bool na_rm){
   // divides x by a whole number
 
   int64_t res = std::llabs(x) / cpp_gcd2_int64(x, y, false);
-  if (y != 0 && (std::llabs(res) > (integer64_max_ / std::llabs(y)))){
+  if (y != 0 && (std::llabs(res) > (INTEGER64_MAX / std::llabs(y)))){
     Rf_error("64-bit integer overflow, please use doubles");
   } else {
     return (res * std::llabs(y));
@@ -272,7 +272,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = cpp_lcm2_int64(lcm, CHEAPR_INT_TO_INT64(p_x[i]), na_rm);
       }
-      bool is_short = lcm == NA_INTEGER64 || (std::llabs(lcm) <= integer_max_);
+      bool is_short = is_na_int64(lcm) || is_integerable<int64_t>(lcm);
       out = SHIELD(new_vec(is_short ? INTSXP : REALSXP, 1)); ++NP;
       if (is_short){
         int temp = CHEAPR_INT64_TO_INT(lcm);
@@ -407,7 +407,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   case INTSXP: {
     double dbl_lcm;
     int int_lcm;
-    double int_max = integer_max_;
+    double int_max = INTEGER_MAX;
     SHIELD(x = coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = coerce_vec(y, INTSXP)); ++NP;
     SEXP out = SHIELD(new_vec(INTSXP, n)); ++NP;

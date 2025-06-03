@@ -22,7 +22,7 @@ int int_div(int x, int y){
 }
 
 SEXP xlen_to_r(R_xlen_t x){
-  return x > integer_max_ ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
+  return x > INTEGER_MAX ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
 }
 
 R_xlen_t vec_length(SEXP x){
@@ -250,7 +250,7 @@ double cpp_min(SEXP x){
     if (n == 0) return R_PosInf;
 
     int *p_x = INTEGER(x);
-    int out = integer_max_;
+    int out = INTEGER_MAX;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -263,7 +263,7 @@ double cpp_min(SEXP x){
     if (n == 0) return R_PosInf;
 
     int64_t *p_x = INTEGER64_PTR(x);
-    int64_t out = integer64_max_;
+    int64_t out = INTEGER64_MAX;
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -328,10 +328,10 @@ double var_sum_squared_diff(SEXP x, double mu){
 // The main difference is that codes or breaks can be returned efficiently
 // Values outside the (right or left) intervals can be included too
 
-#define CHEAPR_BIN_CODES(_IS_NA_, _NA_VAL_)                                                    \
+#define CHEAPR_BIN_CODES(IS_NA, NA_VAL)                                                    \
 for (R_xlen_t i = 0; i < n; ++i) {                                                             \
-  p_out[i] = _NA_VAL_;                                                                         \
-  if (!_IS_NA_(p_x[i])) {                                                                      \
+  p_out[i] = NA_VAL;                                                                         \
+  if (!IS_NA(p_x[i])) {                                                                      \
     lo = 0;                                                                                    \
     hi = nb1;                                                                                  \
     if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) || \
@@ -352,10 +352,10 @@ for (R_xlen_t i = 0; i < n; ++i) {                                              
   }                                                                                            \
 }                                                                                              \
 
-#define CHEAPR_BIN_NCODES(_IS_NA_, _NA_VAL_)                                                                                       \
+#define CHEAPR_BIN_NCODES(IS_NA, NA_VAL)                                                                                       \
 for (R_xlen_t i = 0; i < n; ++i) {                                                                                                 \
-  p_out[i] = _NA_VAL_;                                                                                                             \
-  if (!_IS_NA_(p_x[i])) {                                                                                                          \
+  p_out[i] = NA_VAL;                                                                                                             \
+  if (!IS_NA(p_x[i])) {                                                                                                          \
     lo = 0;                                                                                                                        \
     hi = nb1;                                                                                                                      \
     if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||                                     \
@@ -647,13 +647,13 @@ SEXP cpp_lgl_count(SEXP x){
   }
   R_xlen_t nna = n - ntrue - nfalse;
 
-  SEXP out = SHIELD(new_vec(n > integer_max_ ? REALSXP : INTSXP, 3));
+  SEXP out = SHIELD(new_vec(n > INTEGER_MAX ? REALSXP : INTSXP, 3));
   SEXP names = SHIELD(new_vec(STRSXP, 3));
   SET_STRING_ELT(names, 0, make_utf8_char("true"));
   SET_STRING_ELT(names, 1, make_utf8_char("false"));
   SET_STRING_ELT(names, 2, make_utf8_char("na"));
 
-  if (n > integer_max_){
+  if (n > INTEGER_MAX){
     SET_REAL_ELT(out, 0, static_cast<double>(ntrue));
     SET_REAL_ELT(out, 1, static_cast<double>(nfalse));
     SET_REAL_ELT(out, 2, static_cast<double>(nna));
@@ -1119,7 +1119,7 @@ SEXP cpp_str_coalesce(SEXP x){
 [[cpp11::register]]
 SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
-  if (n_bins > integer_max_){
+  if (n_bins > INTEGER_MAX){
     Rf_error("`n_bins` must be < 2^31 in %s", __func__);
   }
   R_xlen_t n = Rf_xlength(x);

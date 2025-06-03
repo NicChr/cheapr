@@ -3,17 +3,17 @@
 // NA handling functions
 // Author: Nick Christofides
 
-#define CHEAPR_ANY_NA(_ISNA_)                                  \
+#define CHEAPR_ANY_NA(IS_NA)                                  \
 for (R_xlen_t i = 0; i < n; ++i){                              \
-  if (_ISNA_(p_x[i])){                                         \
+  if (IS_NA(p_x[i])){                                         \
     out = true;                                                \
     break;                                                     \
   }                                                            \
 }                                                              \
 
-#define CHEAPR_ALL_NA(_ISNA_)                                  \
+#define CHEAPR_ALL_NA(IS_NA)                                  \
 for (R_xlen_t i = 0; i < n; ++i){                              \
-  if (!_ISNA_(p_x[i])){                                        \
+  if (!IS_NA(p_x[i])){                                        \
     out = false;                                               \
     break;                                                     \
   }                                                            \

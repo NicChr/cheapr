@@ -88,9 +88,9 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     return na_count(x, recursive);
     // }
   }
-#define CHEAPR_VAL_COUNT(_val_)                                \
+#define CHEAPR_VAL_COUNT(VAL)                                \
   for (R_xlen_t i = 0; i < n; ++i){                            \
-    count += (p_x[i] == _val_);                                \
+    count += (p_x[i] == VAL);                                \
   }                                                            \
                                                                \
 

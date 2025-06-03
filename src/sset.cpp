@@ -92,7 +92,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
 
   SEXP x_seq = SHIELD(cpp_seq_len(xn));
 
-  if (xn > integer_max_){
+  if (xn > INTEGER_MAX){
     SHIELD(exclude = coerce_vec(exclude, REALSXP));
     double* RESTRICT p_x = REAL(x_seq);
     double *p_excl = REAL(exclude);
@@ -212,7 +212,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     n = Rf_xlength(clean_indices);
     out_size = n;
     check_indices = false;
-  } else if (xn > integer_max_){
+  } else if (xn > INTEGER_MAX){
 
     SHIELD(clean_indices = coerce_vec(indices, REALSXP)); ++NP;
 
@@ -641,7 +641,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
   if (check){
 
-    if (Rf_xlength(x) > integer_max_){
+    if (Rf_xlength(x) > INTEGER_MAX){
 
       int_fast64_t xn = Rf_xlength(x);
 
@@ -943,7 +943,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
     }
   } else {
 
-    if (Rf_xlength(x) > integer_max_){
+    if (Rf_xlength(x) > INTEGER_MAX){
 
       int_fast64_t n = Rf_xlength(indices);
 
@@ -1455,7 +1455,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
 
   if (Rf_isObject(x)){
     SEXP loc;
-    if (i <= integer_max_){
+    if (i <= INTEGER_MAX){
       loc = SHIELD(Rf_ScalarInteger(i));
     } else {
       loc = SHIELD(Rf_ScalarReal(i));

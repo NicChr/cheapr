@@ -982,7 +982,7 @@ SEXP cpp_c(SEXP x){
 
 
   // We use the tz info of the first datetime vec to copy to final result
-  int first_datetime = integer_max_;
+  int first_datetime = INTEGER_MAX;
 
   SEXP elem = R_NilValue;
 

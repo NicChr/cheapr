@@ -1,5 +1,7 @@
 #include "cheapr.h"
 
+// #define IS_INTEGERABLE(x, is_na_fn, min, max) ( (bool) (is_na_fn(x) || (x >= min && x <= max)) )
+
 // Convert 64-bit integer vec to 32-bit integer vec
 
 [[cpp11::register]]
@@ -14,7 +16,7 @@ SEXP cpp_int64_to_int(SEXP x){
 
   const int64_t *p_x = INTEGER64_PTR(x);
 
-  int64_t int_max = integer_max_;
+  int64_t int_max = INTEGER_MAX;
 
   for (R_xlen_t i = 0; i < n; ++i){
     p_out[i] = is_na_int64(p_x[i]) || std::llabs(p_x[i]) > int_max ? NA_INTEGER : p_x[i];
@@ -48,7 +50,7 @@ SEXP cpp_int64_to_double(SEXP x){
 
 // Can all numbers be safely converted to 32-bit int?
 
-bool cpp_all_integerable(SEXP x, int shift = 0){
+bool cpp_all_integerable(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   bool out = true;
 
@@ -58,11 +60,13 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int64_t *p_x = INTEGER64_PTR(x);
-    int64_t int_max = integer_max_;
-    int64_t shift_ = shift;
+    const int64_t *p_x = INTEGER64_RO_PTR(x);
+
+    int64_t int_min = INTEGER_MIN;
+    int64_t int_max = INTEGER_MAX;
+
     for (R_xlen_t i = 0; i < n; ++i){
-      if (!is_na_int64(p_x[i]) && ( (std::llabs(p_x[i]) + shift_) > int_max )){
+      if (!(is_na_int64(p_x[i]) || between<int64_t>(p_x[i], int_min, int_max))){
         out = false;
         break;
       }
@@ -70,11 +74,13 @@ bool cpp_all_integerable(SEXP x, int shift = 0){
     break;
   }
   case REALSXP: {
-    const double *p_x = REAL(x);
-    double int_max = integer_max_;
-    double shift_ = shift;
+    const double *p_x = REAL_RO(x);
+
+    double int_min = INTEGER_MIN;
+    double int_max = INTEGER_MAX;
+
     for (R_xlen_t i = 0; i < n; ++i){
-      if (!is_na_dbl(p_x[i]) && ( (std::fabs(p_x[i]) + shift_) > int_max )){
+      if (!(is_na_dbl(p_x[i]) || between<double>(p_x[i], int_min, int_max))){
         out = false;
         break;
       }
@@ -95,7 +101,7 @@ SEXP cpp_int64_to_numeric(SEXP x){
   if (!is_int64(x)){
     Rf_error("x must be an integer64");
   }
-  return cpp_all_integerable(x, 0) ? cpp_int64_to_int(x) : cpp_int64_to_double(x);
+  return cpp_all_integerable(x) ? cpp_int64_to_int(x) : cpp_int64_to_double(x);
 }
 
 // The reverse operation

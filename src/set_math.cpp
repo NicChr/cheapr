@@ -22,14 +22,14 @@ SEXP check_transform_altrep(SEXP x){
   }
 }
 
-#define CHEAPR_MATH_INT_LOOP(_fun_)                                         \
+#define CHEAPR_MATH_INT_LOOP(FUN)                                         \
 for (R_xlen_t i = 0; i < n; ++i) {                                          \
-  p_out[i] = is_na_int(p_out[i]) ? p_out[i] : _fun_(p_out[i]);           \
+  p_out[i] = is_na_int(p_out[i]) ? p_out[i] : FUN(p_out[i]);           \
 }                                                                           \
 
-#define CHEAPR_MATH_REAL_LOOP(_fun_)                                      \
+#define CHEAPR_MATH_REAL_LOOP(FUN)                                      \
 for (R_xlen_t i = 0; i < n; ++i) {                                        \
-  p_out[i] = is_na_dbl(p_out[i]) ? p_out[i] : _fun_(p_out[i]);           \
+  p_out[i] = is_na_dbl(p_out[i]) ? p_out[i] : FUN(p_out[i]);           \
 }                                                                         \
 
 

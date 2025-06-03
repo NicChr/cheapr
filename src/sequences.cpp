@@ -120,7 +120,7 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by) {
     switch (TYPEOF(by)){
   case INTSXP: {
     int_fast64_t start, increment, seq_size, seq_end;
-    int_fast64_t int_max = integer_max_;
+    int_fast64_t int_max = INTEGER_MAX;
     int_fast64_t zero = 0;
     bool out_is_integer = true;
     const int *p_size = INTEGER(size);
@@ -375,7 +375,7 @@ SEXP cpp_sequence_id(SEXP size){
 }
 
 SEXP cpp_seq_len(R_xlen_t n){
-  if (n > integer_max_){
+  if (n > INTEGER_MAX){
     SEXP out = SHIELD(new_vec(REALSXP, n));
     double* RESTRICT p_out = REAL(out);
     OMP_FOR_SIMD
@@ -445,7 +445,7 @@ double pretty_ceiling(double x){
 // }
 
 bool can_be_int(double x, double tolerance){
-  return is_whole_number(x, tolerance) && std::fabs(x) <= integer_max_;
+  return is_whole_number(x, tolerance) && is_integerable<double>(x);
 }
 
 double seq_end(double size, double from, double by){
@@ -653,7 +653,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     seq_from = R_NilValue, seq_width = R_NilValue;
 
     if (!scale_up && can_be_int(adj_width, tol) && can_be_int(adj_start, tol) &&
-        std::fabs(adj_end) <= integer_max_){
+       is_integerable<double>(adj_end)){
       adj_width = round_nearest_even(adj_width);
       adj_start = round_nearest_even(adj_start);
 
