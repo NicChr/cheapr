@@ -4,6 +4,9 @@
 
 - Fixed a bug where `recycle` sometimes modified lists in-place.
 
+- Fixed a rare issue that could in theory occur where -2147483648 would 
+be recognised as a representable integer in R.
+
 ### Changes
 
 - `attrs_add` and `attrs_rm` have been renamed to `attrs_modify` and 
