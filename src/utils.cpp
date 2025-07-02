@@ -17,10 +17,6 @@ SEXP cpp_is_simple_vec(SEXP x){
   return scalar_lgl(is_simple_vec(x));
 }
 
-int int_div(int x, int y){
-  return x / y;
-}
-
 SEXP xlen_to_r(R_xlen_t x){
   return x > INTEGER_MAX ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
 }

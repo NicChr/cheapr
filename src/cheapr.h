@@ -157,7 +157,6 @@ inline constexpr bool is_integerable(T x){
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
-int int_div(int x, int y);
 SEXP xlen_to_r(R_xlen_t x);
 R_xlen_t vec_length(SEXP x);
 SEXP r_address(SEXP x);

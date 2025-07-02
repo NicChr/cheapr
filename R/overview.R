@@ -510,7 +510,7 @@ summarise_all <- function(data, .fn, size = 1){
 }
 pluck_row <- function(data, i = 1){
   # unlist(sset_row(data, i), recursive = FALSE)
-  cpp_c(unclass(sset_row(data, i)))
+  cheapr_c(.args = unclass(sset_row(data, i)))
 }
 
 # Taken from skimr::skim with modifications

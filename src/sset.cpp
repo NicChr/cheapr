@@ -780,7 +780,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         int* RESTRICT p_out = INTEGER(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
-          if (between<unsigned int>(j, 1, xn)){
+          if (between<unsigned int>(j, 1U, xn)){
             p_out[k++] = p_x[--j];
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
@@ -788,7 +788,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
             YIELD(3);
             return out2;
-          } else if (j != 0){
+          } else if (j != 0U){
             p_out[k++] = NA_INTEGER;
           }
         }
@@ -800,7 +800,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         double* RESTRICT p_out = REAL(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
-          if (between<unsigned int>(j, 1, xn)){
+          if (between<unsigned int>(j, 1U, xn)){
             p_out[k++] = p_x[--j];
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
@@ -808,7 +808,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
             YIELD(3);
             return out2;
-          } else if (j != 0){
+          } else if (j != 0U){
             p_out[k++] = NA_REAL;
           }
         }
@@ -819,7 +819,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         out = SHIELD(new_vec(STRSXP, n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
-          if (between<unsigned int>(j, 1, xn)){
+          if (between<unsigned int>(j, 1U, xn)){
             SET_STRING_ELT(out, k++, p_x[--j]);
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
@@ -827,7 +827,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
             YIELD(3);
             return out2;
-          } else if (j != 0){
+          } else if (j != 0U){
             SET_STRING_ELT(out, k++, NA_STRING);
           }
         }
@@ -839,7 +839,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         Rcomplex* RESTRICT p_out = COMPLEX(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
-          if (between<unsigned int>(j, 1, xn)){
+          if (between<unsigned int>(j, 1U, xn)){
             p_out[k++] = p_x[--j];
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
@@ -847,7 +847,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
             YIELD(3);
             return out2;
-          } else if (j != 0){
+          } else if (j != 0U){
             p_out[k].r = NA_REAL;
             p_out[k++].i = NA_REAL;
           }
@@ -859,7 +859,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         out = SHIELD(new_vec(RAWSXP, n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
-          if (between<unsigned int>(j, 1, xn)){
+          if (between<unsigned int>(j, 1U, xn)){
            SET_RAW_ELT(out, k++, p_x[--j]);
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
@@ -867,7 +867,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
             YIELD(3);
             return out2;
-          } else if (j != 0){
+          } else if (j != 0U){
             SET_RAW_ELT(out, k++, 0);
           }
         }
@@ -878,7 +878,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         out = SHIELD(new_vec(VECSXP, n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
-          if (between<unsigned int>(j, 1, xn)){
+          if (between<unsigned int>(j, 1U, xn)){
             SET_VECTOR_ELT(out, k++, p_x[--j]);
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
@@ -886,7 +886,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             SEXP out2 = SHIELD(sset_vec(x, new_indices, false));
             YIELD(3);
             return out2;
-          } else if (j != 0){
+          } else if (j != 0U){
             SET_VECTOR_ELT(out, k++, R_NilValue);
           }
         }
@@ -1058,7 +1058,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
 SEXP rev(SEXP x, bool set){
   R_xlen_t n = Rf_xlength(x);
-  R_xlen_t half = int_div(n, 2);
+  R_xlen_t half = n / 2;
   R_xlen_t n2 = n - 1; // Offset n for 0-indexing
   R_xlen_t k;
   int32_t NP = 0;
@@ -1358,17 +1358,16 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
     bool check2 = check;
 
     SEXP out = R_NilValue;
+    SEXP names = R_NilValue;
 
     if (is_compact_seq(indices)){
       SEXP seq_data = SHIELD(compact_seq_data(indices)); ++NP;
       const double *p_data = REAL_RO(seq_data);
       out = SHIELD(cpp_sset_range(x, p_data[0], p_data[1], p_data[2])); ++NP;
-      Rf_copyMostAttrib(x, out);
 
       // Subset names
-      SEXP names = SHIELD(get_names(x)); ++NP;
+      names = SHIELD(get_names(x)); ++NP;
       SHIELD(names = cpp_sset_range(names, p_data[0], p_data[1], p_data[2])); ++NP;
-      set_names(out, names);
     } else {
       if (check){
         SEXP indices_metadata = SHIELD(clean_indices(indices, x, false)); ++NP;
@@ -1376,13 +1375,13 @@ SEXP cpp_sset(SEXP x, SEXP indices, bool check){
         check2 = LOGICAL(VECTOR_ELT(indices_metadata, 2))[0];
       }
       out = SHIELD(sset_vec(x, indices, check2)); ++NP;
-      Rf_copyMostAttrib(x, out);
 
       // Subset names
-      SEXP names = SHIELD(get_names(x)); ++NP;
+      names = SHIELD(get_names(x)); ++NP;
       SHIELD(names = sset_vec(names, indices, check2)); ++NP;
-      set_names(out, names);
     }
+    Rf_copyMostAttrib(x, out);
+    set_names(out, names);
     YIELD(NP);
     return out;
   } else if (is_df(x)){
