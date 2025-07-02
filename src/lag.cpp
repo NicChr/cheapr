@@ -35,11 +35,11 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     int* RESTRICT p_out = INTEGER(out);
     int *p_x = INTEGER(xvec);
     if (k >= 0){
-      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
+      safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
-      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int));
+      safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int));
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
@@ -59,11 +59,11 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     // sizeof(int64_t) == sizeof(double), both are 8 bytes
 
     if (k >= 0){
-      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int64_t));
+      safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int64_t));
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
-      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int64_t));
+      safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int64_t));
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
@@ -79,11 +79,11 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     double* RESTRICT p_out = REAL(out);
     double *p_x = REAL(xvec);
     if (k >= 0){
-      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
+      safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
-      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(double));
+      safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(double));
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
@@ -100,10 +100,10 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     Rcomplex *p_out = COMPLEX(out);
     Rcomplex *p_x = COMPLEX(xvec);
     if (k >= 0){
-      memmove(&p_out[k], &p_x[0], (size - k) * sizeof(Rcomplex));
+      safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(Rcomplex));
       for (R_xlen_t i = 0; i < k; ++i) SET_COMPLEX_ELT(out, i, fill_value);
     } else {
-      memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(Rcomplex));
+      safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(Rcomplex));
       OMP_FOR_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) SET_COMPLEX_ELT(out, i, fill_value);
     }

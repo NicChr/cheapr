@@ -1213,15 +1213,14 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     cols = SHIELD(coerce_vec(locs, INTSXP)); ++NP;
   }
 
-  int *p_cols = INTEGER(cols);
-
   // Negative subscripting
-  if (n_locs > 0 && p_cols[0] != NA_INTEGER && p_cols[0] < 0){
+  if (n_locs > 0 && INTEGER(cols)[0] != NA_INTEGER && INTEGER(cols)[0] < 0){
     SHIELD(cols = exclude_locs(cols, n_cols)); ++NP;
-    p_cols = INTEGER(cols);
     n_locs = Rf_length(cols);
     check = false;
   }
+
+  const int *p_cols = INTEGER_RO(cols);
 
   SEXP out = SHIELD(new_vec(VECSXP, n_locs)); ++NP;
   SEXP out_names = SHIELD(new_vec(STRSXP, n_locs)); ++NP;

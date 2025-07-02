@@ -1125,7 +1125,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   int* RESTRICT p_out = INTEGER(out);
 
   // Initialise counts to 0
-  memset(p_out, 0, n_bins * sizeof(int));
+  safe_memset(p_out, 0, n_bins * sizeof(int));
 
   uint32_t one = 1;
 

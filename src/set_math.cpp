@@ -693,7 +693,7 @@ SEXP cpp_int_sign(SEXP x){
   switch (TYPEOF(x)){
   case LGLSXP: {
     const int *p_x = LOGICAL(x);
-    memmove(&p_out[0], &p_x[0], n * sizeof(int));
+    safe_memmove(&p_out[0], &p_x[0], n * sizeof(int));
     break;
   }
   case INTSXP: {

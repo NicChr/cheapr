@@ -43,7 +43,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_RO_PTR(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_int64(p_x[i]);
@@ -272,7 +272,7 @@ SEXP cpp_is_na(SEXP x){
   case CHEAPR_INT64SXP: {
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
-    const int64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_RO_PTR(x);
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
@@ -315,7 +315,7 @@ SEXP cpp_is_na(SEXP x){
   case RAWSXP: {
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
-    memset(p_out, 0, n * sizeof(int));
+    std::fill(p_out, p_out + n, 0);
     break;
   }
   case CPLXSXP: {
@@ -359,7 +359,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
   int num_row = df_nrow(x);
   SEXP out = SHIELD(new_vec(INTSXP, num_row)); ++NP;
   int* RESTRICT p_out = INTEGER(out);
-  memset(p_out, 0, num_row * sizeof(int));
+  std::fill(p_out, p_out + num_row, 0);
   for (int j = 0; j < num_col; ++j){
     switch ( CHEAPR_TYPEOF(p_x[j]) ){
     case LGLSXP:
@@ -372,7 +372,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       break;
     }
     case CHEAPR_INT64SXP: {
-      const int64_t *p_xj = INTEGER64_PTR(p_x[j]);
+      const int64_t *p_xj = INTEGER64_RO_PTR(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_na_int64(p_xj[i]);
@@ -450,7 +450,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   int num_row = df_nrow(x);
   SEXP out = SHIELD(new_vec(INTSXP, num_col)); ++NP;
   int *p_out = INTEGER(out);
-  memset(p_out, 0, num_col * sizeof(int));
+  std::fill(p_out, p_out + num_col, 0);
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
@@ -706,7 +706,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(new_vec(INTSXP, num_row));
   int *p_out = INTEGER(out);
-  memset(p_out, 0, num_row * sizeof(int));
+  std::fill(p_out, p_out + num_row, 0);
   if (num_row > 0 && num_col > 0){
     switch ( CHEAPR_TYPEOF(x) ){
     case LGLSXP:
@@ -773,7 +773,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   bool new_col;
   SEXP out = SHIELD(new_vec(INTSXP, num_col));
   int *p_out = INTEGER(out);
-  memset(p_out, 0, num_col * sizeof(int));
+  std::fill(p_out, p_out + num_col, 0);
   if (num_row > 0 && num_col > 0){
     switch ( CHEAPR_TYPEOF(x) ){
     case LGLSXP:
