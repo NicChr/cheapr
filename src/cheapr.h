@@ -130,6 +130,19 @@
 #define YIELD(n) (Rf_unprotect(n))
 #endif
 
+
+inline void *safe_memmove(void *dst, const void *src, size_t n){
+  return n ? memmove(dst, src, n) : dst;
+}
+
+inline void *safe_memcpy(void *dst, const void *src, size_t n){
+  return n ? memcpy(dst, src, n) : dst;
+}
+
+inline void *safe_memset(void *dst, int val, size_t n){
+  return n ? memset(dst, val, n) : dst;
+}
+
 template<typename T>
 inline constexpr bool between(T x, T lo, T hi) {
   return x >= lo && x <= hi;

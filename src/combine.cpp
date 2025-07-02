@@ -1046,7 +1046,7 @@ SEXP cpp_c(SEXP x){
         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
       }
       m = Rf_xlength(temp);
-      const int *p_temp = INTEGER(temp);
+      const int *p_temp = INTEGER_RO(temp);
       memcpy(&p_out[k], &p_temp[0], m * sizeof(int));
     }
     break;
@@ -1063,7 +1063,7 @@ SEXP cpp_c(SEXP x){
         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
       }
       m = Rf_xlength(temp);
-      const double *p_temp = REAL(temp);
+      const double *p_temp = REAL_RO(temp);
       memcpy(&p_out[k], &p_temp[0], m * sizeof(double));
     }
     break;
