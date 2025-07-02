@@ -1168,10 +1168,6 @@ SEXP cpp_rev(SEXP x, bool set){
 [[cpp11::register]]
 SEXP cpp_df_select(SEXP x, SEXP locs){
 
-  if (!is_df(x)){
-    Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
-  }
-
   int32_t NP = 0,
     n_cols = Rf_length(x),
     n_rows = df_nrow(x),
@@ -1222,6 +1218,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Negative subscripting
   if (n_locs > 0 && p_cols[0] != NA_INTEGER && p_cols[0] < 0){
     SHIELD(cols = exclude_locs(cols, n_cols)); ++NP;
+    p_cols = INTEGER(cols);
     n_locs = Rf_length(cols);
     check = false;
   }
@@ -1279,10 +1276,6 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
 [[cpp11::register]]
 SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
-
-  if (!is_df(x)){
-    Rf_error("`x` must be a `data.frame`, not a %s", Rf_type2char(TYPEOF(x)));
-  }
 
   if (is_null(indices)){
     return x;
