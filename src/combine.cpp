@@ -984,10 +984,36 @@ SEXP cpp_c(SEXP x){
   }
 
   if (is_classed && !(is_date2 || is_datetime2)){
-    SEXP c_char = SHIELD(make_utf8_str("c"));
-    SEXP out = SHIELD(base_do_call(c_char, x));
-    YIELD(2);
+    // SEXP expr = SHIELD(Rf_lang3(install_utf8("do.call"), install_utf8("c"), x));
+    // SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    // YIELD(2);
+    // return out;
+
+    // SEXP call = SHIELD(Rf_lcons(R_NilValue, Rf_allocList(n + 1)));
+    // SETCAR(call, install_utf8("c"));
+    // SEXP tail = CDR(call);
+    //
+    // for (int i = 0; i < n; ++i, tail = CDR(tail)){
+    //   SETCAR(tail, p_x[i]);
+    // }
+    // SEXP out = SHIELD(Rf_eval(call, R_GetCurrentEnv()));
+
+    SEXP call = SHIELD(coerce_vec(x, LISTSXP));
+    SHIELD(call = Rf_lcons(install_utf8("c"), call));
+    SEXP out = SHIELD(Rf_eval(call, R_GetCurrentEnv()));
+    YIELD(3);
     return out;
+
+    // SEXP envir = SHIELD(R_GetCurrentEnv());
+    // SEXP arg1 = SHIELD(new_vec(VECSXP, 1));
+    // SET_VECTOR_ELT(arg1, 0, install_utf8("c"));
+    // SEXP args = SHIELD(list_c2(arg1, x));
+    // SEXP expr = SHIELD(Rf_lang2(install_utf8("as.call"), args));
+    // SHIELD(args = Rf_eval(expr, envir));
+    // SEXP out = SHIELD(Rf_eval(args, envir));
+    // YIELD(6);
+    // return out;
+
   }
 
   R_xlen_t k = 0;
@@ -1016,8 +1042,7 @@ SEXP cpp_c(SEXP x){
         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
       }
       m = Rf_xlength(temp);
-      const int *p_temp = INTEGER_RO(temp);
-      memcpy(&p_out[k], &p_temp[0], m * sizeof(int));
+      std::copy_n(INTEGER_RO(temp), m, &p_out[k]);
     }
     break;
   }
@@ -1033,8 +1058,7 @@ SEXP cpp_c(SEXP x){
         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
       }
       m = Rf_xlength(temp);
-      const double *p_temp = REAL_RO(temp);
-      memcpy(&p_out[k], &p_temp[0], m * sizeof(double));
+      std::copy_n(REAL_RO(temp), m, &p_out[k]);
     }
     break;
   }
@@ -1059,18 +1083,16 @@ SEXP cpp_c(SEXP x){
   case CPLXSXP: {
 
     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
+    Rcomplex *p_out = COMPLEX(out);
 
-    for (int i = 0; i < n; ++i){
+    for (int i = 0; i < n; ++i, k += m){
       if (TYPEOF(p_x[i]) == vector_type){
         temp = p_x[i];
       } else {
         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
       }
       m = Rf_xlength(temp);
-      Rcomplex *p_temp = COMPLEX(temp);
-      for (R_xlen_t j = 0; j < m; ++k, ++j){
-        SET_COMPLEX_ELT(out, k, p_temp[j]);
-      }
+      std::copy_n(COMPLEX_RO(temp), m, p_out + k);
     }
     break;
   }
