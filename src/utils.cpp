@@ -94,13 +94,13 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
   case INTSXP: {
     int *p_source = INTEGER(source);
     int *p_target = INTEGER(target);
-    memmove(&p_target[0], &p_source[0], n * sizeof(int));
+    safe_memmove(&p_target[0], &p_source[0], n * sizeof(int));
     break;
   }
   case REALSXP: {
     double *p_source = REAL(source);
     double *p_target = REAL(target);
-    memmove(&p_target[0], &p_source[0], n * sizeof(double));
+    safe_memmove(&p_target[0], &p_source[0], n * sizeof(double));
     break;
   }
   case STRSXP: {
@@ -113,13 +113,13 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
   case CPLXSXP: {
     Rcomplex *p_source = COMPLEX(source);
     Rcomplex *p_target = COMPLEX(target);
-    memmove(&p_target[0], &p_source[0], n * sizeof(Rcomplex));
+    safe_memmove(&p_target[0], &p_source[0], n * sizeof(Rcomplex));
     break;
   }
   case RAWSXP: {
     Rbyte *p_source = RAW(source);
     Rbyte *p_target = RAW(target);
-    memmove(&p_target[0], &p_source[0], n * sizeof(Rbyte));
+    safe_memmove(&p_target[0], &p_source[0], n * sizeof(Rbyte));
     break;
   }
   default: {

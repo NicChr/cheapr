@@ -73,7 +73,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     switch (CHEAPR_TYPEOF(x)){
     case LGLSXP:
     case INTSXP: {
-      const int *p_x = INTEGER(x);
+      const int *p_x = INTEGER_RO(x);
       SEXP out = SHIELD(new_vec(TYPEOF(x), out_size));
       int* RESTRICT p_out = INTEGER(out);
 
@@ -84,7 +84,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         for (int i = 0; i < n_chunks; ++i){
           k = i * size;
           chunk_size = std::min(k + size, out_size) - k;
-          memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(int));
+          std::copy(p_x, p_x + chunk_size, p_out + k);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -106,7 +106,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         for (int i = 0; i < n_chunks; ++i){
           k = i * size;
           chunk_size = std::min(k + size, out_size) - k;
-          memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(int64_t));
+          std::copy(p_x, p_x + chunk_size, p_out + k);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -117,7 +117,7 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     case REALSXP: {
-      const double *p_x = REAL(x);
+      const double *p_x = REAL_RO(x);
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
       double* RESTRICT p_out = REAL(out);
 
@@ -128,7 +128,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         for (int i = 0; i < n_chunks; ++i){
           k = i * size;
           chunk_size = std::min(k + size, out_size) - k;
-          memcpy(&p_out[k], &p_x[0], chunk_size * sizeof(double));
+          std::copy(p_x, p_x + chunk_size, p_out + k);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -1105,203 +1105,3 @@ SEXP cpp_c(SEXP x){
   YIELD(NP);
   return out;
 }
-
-// SEXP cpp_combine(SEXP x, SEXP size, SEXP ptype){
-//   if (TYPEOF(x) != VECSXP){
-//     Rf_error("`x` must be a list of vectors");
-//   }
-//   int32_t NP = 0;
-//   int n = Rf_length(x);
-//   const SEXP *p_x = VECTOR_PTR_RO(x);
-//   if (n == 1){
-//     return p_x[0];
-//   }
-//
-//   int vector_type = NILSXP;
-//   R_xlen_t out_size = 0;
-//
-//   bool is_factor = false, is_frame = false, is_classed = false,
-//     is_simple = false, is_date = false, is_datetime = false;
-//
-//
-//   // We use the tz info of the first datetime vec to copy to final result
-//   int first_datetime = INTEGER_MAX;
-//
-//   SEXP elem = R_NilValue;
-//
-//   if ((!is_null(ptype) && !Rf_isObject(ptype)) || !is_null(size)){
-//     if (!is_null(ptype) && !is_null(size)){
-//       vector_type = TYPEOF(ptype);
-//       out_size = TYPEOF(size) == REALSXP ? REAL(size)[0] : INTEGER(size)[0];
-//     } else if (is_null(ptype)){
-//       out_size = TYPEOF(size) == REALSXP ? REAL(size)[0] : INTEGER(size)[0];
-//       for (int i = 0; i < n; ++i){
-//         elem = p_x[i];
-//         vector_type = std::max(vector_type, TYPEOF(elem));
-//         is_factor = is_factor || Rf_isFactor(elem);
-//         is_simple = is_simple || is_simple_atomic_vec(elem);
-//         is_date = is_date || Rf_inherits(elem, "Date");
-//         is_datetime = is_datetime || Rf_inherits(elem, "POSIXct");
-//         if (is_datetime){
-//           first_datetime = std::min(i, first_datetime);
-//         }
-//         is_frame = is_frame || is_df(elem);
-//         is_classed = is_classed || Rf_isObject(elem);
-//       }
-//     } else {
-//       vector_type = TYPEOF(ptype);
-//       for (int i = 0; i < n; ++i){
-//         out_size += Rf_xlength(p_x[i]);
-//       }
-//     }
-//   } else {
-//     for (int i = 0; i < n; ++i){
-//       elem = p_x[i];
-//       vector_type = std::max(vector_type, TYPEOF(elem));
-//       out_size += Rf_xlength(elem);
-//       is_factor = is_factor || Rf_isFactor(elem);
-//       is_simple = is_simple || is_simple_atomic_vec(elem);
-//       is_date = is_date || Rf_inherits(elem, "Date");
-//       is_datetime = is_datetime || Rf_inherits(elem, "POSIXct");
-//       if (is_datetime){
-//         first_datetime = std::min(i, first_datetime);
-//       }
-//       is_frame = is_frame || is_df(elem);
-//       is_classed = is_classed || Rf_isObject(elem);
-//     }
-//   }
-//
-//   // Date vectors can be ints but datetimes can't
-//   bool is_date2 = is_date && !is_datetime && (vector_type == INTSXP || vector_type == REALSXP);
-//   bool is_datetime2 = !is_date && is_datetime && vector_type == REALSXP;
-//
-//   if (is_frame){
-//     return cpp_df_c(x);
-//   }
-//
-//   if (is_factor){
-//     return cpp_combine_factors(x);
-//   }
-//
-//   if (is_classed && !(is_date2 || is_datetime2)){
-//     SEXP call = SHIELD(coerce_vec(x, LISTSXP));
-//     SHIELD(call = Rf_lcons(install_utf8("c"), call));
-//     SEXP out = SHIELD(Rf_eval(call, R_GetCurrentEnv()));
-//     YIELD(3);
-//     return out;
-//   }
-//
-//   R_xlen_t k = 0;
-//   R_xlen_t m = 0;
-//   SEXP out, temp;
-//
-//   PROTECT_INDEX temp_idx;
-//   R_ProtectWithIndex(temp = R_NilValue, &temp_idx); ++NP;
-//
-//
-//   switch(vector_type){
-//   case NILSXP: {
-//     out = SHIELD(R_NilValue); ++NP;
-//     break;
-//   }
-//   case LGLSXP:
-//   case INTSXP: {
-//
-//     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-//     int* RESTRICT p_out = INTEGER(out);
-//
-//     for (int i = 0; i < n; ++i, k += m){
-//       if (TYPEOF(p_x[i]) == vector_type){
-//         temp = p_x[i];
-//       } else {
-//         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
-//       }
-//       m = Rf_xlength(temp);
-//       std::copy_n(INTEGER_RO(temp), m, &p_out[k]);
-//     }
-//     break;
-//   }
-//   case REALSXP: {
-//
-//     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-//     double* RESTRICT p_out = REAL(out);
-//
-//     for (int i = 0; i < n; ++i, k += m){
-//       if (TYPEOF(p_x[i]) == vector_type){
-//         temp = p_x[i];
-//       } else {
-//         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
-//       }
-//       m = Rf_xlength(temp);
-//       std::copy_n(REAL_RO(temp), m, &p_out[k]);
-//     }
-//     break;
-//   }
-//   case STRSXP: {
-//
-//     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-//
-//     for (int i = 0; i < n; ++i){
-//       if (TYPEOF(p_x[i]) == vector_type){
-//         temp = p_x[i];
-//       } else {
-//         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
-//       }
-//       m = Rf_xlength(temp);
-//       const SEXP *p_temp = STRING_PTR_RO(temp);
-//       for (R_xlen_t j = 0; j < m; ++k, ++j){
-//         SET_STRING_ELT(out, k, p_temp[j]);
-//       }
-//     }
-//     break;
-//   }
-//   case CPLXSXP: {
-//
-//     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-//     Rcomplex *p_out = COMPLEX(out);
-//
-//     for (int i = 0; i < n; ++i, k += m){
-//       if (TYPEOF(p_x[i]) == vector_type){
-//         temp = p_x[i];
-//       } else {
-//         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
-//       }
-//       m = Rf_xlength(temp);
-//       std::copy_n(COMPLEX_RO(temp), m, p_out + k);
-//     }
-//     break;
-//   }
-//   case VECSXP: {
-//
-//     out = SHIELD(new_vec(vector_type, out_size)); ++NP;
-//
-//     for (int i = 0; i < n; ++i){
-//       if (TYPEOF(p_x[i]) == vector_type){
-//         temp = p_x[i];
-//       } else {
-//         R_Reprotect(temp = coerce_vec(p_x[i], vector_type), temp_idx);
-//       }
-//       m = Rf_xlength(temp);
-//       const SEXP *p_temp = VECTOR_PTR_RO(temp);
-//       for (R_xlen_t j = 0; j < m; ++k, ++j){
-//         SET_VECTOR_ELT(out, k, p_temp[j]);
-//       }
-//     }
-//     break;
-//   }
-//
-//   default: {
-//     SEXP c_char = SHIELD(make_utf8_str("c")); ++NP;
-//     out = SHIELD(base_do_call(c_char, x)); ++NP;
-//     break;
-//   }
-//   }
-//   if (is_date2){
-//     Rf_classgets(out, make_utf8_str("Date"));
-//   }
-//   if (is_datetime2){
-//     Rf_copyMostAttrib(p_x[first_datetime], out);
-//   }
-//   YIELD(NP);
-//   return out;
-// }
