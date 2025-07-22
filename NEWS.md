@@ -2,6 +2,11 @@
 
 - Subsetting sees substantial speed improvements.
 
+### Bug fixes
+
+- Fixed an issue where negative-subscripting a data frame with `sset_col()`
+would crash R.
+
 # cheapr 1.3.1
 
 ### Bug fixes
