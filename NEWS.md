@@ -1,5 +1,7 @@
 # cheapr (development version)
 
+### Miscellaneous
+
 - Subsetting sees substantial speed improvements.
 
 ### Bug fixes
