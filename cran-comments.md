@@ -1,6 +1,6 @@
-* Updated to version 1.3.1
+* Updated to version 1.3.2
 
-* A bug where `recycle` modified lists in-place has been fixed.
+* A bug where `sset_col` sometimes crashed R has been fixed.
 
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
