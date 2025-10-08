@@ -26,31 +26,8 @@
 #' @rdname rebuild
 #' @export
 rebuild <- function(x, template, ...){
-  # Temporary piece of code to not break dependencies
-  if (inherits(template, c("episodes_tbl_df", "time_tbl_df"))){
-    old_class <- vec_intersect(class(template), c("episodes_tbl_df", "time_tbl_df"))
-    class(template) <- vec_setdiff(class(template), c("episodes_tbl_df", "time_tbl_df"))
-    out <- rebuild(x, template)
-
-    # Add extra attributes
-
-    extra_attrs <- list_drop_null(attributes(template)[c("time", "time_by", "threshold")])
-    attributes(out) <- c(attributes(out), extra_attrs)
-    class(out) <- c(old_class, class(out))
-    out
-  } else {
-    UseMethod("rebuild", template)
-  }
+  UseMethod("rebuild", template)
 }
-# rebuild.default <- function(x, template, shallow_copy = TRUE, ...){
-#   cpp_reconstruct(
-#     x, template, c("names", "dim", "dimnames", "row.names", "tsp", "comment"),
-#     cpp_setdiff(
-#       names(attributes(template)),
-#       c("names", "dim", "dimnames", "row.names", "tsp", "comment")
-#     ), shallow_copy
-#   )
-# }
 #' @rdname rebuild
 #' @export
 rebuild.data.frame <- function(x, template, shallow_copy = TRUE, ...){

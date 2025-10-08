@@ -17,25 +17,7 @@ R/create_data.R
 *.[rR][dD][aA][tT][aA]
 *.[rR][dD][sS]
 .DS_Store
-.Rproj.user
-inst/doc
-.Rhistory
-.RData
-.Ruserdata
-data/
-testing/
-create_data.R
-data/create_data.R
-R/create_data.R
-*.[cC][sS][vV]
-*.[tT][xX][tT]
-*.[lL][oO][gG]
-*.[xX][lL][sS]*
-*.[sS][aA][vV]
-*.[zZ][sS][aA][vV]
-*.[rR][dD][aA][tT][aA]
-*.[rR][dD][sS]
-.DS_Store
+
 # Ignore testthat files
 tests/testthat/.gitlab-ci.yml
 tests/testthat/.travis.yml
