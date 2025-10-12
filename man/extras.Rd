@@ -3,17 +3,18 @@
 \name{setdiff_}
 \alias{setdiff_}
 \alias{intersect_}
-\alias{cut_numeric}
 \alias{\%in_\%}
 \alias{\%!in_\%}
-\alias{enframe_}
-\alias{deframe_}
 \alias{sample_}
 \alias{val_insert}
 \alias{na_insert}
 \alias{vector_length}
 \alias{cheapr_var}
 \alias{cheapr_rev}
+\alias{cheapr_sd}
+\alias{rev_}
+\alias{sd_}
+\alias{var_}
 \alias{with_local_seed}
 \title{Extra utilities}
 \usage{
@@ -21,24 +22,9 @@ setdiff_(x, y, dups = TRUE)
 
 intersect_(x, y, dups = TRUE)
 
-cut_numeric(
-  x,
-  breaks,
-  labels = NULL,
-  include.lowest = FALSE,
-  right = TRUE,
-  dig.lab = 3L,
-  ordered_result = FALSE,
-  ...
-)
-
 x \%in_\% table
 
 x \%!in_\% table
-
-enframe_(x, name = "name", value = "value")
-
-deframe_(x)
 
 sample_(x, size = vector_length(x), replace = FALSE, prob = NULL)
 
@@ -52,7 +38,15 @@ cheapr_var(x, na.rm = TRUE)
 
 cheapr_rev(x)
 
-with_local_seed(expr, .seed = NULL, ...)
+cheapr_sd(x, na.rm = TRUE)
+
+rev_(x)
+
+sd_(x, na.rm = TRUE)
+
+var_(x, na.rm = TRUE)
+
+with_local_seed(expr, .seed = NULL, .envir = environment(), ...)
 }
 \arguments{
 \item{x}{A vector or data frame.}
@@ -61,31 +55,15 @@ with_local_seed(expr, .seed = NULL, ...)
 
 \item{dups}{Should duplicates be kept? Default is \code{TRUE}.}
 
-\item{breaks}{See \code{?cut}.}
-
-\item{labels}{See \code{?cut}.}
-
-\item{include.lowest}{See \code{?cut}.}
-
-\item{right}{See \code{?cut}.}
-
-\item{dig.lab}{See \code{?cut}.}
-
-\item{ordered_result}{See \code{?cut}.}
-
-\item{...}{Further arguments passed onto \code{cut} or \code{set.seed}.}
-
 \item{table}{See \code{?collapse::fmatch}}
-
-\item{name}{The column name to assign the names of a vector.}
-
-\item{value}{The column name to assign the values of a vector.}
 
 \item{size}{See \code{?sample}.}
 
 \item{replace}{See \code{?sample}.}
 
 \item{prob}{See \code{?sample}.}
+
+\item{value}{The column name to assign the values of a vector.}
 
 \item{n}{Number of scalar values (or \code{NA}) to insert
 randomly into your vector.}
@@ -102,15 +80,14 @@ is independent and has absolutely no effect on the global RNG state.}
 \item{.seed}{A local seed to set which is only used inside
 \code{with_local_seed()}. After the execution of the expression the original
 seed is reset.}
+
+\item{.envir}{Environment to evaluate expression.}
+
+\item{...}{Further arguments passed onto \code{cut} or \code{set.seed}.}
 }
 \value{
-\verb{enframe()_} converts a vector to a data frame. \cr
-\verb{deframe()_} converts a 1-2 column data frame to a vector. \cr
 \code{intersect_()} returns a vector of common values between \code{x} and \code{y}. \cr
 \code{setdiff_()} returns a vector of values in \code{x} but not \code{y}. \cr
-\code{cut_numeric()} places values of a numeric vector into buckets, defined
-through the \code{breaks} argument and returns a factor unless \code{labels = FALSE},
-in which case an integer vector of break indices is returned. \cr
 \verb{\%in_\%} and \verb{\%!in_\%} both return a logical vector signifying if the values of
 \code{x} exist or don't exist in \code{table} respectively. \cr
 \code{sample_()} is an alternative to \code{sample()} that natively samples
@@ -120,8 +97,6 @@ data frame rows through \code{sset()}. It also does not have a special case when
 Useful for replacing lots of data with a single value. \cr
 \code{na_insert} inserts \code{NA} values randomly into your vector.
 Useful for generating missing data. \cr
-\code{vector_length} behaves mostly like \code{NROW()} except
-for matrices in which it matches \code{length()}.
 \code{cheapr_var} returns the variance of a numeric vector.
 No coercion happens for integer vectors and so is very cheap. \cr
 \code{cheapr_rev} is a much cheaper version of \code{rev()}. \cr

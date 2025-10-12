@@ -16,7 +16,16 @@
 cheapr_rep <- cpp_rep
 #' @rdname rep
 #' @export
+rep_ <- cheapr_rep
+#' @rdname rep
+#' @export
 cheapr_rep_len <- cpp_rep_len
 #' @rdname rep
 #' @export
+rep_len_ <- cheapr_rep_len
+#' @rdname rep
+#' @export
 cheapr_rep_each <- cpp_rep_each
+#' @rdname rep
+#' @export
+rep_each_ <- cheapr_rep_each

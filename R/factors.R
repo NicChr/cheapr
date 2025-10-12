@@ -133,7 +133,7 @@ factor_ <- function(
       class(out) <- c(if (ordered) "ordered" else character(), "factor")
       return(out)
     }
-    lvls <- collapse::funique(x, sort = order, na.last = TRUE)
+    lvls <- unique_(x, sort = order)
   } else {
     lvls <- levels
   }

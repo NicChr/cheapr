@@ -3,14 +3,7 @@
 #' @param x A vector or data frame.
 #' @param y A vector or data frame.
 #' @param dups Should duplicates be kept? Default is `TRUE`.
-#' @param name The column name to assign the names of a vector.
 #' @param value The column name to assign the values of a vector.
-#' @param breaks See `?cut`.
-#' @param labels See `?cut`.
-#' @param include.lowest See `?cut`.
-#' @param right See `?cut`.
-#' @param dig.lab See `?cut`.
-#' @param ordered_result See `?cut`.
 #' @param table See `?collapse::fmatch`
 #' @param ... Further arguments passed onto `cut` or `set.seed`.
 #' @param size See `?sample`.
@@ -27,15 +20,11 @@
 #' @param .seed A local seed to set which is only used inside
 #' `with_local_seed()`. After the execution of the expression the original
 #' seed is reset.
+#' @param .envir Environment to evaluate expression.
 #'
 #' @returns
-#' `enframe()_` converts a vector to a data frame. \cr
-#' `deframe()_` converts a 1-2 column data frame to a vector. \cr
 #' `intersect_()` returns a vector of common values between `x` and `y`. \cr
 #' `setdiff_()` returns a vector of values in `x` but not `y`. \cr
-#' `cut_numeric()` places values of a numeric vector into buckets, defined
-#' through the `breaks` argument and returns a factor unless `labels = FALSE`,
-#' in which case an integer vector of break indices is returned. \cr
 #' `%in_%` and `%!in_%` both return a logical vector signifying if the values of
 #' `x` exist or don't exist in `table` respectively. \cr
 #' `sample_()` is an alternative to `sample()` that natively samples
@@ -45,8 +34,6 @@
 #' Useful for replacing lots of data with a single value. \cr
 #' `na_insert` inserts `NA` values randomly into your vector.
 #' Useful for generating missing data. \cr
-#' `vector_length` behaves mostly like `NROW()` except
-#' for matrices in which it matches `length()`.
 #' `cheapr_var` returns the variance of a numeric vector.
 #' No coercion happens for integer vectors and so is very cheap. \cr
 #' `cheapr_rev` is a much cheaper version of `rev()`. \cr
@@ -123,67 +110,6 @@ intersect_ <- function(x, y, dups = TRUE){
 }
 #' @rdname extras
 #' @export
-cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
-                        right = TRUE, dig.lab = 3L, ordered_result = FALSE, ...){
-  .Deprecated("as_discrete")
-  if (!is.numeric(x))
-    stop("'x' must be numeric")
-  if (length(breaks) == 1L) {
-    if (is.na(breaks) || breaks < 2L)
-      stop("invalid number of intervals")
-    nb <- as.integer(breaks + 1)
-    dx <- diff(rx <- range(x, na.rm = TRUE))
-    if (isTRUE(dx == 0)) {
-      dx <- if (rx[1L] != 0)
-        abs(rx[1L])
-      else 1
-      breaks <- seq.int(rx[1L] - dx/1000, rx[2L] + dx/1000,
-                        length.out = nb)
-    }
-    else {
-      breaks <- seq.int(rx[1L], rx[2L], length.out = nb)
-      breaks[c(1L, nb)] <- c(rx[1L] - dx/1000, rx[2L] +
-                               dx/1000)
-    }
-  }
-  else nb <- length(breaks <- sort.int(as.double(breaks)))
-  if (anyDuplicated(breaks))
-    stop("'breaks' are not unique")
-  codes.only <- FALSE
-  if (is.null(labels)) {
-    for (dig in dig.lab:max(12L, dig.lab)) {
-      ch.br <- formatC(0 + breaks, digits = dig, width = 1L)
-      if (ok <- all(ch.br[-1L] != ch.br[-nb]))
-        break
-    }
-    labels <- if (ok)
-      paste0(if (right)
-        "("
-        else "[", ch.br[-nb], ",", ch.br[-1L], if (right)
-          "]"
-        else ")")
-    else paste0("Range_", seq_len(nb - 1L))
-    if (ok && include.lowest) {
-      if (right)
-        substr(labels[1L], 1L, 1L) <- "["
-      else substring(labels[nb - 1L], nchar(labels[nb -
-                                                     1L], "c")) <- "]"
-    }
-  }
-  else if (is.logical(labels) && !labels)
-    codes.only <- TRUE
-  else if (length(labels) != nb - 1L)
-    stop("number of intervals and length of 'labels' differ")
-  code <- cpp_bin(x, breaks, codes = TRUE, right = right,
-                  include_lowest = include.lowest, include_oob = FALSE)
-  if (!codes.only) {
-    levels(code) <- as.character(labels)
-    class(code) <- c(if (ordered_result) "ordered" else character(0), "factor")
-  }
-  code
-}
-#' @rdname extras
-#' @export
 `%in_%` <- function(x, table){
   collapse::fmatch(x, table, overid = 2L, nomatch = 0L) > 0L
 }
@@ -191,12 +117,6 @@ cut_numeric <- function(x, breaks, labels = NULL, include.lowest = FALSE,
 #' @export
 `%!in_%` <- function(x, table){
   cpp_is_na(collapse::fmatch(x, table, overid = 2L, nomatch = NA_integer_))
-}
-#' @rdname extras
-#' @export
-enframe_ <- function(x, name = "name", value = "value"){
-  .Deprecated("fastplyr::f_enframe")
-  cheapr_enframe(x, name, value)
 }
 cheapr_enframe <- function(x, name = "name", value = "value"){
   if (inherits(x, "data.frame")) {
@@ -215,20 +135,6 @@ cheapr_enframe <- function(x, name = "name", value = "value"){
   }
   class(out) <- c("tbl_df", "tbl", "data.frame")
   attr(out, "row.names") <- .set_row_names(length(x))
-  out
-}
-#' @rdname extras
-#' @export
-deframe_ <- function(x){
-  .Deprecated("fastplyr::f_deframe")
-  ncol <- length(names(x))
-  if (!(inherits(x, "data.frame") && ncol %in% (1:2))) {
-    stop("`x` must be a 1 or 2 col data frame")
-  }
-  out <- .subset2(x, ncol)
-  if (ncol == 2) {
-    names(out) <- as.character(.subset2(x, 1L))
-  }
   out
 }
 #' @rdname extras
@@ -289,25 +195,36 @@ cheapr_var <- function(x, na.rm = TRUE){
 cheapr_rev <- function(x){
   .Call(`_cheapr_cpp_sset`, x, .Call(`_cheapr_cpp_vector_length`, x):0, TRUE)
 }
+#' @rdname extras
+#' @export
 cheapr_sd <- function(x, na.rm = TRUE){
   sqrt(cheapr_var(x, na.rm = na.rm))
 }
+
 #' @rdname extras
 #' @export
-with_local_seed <- function (expr, .seed = NULL, ...){
-  global_env <- base::globalenv
-  old <- global_env()[[".Random.seed"]]
-  if (is.null(old)) {
+rev_ <- cheapr_rev
+#' @rdname extras
+#' @export
+sd_ <- cheapr_sd
+#' @rdname extras
+#' @export
+var_ <- cheapr_var
+#' @rdname extras
+#' @export
+with_local_seed <- function (expr, .seed = NULL, .envir = environment(), ...){
+  old <- globalenv()[[".Random.seed"]]
+  if (is.null(old)){
     set.seed(NULL)
-    old <- global_env()[[".Random.seed"]]
+    old <- globalenv()[[".Random.seed"]]
   }
-  if (!is.null(.seed)) {
+  if (!is.null(.seed)){
     set.seed(.seed, ...)
   }
   on.exit({
-    assign(".Random.seed", old, envir = global_env())
+    assign(".Random.seed", old, envir = globalenv())
   }, add = TRUE)
-  eval(expr, envir = parent.frame())
+  eval(expr, envir = .envir)
 }
 
 cast <- function(x, template){

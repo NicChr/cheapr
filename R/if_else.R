@@ -13,6 +13,7 @@
 #' A vector the same length as condition,
 #' using a common type between `true`, `false` and `default`.
 #'
+#' @rdname cheapr_if_else
 #' @export
 cheapr_if_else <- function(condition, true, false, na = false[NA_integer_]){
 
@@ -106,3 +107,7 @@ cheapr_if_else <- function(condition, true, false, na = false[NA_integer_]){
   }
   out
 }
+
+#' @rdname cheapr_if_else
+#' @export
+if_else_ <- cheapr_if_else

@@ -159,7 +159,7 @@ fast_match <- function(x, table, nomatch = NA_integer_){
   collapse::fmatch(x, table, overid = 2L, nomatch = nomatch)
 }
 fast_unique <- function(x){
-  collapse::funique(x)
+  unique_(x)
 }
 
 vec_setdiff <- function(x, y, unique = FALSE){
@@ -175,8 +175,20 @@ vec_intersect <- function(x, y, unique = FALSE){
 #   cpp_get_unique(x, ids, n_groups)
 # }
 
-# my_unique2 <- function(x, sort = FALSE){
-#   ids <- collapse::qG(x, sort = sort, na.exclude = FALSE)
-#   n_groups <- attr(ids, "N.groups", TRUE)
-#   cpp_sset(x, cpp_group_starts(ids, n_groups), FALSE)
-# }
+# A fast unique function
+# This can be extended to more objects by defining
+# GRP() and sset()/`[` methods
+unique_ <- function(x, sort = FALSE){
+
+  # In the future, `group_id()` will be moved from fastplyr
+  # to cheapr to make things simpler
+  groups <- collapse::GRP(
+    x, sort = sort,
+    return.groups = FALSE, return.order = FALSE
+  )
+  group_ids <- groups[["group.id"]]
+  n_groups <- groups[["N.groups"]]
+
+  start_locs <- cpp_group_starts(group_ids, n_groups)
+  sset(x, start_locs)
+}

@@ -2,9 +2,12 @@
 % Please edit documentation in R/if_else.R
 \name{cheapr_if_else}
 \alias{cheapr_if_else}
+\alias{if_else_}
 \title{Cheaper version of \code{ifelse()}}
 \usage{
 cheapr_if_else(condition, true, false, na = false[NA_integer_])
+
+if_else_(condition, true, false, na = false[NA_integer_])
 }
 \arguments{
 \item{condition}{\link{logical} A condition which will be used to
