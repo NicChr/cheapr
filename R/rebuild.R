@@ -31,13 +31,45 @@ rebuild <- function(x, template, ...){
 #' @rdname rebuild
 #' @export
 rebuild.data.frame <- function(x, template, shallow_copy = TRUE, ...){
-  .Call(`_cheapr_cpp_rebuild`, x, template, c("names", "row.names"), "class", shallow_copy)
+
+  names <- names(x)
+  row_names <- .set_row_names(length(attr(x, "row.names", TRUE)))
+
+  attrs_modify(
+    attrs_clear(x, .set = !shallow_copy),
+    names = names, row.names = row_names,
+    class = "data.frame", .set = TRUE
+  )
 }
 #' @rdname rebuild
 #' @export
 rebuild.data.table <- function(x, template, shallow_copy = TRUE, ...){
+
+  names <- names(x)
+  row_names <- .set_row_names(length(attr(x, "row.names", TRUE)))
+  sorted <- attr(x, "sorted", TRUE)
+
+  # qDT() will internally add a true length
   collapse::qDT(
-    cpp_rebuild(x, template, c("names", "row.names", "sorted"), "class", shallow_copy),
-    class = class(template)
+    attrs_modify(
+      attrs_clear(x, .set = !shallow_copy),
+      names = names, row.names = row_names, sorted = sorted,
+      class = c("data.table", "data.frame"),
+      .set = TRUE
+    )
+  )
+}
+#' @rdname rebuild
+#' @export
+rebuild.tbl_df <- function(x, template, shallow_copy = TRUE, ...){
+
+  names <- names(x)
+  row_names <- .set_row_names(length(attr(x, "row.names", TRUE)))
+
+  attrs_modify(
+    attrs_clear(x, .set = !shallow_copy),
+    names = names, row.names = row_names,
+    class = c("tbl_df", "tbl", "data.frame"),
+    .set = TRUE
   )
 }

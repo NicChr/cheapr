@@ -4,6 +4,7 @@
 \alias{rebuild}
 \alias{rebuild.data.frame}
 \alias{rebuild.data.table}
+\alias{rebuild.tbl_df}
 \title{Rebuild an object from a template}
 \usage{
 rebuild(x, template, ...)
@@ -11,6 +12,8 @@ rebuild(x, template, ...)
 \method{rebuild}{data.frame}(x, template, shallow_copy = TRUE, ...)
 
 \method{rebuild}{data.table}(x, template, shallow_copy = TRUE, ...)
+
+\method{rebuild}{tbl_df}(x, template, shallow_copy = TRUE, ...)
 }
 \arguments{
 \item{x}{An object in which carefully selected attributes
