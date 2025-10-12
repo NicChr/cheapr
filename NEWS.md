@@ -1,5 +1,10 @@
 # cheapr (development version)
 
+- Exported `cpp_rebuild`, a low-level convenience function for rebuilding
+attributes from a template.
+
+- New rebuild method for `tbl_df` objects.
+
 # cheapr 1.3.2
 
 ### Miscellaneous
