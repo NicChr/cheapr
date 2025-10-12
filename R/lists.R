@@ -9,7 +9,9 @@
 #' @param names Should names of list elements be added? Default is `FALSE`.
 #' @param values A named list
 #' @param ... Objects to combine into a list.
-#' @param .args An alternative to `...` for easier programming with lists.
+#' @param .args An alternative to `...` so you can supply arguments directly
+#' in a list. \cr
+#' This is equivalent to `do.call(f, .args)` but much more efficient.
 #'
 #' @returns
 #' `list_lengths()` returns the list lengths. \cr

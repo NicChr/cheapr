@@ -9,7 +9,9 @@
 #' @param ... Named attributes, e.g 'key = value'.
 #' @param .set Should attributes be added in-place without shallow-copying `x`?
 #' Default is `FALSE`.
-#' @param .args An alternative to `...` for easier programming with lists.
+#' @param .args An alternative to `...` so you can supply arguments directly
+#' in a list. \cr
+#' This is equivalent to `do.call(f, .args)` but much more efficient.
 #'
 #' @seealso [shallow_copy]
 #'

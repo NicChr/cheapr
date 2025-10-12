@@ -9,7 +9,9 @@ str_coalesce(..., .args = NULL)
 \arguments{
 \item{...}{Character vectors to coalesce.}
 
-\item{.args}{An alternative to \code{...} for easier programming with lists.}
+\item{.args}{An alternative to \code{...} so you can supply arguments directly
+in a list. \cr
+This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 }
 \value{
 A coalesced character vector of length corresponding to the recycled

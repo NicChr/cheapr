@@ -6,7 +6,9 @@
 #'
 #' @param ... Objects to recycle.
 #' @param length Optional length to recycle objects to.
-#' @param .args An alternative to `...` for easier programming with lists.
+#' @param .args An alternative to `...` so you can supply arguments directly
+#' in a list. \cr
+#' This is equivalent to `do.call(f, .args)` but much more efficient.
 #'
 #' @returns
 #' A list of recycled R objects.

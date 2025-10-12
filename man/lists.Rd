@@ -40,7 +40,9 @@ list_drop_null(x)
 
 \item{...}{Objects to combine into a list.}
 
-\item{.args}{An alternative to \code{...} for easier programming with lists.}
+\item{.args}{An alternative to \code{...} so you can supply arguments directly
+in a list. \cr
+This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 }
 \value{
 \code{list_lengths()} returns the list lengths. \cr

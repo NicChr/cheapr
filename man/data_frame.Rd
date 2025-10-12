@@ -42,7 +42,9 @@ Default is \code{TRUE}.}
 \item{.name_repair}{\verb{[logical(1)]} - Should duplicate and empty names
 repaired and made unique? Default is \code{TRUE}.}
 
-\item{.args}{An alternative to \code{...} for easier programming with lists.}
+\item{.args}{An alternative to \code{...} so you can supply arguments directly
+in a list. \cr
+This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 
 \item{x}{An object to coerce to a \code{data.frame} or a character vector
 for \code{unique_name_repair()}.}

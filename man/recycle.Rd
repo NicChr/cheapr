@@ -11,7 +11,9 @@ recycle(..., length = NULL, .args = NULL)
 
 \item{length}{Optional length to recycle objects to.}
 
-\item{.args}{An alternative to \code{...} for easier programming with lists.}
+\item{.args}{An alternative to \code{...} so you can supply arguments directly
+in a list. \cr
+This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 }
 \value{
 A list of recycled R objects.

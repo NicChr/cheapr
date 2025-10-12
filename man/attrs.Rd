@@ -24,7 +24,9 @@ attrs_rm(x, .set = FALSE)
 \item{.set}{Should attributes be added in-place without shallow-copying \code{x}?
 Default is \code{FALSE}.}
 
-\item{.args}{An alternative to \code{...} for easier programming with lists.}
+\item{.args}{An alternative to \code{...} so you can supply arguments directly
+in a list. \cr
+This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 }
 \value{
 The object \code{x} with attributes removed or added.

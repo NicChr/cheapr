@@ -4,7 +4,9 @@
 #' and combines data frame rows instead of cols.
 #'
 #' @param ... Objects to combine.
-#' @param .args An alternative to `...` for easier programming with lists.
+#' @param .args An alternative to `...` so you can supply arguments directly
+#' in a list. \cr
+#' This is equivalent to `do.call(f, .args)` but much more efficient.
 #'
 #' @returns
 #' Combined objects.

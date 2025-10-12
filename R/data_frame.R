@@ -13,7 +13,9 @@
 #' duplicate column names and their locations. Default is `'_'`
 #' @param empty_sep `[character(1)]` A separator to use between the empty
 #' column names and their locations. Default is `'col_'`
-#' @param .args An alternative to `...` for easier programming with lists.
+#' @param .args An alternative to `...` so you can supply arguments directly
+#' in a list. \cr
+#' This is equivalent to `do.call(f, .args)` but much more efficient.
 #' @param cols A list of values to add or modify data frame `x`.
 #'
 #' @returns
