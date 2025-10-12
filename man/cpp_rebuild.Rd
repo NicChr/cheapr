@@ -29,7 +29,7 @@ Low-level attribute re-constructor
 \code{cpp_rebuild()} is mostly a convenience function to help with choosing
 exactly which attributes to copy onto the target object.
 \code{rebuild()} is a related generic function with rebuild methods for
-common objects (currently only \code{data.frame} and \code{data.table}).
+common objects (currently only \code{tbl_df}, \code{data.frame} and \code{data.table}).
 For examples of further rebuild methods, see the fastplyr package.
 
 To modify attributes yourself you can of course use base R attribute functions

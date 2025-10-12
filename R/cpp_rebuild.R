@@ -12,7 +12,7 @@
 #' `cpp_rebuild()` is mostly a convenience function to help with choosing
 #' exactly which attributes to copy onto the target object.
 #' `rebuild()` is a related generic function with rebuild methods for
-#' common objects (currently only `data.frame` and `data.table`).
+#' common objects (currently only `tbl_df`, `data.frame` and `data.table`).
 #' For examples of further rebuild methods, see the fastplyr package.
 #'
 #' To modify attributes yourself you can of course use base R attribute functions
