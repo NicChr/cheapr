@@ -6,7 +6,6 @@
 //   CHEAPR_ZERO[0] = 0;
 // }
 
-[[cpp11::register]]
 SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
   if (is_df(x)){
     if (is_bare_df(source)){

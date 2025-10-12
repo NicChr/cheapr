@@ -16,10 +16,6 @@ cpp_set_add_attributes <- function(x, attributes, add) {
   .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
-rebuild <- function(x, source, shallow_copy) {
-  .Call(`_cheapr_rebuild`, x, source, shallow_copy)
-}
-
 cpp_rep_len <- function(x, length) {
   .Call(`_cheapr_cpp_rep_len`, x, length)
 }

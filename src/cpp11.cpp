@@ -34,13 +34,6 @@ extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add
   END_CPP11
 }
 // combine.cpp
-SEXP rebuild(SEXP x, SEXP source, bool shallow_copy);
-extern "C" SEXP _cheapr_rebuild(SEXP x, SEXP source, SEXP shallow_copy) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(rebuild(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<bool>>(shallow_copy)));
-  END_CPP11
-}
-// combine.cpp
 SEXP cpp_rep_len(SEXP x, int length);
 extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
   BEGIN_CPP11
@@ -839,7 +832,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
-    {"_cheapr_rebuild",                     (DL_FUNC) &_cheapr_rebuild,                     3},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}
 };
