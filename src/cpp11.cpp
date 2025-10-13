@@ -391,10 +391,10 @@ extern "C" SEXP _cheapr_cpp_val_remove(SEXP x, SEXP value) {
   END_CPP11
 }
 // sequences.cpp
-SEXP cpp_sequence(SEXP size, SEXP from, SEXP by);
-extern "C" SEXP _cheapr_cpp_sequence(SEXP size, SEXP from, SEXP by) {
+SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list);
+extern "C" SEXP _cheapr_cpp_sequence(SEXP size, SEXP from, SEXP by, SEXP as_list) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_sequence(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size), cpp11::as_cpp<cpp11::decay_t<SEXP>>(from), cpp11::as_cpp<cpp11::decay_t<SEXP>>(by)));
+    return cpp11::as_sexp(cpp_sequence(cpp11::as_cpp<cpp11::decay_t<SEXP>>(size), cpp11::as_cpp<cpp11::decay_t<SEXP>>(from), cpp11::as_cpp<cpp11::decay_t<SEXP>>(by), cpp11::as_cpp<cpp11::decay_t<bool>>(as_list)));
   END_CPP11
 }
 // sequences.cpp
@@ -802,7 +802,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
     {"_cheapr_cpp_semi_copy",               (DL_FUNC) &_cheapr_cpp_semi_copy,               1},
-    {"_cheapr_cpp_sequence",                (DL_FUNC) &_cheapr_cpp_sequence,                3},
+    {"_cheapr_cpp_sequence",                (DL_FUNC) &_cheapr_cpp_sequence,                4},
     {"_cheapr_cpp_sequence_id",             (DL_FUNC) &_cheapr_cpp_sequence_id,             1},
     {"_cheapr_cpp_set_abs",                 (DL_FUNC) &_cheapr_cpp_set_abs,                 1},
     {"_cheapr_cpp_set_add",                 (DL_FUNC) &_cheapr_cpp_set_add,                 2},

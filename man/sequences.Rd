@@ -10,11 +10,11 @@
 \alias{lead_sequence}
 \title{Utilities for creating many sequences}
 \usage{
-sequence_(size, from = 1L, by = 1L, add_id = FALSE)
+sequence_(size, from = 1L, by = 1L, add_id = FALSE, as_list = FALSE)
 
 seq_id(size)
 
-seq_(from = 1L, to = 1L, by = 1L, add_id = FALSE)
+seq_(from = 1L, to = 1L, by = 1L, add_id = FALSE, as_list = FALSE)
 
 seq_size(from, to, by = 1L)
 
@@ -33,6 +33,11 @@ lead_sequence(size, k, partial = TRUE, add_id = FALSE)
 
 \item{add_id}{Should the ID numbers of the sequences be added as names?
 Default is \code{FALSE}.}
+
+\item{as_list}{Should a list of sequences be returned?
+Setting to \code{TRUE} would
+place each distinct sequence vector into a distinct list element.
+The default is \code{FALSE}.}
 
 \item{to}{End of sequence(s).}
 
@@ -70,11 +75,16 @@ only the arguments \code{from}, \code{to} and \code{by}. \cr
 }
 \examples{
 library(cheapr)
-sequence(1:3)
-sequence_(1:3)
 
-sequence(1:3, by = 0.1)
-sequence_(1:3, by = 0.1)
+# These two functions are similar
+sequence(1:3);sequence_(1:3)
+
+# sequence_() can handle any numeric vector sequence
+sequence(1:3, by = 0.1);sequence_(1:3, by = 0.1)
+
+# Alternatively return as a list of sequences
+
+sequence_(1:3, by = 0.1, as_list = TRUE)
 
 # Add IDs to the sequences
 sequence_(1:3, by = 0.1, add_id = TRUE)
@@ -82,14 +92,16 @@ sequence_(1:3, by = 0.1, add_id = TRUE)
 seqs <- sequence_(1:3, by = 0.1, add_id = TRUE)
 new_df(name = names(seqs), seq = seqs)
 
-sequence(c(3, 2), by = c(-0.1, 0.1))
-sequence_(c(3, 2), by = c(-0.1, 0.1))
-
+sequence(c(3, 2), by = c(-0.1, 0.1));sequence_(c(3, 2), by = c(-0.1, 0.1))
 
 # Vectorised version of seq()
 seq_(1, 10, by = c(1, 0.5))
-# Same as below
+# Same as above
 c(seq(1, 10, 1), seq(1, 10, 0.5))
+
+# Again, as a list of sequences
+# 2 different start points and 2 different increments
+seq_(from = c(-1, 1), 3, by = c(1, 0.5), as_list = TRUE)
 
 # Programmers may use seq_size() to determine final sequence lengths
 
@@ -97,20 +109,38 @@ sizes <- seq_size(1, 10, by = c(1, 0.5))
 print(paste(c("sequence sizes: (", sizes, ") total size:", sum(sizes)),
             collapse = " "))
 
-# We can group sequences using seq_id
+# Or return as a list of sequences
+# Note that these lengths will match the above line of code
+seq_(1, 10, by = c(1, 0.5), as_list = TRUE) |>
+  list_lengths()
+
+# Sequences of dates with different increments
 
 from <- Sys.Date()
 to <- from + 10
 by <- c(1, 2, 3)
-x <- seq_(from, to, by, add_id = TRUE)
-class(x) <- "Date"
-x
+date_seqs <- seq_(from, to, by, as_list = TRUE)
+lapply(date_seqs, \(x) `class<-`(x, "Date"))
 
 # Utilities for rolling calculations
+
+# A window sequence of size 3 for a vector of size 10
+# This tells us how big the window should be when looking backwards
+window_sequence(10, 3, partial = FALSE)
+window_sequence(10, 3, partial = TRUE)
 
 window_sequence(c(3, 5), 3)
 window_sequence(c(3, 5), 3, partial = FALSE)
 window_sequence(c(3, 5), 3, partial = TRUE, ascending = FALSE)
+
+# Lag sequence of size 3 for a vector of size 10
+# This tells us how for we should look backwards at any given point
+lag_sequence(10, 3, partial = FALSE)
+# How far to look forwards
+lead_sequence(10, 3, partial = FALSE)
+
+lag_sequence(10, 3, partial = TRUE)
+lead_sequence(10, 3, partial = TRUE)
 # One can for example use these in data.table::frollsum
 
 }

@@ -122,10 +122,10 @@ loc_set_replace(SEXP x, SEXP where, SEXP what){
 }
 
 static inline SEXP
-sequence(SEXP size, SEXP from, SEXP by){
-  typedef SEXP fn_t(SEXP, SEXP, SEXP);
+sequence(SEXP size, SEXP from, SEXP by, bool as_list){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_sequence");
-  return fn(size, from, by);
+  return fn(size, from, by, as_list);
 }
 
 static inline SEXP

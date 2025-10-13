@@ -2,7 +2,10 @@
 
 // My version of base::sequence()
 
-SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
+SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
+
+  int32_t NP = 0;
+
   int size_n = Rf_length(size);
   int from_n = Rf_length(from);
   int by_n = Rf_length(by);
@@ -17,44 +20,94 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by) {
   if (min_size < 0){
     Rf_error("size must be a vector of non-negative integers");
   }
-  SEXP out = SHIELD(new_vec(INTSXP, out_size));
-  int* RESTRICT p_out = INTEGER(out);
-  R_xlen_t index = 0, interrupt_counter = 0;
+  R_xlen_t interrupt_counter = 0;
   int fj = 0, bj = 0;
   int start, increment, seq_size;
+  SEXP out = R_NilValue;
 
-  if (size_n > 0){
-    const int *p_size = INTEGER(size);
-    const int *p_from = INTEGER(from);
-    const int *p_by = INTEGER(by);
-    for (int j = 0; j < size_n; ++j, ++fj, ++bj){
-      seq_size = p_size[j];
-      fj = (fj == from_n) ? 0 : fj;
-      bj = (bj == by_n) ? 0 : bj;
-      start = p_from[fj];
-      increment = p_by[bj];
-      if (start == NA_INTEGER){
-        YIELD(1);
-        Rf_error("from contains NA values");
-      }
-      if (increment == NA_INTEGER){
-        YIELD(1);
-        Rf_error("by contains NA values");
-      }
-      for (int i = 0; i < seq_size; ++i, ++index, ++interrupt_counter, start += increment){
-        if (interrupt_counter == 100000000){
-          R_CheckUserInterrupt();
-          interrupt_counter = 0;
+
+  if (as_list){
+
+    out = SHIELD(new_vec(VECSXP, size_n)); ++NP;
+    SEXP curr_seq;
+
+    PROTECT_INDEX curr_seq_idx;
+    R_ProtectWithIndex(curr_seq = R_NilValue, &curr_seq_idx); ++NP;
+
+    if (size_n > 0){
+      const int *p_size = INTEGER(size);
+      const int *p_from = INTEGER(from);
+      const int *p_by = INTEGER(by);
+      for (int j = 0; j < size_n; ++j, ++fj, ++bj){
+        seq_size = p_size[j];
+        R_Reprotect(curr_seq = new_vec(INTSXP, seq_size), curr_seq_idx);
+        int* RESTRICT p_curr_seq = INTEGER(curr_seq);
+        fj = (fj == from_n) ? 0 : fj;
+        bj = (bj == by_n) ? 0 : bj;
+        start = p_from[fj];
+        increment = p_by[bj];
+        if (start == NA_INTEGER){
+          YIELD(NP);
+          Rf_error("from contains NA values");
         }
-        p_out[index] = start;
+        if (increment == NA_INTEGER){
+          YIELD(NP);
+          Rf_error("by contains NA values");
+        }
+        for (int i = 0; i < seq_size; ++i, ++interrupt_counter, start += increment){
+          if (interrupt_counter == 100000000){
+            R_CheckUserInterrupt();
+            interrupt_counter = 0;
+          }
+          p_curr_seq[i] = start;
+        }
+        SET_VECTOR_ELT(out, j, curr_seq);
+      }
+    }
+
+  } else {
+
+    R_xlen_t index = 0;
+    out = SHIELD(new_vec(INTSXP, out_size)); ++NP;
+    int* RESTRICT p_out = INTEGER(out);
+
+    if (size_n > 0){
+      const int *p_size = INTEGER(size);
+      const int *p_from = INTEGER(from);
+      const int *p_by = INTEGER(by);
+      for (int j = 0; j < size_n; ++j, ++fj, ++bj){
+        seq_size = p_size[j];
+        fj = (fj == from_n) ? 0 : fj;
+        bj = (bj == by_n) ? 0 : bj;
+        start = p_from[fj];
+        increment = p_by[bj];
+        if (start == NA_INTEGER){
+          YIELD(NP);
+          Rf_error("from contains NA values");
+        }
+        if (increment == NA_INTEGER){
+          YIELD(NP);
+          Rf_error("by contains NA values");
+        }
+        for (int i = 0; i < seq_size; ++i, ++index, ++interrupt_counter, start += increment){
+          if (interrupt_counter == 100000000){
+            R_CheckUserInterrupt();
+            interrupt_counter = 0;
+          }
+          p_out[index] = start;
+        }
       }
     }
   }
-  YIELD(1);
+
+  YIELD(NP);
   return out;
 }
 
-SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
+SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
+
+  int32_t NP = 0;
+
   int size_n = Rf_length(size);
   int from_n = Rf_length(from);
   int by_n = Rf_length(by);
@@ -70,48 +123,98 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by) {
   if (min_size < 0){
     Rf_error("size must be a vector of non-negative integers");
   }
-  SEXP out = SHIELD(new_vec(REALSXP, out_size));
-  double* RESTRICT p_out = REAL(out);
-  R_xlen_t index = 0, interrupt_counter = 0;
+  R_xlen_t interrupt_counter = 0;
   int fj = 0;
   int bj = 0;
   int seq_size;
   double start;
   double increment;
-  if (size_n > 0){
-    const int *p_size = INTEGER(size);
-    const double *p_from = REAL(from);
-    const double *p_by = REAL(by);
-    for (int j = 0; j < size_n; ++j, ++fj, ++bj){
+  SEXP out = R_NilValue;
 
-      seq_size = p_size[j];
-      fj = (fj == from_n) ? 0 : fj;
-      bj = (bj == by_n) ? 0 : bj;
-      start = p_from[fj];
-      increment = p_by[bj];
-      if (!(start == start)){
-        YIELD(1);
-        Rf_error("from contains NA values");
-      }
-      if (!(increment == increment)){
-        YIELD(1);
-        Rf_error("by contains NA values");
-      }
-      for (int i = 0; i < seq_size; ++i, ++index, ++interrupt_counter){
-        if (interrupt_counter == 100000000){
-          R_CheckUserInterrupt();
-          interrupt_counter = 0;
+  if (as_list){
+
+    out = SHIELD(new_vec(VECSXP, size_n)); ++NP;
+    SEXP curr_seq;
+
+    PROTECT_INDEX curr_seq_idx;
+    R_ProtectWithIndex(curr_seq = R_NilValue, &curr_seq_idx); ++NP;
+
+    if (size_n > 0){
+
+      const int *p_size = INTEGER_RO(size);
+      const double *p_from = REAL_RO(from);
+      const double *p_by = REAL_RO(by);
+
+      for (int j = 0; j < size_n; ++j, ++fj, ++bj){
+
+        seq_size = p_size[j];
+        R_Reprotect(curr_seq = new_vec(REALSXP, seq_size), curr_seq_idx);
+        double* RESTRICT p_curr_seq = REAL(curr_seq);
+        fj = (fj == from_n) ? 0 : fj;
+        bj = (bj == by_n) ? 0 : bj;
+        start = p_from[fj];
+        increment = p_by[bj];
+        if (!(start == start)){
+          YIELD(NP);
+          Rf_error("from contains NA values");
         }
-        p_out[index] = ( start + (i * increment) );
+        if (!(increment == increment)){
+          YIELD(NP);
+          Rf_error("by contains NA values");
+        }
+        for (int i = 0; i < seq_size; ++i, ++interrupt_counter){
+          if (interrupt_counter == 100000000){
+            R_CheckUserInterrupt();
+            interrupt_counter = 0;
+          }
+          p_curr_seq[i] = ( start + (i * increment) );
+        }
+        SET_VECTOR_ELT(out, j, curr_seq);
+      }
+    }
+  } else {
+
+    R_xlen_t index = 0;
+
+    out = SHIELD(new_vec(REALSXP, out_size)); ++NP;
+    double* RESTRICT p_out = REAL(out);
+    if (size_n > 0){
+
+      const int *p_size = INTEGER(size);
+      const double *p_from = REAL(from);
+      const double *p_by = REAL(by);
+      for (int j = 0; j < size_n; ++j, ++fj, ++bj){
+
+        seq_size = p_size[j];
+        fj = (fj == from_n) ? 0 : fj;
+        bj = (bj == by_n) ? 0 : bj;
+        start = p_from[fj];
+        increment = p_by[bj];
+        if (!(start == start)){
+          YIELD(NP);
+          Rf_error("from contains NA values");
+        }
+        if (!(increment == increment)){
+          YIELD(NP);
+          Rf_error("by contains NA values");
+        }
+        for (int i = 0; i < seq_size; ++i, ++index, ++interrupt_counter){
+          if (interrupt_counter == 100000000){
+            R_CheckUserInterrupt();
+            interrupt_counter = 0;
+          }
+          p_out[index] = ( start + (i * increment) );
+        }
       }
     }
   }
-  YIELD(1);
+
+  YIELD(NP);
   return out;
 }
 
 [[cpp11::register]]
-SEXP cpp_sequence(SEXP size, SEXP from, SEXP by) {
+SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
   int size_n = Rf_length(size);
   int from_n = Rf_length(from);
   int by_n = Rf_length(by);
@@ -146,18 +249,18 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by) {
     }
     // If all sequence values are < 2^31 then we can safely use cpp_int_sequence
     if (out_is_integer){
-      return cpp_int_sequence(size, from, by);
+      return cpp_int_sequence(size, from, by, as_list);
     } else {
       SHIELD(from = coerce_vec(from, REALSXP));
       SHIELD(by = coerce_vec(by, REALSXP));
-      SEXP out = SHIELD(cpp_dbl_sequence(size, from, by));
+      SEXP out = SHIELD(cpp_dbl_sequence(size, from, by, as_list));
       YIELD(3);
       return out;
     }
   }
   case REALSXP: {
     SHIELD(from = coerce_vec(from, REALSXP));
-    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by));
+    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by, as_list));
     YIELD(2);
     return out;
   }
@@ -171,12 +274,12 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by) {
     switch (TYPEOF(by)){
   case INTSXP: {
     SHIELD(by = coerce_vec(by, REALSXP));
-    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by));
+    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by, as_list));
     YIELD(2);
     return out;
   }
   case REALSXP: {
-    return cpp_dbl_sequence(size, from, by);
+    return cpp_dbl_sequence(size, from, by, as_list);
   }
   default: {
     Rf_error("by must have type integer or double in %s", __func__);
@@ -515,7 +618,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     SEXP size = SHIELD(Rf_ScalarInteger(n + 1.0)); ++NP;
     SEXP from = SHIELD(Rf_ScalarReal(adj_start)); ++NP;
     SEXP by = SHIELD(Rf_ScalarReal(seq_width(n + 1.0, adj_start, adj_end))); ++NP;
-    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by)); ++NP;
+    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by, false)); ++NP;
     YIELD(NP);
     return out;
   }
@@ -533,7 +636,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     SEXP size_sexp = SHIELD(Rf_ScalarInteger(out_size)); ++NP;
     SEXP start_sexp = SHIELD(Rf_ScalarReal(start)); ++NP;
     SEXP width_sexp = SHIELD(Rf_ScalarReal(bin_width)); ++NP;
-    SEXP out = SHIELD(cpp_dbl_sequence(size_sexp, start_sexp, width_sexp)); ++NP;
+    SEXP out = SHIELD(cpp_dbl_sequence(size_sexp, start_sexp, width_sexp, false)); ++NP;
     YIELD(NP);
     return out;
 
@@ -661,7 +764,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       seq_from = SHIELD(Rf_ScalarInteger(adj_start)); ++NP;
       seq_width = SHIELD(Rf_ScalarInteger(adj_width)); ++NP;
 
-      out = SHIELD(cpp_int_sequence(seq_size, seq_from, seq_width)); ++NP;
+      out = SHIELD(cpp_int_sequence(seq_size, seq_from, seq_width, false)); ++NP;
     }
 
     if (scale_up){
@@ -669,7 +772,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       seq_from = SHIELD(Rf_ScalarReal(adj_start)); ++NP;
       seq_width = SHIELD(Rf_ScalarReal(adj_width)); ++NP;
 
-      out = SHIELD(cpp_dbl_sequence(seq_size, seq_from, seq_width)); ++NP;
+      out = SHIELD(cpp_dbl_sequence(seq_size, seq_from, seq_width, false)); ++NP;
       int seq_n = n_breaks;
       double* RESTRICT p_out = REAL(out);
       OMP_FOR_SIMD

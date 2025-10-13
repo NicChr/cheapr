@@ -220,8 +220,8 @@ cpp_val_remove <- function(x, value) {
   .Call(`_cheapr_cpp_val_remove`, x, value)
 }
 
-cpp_sequence <- function(size, from, by) {
-  .Call(`_cheapr_cpp_sequence`, size, from, by)
+cpp_sequence <- function(size, from, by, as_list) {
+  .Call(`_cheapr_cpp_sequence`, size, from, by, as_list)
 }
 
 cpp_window_sequence <- function(size, k, partial, ascending) {

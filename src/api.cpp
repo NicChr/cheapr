@@ -150,9 +150,9 @@ api_loc_set_replace(SEXP x, SEXP where, SEXP what){
 }
 
 SEXP
-api_sequence(SEXP size, SEXP from, SEXP by){
+api_sequence(SEXP size, SEXP from, SEXP by, bool as_list){
   try {
-    return cpp_sequence(size, from, by);
+    return cpp_sequence(size, from, by, as_list);
   } catch (...) {
     return R_NilValue;
   }
