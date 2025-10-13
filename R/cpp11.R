@@ -84,6 +84,10 @@ cpp_lcm2_vectorised <- function(x, y, tol, na_rm) {
   .Call(`_cheapr_cpp_lcm2_vectorised`, x, y, tol, na_rm)
 }
 
+cpp_group_starts <- function(group_id, n_groups) {
+  .Call(`_cheapr_cpp_group_starts`, group_id, n_groups)
+}
+
 cpp_int64_to_int <- function(x) {
   .Call(`_cheapr_cpp_int64_to_int`, x)
 }
@@ -390,10 +394,6 @@ cpp_str_coalesce <- function(x) {
 
 cpp_tabulate <- function(x, n_bins) {
   .Call(`_cheapr_cpp_tabulate`, x, n_bins)
-}
-
-cpp_group_starts <- function(group_id, n_groups) {
-  .Call(`_cheapr_cpp_group_starts`, group_id, n_groups)
 }
 
 cpp_which_ <- function(x, invert) {

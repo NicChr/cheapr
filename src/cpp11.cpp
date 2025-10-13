@@ -152,6 +152,13 @@ extern "C" SEXP _cheapr_cpp_lcm2_vectorised(SEXP x, SEXP y, SEXP tol, SEXP na_rm
     return cpp11::as_sexp(cpp_lcm2_vectorised(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y), cpp11::as_cpp<cpp11::decay_t<double>>(tol), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
   END_CPP11
 }
+// groups.cpp
+SEXP cpp_group_starts(SEXP group_id, int n_groups);
+extern "C" SEXP _cheapr_cpp_group_starts(SEXP group_id, SEXP n_groups) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_group_starts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(group_id), cpp11::as_cpp<cpp11::decay_t<int>>(n_groups)));
+  END_CPP11
+}
 // int64.cpp
 SEXP cpp_int64_to_int(SEXP x);
 extern "C" SEXP _cheapr_cpp_int64_to_int(SEXP x) {
@@ -690,13 +697,6 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins);
 extern "C" SEXP _cheapr_cpp_tabulate(SEXP x, SEXP n_bins) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_tabulate(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<uint32_t>>(n_bins)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_group_starts(SEXP group_id, int n_groups);
-extern "C" SEXP _cheapr_cpp_group_starts(SEXP group_id, SEXP n_groups) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_group_starts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(group_id), cpp11::as_cpp<cpp11::decay_t<int>>(n_groups)));
   END_CPP11
 }
 // which.cpp
