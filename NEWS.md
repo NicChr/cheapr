@@ -1,5 +1,7 @@
 # cheapr (development version)
 
+### New features 
+
 - Added argument `as_list` to `seq_()` and `sequence_()` to allow the 
 result to be returned as a list of sequences instead of a vector of combined
 sequences.
@@ -9,9 +11,21 @@ attributes from a template.
 
 - New rebuild method for `tbl_df` objects.
 
+### Changes
+
 - `rebuild.data.frame` and `rebuild.data.table` will now return a data frame 
 with class `'data.frame'` and `c('data.table', 'data.frame')` respectively instead of 
 returning a data frame with the class of the template data frame.
+
+- Added aliases for all functions named 'cheapr_' to follow the convention of
+`fn_()` where `fn()` is the common function they are replacing or improving.
+The current alternatives beginning with 'cheapr_' will likely not be deprecated
+for a long while.
+
+### Breaking changes
+
+- `enframe_()`, `deframe_()` and `cut_numeric()` have been removed as they have
+been deprecated for a while.
 
 # cheapr 1.3.2
 
