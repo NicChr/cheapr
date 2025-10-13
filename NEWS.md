@@ -1,9 +1,17 @@
 # cheapr (development version)
 
+- Added argument `as_list` to `seq_()` and `sequence_()` to allow the 
+result to be returned as a list of sequences instead of a vector of combined
+sequences.
+
 - Exported `cpp_rebuild`, a low-level convenience function for rebuilding
 attributes from a template.
 
 - New rebuild method for `tbl_df` objects.
+
+- `rebuild.data.frame` and `rebuild.data.table` will now return a data frame 
+with class `'data.frame'` and `c('data.table', 'data.frame')` respectively instead of 
+returning a data frame with the class of the template data frame.
 
 # cheapr 1.3.2
 
