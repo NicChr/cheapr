@@ -92,6 +92,11 @@ counts <- function(x, sort = is.factor(x)){
     count = counts
   )
 }
+
+#' @rdname cheapr_table
+#' @export
+table_ <- cheapr_table
+
 # counts2 <- function(x, sort = is.factor(x)){
 #   if (!cpp_is_simple_atomic_vec(x)){
 #     stop("`x` must be an atomic vector")

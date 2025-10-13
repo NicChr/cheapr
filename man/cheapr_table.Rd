@@ -3,6 +3,7 @@
 \name{cheapr_table}
 \alias{cheapr_table}
 \alias{counts}
+\alias{table_}
 \title{Fast frequency tables - Still experimental}
 \usage{
 cheapr_table(
@@ -14,6 +15,8 @@ cheapr_table(
 )
 
 counts(x, sort = is.factor(x))
+
+table_(..., names = TRUE, order = FALSE, na_exclude = FALSE, classed = FALSE)
 }
 \arguments{
 \item{...}{\verb{>=1} objects that can be converted to a factor through
