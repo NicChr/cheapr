@@ -11,11 +11,23 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
 
   int fill_value = std::numeric_limits<int>::max();
 
+  bool sorted = true;
+
   if (n < fill_value){
     // Initialise start locations
     std::fill(p_out, p_out + n_groups, fill_value);
-    for (int i = 0; i < n; ++i){
-      p_out[p_group_id[i] - 1] = std::min(p_out[p_group_id[i] - 1], i + 1);
+
+    // Manually do first iteration
+    // We have to look at lagged value to check if group IDs are sorted
+    int curr_group = p_group_id[0] - 1;
+    int curr_group_start = p_out[curr_group];
+    p_out[curr_group] = std::min(curr_group_start, 1);
+
+    for (int i = 1; i < n; ++i){
+      curr_group = p_group_id[i] - 1;
+      curr_group_start = p_out[p_group_id[i] - 1];
+      p_out[curr_group] = std::min(curr_group_start, i + 1);
+      sorted = sorted && curr_group > (p_group_id[i - 1] - 1);
     }
 
     for (int i = 0; i < n_groups; ++i){
@@ -31,16 +43,28 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
 
     // Initialise start locations
     std::fill(p_out, p_out + n_groups, 0);
-    for (int i = 0; i < n; ++i){
-      p_out[p_group_id[i] - 1] = static_cast<int>(
-        std::min(
-          static_cast<unsigned int>(p_out[p_group_id[i] - 1]) - 1U,
-          static_cast<unsigned int>(i)
-        ) + 1U
+
+    int curr_group = p_group_id[0] - 1;
+    unsigned int curr_group_start = p_out[curr_group];
+
+    p_out[curr_group] = static_cast<int>(
+      std::min(curr_group_start - 1U, static_cast<unsigned int>(0)) + 1U
+    );
+
+    for (int i = 1; i < n; ++i){
+      curr_group = p_group_id[i] - 1;
+      curr_group_start = p_out[curr_group];
+
+
+      p_out[curr_group] = static_cast<int>(
+        std::min(curr_group_start - 1U, static_cast<unsigned int>(i)) + 1U
       );
+      sorted = sorted && curr_group > (p_group_id[i - 1] - 1);
     }
   }
-  YIELD(1);
+
+  SEXP r_sorted = SHIELD(Rf_ScalarLogical(sorted));
+  Rf_setAttrib(out, Rf_installChar(make_utf8_char("sorted")), r_sorted);
+  YIELD(2);
   return out;
 }
-
