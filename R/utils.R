@@ -174,21 +174,3 @@ vec_intersect <- function(x, y, unique = FALSE){
 #   n_groups <- attr(ids, "N.groups", TRUE)
 #   cpp_get_unique(x, ids, n_groups)
 # }
-
-# A fast unique function
-# This can be extended to more objects by defining
-# GRP() and sset()/`[` methods
-unique_ <- function(x, sort = FALSE){
-
-  # In the future, `group_id()` will be moved from fastplyr
-  # to cheapr to make things simpler
-  groups <- collapse::GRP(
-    x, sort = sort,
-    return.groups = FALSE, return.order = FALSE
-  )
-  group_ids <- groups[["group.id"]]
-  n_groups <- groups[["N.groups"]]
-
-  start_locs <- cpp_group_starts(group_ids, n_groups)
-  sset(x, start_locs)
-}

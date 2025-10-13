@@ -2,6 +2,8 @@
 
 ### New features 
 
+- New function `unique_()` as a cheaper alternative to `unique()`.
+
 - Added argument `as_list` to `seq_()` and `sequence_()` to allow the 
 result to be returned as a list of sequences instead of a vector of combined
 sequences.
