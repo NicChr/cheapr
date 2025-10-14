@@ -76,12 +76,10 @@ or a list of sequences.
 non-integer \code{by} values.
 This is the workhorse function of \code{seq_()}.
 
-It also recycles \code{from} and \code{to}, in the same way as \code{sequence()}. \cr
+Unlike \code{sequence()}, \code{sequence_()} recycles its arguments.
+
 If any of the sequences contain values > \code{.Machine$integer.max},
 then the result will always be a double vector.
-
-\code{from} can be also be a date, date-time, or any object that supports
-addition and multiplication.
 }
 \examples{
 library(cheapr)

@@ -6,8 +6,8 @@ test_that("sequences", {
   expect_identical(c(1, 1, 1.1, 1, 1.1, 1.2),
                    sequence_(1:3, by = 0.1))
 
-  expect_error(sequence_(1, integer(), integer()))
-  expect_error(sequence_(1, numeric(), numeric()))
+  expect_identical(sequence_(1, integer(), integer()), integer())
+  expect_identical(sequence_(1, numeric(), numeric()), numeric())
   expect_identical(sequence_(integer(), integer(), integer()), integer())
   expect_identical(sequence_(numeric(), numeric(), numeric()), numeric())
 

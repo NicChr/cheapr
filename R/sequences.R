@@ -38,13 +38,10 @@
 #' non-integer `by` values.
 #' This is the workhorse function of `seq_()`.
 #'
-#' It also recycles `from` and `to`, in the same way as `sequence()`. \cr
+#' Unlike `sequence()`, `sequence_()` recycles its arguments.
+#'
 #' If any of the sequences contain values > `.Machine$integer.max`,
 #' then the result will always be a double vector.
-#'
-#' `from` can be also be a date, date-time, or any object that supports
-#' addition and multiplication.
-#'
 #'
 #' @examples
 #' library(cheapr)
@@ -155,47 +152,17 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
   } else {
     from <- from %||% 1L
     to <- to %||% 1L
-    by <- by %||% (1L * sign(to - from))
+    by <- by %||% as.integer(1L * sign(to - from))
     if (!.s){
       size <- seq_size(from = from, to = to, by = by)
     }
   }
   sequence_(size, from = from, by = by, add_id = add_id, as_list = as_list)
 }
-# seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE, as_list = FALSE){
-#
-#   .f <- !is.null(from)
-#   .t <- !is.null(to)
-#   .b <- !is.null(by)
-#   .s <- !is.null(size)
-#
-#   if (.f && .t && .b){
-#     out_size <- seq_size(from = from, to = to, by = by)
-#     sequence_(out_size, from = from, by = by, add_id = add_id, as_list = as_list)
-#   } else if (.f && .b && .s){
-#     sequence_(size, from = from, by = by, add_id = add_id, as_list = as_list)
-#   } else if (.t && .b && .s){
-#     from <- seq_from(size, to = to, by = by)
-#     sequence_(size, from = from, by = by, add_id = add_id, as_list = as_list)
-#   } else if (.f && .t && .s){
-#     by <- seq_by(size, from = from, to = to)
-#     sequence_(size, from = from, by = by, add_id = add_id, as_list = as_list)
-#   } else {
-#     from <- from %||% 1L
-#     to <- to %||% 1L
-#     by <- by %||% (1L * sign(to - from))
-#     if (.s){
-#       sequence_(size, from = from, by = by, add_id = add_id, as_list = as_list)
-#     } else {
-#       out_size <- seq_size(from = from, to = to, by = by)
-#       sequence_(out_size, from = from, by = by, add_id = add_id, as_list = as_list)
-#     }
-#   }
-# }
 #' @rdname sequences
 #' @export
 seq_size <- function(from, to, by = 1L){
-  del <- unclass(to - from)
+  del <- as.numeric(to) - as.numeric(from)
   if (is.integer(by) && allv2(by, 1L)){
     size <- del
   } else {

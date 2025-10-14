@@ -34,6 +34,9 @@ returning a data frame with the class of the template data frame.
 The current alternatives beginning with 'cheapr_' will likely not be deprecated
 for a long while.
 
+- `sequence_` will now recycle the `size` argument additionally to recycling
+`from` and `by`.
+
 ### Breaking changes
 
 - `enframe_()`, `deframe_()` and `cut_numeric()` have been removed as they have
