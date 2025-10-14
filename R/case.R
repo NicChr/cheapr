@@ -82,11 +82,11 @@ case <- function(..., .default = NULL){
 
   true_locs <- val_find(lgl, TRUE)
 
+  out <- rep(rhs[NA_integer_], length.out = out_size)
+
   if (length(rhs) == 1){
-    out <- rep(rhs[NA_integer_], length.out = out_size)
     out[true_locs] <- rhs
   } else {
-    out <- rhs
     out[true_locs] <- rhs[true_locs]
   }
 
