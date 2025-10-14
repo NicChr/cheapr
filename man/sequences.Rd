@@ -14,7 +14,14 @@ sequence_(size, from = 1L, by = 1L, add_id = FALSE, as_list = FALSE)
 
 seq_id(size)
 
-seq_(from = 1L, to = 1L, by = 1L, add_id = FALSE, as_list = FALSE)
+seq_(
+  from = NULL,
+  to = NULL,
+  by = NULL,
+  size = NULL,
+  add_id = FALSE,
+  as_list = FALSE
+)
 
 seq_size(from, to, by = 1L)
 
@@ -61,17 +68,20 @@ accepts decimal number increments. \cr
 \code{lead_sequence} creates a vector of leads for rolling calculations. \cr
 }
 \details{
+\code{seq_()} is a fast vectorised version of \code{seq()} with powerful features.
+It can return many sequences as a single vector of combined sequences
+or a list of sequences.
+
 \code{sequence_()} works in the same way as \code{sequence()} but can accept
 non-integer \code{by} values.
+This is the workhorse function of \code{seq_()}.
+
 It also recycles \code{from} and \code{to}, in the same way as \code{sequence()}. \cr
 If any of the sequences contain values > \code{.Machine$integer.max},
 then the result will always be a double vector.
 
 \code{from} can be also be a date, date-time, or any object that supports
 addition and multiplication.
-
-\code{seq_()} is a vectorised version of \code{seq()} that strictly accepts
-only the arguments \code{from}, \code{to} and \code{by}. \cr
 }
 \examples{
 library(cheapr)
