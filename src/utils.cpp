@@ -235,50 +235,83 @@ double cpp_sum(SEXP x){
   return sum;
 }
 
-double cpp_min(SEXP x){
+// Extremely fast range(x, na.rm = F)
+SEXP cpp_range(SEXP x){
 
   R_xlen_t n = Rf_xlength(x);
-  switch (CHEAPR_TYPEOF(x)){
 
-  case LGLSXP:
-  case INTSXP: {
+  SEXP out = SHIELD(new_vec(REALSXP, 2));
+  double lo = R_PosInf;
+  double hi = R_NegInf;
 
-    if (n == 0) return R_PosInf;
+  if (n > 0){
+    switch (CHEAPR_TYPEOF(x)){
 
-    int *p_x = INTEGER(x);
-    int out = INTEGER_MAX;
+    case LGLSXP:
+    case INTSXP: {
 
-    OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i){
-      out = is_na_int(out) || is_na_int(p_x[i]) ? NA_INTEGER : std::min(out, p_x[i]);
+      const int *p_x = INTEGER_RO(x);
+      int min = std::numeric_limits<int>::max();
+      int max = std::numeric_limits<int>::min();
+
+      OMP_FOR_SIMD
+      for (R_xlen_t i = 0; i < n; ++i){
+        min = std::min(min, p_x[i]);
+        max = std::max(max, p_x[i]);
+      }
+      lo = is_na_int(min) ? NA_REAL : min;
+      hi = is_na_int(min) ? NA_REAL : max;
+      break;
     }
-    return out == NA_INTEGER ? NA_REAL : out;
-  }
-  case CHEAPR_INT64SXP: {
+    case CHEAPR_INT64SXP: {
 
-    if (n == 0) return R_PosInf;
+      const int64_t *p_x = INTEGER64_PTR(x);
 
-    int64_t *p_x = INTEGER64_PTR(x);
-    int64_t out = INTEGER64_MAX;
+      int64_t min = std::numeric_limits<int64_t>::max();
+      int64_t max = std::numeric_limits<int64_t>::min();
 
-    OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i){
-      out = is_na_int64(out) || is_na_int64(p_x[i]) ? NA_INTEGER64 : std::min(out, p_x[i]);
+      OMP_FOR_SIMD
+      for (R_xlen_t i = 0; i < n; ++i){
+        min = std::min(min, p_x[i]);
+        max = std::max(max, p_x[i]);
+      }
+      lo = is_na_int64(min) ? NA_REAL : min;
+      hi = is_na_int64(min) ? NA_REAL : max;
+      break;
     }
-    return out == NA_INTEGER64 ? NA_REAL : out;
-  }
-  default: {
+    default: {
 
-    double *p_x = REAL(x);
-    double out = R_PosInf;
+      const double *p_x = REAL_RO(x);
 
-    OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i){
-      out = is_na_dbl(out) || is_na_dbl(p_x[i]) ? NA_REAL : std::min(out, p_x[i]);
+      double min = R_PosInf;
+      double max = R_NegInf;
+
+      for (R_xlen_t i = 0; i < n; ++i){
+        if (is_na_dbl(p_x[i])){
+          min = NA_REAL;
+          max = NA_REAL;
+          break;
+        }
+        min = std::min(min, p_x[i]);
+        max = std::max(max, p_x[i]);
+      }
+      lo = min;
+      hi = max;
+      break;
     }
-    return out;
+    }
   }
-  }
+  SET_REAL_ELT(out, 0, lo);
+  SET_REAL_ELT(out, 1, hi);
+  YIELD(1);
+  return out;
+}
+
+double cpp_min(SEXP x){
+  return REAL_RO(cpp_range(x))[0];
+}
+double cpp_max(SEXP x){
+  return REAL_RO(cpp_range(x))[1];
 }
 
 // Internal-only function

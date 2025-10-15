@@ -68,3 +68,20 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
   YIELD(2);
   return out;
 }
+
+// SEXP cpp_group_counts(SEXP group_id, int n_groups){
+//
+//   int n = Rf_length(group_id);
+//
+//   SEXP out = SHIELD(new_vec(INTSXP, n_groups));
+//   const int* RESTRICT p_group_id = INTEGER_RO(group_id);
+//   int* RESTRICT p_out = INTEGER(out);
+//
+//   // Initialise counts
+//   std::fill(p_out, p_out + n_groups, 0);
+//   // Count groups
+//   for (int i = 0; i < n; ++i) p_out[p_group_id[i] - 1]++;
+//
+//   YIELD(1);
+//   return out;
+// }
