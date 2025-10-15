@@ -45,7 +45,7 @@
 #'
 #' # Using `.args` instead of `do.call` is much more efficient
 #' library(bench)
-#' x <- cheapr_rep_len(list(letters), 10^3)
+#' x <- rep_len_(list(letters), 10^3)
 #'
 #' mark(do.call(str_coalesce, x),
 #'      str_coalesce(.args = x),

@@ -37,9 +37,10 @@ c_(new_df(x = 1:3), new_df(x = 4:10))
 
 list_of_objs <- rep_(list(0), 10^4)
 
- bench::mark(
-    do.call(c, list_of_objs),
-    c_(.args = list_of_objs)
-  )
+bench::mark(
+  do.call(c, list_of_objs),
+  do.call(c_, list_of_objs),
+  c_(.args = list_of_objs) # Fastest
+)
 
 }

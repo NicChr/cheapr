@@ -47,5 +47,5 @@ case(
 }
 }
 \seealso{
-\link{cheapr_if_else}
+\link{if_else_}
 }
