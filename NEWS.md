@@ -25,6 +25,10 @@ the RHS was greater than 1.
 
 ### Changes
 
+- `sset` is no longer an S3 generic and now internally dispatches on the 
+correct method. One can still define a subset method for custom objects 
+via `[` which `sset` falls back on when it can't find an appropriate method.
+
 - `rebuild.data.frame` and `rebuild.data.table` will now return a data frame 
 with class `'data.frame'` and `c('data.table', 'data.frame')` respectively instead of 
 returning a data frame with the class of the template data frame.
