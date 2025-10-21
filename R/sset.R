@@ -16,11 +16,17 @@
 #' A new vector, data frame, list, matrix or other R object.
 #'
 #' @details
-#' `sset` will internally dispatch the correct method and
-#' will call `[` if it can't find an appropriate method.
 #'
-#' You can define your own `[` method for custom S3 vectors
-#' which `sset` will call.
+#' ### S3 dispatching
+#' `sset` will internally dispatch the correct method and
+#' will call `[` if it can't find an appropriate method. This means
+#' one can define their own `[` method for custom S3 objects.
+#'
+#' To speed up subsetting for common objects likes Dates and `POSIXlt`
+#' an internal generic function is used which overwrites the `[` method for
+#' that common object. This is why subsetting `POSIXlt` is much faster with
+#' `sset` an internal method has been defined. For more details see the code
+#' for `cheapr:::cheapr_sset`.
 #'
 #' ### Difference to base R
 #'

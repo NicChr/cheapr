@@ -25,11 +25,19 @@ It consistently subsets data frame rows for any data frame class including
 tibble and data.table.
 }
 \details{
-\code{sset} will internally dispatch the correct method and
-will call \code{[} if it can't find an appropriate method.
+\subsection{S3 dispatching}{
 
-You can define your own \code{[} method for custom S3 vectors
-which \code{sset} will call.
+\code{sset} will internally dispatch the correct method and
+will call \code{[} if it can't find an appropriate method. This means
+one can define their own \code{[} method for custom S3 objects.
+
+To speed up subsetting for common objects likes Dates and \code{POSIXlt}
+an internal generic function is used which overwrites the \code{[} method for
+that common object. This is why subsetting \code{POSIXlt} is much faster with
+\code{sset} an internal method has been defined. For more details see the code
+for \code{cheapr:::cheapr_sset}.
+}
+
 \subsection{Difference to base R}{
 
 When \code{i} is a logical vector, it is passed directly to \code{which_()}. \cr
