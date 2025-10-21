@@ -96,17 +96,17 @@
 #' @export
 setdiff_ <- function(x, y, dups = TRUE){
   if (!dups){
-    x <- collapse::funique(x)
+    x <- unique_(x)
   }
-  cpp_sset(x, which_not_in(x, y), TRUE)
+  sset(x, which_not_in(x, y))
 }
 #' @rdname extras
 #' @export
 intersect_ <- function(x, y, dups = TRUE){
   if (!dups){
-    x <- collapse::funique(x)
+    x <- unique_(x)
   }
-  cpp_sset(x, which_in(x, y), TRUE)
+  sset(x, which_in(x, y))
 }
 #' @rdname extras
 #' @export
@@ -140,7 +140,7 @@ cheapr_enframe <- function(x, name = "name", value = "value"){
 #' @rdname extras
 #' @export
 sample_ <- function(x, size = vector_length(x), replace = FALSE, prob = NULL){
-  cpp_sset(x, sample.int(vector_length(x), size, replace, prob), TRUE)
+  sset(x, sample.int(vector_length(x), size, replace, prob))
 }
 #' @rdname extras
 #' @export

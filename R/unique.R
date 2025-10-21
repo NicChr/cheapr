@@ -57,47 +57,9 @@ unique_ <- function(x, sort = FALSE){
   if (!sort && vector_length(x) == n_groups){
     return(x)
   }
-
   start_locs <- cpp_group_starts(group_ids, n_groups)
-
-  if (attr(start_locs, "sorted", TRUE)){
-    x
-  } else {
-    cpp_sset(x, start_locs, TRUE)
+  if (sort && attr(start_locs, "sorted", TRUE) && vector_length(x) == n_groups){
+    return(x)
   }
+  sset(x, start_locs)
 }
-# unique_ <- function(x, sort = FALSE){
-#
-#   # In the future, `group_id()` will be moved from fastplyr
-#   # to cheapr to make things simpler
-#
-#   if (cpp_is_simple_atomic_vec(x)){
-#     group_ids <- collapse::qG(x, sort = sort, na.exclude = FALSE)
-#     n_groups <- attr(group_ids, "N.groups", TRUE)
-#
-#     if (sort && isTRUE(attr(group_ids, "sorted"))){
-#       return(x)
-#     }
-#
-#   } else {
-#     groups <- collapse::GRP(
-#       x, sort = sort,
-#       return.groups = FALSE,
-#       return.order = sort
-#     )
-#     group_ids <- groups[["group.id"]]
-#     n_groups <- groups[["N.groups"]]
-#
-#     if (sort && isTRUE(attr(groups[["order"]], "sorted"))){
-#       return(x)
-#     }
-#   }
-#
-#   # If `x` is already unique, return x
-#   if (!sort && vector_length(x) == n_groups){
-#     return(x)
-#   }
-#
-#   start_locs <- cpp_group_starts(group_ids, n_groups)
-#   cpp_sset(x, start_locs, TRUE)
-# }

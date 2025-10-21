@@ -7,6 +7,22 @@
 
 // Author: Nick Christofides
 
+// Compact integer seq generator as ALTREP, same as `seq_len()`
+SEXP compact_int_seq_len(int n){
+  if (n == NA_INTEGER || n < 0){
+    Rf_error("`n` must be >= 0");
+  }
+  if (n == 0){
+    return new_vec(INTSXP, 0);
+  }
+  SEXP start = SHIELD(Rf_ScalarInteger(1));
+  SEXP end = SHIELD(Rf_ScalarInteger(n));
+  SEXP expr = SHIELD(Rf_lang3(Rf_install(":"), start, end));
+  SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
+  YIELD(4);
+  return out;
+}
+
 // Helper to convert altrep sequences into the final subsetted length
 
 R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_t by){
@@ -156,6 +172,10 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     oob_count = 0,
     na_count = 0,
     neg_count = 0;
+
+  if (is_null(indices)){
+    SHIELD(indices = compact_int_seq_len(xn)); ++NP;
+  }
 
   R_xlen_t n = Rf_xlength(indices);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
@@ -1341,64 +1361,60 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check){
 // Fast vector/data frame subset, exported to R
 
 [[cpp11::register]]
-SEXP cpp_sset(SEXP x, SEXP indices, bool check){
+SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check){
+
+  int32_t NP = 0;
+
+  SEXP out = R_NilValue;
 
   if (is_simple_vec(x)){
 
-    int32_t NP = 0;
+    if (!is_null(j)){
+      YIELD(NP);
+      Rf_error("`x` does not have cols, please leave `j` as `NULL`");
+    }
 
-    bool check2 = check;
+    if (check){
+      SEXP indices_metadata = SHIELD(clean_indices(i, x, false)); ++NP;
+      SHIELD(i = VECTOR_ELT(indices_metadata, 0)); ++NP;
+      check = LOGICAL(VECTOR_ELT(indices_metadata, 2))[0];
+    }
 
-    SEXP out = R_NilValue;
     SEXP names = R_NilValue;
 
-    if (is_compact_seq(indices)){
-      SEXP seq_data = SHIELD(compact_seq_data(indices)); ++NP;
+    if (is_compact_seq(i)){
+      SEXP seq_data = SHIELD(compact_seq_data(i)); ++NP;
       const double *p_data = REAL_RO(seq_data);
-      out = SHIELD(cpp_sset_range(x, p_data[0], p_data[1], p_data[2])); ++NP;
+      SHIELD(out = cpp_sset_range(x, p_data[0], p_data[1], p_data[2])); ++NP;
 
       // Subset names
-      names = SHIELD(get_names(x)); ++NP;
+      SHIELD(names = get_names(x)); ++NP;
       SHIELD(names = cpp_sset_range(names, p_data[0], p_data[1], p_data[2])); ++NP;
     } else {
-      if (check){
-        SEXP indices_metadata = SHIELD(clean_indices(indices, x, false)); ++NP;
-        SHIELD(indices = VECTOR_ELT(indices_metadata, 0)); ++NP;
-        check2 = LOGICAL(VECTOR_ELT(indices_metadata, 2))[0];
-      }
-      out = SHIELD(sset_vec(x, indices, check2)); ++NP;
+
+      SHIELD(out = sset_vec(x, i, check)); ++NP;
 
       // Subset names
-      names = SHIELD(get_names(x)); ++NP;
-      SHIELD(names = sset_vec(names, indices, check2)); ++NP;
+      SHIELD(names = get_names(x)); ++NP;
+      SHIELD(names = sset_vec(names, i, check)); ++NP;
     }
     Rf_copyMostAttrib(x, out);
     set_names(out, names);
-    YIELD(NP);
-    return out;
   } else if (is_df(x)){
-    return cpp_df_subset(x, indices, R_NilValue, check);
+    SHIELD(out = cpp_df_subset(x, i, j, check)); ++NP;
   } else {
-    // Normally we would use base_sset here BUT
-    // we want to dispatch on some of sset's methods
-    // This can all be re-worked and simplified by passing `...` to cpp_sset
-    // from sset.default
-
-    ////// IMPORTANT //////
-    // The reason this doesn't result in infinite recursion is because
-    // both this function and sset.default check that `x` is a simple vec
-
-    // This can be more safely avoided by
-    // writing an internal dispatch method in R
-    // e.g. sset can be a non-generic function that calls an
-    // internal generic function, e.g. `cheapr_sset`
-    // I don't like this approach as much because the user can't see
-    // all the available arguments like `j` as its hidden by the dots `...`
-    // So as previously stated, fastest is to handle the args in C but
-    // I don't currently know how to! :)
-
-    return cheapr_sset(x, indices);
+    // Fall-back to `cheapr_sset()` S3 methods
+    SHIELD(out = cheapr_sset(x, i, j)); ++NP;
   }
+  YIELD(NP);
+  return out;
+}
+
+// Keep this as it's a handy C function to export
+// also keep for legacy reasons as fastplyr directly uses it
+[[cpp11::register]]
+SEXP cpp_sset(SEXP x, SEXP indices, bool check){
+  return cpp_sset2(x, indices, R_NilValue, check);
 }
 
 // scalar subset

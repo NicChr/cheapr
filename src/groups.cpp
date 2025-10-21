@@ -17,24 +17,16 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
     // Initialise start locations
     std::fill(p_out, p_out + n_groups, fill_value);
 
-    // Manually do first iteration
-    // We have to look at lagged value to check if group IDs are sorted
-    int curr_group = p_group_id[0] - 1;
-    int curr_group_start = p_out[curr_group];
-    p_out[curr_group] = std::min(curr_group_start, 1);
-
-    for (int i = 1; i < n; ++i){
-      curr_group = p_group_id[i] - 1;
-      curr_group_start = p_out[p_group_id[i] - 1];
+    for (int i = 0; i < n; ++i){
+      int curr_group = p_group_id[i] - 1;
+      int curr_group_start = p_out[p_group_id[i] - 1];
       p_out[curr_group] = std::min(curr_group_start, i + 1);
-      sorted = sorted && curr_group > (p_group_id[i - 1] - 1);
+      sorted = sorted && p_out[curr_group] >= p_out[std::max(curr_group, 1) - 1];
     }
 
-    for (int i = 0; i < n_groups; ++i){
-      if (p_out[i] == fill_value){
-        p_out[i] = 0;
-      }
-    }
+    // This will set groups with no start locations to 0
+    // (e.g. undropped factor levels)
+    std::replace(p_out, p_out + n_groups, fill_value, 0);
   } else {
 
     // Slightly slower method than above
@@ -44,22 +36,15 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
     // Initialise start locations
     std::fill(p_out, p_out + n_groups, 0);
 
-    int curr_group = p_group_id[0] - 1;
-    unsigned int curr_group_start = p_out[curr_group];
-
-    p_out[curr_group] = static_cast<int>(
-      std::min(curr_group_start - 1U, static_cast<unsigned int>(0)) + 1U
-    );
-
-    for (int i = 1; i < n; ++i){
-      curr_group = p_group_id[i] - 1;
-      curr_group_start = p_out[curr_group];
+    for (int i = 0; i < n; ++i){
+      int curr_group = p_group_id[i] - 1;
+      unsigned int curr_group_start = p_out[curr_group];
 
 
       p_out[curr_group] = static_cast<int>(
         std::min(curr_group_start - 1U, static_cast<unsigned int>(i)) + 1U
       );
-      sorted = sorted && curr_group > (p_group_id[i - 1] - 1);
+      sorted = sorted && p_out[curr_group] >= p_out[std::max(curr_group, 1) - 1];
     }
   }
 
@@ -69,19 +54,20 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
   return out;
 }
 
-// SEXP cpp_group_counts(SEXP group_id, int n_groups){
-//
-//   int n = Rf_length(group_id);
-//
-//   SEXP out = SHIELD(new_vec(INTSXP, n_groups));
-//   const int* RESTRICT p_group_id = INTEGER_RO(group_id);
-//   int* RESTRICT p_out = INTEGER(out);
-//
-//   // Initialise counts
-//   std::fill(p_out, p_out + n_groups, 0);
-//   // Count groups
-//   for (int i = 0; i < n; ++i) p_out[p_group_id[i] - 1]++;
-//
-//   YIELD(1);
-//   return out;
-// }
+[[cpp11::register]]
+SEXP cpp_group_counts(SEXP group_id, int n_groups){
+
+  int n = Rf_length(group_id);
+
+  SEXP out = SHIELD(new_vec(INTSXP, n_groups));
+  const int* RESTRICT p_group_id = INTEGER_RO(group_id);
+  int* RESTRICT p_out = INTEGER(out);
+
+  // Initialise counts
+  std::fill(p_out, p_out + n_groups, 0);
+  // Count groups
+  for (int i = 0; i < n; ++i) p_out[p_group_id[i] - 1]++;
+
+  YIELD(1);
+  return out;
+}

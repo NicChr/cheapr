@@ -343,7 +343,7 @@ inline double round_nearest_even(double x){
   return x - std::remainder(x, 1.0);
 }
 
-inline cpp11::function cheapr_sset = cpp11::package("cheapr")["sset"];
+inline cpp11::function cheapr_sset = cpp11::package("cheapr")["cheapr_sset"];
 inline cpp11::function base_sset = cpp11::package("base")["["];
 inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
 inline cpp11::function cheapr_factor = cpp11::package("cheapr")["factor_"];

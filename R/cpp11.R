@@ -88,6 +88,10 @@ cpp_group_starts <- function(group_id, n_groups) {
   .Call(`_cheapr_cpp_group_starts`, group_id, n_groups)
 }
 
+cpp_group_counts <- function(group_id, n_groups) {
+  .Call(`_cheapr_cpp_group_counts`, group_id, n_groups)
+}
+
 cpp_int64_to_int <- function(x) {
   .Call(`_cheapr_cpp_int64_to_int`, x)
 }
@@ -318,6 +322,10 @@ cpp_df_slice <- function(x, indices, check) {
 
 cpp_df_subset <- function(x, i, j, check) {
   .Call(`_cheapr_cpp_df_subset`, x, i, j, check)
+}
+
+cpp_sset2 <- function(x, i, j, check) {
+  .Call(`_cheapr_cpp_sset2`, x, i, j, check)
 }
 
 cpp_sset <- function(x, indices, check) {

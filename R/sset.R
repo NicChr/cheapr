@@ -1,12 +1,14 @@
-#' Cheaper subset
+#' Cheaper subset `sset()`
 #'
 #' @description
-#' Cheaper alternative to `[` that consistently subsets data frame
-#' rows, always returning a data frame. There are explicit methods for
-#' enhanced data frames like tibbles, data.tables and sf.
+#'
+#' `sset()` is a cheaper alternative to `[`.
+#'
+#' It consistently subsets data frame rows for any data frame class including
+#' tibble and data.table.
 #'
 #' @param x Vector or data frame.
-#' @param i A logical or vector of indices. \cr
+#' @param i A logical vector or integer vector of locations.
 #' @param j Column indices, names or logical vector.
 #' @param ... Further parameters passed to `[`.
 #'
@@ -14,12 +16,11 @@
 #' A new vector, data frame, list, matrix or other R object.
 #'
 #' @details
-#' `sset` is an S3 generic.
-#' You can either write methods for `sset` or `[`. \cr
-#' `sset` will fall back on using `[` when no suitable method is found.
+#' `sset` will internally dispatch the correct method and
+#' will call `[` if it can't find an appropriate method.
 #'
-#' To get into more detail, using `sset()` on a data frame, a new
-#' list is always allocated through `new_list()`.
+#' You can define your own `[` method for custom S3 vectors
+#' which `sset` will call.
 #'
 #' ### Difference to base R
 #'
@@ -32,8 +33,8 @@
 #'
 #' When `i` is an ALTREP compact sequence which can be commonly created
 #' using e.g. `1:10` or using `seq_len`, `seq_along` and `seq.int`,
-#' `sset` internally uses a range-based subsetting method which is faster and doesn't
-#' allocate `i` into memory.
+#' `sset` internally uses a range-based subsetting method
+#' which is faster and doesn't allocate `i` into memory.
 #'
 #' @examples
 #' library(cheapr)
@@ -64,35 +65,34 @@
 #'
 #' @rdname sset
 #' @export
-sset <- function(x, ...){
-  UseMethod("sset")
+sset <- function(x, i = NULL, j = NULL, ...){
+  .Call(`_cheapr_cpp_sset2`, x, i, j, TRUE)
+}
+cheapr_sset <- function(x, ...){
+  UseMethod("cheapr_sset")
 }
 #' @export
-sset.default <- function(x, i, ...){
-  if (.Call(`_cheapr_cpp_is_simple_vec`, x) && n_dots(...) == 0L){
-    .Call(`_cheapr_cpp_sset`, x, if (missing(i)) seq_len(vector_length(x)) else i, TRUE)
+cheapr_sset.default <- function(x, i = NULL, j = NULL, ...){
+  if (is.logical(i)){
+    check_length(i, length(x))
+    i <- which_(i)
+  }
+  if (is.null(i) && is.null(j)){
+    x[...]
+  } else if (is.null(j)){
+    x[i = i, ...]
   } else {
-    if (!missing(i) && is.logical(i)){
-      check_length(i, length(x))
-      i <- which_(i)
-    }
-    x[i, ...]
+    x[i = i, j = j, ...]
   }
 }
-#' @rdname sset
 #' @export
-sset.data.frame <- function(x, i = NULL, j = NULL, ...){
-  .Call(`_cheapr_cpp_df_subset`, x, i, j, TRUE)
-}
-#' @rdname sset
-#' @export
-sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
+cheapr_sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
   missingj <- is.null(j)
   out <- fill_posixlt(x, classed = FALSE)
   if (missingj){
     j <- seq_along(out)
   }
-  out <- sset_df(list_as_df(out), i , j)
+  out <- sset(list_as_df(out), i, j)
   if (missingj){
     attrs_add(out, class = class(x), row.names = NULL, .set = TRUE)
   }
@@ -104,20 +104,20 @@ sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
   }
   out
 }
-#' @rdname sset
 #' @export
-sset.sf <- function(x, i = NULL, j = NULL, ...){
-  out <- sset_df(x, i, j)
+cheapr_sset.sf <- function(x, i = NULL, j = NULL, ...){
+  out <- sset(as_df(x), i, j)
   cpp_rebuild(
     out, x, c("names", "row.names"), vec_setdiff(names(attributes(x)), c("names", "row.names")), FALSE
   )
 }
 #' @export
-sset.vctrs_rcrd <- function(x, i = NULL, ...){
-  .Call(
-    `_cheapr_cpp_set_add_attributes`,
-    sset_row(list_as_df(x), i), shallow_copy(attributes(x)), FALSE
-  )
+cheapr_sset.vctrs_rcrd <- function(x, i = NULL, ...){
+  x |>
+    list_as_df() |>
+    sset(i) |>
+    attrs_clear(.set = TRUE) |>
+    attrs_modify(.args = shallow_copy(attributes(x)), .set = TRUE)
 }
 
 na_int64 <- unserialize(as.raw(c(
@@ -127,13 +127,12 @@ na_int64 <- unserialize(as.raw(c(
   0x61, 0x73, 0x73, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x04, 0x00, 0x09, 0x00,
   0x00, 0x00, 0x09, 0x69, 0x6e, 0x74, 0x65, 0x67, 0x65, 0x72, 0x36, 0x34, 0x00, 0x00, 0x00, 0xfe
 )))
-
 #' @export
-sset.integer64 <- function(x, i = NULL, ...){
-  out <- cpp_sset(unclass(x), if (is.null(i)) seq_along(x) else i, TRUE)
+cheapr_sset.integer64 <- function(x, i = NULL, ...){
+  out <- sset(unclass(x), i)
   out[na_find(out)] <- na_int64
 
-  attrs_add(
+  attrs_modify(
     out,
     .args = shallow_copy(attributes(x)),
     .set = TRUE
