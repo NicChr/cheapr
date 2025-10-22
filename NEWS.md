@@ -13,6 +13,9 @@ vectorised.
 result to be returned as a list of sequences instead of a vector of combined
 sequences.
 
+- New vectorised functions `seq_start`, `seq_end` and `seq_increment` to help
+with sequence generation.
+
 - Exported `cpp_rebuild`, a low-level convenience function for rebuilding
 attributes from a template.
 

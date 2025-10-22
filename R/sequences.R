@@ -1,10 +1,16 @@
 #' Utilities for creating many sequences
 #'
+#' @name sequences
+#'
 #' @description
+#' `seq_` is a vectorised version of [seq] with some additional features. \cr
+#' `seq_size` returns sequence sizes. \cr
+#' `seq_start` returns sequence start points. \cr
+#' `seq_end` returns sequence end points. \cr
+#' `seq_increment` returns sequence increments. \cr
 #' `sequence_` is an extension to [sequence] which
 #' accepts decimal number increments. \cr
 #' `seq_id` can be paired with `sequence_` to group individual sequences. \cr
-#' `seq_` is a vectorised version of [seq]. \cr
 #' `window_sequence` creates a vector of window sizes for rolling calculations. \cr
 #' `lag_sequence` creates a vector of lags for rolling calculations. \cr
 #' `lead_sequence` creates a vector of leads for rolling calculations. \cr
@@ -38,7 +44,8 @@
 #' non-integer `by` values.
 #' This is the workhorse function of `seq_()`.
 #'
-#' Unlike `sequence()`, `sequence_()` recycles its arguments.
+#' Unlike `sequence()`, `sequence_()` recycles all its arguments,
+#' including `size`.
 #'
 #' If any of the sequences contain values > `.Machine$integer.max`,
 #' then the result will always be a double vector.
@@ -146,9 +153,9 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
     size <- seq_size(from = from, to = to, by = by)
   # } else if (.f && .b && .s){
   } else if (.t && .b && .s){
-    from <- seq_from(size, to = to, by = by)
+    from <- seq_start(size, to = to, by = by)
   } else if (.f && .t && .s){
-    by <- seq_by(size, from = from, to = to)
+    by <- seq_increment(size, from = from, to = to)
   } else {
     from <- from %||% 1L
     to <- to %||% 1L
@@ -162,7 +169,7 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
 #' @rdname sequences
 #' @export
 seq_size <- function(from, to, by = 1L){
-  del <- as.numeric(to) - as.numeric(from)
+  del <- as_numeric(to) - as_numeric(from)
   if (is.integer(by) && allv2(by, 1L)){
     size <- del
   } else {
@@ -177,7 +184,6 @@ seq_size <- function(from, to, by = 1L){
     if (is.integer(size)){
       size <- set_add(size, 1L)
     } else {
-      # size <- as.integer(size + 1e-10) + 1L
       size <- set_add(size, 1e-10)
       size <- as.integer(size)
       size <- set_add(size, 1L)
@@ -187,13 +193,19 @@ seq_size <- function(from, to, by = 1L){
   }
   size
 }
-seq_from <- function(size, to, by = 1L){
+#' @rdname sequences
+#' @export
+seq_start <- function(size, to, by = 1L){
   to - (pmax(size - 1L, 0L) * by)
 }
-seq_to <- function(size, from, by = 1L){
+#' @rdname sequences
+#' @export
+seq_end <- function(size, from, by = 1L){
   from + (pmax(size - 1L, 0L) * by)
 }
-seq_by <- function(size, from, to){
+#' @rdname sequences
+#' @export
+seq_increment <- function(size, from, to){
   del <- as.double((to - from))
   out <- del / pmax.int(size - 1L, 0L)
   out[which_val(del, 0)] <- 0

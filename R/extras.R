@@ -168,11 +168,7 @@ vector_length <- cpp_vector_length
 #' @rdname extras
 #' @export
 cheapr_var <- function(x, na.rm = TRUE){
-  if (is.integer(x)){
-    y <- as.integer(x)
-  } else {
-    y <- as.double(x)
-  }
+  y <- as_numeric(x)
   if (na.rm){
     N <- (length(y) - na_count(y)) - 1
   } else {

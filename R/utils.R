@@ -1,5 +1,12 @@
 #' @noRd
 
+# `as.numeric` but keep integers as integers
+as_numeric <- function(x){
+  switch(typeof(x),
+         integer = as.integer(x),
+         as.double(x))
+}
+
 # Like deparse1 but has a cutoff in case of massive strings
 
 deparse2 <- function(expr, collapse = " ", width.cutoff = 500L, nlines = 10L, ...){
