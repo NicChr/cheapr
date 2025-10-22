@@ -72,7 +72,7 @@
 #' @rdname sset
 #' @export
 sset <- function(x, i = NULL, j = NULL, ...){
-  .Call(`_cheapr_cpp_sset2`, x, i, j, TRUE)
+  .Call(`_cheapr_cpp_sset2`, x, i, j, TRUE, list(...))
 }
 cheapr_sset <- function(x, ...){
   UseMethod("cheapr_sset")
@@ -87,9 +87,15 @@ cheapr_sset.default <- function(x, i = NULL, j = NULL, ...){
     x[...]
   } else if (is.null(j)){
     x[i = i, ...]
-  } else {
+  } else if (is.null(i)){
+    x[j = j, ...]
+    } else {
     x[i = i, j = j, ...]
   }
+}
+#' @export
+cheapr_sset.data.frame <- function(x, i = NULL, j = NULL, ...){
+  sset_df(x, i, j, ...)
 }
 #' @export
 cheapr_sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
@@ -110,12 +116,18 @@ cheapr_sset.POSIXlt <- function(x, i = NULL, j = NULL, ...){
   }
   out
 }
+# Have to define sf method because otherwise `cheapr_sset.data.frame` is called
+# which can't handle 'sf_column' correctly
 #' @export
 cheapr_sset.sf <- function(x, i = NULL, j = NULL, ...){
-  out <- sset(as_df(x), i, j)
-  cpp_rebuild(
-    out, x, c("names", "row.names"), vec_setdiff(names(attributes(x)), c("names", "row.names")), FALSE
-  )
+  return(cheapr_sset.default(x, i, j, ...))
+  # j <- names(sset_col(x, j))
+  #
+  # sf_col <- attr(x, "sf_column")
+  # if (!is.null(sf_col) && sf_col %!in_% j){
+  #   j <- c_(j, sf_col)
+  # }
+  # sset_df(x, i, j)
 }
 #' @export
 cheapr_sset.vctrs_rcrd <- function(x, i = NULL, ...){

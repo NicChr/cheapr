@@ -573,10 +573,10 @@ extern "C" SEXP _cheapr_cpp_df_subset(SEXP x, SEXP i, SEXP j, SEXP check) {
   END_CPP11
 }
 // sset.cpp
-SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check);
-extern "C" SEXP _cheapr_cpp_sset2(SEXP x, SEXP i, SEXP j, SEXP check) {
+SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args);
+extern "C" SEXP _cheapr_cpp_sset2(SEXP x, SEXP i, SEXP j, SEXP check, SEXP args) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_sset2(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j), cpp11::as_cpp<cpp11::decay_t<bool>>(check)));
+    return cpp11::as_sexp(cpp_sset2(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(i), cpp11::as_cpp<cpp11::decay_t<SEXP>>(j), cpp11::as_cpp<cpp11::decay_t<bool>>(check), cpp11::as_cpp<cpp11::decay_t<SEXP>>(args)));
   END_CPP11
 }
 // sset.cpp
@@ -842,7 +842,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_setdiff",                 (DL_FUNC) &_cheapr_cpp_setdiff,                 3},
     {"_cheapr_cpp_shallow_copy",            (DL_FUNC) &_cheapr_cpp_shallow_copy,            1},
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    3},
-    {"_cheapr_cpp_sset2",                   (DL_FUNC) &_cheapr_cpp_sset2,                   4},
+    {"_cheapr_cpp_sset2",                   (DL_FUNC) &_cheapr_cpp_sset2,                   5},
     {"_cheapr_cpp_str_coalesce",            (DL_FUNC) &_cheapr_cpp_str_coalesce,            1},
     {"_cheapr_cpp_tabulate",                (DL_FUNC) &_cheapr_cpp_tabulate,                2},
     {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},

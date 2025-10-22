@@ -1361,7 +1361,7 @@ SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check){
 // Fast vector/data frame subset, exported to R
 
 [[cpp11::register]]
-SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check){
+SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 
   int32_t NP = 0;
 
@@ -1401,10 +1401,74 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check){
     Rf_copyMostAttrib(x, out);
     set_names(out, names);
   } else if (is_df(x)){
-    SHIELD(out = cpp_df_subset(x, i, j, check)); ++NP;
+    if (is_bare_df(x) || is_bare_tbl(x)){
+      SHIELD(out = cpp_df_subset(x, i, j, check)); ++NP;
+    } else {
+      if (Rf_length(args) == 0){
+        SHIELD(out = cheapr_sset(x, i, j)); ++NP;
+      } else {
+        SEXP usual_args = SHIELD(new_vec(VECSXP, 3)); ++NP;
+        SET_VECTOR_ELT(usual_args, 0, x);
+        SET_VECTOR_ELT(usual_args, 1, i);
+        SET_VECTOR_ELT(usual_args, 2, j);
+
+        SEXP arg_names = SHIELD(new_vec(STRSXP, 3)); ++NP;
+        SET_STRING_ELT(arg_names, 0, make_utf8_char("x"));
+        SET_STRING_ELT(arg_names, 1, make_utf8_char("i"));
+        SET_STRING_ELT(arg_names, 2, make_utf8_char("j"));
+        set_names(usual_args, arg_names);
+
+        // Combine all args into one list
+        SEXP all_args = SHIELD(list_c2(usual_args, args)); ++NP;
+
+        SEXP get_fn_expr = SHIELD(
+          Rf_lang3(
+            R_TripleColonSymbol, install_utf8("cheapr"), install_utf8("cheapr_sset")
+          )
+        ); ++NP;
+
+        SEXP cheapr_sset_fn = SHIELD(Rf_eval(get_fn_expr, R_BaseEnv)); ++NP;
+
+        SEXP expr = SHIELD(Rf_lang3(
+          install_utf8("do.call"), cheapr_sset_fn, all_args
+        )); ++NP;
+        SEXP env = SHIELD(R_GetCurrentEnv()); ++NP;
+        SHIELD(out = Rf_eval(expr, env)); ++NP;
+      }
+    }
   } else {
     // Fall-back to `cheapr_sset()` S3 methods
-    SHIELD(out = cheapr_sset(x, i, j)); ++NP;
+    if (Rf_length(args) == 0){
+      SHIELD(out = cheapr_sset(x, i, j)); ++NP;
+    } else {
+      SEXP usual_args = SHIELD(new_vec(VECSXP, 3)); ++NP;
+      SET_VECTOR_ELT(usual_args, 0, x);
+      SET_VECTOR_ELT(usual_args, 1, i);
+      SET_VECTOR_ELT(usual_args, 2, j);
+
+      SEXP arg_names = SHIELD(new_vec(STRSXP, 3)); ++NP;
+      SET_STRING_ELT(arg_names, 0, make_utf8_char("x"));
+      SET_STRING_ELT(arg_names, 1, make_utf8_char("i"));
+      SET_STRING_ELT(arg_names, 2, make_utf8_char("j"));
+      set_names(usual_args, arg_names);
+
+      // Combine all args into one list
+      SEXP all_args = SHIELD(list_c2(usual_args, args)); ++NP;
+
+      SEXP get_fn_expr = SHIELD(
+        Rf_lang3(
+          R_TripleColonSymbol, install_utf8("cheapr"), install_utf8("cheapr_sset")
+        )
+      ); ++NP;
+
+      SEXP cheapr_sset_fn = SHIELD(Rf_eval(get_fn_expr, R_BaseEnv)); ++NP;
+
+      SEXP expr = SHIELD(Rf_lang3(
+        install_utf8("do.call"), cheapr_sset_fn, all_args
+      )); ++NP;
+      SEXP env = SHIELD(R_GetCurrentEnv()); ++NP;
+      SHIELD(out = Rf_eval(expr, env)); ++NP;
+    }
   }
   YIELD(NP);
   return out;
@@ -1414,7 +1478,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check){
 // also keep for legacy reasons as fastplyr directly uses it
 [[cpp11::register]]
 SEXP cpp_sset(SEXP x, SEXP indices, bool check){
-  return cpp_sset2(x, indices, R_NilValue, check);
+  return cpp_sset2(x, indices, R_NilValue, check, R_NilValue);
 }
 
 // scalar subset

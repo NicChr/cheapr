@@ -324,8 +324,8 @@ cpp_df_subset <- function(x, i, j, check) {
   .Call(`_cheapr_cpp_df_subset`, x, i, j, check)
 }
 
-cpp_sset2 <- function(x, i, j, check) {
-  .Call(`_cheapr_cpp_sset2`, x, i, j, check)
+cpp_sset2 <- function(x, i, j, check, args) {
+  .Call(`_cheapr_cpp_sset2`, x, i, j, check, args)
 }
 
 cpp_sset <- function(x, indices, check) {

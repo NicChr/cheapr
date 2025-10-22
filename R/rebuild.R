@@ -73,3 +73,31 @@ rebuild.tbl_df <- function(x, template, shallow_copy = TRUE, ...){
     .set = TRUE
   )
 }
+
+#' @rdname rebuild
+#' @export
+rebuild.sf <- function(x, template, shallow_copy = TRUE, ...){
+
+  target_attrs <- attributes(x)
+  source_attrs <- attributes(template)
+
+  keep_target <- c("names", "row.names")
+  keep_source <- vec_setdiff(names(source_attrs), keep_target)
+
+  # Keep the original order of attributes + additional attributes
+  out_attr_names <- c(
+    vec_intersect(names(target_attrs), c(keep_target, keep_source)),
+    vec_setdiff(keep_source, names(target_attrs))
+  )
+
+  # Keep at most these 2 class types
+  source_attrs[["class"]] <- vec_intersect(source_attrs[["class"]], c("sf", "data.frame"))
+
+  target_attrs <- sset(target_attrs, keep_target)
+  source_attrs <- sset(source_attrs, keep_source)
+
+  out_attrs <- list_modify(source_attrs, target_attrs) |>
+    sset(out_attr_names)
+
+  attrs_modify(x, .args = out_attrs)
+}
