@@ -16,6 +16,9 @@ sequences.
 - New vectorised functions `seq_start`, `seq_end` and `seq_increment` to help
 with sequence generation.
 
+- New function `is_whole_number` to check that a numeric vector consists 
+only of whole numbers. 
+
 - Exported `cpp_rebuild`, a low-level convenience function for rebuilding
 attributes from a template.
 

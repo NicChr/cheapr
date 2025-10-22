@@ -1158,7 +1158,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   int* RESTRICT p_out = INTEGER(out);
 
   // Initialise counts to 0
-  safe_memset(p_out, 0, n_bins * sizeof(int));
+  std::fill(p_out, p_out + n_bins, 0);
 
   uint32_t one = 1;
 
@@ -1170,4 +1170,49 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   }
   YIELD(1);
   return out;
+}
+
+// Returns true if all numbers are whole numbers
+// otherwise false
+// Returns NA when na_rm is false and the function can't find any
+// non-whole numbers and there is at least 1 NA
+
+[[cpp11::register]]
+SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
+
+  R_xlen_t n = Rf_xlength(x);
+  R_xlen_t n_na = 0;
+  int out = 0;
+
+  switch ( TYPEOF(x) ){
+  case LGLSXP:
+  case INTSXP: {
+    out = 1;
+    break;
+  }
+  case REALSXP: {
+    // Re-initialise so that we can break when we find non-whole num
+    out = 1;
+    const double *p_x = REAL_RO(x);
+    for (R_xlen_t i = 0; i < n; ++i) {
+      double adiff = std::fabs(p_x[i] - std::round(p_x[i]));
+      bool is_whole = (adiff < tol_);
+      bool is_na = is_na_dbl(p_x[i]);
+      n_na += is_na;
+      if (!is_whole && !is_na){
+        out = 0;
+        break;
+      }
+    }
+    if (!na_rm_ && n_na > 0){
+      out = NA_INTEGER;
+      break;
+    }
+    break;
+  }
+  default: {
+    break;
+  }
+  }
+  return Rf_ScalarLogical(out);
 }

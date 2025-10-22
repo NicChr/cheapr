@@ -404,6 +404,10 @@ cpp_tabulate <- function(x, n_bins) {
   .Call(`_cheapr_cpp_tabulate`, x, n_bins)
 }
 
+cpp_is_whole_number <- function(x, tol_, na_rm_) {
+  .Call(`_cheapr_cpp_is_whole_number`, x, tol_, na_rm_)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }
