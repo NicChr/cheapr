@@ -16,7 +16,7 @@ sequences.
 - Exported `cpp_rebuild`, a low-level convenience function for rebuilding
 attributes from a template.
 
-- New rebuild method for `tbl_df` objects.
+- New rebuild methods for `tbl_df` and `sf` objects.
 
 ### Bug fixes
 
@@ -40,6 +40,8 @@ for a long while.
 
 - `sequence_` will now recycle the `size` argument additionally to recycling
 `from` and `by`.
+
+- Subsetting `sf` objects with `sset` now internally calls `[`.
 
 ### Breaking changes
 
