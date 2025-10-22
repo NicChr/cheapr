@@ -176,6 +176,10 @@ vec_intersect <- function(x, y, unique = FALSE){
   .Call(`_cheapr_cpp_intersect`, x, y, unique)
 }
 
+numeric_diff <- function(x, y){
+  as_numeric(y) - as_numeric(x)
+}
+
 # my_unique <- function(x, sort = FALSE){
 #   ids <- collapse::qG(x, sort = sort, na.exclude = FALSE)
 #   n_groups <- attr(ids, "N.groups", TRUE)

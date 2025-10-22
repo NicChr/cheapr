@@ -473,31 +473,6 @@ SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
   return out;
 }
 
-[[cpp11::register]]
-SEXP cpp_sequence_id(SEXP size){
-  int size_n = Rf_length(size);
-  SEXP size_sexp = SHIELD(coerce_vec(size, INTSXP));
-  R_xlen_t min_size = cpp_min(size_sexp);
-  if (min_size < 0){
-    YIELD(1);
-    Rf_error("size must be a vector of non-negative integers");
-  }
-  R_xlen_t N = cpp_sum(size_sexp);
-  SEXP out = SHIELD(new_vec(INTSXP, N));
-  int *p_out = INTEGER(out);
-  int *p_size = INTEGER(size_sexp);
-  R_xlen_t k = 0;
-  int seq_size;
-  for (int i = 0; i < size_n; ++i){
-    seq_size = p_size[i];
-    for (int j = 0; j < seq_size; ++j){
-      p_out[k++] = i + 1;
-    }
-  }
-  YIELD(2);
-  return out;
-}
-
 SEXP cpp_seq_len(R_xlen_t n){
   if (n > INTEGER_MAX){
     SEXP out = SHIELD(new_vec(REALSXP, n));
@@ -516,8 +491,13 @@ SEXP cpp_seq_len(R_xlen_t n){
   }
 }
 
-bool is_whole_number(double x, double tolerance){
-  return (std::fabs(x - std::round(x)) < tolerance);
+[[cpp11::register]]
+SEXP cpp_sequence_id(SEXP size){
+  SEXP seq = SHIELD(cpp_seq_len(Rf_length(size)));
+  SEXP out = SHIELD(cpp_rep(seq, size));
+
+  YIELD(2);
+  return out;
 }
 
 double log10_scale(double x){

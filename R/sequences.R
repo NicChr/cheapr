@@ -136,9 +136,8 @@ sequence_ <- function(size, from = 1L, by = 1L, add_id = FALSE, as_list = FALSE)
 }
 #' @rdname sequences
 #' @export
-seq_id <- cpp_sequence_id
-# Alternative base R way of defining seq_id
-# rep.int(seq_along(size), times = size)
+seq_id <- cpp_sequence_id # rep(seq_along(size), size)
+
 
 #' @rdname sequences
 #' @export
@@ -159,7 +158,7 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
   } else {
     from <- from %||% 1L
     to <- to %||% 1L
-    by <- by %||% as.integer(1L * sign(to - from))
+    by <- by %||% int_sign(numeric_diff(from, to))
     if (!.s){
       size <- seq_size(from = from, to = to, by = by)
     }
@@ -169,7 +168,7 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
 #' @rdname sequences
 #' @export
 seq_size <- function(from, to, by = 1L){
-  del <- as_numeric(to) - as_numeric(from)
+  del <- numeric_diff(from, to)
   if (is.integer(by) && allv2(by, 1L)){
     size <- del
   } else {
@@ -206,7 +205,7 @@ seq_end <- function(size, from, by = 1L){
 #' @rdname sequences
 #' @export
 seq_increment <- function(size, from, to){
-  del <- as.double((to - from))
+  del <- numeric_diff(from, to)
   out <- del / pmax.int(size - 1L, 0L)
   out[which_val(del, 0)] <- 0
   out

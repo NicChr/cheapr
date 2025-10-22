@@ -1181,8 +1181,9 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
 
   R_xlen_t n = Rf_xlength(x);
-  R_xlen_t n_na = 0;
+  // Use int instead of bool as int can hold NA
   int out = 0;
+  bool any_na = false;
 
   switch ( TYPEOF(x) ){
   case LGLSXP:
@@ -1195,18 +1196,18 @@ SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
     out = 1;
     const double *p_x = REAL_RO(x);
     for (R_xlen_t i = 0; i < n; ++i) {
-      double adiff = std::fabs(p_x[i] - std::round(p_x[i]));
-      bool is_whole = (adiff < tol_);
-      bool is_na = is_na_dbl(p_x[i]);
-      n_na += is_na;
-      if (!is_whole && !is_na){
-        out = 0;
+      if (is_na_dbl(p_x[i])){
+        any_na = true;
+        continue;
+      }
+
+      out = is_whole_number(p_x[i], tol_);
+      if (out == 0){
         break;
       }
     }
-    if (!na_rm_ && n_na > 0){
+    if (!na_rm_ && any_na){
       out = NA_INTEGER;
-      break;
     }
     break;
   }
@@ -1216,3 +1217,43 @@ SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
   }
   return Rf_ScalarLogical(out);
 }
+
+// SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
+//
+//   R_xlen_t n = Rf_xlength(x);
+//   // Use int instead of bool as int can hold NA
+//   int out = 0;
+//   bool any_na = false;
+//   bool is_na;
+//
+//   switch ( TYPEOF(x) ){
+//   case LGLSXP:
+//   case INTSXP: {
+//     out = 1;
+//     break;
+//   }
+//   case REALSXP: {
+//     // Re-initialise so that we can break when we find non-whole num
+//     out = 1;
+//     const double *p_x = REAL_RO(x);
+//     for (R_xlen_t i = 0; i < n; ++i) {
+//       is_na = is_na_dbl(p_x[i]);
+//       any_na = any_na || is_na;
+//       if (is_na) continue;
+//
+//       out = is_whole_number(p_x[i], tol_);
+//       if (out == 0){
+//         break;
+//       }
+//     }
+//     if (!na_rm_ && any_na){
+//       out = NA_INTEGER;
+//     }
+//     break;
+//   }
+//   default: {
+//     break;
+//   }
+//   }
+//   return Rf_ScalarLogical(out);
+// }
