@@ -82,12 +82,12 @@ case <- function(..., .default = NULL){
 
   true_locs <- val_find(lgl, TRUE)
 
-  out <- rep(rhs[NA_integer_], length.out = out_size)
+  out <- cpp_na_init(rhs, out_size)
 
   if (length(rhs) == 1){
     out[true_locs] <- rhs
   } else {
-    out[true_locs] <- rhs[true_locs]
+    out[true_locs] <- sset(rhs, true_locs)
   }
 
   # Initialise a logical that will keep track of
@@ -128,7 +128,7 @@ case <- function(..., .default = NULL){
         if (length(rhs) == 1){
           out[true_locs] <- rhs
         } else {
-          out[true_locs] <- rhs[true_locs]
+          out[true_locs] <- sset(rhs, true_locs)
         }
       }
     }
@@ -147,7 +147,7 @@ case <- function(..., .default = NULL){
       if (length(default_val) == 1){
         out[default_locs] <- default_val
       } else {
-        out[default_locs] <- default_val[default_locs]
+        out[default_locs] <- sset(default_val, default_locs)
       }
     }
 
