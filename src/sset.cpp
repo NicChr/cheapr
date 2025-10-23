@@ -7,16 +7,16 @@
 
 // Author: Nick Christofides
 
-// Compact integer seq generator as ALTREP, same as `seq_len()`
-SEXP compact_int_seq_len(int n){
+// Compact seq generator as ALTREP, same as `seq_len()`
+SEXP compact_seq_len(R_xlen_t n){
   if (n == NA_INTEGER || n < 0){
     Rf_error("`n` must be >= 0");
   }
   if (n == 0){
     return new_vec(INTSXP, 0);
   }
-  SEXP start = SHIELD(Rf_ScalarInteger(1));
-  SEXP end = SHIELD(Rf_ScalarInteger(n));
+  SEXP start = SHIELD(Rf_ScalarReal(1));
+  SEXP end = SHIELD(Rf_ScalarReal(n));
   SEXP expr = SHIELD(Rf_lang3(Rf_install(":"), start, end));
   SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
   YIELD(4);
@@ -174,7 +174,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     neg_count = 0;
 
   if (is_null(indices)){
-    SHIELD(indices = compact_int_seq_len(xn)); ++NP;
+    SHIELD(indices = compact_seq_len(xn)); ++NP;
   }
 
   R_xlen_t n = Rf_xlength(indices);

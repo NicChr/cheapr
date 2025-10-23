@@ -124,15 +124,7 @@
 #' @rdname sequences
 #' @export
 sequence_ <- function(size, from = 1L, by = 1L, add_id = FALSE, as_list = FALSE){
-  out <- cpp_sequence(as.integer(size), from, by, as.logical(as_list))
-  if (add_id){
-    if (as_list){
-      names(out) <- seq_along(out)
-    } else {
-      names(out) <- seq_id(size)
-    }
-  }
-  out
+  .Call(`_cheapr_cpp_sequence`, as.integer(size), from, by, as.logical(as_list), as.logical(add_id))
 }
 #' @rdname sequences
 #' @export
@@ -158,7 +150,7 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
   } else {
     from <- from %||% 1L
     to <- to %||% 1L
-    by <- by %||% int_sign(numeric_diff(from, to))
+    by <- by %||% int_sign(numeric_subtraction(to, from))
     if (!.s){
       size <- seq_size(from = from, to = to, by = by)
     }
@@ -168,7 +160,7 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
 #' @rdname sequences
 #' @export
 seq_size <- function(from, to, by = 1L){
-  del <- numeric_diff(from, to)
+  del <- numeric_subtraction(to, from)
   if (is.integer(by) && allv2(by, 1L)){
     size <- del
   } else {
@@ -177,7 +169,7 @@ seq_size <- function(from, to, by = 1L){
   }
   size_rng <- collapse::frange(size, na.rm = TRUE)
   if (isTRUE(any(size_rng < 0))){
-    stop("At least 1 sequence length is negative, please check the sign of by")
+    stop("At least 1 sequence length is negative, please check the sign of `by`")
   }
   if (length(size) == 0 || all(is_integerable(abs(size_rng) + 1), na.rm = TRUE)){
     if (is.integer(size)){
@@ -195,17 +187,17 @@ seq_size <- function(from, to, by = 1L){
 #' @rdname sequences
 #' @export
 seq_start <- function(size, to, by = 1L){
-  to - (pmax(size - 1L, 0L) * by)
+  numeric_subtraction(to, pmax(size - 1L, 0L) * by)
 }
 #' @rdname sequences
 #' @export
 seq_end <- function(size, from, by = 1L){
-  from + (pmax(size - 1L, 0L) * by)
+  numeric_addition(from, pmax(size - 1L, 0L) * by)
 }
 #' @rdname sequences
 #' @export
 seq_increment <- function(size, from, to){
-  del <- numeric_diff(from, to)
+  del <- numeric_subtraction(to, from)
   out <- del / pmax.int(size - 1L, 0L)
   out[which_val(del, 0)] <- 0
   out

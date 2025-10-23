@@ -195,7 +195,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check);
 SEXP cpp_df_select(SEXP x, SEXP locs);
 SEXP cpp_df_subset(SEXP x, SEXP i, SEXP j, bool check);
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
-SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list);
+SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list, bool add_id);
 SEXP cpp_rep_len(SEXP x, int length);
 SEXP cpp_rep(SEXP x, SEXP times);
 SEXP cpp_recycle(SEXP x, SEXP length);
@@ -224,6 +224,7 @@ void set_list_as_df(SEXP x);
 SEXP cpp_semi_copy(SEXP x);
 void clear_attributes(SEXP x);
 uint_fast64_t null_count(SEXP x);
+SEXP compact_seq_len(R_xlen_t n);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);

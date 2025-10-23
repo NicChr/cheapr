@@ -224,8 +224,12 @@ cpp_val_remove <- function(x, value) {
   .Call(`_cheapr_cpp_val_remove`, x, value)
 }
 
-cpp_sequence <- function(size, from, by, as_list) {
-  .Call(`_cheapr_cpp_sequence`, size, from, by, as_list)
+cpp_sequence_id <- function(size) {
+  .Call(`_cheapr_cpp_sequence_id`, size)
+}
+
+cpp_sequence <- function(size, from, by, as_list, add_id) {
+  .Call(`_cheapr_cpp_sequence`, size, from, by, as_list, add_id)
 }
 
 cpp_window_sequence <- function(size, k, partial, ascending) {
@@ -238,10 +242,6 @@ cpp_lag_sequence <- function(size, k, partial) {
 
 cpp_lead_sequence <- function(size, k, partial) {
   .Call(`_cheapr_cpp_lead_sequence`, size, k, partial)
-}
-
-cpp_sequence_id <- function(size) {
-  .Call(`_cheapr_cpp_sequence_id`, size)
 }
 
 cpp_fixed_width_breaks <- function(start, end, n, pretty, expand_min, expand_max) {

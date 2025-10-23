@@ -2,6 +2,7 @@
 
 // A more memory-efficient which()
 // Author: Nick Christofides
+// License: MIT
 
 // Count the number of true values
 

@@ -1,12 +1,5 @@
 #' @noRd
 
-# `as.numeric` but keep integers as integers
-as_numeric <- function(x){
-  switch(typeof(x),
-         integer = as.integer(x),
-         as.double(x))
-}
-
 # Like deparse1 but has a cutoff in case of massive strings
 
 deparse2 <- function(expr, collapse = " ", width.cutoff = 500L, nlines = 10L, ...){
@@ -176,8 +169,19 @@ vec_intersect <- function(x, y, unique = FALSE){
   .Call(`_cheapr_cpp_intersect`, x, y, unique)
 }
 
-numeric_diff <- function(x, y){
-  as_numeric(y) - as_numeric(x)
+# `as.numeric` but keep integers as integers
+as_numeric <- function(x){
+  switch(typeof(x),
+         integer = as.integer(x),
+         as.double(x))
+}
+
+numeric_subtraction <- function(x, y){
+  as_numeric(x) - as_numeric(y)
+}
+
+numeric_addition <- function(x, y){
+  as_numeric(x) + as_numeric(y)
 }
 
 # my_unique <- function(x, sort = FALSE){

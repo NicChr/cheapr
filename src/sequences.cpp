@@ -1,5 +1,18 @@
 #include "cheapr.h"
 
+// Vectorised generation of multiple numeric sequences
+// Author: Nick Christofides
+// License: MIT
+
+[[cpp11::register]]
+SEXP cpp_sequence_id(SEXP size){
+  SEXP seq = SHIELD(cpp_seq_len(Rf_length(size)));
+  SEXP out = SHIELD(cpp_rep(seq, size));
+
+  YIELD(2);
+  return out;
+}
+
 // My version of base::sequence()
 
 SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
@@ -215,7 +228,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
 }
 
 [[cpp11::register]]
-SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
+SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list, bool add_id) {
 
   int32_t NP = 0;
 
@@ -234,6 +247,8 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
   if (size_n != n){
     SHIELD(size = cpp_rep_len(size, n)); ++NP;
   }
+
+  SEXP out = R_NilValue;
 
   switch (TYPEOF(from)){
   case INTSXP: {
@@ -262,22 +277,18 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
     }
     // If all sequence values are < 2^31 then we can safely use cpp_int_sequence
     if (out_is_integer){
-      SEXP out = SHIELD(cpp_int_sequence(size, from, by, as_list)); ++NP;
-      YIELD(NP);
-      return out;
+      SHIELD(out = cpp_int_sequence(size, from, by, as_list)); ++NP;
     } else {
       SHIELD(from = coerce_vec(from, REALSXP)); ++NP;
       SHIELD(by = coerce_vec(by, REALSXP)); ++NP;
-      SEXP out = SHIELD(cpp_dbl_sequence(size, from, by, as_list)); ++NP;
-      YIELD(NP);
-      return out;
+      SHIELD(out = cpp_dbl_sequence(size, from, by, as_list)); ++NP;
     }
+    break;
   }
   case REALSXP: {
     SHIELD(from = coerce_vec(from, REALSXP)); ++NP;
-    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by, as_list)); ++NP;
-    YIELD(NP);
-    return out;
+    SHIELD(out = cpp_dbl_sequence(size, from, by, as_list)); ++NP;
+    break;
   }
   default: {
     YIELD(NP);
@@ -290,27 +301,36 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
     switch (TYPEOF(by)){
   case INTSXP: {
     SHIELD(by = coerce_vec(by, REALSXP)); ++NP;
-    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by, as_list)); ++NP;
-    YIELD(NP);
-    return out;
+    SHIELD(out = cpp_dbl_sequence(size, from, by, as_list)); ++NP;
+    break;
   }
   case REALSXP: {
-    SEXP out = SHIELD(cpp_dbl_sequence(size, from, by, as_list)); ++NP;
-    YIELD(NP);
-    return out;
-
+    SHIELD(out = cpp_dbl_sequence(size, from, by, as_list)); ++NP;
+    break;
   }
   default: {
     YIELD(NP);
     Rf_error("by must have type integer or double in %s", __func__);
   }
   }
+    break;
   }
   default: {
     YIELD(NP);
     Rf_error("from must have type integer or double in %s", __func__);
   }
   }
+  if (add_id){
+    SEXP out_names;
+    if (as_list){
+      SHIELD(out_names = compact_seq_len(n)); ++NP;
+    } else {
+      SHIELD(out_names = cpp_sequence_id(size)); ++NP;
+    }
+    set_names(out, out_names);
+  }
+  YIELD(NP);
+  return out;
 }
 
 [[cpp11::register]]
@@ -478,7 +498,7 @@ SEXP cpp_seq_len(R_xlen_t n){
     SEXP out = SHIELD(new_vec(REALSXP, n));
     double* RESTRICT p_out = REAL(out);
     OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i) p_out[i] = 1.0 + i;
+    for (R_xlen_t i = 0; i < n; ++i) p_out[i] = 1.0 + static_cast<double>(i);
     YIELD(1);
     return out;
   } else {
@@ -489,15 +509,6 @@ SEXP cpp_seq_len(R_xlen_t n){
     YIELD(1);
     return out;
   }
-}
-
-[[cpp11::register]]
-SEXP cpp_sequence_id(SEXP size){
-  SEXP seq = SHIELD(cpp_seq_len(Rf_length(size)));
-  SEXP out = SHIELD(cpp_rep(seq, size));
-
-  YIELD(2);
-  return out;
 }
 
 double log10_scale(double x){
@@ -777,7 +788,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       int seq_n = n_breaks;
       double* RESTRICT p_out = REAL(out);
       OMP_FOR_SIMD
-      for (int i = 0; i < seq_n; ++i) p_out[i] = p_out[i] / scale_adj;
+      for (int i = 0; i < seq_n; ++i) p_out[i] /= scale_adj;
     }
 
     YIELD(NP);
