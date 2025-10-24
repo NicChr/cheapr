@@ -112,6 +112,10 @@ cpp_format_numeric_as_int64 <- function(x) {
   .Call(`_cheapr_cpp_format_numeric_as_int64`, x)
 }
 
+cpp_sset_int64 <- function(x, locs) {
+  .Call(`_cheapr_cpp_sset_int64`, x, locs)
+}
+
 cpp_lag <- function(x, k, fill, set, recursive) {
   .Call(`_cheapr_cpp_lag`, x, k, fill, set, recursive)
 }

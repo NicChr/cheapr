@@ -166,7 +166,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
     int64_t val = INTEGER64_PTR(value)[0];
-    const int64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_RO_PTR(x);
     if (is_long){
       double* RESTRICT p_out = REAL(out);
       if (invert){
@@ -251,7 +251,7 @@ SEXP cpp_which_na(SEXP x){
   }
   case CHEAPR_INT64SXP: {
     R_xlen_t count = na_count(x, true);
-    const int64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_RO_PTR(x);
     if (is_short){
       int out_size = count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
@@ -411,7 +411,7 @@ SEXP cpp_which_not_na(SEXP x){
   }
   case CHEAPR_INT64SXP: {
     R_xlen_t count = na_count(x, true);
-    const int64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_RO_PTR(x);
     if (is_short){
       int out_size = n - count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
@@ -558,27 +558,27 @@ SEXP cpp_which_not_na(SEXP x){
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
                   bool include_true, bool include_false, bool include_na){
   R_xlen_t n = Rf_xlength(x);
-  int *p_x = LOGICAL(x);
+  const int *p_x = INTEGER_RO(x);
 
   if (n > INTEGER_MAX){
     SEXP true_locs = SHIELD(new_vec(REALSXP, include_true ? n_true : 0));
     SEXP false_locs = SHIELD(new_vec(REALSXP, include_false ? n_false : 0));
     SEXP na_locs = SHIELD(new_vec(REALSXP, include_na ? (n - n_true - n_false) : 0));
 
-    double *p_true = REAL(true_locs);
-    double *p_false = REAL(false_locs);
-    double *p_na = REAL(na_locs);
+    double* RESTRICT p_true = REAL(true_locs);
+    double* RESTRICT p_false = REAL(false_locs);
+    double* RESTRICT p_na = REAL(na_locs);
 
     R_xlen_t k1 = 0;
     R_xlen_t k2 = 0;
     R_xlen_t k3 = 0;
 
     for (R_xlen_t i = 0; i < n; ++i){
-      if (include_true && p_x[i] == TRUE){
+      if (include_true && p_x[i] == 1){
         p_true[k1++] = i + 1;
-      } else if (include_false && p_x[i] == FALSE){
+      } else if (include_false && p_x[i] == 0){
         p_false[k2++] = i + 1;
-      } else if (include_na && p_x[i] == NA_LOGICAL){
+      } else if (include_na && is_na_int(p_x[i])){
         p_na[k3++] = i + 1;
       }
     }
@@ -600,20 +600,20 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
     SEXP false_locs = SHIELD(new_vec(INTSXP, include_false ? n_false : 0));
     SEXP na_locs = SHIELD(new_vec(INTSXP, include_na ? (n - n_true - n_false) : 0));
 
-    int *p_true = INTEGER(true_locs);
-    int *p_false = INTEGER(false_locs);
-    int *p_na = INTEGER(na_locs);
+    int* RESTRICT p_true = INTEGER(true_locs);
+    int* RESTRICT p_false = INTEGER(false_locs);
+    int* RESTRICT p_na = INTEGER(na_locs);
 
     int k1 = 0;
     int k2 = 0;
     int k3 = 0;
 
     for (int i = 0; i < n; ++i){
-      if (include_true && p_x[i] == TRUE){
+      if (include_true && p_x[i] == 1){
         p_true[k1++] = i + 1;
-      } else if (include_false && p_x[i] == FALSE){
+      } else if (include_false && p_x[i] == 0){
         p_false[k2++] = i + 1;
-      } else if (include_na && p_x[i] == NA_LOGICAL){
+      } else if (include_na && is_na_int(p_x[i])){
         p_na[k3++] = i + 1;
       }
     }

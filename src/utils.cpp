@@ -215,7 +215,7 @@ double cpp_sum(SEXP x){
   }
   case CHEAPR_INT64SXP: {
 
-    const int64_t *p_x = INTEGER64_PTR(x);
+    const int64_t *p_x = INTEGER64_RO_PTR(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -265,7 +265,7 @@ SEXP cpp_range(SEXP x){
     }
     case CHEAPR_INT64SXP: {
 
-      const int64_t *p_x = INTEGER64_PTR(x);
+      const int64_t *p_x = INTEGER64_RO_PTR(x);
 
       int64_t min = std::numeric_limits<int64_t>::max();
       int64_t max = std::numeric_limits<int64_t>::min();
@@ -656,7 +656,7 @@ SEXP cpp_lgl_count(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
-  const int *p_x = LOGICAL(x);
+  const int *p_x = INTEGER_RO(x);
 
   R_xlen_t i;
   R_xlen_t ntrue = 0, nfalse = 0;
@@ -664,16 +664,17 @@ SEXP cpp_lgl_count(SEXP x){
   if (n_cores > 1){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:ntrue, nfalse)
     for (i = 0; i < n; ++i){
-      ntrue += p_x[i] == TRUE;
-      nfalse += p_x[i] == FALSE;
+      ntrue += p_x[i] == 1;
+      nfalse += p_x[i] == 0;
     }
   } else {
     OMP_FOR_SIMD
     for (i = 0; i < n; ++i){
-      ntrue += p_x[i] == TRUE;
-      nfalse += p_x[i] == FALSE;
+      ntrue += p_x[i] == 1;
+      nfalse += p_x[i] == 0;
     }
   }
+
   R_xlen_t nna = n - ntrue - nfalse;
 
   SEXP out = SHIELD(new_vec(n > INTEGER_MAX ? REALSXP : INTSXP, 3));

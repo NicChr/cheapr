@@ -21,7 +21,7 @@
 #define INTEGER64_PTR(x) ((int64_t*) REAL(x))
 #endif
 #ifndef INTEGER64_RO_PTR
-#define INTEGER64_RO_PTR(x) ((int64_t*) REAL_RO(x))
+#define INTEGER64_RO_PTR(x) ((const int64_t*) REAL_RO(x))
 #endif
 
 #ifdef _OPENMP
@@ -145,6 +145,7 @@ inline constexpr bool is_integerable(T x){
   return between<T>(x, INTEGER_MIN, INTEGER_MAX);
 }
 
+// Make function definitions visible to all C++ files
 
 int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
@@ -217,6 +218,7 @@ SEXP cpp_semi_copy(SEXP x);
 void clear_attributes(SEXP x);
 uint_fast64_t null_count(SEXP x);
 SEXP compact_seq_len(R_xlen_t n);
+SEXP clean_indices(SEXP indices, SEXP x, bool count);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);

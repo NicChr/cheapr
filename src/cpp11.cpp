@@ -201,6 +201,13 @@ extern "C" SEXP _cheapr_cpp_format_numeric_as_int64(SEXP x) {
     return cpp11::as_sexp(cpp_format_numeric_as_int64(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// int64.cpp
+SEXP cpp_sset_int64(SEXP x, SEXP locs);
+extern "C" SEXP _cheapr_cpp_sset_int64(SEXP x, SEXP locs) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_sset_int64(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(locs)));
+  END_CPP11
+}
 // lag.cpp
 SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive);
 extern "C" SEXP _cheapr_cpp_lag(SEXP x, SEXP k, SEXP fill, SEXP set, SEXP recursive) {
@@ -851,6 +858,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_shallow_copy",            (DL_FUNC) &_cheapr_cpp_shallow_copy,            1},
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    3},
     {"_cheapr_cpp_sset2",                   (DL_FUNC) &_cheapr_cpp_sset2,                   5},
+    {"_cheapr_cpp_sset_int64",              (DL_FUNC) &_cheapr_cpp_sset_int64,              2},
     {"_cheapr_cpp_str_coalesce",            (DL_FUNC) &_cheapr_cpp_str_coalesce,            1},
     {"_cheapr_cpp_tabulate",                (DL_FUNC) &_cheapr_cpp_tabulate,                2},
     {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},

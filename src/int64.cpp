@@ -1,7 +1,5 @@
 #include "cheapr.h"
 
-// #define IS_INTEGERABLE(x, is_na_fn, min, max) ( (bool) (is_na_fn(x) || (x >= min && x <= max)) )
-
 // Convert 64-bit integer vec to 32-bit integer vec
 
 [[cpp11::register]]
@@ -14,7 +12,7 @@ SEXP cpp_int64_to_int(SEXP x){
   SEXP out = SHIELD(new_vec(INTSXP, n));
   int* RESTRICT p_out = INTEGER(out);
 
-  const int64_t *p_x = INTEGER64_PTR(x);
+  const int64_t *p_x = INTEGER64_RO_PTR(x);
 
   int64_t int_max = INTEGER_MAX;
 
@@ -37,7 +35,7 @@ SEXP cpp_int64_to_double(SEXP x){
   SEXP out = SHIELD(new_vec(REALSXP, n));
   double* RESTRICT p_out = REAL(out);
 
-  const int64_t *p_x = INTEGER64_PTR(x);
+  const int64_t *p_x = INTEGER64_RO_PTR(x);
 
   double repl;
   for (R_xlen_t i = 0; i < n; ++i){
@@ -231,4 +229,90 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
   }
   YIELD(1);
   return out;
+}
+
+
+[[cpp11::register]]
+SEXP cpp_sset_int64(SEXP x, SEXP locs){
+
+  int32_t NP = 0;
+
+  const int64_t* p_x = INTEGER64_RO_PTR(x);
+
+  SEXP clean_locs = SHIELD(clean_indices(locs, x, false)); ++NP;
+  SHIELD(locs = VECTOR_ELT(clean_locs, 0)); ++NP;
+
+  SEXP out = SHIELD(new_vec(REALSXP, Rf_xlength(locs))); ++NP;
+  int64_t* RESTRICT p_out = INTEGER64_PTR(out);
+
+  SEXP names = SHIELD(get_names(x)); ++NP;
+  SEXP out_names = SHIELD(sset_vec(names, locs, true)); ++NP;
+
+  if (Rf_xlength(x) > INTEGER_MAX){
+
+    int_fast64_t xn = Rf_xlength(x);
+
+    int_fast64_t
+    n = Rf_xlength(locs), k = 0, j;
+
+    const double* pind = REAL_RO(locs);
+
+    for (int_fast64_t i = 0; i < n; ++i){
+      j = pind[i];
+      if (j < 0){
+        SEXP new_i = SHIELD(exclude_locs(locs, xn)); ++NP;
+        SEXP out2 = SHIELD(cpp_sset_int64(x, new_i)); ++NP;
+        YIELD(NP);
+        return out2;
+      } else if (j != 0){
+        p_out[k++] = (is_na_dbl(pind[i]) || j > xn) ? NA_INTEGER64 : p_x[j - 1];
+      }
+    }
+
+    // Resize if necessary (only when locs contains zeroes)
+
+    if (k != n){
+      SHIELD(out = Rf_xlengthgets(out, k)); ++NP;
+    }
+
+    set_names(out, out_names);
+
+    YIELD(NP);
+    return out;
+
+  } else {
+
+    unsigned int
+    xn = Rf_length(x),
+      n = Rf_xlength(locs),
+      k = 0,
+      na_val = NA_INTEGER,
+      j;
+
+    const int *pind = INTEGER_RO(locs);
+
+    for (unsigned int i = 0; i < n; ++i){
+      j = pind[i];
+      if (between<unsigned int>(j, 1U, xn)){
+        p_out[k++] = p_x[--j];
+        // If j > n_val then it is a negative 32-bit integer
+      } else if (j > na_val){
+        SEXP new_i = SHIELD(exclude_locs(locs, xn)); ++NP;
+        SEXP out2 = SHIELD(cpp_sset_int64(x, new_i)); ++NP;
+        YIELD(NP);
+        return out2;
+      } else if (j != 0U){
+        p_out[k++] = NA_INTEGER64;
+      }
+    }
+
+    if (k != n){
+      SHIELD(out = Rf_lengthgets(out, k)); ++NP;
+    }
+
+    set_names(out, out_names);
+
+    YIELD(NP);
+    return out;
+  }
 }

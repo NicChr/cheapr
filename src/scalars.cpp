@@ -144,7 +144,7 @@ case CHEAPR_INT64SXP: {
   if (implicit_na_coercion(value, x)) break;
   SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
   int64_t val = INTEGER64_PTR(value)[0];
-  const int64_t *p_x = INTEGER64_PTR(x);
+  const int64_t *p_x = INTEGER64_RO_PTR(x);
   // int (*c_op)(int64_t, int64_t);
   // CHEAPR_OP_SWITCH;
   if (n_cores > 1){
