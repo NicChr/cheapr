@@ -253,18 +253,18 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   SEXP out = R_NilValue;
 
   // Fast method for bare atomic vectors
-  // if (is_bare_atomic(yes) && is_bare_atomic(no) && is_bare_atomic(na)){
-  //   SHIELD(args = cpp_cast(args)); ++NP;
-  //   const SEXP *p_args = VECTOR_PTR_RO(args);
-  //
-  //   yes = p_args[0];
-  //   no = p_args[1];
-  //   na = p_args[2];
-  //
-  //   SHIELD(out = if_else(condition, yes, no, na)); ++NP;
-  //   YIELD(NP);
-  //   return out;
-  // }
+  if (is_bare_atomic(yes) && is_bare_atomic(no) && is_bare_atomic(na)){
+    SHIELD(args = cpp_cast(args)); ++NP;
+    const SEXP *p_args = VECTOR_PTR_RO(args);
+
+    yes = p_args[0];
+    no = p_args[1];
+    na = p_args[2];
+
+    SHIELD(out = if_else(condition, yes, no, na)); ++NP;
+    YIELD(NP);
+    return out;
+  }
 
   // Below is a catch-all method
 
@@ -379,17 +379,12 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   SET_TAG(arg, install_utf8("value"));
 
   SHIELD(out = Rf_eval(expr, R_GetCurrentEnv())); ++NP;
-  // cpp11::function base_assign = cpp11::package("base")["[<-"];
-  // SHIELD(out = base_assign(cpp11::named_arg("x") = out,
-  //                          cpp11::named_arg("i") = true_locs,
-  //                          cpp11::named_arg("value") = replace)); ++NP;
 
   if (vec_length(yes) == 1){
     replace = na;
   } else {
     SHIELD(replace = cpp_sset(na, na_locs, true)); ++NP;
   }
-
   SHIELD(expr = Rf_lang4(assign_sym, out, na_locs, replace)); ++NP;
   arg = CDR(expr);
   SET_TAG(arg, install_utf8("x"));
