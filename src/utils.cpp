@@ -215,7 +215,7 @@ double cpp_sum(SEXP x){
   }
   case CHEAPR_INT64SXP: {
 
-    const int64_t *p_x = INTEGER64_RO_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR_RO(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -265,7 +265,7 @@ SEXP cpp_range(SEXP x){
     }
     case CHEAPR_INT64SXP: {
 
-      const int64_t *p_x = INTEGER64_RO_PTR(x);
+      const int64_t *p_x = INTEGER64_PTR_RO(x);
 
       int64_t min = std::numeric_limits<int64_t>::max();
       int64_t max = std::numeric_limits<int64_t>::min();
@@ -459,194 +459,6 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   }
   }
   }
-}
-
-[[cpp11::register]]
-SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
-  int32_t NP = 0; // count num protections
-  if (TYPEOF(condition) != LGLSXP){
-    Rf_error("condition must be a logical vector");
-  }
-  if (TYPEOF(yes) != TYPEOF(no)){
-    Rf_error("`typeof(yes)` must match `typeof(no)`");
-  }
-  if (TYPEOF(yes) != TYPEOF(na)){
-    Rf_error("`typeof(yes)` must match `typeof(na)`");
-  }
-  R_xlen_t n = Rf_xlength(condition);
-  R_xlen_t yes_size = Rf_xlength(yes);
-  R_xlen_t no_size = Rf_xlength(no);
-  R_xlen_t na_size = Rf_xlength(na);
-
-  if (yes_size != 1 && yes_size != n){
-    Rf_error("`length(yes)` must be 1 or `length(condition)`");
-  }
-  if (no_size != 1 && no_size != n){
-    Rf_error("`length(no)` must be 1 or `length(condition)`");
-  }
-  if (na_size != 1 && na_size != n){
-    Rf_error("`length(na)` must be 1 or `length(condition)`");
-  }
-
-  bool yes_scalar = yes_size == 1;
-  bool no_scalar = no_size == 1;
-  bool na_scalar = na_size == 1;
-
-  const int *p_x = LOGICAL(condition);
-  SEXP out = SHIELD(new_vec(TYPEOF(yes), n)); ++NP;
-
-  switch (TYPEOF(yes)){
-  case NILSXP: {
-    break;
-  }
-  case LGLSXP:
-  case INTSXP: {
-    int* RESTRICT p_out = INTEGER(out);
-    const int *p_yes = INTEGER(yes);
-    const int *p_no = INTEGER(no);
-    const int *p_na = INTEGER(na);
-
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case true: {
-      p_out[i] = p_yes[yes_scalar ? 0 : i];
-      break;
-    }
-      case false: {
-        p_out[i] = p_no[no_scalar ? 0 : i];
-        break;
-      }
-      default: {
-        p_out[i] = p_na[na_scalar ? 0 : i];
-        break;
-      }
-      }
-    }
-    break;
-  }
-  case REALSXP: {
-    double* RESTRICT p_out = REAL(out);
-    const double *p_yes = REAL(yes);
-    const double *p_no = REAL(no);
-    const double *p_na = REAL(na);
-
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case true: {
-      p_out[i] = p_yes[yes_scalar ? 0 : i];
-      break;
-    }
-      case false: {
-        p_out[i] = p_no[no_scalar ? 0 : i];
-        break;
-      }
-      default: {
-        p_out[i] = p_na[na_scalar ? 0 : i];
-        break;
-      }
-      }
-    }
-    break;
-  }
-  case STRSXP: {
-    const SEXP *p_yes = STRING_PTR_RO(yes);
-    const SEXP *p_no = STRING_PTR_RO(no);
-    const SEXP *p_na = STRING_PTR_RO(na);
-
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case true: {
-      SET_STRING_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-      break;
-    }
-      case false: {
-        SET_STRING_ELT(out, i, p_no[no_scalar ? 0 : i]);
-        break;
-      }
-      default: {
-        SET_STRING_ELT(out, i, p_na[na_scalar ? 0 : i]);
-        break;
-      }
-      }
-    }
-    break;
-  }
-  case CPLXSXP: {
-    const Rcomplex *p_yes = COMPLEX(yes);
-    const Rcomplex *p_no = COMPLEX(no);
-    const Rcomplex *p_na = COMPLEX(na);
-
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case true: {
-      SET_COMPLEX_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-      break;
-    }
-      case false: {
-        SET_COMPLEX_ELT(out, i, p_no[no_scalar ? 0 : i]);
-        break;
-      }
-      default: {
-        SET_COMPLEX_ELT(out, i, p_na[na_scalar ? 0 : i]);
-        break;
-      }
-      }
-    }
-    break;
-  }
-  case RAWSXP: {
-    const Rbyte *p_yes = RAW(yes);
-    const Rbyte *p_no = RAW(no);
-    const Rbyte *p_na = RAW(na);
-
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case true: {
-      SET_RAW_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-      break;
-    }
-      case false: {
-        SET_RAW_ELT(out, i, p_no[no_scalar ? 0 : i]);
-        break;
-      }
-      default: {
-        SET_RAW_ELT(out, i, p_na[na_scalar ? 0 : i]);
-        break;
-      }
-      }
-    }
-    break;
-  }
-  case VECSXP: {
-    const SEXP *p_yes = VECTOR_PTR_RO(yes);
-    const SEXP *p_no = VECTOR_PTR_RO(no);
-    const SEXP *p_na = VECTOR_PTR_RO(na);
-
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case true: {
-      SET_VECTOR_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-      break;
-    }
-      case false: {
-        SET_VECTOR_ELT(out, i, p_no[no_scalar ? 0 : i]);
-        break;
-      }
-      default: {
-        SET_VECTOR_ELT(out, i, p_na[na_scalar ? 0 : i]);
-        break;
-      }
-      }
-    }
-    break;
-  }
-  default: {
-    YIELD(NP);
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(yes)));
-  }
-  }
-  YIELD(NP);
-  return out;
 }
 
 // Counts number of true, false and NAs in a logical vector in one pass

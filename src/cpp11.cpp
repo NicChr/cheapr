@@ -62,6 +62,13 @@ extern "C" SEXP _cheapr_cpp_recycle(SEXP x, SEXP length) {
   END_CPP11
 }
 // combine.cpp
+SEXP cpp_cast(SEXP x);
+extern "C" SEXP _cheapr_cpp_cast(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_cast(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// combine.cpp
 SEXP cpp_setdiff(SEXP x, SEXP y, bool unique);
 extern "C" SEXP _cheapr_cpp_setdiff(SEXP x, SEXP y, SEXP unique) {
   BEGIN_CPP11
@@ -108,6 +115,13 @@ SEXP cpp_c(SEXP x);
 extern "C" SEXP _cheapr_cpp_c(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_c(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// conditions.cpp
+SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na);
+extern "C" SEXP _cheapr_cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_if_else(cpp11::as_cpp<cpp11::decay_t<SEXP>>(condition), cpp11::as_cpp<cpp11::decay_t<SEXP>>(yes), cpp11::as_cpp<cpp11::decay_t<SEXP>>(no), cpp11::as_cpp<cpp11::decay_t<SEXP>>(na)));
   END_CPP11
 }
 // gcd.cpp
@@ -665,13 +679,6 @@ extern "C" SEXP _cheapr_cpp_bin(SEXP x, SEXP breaks, SEXP codes, SEXP right, SEX
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na);
-extern "C" SEXP _cheapr_cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_if_else(cpp11::as_cpp<cpp11::decay_t<SEXP>>(condition), cpp11::as_cpp<cpp11::decay_t<SEXP>>(yes), cpp11::as_cpp<cpp11::decay_t<SEXP>>(no), cpp11::as_cpp<cpp11::decay_t<SEXP>>(na)));
-  END_CPP11
-}
-// utils.cpp
 SEXP cpp_lgl_count(SEXP x);
 extern "C" SEXP _cheapr_cpp_lgl_count(SEXP x) {
   BEGIN_CPP11
@@ -770,6 +777,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
     {"_cheapr_cpp_bin",                     (DL_FUNC) &_cheapr_cpp_bin,                     6},
     {"_cheapr_cpp_c",                       (DL_FUNC) &_cheapr_cpp_c,                       1},
+    {"_cheapr_cpp_cast",                    (DL_FUNC) &_cheapr_cpp_cast,                    1},
     {"_cheapr_cpp_col_all_na",              (DL_FUNC) &_cheapr_cpp_col_all_na,              2},
     {"_cheapr_cpp_col_any_na",              (DL_FUNC) &_cheapr_cpp_col_any_na,              2},
     {"_cheapr_cpp_col_na_counts",           (DL_FUNC) &_cheapr_cpp_col_na_counts,           2},

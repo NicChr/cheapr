@@ -194,7 +194,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     return out;
   }
   case CHEAPR_INT64SXP: {
-    const int64_t *p_x = INTEGER64_RO_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR_RO(x);
     SEXP out = SHIELD(new_vec(REALSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
       int64_t gcd = p_x[0];

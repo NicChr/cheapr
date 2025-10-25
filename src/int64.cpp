@@ -12,7 +12,7 @@ SEXP cpp_int64_to_int(SEXP x){
   SEXP out = SHIELD(new_vec(INTSXP, n));
   int* RESTRICT p_out = INTEGER(out);
 
-  const int64_t *p_x = INTEGER64_RO_PTR(x);
+  const int64_t *p_x = INTEGER64_PTR_RO(x);
 
   int64_t int_max = INTEGER_MAX;
 
@@ -35,7 +35,7 @@ SEXP cpp_int64_to_double(SEXP x){
   SEXP out = SHIELD(new_vec(REALSXP, n));
   double* RESTRICT p_out = REAL(out);
 
-  const int64_t *p_x = INTEGER64_RO_PTR(x);
+  const int64_t *p_x = INTEGER64_PTR_RO(x);
 
   double repl;
   for (R_xlen_t i = 0; i < n; ++i){
@@ -58,7 +58,7 @@ bool cpp_all_integerable(SEXP x){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int64_t *p_x = INTEGER64_RO_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR_RO(x);
 
     int64_t int_min = INTEGER_MIN;
     int64_t int_max = INTEGER_MAX;
@@ -237,7 +237,7 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
 
   int32_t NP = 0;
 
-  const int64_t* p_x = INTEGER64_RO_PTR(x);
+  const int64_t* p_x = INTEGER64_PTR_RO(x);
 
   SEXP clean_locs = SHIELD(clean_indices(locs, x, false)); ++NP;
   SHIELD(locs = VECTOR_ELT(clean_locs, 0)); ++NP;

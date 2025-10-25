@@ -94,7 +94,7 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     case CHEAPR_INT64SXP: {
-      const int64_t *p_x = INTEGER64_RO_PTR(x);
+      const int64_t *p_x = INTEGER64_PTR_RO(x);
       SEXP out = SHIELD(new_vec(REALSXP, out_size));
       int64_t* RESTRICT p_out = INTEGER64_PTR(out);
 
@@ -410,6 +410,44 @@ SEXP cpp_recycle(SEXP x, SEXP length){
   }
 
   YIELD(NP);
+  return out;
+}
+
+// Fast casting of objects to common type (via typeof)
+
+[[cpp11::register]]
+SEXP cpp_cast(SEXP x){
+
+  if (!Rf_isVectorList(x)){
+    Rf_error("`x` must be a list");
+  }
+
+  R_xlen_t n = Rf_xlength(x);
+
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+  SEXP out = SHIELD(new_vec(VECSXP, n));
+
+  std::vector<int16_t> types(n);
+
+  int16_t out_type = 0;
+  int16_t type;
+
+  for (R_xlen_t i = 0; i < n; ++i){
+    type = TYPEOF(p_x[i]);
+    out_type = std::max(out_type, type);
+    types[i] = type;
+  }
+
+  // Cast all objects
+  for (R_xlen_t i = 0; i < n; ++i){
+    if (types[i] != out_type){
+      SET_VECTOR_ELT(out, i, coerce_vec(p_x[i], out_type));
+    } else {
+      SET_VECTOR_ELT(out, i, p_x[i]);
+    }
+  }
+
+  YIELD(1);
   return out;
 }
 

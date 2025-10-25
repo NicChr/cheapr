@@ -20,8 +20,8 @@
 #ifndef INTEGER64_PTR
 #define INTEGER64_PTR(x) ((int64_t*) REAL(x))
 #endif
-#ifndef INTEGER64_RO_PTR
-#define INTEGER64_RO_PTR(x) ((const int64_t*) REAL_RO(x))
+#ifndef INTEGER64_PTR_RO
+#define INTEGER64_PTR_RO(x) ((const int64_t*) REAL_RO(x))
 #endif
 
 #ifdef _OPENMP
@@ -219,6 +219,11 @@ void clear_attributes(SEXP x);
 uint_fast64_t null_count(SEXP x);
 SEXP compact_seq_len(R_xlen_t n);
 SEXP clean_indices(SEXP indices, SEXP x, bool count);
+SEXP cpp_combine_levels(SEXP x);
+SEXP cpp_cast(SEXP x);
+SEXP cpp_lgl_count(SEXP x);
+SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
+                  bool include_true, bool include_false, bool include_na);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
@@ -286,6 +291,10 @@ inline bool is_simple_atomic_vec(SEXP x){
 
 inline bool is_bare_list(SEXP x){
   return (!Rf_isObject(x) && TYPEOF(x) == VECSXP);
+}
+
+inline bool is_bare_atomic(SEXP x){
+  return !Rf_isObject(x) && Rf_isVectorAtomic(x);
 }
 
 // Sometimes bare lists can be easily handled

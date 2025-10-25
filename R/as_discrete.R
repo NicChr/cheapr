@@ -127,7 +127,7 @@ as_discrete.numeric <- function(
     inf_label = NULL,
     ...
 ){
-  breaks <- collapse::funique(as.double(breaks), sort = TRUE)
+  breaks <- unique_(as.double(breaks), sort = TRUE)
   breaks <- na_rm(breaks)
   # N breaks
   nb <- length(breaks)

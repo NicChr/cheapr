@@ -224,13 +224,9 @@ with_local_seed <- function (expr, .seed = NULL, .envir = environment(), ...){
 }
 
 cast <- function(x, template){
-  if (identical(typeof(x), typeof(template)) &&
-      identical(class(x), class(template))){
-    x
-  } else {
-    x[0] <- template[0]
-    `mostattributes<-`(x, attributes(template))
-  }
+  # template <- c_(sset(x, 1), sset(template, 1))
+  x[0] <- template[0]
+  `mostattributes<-`(x, attributes(template))
 }
 
 # is_duplicate <- function(x, .all = FALSE){

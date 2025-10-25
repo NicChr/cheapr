@@ -43,7 +43,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int64_t *p_x = INTEGER64_RO_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
       for (R_xlen_t i = 0; i < n; ++i) count += is_na_int64(p_x[i]);
@@ -272,7 +272,7 @@ SEXP cpp_is_na(SEXP x){
   case CHEAPR_INT64SXP: {
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
-    const int64_t *p_x = INTEGER64_RO_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR_RO(x);
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
@@ -372,7 +372,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       break;
     }
     case CHEAPR_INT64SXP: {
-      const int64_t *p_xj = INTEGER64_RO_PTR(p_x[j]);
+      const int64_t *p_xj = INTEGER64_PTR_RO(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_na_int64(p_xj[i]);

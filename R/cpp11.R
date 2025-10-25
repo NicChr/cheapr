@@ -32,6 +32,10 @@ cpp_recycle <- function(x, length) {
   .Call(`_cheapr_cpp_recycle`, x, length)
 }
 
+cpp_cast <- function(x) {
+  .Call(`_cheapr_cpp_cast`, x)
+}
+
 cpp_setdiff <- function(x, y, unique) {
   .Call(`_cheapr_cpp_setdiff`, x, y, unique)
 }
@@ -58,6 +62,10 @@ cpp_df_col_c <- function(x, recycle, name_repair) {
 
 cpp_c <- function(x) {
   .Call(`_cheapr_cpp_c`, x)
+}
+
+cpp_if_else <- function(condition, yes, no, na) {
+  .Call(`_cheapr_cpp_if_else`, condition, yes, no, na)
 }
 
 cpp_gcd2 <- function(x, y, tol, na_rm) {
@@ -374,10 +382,6 @@ var_sum_squared_diff <- function(x, mu) {
 
 cpp_bin <- function(x, breaks, codes, right, include_lowest, include_oob) {
   .Call(`_cheapr_cpp_bin`, x, breaks, codes, right, include_lowest, include_oob)
-}
-
-cpp_if_else <- function(condition, yes, no, na) {
-  .Call(`_cheapr_cpp_if_else`, condition, yes, no, na)
 }
 
 cpp_lgl_count <- function(x) {

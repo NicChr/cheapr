@@ -166,7 +166,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
     int64_t val = INTEGER64_PTR(value)[0];
-    const int64_t *p_x = INTEGER64_RO_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR_RO(x);
     if (is_long){
       double* RESTRICT p_out = REAL(out);
       if (invert){
@@ -251,7 +251,7 @@ SEXP cpp_which_na(SEXP x){
   }
   case CHEAPR_INT64SXP: {
     R_xlen_t count = na_count(x, true);
-    const int64_t *p_x = INTEGER64_RO_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR_RO(x);
     if (is_short){
       int out_size = count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
@@ -411,7 +411,7 @@ SEXP cpp_which_not_na(SEXP x){
   }
   case CHEAPR_INT64SXP: {
     R_xlen_t count = na_count(x, true);
-    const int64_t *p_x = INTEGER64_RO_PTR(x);
+    const int64_t *p_x = INTEGER64_PTR_RO(x);
     if (is_short){
       int out_size = n - count;
       SEXP out = SHIELD(new_vec(INTSXP, out_size));
