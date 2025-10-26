@@ -220,7 +220,7 @@ uint_fast64_t null_count(SEXP x);
 SEXP compact_seq_len(R_xlen_t n);
 SEXP clean_indices(SEXP indices, SEXP x, bool count);
 SEXP cpp_combine_levels(SEXP x);
-SEXP cpp_cast(SEXP x);
+SEXP fast_cast(SEXP x);
 SEXP cpp_lgl_count(SEXP x);
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
                   bool include_true, bool include_false, bool include_na);
@@ -326,12 +326,11 @@ inline bool is_bare_df(SEXP x){
 
 inline bool is_bare_tbl(SEXP x){
   SEXP xclass = Rf_getAttrib(x, R_ClassSymbol);
-  const SEXP *p_x = STRING_PTR_RO(xclass);
 
   return Rf_length(xclass) == 3 &&
-    std::strcmp(CHAR(p_x[0]), "tbl_df") == 0 &&
-    std::strcmp(CHAR(p_x[1]), "tbl") == 0 &&
-    std::strcmp(CHAR(p_x[2]), "data.frame") == 0;
+    std::strcmp(CHAR(STRING_ELT(xclass, 0)), "tbl_df") == 0 &&
+    std::strcmp(CHAR(STRING_ELT(xclass, 1)), "tbl") == 0 &&
+    std::strcmp(CHAR(STRING_ELT(xclass, 2)), "data.frame") == 0;
 }
 
 // Can't use `Rf_namesgets(x, R_NilValue)`
@@ -361,6 +360,7 @@ inline cpp11::function base_paste0 = cpp11::package("base")["paste0"];
 inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
 inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
 inline cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
+inline cpp11::function cheapr_as_df = cpp11::package("cheapr")["as_df"];
 
 inline bool address_equal(SEXP x, SEXP y){
   return r_address(x) == r_address(y);

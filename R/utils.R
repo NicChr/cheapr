@@ -71,18 +71,6 @@ fill_posixlt <- function(x, classed = TRUE){
   out
 }
 
-# balance_posixlt <- function(x, fill.only = FALSE, classed = TRUE){
-#   balance_pos <- tryCatch(get("balancePOSIXlt",
-#                               asNamespace("base"),
-#                               inherits = FALSE),
-#                           error = function(e) return(".r.error"))
-#   if (is.character(balance_pos) && length(balance_pos) == 1 && balance_pos == ".r.error"){
-#     fill_posixlt(x, classed = classed)
-#   } else {
-#     balance_pos(x, fill.only = fill.only, classed = classed)
-#   }
-# }
-
 #' @exportS3Method base::as.character
 as.character.vctrs_rcrd <- function(x, ...){
   format(x, ...)
@@ -183,9 +171,3 @@ numeric_subtraction <- function(x, y){
 numeric_addition <- function(x, y){
   as_numeric(x) + as_numeric(y)
 }
-
-# my_unique <- function(x, sort = FALSE){
-#   ids <- collapse::qG(x, sort = sort, na.exclude = FALSE)
-#   n_groups <- attr(ids, "N.groups", TRUE)
-#   cpp_get_unique(x, ids, n_groups)
-# }

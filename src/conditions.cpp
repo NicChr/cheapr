@@ -254,7 +254,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
 
   // Fast method for bare atomic vectors
   if (is_bare_atomic(yes) && is_bare_atomic(no) && is_bare_atomic(na)){
-    SHIELD(args = cpp_cast(args)); ++NP;
+    SHIELD(args = fast_cast(args)); ++NP;
     const SEXP *p_args = VECTOR_PTR_RO(args);
 
     yes = p_args[0];
