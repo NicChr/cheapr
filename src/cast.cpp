@@ -178,7 +178,7 @@ SEXP r_data_class(SEXP obj){
       break;
     }
     case OBJSXP: {
-      klass = Rf_mkChar(IS_S4_OBJECT(obj) ? "S4" : "object");
+      klass = Rf_mkChar(Rf_isS4(obj) ? "S4" : "object");
       break;
     }
     default:{
