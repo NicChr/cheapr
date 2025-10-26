@@ -143,7 +143,7 @@ from <- Sys.Date()
 to <- from + 10
 by <- c(1, 2, 3)
 date_seqs <- seq_(from, to, by, as_list = TRUE)
-lapply(date_seqs, \(x) `class<-`(x, "Date"))
+lapply(date_seqs, function(x) `class<-`(x, "Date"))
 
 # Utilities for rolling calculations
 
