@@ -339,7 +339,7 @@ inline SEXP cast<r_list>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_factor>(SEXP x, SEXP y) {
-  if (Rf_inherits(x, "factor")){
+  if (Rf_inherits(x, "factor") && !Rf_inherits(y, "factor")){
     return x;
   } else if (Rf_inherits(y, "factor")){
     SEXP fctrs = SHIELD(new_vec(VECSXP, 2));
@@ -532,6 +532,8 @@ constexpr unsigned int hash_type(const char *s, int off = 0) {
 [[cpp11::register]]
 SEXP cpp_cast_all(SEXP x){
 
+  int32_t NP = 0;
+
   if (!Rf_isVectorList(x)){
     Rf_error("`x` must be a list");
   }
@@ -570,11 +572,11 @@ SEXP cpp_cast_all(SEXP x){
     common_type = it->second;
   }
 
-  SEXP out = SHIELD(new_vec(VECSXP, n));
+  SEXP out = SHIELD(new_vec(VECSXP, n)); ++NP;
 
   SEXP temp;
   PROTECT_INDEX temp_idx;
-  R_ProtectWithIndex(temp = R_NilValue, &temp_idx);
+  R_ProtectWithIndex(temp = R_NilValue, &temp_idx); ++NP;
 
 #define CAST_LOOP(cast_fn)                                     \
   for (R_xlen_t i = 0; i < (n - 1); ++i){                      \
@@ -621,7 +623,13 @@ SEXP cpp_cast_all(SEXP x){
     break;
   }
   case hash_type("factor"): {
-    CAST_LOOP(cast<r_factor>)
+
+    SEXP lvls = SHIELD(cpp_combine_levels(x)); ++NP;
+    R_Reprotect(temp = cheapr_factor(cpp11::named_arg("levels") = lvls), temp_idx);
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_VECTOR_ELT(out, i, cast<r_factor>(p_x[i], temp));
+    }
     break;
   }
   case hash_type("Date"): {
@@ -637,10 +645,10 @@ SEXP cpp_cast_all(SEXP x){
     break;
   }
   default: {
-    YIELD(2);
+    YIELD(NP);
     Rf_error("Unimplemented cast type");
   }
   }
-  YIELD(2);
+  YIELD(NP);
   return out;
 }
