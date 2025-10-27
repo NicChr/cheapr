@@ -440,7 +440,7 @@ inline constexpr uint8_t r_type_pairs[14][14] = {
 
 // cast template with specialisations
 template<typename T>
-SEXP cast(SEXP x, SEXP y) {
+inline SEXP cast(SEXP x, SEXP y) {
   Rf_error("Unimplemented type conversion");
 }
 
