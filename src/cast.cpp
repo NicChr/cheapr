@@ -6,105 +6,68 @@
 static SEXP as_lgl = NULL;
 static SEXP as_int = NULL;
 static SEXP as_dbl = NULL;
+static SEXP as_char = NULL;
 static SEXP as_cplx = NULL;
 static SEXP as_raw = NULL;
-static SEXP as_char = NULL;
 static SEXP as_date = NULL;
 static SEXP as_posixct = NULL;
 static SEXP as_list = NULL;
 
-std::string combine_types(const std::string &a, const std::string &b) {
-  if (a < b) {
-    return a + "_" + b;
-  } else {
-    return b + "_" + a;
-  }
-}
+// r types
 
-const std::unordered_map<std::string, std::string> type_pairs = {
-  {"NULL_NULL", "NULL"},
-  {"integer_integer", "integer"},
-  {"numeric_numeric", "numeric"},
-  {"logical_logical", "logical"},
-  {"complex_complex", "complex"},
-  {"raw_raw", "raw"},
-  {"list_list", "list"},
-  {"character_character", "character"},
-  {"Date_Date", "Date"},
-  {"POSIXt_POSIXt", "POSIXt"},
-  {"factor_factor", "factor"},
-  {"integer64_integer64", "integer64"},
-  {"data.frame_data.frame", "data.frame"},
-  {"NULL_integer", "integer"},
-  {"NULL_numeric", "numeric"},
-  {"NULL_logical", "logical"},
-  {"NULL_complex", "complex"},
-  {"NULL_raw", "raw"},
-  {"NULL_list", "list"},
-  {"NULL_character", "character"},
-  {"Date_NULL", "Date"},
-  {"NULL_POSIXt", "POSIXt"},
-  {"NULL_factor", "factor"},
-  {"NULL_integer64", "integer64"},
-  {"NULL_data.frame", "data.frame"},
-  {"integer_numeric", "numeric"},
-  {"integer_logical", "integer"},
-  {"complex_integer", "complex"},
-  {"integer_raw", "raw"},
-  {"integer_list", "list"},
-  {"character_integer", "character"},
-  {"Date_integer", "Date"},
-  {"POSIXt_integer", "POSIXt"},
-  {"factor_integer", "factor"},
-  {"integer_integer64", "integer64"},
-  {"data.frame_integer", "data.frame"},
-  {"logical_numeric", "numeric"},
-  {"complex_numeric", "complex"},
-  {"numeric_raw", "raw"},
-  {"list_numeric", "list"},
-  {"character_numeric", "character"},
-  {"Date_numeric", "Date"},
-  {"POSIXt_numeric", "POSIXt"},
-  {"factor_numeric", "factor"},
-  {"integer64_numeric", "numeric"},
-  {"data.frame_numeric", "data.frame"},
-  {"complex_logical", "complex"},
-  {"logical_raw", "raw"},
-  {"list_logical", "list"},
-  {"character_logical", "character"},
-  {"Date_logical", "Date"},
-  {"POSIXt_logical", "POSIXt"},
-  {"factor_logical", "factor"},
-  {"integer64_logical", "integer64"},
-  {"data.frame_logical", "data.frame"},
-  {"complex_list", "list"},
-  {"character_complex", "character"},
-  {"complex_factor", "factor"},
-  {"complex_data.frame", "data.frame"},
-  {"list_raw", "list"},
-  {"character_raw", "character"},
-  {"data.frame_raw", "data.frame"},
-  {"character_list", "list"},
-  {"Date_list", "list"},
-  {"POSIXt_list", "list"},
-  {"factor_list", "list"},
-  {"integer64_list", "list"},
-  {"data.frame_list", "data.frame"},
-  {"Date_character", "character"},
-  {"POSIXt_character", "character"},
-  {"character_factor", "factor"},
-  {"character_integer64", "character"},
-  {"character_data.frame", "data.frame"},
-  {"POSIXt_Date", "POSIXt"},
-  {"Date_factor", "factor"},
-  {"Date_integer64", "Date"},
-  {"Date_data.frame", "data.frame"},
-  {"POSIXt_factor", "factor"},
-  {"POSIXt_integer64", "POSIXt"},
-  {"POSIXt_data.frame", "data.frame"},
-  {"factor_integer64", "factor"},
-  {"data.frame_factor", "data.frame"},
-  {"data.frame_integer64", "data.frame"},
+struct r_null_t {};
+struct r_logical_t {};
+struct r_integer_t {};
+struct r_integer64_t {};
+struct r_numeric_t {};
+struct r_character_t {};
+struct r_complex_t {};
+struct r_raw_t {};
+struct r_list_t {};
+struct r_factor_t {};
+struct r_date_t {};
+struct r_posixt_t {};
+struct r_data_frame_t {};
+struct r_unknown_t {};
+
+
+// r type constants
+using r_type = uint8_t;
+enum : r_type {
+  r_null = (uint8_t) 0,
+  r_lgl = (uint8_t) 1,
+  r_int = (uint8_t) 2,
+  r_int64 = (uint8_t) 3,
+  r_dbl = (uint8_t) 4,
+  r_chr = (uint8_t) 5,
+  r_cplx = (uint8_t) 6,
+  r_raw = (uint8_t) 7,
+  r_list = (uint8_t) 8,
+  r_fct = (uint8_t) 9,
+  r_date = (uint8_t) 10,
+  r_pxct = (uint8_t) 11,
+  r_df = (uint8_t) 12,
+  r_unk = (uint8_t) 13,
+};
+
+// Symmetric lattice with columns/rows in the new order:
+// NULL, LGL, INT, I64, DBL, CHR, CPLX, RAW, LIST, FCT, DATE, PXCT, DF
+constexpr uint8_t r_type_pairs[14][14] = {
+  /*            NULL    LGL     INT     I64     DBL     CHR     CPLX    RAW     LIST    FCT     DATE    PXCT    DF   Unknown */
+  /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
+  /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
+  /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
+  /* I64  */  { r_int64,r_int64,r_int64,r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
+  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,  r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
+  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_list, r_fct,  r_chr,  r_chr,  r_df, r_unk },
+  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx, r_cplx, r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_fct,  r_df,   r_df, r_unk },
+  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,  r_raw,  r_chr,  r_raw,  r_raw,  r_list, r_df,   r_df,   r_df,   r_df, r_unk },
+  /* LIST */  { r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_df, r_unk },
+  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_df,   r_list, r_fct,  r_fct,  r_fct,  r_df, r_unk },
+  /* DATE */  { r_date, r_date, r_date, r_date, r_date, r_chr,  r_fct,  r_df,   r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
+  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct, r_pxct, r_chr,  r_df,   r_df,   r_list, r_fct,  r_pxct, r_pxct, r_df, r_unk },
+  /* DF   */  { r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df, r_unk },
+  /* Unknown   */  { r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk, r_unk }
 };
 
 using namespace cpp11;
@@ -147,36 +110,36 @@ const char* get_class(SEXP obj){
   }
 }
 
-std::string common_type(const std::string &a, const std::string &b, bool stop_on_no_match) {
-
-  std::string data_pair_type = combine_types(a, b);
-
-  auto it = type_pairs.find(data_pair_type);
-
-  if (it == type_pairs.end()) {
-    if (stop_on_no_match){
-      stop("Can't find suitable cast between <%s> and <%s>", a, b);
-    } else {
-      return "unknown";
-    }
-  }
-
-  return it->second;
+inline r_type common_type(const r_type &a, const r_type &b) {
+  // return (a <= b) ? r_type_pairs[a][b] : r_type_pairs[b][a];
+  return r_type_pairs[a][b];
 }
 
-struct r_null {};
-struct r_logical {};
-struct r_integer {};
-struct r_integer64 {};
-struct r_numeric {};
-struct r_complex {};
-struct r_raw {};
-struct r_character {};
-struct r_factor {};
-struct r_list {};
-struct r_date {};
-struct r_POSIXt {};
-struct r_data_frame {};
+// Convert single SEXP into r_* code.
+inline const r_type get_r_type(SEXP x) {
+
+  if (!Rf_isObject(x)){
+    switch (TYPEOF(x)) {
+    case NILSXP:  return r_null;
+    case LGLSXP:  return r_lgl;
+    case INTSXP:  return r_int;
+    case REALSXP: return r_dbl;
+    case STRSXP:  return r_chr;
+    case CPLXSXP: return r_cplx;
+    case RAWSXP:  return r_raw;
+    case VECSXP:  return r_list;
+    default: return r_unk;
+    }
+  } else {
+
+    if (Rf_inherits(x, "data.frame")) return r_df;
+    if (Rf_inherits(x, "POSIXct"))    return r_pxct;
+    if (Rf_inherits(x, "Date"))       return r_date;
+    if (Rf_inherits(x, "factor"))     return r_fct;
+    if (Rf_inherits(x, "integer64"))  return r_int64;
+    return r_unk;
+  }
+}
 
 // cast template with specialisations
 template<typename T>
@@ -185,12 +148,12 @@ SEXP cast(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_null>(SEXP x, SEXP y) {
+inline SEXP cast<r_null_t>(SEXP x, SEXP y) {
   return R_NilValue;
 }
 
 template<>
-inline SEXP cast<r_logical>(SEXP x, SEXP y) {
+inline SEXP cast<r_logical_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "logical")){
     return x;
   } else if (Rf_isObject(x)){
@@ -202,7 +165,7 @@ inline SEXP cast<r_logical>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_integer>(SEXP x, SEXP y) {
+inline SEXP cast<r_integer_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "integer")){
     return x;
   } else if (Rf_isObject(x)){
@@ -214,7 +177,7 @@ inline SEXP cast<r_integer>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_integer64>(SEXP x, SEXP y) {
+inline SEXP cast<r_integer64_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "integer64")){
     return x;
   } else {
@@ -223,7 +186,7 @@ inline SEXP cast<r_integer64>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_numeric>(SEXP x, SEXP y) {
+inline SEXP cast<r_numeric_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "numeric")){
     return x;
   } else if (Rf_isObject(x)){
@@ -235,7 +198,7 @@ inline SEXP cast<r_numeric>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_character>(SEXP x, SEXP y) {
+inline SEXP cast<r_character_t>(SEXP x, SEXP y) {
 
   if (Rf_inherits(x, "character")){
     return x;
@@ -250,7 +213,7 @@ inline SEXP cast<r_character>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_complex>(SEXP x, SEXP y) {
+inline SEXP cast<r_complex_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "complex")){
     return x;
   } else if (Rf_isObject(x)){
@@ -262,7 +225,7 @@ inline SEXP cast<r_complex>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_raw>(SEXP x, SEXP y) {
+inline SEXP cast<r_raw_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "raw")){
     return x;
   } else if (Rf_isObject(x)){
@@ -274,7 +237,7 @@ inline SEXP cast<r_raw>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_list>(SEXP x, SEXP y) {
+inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "list")){
     return x;
   } else if (Rf_isObject(x)){
@@ -286,7 +249,7 @@ inline SEXP cast<r_list>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_factor>(SEXP x, SEXP y) {
+inline SEXP cast<r_factor_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "factor") && !Rf_inherits(y, "factor")){
     return x;
   } else if (Rf_inherits(y, "factor")){
@@ -303,7 +266,7 @@ inline SEXP cast<r_factor>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_date>(SEXP x, SEXP y) {
+inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "Date")){
     return x;
   } else if (Rf_isObject(x)){
@@ -324,7 +287,7 @@ inline SEXP cast<r_date>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_POSIXt>(SEXP x, SEXP y) {
+inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "POSIXct")){
     return x;
   } else if (Rf_inherits(x, "Date") && Rf_inherits(y, "POSIXct")){
@@ -360,7 +323,7 @@ inline SEXP cast<r_POSIXt>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_data_frame>(SEXP x, SEXP y) {
+inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "data.frame") && Rf_inherits(y, "data.frame")){
     return rebuild(x, y, true);
   } else if (is_simple_atomic_vec2(x)){
@@ -384,59 +347,43 @@ inline SEXP cast<r_data_frame>(SEXP x, SEXP y) {
   }
 }
 
+template<>
+inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
+  return cheapr_cast(x, y);
+}
+
 
 // Wrapper functions for cast fns map
-inline SEXP cast_null(SEXP x, SEXP y) { return cast<r_null>(x, y); }
-inline SEXP cast_logical(SEXP x, SEXP y) { return cast<r_logical>(x, y); }
-inline SEXP cast_integer(SEXP x, SEXP y) { return cast<r_integer>(x, y); }
-inline SEXP cast_integer64(SEXP x, SEXP y) { return cast<r_integer64>(x, y); }
-inline SEXP cast_numeric(SEXP x, SEXP y) { return cast<r_numeric>(x, y); }
-inline SEXP cast_character(SEXP x, SEXP y) { return cast<r_character>(x, y); }
-inline SEXP cast_complex(SEXP x, SEXP y) { return cast<r_complex>(x, y); }
-inline SEXP cast_raw(SEXP x, SEXP y) { return cast<r_raw>(x, y); }
-inline SEXP cast_list(SEXP x, SEXP y) { return cast<r_list>(x, y); }
-inline SEXP cast_factor(SEXP x, SEXP y) { return cast<r_factor>(x, y); }
-inline SEXP cast_date(SEXP x, SEXP y) { return cast<r_date>(x, y); }
-inline SEXP cast_posixt(SEXP x, SEXP y) { return cast<r_POSIXt>(x, y); }
-inline SEXP cast_data_frame(SEXP x, SEXP y) { return cast<r_data_frame>(x, y); }
+using cast_fn = SEXP(*)(SEXP, SEXP);
+inline SEXP cast_null(SEXP x, SEXP y) { return cast<r_null_t>(x, y); }
+inline SEXP cast_logical(SEXP x, SEXP y) { return cast<r_logical_t>(x, y); }
+inline SEXP cast_integer(SEXP x, SEXP y) { return cast<r_integer_t>(x, y); }
+inline SEXP cast_integer64(SEXP x, SEXP y) { return cast<r_integer64_t>(x, y); }
+inline SEXP cast_numeric(SEXP x, SEXP y) { return cast<r_numeric_t>(x, y); }
+inline SEXP cast_character(SEXP x, SEXP y) { return cast<r_character_t>(x, y); }
+inline SEXP cast_complex(SEXP x, SEXP y) { return cast<r_complex_t>(x, y); }
+inline SEXP cast_raw(SEXP x, SEXP y) { return cast<r_raw_t>(x, y); }
+inline SEXP cast_list(SEXP x, SEXP y) { return cast<r_list_t>(x, y); }
+inline SEXP cast_factor(SEXP x, SEXP y) { return cast<r_factor_t>(x, y); }
+inline SEXP cast_date(SEXP x, SEXP y) { return cast<r_date_t>(x, y); }
+inline SEXP cast_posixt(SEXP x, SEXP y) { return cast<r_posixt_t>(x, y); }
+inline SEXP cast_data_frame(SEXP x, SEXP y) { return cast<r_data_frame_t>(x, y); }
 
-// Cast functions
-const std::unordered_map<std::string, std::function<SEXP(SEXP, SEXP)>> cast_fns = {
-  {"NULL", cast_null},
-  {"logical", cast_logical},
-  {"integer", cast_integer},
-  {"integer64", cast_integer64},
-  {"numeric", cast_numeric},
-  {"character", cast_character},
-  {"complex", cast_complex},
-  {"raw", cast_raw},
-  {"list", cast_list},
-  {"factor", cast_factor},
-  {"Date", cast_date},
-  {"POSIXt", cast_posixt},
-  {"data.frame", cast_data_frame}
+static const cast_fn CAST_FNS[13] = {
+  cast_null, cast_logical, cast_integer, cast_integer64,
+  cast_numeric, cast_character, cast_complex, cast_raw, cast_list,
+  cast_factor, cast_date, cast_posixt, cast_data_frame
 };
 
 // Dispatcher function
-inline SEXP cast_(const std::string& cast_type, SEXP x, SEXP y) {
-  auto it = cast_fns.find(cast_type);
-  if (it != cast_fns.end()) {
-    return it->second(x, y);
-  } else {
-    stop("Unknown cast type: %s", cast_type.c_str());
-  }
+inline SEXP cast_(r_type cast_type, SEXP x, SEXP y) {
+  return CAST_FNS[cast_type](x, y);
 }
 
 [[cpp11::register]]
 SEXP cpp_cast(SEXP x, SEXP y) {
-  const char *a = get_class(x);
-  const char *b = get_class(y);
-  std::string cast_type = common_type(a, b, false);
-  if (cast_type != "unknown"){
-    return cast_(cast_type, x, y);
-  } else {
-    return cpp11::package("cheapr")["cast"](x, y);
-  }
+  r_type common = common_type(get_r_type(x), get_r_type(y));
+  return cast_(common, x, y);
 }
 
 // Fast casting of objects to common type (via typeof)
@@ -475,13 +422,7 @@ SEXP fast_cast(SEXP x){
   return out;
 }
 
-// hash common type for switch statement in cpp_cast_all() to work
-constexpr unsigned int hash_type(const char *s, int off = 0) {
-  return !s[off] ? 5381 : (hash_type(s, off + 1) * 33) ^ s[off];
-}
-
-[[cpp11::register]]
-SEXP cpp_common_type(SEXP x, bool stop_on_no_match){
+r_type r_common_type(SEXP x){
 
   if (!Rf_isVectorList(x)){
     Rf_error("`x` must be a list");
@@ -491,43 +432,26 @@ SEXP cpp_common_type(SEXP x, bool stop_on_no_match){
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
   // Initialise to null
-  std::string common_type = "NULL";
+  r_type common = 0;
 
   for (R_xlen_t i = 0; i < n; ++i){
-
-    const char *a = common_type.c_str();
-    const char *b = get_class(p_x[i]);
-
-    std::string data_pair_type = combine_types(a, b);
-    auto it = type_pairs.find(data_pair_type);
-
-    if (it == type_pairs.end()){
-      if (stop_on_no_match){
-        Rf_error("Can't find suitable cast between <%s> and <%s>", a, b);
-      } else {
-        return make_utf8_str("unknown");
-      }
-
-    }
-    common_type = it->second;
+    common = common_type(common, get_r_type(p_x[i]));
+    if (common == r_unk) break;
   }
-  return make_utf8_str(common_type.c_str());
+  return common;
 }
 
 [[cpp11::register]]
 SEXP cpp_cast_all(SEXP x){
 
-
   int32_t NP = 0;
 
-  SEXP r_common_type = SHIELD(cpp_common_type(x, false)); ++NP;
-  std::string common_type = CHAR(STRING_ELT(r_common_type, 0));
+  r_type common = r_common_type(x);
 
   R_xlen_t n = Rf_xlength(x);
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
   if (n <= 1){
-    YIELD(NP);
     return x;
   }
 
@@ -545,80 +469,79 @@ SEXP cpp_cast_all(SEXP x){
   SET_VECTOR_ELT(out, n - 1, cast_fn(p_x[n - 1], temp));
 
 
-switch (hash_type(common_type.c_str())){
-case hash_type("NULL"): {
-  break;
-}
-case hash_type("logical"): {
-  CAST_LOOP(cast<r_logical>)
-  break;
-}
-case hash_type("integer"): {
-  CAST_LOOP(cast<r_integer>)
-  break;
-}
-case hash_type("integer64"): {
-  CAST_LOOP(cast<r_integer64>)
-  break;
-}
-case hash_type("numeric"): {
-  CAST_LOOP(cast<r_numeric>)
-  break;
-}
-case hash_type("character"): {
-  CAST_LOOP(cast<r_character>)
-  break;
-}
-case hash_type("complex"): {
-  CAST_LOOP(cast<r_complex>)
-  break;
-}
-case hash_type("raw"): {
-  CAST_LOOP(cast<r_raw>)
-  break;
-}
-case hash_type("list"): {
-  CAST_LOOP(cast<r_list>)
-  break;
-}
-case hash_type("factor"): {
-
-  SEXP lvls = SHIELD(cpp_combine_levels(x)); ++NP;
-  SEXP fctr_cls = SHIELD(make_utf8_str("factor")); ++NP;
-  // R_Reprotect(temp = cheapr_factor(cpp11::named_arg("levels") = lvls), temp_idx);
-
-
-  for (R_xlen_t i = 0; i < n; ++i){
-    R_Reprotect(temp = cast<r_character>(p_x[i], R_NilValue), temp_idx);
-    R_Reprotect(temp = Rf_match(lvls, temp, NA_INTEGER), temp_idx);
-    Rf_setAttrib(temp, R_LevelsSymbol, lvls);
-    Rf_classgets(temp, fctr_cls);
-    SET_VECTOR_ELT(out, i, temp);
-  }
-  break;
-}
-case hash_type("Date"): {
-  CAST_LOOP(cast<r_date>)
-  break;
-}
-case hash_type("POSIXt"): {
-  CAST_LOOP(cast<r_POSIXt>)
-  break;
-}
-case hash_type("data.frame"): {
-  CAST_LOOP(cast<r_data_frame>)
-  break;
-}
-case hash_type("unknown"): {
-  cpp11::function cheapr_cast = cpp11::package("cheapr")["cast"];
-  CAST_LOOP(cheapr_cast)
+  switch (common){
+  case r_null: {
     break;
-}
-default: {
+  }
+  case r_lgl: {
+    CAST_LOOP(cast<r_logical_t>)
+    break;
+  }
+  case r_int: {
+    CAST_LOOP(cast<r_integer_t>)
+    break;
+  }
+  case r_int64: {
+    CAST_LOOP(cast<r_integer64_t>)
+    break;
+  }
+  case r_dbl: {
+    CAST_LOOP(cast<r_numeric_t>)
+    break;
+  }
+  case r_chr: {
+    CAST_LOOP(cast<r_character_t>)
+    break;
+  }
+  case r_cplx: {
+    CAST_LOOP(cast<r_complex_t>)
+    break;
+  }
+  case r_raw: {
+    CAST_LOOP(cast<r_raw_t>)
+    break;
+  }
+  case r_list: {
+    CAST_LOOP(cast<r_list_t>)
+    break;
+  }
+  case r_fct: {
+
+    SEXP lvls = SHIELD(cpp_combine_levels(x)); ++NP;
+    SEXP fctr_cls = SHIELD(make_utf8_str("factor")); ++NP;
+    // R_Reprotect(temp = cheapr_factor(cpp11::named_arg("levels") = lvls), temp_idx);
+
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      R_Reprotect(temp = cast<r_character_t>(p_x[i], R_NilValue), temp_idx);
+      R_Reprotect(temp = Rf_match(lvls, temp, NA_INTEGER), temp_idx);
+      Rf_setAttrib(temp, R_LevelsSymbol, lvls);
+      Rf_classgets(temp, fctr_cls);
+      SET_VECTOR_ELT(out, i, temp);
+    }
+    break;
+  }
+  case r_date: {
+    CAST_LOOP(cast<r_date_t>)
+    break;
+  }
+  case r_pxct: {
+    CAST_LOOP(cast<r_posixt_t>)
+    break;
+  }
+  case r_df: {
+    CAST_LOOP(cast<r_data_frame_t>)
+    break;
+  }
+  case r_unk: {
+    CAST_LOOP(cast<r_unknown_t>)
+    break;
+  }
+  default: {
+    YIELD(NP);
+    Rf_error("Unimplemented cast type");
+  }
+  }
   YIELD(NP);
-  Rf_error("Unimplemented cast type");
-}
-}
-YIELD(NP);
-return out;
+  return out;
 }

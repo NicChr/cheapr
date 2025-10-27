@@ -224,7 +224,6 @@ with_local_seed <- function (expr, .seed = NULL, .envir = environment(), ...){
 }
 
 cast <- function(x, template){
-  # template <- c_(sset(x, 1), sset(template, 1))
   x[0] <- template[0]
   `mostattributes<-`(x, attributes(template))
 }
