@@ -1,5 +1,5 @@
 #include "cheapr.h"
-#include <string.h>
+#include <string>
 #include <unordered_map>
 #include <functional>
 
@@ -109,96 +109,42 @@ const std::unordered_map<std::string, std::string> type_pairs = {
 
 using namespace cpp11;
 
-// lang2str() and R_data_class() taken directly from R, all thanks go to R team
-// R_data_class() has been slightly modified
-
-SEXP lang2str(SEXP obj){
-  SEXP symb = CAR(obj);
-  static SEXP if_sym = 0, while_sym, for_sym, eq_sym, gets_sym,
-    lpar_sym, lbrace_sym, call_sym;
-  if(!if_sym) {
-    if_sym = Rf_install("if");
-    while_sym = Rf_install("while");
-    for_sym = Rf_install("for");
-    eq_sym = Rf_install("=");
-    gets_sym = Rf_install("<-");
-    lpar_sym = Rf_install("(");
-    lbrace_sym = Rf_install("{");
-    call_sym = Rf_install("call");
-  }
-  if(Rf_isSymbol(symb)) {
-    if(symb == if_sym || symb == for_sym || symb == while_sym ||
-       symb == lpar_sym || symb == lbrace_sym ||
-       symb == eq_sym || symb == gets_sym)
-      return PRINTNAME(symb);
-  }
-  return PRINTNAME(call_sym);
-}
-
 // `class()`
-SEXP get_classes(SEXP obj){
-  SEXP value, klass = Rf_getAttrib(obj, R_ClassSymbol);
-  int n = Rf_length(klass);
-  if(n > 0){
-    return(klass);
-  }
-  SEXP dim = Rf_getAttrib(obj, R_DimSymbol);
-  int nd = Rf_length(dim);
+const char* get_class(SEXP obj){
+  if (Rf_isObject(obj)){
+    SEXP klass = Rf_getAttrib(obj, R_ClassSymbol);
 
-  if(nd > 0) {
-    if(nd == 2) {
-      SHIELD(klass = new_vec(STRSXP, 2));
-      SET_STRING_ELT(klass, 0, Rf_mkChar("matrix"));
-      SET_STRING_ELT(klass, 1, Rf_mkChar("array"));
-      YIELD(1);
-      return klass;
-    }
-    else {
-      klass = Rf_mkChar("array");
-    }
+    int n = Rf_length(klass);
+
+    return CHAR(STRING_ELT(klass, n - 1));
   } else {
-    SEXPTYPE t = TYPEOF(obj);
-    switch(t) {
-    case CLOSXP:
-    case SPECIALSXP:
-    case BUILTINSXP: {
-      klass = Rf_mkChar("function");
-      break;
+    switch(TYPEOF(obj)) {
+    case LGLSXP: {
+      return "logical";
+    }
+    case INTSXP: {
+      return "integer";
     }
     case REALSXP: {
-      klass = Rf_mkChar("numeric");
-      break;
+      return "numeric";
     }
-    case SYMSXP: {
-      klass = Rf_mkChar("name");
-      break;
+    case STRSXP: {
+      return "character";
     }
-    case LANGSXP: {
-      klass = lang2str(obj);
-      break;
+    case CPLXSXP: {
+      return "complex";
     }
-    case OBJSXP: {
-      klass = Rf_mkChar(Rf_isS4(obj) ? "S4" : "object");
-      break;
+    case RAWSXP: {
+      return "raw";
     }
-    default:{
-      klass = Rf_type2str(t);
-      break;
+    case VECSXP: {
+      return "list";
+    }
+    default: {
+      return "Unknown";
     }
     }
   }
-  SHIELD(klass);
-  value = Rf_ScalarString(klass);
-  YIELD(1);
-  return value;
-}
-
-const char* get_class(SEXP x){
-  SEXP classes = SHIELD(get_classes(x));
-  int n = Rf_length(classes);
-  const char *out = CHAR(STRING_ELT(classes, n - 1));
-  YIELD(1);
-  return out;
 }
 
 std::string common_type(const std::string &a, const std::string &b, bool stop_on_no_match) {
@@ -599,80 +545,80 @@ SEXP cpp_cast_all(SEXP x){
   SET_VECTOR_ELT(out, n - 1, cast_fn(p_x[n - 1], temp));
 
 
-  switch (hash_type(common_type.c_str())){
-  case hash_type("NULL"): {
-    break;
-  }
-  case hash_type("logical"): {
-    CAST_LOOP(cast<r_logical>)
-    break;
-  }
-  case hash_type("integer"): {
-    CAST_LOOP(cast<r_integer>)
-    break;
-  }
-  case hash_type("integer64"): {
-    CAST_LOOP(cast<r_integer64>)
-    break;
-  }
-  case hash_type("numeric"): {
-    CAST_LOOP(cast<r_numeric>)
-    break;
-  }
-  case hash_type("character"): {
-    CAST_LOOP(cast<r_character>)
-    break;
-  }
-  case hash_type("complex"): {
-    CAST_LOOP(cast<r_complex>)
-    break;
-  }
-  case hash_type("raw"): {
-    CAST_LOOP(cast<r_raw>)
-    break;
-  }
-  case hash_type("list"): {
-    CAST_LOOP(cast<r_list>)
-    break;
-  }
-  case hash_type("factor"): {
+switch (hash_type(common_type.c_str())){
+case hash_type("NULL"): {
+  break;
+}
+case hash_type("logical"): {
+  CAST_LOOP(cast<r_logical>)
+  break;
+}
+case hash_type("integer"): {
+  CAST_LOOP(cast<r_integer>)
+  break;
+}
+case hash_type("integer64"): {
+  CAST_LOOP(cast<r_integer64>)
+  break;
+}
+case hash_type("numeric"): {
+  CAST_LOOP(cast<r_numeric>)
+  break;
+}
+case hash_type("character"): {
+  CAST_LOOP(cast<r_character>)
+  break;
+}
+case hash_type("complex"): {
+  CAST_LOOP(cast<r_complex>)
+  break;
+}
+case hash_type("raw"): {
+  CAST_LOOP(cast<r_raw>)
+  break;
+}
+case hash_type("list"): {
+  CAST_LOOP(cast<r_list>)
+  break;
+}
+case hash_type("factor"): {
 
-    SEXP lvls = SHIELD(cpp_combine_levels(x)); ++NP;
-    SEXP fctr_cls = SHIELD(make_utf8_str("factor")); ++NP;
-    // R_Reprotect(temp = cheapr_factor(cpp11::named_arg("levels") = lvls), temp_idx);
+  SEXP lvls = SHIELD(cpp_combine_levels(x)); ++NP;
+  SEXP fctr_cls = SHIELD(make_utf8_str("factor")); ++NP;
+  // R_Reprotect(temp = cheapr_factor(cpp11::named_arg("levels") = lvls), temp_idx);
 
 
-    for (R_xlen_t i = 0; i < n; ++i){
-      R_Reprotect(temp = cast<r_character>(p_x[i], R_NilValue), temp_idx);
-      R_Reprotect(temp = Rf_match(lvls, temp, NA_INTEGER), temp_idx);
-      Rf_setAttrib(temp, R_LevelsSymbol, lvls);
-      Rf_classgets(temp, fctr_cls);
-      SET_VECTOR_ELT(out, i, temp);
-    }
+  for (R_xlen_t i = 0; i < n; ++i){
+    R_Reprotect(temp = cast<r_character>(p_x[i], R_NilValue), temp_idx);
+    R_Reprotect(temp = Rf_match(lvls, temp, NA_INTEGER), temp_idx);
+    Rf_setAttrib(temp, R_LevelsSymbol, lvls);
+    Rf_classgets(temp, fctr_cls);
+    SET_VECTOR_ELT(out, i, temp);
+  }
+  break;
+}
+case hash_type("Date"): {
+  CAST_LOOP(cast<r_date>)
+  break;
+}
+case hash_type("POSIXt"): {
+  CAST_LOOP(cast<r_POSIXt>)
+  break;
+}
+case hash_type("data.frame"): {
+  CAST_LOOP(cast<r_data_frame>)
+  break;
+}
+case hash_type("unknown"): {
+  cpp11::function cheapr_cast = cpp11::package("cheapr")["cast"];
+  CAST_LOOP(cheapr_cast)
     break;
-  }
-  case hash_type("Date"): {
-    CAST_LOOP(cast<r_date>)
-    break;
-  }
-  case hash_type("POSIXt"): {
-    CAST_LOOP(cast<r_POSIXt>)
-    break;
-  }
-  case hash_type("data.frame"): {
-    CAST_LOOP(cast<r_data_frame>)
-    break;
-  }
-  case hash_type("unknown"): {
-    cpp11::function cheapr_cast = cpp11::package("cheapr")["cast"];
-    CAST_LOOP(cheapr_cast)
-    break;
-  }
-  default: {
-    YIELD(NP);
-    Rf_error("Unimplemented cast type");
-  }
-  }
+}
+default: {
   YIELD(NP);
-  return out;
+  Rf_error("Unimplemented cast type");
+}
+}
+YIELD(NP);
+return out;
 }
