@@ -268,10 +268,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
 
   // Below is a catch-all method
 
-  SEXP templates = SHIELD(new_vec(VECSXP, 3)); ++NP;
-  SET_VECTOR_ELT(templates, 0, slice_loc(yes, 1));
-  SET_VECTOR_ELT(templates, 1, slice_loc(no, 1));
-  SET_VECTOR_ELT(templates, 2, slice_loc(na, 1));
+  SHIELD(args = cpp_cast_all(args)); ++NP;
+  yes = VECTOR_ELT(args, 0);
+  no = VECTOR_ELT(args, 1);
+  na = VECTOR_ELT(args, 2);
 
   if (!Rf_isLogical(condition)){
     YIELD(NP);
@@ -290,24 +290,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     Rf_error("`length(na)` must be 1 or `length(condition)`");
   }
 
-  SEXP cast_expr = SHIELD(
-    Rf_lang3(
-      R_TripleColonSymbol, install_utf8("cheapr"), install_utf8("cast")
-    )
-  ); ++NP;
-  SEXP cast_fn = SHIELD(Rf_eval(cast_expr, R_BaseEnv)); ++NP;
-  SEXP cast_template = R_NilValue;
   SEXP expr = R_NilValue;
-
-  SHIELD(cast_template = cpp_c(templates)); ++NP;
-  SHIELD(cast_template = slice_loc(cast_template, 0)); ++NP;
-  SHIELD(expr = Rf_lang3(cast_fn, yes, cast_template)); ++NP;
-  SHIELD(yes = Rf_eval(expr, R_GetCurrentEnv())); ++NP;
-  SHIELD(expr = Rf_lang3(cast_fn, no, cast_template)); ++NP;
-  SHIELD(no = Rf_eval(expr, R_GetCurrentEnv())); ++NP;
-  SHIELD(expr = Rf_lang3(cast_fn, na, cast_template)); ++NP;
-  SHIELD(na = Rf_eval(expr, R_GetCurrentEnv())); ++NP;
-
   SEXP if_else_fn_expr = SHIELD(
     Rf_lang3(
       R_TripleColonSymbol, install_utf8("cheapr"), install_utf8("if_else2")

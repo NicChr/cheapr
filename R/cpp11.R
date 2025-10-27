@@ -20,6 +20,10 @@ cpp_cast <- function(x, y) {
   .Call(`_cheapr_cpp_cast`, x, y)
 }
 
+cpp_common_type <- function(x, stop_on_no_match) {
+  .Call(`_cheapr_cpp_common_type`, x, stop_on_no_match)
+}
+
 cpp_cast_all <- function(x) {
   .Call(`_cheapr_cpp_cast_all`, x)
 }

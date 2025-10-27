@@ -136,7 +136,7 @@ SEXP lang2str(SEXP obj){
 }
 
 // `class()`
-SEXP r_data_class(SEXP obj){
+SEXP get_classes(SEXP obj){
   SEXP value, klass = Rf_getAttrib(obj, R_ClassSymbol);
   int n = Rf_length(klass);
   if(n > 0){
@@ -193,10 +193,6 @@ SEXP r_data_class(SEXP obj){
   return value;
 }
 
-SEXP get_classes(SEXP x){
-  return r_data_class(x);
-}
-
 const char* get_class(SEXP x){
   SEXP classes = SHIELD(get_classes(x));
   int n = Rf_length(classes);
@@ -205,14 +201,18 @@ const char* get_class(SEXP x){
   return out;
 }
 
-std::string common_type(const std::string &a, const std::string &b) {
+std::string common_type(const std::string &a, const std::string &b, bool stop_on_no_match) {
 
   std::string data_pair_type = combine_types(a, b);
 
   auto it = type_pairs.find(data_pair_type);
 
   if (it == type_pairs.end()) {
-    stop("Can't find suitable cast between <%s> and <%s>", a, b);
+    if (stop_on_no_match){
+      stop("Can't find suitable cast between <%s> and <%s>", a, b);
+    } else {
+      return "unknown";
+    }
   }
 
   return it->second;
@@ -293,6 +293,8 @@ inline SEXP cast<r_character>(SEXP x, SEXP y) {
 
   if (Rf_inherits(x, "character")){
     return x;
+  } else if (Rf_isFactor(x)){
+    return factor_as_character(x);
   } else if (Rf_isObject(x)){
     as_char = as_char != NULL ? as_char : Rf_install("as.character");
     return Rf_eval(Rf_lang2(as_char, x), R_GetCurrentEnv());
@@ -354,7 +356,6 @@ inline SEXP cast<r_factor>(SEXP x, SEXP y) {
   }
 }
 
-// TO-DO: FIX THIS METHOD
 template<>
 inline SEXP cast<r_date>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "Date")){
@@ -484,8 +485,12 @@ inline SEXP cast_(const std::string& cast_type, SEXP x, SEXP y) {
 SEXP cpp_cast(SEXP x, SEXP y) {
   const char *a = get_class(x);
   const char *b = get_class(y);
-  std::string cast_type = common_type(a, b);
-  return cast_(cast_type, x, y);
+  std::string cast_type = common_type(a, b, false);
+  if (cast_type != "unknown"){
+    return cast_(cast_type, x, y);
+  } else {
+    return cpp11::package("cheapr")["cast"](x, y);
+  }
 }
 
 // Fast casting of objects to common type (via typeof)
@@ -530,46 +535,54 @@ constexpr unsigned int hash_type(const char *s, int off = 0) {
 }
 
 [[cpp11::register]]
-SEXP cpp_cast_all(SEXP x){
-
-  int32_t NP = 0;
+SEXP cpp_common_type(SEXP x, bool stop_on_no_match){
 
   if (!Rf_isVectorList(x)){
     Rf_error("`x` must be a list");
   }
 
   R_xlen_t n = Rf_xlength(x);
-  if (n <= 1){
-    return x;
-  }
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
-  // n is guaranteed to be >=2 because of earlier check
+  // Initialise to null
+  std::string common_type = "NULL";
 
-  const char *a = get_class(p_x[0]);
-  const char *b = get_class(p_x[1]);
+  for (R_xlen_t i = 0; i < n; ++i){
 
-  std::string data_pair_type = combine_types(a, b);
-  auto it = type_pairs.find(data_pair_type);
-
-  if (it == type_pairs.end()){
-    Rf_error("Can't find suitable cast between <%s> and <%s>", a, b);
-  }
-
-  std::string common_type = it->second;
-
-  for (R_xlen_t i = 1; i < n; ++i){
-
-    a = common_type.c_str();
-    b = get_class(p_x[i]);
+    const char *a = common_type.c_str();
+    const char *b = get_class(p_x[i]);
 
     std::string data_pair_type = combine_types(a, b);
-    it = type_pairs.find(data_pair_type);
+    auto it = type_pairs.find(data_pair_type);
 
     if (it == type_pairs.end()){
-      Rf_error("Can't find suitable cast between <%s> and <%s>", a, b);
+      if (stop_on_no_match){
+        Rf_error("Can't find suitable cast between <%s> and <%s>", a, b);
+      } else {
+        return make_utf8_str("unknown");
+      }
+
     }
     common_type = it->second;
+  }
+  return make_utf8_str(common_type.c_str());
+}
+
+[[cpp11::register]]
+SEXP cpp_cast_all(SEXP x){
+
+
+  int32_t NP = 0;
+
+  SEXP r_common_type = SHIELD(cpp_common_type(x, false)); ++NP;
+  std::string common_type = CHAR(STRING_ELT(r_common_type, 0));
+
+  R_xlen_t n = Rf_xlength(x);
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  if (n <= 1){
+    YIELD(NP);
+    return x;
   }
 
   SEXP out = SHIELD(new_vec(VECSXP, n)); ++NP;
@@ -625,10 +638,16 @@ SEXP cpp_cast_all(SEXP x){
   case hash_type("factor"): {
 
     SEXP lvls = SHIELD(cpp_combine_levels(x)); ++NP;
-    R_Reprotect(temp = cheapr_factor(cpp11::named_arg("levels") = lvls), temp_idx);
+    SEXP fctr_cls = SHIELD(make_utf8_str("factor")); ++NP;
+    // R_Reprotect(temp = cheapr_factor(cpp11::named_arg("levels") = lvls), temp_idx);
+
 
     for (R_xlen_t i = 0; i < n; ++i){
-      SET_VECTOR_ELT(out, i, cast<r_factor>(p_x[i], temp));
+      R_Reprotect(temp = cast<r_character>(p_x[i], R_NilValue), temp_idx);
+      R_Reprotect(temp = Rf_match(lvls, temp, NA_INTEGER), temp_idx);
+      Rf_setAttrib(temp, R_LevelsSymbol, lvls);
+      Rf_classgets(temp, fctr_cls);
+      SET_VECTOR_ELT(out, i, temp);
     }
     break;
   }
@@ -642,6 +661,11 @@ SEXP cpp_cast_all(SEXP x){
   }
   case hash_type("data.frame"): {
     CAST_LOOP(cast<r_data_frame>)
+    break;
+  }
+  case hash_type("unknown"): {
+    cpp11::function cheapr_cast = cpp11::package("cheapr")["cast"];
+    CAST_LOOP(cheapr_cast)
     break;
   }
   default: {

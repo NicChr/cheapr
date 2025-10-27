@@ -565,7 +565,7 @@ SEXP get_ptypes(SEXP x){
   return out;
 }
 
-SEXP cpp_factor_as_character(SEXP x){
+SEXP factor_as_character(SEXP x){
   return sset_vec(Rf_getAttrib(x, R_LevelsSymbol), x, true);
 }
 
@@ -615,7 +615,7 @@ SEXP cpp_combine_factors(SEXP x){
 
   for (int i = 0; i < n; ++i){
     if (Rf_isFactor(p_x[i])){
-      R_Reprotect(char_vec = cpp_factor_as_character(p_x[i]), char_vec_idx);
+      R_Reprotect(char_vec = factor_as_character(p_x[i]), char_vec_idx);
     } else {
       R_Reprotect(char_vec = base_as_character(p_x[i]), char_vec_idx);
     }
@@ -1100,6 +1100,134 @@ SEXP cpp_c(SEXP x){
   }
   if (is_datetime2){
     Rf_copyMostAttrib(p_x[first_datetime], out);
+  }
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_c_alternative(SEXP x){
+
+  if (!Rf_isVectorList(x)){
+    Rf_error("`x` must be a list of vectors");
+  }
+  int32_t NP = 0;
+
+  int n = Rf_length(x);
+
+
+  if (n == 1){
+    return VECTOR_ELT(x, 0);
+  }
+
+  // Cast all objects to common type
+
+  SHIELD(x = cpp_cast_all(x)); ++NP;
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  // Figure out final size
+  R_xlen_t out_size = 0;
+  for (int i = 0; i < n; ++i) out_size += vec_length(p_x[i]);
+
+
+  if (is_df(p_x[0])){
+    SEXP out = SHIELD(cpp_df_c(x)); ++NP;
+    YIELD(NP);
+    return out;
+  }
+
+  // Make exceptions for factors, dates, datetimes and integer64
+  if (Rf_isObject(p_x[0])){
+    SEXP call = SHIELD(coerce_vec(x, LISTSXP)); ++NP;
+    SHIELD(call = Rf_lcons(install_utf8("c"), call)); ++NP;
+    SEXP out = SHIELD(Rf_eval(call, R_GetCurrentEnv())); ++NP;
+    YIELD(NP);
+    return out;
+  }
+
+  R_xlen_t k = 0;
+  R_xlen_t m = 0;
+  SEXP out, vec;
+
+  PROTECT_INDEX vec_idx;
+  R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
+
+  int out_type = TYPEOF(p_x[0]);
+
+  switch(out_type){
+  case NILSXP: {
+    out = R_NilValue;
+    break;
+  }
+  case LGLSXP:
+  case INTSXP: {
+
+    out = SHIELD(new_vec(out_type, out_size)); ++NP;
+    int* RESTRICT p_out = INTEGER(out);
+
+    for (int i = 0; i < n; ++i, k += m){
+      vec = p_x[i];
+      m = Rf_xlength(vec);
+      std::copy_n(INTEGER_RO(vec), m, &p_out[k]);
+    }
+    break;
+  }
+  case REALSXP: {
+
+    out = SHIELD(new_vec(out_type, out_size)); ++NP;
+    double* RESTRICT p_out = REAL(out);
+
+    for (int i = 0; i < n; ++i, k += m){
+      vec = p_x[i];
+      m = Rf_xlength(vec);
+      std::copy_n(REAL_RO(vec), m, &p_out[k]);
+    }
+    break;
+  }
+  case STRSXP: {
+
+    out = SHIELD(new_vec(out_type, out_size)); ++NP;
+
+    for (int i = 0; i < n; ++i){
+      vec = p_x[i];
+      m = Rf_xlength(vec);
+      const SEXP *p_vec = STRING_PTR_RO(vec);
+      for (R_xlen_t j = 0; j < m; ++k, ++j){
+        SET_STRING_ELT(out, k, p_vec[j]);
+      }
+    }
+    break;
+  }
+  case CPLXSXP: {
+
+    out = SHIELD(new_vec(out_type, out_size)); ++NP;
+    Rcomplex *p_out = COMPLEX(out);
+
+    for (int i = 0; i < n; ++i, k += m){
+      vec = p_x[i];
+      m = Rf_xlength(vec);
+      std::copy_n(COMPLEX_RO(vec), m, p_out + k);
+    }
+    break;
+  }
+  case VECSXP: {
+
+    out = SHIELD(new_vec(out_type, out_size)); ++NP;
+
+    for (int i = 0; i < n; ++i){
+      vec = p_x[i];
+      m = Rf_xlength(vec);
+      const SEXP *p_vec = VECTOR_PTR_RO(vec);
+      for (R_xlen_t j = 0; j < m; ++k, ++j){
+        SET_VECTOR_ELT(out, k, p_vec[j]);
+      }
+    }
+    break;
+  }
+  default: {
+    SEXP c_char = SHIELD(make_utf8_str("c")); ++NP;
+    out = SHIELD(base_do_call(c_char, x)); ++NP;
+    break;
+  }
   }
   YIELD(NP);
   return out;

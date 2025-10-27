@@ -41,6 +41,13 @@ extern "C" SEXP _cheapr_cpp_cast(SEXP x, SEXP y) {
   END_CPP11
 }
 // cast.cpp
+SEXP cpp_common_type(SEXP x, bool stop_on_no_match);
+extern "C" SEXP _cheapr_cpp_common_type(SEXP x, SEXP stop_on_no_match) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_common_type(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(stop_on_no_match)));
+  END_CPP11
+}
+// cast.cpp
 SEXP cpp_cast_all(SEXP x);
 extern "C" SEXP _cheapr_cpp_cast_all(SEXP x) {
   BEGIN_CPP11
@@ -790,6 +797,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_col_any_na",              (DL_FUNC) &_cheapr_cpp_col_any_na,              2},
     {"_cheapr_cpp_col_na_counts",           (DL_FUNC) &_cheapr_cpp_col_na_counts,           2},
     {"_cheapr_cpp_combine_levels",          (DL_FUNC) &_cheapr_cpp_combine_levels,          1},
+    {"_cheapr_cpp_common_type",             (DL_FUNC) &_cheapr_cpp_common_type,             2},
     {"_cheapr_cpp_count_val",               (DL_FUNC) &_cheapr_cpp_count_val,               3},
     {"_cheapr_cpp_df_assign_cols",          (DL_FUNC) &_cheapr_cpp_df_assign_cols,          2},
     {"_cheapr_cpp_df_col_c",                (DL_FUNC) &_cheapr_cpp_df_col_c,                3},

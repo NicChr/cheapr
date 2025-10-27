@@ -224,6 +224,8 @@ SEXP fast_cast(SEXP x);
 SEXP cpp_lgl_count(SEXP x);
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
                   bool include_true, bool include_false, bool include_na);
+SEXP cpp_cast_all(SEXP x);
+SEXP factor_as_character(SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
