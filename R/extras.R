@@ -223,7 +223,7 @@ with_local_seed <- function (expr, .seed = NULL, .envir = environment(), ...){
   eval(expr, envir = .envir)
 }
 
-cast <- function(x, template){
+base_cast <- function(x, template){
   x[0] <- template[0]
   `mostattributes<-`(x, attributes(template))
 }

@@ -370,7 +370,7 @@ inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"
 inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
 inline cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
 inline cpp11::function cheapr_as_df = cpp11::package("cheapr")["as_df"];
-inline cpp11::function cheapr_cast = cpp11::package("cheapr")["cast"];
+inline cpp11::function cheapr_cast = cpp11::package("cheapr")["base_cast"];
 
 inline bool address_equal(SEXP x, SEXP y){
   return r_address(x) == r_address(y);
