@@ -3,6 +3,22 @@
 #include <unordered_map>
 #include <functional>
 
+SEXP as_lgl = NULL;
+SEXP as_int = NULL;
+SEXP as_dbl = NULL;
+SEXP as_char = NULL;
+SEXP as_cplx = NULL;
+SEXP as_raw = NULL;
+SEXP as_date = NULL;
+SEXP as_posixct = NULL;
+SEXP as_list = NULL;
+
+const cast_fn CAST_FNS[14] = {
+  cast_null, cast_logical, cast_integer, cast_integer64,
+  cast_numeric, cast_character, cast_complex, cast_raw, cast_list,
+  cast_factor, cast_date, cast_posixt, cast_data_frame, cast_unknown
+};
+
 using namespace cpp11;
 
 // `class()`

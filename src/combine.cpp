@@ -727,6 +727,7 @@ SEXP c2(SEXP x, SEXP y){
 }
 
 // Concatenate a list of data frames
+
 SEXP cpp_df_c(SEXP x){
 
   if (TYPEOF(x) != VECSXP){
