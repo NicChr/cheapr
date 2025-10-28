@@ -586,28 +586,6 @@ SEXP character_as_factor(SEXP x, SEXP levels){
   YIELD(NP);
   return out;
 }
-// SEXP character_as_factor(SEXP x, SEXP levels){
-//
-//   if (TYPEOF(x) != STRSXP){
-//     Rf_error("`x` must be a character vector in %s", __func__);
-//   }
-//
-//   int32_t NP = 0;
-//
-//   SEXP out = SHIELD(Rf_match(levels, x, NA_INTEGER)); ++NP;
-//   if (cpp_any_na(levels, false)){
-//     SEXP na_locs = SHIELD(cpp_which_na(out)); ++NP;
-//     SEXP r_n = SHIELD(Rf_ScalarInteger(Rf_length(levels))); ++NP;
-//
-//     // In-replace replacement of NA with n where n is number of levels
-//     static_cast<void>(cpp_loc_set_replace(out, na_locs, r_n));
-//   }
-//   SEXP cls = SHIELD(make_utf8_str("factor")); ++NP;
-//   Rf_setAttrib(out, R_LevelsSymbol, levels);
-//   Rf_classgets(out, cls);
-//   YIELD(NP);
-//   return out;
-// }
 
 SEXP combine_levels(SEXP x){
   if (TYPEOF(x) != VECSXP){
