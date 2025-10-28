@@ -4,6 +4,12 @@
 
 - New function `unique_` as a cheaper alternative to `unique`.
 
+- New functions `cast` and `cast_common` to help with fast and type-stable 
+coercion.
+
+- New function `na_init` to help with fast initialisation of vectors based off
+a template vector.
+
 - `seq_` gains a new argument `size` to allow for specifying sequences
 of exact sizes. 
 Any combination of `from`, `to`, `by` and `size` can be specified and are
@@ -48,6 +54,9 @@ for a long while.
 `from` and `by`.
 
 - Subsetting `sf` objects with `sset` now internally calls `[`.
+
+- Combining vectors has been internally made simpler, utilising type-stable
+casting.
 
 ### Breaking changes
 
