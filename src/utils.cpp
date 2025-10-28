@@ -998,13 +998,14 @@ SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
   int out = 0;
   bool any_na = false;
 
-  switch ( TYPEOF(x) ){
-  case LGLSXP:
-  case INTSXP: {
+  switch ( get_r_type(x) ){
+  case r_lgl:
+  case r_int:
+  case r_int64: {
     out = 1;
     break;
   }
-  case REALSXP: {
+  case r_dbl: {
     // Re-initialise so that we can break when we find non-whole num
     out = 1;
     const double *p_x = REAL_RO(x);
@@ -1030,43 +1031,3 @@ SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
   }
   return Rf_ScalarLogical(out);
 }
-
-// SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
-//
-//   R_xlen_t n = Rf_xlength(x);
-//   // Use int instead of bool as int can hold NA
-//   int out = 0;
-//   bool any_na = false;
-//   bool is_na;
-//
-//   switch ( TYPEOF(x) ){
-//   case LGLSXP:
-//   case INTSXP: {
-//     out = 1;
-//     break;
-//   }
-//   case REALSXP: {
-//     // Re-initialise so that we can break when we find non-whole num
-//     out = 1;
-//     const double *p_x = REAL_RO(x);
-//     for (R_xlen_t i = 0; i < n; ++i) {
-//       is_na = is_na_dbl(p_x[i]);
-//       any_na = any_na || is_na;
-//       if (is_na) continue;
-//
-//       out = is_whole_number(p_x[i], tol_);
-//       if (out == 0){
-//         break;
-//       }
-//     }
-//     if (!na_rm_ && any_na){
-//       out = NA_INTEGER;
-//     }
-//     break;
-//   }
-//   default: {
-//     break;
-//   }
-//   }
-//   return Rf_ScalarLogical(out);
-// }

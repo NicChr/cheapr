@@ -549,7 +549,7 @@ inline SEXP init<r_date_t>(R_xlen_t n){
 
 template<>
 inline SEXP init<r_posixt_t>(R_xlen_t n) {
-  SEXP out = SHIELD(init<r_numeric_t>(0));
+  SEXP out = SHIELD(init<r_numeric_t>(n));
   SEXP tz = SHIELD(new_vec(STRSXP, 1));
   SEXP cls = SHIELD(new_vec(STRSXP, 2));
   SET_STRING_ELT(cls, 0, make_utf8_char("POSIXct"));
@@ -728,10 +728,16 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
-  if (Rf_inherits(x, "POSIXct")){
+  if (Rf_inherits(x, "POSIXct") && !Rf_inherits(y, "POSIXct")){
     return x;
-  } else if (is_null(y)){
-    return init<r_posixt_t>(vec_length(x));
+  } else if (Rf_inherits(x, "POSIXct") && Rf_inherits(y, "POSIXct")){
+    SEXP out = SHIELD(Rf_shallow_duplicate(x));
+    SEXP out_tzone = SHIELD(Rf_getAttrib(y, install_utf8("tzone")));
+    Rf_setAttrib(out, install_utf8("tzone"), out_tzone);
+    YIELD(2);
+    return out;
+  } else if (is_null(x) && is_null(y)){
+    return init<r_posixt_t>(0);
   } else if (Rf_inherits(x, "Date") && Rf_inherits(y, "POSIXct")){
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(new_vec(REALSXP, n));
@@ -760,7 +766,10 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     return out;
   } else {
     as_posixct = as_posixct != NULL ? as_posixct : Rf_install("as.POSIXct");
-    return Rf_eval(Rf_lang2(as_posixct, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_posixct, x), R_GetCurrentEnv()));
+    SHIELD(out = cast<r_posixt_t>(out, y)); // To set the correct attributes
+    YIELD(2);
+    return out;
   }
 }
 

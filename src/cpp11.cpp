@@ -34,17 +34,17 @@ extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add
   END_CPP11
 }
 // cast.cpp
-SEXP cpp_cast(SEXP x, SEXP y);
-extern "C" SEXP _cheapr_cpp_cast(SEXP x, SEXP y) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_cast(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
-  END_CPP11
-}
-// cast.cpp
 SEXP cpp_cast_all(SEXP x);
 extern "C" SEXP _cheapr_cpp_cast_all(SEXP x) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_cast_all(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// cast.cpp
+SEXP cpp_cast(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_cast(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_cast(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
   END_CPP11
 }
 // combine.cpp

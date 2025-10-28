@@ -62,7 +62,7 @@ void check_atomic(SEXP x){
 }
 
 bool implicit_na_coercion(SEXP x, SEXP target){
-  SEXP coerced = SHIELD(coerce_vector(x, CHEAPR_TYPEOF(target)));
+  SEXP coerced = SHIELD(cast_(get_r_type(target), x, R_NilValue));
   bool out = na_count(x, true) != na_count(coerced, true);
   YIELD(1);
   return out;
@@ -109,7 +109,7 @@ case NILSXP: {
 case LGLSXP:
 case INTSXP: {
   if (implicit_na_coercion(value, x)) break;
-  SHIELD(value = coerce_vector(value, INTSXP)); ++NP;
+  SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
   int val = Rf_asInteger(value);
   const int *p_x = INTEGER(x);
   // int (*c_op)(int, int);
@@ -125,7 +125,7 @@ case INTSXP: {
 }
 case REALSXP: {
   if (implicit_na_coercion(value, x)) break;
-  SHIELD(value = coerce_vector(value, REALSXP)); ++NP;
+  SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
   double val = Rf_asReal(value);
   const double *p_x = REAL(x);
   // int (*c_op)(double, double);
@@ -142,7 +142,7 @@ case REALSXP: {
 }
 case CHEAPR_INT64SXP: {
   if (implicit_na_coercion(value, x)) break;
-  SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
+  SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
   int64_t val = INTEGER64_PTR(value)[0];
   const int64_t *p_x = INTEGER64_PTR_RO(x);
   // int (*c_op)(int64_t, int64_t);
@@ -158,7 +158,7 @@ case CHEAPR_INT64SXP: {
 }
 case STRSXP: {
   if (implicit_na_coercion(value, x)) break;
-  SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
+  SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
   SEXP val = SHIELD(Rf_asChar(value)); ++NP;
   const SEXP *p_x = STRING_PTR_RO(x);
   // int (*c_op)(SEXP, SEXP);
@@ -238,8 +238,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SEXP temp = SHIELD(new_vec(INTSXP, 0)); ++NP;
     int *p_out = INTEGER(temp);
-    SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
-    SHIELD(replace = coerce_vector(replace, CHEAPR_TYPEOF(x))); ++NP;
+    SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_integer_t>(replace, R_NilValue)); ++NP;
     int val = Rf_asInteger(value);
     int repl = Rf_asInteger(replace);
     int *p_x = INTEGER(x);
@@ -265,8 +265,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     out = x;
     break;
   }
-    SHIELD(value = coerce_vector(value, REALSXP)); ++NP;
-    SHIELD(replace = coerce_vector(replace, REALSXP)); ++NP;
+    SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_numeric_t>(replace, R_NilValue)); ++NP;
     SEXP temp = SHIELD(new_vec(REALSXP, 0)); ++NP;
     double *p_out = REAL(temp);
     double val = Rf_asReal(value);
@@ -310,8 +310,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     out = x;
     break;
   }
-    SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
-    SHIELD(replace = coerce_vector(replace, CHEAPR_INT64SXP)); ++NP;
+    SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_integer64_t>(replace, R_NilValue)); ++NP;
     SEXP temp = SHIELD(new_vec(REALSXP, 0)); ++NP;
     int64_t *p_out = INTEGER64_PTR(temp);
     int64_t val = INTEGER64_PTR(value)[0];
@@ -338,8 +338,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     out = x;
     break;
   }
-    SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
-    SHIELD(replace = coerce_vector(replace, STRSXP)); ++NP;
+    SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_character_t>(replace, R_NilValue)); ++NP;
     SEXP val = SHIELD(Rf_asChar(value)); ++NP;
     SEXP repl = SHIELD(Rf_asChar(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -407,8 +407,8 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   case LGLSXP:
   case INTSXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
-    SHIELD(replace = coerce_vector(replace, CHEAPR_TYPEOF(x))); ++NP;
+    SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_integer_t>(replace, R_NilValue)); ++NP;
     int val = Rf_asInteger(value);
     int repl = Rf_asInteger(replace);
     int *p_x = INTEGER(x);
@@ -421,8 +421,8 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   case REALSXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = coerce_vector(value, REALSXP)); ++NP;
-    SHIELD(replace = coerce_vector(replace, REALSXP)); ++NP;
+    SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_numeric_t>(replace, R_NilValue)); ++NP;
 
     double val = Rf_asReal(value);
     double repl = Rf_asReal(replace);
@@ -442,8 +442,8 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   case CHEAPR_INT64SXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
-    SHIELD(replace = coerce_vector(replace, CHEAPR_INT64SXP)); ++NP;
+    SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_integer64_t>(replace, R_NilValue)); ++NP;
 
     int64_t val = INTEGER64_PTR(value)[0];
     int64_t repl = INTEGER64_PTR(replace)[0];
@@ -456,8 +456,8 @@ SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
-    SHIELD(replace = coerce_vector(replace, STRSXP)); ++NP;
+    SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_character_t>(replace, R_NilValue)); ++NP;
     SEXP val = SHIELD(Rf_asChar(value)); ++NP;
     SEXP repl = SHIELD(Rf_asChar(replace)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -690,7 +690,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+      SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
       int val = Rf_asInteger(value);
       int *p_x = INTEGER(x);
       int *p_out = INTEGER(out);
@@ -710,7 +710,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+      SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
       double val = Rf_asReal(value);
       double *p_x = REAL(x);
       double *p_out = REAL(out);
@@ -739,7 +739,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+      SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
       int64_t val = INTEGER64_PTR(value)[0];
       int64_t *p_x = INTEGER64_PTR(x);
       int64_t *p_out = INTEGER64_PTR(out);
@@ -759,7 +759,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+      SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
       SEXP val = SHIELD(Rf_asChar(value)); ++NP;
       const SEXP *p_x = STRING_PTR_RO(x);
 

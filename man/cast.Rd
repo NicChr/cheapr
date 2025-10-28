@@ -21,11 +21,11 @@ in a list. \cr
 This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 }
 \value{
-\code{cast()} coerces \code{x} into a common type between \code{x} and \code{y}.
+\code{cast()} will attempt to cast \code{x} into an object similar to \code{y}.
 \code{cast_common()} coerces all supplied vectors into a common type between them.
 }
 \description{
-\code{cast()} is type-commutative, meaning the order \code{x} and \code{y} doesn't
+\code{cast_common()} is type-commutative, meaning the order of objects doesn't
 affect the outcome type.
-\code{cast()} will attempt to cast \code{x} into a common type between \code{x} and \code{y}.
+\code{cast()} will attempt to cast \code{x} into an object similar to \code{y}.
 }

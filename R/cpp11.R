@@ -16,12 +16,12 @@ cpp_set_add_attributes <- function(x, attributes, add) {
   .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
-cpp_cast <- function(x, y) {
-  .Call(`_cheapr_cpp_cast`, x, y)
-}
-
 cpp_cast_all <- function(x) {
   .Call(`_cheapr_cpp_cast_all`, x)
+}
+
+cpp_cast <- function(x, y) {
+  .Call(`_cheapr_cpp_cast`, x, y)
 }
 
 cpp_rep_len <- function(x, length) {

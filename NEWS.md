@@ -35,11 +35,13 @@ attributes from a template.
 - Fixed a bug in `case` that would return incorrect results when the length of 
 the RHS was greater than 1.
 
-### Changes
+### Changes and Improvements
 
 - `sset` is no longer an S3 generic and now internally dispatches on the 
 correct method. One can still define a subset method for custom objects 
 via `[` which `sset` falls back on when it can't find an appropriate method.
+
+- `if_else_` has been re-written mostly in C/C++ and should be faster.
 
 - `rebuild.data.frame` and `rebuild.data.table` will now return a data frame 
 with class `'data.frame'` and `c('data.table', 'data.frame')` respectively instead of 

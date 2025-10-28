@@ -223,11 +223,6 @@ with_local_seed <- function (expr, .seed = NULL, .envir = environment(), ...){
   eval(expr, envir = .envir)
 }
 
-base_cast <- function(x, template){
-  x[0] <- template[0]
-  `mostattributes<-`(x, attributes(template))
-}
-
 # is_duplicate <- function(x, .all = FALSE){
 #   groups <- collapse::group(x, starts = !.all, group.sizes = TRUE)
 #   sizes <- attr(groups, "group.sizes", TRUE)

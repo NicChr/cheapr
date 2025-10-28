@@ -1,9 +1,9 @@
 #' Fast casting/coercing of R objects
 #'
 #' @description
-#' `cast()` is type-commutative, meaning the order `x` and `y` doesn't
+#' `cast_common()` is type-commutative, meaning the order of objects doesn't
 #' affect the outcome type.
-#' `cast()` will attempt to cast `x` into a common type between `x` and `y`.
+#' `cast()` will attempt to cast `x` into an object similar to `y`.
 #'
 #' @param x A vector.
 #' @param y A vector.
@@ -13,12 +13,11 @@
 #' This is equivalent to `do.call(f, .args)` but much more efficient.
 #'
 #' @returns
-#' `cast()` coerces `x` into a common type between `x` and `y`.
+#' `cast()` will attempt to cast `x` into an object similar to `y`.
 #' `cast_common()` coerces all supplied vectors into a common type between them.
 #'
-#' @rdname cast
 #' @export
-cast <- function(x, y) {
+cast <- function(x, y){
   .Call(`_cheapr_cpp_cast`, x, y)
 }
 
@@ -26,4 +25,14 @@ cast <- function(x, y) {
 #' @export
 cast_common <- function(..., .args = NULL){
   .Call(`_cheapr_cpp_cast_all`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
+}
+
+base_cast <- function(x, template){
+  if (is.null(template)){
+    x
+  } else {
+    x[0] <- template[0]
+    x
+    # c(x, template[0])
+  }
 }

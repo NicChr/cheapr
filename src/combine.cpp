@@ -938,6 +938,7 @@ SEXP cpp_c(SEXP x){
   if (!Rf_isVectorList(x)){
     Rf_error("`x` must be a list of vectors");
   }
+
   int32_t NP = 0;
 
   int n = Rf_length(x);
@@ -955,20 +956,24 @@ SEXP cpp_c(SEXP x){
 
   R_xlen_t k = 0;
   R_xlen_t m = 0;
-  SEXP out, vec;
+  SEXP out = R_NilValue;
 
+  SEXP vec;
   PROTECT_INDEX vec_idx;
   R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
 
   r_type common = r_common_type(x);
-  SHIELD(out = cast_(common, R_NilValue, R_NilValue)); ++NP;
-  SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+  if (n > 0){
+    SHIELD(out = cast_(common, get_ptype(p_x[0]), R_NilValue)); ++NP;
+  }
 
   switch (common){
   case r_null: {
     break;
   }
   case r_lgl: {
+
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
 
     int* RESTRICT p_out = INTEGER(out);
 
@@ -981,6 +986,8 @@ SEXP cpp_c(SEXP x){
   }
   case r_int: {
 
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+
     int* RESTRICT p_out = INTEGER(out);
 
     for (int i = 0; i < n; ++i, k += m){
@@ -991,6 +998,9 @@ SEXP cpp_c(SEXP x){
     break;
   }
   case r_int64: {
+
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+
     int64_t* RESTRICT p_out = INTEGER64_PTR(out);
 
     for (int i = 0; i < n; ++i, k += m){
@@ -1002,6 +1012,8 @@ SEXP cpp_c(SEXP x){
   }
   case r_dbl: {
 
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+
     double* RESTRICT p_out = REAL(out);
 
     for (int i = 0; i < n; ++i, k += m){
@@ -1012,6 +1024,8 @@ SEXP cpp_c(SEXP x){
     break;
   }
   case r_chr: {
+
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
 
     for (int i = 0; i < n; ++i){
       R_Reprotect(vec = cast<r_character_t>(p_x[i], R_NilValue), vec_idx);
@@ -1026,6 +1040,8 @@ SEXP cpp_c(SEXP x){
   }
   case r_cplx: {
 
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+
     Rcomplex *p_out = COMPLEX(out);
 
     for (int i = 0; i < n; ++i, k += m){
@@ -1037,6 +1053,8 @@ SEXP cpp_c(SEXP x){
   }
   case r_raw: {
 
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+
     Rbyte *p_out = RAW(out);
 
     for (int i = 0; i < n; ++i, k += m){
@@ -1047,6 +1065,8 @@ SEXP cpp_c(SEXP x){
     break;
   }
   case r_list: {
+
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
 
     for (int i = 0; i < n; ++i){
     R_Reprotect(vec = cast<r_list_t>(p_x[i], R_NilValue), vec_idx);
@@ -1065,6 +1085,8 @@ SEXP cpp_c(SEXP x){
   }
   case r_date: {
 
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+
     SHIELD(out = coerce_vec(out, REALSXP)); ++NP;
     double* RESTRICT p_out = REAL(out);
 
@@ -1077,6 +1099,8 @@ SEXP cpp_c(SEXP x){
     break;
   }
   case r_pxct: {
+
+    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
     double* RESTRICT p_out = REAL(out);
 
     for (int i = 0; i < n; ++i, k += m){
@@ -1097,7 +1121,6 @@ SEXP cpp_c(SEXP x){
     break;
   }
   default: {
-    YIELD(NP);
     Rf_error("Don't know how to combine elements");
   }
   }
