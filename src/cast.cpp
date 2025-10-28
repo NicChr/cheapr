@@ -21,44 +21,6 @@ const cast_fn CAST_FNS[14] = {
 
 using namespace cpp11;
 
-// `class()`
-const char* get_class(SEXP obj){
-  if (Rf_isObject(obj)){
-    SEXP klass = Rf_getAttrib(obj, R_ClassSymbol);
-
-    int n = Rf_length(klass);
-
-    return CHAR(STRING_ELT(klass, n - 1));
-  } else {
-    switch(TYPEOF(obj)) {
-    case LGLSXP: {
-      return "logical";
-    }
-    case INTSXP: {
-      return "integer";
-    }
-    case REALSXP: {
-      return "numeric";
-    }
-    case STRSXP: {
-      return "character";
-    }
-    case CPLXSXP: {
-      return "complex";
-    }
-    case RAWSXP: {
-      return "raw";
-    }
-    case VECSXP: {
-      return "list";
-    }
-    default: {
-      return "Unknown";
-    }
-    }
-  }
-}
-
 [[cpp11::register]]
 SEXP cpp_cast(SEXP x, SEXP y) {
   r_type common = common_type(get_r_type(x), get_r_type(y));
