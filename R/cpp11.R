@@ -52,10 +52,6 @@ cpp_na_init <- function(x, n) {
   .Call(`_cheapr_cpp_na_init`, x, n)
 }
 
-cpp_combine_levels <- function(x) {
-  .Call(`_cheapr_cpp_combine_levels`, x)
-}
-
 cpp_list_c <- function(x) {
   .Call(`_cheapr_cpp_list_c`, x)
 }

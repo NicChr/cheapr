@@ -565,12 +565,51 @@ SEXP get_ptypes(SEXP x){
   return out;
 }
 
+// Helper to turn a factor into a character vec
 SEXP factor_as_character(SEXP x){
   return sset_vec(Rf_getAttrib(x, R_LevelsSymbol), x, true);
 }
 
-[[cpp11::register]]
-SEXP cpp_combine_levels(SEXP x){
+// Helper to turn a character vec into a factor, given levels
+SEXP character_as_factor(SEXP x, SEXP levels){
+
+  if (TYPEOF(x) != STRSXP){
+    Rf_error("`x` must be a character vector in %s", __func__);
+  }
+
+  int32_t NP = 0;
+
+  SEXP out = SHIELD(Rf_match(levels, x, NA_INTEGER)); ++NP;
+  SEXP cls = SHIELD(make_utf8_str("factor")); ++NP;
+  Rf_setAttrib(out, R_LevelsSymbol, levels);
+  Rf_classgets(out, cls);
+  YIELD(NP);
+  return out;
+}
+// SEXP character_as_factor(SEXP x, SEXP levels){
+//
+//   if (TYPEOF(x) != STRSXP){
+//     Rf_error("`x` must be a character vector in %s", __func__);
+//   }
+//
+//   int32_t NP = 0;
+//
+//   SEXP out = SHIELD(Rf_match(levels, x, NA_INTEGER)); ++NP;
+//   if (cpp_any_na(levels, false)){
+//     SEXP na_locs = SHIELD(cpp_which_na(out)); ++NP;
+//     SEXP r_n = SHIELD(Rf_ScalarInteger(Rf_length(levels))); ++NP;
+//
+//     // In-replace replacement of NA with n where n is number of levels
+//     static_cast<void>(cpp_loc_set_replace(out, na_locs, r_n));
+//   }
+//   SEXP cls = SHIELD(make_utf8_str("factor")); ++NP;
+//   Rf_setAttrib(out, R_LevelsSymbol, levels);
+//   Rf_classgets(out, cls);
+//   YIELD(NP);
+//   return out;
+// }
+
+SEXP combine_levels(SEXP x){
   if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of factors in %s", __func__);
   }
@@ -597,7 +636,7 @@ SEXP cpp_combine_levels(SEXP x){
   return out;
 }
 
-SEXP cpp_combine_factors(SEXP x){
+SEXP combine_factors(SEXP x){
 
   if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of factors in %s", __func__);
@@ -606,27 +645,15 @@ SEXP cpp_combine_factors(SEXP x){
   int n = Rf_length(x);
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
-  SEXP levels = SHIELD(cpp_combine_levels(x));
+  SEXP levels = SHIELD(combine_levels(x));
   SEXP chars = SHIELD(new_vec(VECSXP, n));
-  SEXP char_vec;
-
-  PROTECT_INDEX char_vec_idx;
-  R_ProtectWithIndex(char_vec = R_NilValue, &char_vec_idx);
 
   for (int i = 0; i < n; ++i){
-    if (Rf_isFactor(p_x[i])){
-      R_Reprotect(char_vec = factor_as_character(p_x[i]), char_vec_idx);
-    } else {
-      R_Reprotect(char_vec = base_as_character(p_x[i]), char_vec_idx);
-    }
-    SET_VECTOR_ELT(chars, i, char_vec);
+    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_x[i], R_NilValue));
   }
 
-  R_Reprotect(char_vec = cpp_c(chars), char_vec_idx);
-  SEXP out = SHIELD(cheapr_factor(char_vec,
-    cpp11::named_arg("levels") = levels,
-    cpp11::named_arg("na_exclude") = !cpp_any_na(levels, false)
-  ));
+  SEXP char_vec = SHIELD(cpp_c(chars));
+  SEXP out = SHIELD(character_as_factor(char_vec, levels));
   YIELD(4);
   return out;
 }
@@ -811,6 +838,7 @@ SEXP cpp_df_c(SEXP x){
 
   const SEXP *p_ptypes = VECTOR_PTR_RO(ptypes);
   const SEXP *p_names = VECTOR_PTR_RO(names);
+
 
   for (int j = 0; j < n_cols; ++j){
     for (int i = 0; i < n_frames; ++i){
@@ -1054,7 +1082,7 @@ SEXP cpp_c(SEXP x){
     break;
   }
   case r_fct: {
-    SHIELD(out = cpp_combine_factors(x)); ++NP;
+    SHIELD(out = combine_factors(x)); ++NP;
     break;
   }
   case r_date: {

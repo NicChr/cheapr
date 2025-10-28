@@ -97,13 +97,6 @@ extern "C" SEXP _cheapr_cpp_na_init(SEXP x, SEXP n) {
   END_CPP11
 }
 // combine.cpp
-SEXP cpp_combine_levels(SEXP x);
-extern "C" SEXP _cheapr_cpp_combine_levels(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_combine_levels(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// combine.cpp
 SEXP cpp_list_c(SEXP x);
 extern "C" SEXP _cheapr_cpp_list_c(SEXP x) {
   BEGIN_CPP11
@@ -789,7 +782,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_col_all_na",              (DL_FUNC) &_cheapr_cpp_col_all_na,              2},
     {"_cheapr_cpp_col_any_na",              (DL_FUNC) &_cheapr_cpp_col_any_na,              2},
     {"_cheapr_cpp_col_na_counts",           (DL_FUNC) &_cheapr_cpp_col_na_counts,           2},
-    {"_cheapr_cpp_combine_levels",          (DL_FUNC) &_cheapr_cpp_combine_levels,          1},
     {"_cheapr_cpp_count_val",               (DL_FUNC) &_cheapr_cpp_count_val,               3},
     {"_cheapr_cpp_df_assign_cols",          (DL_FUNC) &_cheapr_cpp_df_assign_cols,          2},
     {"_cheapr_cpp_df_col_c",                (DL_FUNC) &_cheapr_cpp_df_col_c,                3},

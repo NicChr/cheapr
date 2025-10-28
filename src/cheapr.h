@@ -219,13 +219,15 @@ void clear_attributes(SEXP x);
 uint_fast64_t null_count(SEXP x);
 SEXP compact_seq_len(R_xlen_t n);
 SEXP clean_indices(SEXP indices, SEXP x, bool count);
-SEXP cpp_combine_levels(SEXP x);
+SEXP combine_levels(SEXP x);
 SEXP fast_cast(SEXP x);
 SEXP cpp_lgl_count(SEXP x);
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
                   bool include_true, bool include_false, bool include_na);
 SEXP cpp_cast_all(SEXP x);
 SEXP factor_as_character(SEXP x);
+SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
+SEXP character_as_factor(SEXP x, SEXP levels);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
@@ -246,6 +248,11 @@ inline SEXP install_utf8(const char *x){
 inline bool is_null(SEXP x){
   return x == R_NilValue;
 }
+
+// Helper to install symbols if they are not already installed
+// inline SEXP maybe_install(const char *sym, SEXP sym_sexp){
+//   return sym_sexp == NULL ? Rf_install(sym) : sym_sexp;
+// }
 
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
@@ -627,7 +634,7 @@ template<>
 inline SEXP cast<r_character_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "character")){
     return x;
-  } else if (Rf_isFactor(x)){
+  } else if (Rf_inherits(x, "factor")){
     return factor_as_character(x);
   } else if (Rf_isObject(x)){
     as_char = as_char != NULL ? as_char : Rf_install("as.character");
@@ -678,13 +685,16 @@ inline SEXP cast<r_factor_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "factor") && !Rf_inherits(y, "factor")){
     return x;
   } else if (Rf_inherits(y, "factor")){
+    SEXP out = SHIELD(cast<r_character_t>(x, R_NilValue));
     SEXP fctrs = SHIELD(new_vec(VECSXP, 2));
-    SET_VECTOR_ELT(fctrs, 0, x);
+    SET_VECTOR_ELT(fctrs, 0, out);
     SET_VECTOR_ELT(fctrs, 1, y);
-    SEXP all_levels = SHIELD(cpp_combine_levels(fctrs));
-    SEXP out = SHIELD(cheapr_factor(x, cpp11::named_arg("levels") = all_levels));
-    YIELD(3);
+    SEXP all_levels = SHIELD(combine_levels(fctrs));
+    SHIELD(out = character_as_factor(out, all_levels));
+    YIELD(4);
     return out;
+  } else if (is_null(x)){
+    return init<r_factor_t>(0);
   } else {
     return cheapr_factor(x);
   }

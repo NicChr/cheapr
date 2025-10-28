@@ -186,17 +186,11 @@ SEXP cpp_cast_all(SEXP x){
   }
   case r_fct: {
 
-    SEXP lvls = SHIELD(cpp_combine_levels(x)); ++NP;
-    SEXP fctr_cls = SHIELD(make_utf8_str("factor")); ++NP;
-    // R_Reprotect(temp = cheapr_factor(cpp11::named_arg("levels") = lvls), temp_idx);
-
+    SEXP lvls = SHIELD(combine_levels(x)); ++NP;
 
     for (R_xlen_t i = 0; i < n; ++i){
       R_Reprotect(temp = cast<r_character_t>(p_x[i], R_NilValue), temp_idx);
-      R_Reprotect(temp = Rf_match(lvls, temp, NA_INTEGER), temp_idx);
-      Rf_setAttrib(temp, R_LevelsSymbol, lvls);
-      Rf_classgets(temp, fctr_cls);
-      SET_VECTOR_ELT(out, i, temp);
+      SET_VECTOR_ELT(out, i, character_as_factor(temp, lvls));
     }
     break;
   }
