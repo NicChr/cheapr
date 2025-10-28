@@ -49,7 +49,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     int64_t fill_value = NA_INTEGER64;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(coerce_vector(fill, CHEAPR_INT64SXP)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_integer64_t>(fill, R_NilValue)); ++NP;
       fill_value = INTEGER64_PTR(temp_fill)[0];
     }
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
@@ -411,7 +411,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     int64_t fill_value = NA_INTEGER64;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(coerce_vector(fill, CHEAPR_INT64SXP)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_integer64_t>(fill, R_NilValue)); ++NP;
       fill_value = INTEGER64_PTR(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;

@@ -610,23 +610,26 @@ inline SEXP cast<r_integer_t>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_integer64_t>(SEXP x, SEXP y) {
-  if (Rf_inherits(x, "integer64")){
-    return x;
-  } else {
-    return coerce_vector(x, CHEAPR_INT64SXP);
-  }
-}
-
-template<>
 inline SEXP cast<r_numeric_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "numeric")){
     return x;
   } else if (Rf_isObject(x)){
-    as_dbl = as_dbl != NULL ? as_dbl : Rf_install("as.numeric");
+    as_dbl = as_dbl != NULL ? as_dbl : Rf_install("as.double");
     return Rf_eval(Rf_lang2(as_dbl, x), R_GetCurrentEnv());
   } else {
     return coerce_vec(x, REALSXP);
+  }
+}
+
+template<>
+inline SEXP cast<r_integer64_t>(SEXP x, SEXP y) {
+  if (Rf_inherits(x, "integer64")){
+    return x;
+  } else {
+    SEXP out = SHIELD(cast<r_numeric_t>(x, R_NilValue));
+    SHIELD(out = cpp_numeric_to_int64(x));
+    YIELD(2);
+    return out;
   }
 }
 
@@ -767,7 +770,7 @@ inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_inherits(x, "data.frame") && Rf_inherits(y, "data.frame")){
     return rebuild(x, y, true);
-  } else if (is_simple_atomic_vec2(x)){
+  } else if (is_simple_vec2(x)){
     SEXP out = SHIELD(new_vec(VECSXP, 1));
     SET_VECTOR_ELT(out, 0, x);
     SEXP names = SHIELD(make_utf8_str("x"));

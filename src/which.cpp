@@ -118,7 +118,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   case LGLSXP:
   case INTSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
-    SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+    SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
     int val = Rf_asInteger(value);
     const int *p_x = INTEGER(x);
     if (is_long){
@@ -141,7 +141,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   }
   case REALSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
-    SHIELD(value = coerce_vector(value, REALSXP)); ++NP;
+    SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
     double val = Rf_asReal(value);
     const double *p_x = REAL(x);
     if (is_long){
@@ -164,7 +164,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   }
   case CHEAPR_INT64SXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
-    SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
+    SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
     int64_t val = INTEGER64_PTR(value)[0];
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     if (is_long){
@@ -187,7 +187,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
   }
   case STRSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
-    SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
+    SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
     SEXP val = SHIELD(Rf_asChar(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
@@ -661,7 +661,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case INTSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
-    SHIELD(value = coerce_vector(value, CHEAPR_TYPEOF(x))); ++NP;
+    SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
     int val = Rf_asInteger(value);
     int *p_x = INTEGER(x);
     if (is_long){
@@ -685,7 +685,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case REALSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
-    SHIELD(value = coerce_vector(value, REALSXP)); ++NP;
+    SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
     double val = Rf_asReal(value);
     double *p_x = REAL(x);
     if (val_is_na){
@@ -735,7 +735,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case CHEAPR_INT64SXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
-    SHIELD(value = coerce_vector(value, CHEAPR_INT64SXP)); ++NP;
+    SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
     int64_t val = INTEGER64_PTR(value)[0];
     int64_t *p_x = INTEGER64_PTR(x);
     if (is_long){
@@ -759,7 +759,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case STRSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
     ++NP;
-    SHIELD(value = coerce_vector(value, STRSXP)); ++NP;
+    SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
     SEXP val = SHIELD(Rf_asChar(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){

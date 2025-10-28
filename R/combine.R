@@ -33,9 +33,9 @@
 #'
 #' @rdname cheapr_c
 #' @export
-cheapr_c <- function(..., .args = NULL){
+c_ <- function(..., .args = NULL){
   .Call(`_cheapr_cpp_c`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
 }
 #' @rdname cheapr_c
 #' @export
-c_ <- cheapr_c
+cheapr_c <- c_

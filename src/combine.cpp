@@ -229,7 +229,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
 
   R_xlen_t out_size;
   R_xlen_t n_times = Rf_xlength(times);
-  SHIELD(times = coerce_vector(times, INTSXP));
+  SHIELD(times = cast<r_integer_t>(times, R_NilValue));
 
   if (n_times == 1){
     out_size = n * INTEGER(times)[0];
@@ -334,7 +334,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
 [[cpp11::register]]
 SEXP cpp_rep_each(SEXP x, SEXP each){
   int32_t NP = 0;
-  SHIELD(each = coerce_vector(each, INTSXP)); ++NP;
+  SHIELD(each = cast<r_integer_t>(each, R_NilValue)); ++NP;
   if (Rf_length(each) == 1){
     if (INTEGER(each)[0] == 1){
       Rf_unprotect(NP);
