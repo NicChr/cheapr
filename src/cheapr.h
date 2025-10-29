@@ -413,26 +413,26 @@ struct r_unknown_t {};
 // r type constants
 using r_type = uint8_t;
 enum : r_type {
-  r_null = (uint8_t) 0,
-    r_lgl = (uint8_t) 1,
-    r_int = (uint8_t) 2,
-    r_int64 = (uint8_t) 3,
-    r_dbl = (uint8_t) 4,
-    r_chr = (uint8_t) 5,
-    r_cplx = (uint8_t) 6,
-    r_raw = (uint8_t) 7,
-    r_list = (uint8_t) 8,
-    r_fct = (uint8_t) 9,
-    r_date = (uint8_t) 10,
-    r_pxct = (uint8_t) 11,
-    r_df = (uint8_t) 12,
-    r_rcrd = (uint8_t) 13,
-    r_unk = (uint8_t) 14,
+  r_null = 0,
+    r_lgl = 1,
+    r_int = 2,
+    r_int64 = 3,
+    r_dbl = 4,
+    r_chr = 5,
+    r_cplx = 6,
+    r_raw = 7,
+    r_list = 8,
+    r_fct = 9,
+    r_date = 10,
+    r_pxct = 11,
+    r_df = 12,
+    r_rcrd = 13,
+    r_unk = 14,
 };
 
 // An n x n matrix of r types and their common cast type
 
-inline constexpr uint8_t r_type_pairs[15][15] = {
+inline constexpr r_type r_type_pairs[15][15] = {
   /*            NULL    LGL     INT     I64     DBL     CHR     CPLX    RAW     LIST    FCT     DATE    PXCT    DF   RCRD Unknown */
   /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_rcrd, r_unk },
   /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
