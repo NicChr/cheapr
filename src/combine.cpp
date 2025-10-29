@@ -963,6 +963,8 @@ SEXP cpp_c(SEXP x){
   R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
 
   r_type common = r_common_type(x);
+
+  // 'out' here acts as a template for the final result
   if (n > 0){
     SHIELD(out = cast_(common, get_ptype(p_x[0]), R_NilValue)); ++NP;
   }
@@ -1112,6 +1114,30 @@ SEXP cpp_c(SEXP x){
   }
   case r_df: {
     SHIELD(out = cpp_df_c(x)); ++NP;
+    break;
+  }
+  case r_rcrd: {
+
+    SEXP cls = SHIELD(Rf_getAttrib(out, R_ClassSymbol)); ++NP;
+    SEXP nms = SHIELD(get_names(out)); ++NP;
+    SEXP rcrds = SHIELD(new_vec(VECSXP, n)); ++NP;
+
+    for (int i = 0; i < n; ++i){
+    SET_VECTOR_ELT(rcrds, i, cpp_list_as_df(p_x[i]));
+
+      // Incompatible names between rcrds
+      // It's possible that the owner of the rcrd object has a method to handle
+      // this specific case
+      if (!R_compute_identical(get_names(VECTOR_ELT(rcrds, i)), nms, 0)){
+        SEXP call = SHIELD(coerce_vec(x, LISTSXP)); ++NP;
+        SHIELD(call = Rf_lcons(install_utf8("c"), call)); ++NP;
+        SHIELD(out = Rf_eval(call, R_GetCurrentEnv())); ++NP;
+        YIELD(NP);
+        return out;
+      }
+  }
+    SHIELD(out = cpp_df_c(rcrds)); ++NP;
+    Rf_classgets(out, cls);
     break;
   }
   case r_unk: {

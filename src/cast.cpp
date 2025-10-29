@@ -11,10 +11,11 @@ SEXP as_date = NULL;
 SEXP as_posixct = NULL;
 SEXP as_list = NULL;
 
-const cast_fn CAST_FNS[14] = {
+const cast_fn CAST_FNS[15] = {
   cast_null, cast_logical, cast_integer, cast_integer64,
   cast_numeric, cast_character, cast_complex, cast_raw, cast_list,
-  cast_factor, cast_date, cast_posixt, cast_data_frame, cast_unknown
+  cast_factor, cast_date, cast_posixt, cast_data_frame,
+  cast_vctrs_rcrd, cast_unknown
 };
 
 // Fast casting of objects to common type (via typeof)
@@ -67,13 +68,12 @@ r_type r_common_type(SEXP x){
 
   for (R_xlen_t i = 0; i < n; ++i){
     common = common_type(common, get_r_type(p_x[i]));
-    if (common == r_unk) break;
   }
   return common;
 }
 
 [[cpp11::register]]
-SEXP cpp_cast_all(SEXP x){
+SEXP cpp_cast_common(SEXP x){
 
   int32_t NP = 0;
 
@@ -152,6 +152,10 @@ case r_date: {
 }
 case r_pxct: {
   CAST_LOOP(cast<r_posixt_t>)
+  break;
+}
+case r_rcrd: {
+  CAST_LOOP(cast<r_vctrs_rcrd_t>)
   break;
 }
 case r_df: {

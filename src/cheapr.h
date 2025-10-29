@@ -224,7 +224,7 @@ SEXP fast_cast(SEXP x);
 SEXP cpp_lgl_count(SEXP x);
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
                   bool include_true, bool include_false, bool include_na);
-SEXP cpp_cast_all(SEXP x);
+SEXP cpp_cast_common(SEXP x);
 SEXP factor_as_character(SEXP x);
 SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
 SEXP character_as_factor(SEXP x, SEXP levels);
@@ -406,6 +406,7 @@ struct r_factor_t {};
 struct r_date_t {};
 struct r_posixt_t {};
 struct r_data_frame_t {};
+struct r_vctrs_rcrd_t {}; // Special type for vctrs-style record objects
 struct r_unknown_t {};
 
 
@@ -425,27 +426,29 @@ enum : r_type {
     r_date = (uint8_t) 10,
     r_pxct = (uint8_t) 11,
     r_df = (uint8_t) 12,
-    r_unk = (uint8_t) 13,
+    r_rcrd = (uint8_t) 13,
+    r_unk = (uint8_t) 14,
 };
 
 // An n x n matrix of r types and their common cast type
 
-inline constexpr uint8_t r_type_pairs[14][14] = {
-  /*            NULL    LGL     INT     I64     DBL     CHR     CPLX    RAW     LIST    FCT     DATE    PXCT    DF   Unknown */
-  /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
-  /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
-  /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
-  /* I64  */  { r_int64,r_int64,r_int64,r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
-  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,  r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
-  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_list, r_fct,  r_chr,  r_chr,  r_df, r_unk },
-  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx, r_cplx, r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_fct,  r_df,   r_df, r_unk },
-  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,  r_raw,  r_chr,  r_raw,  r_raw,  r_list, r_df,   r_df,   r_df,   r_df, r_unk },
-  /* LIST */  { r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_df, r_unk },
-  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_df,   r_list, r_fct,  r_fct,  r_fct,  r_df, r_unk },
-  /* DATE */  { r_date, r_date, r_date, r_date, r_date, r_chr,  r_fct,  r_df,   r_list, r_fct,  r_date, r_pxct, r_df, r_unk },
-  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct, r_pxct, r_chr,  r_df,   r_df,   r_list, r_fct,  r_pxct, r_pxct, r_df, r_unk },
-  /* DF   */  { r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df, r_unk },
-  /* Unknown   */  { r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk, r_unk }
+inline constexpr uint8_t r_type_pairs[15][15] = {
+  /*            NULL    LGL     INT     I64     DBL     CHR     CPLX    RAW     LIST    FCT     DATE    PXCT    DF   RCRD Unknown */
+  /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_rcrd, r_unk },
+  /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
+  /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
+  /* I64  */  { r_int64,r_int64,r_int64,r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
+  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,  r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
+  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_list, r_fct,  r_chr,  r_chr,  r_df, r_unk, r_unk },
+  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx, r_cplx, r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_fct,  r_df,   r_df, r_unk, r_unk },
+  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,  r_raw,  r_chr,  r_raw,  r_raw,  r_list, r_df,   r_df,   r_df,   r_df, r_unk, r_unk },
+  /* LIST */  { r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_df, r_unk, r_unk },
+  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_df,   r_list, r_fct,  r_fct,  r_fct,  r_df, r_unk, r_unk },
+  /* DATE */  { r_date, r_date, r_date, r_date, r_date, r_chr,  r_fct,  r_df,   r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
+  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct, r_pxct, r_chr,  r_df,   r_df,   r_list, r_fct,  r_pxct, r_pxct, r_df, r_unk, r_unk },
+  /* DF   */  { r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df, r_unk, r_unk },
+  /* RCRD   */  { r_rcrd,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk, r_rcrd, r_unk },
+  /* Unknown   */  { r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk, r_unk, r_unk }
 };
 
 // initialise template with specialisations
@@ -513,18 +516,12 @@ inline SEXP init<r_complex_t>(R_xlen_t n) {
 
 template<>
 inline SEXP init<r_raw_t>(R_xlen_t n) {
-  SEXP out = SHIELD(new_vec(RAWSXP, 0));
-  SHIELD(out = cpp_na_init(out, n));
-  YIELD(2);
-  return out;
+  return new_vec(RAWSXP, n);
 }
 
 template<>
 inline SEXP init<r_list_t>(R_xlen_t n) {
-  SEXP out = SHIELD(new_vec(VECSXP, 0));
-  SHIELD(out = cpp_na_init(out, n));
-  YIELD(2);
-  return out;
+  return new_vec(VECSXP, n);
 }
 
 template<>
@@ -803,7 +800,22 @@ inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
-  return cheapr_cast(x, y);
+  if (static_cast<bool>(R_compute_identical(
+      Rf_getAttrib(x, R_ClassSymbol),
+      Rf_getAttrib(y, R_ClassSymbol), 0))){
+    return x;
+  } else {
+    return cheapr_cast(x, y);
+  }
+}
+
+template<>
+inline SEXP cast<r_vctrs_rcrd_t>(SEXP x, SEXP y) {
+  if (Rf_inherits(x, "vctrs_rcrd")){
+    return x;
+  } else {
+    return cast<r_unknown_t>(x, y);
+  }
 }
 
 inline r_type common_type(const r_type &a, const r_type &b) {
@@ -827,10 +839,11 @@ inline const r_type get_r_type(SEXP x) {
     }
   } else {
 
-    if (Rf_inherits(x, "data.frame")) return r_df;
-    if (Rf_inherits(x, "POSIXct"))    return r_pxct;
-    if (Rf_inherits(x, "Date"))       return r_date;
     if (Rf_inherits(x, "factor"))     return r_fct;
+    if (Rf_inherits(x, "Date"))       return r_date;
+    if (Rf_inherits(x, "POSIXct"))    return r_pxct;
+    if (Rf_inherits(x, "data.frame")) return r_df;
+    if (Rf_inherits(x, "vctrs_rcrd")) return r_rcrd;
     if (Rf_inherits(x, "integer64"))  return r_int64;
     return r_unk;
   }
@@ -851,9 +864,10 @@ inline SEXP cast_factor(SEXP x, SEXP y) { return cast<r_factor_t>(x, y); }
 inline SEXP cast_date(SEXP x, SEXP y) { return cast<r_date_t>(x, y); }
 inline SEXP cast_posixt(SEXP x, SEXP y) { return cast<r_posixt_t>(x, y); }
 inline SEXP cast_data_frame(SEXP x, SEXP y) { return cast<r_data_frame_t>(x, y); }
+inline SEXP cast_vctrs_rcrd(SEXP x, SEXP y) { return cast<r_vctrs_rcrd_t>(x, y); }
 inline SEXP cast_unknown(SEXP x, SEXP y) { return cast<r_unknown_t>(x, y); }
 
-extern const cast_fn CAST_FNS[14];
+extern const cast_fn CAST_FNS[15];
 
 // Dispatcher function
 inline SEXP cast_(r_type cast_type, SEXP x, SEXP y) {

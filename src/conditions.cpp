@@ -268,7 +268,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
 
   // Below is a catch-all method
 
-  SHIELD(args = cpp_cast_all(args)); ++NP;
+  SHIELD(args = cpp_cast_common(args)); ++NP;
   yes = VECTOR_ELT(args, 0);
   no = VECTOR_ELT(args, 1);
   na = VECTOR_ELT(args, 2);

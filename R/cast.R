@@ -24,7 +24,7 @@ cast <- function(x, y){
 #' @rdname cast
 #' @export
 cast_common <- function(..., .args = NULL){
-  .Call(`_cheapr_cpp_cast_all`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
+  .Call(`_cheapr_cpp_cast_common`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
 }
 
 base_cast <- function(x, template){

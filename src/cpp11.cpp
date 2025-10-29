@@ -34,10 +34,10 @@ extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add
   END_CPP11
 }
 // cast.cpp
-SEXP cpp_cast_all(SEXP x);
-extern "C" SEXP _cheapr_cpp_cast_all(SEXP x) {
+SEXP cpp_cast_common(SEXP x);
+extern "C" SEXP _cheapr_cpp_cast_common(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_cast_all(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(cpp_cast_common(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // cast.cpp
@@ -778,7 +778,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_bin",                     (DL_FUNC) &_cheapr_cpp_bin,                     6},
     {"_cheapr_cpp_c",                       (DL_FUNC) &_cheapr_cpp_c,                       1},
     {"_cheapr_cpp_cast",                    (DL_FUNC) &_cheapr_cpp_cast,                    2},
-    {"_cheapr_cpp_cast_all",                (DL_FUNC) &_cheapr_cpp_cast_all,                1},
+    {"_cheapr_cpp_cast_common",             (DL_FUNC) &_cheapr_cpp_cast_common,             1},
     {"_cheapr_cpp_col_all_na",              (DL_FUNC) &_cheapr_cpp_col_all_na,              2},
     {"_cheapr_cpp_col_any_na",              (DL_FUNC) &_cheapr_cpp_col_any_na,              2},
     {"_cheapr_cpp_col_na_counts",           (DL_FUNC) &_cheapr_cpp_col_na_counts,           2},

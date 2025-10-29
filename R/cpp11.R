@@ -16,8 +16,8 @@ cpp_set_add_attributes <- function(x, attributes, add) {
   .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
-cpp_cast_all <- function(x) {
-  .Call(`_cheapr_cpp_cast_all`, x)
+cpp_cast_common <- function(x) {
+  .Call(`_cheapr_cpp_cast_common`, x)
 }
 
 cpp_cast <- function(x, y) {
