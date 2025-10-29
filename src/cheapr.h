@@ -14,6 +14,12 @@
 #define R_NO_REMAP
 #endif
 
+// Note on use of extern keyword in this file
+// Because earlier R versions only have C++14 and earlier we have to use
+// extern and then define the variable once in a separate cpp file
+// inline can be safely used for functions
+// After R 4.3.0 + C++17 we can use inline keyword in header file only here
+
 #ifndef VECTOR_PTR_RO
 #define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
 #endif
@@ -359,18 +365,20 @@ inline bool is_whole_number(double x, double tolerance){
   return (std::fabs(x - std::round(x)) < tolerance);
 }
 
-inline cpp11::function cheapr_sset = cpp11::package("cheapr")["cheapr_sset"];
-inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
-inline cpp11::function cheapr_factor = cpp11::package("cheapr")["factor_"];
-inline cpp11::function base_rep = cpp11::package("base")["rep"];
-inline cpp11::function base_do_call = cpp11::package("base")["do.call"];
-inline cpp11::function base_as_character = cpp11::package("base")["as.character"];
-inline cpp11::function base_paste0 = cpp11::package("base")["paste0"];
-inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
-inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
-inline cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
-inline cpp11::function cheapr_as_df = cpp11::package("cheapr")["as_df"];
-inline cpp11::function cheapr_cast = cpp11::package("cheapr")["base_cast"];
+// Defined in r_imports.cpp
+
+extern cpp11::function cheapr_sset;
+extern cpp11::function cheapr_is_na;
+extern cpp11::function cheapr_factor;
+extern cpp11::function base_rep;
+extern cpp11::function base_do_call;
+extern cpp11::function base_as_character;
+extern cpp11::function base_paste0;
+extern cpp11::function cheapr_fast_match;
+extern cpp11::function cheapr_fast_unique;
+extern cpp11::function cheapr_rebuild;
+extern cpp11::function cheapr_as_df;
+extern cpp11::function cheapr_cast;
 
 inline bool address_equal(SEXP x, SEXP y){
   return r_address(x) == r_address(y);
@@ -380,6 +388,7 @@ inline bool address_equal(SEXP x, SEXP y){
 // for casting, initialising, combining and assigning
 
 // Symbols for R conversion fns
+// Defined in cast.cpp
 
 extern SEXP as_lgl;
 extern SEXP as_int;
@@ -398,17 +407,16 @@ struct r_logical_t {};
 struct r_integer_t {};
 struct r_integer64_t {};
 struct r_numeric_t {};
-struct r_character_t {};
 struct r_complex_t {};
 struct r_raw_t {};
-struct r_list_t {};
-struct r_factor_t {};
 struct r_date_t {};
 struct r_posixt_t {};
-struct r_data_frame_t {};
 struct r_vctrs_rcrd_t {}; // Special type for vctrs-style record objects
+struct r_character_t {};
+struct r_factor_t {};
+struct r_list_t {};
+struct r_data_frame_t {};
 struct r_unknown_t {};
-
 
 // r type constants
 using r_type = uint8_t;
@@ -418,38 +426,39 @@ enum : r_type {
     r_int = 2,
     r_int64 = 3,
     r_dbl = 4,
-    r_chr = 5,
-    r_cplx = 6,
-    r_raw = 7,
-    r_list = 8,
-    r_fct = 9,
-    r_date = 10,
-    r_pxct = 11,
-    r_df = 12,
-    r_rcrd = 13,
+    r_cplx = 5,
+    r_raw = 6,
+    r_date = 7,
+    r_pxct = 8,
+    r_rcrd = 9,
+    r_chr = 10,
+    r_fct = 11,
+    r_list = 12,
+    r_df = 13,
     r_unk = 14,
 };
 
 // An n x n matrix of r types and their common cast type
 
-inline constexpr r_type r_type_pairs[15][15] = {
-  /*            NULL    LGL     INT     I64     DBL     CHR     CPLX    RAW     LIST    FCT     DATE    PXCT    DF   RCRD Unknown */
-  /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_rcrd, r_unk },
-  /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
-  /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
-  /* I64  */  { r_int64,r_int64,r_int64,r_int64, r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
-  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,  r_dbl,  r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
-  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_list, r_fct,  r_chr,  r_chr,  r_df, r_unk, r_unk },
-  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx, r_cplx, r_chr,  r_cplx, r_raw,  r_list, r_fct,  r_fct,  r_df,   r_df, r_unk, r_unk },
-  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,  r_raw,  r_chr,  r_raw,  r_raw,  r_list, r_df,   r_df,   r_df,   r_df, r_unk, r_unk },
-  /* LIST */  { r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_df, r_unk, r_unk },
-  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_fct,  r_df,   r_list, r_fct,  r_fct,  r_fct,  r_df, r_unk, r_unk },
-  /* DATE */  { r_date, r_date, r_date, r_date, r_date, r_chr,  r_fct,  r_df,   r_list, r_fct,  r_date, r_pxct, r_df, r_unk, r_unk },
-  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct, r_pxct, r_chr,  r_df,   r_df,   r_list, r_fct,  r_pxct, r_pxct, r_df, r_unk, r_unk },
-  /* DF   */  { r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df, r_unk, r_unk },
-  /* RCRD   */  { r_rcrd,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk, r_rcrd, r_unk },
-  /* Unknown   */  { r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk,   r_unk, r_unk, r_unk }
+constexpr r_type r_type_pairs[15][15] = {
+  /*            NULL    LGL     INT     I64     DBL     CPLX    RAW     DATE    PXCT    RCRD    CHR     FCT     LIST    DF      Unknown */
+  /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_rcrd, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* I64  */  { r_int64,r_int64,r_int64,r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,   r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw,  r_fct,  r_df,   r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,   r_raw,  r_raw,  r_raw,  r_df,   r_df,   r_unk,  r_chr,  r_df,   r_list, r_df,   r_unk },
+  /* DATE */  { r_date, r_date, r_date, r_date,  r_date, r_fct,  r_df,   r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_df,   r_df,   r_pxct, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* RCRD */  { r_rcrd, r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_rcrd, r_unk,  r_unk,  r_unk,  r_unk,  r_unk },
+  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,   r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,   r_fct,  r_fct,  r_df,   r_fct,  r_fct,  r_unk,  r_fct,  r_fct,  r_list, r_df,   r_unk },
+  /* LIST */  { r_list, r_list, r_list, r_list,  r_list, r_list, r_list, r_list, r_list, r_unk,  r_list, r_list, r_list, r_df,   r_unk },
+  /* DF   */  { r_df,   r_df,   r_df,   r_df,    r_df,   r_df,   r_df,   r_df,   r_df,   r_unk,  r_df,   r_df,   r_df,   r_df,   r_unk },
+  /* Unknown */ { r_unk,  r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk }
 };
+
 
 // initialise template with specialisations
 template<typename T>
@@ -867,6 +876,7 @@ inline SEXP cast_data_frame(SEXP x, SEXP y) { return cast<r_data_frame_t>(x, y);
 inline SEXP cast_vctrs_rcrd(SEXP x, SEXP y) { return cast<r_vctrs_rcrd_t>(x, y); }
 inline SEXP cast_unknown(SEXP x, SEXP y) { return cast<r_unknown_t>(x, y); }
 
+// Defined cast.cpp
 extern const cast_fn CAST_FNS[15];
 
 // Dispatcher function
