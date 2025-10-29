@@ -11,11 +11,12 @@ SEXP as_date = NULL;
 SEXP as_posixct = NULL;
 SEXP as_list = NULL;
 
+// The order of functions here MUST MATCH the order of defined r types
 const cast_fn CAST_FNS[15] = {
   cast_null, cast_logical, cast_integer, cast_integer64,
-  cast_numeric, cast_character, cast_complex, cast_raw, cast_list,
-  cast_factor, cast_date, cast_posixt, cast_data_frame,
-  cast_vctrs_rcrd, cast_unknown
+  cast_numeric, cast_complex, cast_raw, cast_date, cast_posixt,
+  cast_vctrs_rcrd, cast_character, cast_factor, cast_list,
+  cast_data_frame, cast_unknown
 };
 
 // Fast casting of objects to common type (via typeof)
