@@ -5,6 +5,13 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
+// assign.cpp
+SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place);
+extern "C" SEXP _cheapr_cpp_assign(SEXP x, SEXP where, SEXP with, SEXP in_place) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_assign(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(with), cpp11::as_cpp<cpp11::decay_t<bool>>(in_place)));
+  END_CPP11
+}
 // attrs.cpp
 SEXP cpp_set_rm_attributes(SEXP x);
 extern "C" SEXP _cheapr_cpp_set_rm_attributes(SEXP x) {
@@ -775,6 +782,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
+    {"_cheapr_cpp_assign",                  (DL_FUNC) &_cheapr_cpp_assign,                  4},
     {"_cheapr_cpp_bin",                     (DL_FUNC) &_cheapr_cpp_bin,                     6},
     {"_cheapr_cpp_c",                       (DL_FUNC) &_cheapr_cpp_c,                       1},
     {"_cheapr_cpp_cast",                    (DL_FUNC) &_cheapr_cpp_cast,                    2},

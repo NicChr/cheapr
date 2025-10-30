@@ -438,6 +438,25 @@ enum : r_type {
     r_unk = 14,
 };
 
+// R type chars
+constexpr const char* r_type_names[15] = {
+  "NULL",    // 0
+  "logical",     // 1
+  "integer",     // 2
+  "integer64",   // 3
+  "numeric",     // 4
+  "complex",    // 5
+  "raw",     // 6
+  "Date",    // 7
+  "POSIXct",    // 8
+  "vctrs_rcrd",    // 9
+  "character",     // 10
+  "factor",     // 11
+  "list",    // 12
+  "data.frame",      // 13
+  "unknown"      // 14
+};
+
 // An n x n matrix of r types and their common cast type
 
 constexpr r_type r_type_pairs[15][15] = {
@@ -694,12 +713,14 @@ inline SEXP cast<r_factor_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "factor") && !Rf_inherits(y, "factor")){
     return x;
   } else if (Rf_inherits(y, "factor")){
+    SEXP x_lvls = SHIELD(Rf_getAttrib(x, R_LevelsSymbol));
+    SEXP out_lvls = SHIELD(Rf_getAttrib(y, R_LevelsSymbol));
+    if (R_compute_identical(x_lvls, out_lvls, 0)){
+      YIELD(2);
+      return x;
+    }
     SEXP out = SHIELD(cast<r_character_t>(x, R_NilValue));
-    SEXP fctrs = SHIELD(new_vec(VECSXP, 2));
-    SET_VECTOR_ELT(fctrs, 0, out);
-    SET_VECTOR_ELT(fctrs, 1, y);
-    SEXP all_levels = SHIELD(combine_levels(fctrs));
-    SHIELD(out = character_as_factor(out, all_levels));
+    SHIELD(out = character_as_factor(out, out_lvls));
     YIELD(4);
     return out;
   } else if (is_null(x)){
@@ -736,14 +757,22 @@ template<>
 inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "POSIXct") && !Rf_inherits(y, "POSIXct")){
     return x;
+    // Copy timezone information
   } else if (Rf_inherits(x, "POSIXct") && Rf_inherits(y, "POSIXct")){
-    SEXP out = SHIELD(Rf_shallow_duplicate(x));
+    SEXP x_tzone = SHIELD(Rf_getAttrib(x, install_utf8("tzone")));
     SEXP out_tzone = SHIELD(Rf_getAttrib(y, install_utf8("tzone")));
+
+    if (R_compute_identical(x_tzone, out_tzone, 0)){
+      YIELD(2);
+      return x;
+    }
+    SEXP out = SHIELD(Rf_shallow_duplicate(x));
     Rf_setAttrib(out, install_utf8("tzone"), out_tzone);
-    YIELD(2);
+    YIELD(3);
     return out;
   } else if (is_null(x) && is_null(y)){
     return init<r_posixt_t>(0);
+    // Fast method for converting into a date into a date-time
   } else if (Rf_inherits(x, "Date") && Rf_inherits(y, "POSIXct")){
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(new_vec(REALSXP, n));
@@ -855,6 +884,18 @@ inline const r_type get_r_type(SEXP x) {
     if (Rf_inherits(x, "vctrs_rcrd")) return r_rcrd;
     if (Rf_inherits(x, "integer64"))  return r_int64;
     return r_unk;
+  }
+}
+
+inline const char *r_type_char(SEXP x){
+
+  r_type type = get_r_type(x);
+
+  // If unknown type
+  if (type == r_unk && TYPEOF(Rf_getAttrib(x, R_ClassSymbol)) == STRSXP && Rf_length(Rf_getAttrib(x, R_ClassSymbol)) > 0){
+    return CHAR(STRING_ELT(Rf_getAttrib(x, R_ClassSymbol), 0));
+  } else {
+    return r_type_names[type];
   }
 }
 

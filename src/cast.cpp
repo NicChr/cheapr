@@ -178,5 +178,5 @@ return out;
 
 [[cpp11::register]]
 SEXP cpp_cast(SEXP x, SEXP y){
-  return cast_(get_r_type(y), x, R_NilValue);
+  return cast_(get_r_type(y), x, y);
 }
