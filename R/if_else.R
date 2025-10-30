@@ -28,40 +28,52 @@ cheapr_if_else <- if_else_
 # Assumes true, false, and na are similar types/classes
 if_else2 <- function(condition, true, false, na){
 
+  n <- length(condition)
+
+  if (length(true) != 1 && length(true) != n){
+    stop("`length(true)` must be 1 or `length(condition)`")
+  }
+  if (length(false) != 1 && length(false) != n){
+    stop("`length(false)` must be 1 or `length(condition)`")
+  }
+  if (length(na) != 1 && length(na) != n){
+    stop("`length(na)` must be 1 or `length(condition)`")
+  }
+
   lgl_val_counts <- cpp_lgl_count(condition)
   n_true <- lgl_val_counts["true"]
   n_false <- lgl_val_counts["false"]
   n_na <- lgl_val_counts["na"]
 
   if (n_true == length(condition)){
-    if (vector_length(true) == 1){
-      return(rep_len_(true, length(condition)))
+    if (length(true) == 1){
+      return(rep_len(true, length(condition)))
     } else {
       return(true)
     }
   }
 
   if (n_false == length(condition)){
-    if (vector_length(false) == 1){
-      return(rep_len_(false, length(condition)))
+    if (length(false) == 1){
+      return(rep_len(false, length(condition)))
     } else {
       return(false)
     }
   }
 
   if (n_na == length(condition)){
-    if (vector_length(na) == 1){
-      return(rep_len_(na, length(condition)))
+    if (length(na) == 1){
+      return(rep_len(na, length(condition)))
     } else {
       return(na)
     }
   }
 
   # The else part is most likely to be most prominent
-  if (vector_length(false) == length(condition)){
+  if (length(false) == length(condition)){
     out <- false
   } else {
-    out <- rep_len_(false, length(condition))
+    out <- rep_len(false, length(condition))
   }
 
   lgl_locs <- cpp_lgl_locs(condition, n_true = n_true, n_false = n_false,
@@ -73,12 +85,12 @@ if_else2 <- function(condition, true, false, na){
   if (length(true) == 1){
     out[true_locs] <- true
   } else {
-    out[true_locs] <- sset(true, true_locs)
+    out[true_locs] <- true[true_locs]
   }
   if (length(na) == 1){
     out[na_locs] <- na
   } else {
-    out[na_locs] <- sset(na, na_locs)
+    out[na_locs] <- na[na_locs]
   }
   out
 }

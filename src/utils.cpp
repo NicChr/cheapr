@@ -1054,4 +1054,3 @@ SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   YIELD(2);
   return out;
 }
-

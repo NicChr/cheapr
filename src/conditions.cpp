@@ -1,141 +1,200 @@
 #include "cheapr.h"
 
-// Fast SIMD vectorised if-else
-
-SEXP if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
-
-  int yes_type = TYPEOF(yes);
-
-  if (TYPEOF(condition) != LGLSXP){
-    Rf_error("condition must be a logical vector");
-  }
-  if (yes_type != TYPEOF(no)){
-    Rf_error("`typeof(yes)` must match `typeof(no)`");
-  }
-  if (yes_type != TYPEOF(na)){
-    Rf_error("`typeof(yes)` must match `typeof(na)`");
-  }
-  R_xlen_t n = Rf_xlength(condition);
-  R_xlen_t yes_size = Rf_xlength(yes);
-  R_xlen_t no_size = Rf_xlength(no);
-  R_xlen_t na_size = Rf_xlength(na);
-
-  if (yes_size != 1 && yes_size != n){
-    Rf_error("`length(yes)` must be 1 or `length(condition)`");
-  }
-  if (no_size != 1 && no_size != n){
-    Rf_error("`length(no)` must be 1 or `length(condition)`");
-  }
-  if (na_size != 1 && na_size != n){
-    Rf_error("`length(na)` must be 1 or `length(condition)`");
-  }
-
-  bool yes_scalar = yes_size == 1;
-  bool no_scalar = no_size == 1;
-  bool na_scalar = na_size == 1;
-  bool all_scalar = yes_scalar && no_scalar && na_scalar;
-  int lgl;
-
-#define VECTORISED_IF_ELSE                                         \
-  for (R_xlen_t i = 0; i < n; ++i){                                \
-    switch(p_x[i]){                                                \
-    case 1: {                                                      \
+#define CHEAPR_VECTORISED_IF_ELSE                                  \
+for (R_xlen_t i = 0; i < n; ++i){                                  \
+  switch(p_x[i]){                                                  \
+  case 1: {                                                        \
   p_out[i] = p_yes[yes_scalar ? 0 : i];                            \
   break;                                                           \
 }                                                                  \
-    case 0: {                                                      \
-      p_out[i] = p_no[no_scalar ? 0 : i];                          \
-      break;                                                       \
-    }                                                              \
-    default: {                                                     \
-      p_out[i] = p_na[na_scalar ? 0 : i];                          \
-      break;                                                       \
-    }                                                              \
-    }                                                              \
+  case 0: {                                                        \
+    p_out[i] = p_no[no_scalar ? 0 : i];                            \
+    break;                                                         \
   }                                                                \
+  default: {                                                       \
+    p_out[i] = p_na[na_scalar ? 0 : i];                            \
+    break;                                                         \
+  }                                                                \
+  }                                                                \
+}
 
-#define SCALAR_IF_ELSE                                               \
-  for (R_xlen_t i = 0; i < n; ++i){                                  \
-    lgl = p_x[i];                                                    \
-    if (lgl == 1){                                                   \
-      p_out[i] = yes_value;                                          \
-    } else if (lgl == 0){                                            \
-      p_out[i] = no_value;                                           \
-    } else {                                                         \
-      p_out[i] = na_value;                                           \
-    }                                                                \
+#define CHEAPR_SCALAR_IF_ELSE                                        \
+for (R_xlen_t i = 0; i < n; ++i){                                    \
+  lgl = p_x[i];                                                      \
+  if (lgl == 1){                                                     \
+    p_out[i] = yes_value;                                            \
+  } else if (lgl == 0){                                              \
+    p_out[i] = no_value;                                             \
+  } else {                                                           \
+    p_out[i] = na_value;                                             \
   }                                                                  \
+}
 
-  const int* RESTRICT p_x = INTEGER_RO(condition);
-  SEXP out = SHIELD(new_vec(yes_type, n));
+// Fast SIMD vectorised if-else
 
-  switch (yes_type){
-  case NILSXP: {
-    break;
+[[cpp11::register]]
+SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
+
+  if (!Rf_isLogical(condition)){
+    Rf_error("condition must be a logical vector");
   }
-  case LGLSXP:
-  case INTSXP: {
-    int* RESTRICT p_out = INTEGER(out);
-    const int *p_yes = INTEGER(yes);
-    const int *p_no = INTEGER(no);
-    const int *p_na = INTEGER(na);
 
-    if (all_scalar){
-      const int yes_value = p_yes[0];
-      const int no_value = p_no[0];
-      const int na_value = p_na[0];
-      OMP_FOR_SIMD
-      SCALAR_IF_ELSE
-    } else {
-      VECTORISED_IF_ELSE
+  int32_t NP = 0;
+
+  if (is_null(na)){
+    SHIELD(na = cpp_na_init(no, 1)); ++NP;
+  }
+
+  SEXP args = SHIELD(new_vec(VECSXP, 3)); ++NP;
+  SET_VECTOR_ELT(args, 0, yes);
+  SET_VECTOR_ELT(args, 1, no);
+  SET_VECTOR_ELT(args, 2, na);
+
+  SHIELD(args = cpp_cast_common(args)); ++NP;
+  yes = VECTOR_ELT(args, 0);
+  no = VECTOR_ELT(args, 1);
+  na = VECTOR_ELT(args, 2);
+  r_type common = get_r_type(yes);
+
+  if (common != r_unk){
+    SEXP out = R_NilValue;
+
+    R_xlen_t n = vec_length(condition);
+    R_xlen_t yes_size = vec_length(yes);
+    R_xlen_t no_size = vec_length(no);
+    R_xlen_t na_size = vec_length(na);
+
+    if (yes_size != 1 && yes_size != n){
+      YIELD(NP);
+      Rf_error("`vector_length(true)` must be 1 or `length(condition)`");
     }
-    break;
-  }
-  case REALSXP: {
-    double* RESTRICT p_out = REAL(out);
-    const double *p_yes = REAL(yes);
-    const double *p_no = REAL(no);
-    const double *p_na = REAL(na);
-
-    if (all_scalar){
-      const double yes_value = p_yes[0];
-      const double no_value = p_no[0];
-      const double na_value = p_na[0];
-      OMP_FOR_SIMD
-      SCALAR_IF_ELSE
-    } else {
-      VECTORISED_IF_ELSE
+    if (no_size != 1 && no_size != n){
+      YIELD(NP);
+      Rf_error("`vector_length(false)` must be 1 or `length(condition)`");
     }
-    break;
-  }
-  case STRSXP: {
-    const SEXP *p_yes = STRING_PTR_RO(yes);
-    const SEXP *p_no = STRING_PTR_RO(no);
-    const SEXP *p_na = STRING_PTR_RO(na);
+    if (na_size != 1 && na_size != n){
+      YIELD(NP);
+      Rf_error("`vector_length(na)` must be 1 or `length(condition)`");
+    }
 
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case 1: {
-      SET_STRING_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+    bool yes_scalar = yes_size == 1;
+    bool no_scalar = no_size == 1;
+    bool na_scalar = na_size == 1;
+    bool all_scalar = yes_scalar && no_scalar && na_scalar;
+    int lgl;
+
+    const int* RESTRICT p_x = INTEGER_RO(condition);
+
+    switch (common){
+    case r_null: {
       break;
     }
-      case 0: {
-        SET_STRING_ELT(out, i, p_no[no_scalar ? 0 : i]);
-        break;
+    case r_lgl: {
+      SHIELD(out = init<r_logical_t>(n, false)); ++NP;
+      int* RESTRICT p_out = LOGICAL(out);
+      const int *p_yes = LOGICAL_RO(yes);
+      const int *p_no = LOGICAL_RO(no);
+      const int *p_na = LOGICAL_RO(na);
+
+      if (all_scalar){
+        const int yes_value = p_yes[0];
+        const int no_value = p_no[0];
+        const int na_value = p_na[0];
+        OMP_FOR_SIMD
+        CHEAPR_SCALAR_IF_ELSE
+      } else {
+        CHEAPR_VECTORISED_IF_ELSE
       }
-      default: {
-        SET_STRING_ELT(out, i, p_na[na_scalar ? 0 : i]);
-        break;
-      }
-      }
+      break;
     }
-    break;
-  }
-  case CPLXSXP: {
-    Rcomplex *p_out = COMPLEX(out);
-    const Rcomplex *p_yes = COMPLEX(yes);
-    const Rcomplex *p_no = COMPLEX(no);
-    const Rcomplex *p_na = COMPLEX(na);
+    case r_int: {
+      SHIELD(out = init<r_integer_t>(n, false)); ++NP;
+      int* RESTRICT p_out = INTEGER(out);
+      const int *p_yes = INTEGER_RO(yes);
+      const int *p_no = INTEGER_RO(no);
+      const int *p_na = INTEGER_RO(na);
+
+      if (all_scalar){
+        const int yes_value = p_yes[0];
+        const int no_value = p_no[0];
+        const int na_value = p_na[0];
+        OMP_FOR_SIMD
+        CHEAPR_SCALAR_IF_ELSE
+      } else {
+        CHEAPR_VECTORISED_IF_ELSE
+      }
+      break;
+    }
+    case r_int64: {
+      SHIELD(out = init<r_integer64_t>(n, false)); ++NP;
+      int64_t* RESTRICT p_out = INTEGER64_PTR(out);
+      const int64_t *p_yes = INTEGER64_PTR_RO(yes);
+      const int64_t *p_no = INTEGER64_PTR_RO(no);
+      const int64_t *p_na = INTEGER64_PTR_RO(na);
+
+      if (all_scalar){
+        const int64_t yes_value = p_yes[0];
+        const int64_t no_value = p_no[0];
+        const int64_t na_value = p_na[0];
+        OMP_FOR_SIMD
+        CHEAPR_SCALAR_IF_ELSE
+      } else {
+        CHEAPR_VECTORISED_IF_ELSE
+      }
+      break;
+    }
+    case r_dbl: {
+      SHIELD(out = init<r_numeric_t>(n, false)); ++NP;
+      double* RESTRICT p_out = REAL(out);
+      const double *p_yes = REAL_RO(yes);
+      const double *p_no = REAL_RO(no);
+      const double *p_na = REAL_RO(na);
+
+      if (all_scalar){
+        const double yes_value = p_yes[0];
+        const double no_value = p_no[0];
+        const double na_value = p_na[0];
+        OMP_FOR_SIMD
+        CHEAPR_SCALAR_IF_ELSE
+      } else {
+        CHEAPR_VECTORISED_IF_ELSE
+      }
+      break;
+    }
+    case r_chr: {
+
+      SHIELD(out = init<r_character_t>(n, false)); ++NP;
+
+      const SEXP *p_yes = STRING_PTR_RO(yes);
+      const SEXP *p_no = STRING_PTR_RO(no);
+      const SEXP *p_na = STRING_PTR_RO(na);
+
+      for (R_xlen_t i = 0; i < n; ++i){
+        switch(p_x[i]){
+        case 1: {
+        SET_STRING_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+        break;
+      }
+        case 0: {
+          SET_STRING_ELT(out, i, p_no[no_scalar ? 0 : i]);
+          break;
+        }
+        default: {
+          SET_STRING_ELT(out, i, p_na[na_scalar ? 0 : i]);
+          break;
+        }
+        }
+      }
+      break;
+    }
+    case r_cplx: {
+
+      SHIELD(out = init<r_complex_t>(n, false)); ++NP;
+
+      Rcomplex *p_out = COMPLEX(out);
+      const Rcomplex *p_yes = COMPLEX(yes);
+      const Rcomplex *p_no = COMPLEX(no);
+      const Rcomplex *p_na = COMPLEX(na);
 
       if (all_scalar){
 
@@ -164,135 +223,158 @@ SEXP if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       } else {
 
         for (R_xlen_t i = 0; i < n; ++i){
-        switch(p_x[i]){
-        case 1: {
+          switch(p_x[i]){
+          case 1: {
         SET_COMPLEX_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
         break;
       }
+          case 0: {
+            SET_COMPLEX_ELT(out, i, p_no[no_scalar ? 0 : i]);
+            break;
+          }
+          default: {
+            SET_COMPLEX_ELT(out, i, p_na[na_scalar ? 0 : i]);
+            break;
+          }
+          }
+        }
+      }
+      break;
+    }
+    case r_raw: {
+
+      SHIELD(out = init<r_raw_t>(n, false)); ++NP;
+
+      const Rbyte *p_yes = RAW(yes);
+      const Rbyte *p_no = RAW(no);
+      const Rbyte *p_na = RAW(na);
+
+      for (R_xlen_t i = 0; i < n; ++i){
+        switch(p_x[i]){
+        case 1: {
+        SET_RAW_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+        break;
+      }
         case 0: {
-          SET_COMPLEX_ELT(out, i, p_no[no_scalar ? 0 : i]);
+          SET_RAW_ELT(out, i, p_no[no_scalar ? 0 : i]);
           break;
         }
         default: {
-          SET_COMPLEX_ELT(out, i, p_na[na_scalar ? 0 : i]);
+          SET_RAW_ELT(out, i, p_na[na_scalar ? 0 : i]);
           break;
         }
         }
       }
-    }
-    break;
-  }
-  case RAWSXP: {
-    const Rbyte *p_yes = RAW(yes);
-    const Rbyte *p_no = RAW(no);
-    const Rbyte *p_na = RAW(na);
-
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case 1: {
-      SET_RAW_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
       break;
     }
-      case 0: {
-        SET_RAW_ELT(out, i, p_no[no_scalar ? 0 : i]);
-        break;
-      }
-      default: {
-        SET_RAW_ELT(out, i, p_na[na_scalar ? 0 : i]);
-        break;
-      }
-      }
-    }
-    break;
-  }
-  case VECSXP: {
-    const SEXP *p_yes = VECTOR_PTR_RO(yes);
-    const SEXP *p_no = VECTOR_PTR_RO(no);
-    const SEXP *p_na = VECTOR_PTR_RO(na);
+    case r_fct: {
+      SHIELD(out = cpp_na_init(yes, n)); ++NP;
+      int* RESTRICT p_out = INTEGER(out);
+      const int *p_yes = INTEGER_RO(yes);
+      const int *p_no = INTEGER_RO(no);
+      const int *p_na = INTEGER_RO(na);
 
-    for (R_xlen_t i = 0; i < n; ++i){
-      switch(p_x[i]){
-      case 1: {
-      SET_VECTOR_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+      if (all_scalar){
+        const int yes_value = p_yes[0];
+        const int no_value = p_no[0];
+        const int na_value = p_na[0];
+        OMP_FOR_SIMD
+        CHEAPR_SCALAR_IF_ELSE
+      } else {
+        CHEAPR_VECTORISED_IF_ELSE
+      }
       break;
     }
-      case 0: {
-        SET_VECTOR_ELT(out, i, p_no[no_scalar ? 0 : i]);
-        break;
+    case r_date: {
+
+      SHIELD(out = cpp_na_init(yes, n)); ++NP;
+
+      if (TYPEOF(out) == INTSXP){
+        int* RESTRICT p_out = INTEGER(out);
+        const int *p_yes = INTEGER_RO(yes);
+        const int *p_no = INTEGER_RO(no);
+        const int *p_na = INTEGER_RO(na);
+
+        if (all_scalar){
+          const int yes_value = p_yes[0];
+          const int no_value = p_no[0];
+          const int na_value = p_na[0];
+          OMP_FOR_SIMD
+          CHEAPR_SCALAR_IF_ELSE
+        } else {
+          CHEAPR_VECTORISED_IF_ELSE
+        }
+      } else {
+        double* RESTRICT p_out = REAL(out);
+        const double *p_yes = REAL_RO(yes);
+        const double *p_no = REAL_RO(no);
+        const double *p_na = REAL_RO(na);
+
+        if (all_scalar){
+          const double yes_value = p_yes[0];
+          const double no_value = p_no[0];
+          const double na_value = p_na[0];
+          OMP_FOR_SIMD
+          CHEAPR_SCALAR_IF_ELSE
+        } else {
+          CHEAPR_VECTORISED_IF_ELSE
+        }
       }
-      default: {
-        SET_VECTOR_ELT(out, i, p_na[na_scalar ? 0 : i]);
-        break;
-      }
-      }
+
+      break;
     }
-    break;
-  }
-  default: {
-    YIELD(1);
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(yes_type));
-  }
-  }
-  YIELD(1);
-  return out;
-}
+    case r_pxct: {
+      SHIELD(out = init<r_posixt_t>(n, false)); ++NP;
+      double* RESTRICT p_out = REAL(out);
+      const double *p_yes = REAL_RO(yes);
+      const double *p_no = REAL_RO(no);
+      const double *p_na = REAL_RO(na);
 
-[[cpp11::register]]
-SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
+      if (all_scalar){
+        const double yes_value = p_yes[0];
+        const double no_value = p_no[0];
+        const double na_value = p_na[0];
+        OMP_FOR_SIMD
+        CHEAPR_SCALAR_IF_ELSE
+      } else {
+        CHEAPR_VECTORISED_IF_ELSE
+      }
+      break;
+    }
+    case r_list: {
 
-  int32_t NP = 0;
+      SHIELD(out = init<r_list_t>(n, false)); ++NP;
 
-  if (is_null(na)){
-    SHIELD(na = cpp_na_init(no, 1)); ++NP;
-  }
+      const SEXP *p_yes = VECTOR_PTR_RO(yes);
+      const SEXP *p_no = VECTOR_PTR_RO(no);
+      const SEXP *p_na = VECTOR_PTR_RO(na);
 
-  SEXP args = SHIELD(new_vec(VECSXP, 3)); ++NP;
-  SET_VECTOR_ELT(args, 0, yes);
-  SET_VECTOR_ELT(args, 1, no);
-  SET_VECTOR_ELT(args, 2, na);
-  SEXP out = R_NilValue;
-
-  // Fast method for bare atomic vectors
-  if (is_bare_atomic(yes) && is_bare_atomic(no) && is_bare_atomic(na)){
-    SHIELD(args = fast_cast(args)); ++NP;
-    const SEXP *p_args = VECTOR_PTR_RO(args);
-
-    yes = p_args[0];
-    no = p_args[1];
-    na = p_args[2];
-
-    SHIELD(out = if_else(condition, yes, no, na)); ++NP;
+      for (R_xlen_t i = 0; i < n; ++i){
+        switch(p_x[i]){
+        case 1: {
+        SET_VECTOR_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+        break;
+      }
+        case 0: {
+          SET_VECTOR_ELT(out, i, p_no[no_scalar ? 0 : i]);
+          break;
+        }
+        default: {
+          SET_VECTOR_ELT(out, i, p_na[na_scalar ? 0 : i]);
+          break;
+        }
+        }
+      }
+      break;
+    }
+    default: {
+      YIELD(NP);
+      Rf_error("%s cannot handle an object of type %s", __func__, r_type_char(yes));
+    }
+    }
     YIELD(NP);
     return out;
-  }
-
-  // Below is a catch-all method
-
-  SHIELD(args = cpp_cast_common(args)); ++NP;
-  yes = VECTOR_ELT(args, 0);
-  no = VECTOR_ELT(args, 1);
-  na = VECTOR_ELT(args, 2);
-
-  if (!Rf_isLogical(condition)){
-    YIELD(NP);
-    Rf_error("condition must be a logical vector");
-  }
-  if (vec_length(yes) != 1 && vec_length(yes) != Rf_xlength(condition)){
-    YIELD(NP);
-    Rf_error("`length(true)` must be 1 or `length(condition)`");
-  }
-  if (vec_length(no) != 1 && vec_length(no) != Rf_xlength(condition)){
-    YIELD(NP);
-    Rf_error("`length(false)` must be 1 or `length(condition)`");
-  }
-  if (vec_length(na) != 1 && vec_length(na) != Rf_xlength(condition)){
-    YIELD(NP);
-    Rf_error("`length(na)` must be 1 or `length(condition)`");
-  }
-
-  // If unknown type, call R function that can manage reference counting better
-  if (get_r_type(yes) == r_unk){
-
+  } else {
     SEXP if_else_fn = SHIELD(find_pkg_fun("if_else2", "cheapr", true)); ++NP;
 
     // We're calling an R function instead of doing it here in C/C++
@@ -301,85 +383,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     // If we call `[<-` directly then unnecessary copies are made
 
     SEXP expr = SHIELD(Rf_lang5(if_else_fn, condition, yes, no, na)); ++NP;
-    SHIELD(out = Rf_eval(expr, R_GetCurrentEnv())); ++NP;
+    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv())); ++NP;
     YIELD(NP);
     return out;
   }
-
-  SEXP lgl_val_counts = SHIELD(cpp_lgl_count(condition)); ++NP;
-  SHIELD(lgl_val_counts = coerce_vec(lgl_val_counts, REALSXP)); ++NP;
-
-  R_xlen_t n_true = REAL_RO(lgl_val_counts)[0];
-  R_xlen_t n_false = REAL_RO(lgl_val_counts)[1];
-  R_xlen_t n_na = REAL_RO(lgl_val_counts)[2];
-
-  if (n_true == Rf_xlength(condition)){
-    if (Rf_xlength(yes) == 1){
-      SHIELD(out = cpp_rep_len(yes, Rf_xlength(condition))); ++NP;
-      YIELD(NP);
-      return out;
-    } else {
-      YIELD(NP);
-      return yes;
-    }
-  }
-
-  if (n_false == Rf_xlength(condition)){
-    if (Rf_xlength(no) == 1){
-      SHIELD(out = cpp_rep_len(no, Rf_xlength(condition))); ++NP;
-      YIELD(NP);
-      return out;
-    } else {
-      YIELD(NP);
-      return no;
-    }
-  }
-
-  if (n_na == Rf_xlength(condition)){
-    if (Rf_xlength(na) == 1){
-      SHIELD(out = cpp_rep_len(na, Rf_xlength(condition))); ++NP;
-      YIELD(NP);
-      return out;
-    } else {
-      YIELD(NP);
-      return na;
-    }
-  }
-
-  // Assuming the else part is most likely to be most prominent
-  if (vec_length(no) == Rf_xlength(condition)){
-    out = no;
-  } else {
-    SHIELD(out = cpp_rep_len(no, Rf_xlength(condition))); ++NP;
-  }
-
-  SEXP lgl_locs = SHIELD(cpp_lgl_locs(
-    condition, n_true, n_false, true, false, true
-  )); ++NP;
-  SEXP true_locs = get_list_element(lgl_locs, make_utf8_char("true"));
-  SEXP na_locs = get_list_element(lgl_locs, make_utf8_char("na"));
-
-
-  SEXP replace = R_NilValue;
-
-  if (vec_length(yes) == 1){
-    replace = yes;
-  } else {
-    SHIELD(replace = cpp_sset(yes, true_locs, true)); ++NP;
-  }
-
-  SHIELD(out = cpp_assign(out, true_locs, replace, false)); ++NP;
-
-  if (vec_length(yes) == 1){
-    replace = na;
-  } else {
-    SHIELD(replace = cpp_sset(na, na_locs, true)); ++NP;
-  }
-
-  SHIELD(out = cpp_assign(out, na_locs, replace, false)); ++NP;
-
-  YIELD(NP);
-  return out;
 }
 
 
