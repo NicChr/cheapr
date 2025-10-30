@@ -478,6 +478,54 @@ constexpr r_type r_type_pairs[15][15] = {
   /* Unknown */ { r_unk,  r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk }
 };
 
+inline r_type common_type(const r_type &a, const r_type &b) {
+  return r_type_pairs[a][b];
+}
+
+// Convert single SEXP into r_* code.
+inline const r_type get_r_type(SEXP x) {
+
+  if (!Rf_isObject(x)){
+    switch (TYPEOF(x)) {
+    case NILSXP:  return r_null;
+    case LGLSXP:  return r_lgl;
+    case INTSXP:  return r_int;
+    case REALSXP: return r_dbl;
+    case STRSXP:  return r_chr;
+    case CPLXSXP: return r_cplx;
+    case RAWSXP:  return r_raw;
+    case VECSXP:  return r_list;
+    default: return r_unk;
+    }
+  } else {
+
+    if (Rf_inherits(x, "factor"))     return r_fct;
+    if (Rf_inherits(x, "Date"))       return r_date;
+    if (Rf_inherits(x, "POSIXct"))    return r_pxct;
+    if (Rf_inherits(x, "data.frame")) return r_df;
+    if (Rf_inherits(x, "vctrs_rcrd")) return r_rcrd;
+    if (Rf_inherits(x, "integer64"))  return r_int64;
+    return r_unk;
+  }
+}
+
+inline const char *r_type_char(SEXP x){
+
+  r_type type = get_r_type(x);
+
+  // If unknown type
+  if (type == r_unk){
+    if (!Rf_isObject(x)){
+      return R_typeToChar(x);
+    } else if (TYPEOF(Rf_getAttrib(x, R_ClassSymbol)) == STRSXP && Rf_length(Rf_getAttrib(x, R_ClassSymbol)) > 0){
+      return CHAR(STRING_ELT(Rf_getAttrib(x, R_ClassSymbol), 0));
+    } else {
+      return r_type_names[type];
+    }
+  } else {
+    return r_type_names[type];
+  }
+}
 
 // initialise template with specialisations
 template<typename T>
@@ -602,7 +650,10 @@ inline SEXP init<r_unknown_t>(R_xlen_t n) {
 // cast template with specialisations
 template<typename T>
 inline SEXP cast(SEXP x, SEXP y) {
-  Rf_error("Unimplemented type conversion");
+  Rf_error(
+    "Don't know how to cast `x` of type %s to type %s",
+    r_type_char(x), r_type_char(y)
+  );
 }
 
 template<>
@@ -853,49 +904,6 @@ inline SEXP cast<r_vctrs_rcrd_t>(SEXP x, SEXP y) {
     return x;
   } else {
     return cast<r_unknown_t>(x, y);
-  }
-}
-
-inline r_type common_type(const r_type &a, const r_type &b) {
-  return r_type_pairs[a][b];
-}
-
-// Convert single SEXP into r_* code.
-inline const r_type get_r_type(SEXP x) {
-
-  if (!Rf_isObject(x)){
-    switch (TYPEOF(x)) {
-    case NILSXP:  return r_null;
-    case LGLSXP:  return r_lgl;
-    case INTSXP:  return r_int;
-    case REALSXP: return r_dbl;
-    case STRSXP:  return r_chr;
-    case CPLXSXP: return r_cplx;
-    case RAWSXP:  return r_raw;
-    case VECSXP:  return r_list;
-    default: return r_unk;
-    }
-  } else {
-
-    if (Rf_inherits(x, "factor"))     return r_fct;
-    if (Rf_inherits(x, "Date"))       return r_date;
-    if (Rf_inherits(x, "POSIXct"))    return r_pxct;
-    if (Rf_inherits(x, "data.frame")) return r_df;
-    if (Rf_inherits(x, "vctrs_rcrd")) return r_rcrd;
-    if (Rf_inherits(x, "integer64"))  return r_int64;
-    return r_unk;
-  }
-}
-
-inline const char *r_type_char(SEXP x){
-
-  r_type type = get_r_type(x);
-
-  // If unknown type
-  if (type == r_unk && TYPEOF(Rf_getAttrib(x, R_ClassSymbol)) == STRSXP && Rf_length(Rf_getAttrib(x, R_ClassSymbol)) > 0){
-    return CHAR(STRING_ELT(Rf_getAttrib(x, R_ClassSymbol), 0));
-  } else {
-    return r_type_names[type];
   }
 }
 

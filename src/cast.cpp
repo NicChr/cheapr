@@ -167,6 +167,7 @@ case r_unk: {
   CAST_LOOP(cast<r_unknown_t>)
   break;
 }
+  // This should never be reached because of the r_unk (unknown) case above
 default: {
   YIELD(NP);
   Rf_error("Unimplemented cast type");
