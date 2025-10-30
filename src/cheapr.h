@@ -235,6 +235,7 @@ SEXP factor_as_character(SEXP x);
 SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
 SEXP character_as_factor(SEXP x, SEXP levels);
 SEXP match(SEXP y, SEXP x, int no_match);
+SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
@@ -379,7 +380,8 @@ extern cpp11::function cheapr_fast_match;
 extern cpp11::function cheapr_fast_unique;
 extern cpp11::function cheapr_rebuild;
 extern cpp11::function cheapr_as_df;
-extern cpp11::function cheapr_cast;
+extern cpp11::function base_cast;
+extern cpp11::function base_assign;
 
 inline bool address_equal(SEXP x, SEXP y){
   return r_address(x) == r_address(y);
@@ -895,7 +897,7 @@ inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
       Rf_getAttrib(y, R_ClassSymbol), 0))){
     return x;
   } else {
-    return cheapr_cast(x, y);
+    return base_cast(x, y);
   }
 }
 

@@ -1,5 +1,7 @@
 #' Fast vector assignment, an alternative to `[<-`
 #'
+#' @name assign
+#'
 #' @param x A vector.
 #' @param where `[integer(n)]` - Where to assign replacement values.
 #' @param with Replacement values.
@@ -26,7 +28,13 @@
 #' x |>
 #'   assign_at(x == 0, with = "42") # Assign value 42 where x == 0
 #'
+#' @rdname assign
 #' @export
 assign_at <- function(x, where, with, in_place = FALSE){
   .Call(`_cheapr_cpp_assign`, x, where, with, as.logical(in_place))
+}
+
+base_assign_at <- function(x, where, with){
+  x[where] <- with
+  x
 }

@@ -54,6 +54,13 @@ extern "C" SEXP _cheapr_cpp_cast(SEXP x, SEXP y) {
     return cpp11::as_sexp(cpp_cast(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
   END_CPP11
 }
+// cast.cpp
+SEXP cpp_type(SEXP x);
+extern "C" SEXP _cheapr_cpp_type(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_type(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // combine.cpp
 SEXP cpp_rep_len(SEXP x, int length);
 extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
@@ -877,6 +884,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_sset_int64",              (DL_FUNC) &_cheapr_cpp_sset_int64,              2},
     {"_cheapr_cpp_str_coalesce",            (DL_FUNC) &_cheapr_cpp_str_coalesce,            1},
     {"_cheapr_cpp_tabulate",                (DL_FUNC) &_cheapr_cpp_tabulate,                2},
+    {"_cheapr_cpp_type",                    (DL_FUNC) &_cheapr_cpp_type,                    1},
     {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},
     {"_cheapr_cpp_val_remove",              (DL_FUNC) &_cheapr_cpp_val_remove,              2},
     {"_cheapr_cpp_val_replace",             (DL_FUNC) &_cheapr_cpp_val_replace,             4},

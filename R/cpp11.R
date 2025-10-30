@@ -28,6 +28,10 @@ cpp_cast <- function(x, y) {
   .Call(`_cheapr_cpp_cast`, x, y)
 }
 
+cpp_type <- function(x) {
+  .Call(`_cheapr_cpp_type`, x)
+}
+
 cpp_rep_len <- function(x, length) {
   .Call(`_cheapr_cpp_rep_len`, x, length)
 }

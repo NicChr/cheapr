@@ -156,7 +156,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     SEXP x_nms = SHIELD(get_names(x)); ++NP;
     SHIELD(x = cpp_list_as_df(x)); ++NP;
     SHIELD(with = cpp_list_as_df(with)); ++NP;
-    SHIELD(x = cpp_assign(x, where, with, true)); ++NP;
+    SHIELD(x = cpp_assign(x, where, with, in_place)); ++NP;
     clear_attributes(x);
     set_names(x, x_nms);
     Rf_classgets(x, x_cls);
@@ -187,6 +187,11 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
       SET_VECTOR_ELT(x, j, cpp_assign(p_x[j], where, p_with[j], in_place));
     }
 
+    break;
+  }
+
+  case r_unk: {
+    SHIELD(x = base_assign(x, where, with)); ++NP;
     break;
   }
 

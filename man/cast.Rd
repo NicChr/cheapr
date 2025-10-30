@@ -3,11 +3,14 @@
 \name{cast}
 \alias{cast}
 \alias{cast_common}
+\alias{r_type}
 \title{Fast casting/coercing of R objects}
 \usage{
 cast(x, y)
 
 cast_common(..., .args = NULL)
+
+r_type(x)
 }
 \arguments{
 \item{x}{A vector.}
@@ -23,6 +26,9 @@ This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 \value{
 \code{cast()} will attempt to cast \code{x} into an object similar to \code{y}.
 \code{cast_common()} coerces all supplied vectors into a common type between them.
+\code{r_type()} will return the internal cheapr-defined type of \code{x} as a
+character vector of length 1. This will usually match \code{class(x)}
+but not always.
 }
 \description{
 \code{cast_common()} is type-commutative, meaning the order of objects doesn't

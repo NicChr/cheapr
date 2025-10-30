@@ -290,21 +290,78 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     Rf_error("`length(na)` must be 1 or `length(condition)`");
   }
 
-  SEXP expr = R_NilValue;
-  SEXP if_else_fn_expr = SHIELD(
-    Rf_lang3(
-      R_TripleColonSymbol, install_utf8("cheapr"), install_utf8("if_else2")
-    )
-  ); ++NP;
-  SEXP if_else_fn = SHIELD(Rf_eval(if_else_fn_expr, R_BaseEnv)); ++NP;
+  SEXP lgl_val_counts = SHIELD(cpp_lgl_count(condition)); ++NP;
+  SHIELD(lgl_val_counts = coerce_vec(lgl_val_counts, REALSXP)); ++NP;
 
-  // We're calling an R function instead of doing it here in C/C++
-  // to take advantage of the fact that `[<-` avoids creating copies due to
-  // correct reference-tracking in R
-  // If we call `[<-` directly then unnecessary copies are made
+  R_xlen_t n_true = REAL_RO(lgl_val_counts)[0];
+  R_xlen_t n_false = REAL_RO(lgl_val_counts)[1];
+  R_xlen_t n_na = REAL_RO(lgl_val_counts)[2];
 
-  SHIELD(expr = Rf_lang5(if_else_fn, condition, yes, no, na)); ++NP;
-  SHIELD(out = Rf_eval(expr, R_GetCurrentEnv())); ++NP;
+  if (n_true == Rf_xlength(condition)){
+    if (Rf_xlength(yes) == 1){
+      SHIELD(out = cpp_rep_len(yes, Rf_xlength(condition))); ++NP;
+      YIELD(NP);
+      return out;
+    } else {
+      YIELD(NP);
+      return yes;
+    }
+  }
+
+  if (n_false == Rf_xlength(condition)){
+    if (Rf_xlength(no) == 1){
+      SHIELD(out = cpp_rep_len(no, Rf_xlength(condition))); ++NP;
+      YIELD(NP);
+      return out;
+    } else {
+      YIELD(NP);
+      return no;
+    }
+  }
+
+  if (n_na == Rf_xlength(condition)){
+    if (Rf_xlength(na) == 1){
+      SHIELD(out = cpp_rep_len(na, Rf_xlength(condition))); ++NP;
+      YIELD(NP);
+      return out;
+    } else {
+      YIELD(NP);
+      return na;
+    }
+  }
+
+  // Assuming the else part is most likely to be most prominent
+  if (vec_length(no) == Rf_xlength(condition)){
+    out = no;
+  } else {
+    SHIELD(out = cpp_rep_len(no, Rf_xlength(condition))); ++NP;
+  }
+
+  SEXP lgl_locs = SHIELD(cpp_lgl_locs(
+    condition, n_true, n_false, true, false, true
+  )); ++NP;
+  SEXP true_locs = get_list_element(lgl_locs, make_utf8_char("true"));
+  SEXP na_locs = get_list_element(lgl_locs, make_utf8_char("na"));
+
+
+  SEXP replace = R_NilValue;
+
+  if (vec_length(yes) == 1){
+    replace = yes;
+  } else {
+    SHIELD(replace = cpp_sset(yes, true_locs, true)); ++NP;
+  }
+
+  SHIELD(out = cpp_assign(out, true_locs, replace, false)); ++NP;
+
+  if (vec_length(yes) == 1){
+    replace = na;
+  } else {
+    SHIELD(replace = cpp_sset(na, na_locs, true)); ++NP;
+  }
+
+  SHIELD(out = cpp_assign(out, na_locs, replace, false)); ++NP;
+
   YIELD(NP);
   return out;
 }

@@ -181,3 +181,8 @@ return out;
 SEXP cpp_cast(SEXP x, SEXP y){
   return cast_(get_r_type(y), x, y);
 }
+
+[[cpp11::register]]
+SEXP cpp_type(SEXP x){
+  return make_utf8_str(r_type_char(x));
+}
