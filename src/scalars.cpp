@@ -666,11 +666,9 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     return x;
   } else if (n_vals == Rf_xlength(x)){
     SEXP out = SHIELD(new_vec(TYPEOF(x), 0)); ++NP;
-
     cpp_set_add_attributes(out, ATTRIB(x), false);
     YIELD(NP);
     return out;
-    return cheapr_sset(x, 0);
   } else {
     R_xlen_t n = Rf_xlength(x);
     R_xlen_t n_keep = n - n_vals;
@@ -739,7 +737,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
+      SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
       int64_t val = INTEGER64_PTR(value)[0];
       int64_t *p_x = INTEGER64_PTR(x);
       int64_t *p_out = INTEGER64_PTR(out);
@@ -759,7 +757,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
+      SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
       SEXP val = SHIELD(Rf_asChar(value)); ++NP;
       const SEXP *p_x = STRING_PTR_RO(x);
 
