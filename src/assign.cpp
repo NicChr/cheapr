@@ -191,7 +191,9 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
   }
 
   case r_unk: {
-    SHIELD(x = base_assign(x, where, with)); ++NP;
+    SEXP base_assign = SHIELD(find_pkg_fun("base_assign_at", "cheapr", true)); ++NP;
+    SEXP expr = SHIELD(Rf_lang4(base_assign, x, where, with)); ++NP;
+    SHIELD(x = Rf_eval(expr, R_GetCurrentEnv())); ++NP;
     break;
   }
 

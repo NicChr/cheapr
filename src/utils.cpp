@@ -1040,3 +1040,18 @@ SEXP match(SEXP y, SEXP x, int no_match){
   }
 }
 
+// Return R function from a specified package
+SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
+
+  SEXP expr = R_NilValue;
+
+  if (all_fns){
+    expr = SHIELD(Rf_lang3(R_TripleColonSymbol, Rf_install(pkg), Rf_install(name)));
+  } else {
+    expr = SHIELD(Rf_lang3(R_DoubleColonSymbol, Rf_install(pkg), Rf_install(name)));
+  }
+  SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
+  YIELD(2);
+  return out;
+}
+

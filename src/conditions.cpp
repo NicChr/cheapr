@@ -290,6 +290,22 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     Rf_error("`length(na)` must be 1 or `length(condition)`");
   }
 
+  // If unknown type, call R function that can manage reference counting better
+  if (get_r_type(yes) == r_unk){
+
+    SEXP if_else_fn = SHIELD(find_pkg_fun("if_else2", "cheapr", true)); ++NP;
+
+    // We're calling an R function instead of doing it here in C/C++
+    // to take advantage of the fact that `[<-` avoids creating copies due to
+    // correct reference-tracking in R
+    // If we call `[<-` directly then unnecessary copies are made
+
+    SEXP expr = SHIELD(Rf_lang5(if_else_fn, condition, yes, no, na)); ++NP;
+    SHIELD(out = Rf_eval(expr, R_GetCurrentEnv())); ++NP;
+    YIELD(NP);
+    return out;
+  }
+
   SEXP lgl_val_counts = SHIELD(cpp_lgl_count(condition)); ++NP;
   SHIELD(lgl_val_counts = coerce_vec(lgl_val_counts, REALSXP)); ++NP;
 
