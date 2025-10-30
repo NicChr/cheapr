@@ -471,7 +471,7 @@ SEXP cpp_setdiff(SEXP x, SEXP y, bool unique){
   } else {
     SHIELD(x);
   }
-  SEXP matches = SHIELD(Rf_match(y, x, NA_INTEGER));
+  SEXP matches = SHIELD(match(y, x, NA_INTEGER));
   SEXP locs = SHIELD(cpp_which_na(matches));
   if (Rf_xlength(locs) == Rf_xlength(x)){
     YIELD(3);
@@ -491,7 +491,7 @@ SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
   } else {
     SHIELD(x);
   }
-  SEXP matches = SHIELD(Rf_match(y, x, NA_INTEGER));
+  SEXP matches = SHIELD(match(y, x, NA_INTEGER));
   SEXP locs = SHIELD(cpp_which_not_na(matches));
   if (Rf_xlength(locs) == Rf_xlength(x)){
     YIELD(3);
@@ -514,7 +514,7 @@ SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
 //     }
 //     SEXP matches;
 //     if (Rf_length(x) < 10000){
-//       matches = SHIELD(Rf_match(y, x, NA_INTEGER)); ++NP;
+//       matches = SHIELD(match(y, x, NA_INTEGER)); ++NP;
 //     } else {
 //       matches = SHIELD(cheapr_fast_match(x, y)); ++NP;
 //     }
@@ -579,7 +579,7 @@ SEXP character_as_factor(SEXP x, SEXP levels){
 
   int32_t NP = 0;
 
-  SEXP out = SHIELD(Rf_match(levels, x, NA_INTEGER)); ++NP;
+  SEXP out = SHIELD(match(levels, x, NA_INTEGER)); ++NP;
   SEXP cls = SHIELD(make_utf8_str("factor")); ++NP;
   Rf_setAttrib(out, R_LevelsSymbol, levels);
   Rf_classgets(out, cls);

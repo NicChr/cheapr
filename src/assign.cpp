@@ -35,6 +35,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
   R_xlen_t xi;
   R_xlen_t withi = 0;
 
+  // Shallow copy lists and deep copy data of vectors
   if (!internal_in_place){
     if (Rf_isVectorList(x)){
       SHIELD(x = cpp_shallow_copy(x)); ++NP;
@@ -53,7 +54,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
   case r_fct: {
 
     int* RESTRICT p_x = INTEGER(x);
-    const int* RESTRICT p_with = INTEGER(with);
+    const int* RESTRICT p_with = INTEGER_RO(with);
 
     for (int i = 0; i < where_size; withi = (++withi == with_size) ? 0 : withi, ++i){
       xi = p_where[i];
@@ -148,6 +149,8 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
   }
 
   case r_rcrd: {
+
+    // Treat vctrs_rcrd as df and use r_df method
 
     SEXP x_cls = SHIELD(Rf_getAttrib(x, R_ClassSymbol)); ++NP;
     SEXP x_nms = SHIELD(get_names(x)); ++NP;

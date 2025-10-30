@@ -234,6 +234,7 @@ SEXP cpp_cast_common(SEXP x);
 SEXP factor_as_character(SEXP x);
 SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
 SEXP character_as_factor(SEXP x, SEXP levels);
+SEXP match(SEXP y, SEXP x, int no_match);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);

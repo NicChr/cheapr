@@ -292,7 +292,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     SHIELD(add_locs = cpp_rep_len(add_locs, n_cols)); ++NP;
     n_cols_to_add = n_cols;
   } else {
-    add_locs = SHIELD(Rf_match(names, col_names, NA_INTEGER)); ++NP;
+    add_locs = SHIELD(match(names, col_names, NA_INTEGER)); ++NP;
     n_cols_to_add = na_count(add_locs, false);
   }
   int* RESTRICT p_add_locs = INTEGER(add_locs);
@@ -365,7 +365,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 //     names = writable::strings(n);
 //   }
 //
-//   integers add_locs = Rf_match(names, col_names, NA_INTEGER);
+//   integers add_locs = match(names, col_names, NA_INTEGER);
 //   writable::integers null_locs;
 //
 //   int loc;
@@ -426,16 +426,16 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 //   // We create an int vec to keep track of locations where to add col vecs
 //   SEXP add_locs;
 //   if (is_null(locs)){
-//     add_locs = SHIELD(Rf_match(names, col_names, NA_INTEGER)); ++NP;
+//     add_locs = SHIELD(match(names, col_names, NA_INTEGER)); ++NP;
 //   } else {
 //     SHIELD(locs = coerce_vec(locs, INTSXP)); ++NP;
 //     if (Rf_length(locs) != Rf_length(values)){
 //       YIELD(NP);
 //       Rf_error("`length(locs)` must match `length(values)` when `!is.null(locs)`");
 //     }
-//     add_locs = SHIELD(Rf_match(names, col_names, NA_INTEGER)); ++NP;
+//     add_locs = SHIELD(match(names, col_names, NA_INTEGER)); ++NP;
 //     SEXP temp1 = SHIELD(cpp_seq_len(n)); ++NP;
-//     SEXP temp2 = SHIELD(Rf_match(temp1, add_locs, NA_INTEGER)); ++NP;
+//     SEXP temp2 = SHIELD(match(temp1, add_locs, NA_INTEGER)); ++NP;
 //     SHIELD(col_names = sset_vec(names, temp2, true)); ++NP;
 //   }
 //
@@ -628,7 +628,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
 
   // We create an int vec to keep track of locations where to add col vecs
 
-  SEXP add_locs = SHIELD(Rf_match(names, col_names, NA_INTEGER)); ++NP;
+  SEXP add_locs = SHIELD(match(names, col_names, NA_INTEGER)); ++NP;
   int* RESTRICT p_add_locs = INTEGER(add_locs);
   int n_cols_to_add = na_count(add_locs, false);
   int out_size = n + n_cols_to_add;

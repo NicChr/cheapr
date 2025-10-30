@@ -195,7 +195,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
       Rf_error("Cannot subset rows of a data frame using a character vector");
     }
     if (n < 10000){
-      SHIELD(indices = Rf_match(names, indices, NA_INTEGER)); ++NP;
+      SHIELD(indices = match(names, indices, NA_INTEGER)); ++NP;
     } else {
       SHIELD(indices = cheapr_fast_match(indices, names)); ++NP;
     }
@@ -1207,7 +1207,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     n_locs = n_cols;
     check = false;
   } else if (loc_type == STRSXP){
-    cols = SHIELD(Rf_match(names, locs, NA_INTEGER)); ++NP;
+    cols = SHIELD(match(names, locs, NA_INTEGER)); ++NP;
     int *match_locs = INTEGER(cols);
     if (cpp_any_na(cols, false)){
       for (int i = 0; i < Rf_length(cols); ++i){
