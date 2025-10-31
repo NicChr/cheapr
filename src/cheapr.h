@@ -3,6 +3,7 @@
 
 #include <cpp11.hpp>
 #include <Rinternals.h>
+#include <vector>
 
 #ifdef _MSC_VER
 #define RESTRICT __restrict

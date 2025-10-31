@@ -1,5 +1,4 @@
 #include "cheapr.h"
-#include <vector>
 
 // static cpp11::writable::integers CHEAPR_ZERO(1);
 // void constants_init(DllInfo* dll){

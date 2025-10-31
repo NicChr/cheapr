@@ -1,4 +1,3 @@
-#include <vector>
 #include "cheapr.h"
 #include <R.h> // R_Calloc
 

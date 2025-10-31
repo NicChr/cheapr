@@ -1,5 +1,4 @@
 #include "cheapr.h"
-#include <vector>
 
 SEXP as_lgl = NULL;
 SEXP as_int = NULL;
