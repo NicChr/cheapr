@@ -227,7 +227,6 @@ uint_fast64_t null_count(SEXP x);
 SEXP compact_seq_len(R_xlen_t n);
 SEXP clean_indices(SEXP indices, SEXP x, bool count);
 SEXP combine_levels(SEXP x);
-SEXP fast_cast(SEXP x);
 SEXP cpp_lgl_count(SEXP x);
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
                   bool include_true, bool include_false, bool include_na);

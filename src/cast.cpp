@@ -24,42 +24,6 @@ const cast_fn CAST_FNS[15] = {
     SET_VECTOR_ELT(out, i, temp);                              \
   }
 
-// Fast casting of objects to common type (via typeof)
-SEXP fast_cast(SEXP x){
-
-  if (!Rf_isVectorList(x)){
-    Rf_error("`x` must be a list");
-  }
-
-  R_xlen_t n = Rf_xlength(x);
-
-  const SEXP *p_x = VECTOR_PTR_RO(x);
-  SEXP out = SHIELD(new_vec(VECSXP, n));
-
-  std::vector<int16_t> types(n);
-
-  int16_t out_type = 0;
-  int16_t type;
-
-  for (R_xlen_t i = 0; i < n; ++i){
-    type = TYPEOF(p_x[i]);
-    out_type = std::max(out_type, type);
-    types[i] = type;
-  }
-
-  // Cast all objects
-  for (R_xlen_t i = 0; i < n; ++i){
-    if (types[i] != out_type){
-      SET_VECTOR_ELT(out, i, coerce_vec(p_x[i], out_type));
-    } else {
-      SET_VECTOR_ELT(out, i, p_x[i]);
-    }
-  }
-
-  YIELD(1);
-  return out;
-}
-
 r_type r_common_type(SEXP x){
 
   if (!Rf_isVectorList(x)){
