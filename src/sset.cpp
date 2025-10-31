@@ -194,11 +194,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
       YIELD(NP);
       Rf_error("Cannot subset rows of a data frame using a character vector");
     }
-    if (n < 10000){
-      SHIELD(indices = match(names, indices, NA_INTEGER)); ++NP;
-    } else {
-      SHIELD(indices = cheapr_fast_match(indices, names)); ++NP;
-    }
+    SHIELD(indices = match(names, indices, NA_INTEGER)); ++NP;
   }
 
   if (is_compact_seq(indices)){
@@ -341,6 +337,100 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   return out;
 }
 
+// Clean indices
+// Removes NAs, zeros and out-of-bounds
+// Converts logical to integer locations
+// Converts character to integer locations
+
+SEXP clean_locs(SEXP locs, SEXP x){
+
+  R_xlen_t xn = vec_length(x);
+
+  int32_t NP = 0;
+
+  if (is_null(locs)){
+    SHIELD(locs = new_vec(INTSXP, 0)); ++NP;
+  }
+
+  R_xlen_t n = Rf_xlength(locs);
+
+  if (get_r_type(locs) == r_chr){
+    SEXP names = SHIELD(get_names(x)); ++NP;
+    if (is_null(names)){
+      YIELD(NP);
+      Rf_error("Cannot subset on the names of an unnamed vector");
+    }
+    if (is_df(x)){
+      YIELD(NP);
+      Rf_error("Cannot subset rows of a data frame using a character vector");
+    }
+    SHIELD(locs = match(names, locs, NA_INTEGER)); ++NP;
+    YIELD(NP);
+    return locs;
+  }
+
+  if (get_r_type(locs) == r_lgl){
+
+    if (Rf_length(locs) != xn){
+      YIELD(NP);
+      Rf_error("`length(i)` must match `length(x)` when `i` is a logical vector");
+    }
+    SHIELD(locs = cpp_which_(locs, false)); ++NP;
+    YIELD(NP);
+    return locs;
+  }
+
+  SHIELD(locs = cast<r_integer_t>(locs, R_NilValue)); ++NP;
+
+  const int *p_locs = INTEGER_RO(locs);
+
+  int zero_count = 0,
+    pos_count = 0,
+    oob_count = 0,
+    na_count = 0,
+    neg_count = 0;
+
+  int loc;
+  for (int i = 0; i < n; ++i){
+    loc = p_locs[i];
+    zero_count += (loc == 0);
+    pos_count += (loc > 0);
+    oob_count += std::abs(static_cast<int_fast64_t>(loc)) > xn;
+    na_count += is_na_int(loc);
+  }
+
+  oob_count = oob_count - na_count;
+  neg_count = n - pos_count - zero_count - na_count;
+
+  if ( (pos_count > 0 && neg_count > 0) ||
+       (neg_count > 0 && na_count > 0)){
+    YIELD(NP);
+    Rf_error("Cannot mix positive and negative indices");
+  }
+
+  if (neg_count > 0){
+    SHIELD(locs = exclude_locs(locs, xn)); ++NP;
+    YIELD(NP);
+    return locs;
+  }
+  if (zero_count > 0 || oob_count > 0 || na_count > 0){
+    int out_size = pos_count - oob_count;
+    SEXP out = SHIELD(new_vec(INTSXP, out_size)); ++NP;
+    int* RESTRICT p_out = INTEGER(out);
+
+    int k = 0;
+    for (int i = 0; i < n; ++i){
+      if (between<int>(p_locs[i], 1, xn)){
+        p_out[k++] = p_locs[i];
+      }
+    }
+    YIELD(NP);
+    return out;
+  }
+
+  YIELD(NP);
+  return locs;
+}
 
 // A range-based subset method
 // Can be readily used when indices are an altrep compact integer sequence

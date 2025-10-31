@@ -13,24 +13,15 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
 
   int32_t NP = 0;
 
-  // Convere where to integer
-  SHIELD(where = cast<r_integer_t>(where, R_NilValue)); ++NP;
+  // Clean where vector
+  SHIELD(where = clean_locs(where, x)); ++NP;
   const int* RESTRICT p_where = INTEGER_RO(where);
 
   // Cast replacement to type of x
   SHIELD(with = cast_(get_r_type(x), with, x)); ++NP;
 
-  R_xlen_t xn = vec_length(x);
   int where_size = vec_length(where);
   int with_size = vec_length(with);
-
-
-#define CHECK_WHERE                                            \
-  if (xi == 0) continue;                                       \
-  if (!between<int>(xi, 1, xn)){                               \
-    YIELD(NP);                                                 \
-    Rf_error("`where` must be an integer vector of values between 1 and `length(x)`");\
-  }
 
   R_xlen_t xi;
   R_xlen_t withi = 0;
@@ -57,9 +48,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     const int* RESTRICT p_with = INTEGER_RO(with);
 
     for (int i = 0; i < where_size; withi = (++withi == with_size) ? 0 : withi, ++i){
-      xi = p_where[i];
-      CHECK_WHERE
-      p_x[xi - 1] = p_with[withi];
+      p_x[p_where[i] - 1] = p_with[withi];
     }
     break;
   }
@@ -69,9 +58,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     const double* RESTRICT p_with = REAL_RO(with);
 
     for (int i = 0; i < where_size; withi = (++withi == with_size) ? 0 : withi, ++i){
-      xi = p_where[i];
-      CHECK_WHERE
-      p_x[xi - 1] = p_with[withi];
+      p_x[p_where[i] - 1] = p_with[withi];
     }
     break;
   }
@@ -82,9 +69,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     const int64_t* RESTRICT p_with = INTEGER64_PTR_RO(with);
 
     for (int i = 0; i < where_size; withi = (++withi == with_size) ? 0 : withi, ++i){
-      xi = p_where[i];
-      CHECK_WHERE
-      p_x[xi - 1] = p_with[withi];
+      p_x[p_where[i] - 1] = p_with[withi];
     }
     break;
   }
@@ -94,9 +79,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     const SEXP *p_with = STRING_PTR_RO(with);
 
     for (int i = 0; i < where_size; withi = (++withi == with_size) ? 0 : withi, ++i){
-      xi = p_where[i];
-      CHECK_WHERE
-      SET_STRING_ELT(x, xi - 1, p_with[withi]);
+      SET_STRING_ELT(x, p_where[i] - 1, p_with[withi]);
     }
     break;
   }
@@ -107,9 +90,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     const Rcomplex *p_with = COMPLEX_RO(with);
 
     for (int i = 0; i < where_size; withi = (++withi == with_size) ? 0 : withi, ++i){
-      xi = p_where[i];
-      CHECK_WHERE
-      --xi;
+      xi = p_where[i] - 1;
       p_x[xi].r = p_with[withi].r;
       p_x[xi].i = p_with[withi].i;
     }
@@ -121,9 +102,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     const Rbyte *p_with = RAW_RO(with);
 
     for (int i = 0; i < where_size; withi = (++withi == with_size) ? 0 : withi, ++i){
-      xi = p_where[i];
-      CHECK_WHERE
-      SET_RAW_ELT(x, xi - 1, p_with[withi]);
+      SET_RAW_ELT(x, p_where[i] - 1, p_with[withi]);
     }
     break;
   }
@@ -141,9 +120,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     const SEXP *p_with = VECTOR_PTR_RO(with);
 
     for (int i = 0; i < where_size; withi = (++withi == with_size) ? 0 : withi, ++i){
-      xi = p_where[i];
-      CHECK_WHERE
-      SET_VECTOR_ELT(x, xi - 1, p_with[withi]);
+      SET_VECTOR_ELT(x, p_where[i] - 1, p_with[withi]);
     }
     break;
   }

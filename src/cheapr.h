@@ -237,6 +237,7 @@ SEXP character_as_factor(SEXP x, SEXP levels);
 SEXP match(SEXP y, SEXP x, int no_match);
 SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place);
 SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns);
+SEXP clean_locs(SEXP locs, SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
