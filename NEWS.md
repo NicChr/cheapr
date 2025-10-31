@@ -4,7 +4,7 @@
 
 - New function `unique_` as a cheaper alternative to `unique`.
 
-- New function `assign_at`, a cheaper alternative to `[<-` for fast 
+- New function `replace_`, a cheaper alternative to `[<-` for fast 
 value replacement.
 
 - New functions `cast` and `cast_common` to help with fast and type-stable 
