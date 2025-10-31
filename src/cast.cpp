@@ -18,6 +18,12 @@ const cast_fn CAST_FNS[15] = {
   cast_data_frame, cast_unknown
 };
 
+#define CHEAPR_CAST_LOOP(cast_fn)                              \
+  for (R_xlen_t i = 0; i < n; ++i){                            \
+    R_Reprotect(temp = cast_fn(p_x[i], temp), temp_idx);       \
+    SET_VECTOR_ELT(out, i, temp);                              \
+  }
+
 // Fast casting of objects to common type (via typeof)
 SEXP fast_cast(SEXP x){
 
@@ -92,88 +98,81 @@ SEXP cpp_cast_common(SEXP x){
   PROTECT_INDEX temp_idx;
   R_ProtectWithIndex(temp = R_NilValue, &temp_idx); ++NP;
 
-#define CAST_LOOP(cast_fn)                                     \
-  for (R_xlen_t i = 0; i < (n - 1); ++i){                      \
-    R_Reprotect(temp = cast_fn(p_x[i], p_x[i + 1]), temp_idx); \
-    SET_VECTOR_ELT(out, i, temp);                              \
-  }                                                            \
-  SET_VECTOR_ELT(out, n - 1, cast_fn(p_x[n - 1], temp));
 
-
-switch (common){
-case r_null: {
-  break;
-}
-case r_lgl: {
-  CAST_LOOP(cast<r_logical_t>)
-  break;
-}
-case r_int: {
-  CAST_LOOP(cast<r_integer_t>)
-  break;
-}
-case r_int64: {
-  CAST_LOOP(cast<r_integer64_t>)
-  break;
-}
-case r_dbl: {
-  CAST_LOOP(cast<r_numeric_t>)
-  break;
-}
-case r_chr: {
-  CAST_LOOP(cast<r_character_t>)
-  break;
-}
-case r_cplx: {
-  CAST_LOOP(cast<r_complex_t>)
-  break;
-}
-case r_raw: {
-  CAST_LOOP(cast<r_raw_t>)
-  break;
-}
-case r_list: {
-  CAST_LOOP(cast<r_list_t>)
-  break;
-}
-case r_fct: {
-
-  SEXP lvls = SHIELD(combine_levels(x)); ++NP;
-
-  for (R_xlen_t i = 0; i < n; ++i){
-    R_Reprotect(temp = cast<r_character_t>(p_x[i], R_NilValue), temp_idx);
-    SET_VECTOR_ELT(out, i, character_as_factor(temp, lvls));
+  switch (common){
+  case r_null: {
+    break;
   }
-  break;
-}
-case r_date: {
-  CAST_LOOP(cast<r_date_t>)
-  break;
-}
-case r_pxct: {
-  CAST_LOOP(cast<r_posixt_t>)
-  break;
-}
-case r_rcrd: {
-  CAST_LOOP(cast<r_vctrs_rcrd_t>)
-  break;
-}
-case r_df: {
-  CAST_LOOP(cast<r_data_frame_t>)
-  break;
-}
-case r_unk: {
-  CAST_LOOP(cast<r_unknown_t>)
-  break;
-}
-  // This should never be reached because of the r_unk (unknown) case above
-default: {
+  case r_lgl: {
+    CHEAPR_CAST_LOOP(cast<r_logical_t>)
+    break;
+  }
+  case r_int: {
+    CHEAPR_CAST_LOOP(cast<r_integer_t>)
+    break;
+  }
+  case r_int64: {
+    CHEAPR_CAST_LOOP(cast<r_integer64_t>)
+    break;
+  }
+  case r_dbl: {
+    CHEAPR_CAST_LOOP(cast<r_numeric_t>)
+    break;
+  }
+  case r_chr: {
+    CHEAPR_CAST_LOOP(cast<r_character_t>)
+    break;
+  }
+  case r_cplx: {
+    CHEAPR_CAST_LOOP(cast<r_complex_t>)
+    break;
+  }
+  case r_raw: {
+    CHEAPR_CAST_LOOP(cast<r_raw_t>)
+    break;
+  }
+  case r_list: {
+    CHEAPR_CAST_LOOP(cast<r_list_t>)
+    break;
+  }
+  case r_fct: {
+
+    SEXP lvls = SHIELD(combine_levels(x)); ++NP;
+
+    for (R_xlen_t i = 0; i < n; ++i){
+      R_Reprotect(temp = cast<r_character_t>(p_x[i], R_NilValue), temp_idx);
+      SET_VECTOR_ELT(out, i, character_as_factor(temp, lvls));
+    }
+    break;
+  }
+  case r_date: {
+    CHEAPR_CAST_LOOP(cast<r_date_t>)
+    break;
+  }
+  case r_pxct: {
+    CHEAPR_CAST_LOOP(cast<r_posixt_t>)
+    break;
+  }
+  case r_rcrd: {
+    CHEAPR_CAST_LOOP(cast<r_vctrs_rcrd_t>)
+    break;
+  }
+  case r_df: {
+    CHEAPR_CAST_LOOP(cast<r_data_frame_t>)
+    break;
+  }
+  case r_unk: {
+    CHEAPR_CAST_LOOP(cast<r_unknown_t>)
+    break;
+  }
+    // This should never be reached because of the r_unk (unknown) case above
+  default: {
+    YIELD(NP);
+    Rf_error("Unimplemented cast type");
+  }
+  }
   YIELD(NP);
-  Rf_error("Unimplemented cast type");
-}
-}
-YIELD(NP);
-return out;
+  return out;
 }
 
 [[cpp11::register]]

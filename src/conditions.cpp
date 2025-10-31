@@ -324,7 +324,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       break;
     }
     case r_pxct: {
-      SHIELD(out = init<r_posixt_t>(n, false)); ++NP;
+
+      SHIELD(out = cpp_na_init(yes, n)); ++NP;
+
       double* RESTRICT p_out = REAL(out);
       const double *p_yes = REAL_RO(yes);
       const double *p_no = REAL_RO(no);
