@@ -6,13 +6,17 @@ test_that("casting", {
   c <- FALSE
   d <- 1 + 3i
   e <- "e"
-  f <- factor("f")
-  g <- as.Date(origin)
-  f <- as.POSIXct(g, tz = "Europe/London")
-  h <- list(10)
-  i <- new_df(x = "ok")
+  f <- factor(c("h", "f", NA), levels = c("h", "H", "f"))
+  g <- factor(c("f", "g"), levels = c("f", "G", "g"))
+  h <- origin
+  i <- as.POSIXct(origin, tz = "UTC")
+  j <- as.POSIXct(origin, tz = "America/New_York")
+  k <- list(10)
+  l <- new_df(x = "ok")
 
+  # All permutations of above objects (order matters here)
   all_objs <- new_df(obj = list(a, b, c, d, e, f, g, h, i))
+
   which_pair <- expand.grid(
     left = seq_len(nrow(all_objs)),
     right = seq_len(nrow(all_objs))
