@@ -2,7 +2,6 @@
 #define cheapr_h
 
 #include <cpp11.hpp>
-#include <Rinternals.h>
 #include <vector>
 
 #ifdef _MSC_VER
@@ -898,6 +897,17 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     }
 
     YIELD(3);
+    return out;
+  } else if (!Rf_isObject(x)){
+    SEXP out = SHIELD(coerce_vec(x, REALSXP));
+    SEXP out_class = SHIELD(new_vec(STRSXP, 2));
+    SEXP out_tzone = SHIELD(new_vec(STRSXP, 1));
+    SET_STRING_ELT(out_class, 0, make_utf8_char("POSIXct"));
+    SET_STRING_ELT(out_class, 1, make_utf8_char("POSIXt"));
+    Rf_classgets(out, out_class);
+    Rf_setAttrib(out, install_utf8("tzone"), out_tzone);
+    SHIELD(out = cast<r_posixt_t>(out, y)); // To set the correct attributes
+    YIELD(4);
     return out;
   } else {
     as_posixct = as_posixct != NULL ? as_posixct : Rf_install("as.POSIXct");
