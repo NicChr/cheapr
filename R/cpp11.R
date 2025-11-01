@@ -32,6 +32,10 @@ cpp_type <- function(x) {
   .Call(`_cheapr_cpp_type`, x)
 }
 
+common_template <- function(x) {
+  .Call(`_cheapr_common_template`, x)
+}
+
 cpp_rep_len <- function(x, length) {
   .Call(`_cheapr_cpp_rep_len`, x, length)
 }

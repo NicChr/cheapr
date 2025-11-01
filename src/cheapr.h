@@ -237,6 +237,7 @@ SEXP match(SEXP y, SEXP x, int no_match);
 SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place);
 SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns);
 SEXP clean_locs(SEXP locs, SEXP x);
+SEXP common_template(SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
@@ -966,7 +967,7 @@ inline SEXP cast<r_vctrs_rcrd_t>(SEXP x, SEXP y) {
   }
 }
 
-// Wrapper functions for cast fns map
+// Wrapper functions for cast fns
 using cast_fn = SEXP(*)(SEXP, SEXP);
 inline SEXP cast_null(SEXP x, SEXP y) { return cast<r_null_t>(x, y); }
 inline SEXP cast_logical(SEXP x, SEXP y) { return cast<r_logical_t>(x, y); }
@@ -984,12 +985,34 @@ inline SEXP cast_data_frame(SEXP x, SEXP y) { return cast<r_data_frame_t>(x, y);
 inline SEXP cast_vctrs_rcrd(SEXP x, SEXP y) { return cast<r_vctrs_rcrd_t>(x, y); }
 inline SEXP cast_unknown(SEXP x, SEXP y) { return cast<r_unknown_t>(x, y); }
 
+// Wrapper functions for init fns
+using init_fn = SEXP(*)(R_xlen_t, bool);
+inline SEXP init_null(R_xlen_t n, bool with_na) { return init<r_null_t>(n, with_na); }
+inline SEXP init_logical(R_xlen_t n, bool with_na) { return init<r_logical_t>(n, with_na); }
+inline SEXP init_integer(R_xlen_t n, bool with_na) { return init<r_integer_t>(n, with_na); }
+inline SEXP init_integer64(R_xlen_t n, bool with_na) { return init<r_integer64_t>(n, with_na); }
+inline SEXP init_numeric(R_xlen_t n, bool with_na) { return init<r_numeric_t>(n, with_na); }
+inline SEXP init_character(R_xlen_t n, bool with_na) { return init<r_character_t>(n, with_na); }
+inline SEXP init_complex(R_xlen_t n, bool with_na) { return init<r_complex_t>(n, with_na); }
+inline SEXP init_raw(R_xlen_t n, bool with_na) { return init<r_raw_t>(n, with_na); }
+inline SEXP init_list(R_xlen_t n, bool with_na) { return init<r_list_t>(n, with_na); }
+inline SEXP init_factor(R_xlen_t n, bool with_na) { return init<r_factor_t>(n, with_na); }
+inline SEXP init_date(R_xlen_t n, bool with_na) { return init<r_date_t>(n, with_na); }
+inline SEXP init_posixt(R_xlen_t n, bool with_na) { return init<r_posixt_t>(n, with_na); }
+inline SEXP init_data_frame(R_xlen_t n, bool with_na) { return init<r_data_frame_t>(n, with_na); }
+inline SEXP init_vctrs_rcrd(R_xlen_t n, bool with_na) { return init<r_vctrs_rcrd_t>(n, with_na); }
+inline SEXP init_unknown(R_xlen_t n, bool with_na) { return init<r_unknown_t>(n, with_na); }
+
 // Defined cast.cpp
 extern const cast_fn CAST_FNS[15];
+extern const init_fn INIT_FNS[15];
 
-// Dispatcher function
+// Dispatcher functions
 inline SEXP cast_(r_type cast_type, SEXP x, SEXP y) {
   return CAST_FNS[cast_type](x, y);
+}
+inline SEXP init_(r_type cast_type, R_xlen_t n, bool with_na) {
+  return INIT_FNS[cast_type](n, with_na);
 }
 
 r_type r_common_type(SEXP x);

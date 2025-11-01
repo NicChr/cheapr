@@ -18,11 +18,18 @@ const cast_fn CAST_FNS[15] = {
   cast_data_frame, cast_unknown
 };
 
-#define CHEAPR_CAST_LOOP(cast_fn)                              \
-  for (R_xlen_t i = 0; i < n; ++i){                            \
-    R_Reprotect(temp = cast_fn(p_x[i], temp), temp_idx);       \
-    SET_VECTOR_ELT(out, i, temp);                              \
-  }
+const init_fn INIT_FNS[15] = {
+  init_null, init_logical, init_integer, init_integer64,
+  init_numeric, init_complex, init_raw, init_date, init_posixt,
+  init_vctrs_rcrd, init_character, init_factor, init_list,
+  init_data_frame, init_unknown
+};
+
+#define CHEAPR_CAST_LOOP(cast_fn)                            \
+for (R_xlen_t i = 0; i < n; ++i){                            \
+  R_Reprotect(temp = cast_fn(p_x[i], temp), temp_idx);       \
+  SET_VECTOR_ELT(out, i, temp);                              \
+}
 
 r_type r_common_type(SEXP x){
 
@@ -147,4 +154,39 @@ SEXP cpp_cast(SEXP x, SEXP y){
 [[cpp11::register]]
 SEXP cpp_type(SEXP x){
   return make_utf8_str(r_type_char(x));
+}
+
+// Return common template from a list of vectors
+[[cpp11::register]]
+SEXP common_template(SEXP x){
+
+  int32_t NP = 0;
+
+  SEXP out = R_NilValue;
+
+  SEXP vec_template;
+  PROTECT_INDEX vec_template_idx;
+  R_ProtectWithIndex(vec_template = R_NilValue, &vec_template_idx); ++NP;
+
+  r_type common = r_common_type(x);
+  SHIELD(out = init_(common, 0, false)); ++NP;
+
+  switch (common){
+  case r_fct: {
+    SEXP lvls = SHIELD(combine_levels(x)); ++NP;
+    Rf_setAttrib(out, R_LevelsSymbol, lvls);
+    break;
+  }
+  case r_pxct: {
+    if (Rf_xlength(x) > 0){
+    SHIELD(out = cast<r_posixt_t>(out, VECTOR_ELT(x, 0))); ++NP;
+  }
+    break;
+  }
+  default: {
+    break;
+  }
+  }
+  YIELD(NP);
+  return out;
 }

@@ -603,7 +603,7 @@ SEXP combine_levels(SEXP x){
     if (Rf_isFactor(p_x[i])){
       fct_levels = Rf_getAttrib(p_x[i], R_LevelsSymbol);
     } else {
-      R_Reprotect(fct_levels = base_as_character(p_x[i]), fct_idx);
+      R_Reprotect(fct_levels = cast<r_character_t>(p_x[i], R_NilValue), fct_idx);
     }
     SET_VECTOR_ELT(levels, i, fct_levels);
   }
@@ -743,20 +743,23 @@ SEXP cpp_df_c(SEXP x){
   if (n_frames == 0) return R_NilValue;
 
   int32_t NP = 0;
+
+  // Since we are casting potential non-dfs to dfs we need a new list
+  SEXP frames = SHIELD(init<r_list_t>(n_frames, false)); ++NP;
+
   const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_frames = VECTOR_PTR_RO(frames);
 
   SEXP df;
   PROTECT_INDEX df_idx;
   R_ProtectWithIndex(df = cast<r_data_frame_t>(p_x[0], R_NilValue), &df_idx); ++NP;
+  SET_VECTOR_ELT(frames, 0, df);
 
   SEXP names;
   PROTECT_INDEX names_idx;
   R_ProtectWithIndex(names = get_names(df), &names_idx); ++NP;
 
   SEXP df_template = df;
-
-  SEXP frames = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
-  SET_VECTOR_ELT(frames, 0, df_template);
 
   SEXP ptypes, new_names, new_ptypes, new_cols,
   temp_list, df_names, ptype_names;
@@ -801,6 +804,7 @@ SEXP cpp_df_c(SEXP x){
       set_names(ptypes, names);
     }
     out_size += df_nrow(df);
+    SET_VECTOR_ELT(frames, i, df);
   }
 
   int n_cols = Rf_length(names);
@@ -816,13 +820,12 @@ SEXP cpp_df_c(SEXP x){
   const SEXP *p_ptypes = VECTOR_PTR_RO(ptypes);
   const SEXP *p_names = VECTOR_PTR_RO(names);
 
-
   for (int j = 0; j < n_cols; ++j){
     for (int i = 0; i < n_frames; ++i){
-      vec = get_list_element(p_x[i], p_names[j]);
+      vec = get_list_element(p_frames[i], p_names[j]);
 
       if (is_null(vec)){
-        R_Reprotect(vec = cpp_na_init(p_ptypes[j], df_nrow(p_x[i])), vec_idx);
+        R_Reprotect(vec = cpp_na_init(p_ptypes[j], df_nrow(p_frames[i])), vec_idx);
       }
       SET_VECTOR_ELT(vectors, i, vec);
     }
@@ -930,28 +933,21 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   return out;
 }
 
-// `c()` but no concatenation of names
-[[cpp11::register]]
-SEXP cpp_c(SEXP x){
+// Combine vectors given the following args:
+// * A list of vectors
+// * The final size of the combined vector
+// * A template vector (of length 0) whose type is the common type between all vectors
+// This allows us to eliminate a few loops
+SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
-  if (!Rf_isVectorList(x)){
-    Rf_error("`x` must be a list of vectors");
+  if (vec_length(vec_template) != 0){
+    Rf_error("`vec_template` must be of length 0");
   }
-
-  int32_t NP = 0;
 
   int n = Rf_length(x);
-
-  if (n == 1){
-    return VECTOR_ELT(x, 0);
-  }
-
-  // Cast all objects to common type
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
-  // Figure out final size
-  R_xlen_t out_size = 0;
-  for (int i = 0; i < n; ++i) out_size += vec_length(p_x[i]);
+  int32_t NP = 0;
 
   R_xlen_t k = 0;
   R_xlen_t m = 0;
@@ -961,12 +957,7 @@ SEXP cpp_c(SEXP x){
   PROTECT_INDEX vec_idx;
   R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
 
-  r_type common = r_common_type(x);
-
-  // 'out' here acts as a template for the final result
-  if (n > 0){
-    SHIELD(out = cast_(common, get_ptype(p_x[0]), R_NilValue)); ++NP;
-  }
+  r_type common = get_r_type(vec_template);
 
   switch (common){
   case r_null: {
@@ -974,7 +965,7 @@ SEXP cpp_c(SEXP x){
   }
   case r_lgl: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
     int* RESTRICT p_out = INTEGER(out);
 
@@ -987,7 +978,7 @@ SEXP cpp_c(SEXP x){
   }
   case r_int: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
     int* RESTRICT p_out = INTEGER(out);
 
@@ -1000,7 +991,7 @@ SEXP cpp_c(SEXP x){
   }
   case r_int64: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
     int64_t* RESTRICT p_out = INTEGER64_PTR(out);
 
@@ -1013,7 +1004,7 @@ SEXP cpp_c(SEXP x){
   }
   case r_dbl: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
     double* RESTRICT p_out = REAL(out);
 
@@ -1026,7 +1017,7 @@ SEXP cpp_c(SEXP x){
   }
   case r_chr: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
     for (int i = 0; i < n; ++i){
       R_Reprotect(vec = cast<r_character_t>(p_x[i], R_NilValue), vec_idx);
@@ -1041,7 +1032,7 @@ SEXP cpp_c(SEXP x){
   }
   case r_cplx: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
     Rcomplex *p_out = COMPLEX(out);
 
@@ -1054,7 +1045,7 @@ SEXP cpp_c(SEXP x){
   }
   case r_raw: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
     Rbyte *p_out = RAW(out);
 
@@ -1067,41 +1058,35 @@ SEXP cpp_c(SEXP x){
   }
   case r_list: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
     for (int i = 0; i < n; ++i){
-    R_Reprotect(vec = cast<r_list_t>(p_x[i], R_NilValue), vec_idx);
-    m = Rf_xlength(vec);
+      R_Reprotect(vec = cast<r_list_t>(p_x[i], R_NilValue), vec_idx);
+      m = Rf_xlength(vec);
 
-    const SEXP *p_vec = VECTOR_PTR_RO(vec);
-    for (R_xlen_t j = 0; j < m; ++k, ++j){
-      SET_VECTOR_ELT(out, k, p_vec[j]);
+      const SEXP *p_vec = VECTOR_PTR_RO(vec);
+      for (R_xlen_t j = 0; j < m; ++k, ++j){
+        SET_VECTOR_ELT(out, k, p_vec[j]);
+      }
     }
-  }
     break;
   }
   case r_fct: {
-    SHIELD(out = combine_factors(x)); ++NP;
-    break;
-  }
-  case r_date: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
 
-    SHIELD(out = coerce_vec(out, REALSXP)); ++NP;
-    double* RESTRICT p_out = REAL(out);
+    int* RESTRICT p_out = INTEGER(out);
 
     for (int i = 0; i < n; ++i, k += m){
-      R_Reprotect(vec = cast<r_date_t>(p_x[i], R_NilValue), vec_idx);
-      R_Reprotect(vec = coerce_vec(vec, REALSXP), vec_idx);
+      R_Reprotect(vec = cast<r_factor_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(REAL_RO(vec), m, &p_out[k]);
+      std::copy_n(INTEGER_RO(vec), m, &p_out[k]);
     }
     break;
   }
   case r_pxct: {
 
-    SHIELD(out = cpp_rep_len(out, out_size)); ++NP;
+    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
     double* RESTRICT p_out = REAL(out);
 
     for (int i = 0; i < n; ++i, k += m){
@@ -1117,12 +1102,12 @@ SEXP cpp_c(SEXP x){
   }
   case r_rcrd: {
 
-    SEXP cls = SHIELD(Rf_getAttrib(out, R_ClassSymbol)); ++NP;
-    SEXP nms = SHIELD(get_names(out)); ++NP;
+    SEXP cls = SHIELD(Rf_getAttrib(vec_template, R_ClassSymbol)); ++NP;
+    SEXP nms = SHIELD(get_names(vec_template)); ++NP;
     SEXP rcrds = SHIELD(new_vec(VECSXP, n)); ++NP;
 
     for (int i = 0; i < n; ++i){
-    SET_VECTOR_ELT(rcrds, i, cpp_list_as_df(p_x[i]));
+      SET_VECTOR_ELT(rcrds, i, cpp_list_as_df(p_x[i]));
 
       // Incompatible names between rcrds
       // It's possible that the owner of the rcrd object has a method to handle
@@ -1134,7 +1119,7 @@ SEXP cpp_c(SEXP x){
         YIELD(NP);
         return out;
       }
-  }
+    }
     SHIELD(out = cpp_df_c(rcrds)); ++NP;
     Rf_classgets(out, cls);
     break;
@@ -1146,9 +1131,39 @@ SEXP cpp_c(SEXP x){
     break;
   }
   default: {
+    YIELD(NP);
     Rf_error("Don't know how to combine elements");
   }
   }
   YIELD(NP);
+  return out;
+}
+
+// `c()` but no concatenation of names
+
+[[cpp11::register]]
+SEXP cpp_c(SEXP x){
+
+  if (!Rf_isVectorList(x)){
+    Rf_error("`x` must be a list of vectors");
+  }
+
+  int n = Rf_length(x);
+
+  if (n == 1){
+    return VECTOR_ELT(x, 0);
+  }
+
+  // Cast all objects to common type
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  // Figure out final size
+  R_xlen_t out_size = 0;
+  for (int i = 0; i < n; ++i) out_size += vec_length(p_x[i]);
+
+  // 'vec_template' here acts as a template for the final result
+  SEXP vec_template = SHIELD(common_template(x));
+  SEXP out = SHIELD(combine_internal(x, out_size, vec_template));
+  YIELD(2);
   return out;
 }

@@ -61,6 +61,13 @@ extern "C" SEXP _cheapr_cpp_type(SEXP x) {
     return cpp11::as_sexp(cpp_type(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// cast.cpp
+SEXP common_template(SEXP x);
+extern "C" SEXP _cheapr_common_template(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(common_template(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // combine.cpp
 SEXP cpp_rep_len(SEXP x, int length);
 extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
@@ -786,6 +793,7 @@ extern "C" SEXP _cheapr_cpp_lgl_locs(SEXP x, SEXP n_true, SEXP n_false, SEXP inc
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
+    {"_cheapr_common_template",             (DL_FUNC) &_cheapr_common_template,             1},
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
