@@ -20,6 +20,10 @@ cpp_set_add_attributes <- function(x, attributes, add) {
   .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
+cpp_common_template <- function(x) {
+  .Call(`_cheapr_cpp_common_template`, x)
+}
+
 cpp_cast_common <- function(x) {
   .Call(`_cheapr_cpp_cast_common`, x)
 }
@@ -32,8 +36,8 @@ cpp_type <- function(x) {
   .Call(`_cheapr_cpp_type`, x)
 }
 
-common_template <- function(x) {
-  .Call(`_cheapr_common_template`, x)
+foo <- function(x) {
+  .Call(`_cheapr_foo`, x)
 }
 
 cpp_rep_len <- function(x, length) {

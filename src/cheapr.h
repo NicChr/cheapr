@@ -225,7 +225,6 @@ void clear_attributes(SEXP x);
 uint_fast64_t null_count(SEXP x);
 SEXP compact_seq_len(R_xlen_t n);
 SEXP clean_indices(SEXP indices, SEXP x, bool count);
-SEXP combine_levels(SEXP x);
 SEXP cpp_lgl_count(SEXP x);
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
                   bool include_true, bool include_false, bool include_na);
@@ -237,7 +236,7 @@ SEXP match(SEXP y, SEXP x, int no_match);
 SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place);
 SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns);
 SEXP clean_locs(SEXP locs, SEXP x);
-SEXP common_template(SEXP x);
+SEXP cpp_common_template(SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
@@ -469,15 +468,15 @@ constexpr r_type r_type_pairs[15][15] = {
   /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_rcrd, r_chr,  r_fct,  r_list, r_df,   r_unk },
   /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
   /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* I64  */  { r_int64,r_int64,r_int64,r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,   r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw,  r_fct,  r_df,   r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,   r_raw,  r_raw,  r_raw,  r_df,   r_df,   r_unk,  r_chr,  r_df,   r_list, r_df,   r_unk },
-  /* DATE */  { r_date, r_date, r_date, r_date,  r_date, r_fct,  r_df,   r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_df,   r_df,   r_pxct, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* RCRD */  { r_rcrd, r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_rcrd, r_unk,  r_unk,  r_unk,  r_unk,  r_unk },
-  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,   r_chr,  r_chr,  r_chr,  r_chr,  r_chr,  r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,   r_fct,  r_fct,  r_df,   r_fct,  r_fct,  r_unk,  r_fct,  r_fct,  r_list, r_df,   r_unk },
+  /* I64  */  { r_int64,r_int64, r_int64, r_int64, r_dbl, r_cplx, r_raw, r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,   r_dbl,  r_cplx, r_raw, r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw, r_date,  r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,   r_raw,  r_raw,  r_raw, r_unk,   r_unk, r_unk,  r_chr,  r_fct,   r_list, r_df,   r_unk },
+  /* DATE */  { r_date, r_date, r_date, r_date,  r_date, r_date,  r_unk, r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_date, r_unk, r_pxct, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* RCRD */  { r_rcrd, r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk, r_unk,  r_unk, r_rcrd, r_unk,  r_unk,  r_unk,  r_unk,  r_unk },
+  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,   r_chr,  r_chr,  r_chr,  r_chr,  r_chr, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,   r_fct,  r_fct,  r_df,   r_fct,  r_fct, r_unk,  r_fct,  r_fct,  r_list, r_df,   r_unk },
   /* LIST */  { r_list, r_list, r_list, r_list,  r_list, r_list, r_list, r_list, r_list, r_unk,  r_list, r_list, r_list, r_df,   r_unk },
   /* DF   */  { r_df,   r_df,   r_df,   r_df,    r_df,   r_df,   r_df,   r_df,   r_df,   r_unk,  r_df,   r_df,   r_df,   r_df,   r_unk },
   /* Unknown */ { r_unk,  r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk }
@@ -834,7 +833,7 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
     } else {
       return coerce_vec(x, TYPEOF(y));
     }
-  } else if (is_null(y)){
+  } else if (is_null(x) && is_null(y)){
     return init<r_date_t>(vec_length(x), true);
   } else if (Rf_isObject(x)){
     as_date = as_date != NULL ? as_date : Rf_install("as.Date");

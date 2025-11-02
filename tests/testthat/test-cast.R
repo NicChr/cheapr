@@ -9,13 +9,13 @@ test_that("casting", {
   f <- factor(c("h", "f", NA), levels = c("h", "H", "f"))
   g <- factor(c("f", "g"), levels = c("f", "G", "g"))
   h <- origin
-  i <- as.POSIXct(origin, tz = "UTC")
-  j <- as.POSIXct(origin, tz = "America/New_York")
-  k <- list(10)
-  l <- new_df(x = "ok")
+  j <- as.POSIXct(origin, tz = "UTC")
+  k <- as.POSIXct(origin, tz = "America/New_York")
+  l <- list(10)
+  m <- new_df(x = "ok")
 
   # All permutations of above objects (order matters here)
-  all_objs <- new_df(obj = list(a, b, c, d, e, f, g, h, i))
+  all_objs <- new_df(obj = list(a, b, c, d, e, f, g, h, j, k, l, m))
 
   which_pair <- expand.grid(
     left = seq_len(nrow(all_objs)),
@@ -34,12 +34,27 @@ test_that("casting", {
   results <- new_list(nrow(pairs))
 
   for (i in seq_along(results)){
-    results[[i]] <- cast_common(pairs[["left"]][[i]], pairs[["right"]][[i]])
-  }
+    results[[i]] <- suppressWarnings(
+      cast_common(pairs[["left"]][[i]], pairs[["right"]][[i]])
+    )
+    left_result <- results[[i]][[1]]
+    right_result <- results[[i]][[2]]
+    expect_equal(
+      class(left_result),
+      class(right_result)
+    )
 
-
-  for (i in seq_along(results)){
-    results[[i]] <- cast_common(pairs[["left"]][[i]], pairs[["right"]][[i]])
+    if (is.factor(left_result)){
+      expect_identical(
+        levels(left_result),
+        levels(right_result)
+      )
+    } else if (inherits(results[[i]], "POSIXct")){
+      expect_identical(
+        attr(left_result, "tzone"),
+        attr(right_result, "tzone")
+      )
+    }
   }
 
   expect_snapshot(dput(results))

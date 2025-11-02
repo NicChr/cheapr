@@ -41,6 +41,13 @@ extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add
   END_CPP11
 }
 // cast.cpp
+SEXP cpp_common_template(SEXP x);
+extern "C" SEXP _cheapr_cpp_common_template(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_common_template(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// cast.cpp
 SEXP cpp_cast_common(SEXP x);
 extern "C" SEXP _cheapr_cpp_cast_common(SEXP x) {
   BEGIN_CPP11
@@ -62,10 +69,10 @@ extern "C" SEXP _cheapr_cpp_type(SEXP x) {
   END_CPP11
 }
 // cast.cpp
-SEXP common_template(SEXP x);
-extern "C" SEXP _cheapr_common_template(SEXP x) {
+int foo(SEXP x);
+extern "C" SEXP _cheapr_foo(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(common_template(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+    return cpp11::as_sexp(foo(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // combine.cpp
@@ -793,7 +800,6 @@ extern "C" SEXP _cheapr_cpp_lgl_locs(SEXP x, SEXP n_true, SEXP n_false, SEXP inc
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_cheapr_common_template",             (DL_FUNC) &_cheapr_common_template,             1},
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
@@ -805,6 +811,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_col_all_na",              (DL_FUNC) &_cheapr_cpp_col_all_na,              2},
     {"_cheapr_cpp_col_any_na",              (DL_FUNC) &_cheapr_cpp_col_any_na,              2},
     {"_cheapr_cpp_col_na_counts",           (DL_FUNC) &_cheapr_cpp_col_na_counts,           2},
+    {"_cheapr_cpp_common_template",         (DL_FUNC) &_cheapr_cpp_common_template,         1},
     {"_cheapr_cpp_count_val",               (DL_FUNC) &_cheapr_cpp_count_val,               3},
     {"_cheapr_cpp_df_assign_cols",          (DL_FUNC) &_cheapr_cpp_df_assign_cols,          2},
     {"_cheapr_cpp_df_col_c",                (DL_FUNC) &_cheapr_cpp_df_col_c,                3},
@@ -903,6 +910,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
+    {"_cheapr_foo",                         (DL_FUNC) &_cheapr_foo,                         1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}

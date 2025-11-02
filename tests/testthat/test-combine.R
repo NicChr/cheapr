@@ -7,17 +7,27 @@ test_that("combining", {
   b <- 3L
   c <- 7.5
   d <- 1.5 + 3.6i
-  e <- c("e", NA_character_)
-  f <- origin
-  g <- as.POSIXct(origin, tz = "UTC")
-  h <- as.POSIXct(origin, tz = "America/New_York")
+  e <- origin
+  f <- as.POSIXct(origin, tz = "UTC")
+  g <- as.POSIXct(origin, tz = "America/New_York")
+  h <- c("e", NA_character_)
   i <- factor(c("h", "f", NA), levels = c("h", "H", "f"))
   j <- factor(c("f", "g"), levels = c("f", "G", "g"))
   k <- list(10)
-  l <- new_df(x = "ok")
+  l <- new_df(y = "ok")
 
-  objs <- list(A, a, b, c, d, e, f, g, h, i, j, k, l)
-  result <- Reduce(c_, objs, simplify = FALSE, accumulate = TRUE)
+  objs <- named_list(A, a, b, c, d, e, f, g, h, i, j, k, l)
+
+  # results <- new_list(length(objs))
+  # names(results) <- names(objs)
+  #
+  # for (ii in seq_along(objs)){
+  #   results[[ii]] <- suppressWarnings(c_(.args = sset(objs, seq_len(ii))))
+  # }
+
+  result <- Reduce(c_, objs, simplify = FALSE, accumulate = TRUE) |>
+    suppressWarnings() |>
+    stats::setNames(names(objs))
 
   expect_snapshot(dput(result))
 })
