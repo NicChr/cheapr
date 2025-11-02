@@ -36,10 +36,6 @@ cpp_type <- function(x) {
   .Call(`_cheapr_cpp_type`, x)
 }
 
-foo <- function(x) {
-  .Call(`_cheapr_foo`, x)
-}
-
 cpp_rep_len <- function(x, length) {
   .Call(`_cheapr_cpp_rep_len`, x, length)
 }

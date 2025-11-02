@@ -243,9 +243,3 @@ SEXP cpp_cast(SEXP x, SEXP y){
 SEXP cpp_type(SEXP x){
   return make_utf8_str(r_type_char(x));
 }
-
-[[cpp11::register]]
-int foo(SEXP x){
-  return r_common_type(x);
-}
-

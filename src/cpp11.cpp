@@ -68,13 +68,6 @@ extern "C" SEXP _cheapr_cpp_type(SEXP x) {
     return cpp11::as_sexp(cpp_type(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
-// cast.cpp
-int foo(SEXP x);
-extern "C" SEXP _cheapr_foo(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(foo(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
 // combine.cpp
 SEXP cpp_rep_len(SEXP x, int length);
 extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
@@ -910,7 +903,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
-    {"_cheapr_foo",                         (DL_FUNC) &_cheapr_foo,                         1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}

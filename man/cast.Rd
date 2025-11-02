@@ -6,6 +6,7 @@
 \alias{archetype}
 \alias{cast_common}
 \alias{r_type}
+\alias{r_type_common}
 \title{Fast casting/coercing of R objects}
 \usage{
 cast(x, y)
@@ -17,6 +18,8 @@ archetype(x)
 cast_common(..., .args = NULL)
 
 r_type(x)
+
+r_type_common(..., .args = NULL)
 }
 \arguments{
 \item{x}{A vector.}
@@ -37,6 +40,7 @@ template between all supplied vectors.
 \code{r_type()} will return the internal cheapr-defined type of \code{x} as a
 character vector of length 1. This will usually match \code{class(x)}
 but not always.
+\code{r_type_common()} returns the common r_type between all objects.
 }
 \description{
 \code{cast_common()} is type-commutative, meaning the order of objects doesn't

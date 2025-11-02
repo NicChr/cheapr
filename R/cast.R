@@ -20,6 +20,7 @@
 #' `r_type()` will return the internal cheapr-defined type of `x` as a
 #' character vector of length 1. This will usually match `class(x)`
 #' but not always.
+#' `r_type_common()` returns the common r_type between all objects.
 #'
 #' @rdname cast
 #' @export
@@ -47,6 +48,15 @@ cast_common <- function(..., .args = NULL){
 #' @export
 r_type <- function(x) {
   .Call(`_cheapr_cpp_type`, x)
+}
+
+#' @rdname cast
+#' @export
+r_type_common <- function(..., .args = NULL){
+  .Call(
+    `_cheapr_cpp_type`,
+    .Call(`_cheapr_cpp_common_template`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
+  )
 }
 
 base_cast <- function(x, template){
