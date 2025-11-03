@@ -7,8 +7,8 @@
 - New function `replace_`, a cheaper alternative to `[<-` for fast 
 value replacement.
 
-- New functions `cast` and `cast_common` to help with fast and type-stable 
-coercion.
+- New functions `cast`, `cast_common`, `archetype`, `archetype_common`, `r_type`
+and `r_type_common` to help with fast type-stable coercion.
 
 - New function `na_init` to help with fast initialisation of vectors based off
 a template vector.
@@ -44,7 +44,14 @@ the RHS was greater than 1.
 correct method. One can still define a subset method for custom objects 
 via `[` which `sset` falls back on when it can't find an appropriate method.
 
+- Combining vectors via `c_` has been internally made simpler, 
+utilising type-stable casting.
+
 - `if_else_` has been re-written mostly in C/C++ and should be faster.
+
+- `as_df` has been re-written in C/C++ and now has much lower overhead.
+
+- The `.args` argument now accepts any list, even classed ones.
 
 - `rebuild.data.frame` and `rebuild.data.table` will now return a data frame 
 with class `'data.frame'` and `c('data.table', 'data.frame')` respectively instead of 
@@ -60,10 +67,13 @@ for a long while.
 
 - Subsetting `sf` objects with `sset` now internally calls `[`.
 
-- Combining vectors has been internally made simpler, utilising type-stable
-casting.
-
 ### Breaking changes
+
+- Matrices and arrays are converted to bare vectors when using data frames via
+`new_df` and other data frame constructors.
+
+- Bare lists of length `n` are now always converted to data frames of nrow `n`
+via `as_df`.
 
 - `enframe_()`, `deframe_()` and `cut_numeric()` have been removed as they have
 been deprecated for a while.

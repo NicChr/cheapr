@@ -2,20 +2,20 @@
 % Please edit documentation in R/cast.R
 \name{cast}
 \alias{cast}
-\alias{archetype_common}
-\alias{archetype}
 \alias{cast_common}
+\alias{archetype}
+\alias{archetype_common}
 \alias{r_type}
 \alias{r_type_common}
 \title{Fast casting/coercing of R objects}
 \usage{
 cast(x, archetype)
 
-archetype_common(..., .args = NULL)
+cast_common(..., .args = NULL)
 
 archetype(x)
 
-cast_common(..., .args = NULL)
+archetype_common(..., .args = NULL)
 
 r_type(x)
 
@@ -35,6 +35,7 @@ This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 \value{
 \code{cast()} will attempt to cast \code{x} into an object similar to \code{y}.
 \code{cast_common()} coerces all supplied vectors into a common type between them.
+\code{archetype()} returns the zero-length template/archetype of \code{x}.
 \code{archetype_common()} returns the common zero-length
 template between all supplied vectors.
 \code{r_type()} will return the internal cheapr-defined type of \code{x} as a

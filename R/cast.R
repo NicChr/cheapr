@@ -15,6 +15,7 @@
 #' @returns
 #' `cast()` will attempt to cast `x` into an object similar to `y`.
 #' `cast_common()` coerces all supplied vectors into a common type between them.
+#' `archetype()` returns the zero-length template/archetype of `x`.
 #' `archetype_common()` returns the common zero-length
 #' template between all supplied vectors.
 #' `r_type()` will return the internal cheapr-defined type of `x` as a
@@ -27,10 +28,11 @@
 cast <- function(x, archetype){
   .Call(`_cheapr_cpp_cast`, x, archetype)
 }
+
 #' @rdname cast
 #' @export
-archetype_common <- function(..., .args = NULL){
-  .Call(`_cheapr_cpp_common_template`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
+cast_common <- function(..., .args = NULL){
+  .Call(`_cheapr_cpp_cast_common`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
 }
 
 #' @rdname cast
@@ -41,9 +43,10 @@ archetype <- function(x){
 
 #' @rdname cast
 #' @export
-cast_common <- function(..., .args = NULL){
-  .Call(`_cheapr_cpp_cast_common`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
+archetype_common <- function(..., .args = NULL){
+  .Call(`_cheapr_cpp_common_template`, .Call(`_cheapr_cpp_list_args`, list(...), .args))
 }
+
 #' @rdname cast
 #' @export
 r_type <- function(x) {
