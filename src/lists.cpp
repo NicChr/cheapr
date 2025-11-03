@@ -800,6 +800,8 @@ SEXP cpp_as_df(SEXP x){
     SEXP out = SHIELD(cpp_new_df(x, n_rows, false, false));
     YIELD(2);
     return out;
+  } else if (is_null(x)){
+    return init<r_data_frame_t>(0, false);
   } else if (is_simple_vec2(x)){
     SEXP out = SHIELD(init<r_list_t>(2, false));
     SEXP names = SHIELD(init<r_character_t>(2, false));
@@ -812,12 +814,12 @@ SEXP cpp_as_df(SEXP x){
     YIELD(3);
     return out;
   } else {
-    SEXP out = SHIELD(cpp11::package("base")["as.data.frame"](x));
-    SEXP names = SHIELD(get_names(out));
+    SEXP base_as_df = SHIELD(find_pkg_fun("as.data.frame", "base", false));
+    SEXP expr = SHIELD(Rf_lang2(base_as_df, x));
+    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     SEXP col_seq = SHIELD(cpp_seq_len(Rf_length(out)));
     SEXP col_str = SHIELD(make_utf8_str("col_"));
     SEXP new_names = SHIELD(base_paste0(col_str, col_seq));
-    SHIELD(new_names = cpp11::package("cheapr")["str_coalesce"](names, new_names));
     set_names(out, new_names);
     YIELD(6);
     return out;
