@@ -15,7 +15,7 @@
       "POSIXt"), tzone = "America/New_York"), structure(1, class = c("POSIXct", 
       "POSIXt"), tzone = "America/New_York")), list(list(10), list(
           1L)), list(structure(list(x = "ok"), row.names = c(NA, -1L
-      ), class = "data.frame"), structure(list(x = 1L), row.names = c(NA, 
+      ), class = "data.frame"), structure(list(value = 1L), row.names = c(NA, 
       -1L), class = "data.frame")), list(1, structure(2, class = "Date")), 
           list(structure(2, class = "Date"), structure(2, class = "Date")), 
           list(0, structure(2, class = "Date")), list(1+3i, 2+0i), 
@@ -30,7 +30,7 @@
           "POSIXt"), tzone = "America/New_York"), structure(172800, class = c("POSIXct", 
           "POSIXt"), tzone = "America/New_York")), list(list(10), list(
               structure(2, class = "Date"))), list(structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(x = structure(2, class = "Date")), row.names = c(NA, 
+          -1L), class = "data.frame"), structure(list(value = structure(2, class = "Date")), row.names = c(NA, 
           -1L), class = "data.frame")), list(1L, 0L), list(structure(2, class = "Date"), 
               structure(0, class = "Date")), list(FALSE, FALSE), list(
               1+3i, 0+0i), list("e", "FALSE"), list(structure(c(1L, 
@@ -45,7 +45,7 @@
           "POSIXt"), tzone = "America/New_York"), structure(0, class = c("POSIXct", 
           "POSIXt"), tzone = "America/New_York")), list(list(10), list(
               FALSE)), list(structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(x = FALSE), row.names = c(NA, 
+          -1L), class = "data.frame"), structure(list(value = FALSE), row.names = c(NA, 
           -1L), class = "data.frame")), list(1+0i, 1+3i), list(structure(2, class = "Date"), 
               structure(1, class = "Date")), list(0+0i, 1+3i), list(
               1+3i, 1+3i), list("e", "1+3i"), list(structure(c(1L, 
@@ -58,7 +58,7 @@
               structure(1, class = "Date")), list(structure(0, class = "Date"), 
               structure(1, class = "Date")), list(list(10), list(1+3i)), 
           list(structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame"), 
-              structure(list(x = 1+3i), row.names = c(NA, -1L), class = "data.frame")), 
+              structure(list(value = 1+3i), row.names = c(NA, -1L), class = "data.frame")), 
           list("1", "e"), list("1970-01-03", "e"), list("FALSE", "e"), 
           list("1+3i", "e"), list("e", "e"), list(structure(c(1L, 3L, 
           NA), levels = c("h", "H", "f", "e"), class = "factor"), structure(4L, levels = c("h", 
@@ -67,7 +67,7 @@
           "G", "g", "e"), class = "factor")), list("1970-01-01", "e"), 
           list("1970-01-01", "e"), list("1969-12-31 19:00:00", "e"), 
           list(list(10), list("e")), list(structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(x = "e"), row.names = c(NA, 
+          -1L), class = "data.frame"), structure(list(value = "e"), row.names = c(NA, 
           -1L), class = "data.frame")), list(structure(1L, levels = c("1", 
           "h", "H", "f"), class = "factor"), structure(c(2L, 4L, NA
           ), levels = c("1", "h", "H", "f"), class = "factor")), list(
@@ -97,7 +97,7 @@
           ), class = "factor"), structure(3L, levels = c("h", "H", 
           "f"), class = "factor"), structure(NA_integer_, levels = c("h", 
           "H", "f"), class = "factor"))), list(structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(x = structure(c(1L, 
+          -1L), class = "data.frame"), structure(list(value = structure(c(1L, 
           3L, NA), levels = c("h", "H", "f"), class = "factor")), row.names = c(NA, 
           -3L), class = "data.frame")), list(structure(1L, levels = c("1", 
           "f", "G", "g"), class = "factor"), structure(c(2L, 4L), levels = c("1", 
@@ -123,7 +123,7 @@
           "f", "G", "g"), class = "factor")), list(list(10), list(structure(1L, levels = c("f", 
           "G", "g"), class = "factor"), structure(3L, levels = c("f", 
           "G", "g"), class = "factor"))), list(structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(x = structure(c(1L, 
+          -1L), class = "data.frame"), structure(list(value = structure(c(1L, 
           3L), levels = c("f", "G", "g"), class = "factor")), row.names = c(NA, 
           -2L), class = "data.frame")), list(structure(1L, class = "Date"), 
               structure(0, class = "Date")), list(structure(2, class = "Date"), 
@@ -142,7 +142,7 @@
               structure(0, class = c("POSIXct", "POSIXt"), tzone = "America/New_York")), 
           list(list(10), list(structure(0, class = "Date"))), list(
               structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame"), 
-              structure(list(x = structure(0, class = "Date")), row.names = c(NA, 
+              structure(list(value = structure(0, class = "Date")), row.names = c(NA, 
               -1L), class = "data.frame")), list(structure(1, class = c("POSIXct", 
           "POSIXt"), tzone = ""), structure(0, class = c("POSIXct", 
           "POSIXt"), tzone = "")), list(structure(172800, class = c("POSIXct", 
@@ -165,7 +165,7 @@
           "POSIXt"), tzone = "America/New_York")), list(list(10), list(
               structure(0, class = c("POSIXct", "POSIXt"), tzone = "UTC"))), 
           list(structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame"), 
-              structure(list(x = structure(0, class = c("POSIXct", 
+              structure(list(value = structure(0, class = c("POSIXct", 
               "POSIXt"), tzone = "UTC")), row.names = c(NA, -1L), class = "data.frame")), 
           list(structure(1, class = c("POSIXct", "POSIXt"), tzone = ""), 
               structure(0, class = c("POSIXct", "POSIXt"), tzone = "")), 
@@ -189,7 +189,7 @@
               structure(0, class = c("POSIXct", "POSIXt"), tzone = "America/New_York")), 
           list(list(10), list(structure(0, class = c("POSIXct", "POSIXt"
           ), tzone = "America/New_York"))), list(structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(x = structure(0, class = c("POSIXct", 
+          -1L), class = "data.frame"), structure(list(value = structure(0, class = c("POSIXct", 
           "POSIXt"), tzone = "America/New_York")), row.names = c(NA, 
           -1L), class = "data.frame")), list(list(1L), list(10)), list(
               list(structure(2, class = "Date")), list(10)), list(list(
@@ -204,32 +204,33 @@
           "POSIXt"), tzone = "UTC")), list(10)), list(list(structure(0, class = c("POSIXct", 
           "POSIXt"), tzone = "America/New_York")), list(10)), list(
               list(10), list(10)), list(structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(x = list(10)), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = 1L), row.names = c(NA, 
+          -1L), class = "data.frame"), structure(list(value = list(
+              10)), row.names = c(NA, -1L), class = "data.frame")), 
+          list(structure(list(value = 1L), row.names = c(NA, -1L), class = "data.frame"), 
+              structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame")), 
+          list(structure(list(value = structure(2, class = "Date")), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = structure(2, class = "Date")), row.names = c(NA, 
+          -1L), class = "data.frame")), list(structure(list(value = FALSE), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = FALSE), row.names = c(NA, 
+          -1L), class = "data.frame")), list(structure(list(value = 1+3i), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = 1+3i), row.names = c(NA, 
+          -1L), class = "data.frame")), list(structure(list(value = "e"), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = "e"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = structure(c(1L, 
+          -1L), class = "data.frame")), list(structure(list(value = structure(c(1L, 
           3L, NA), levels = c("h", "H", "f"), class = "factor")), row.names = c(NA, 
           -3L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = structure(c(1L, 
+          -1L), class = "data.frame")), list(structure(list(value = structure(c(1L, 
           3L), levels = c("f", "G", "g"), class = "factor")), row.names = c(NA, 
           -2L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = structure(0, class = "Date")), row.names = c(NA, 
+          -1L), class = "data.frame")), list(structure(list(value = structure(0, class = "Date")), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = structure(0, class = c("POSIXct", 
+          -1L), class = "data.frame")), list(structure(list(value = structure(0, class = c("POSIXct", 
           "POSIXt"), tzone = "UTC")), row.names = c(NA, -1L), class = "data.frame"), 
               structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame")), 
-          list(structure(list(x = structure(0, class = c("POSIXct", 
+          list(structure(list(value = structure(0, class = c("POSIXct", 
           "POSIXt"), tzone = "America/New_York")), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(x = list(
+          -1L), class = "data.frame")), list(structure(list(value = list(
               10)), row.names = c(NA, -1L), class = "data.frame"), 
               structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame")), 
           list(structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame"), 

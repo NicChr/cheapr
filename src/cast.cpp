@@ -25,12 +25,6 @@ const init_fn INIT_FNS[15] = {
   init_data_frame, init_unknown
 };
 
-#define CHEAPR_CAST_LOOP(cast_fn)                            \
-for (R_xlen_t i = 0; i < n; ++i){                            \
-  R_Reprotect(temp = cast_fn(p_x[i], temp), temp_idx);       \
-  SET_VECTOR_ELT(out, i, temp);                              \
-}
-
 r_type r_common_type(SEXP x){
 
   if (!Rf_isVectorList(x)){

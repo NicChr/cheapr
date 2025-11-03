@@ -780,7 +780,7 @@ SEXP cpp_df_c(SEXP x){
       }
       SET_VECTOR_ELT(vectors, i, vec);
     }
-    SET_VECTOR_ELT(out, j, cpp_c(vectors));
+    SET_VECTOR_ELT(out, j, combine_internal(vectors, out_size, p_ptypes[j]));
   }
   set_list_as_df(out);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));

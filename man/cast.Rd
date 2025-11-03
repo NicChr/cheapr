@@ -9,7 +9,7 @@
 \alias{r_type_common}
 \title{Fast casting/coercing of R objects}
 \usage{
-cast(x, y)
+cast(x, archetype)
 
 archetype_common(..., .args = NULL)
 
@@ -24,7 +24,7 @@ r_type_common(..., .args = NULL)
 \arguments{
 \item{x}{A vector.}
 
-\item{y}{A vector.}
+\item{archetype}{An archetype vector.}
 
 \item{...}{Vectors.}
 

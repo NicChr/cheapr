@@ -168,16 +168,20 @@ cpp_list_assign <- function(x, values) {
   .Call(`_cheapr_cpp_list_assign`, x, values)
 }
 
-cpp_list_as_df <- function(x) {
-  .Call(`_cheapr_cpp_list_as_df`, x)
-}
-
 cpp_new_df <- function(x, nrows, recycle, name_repair) {
   .Call(`_cheapr_cpp_new_df`, x, nrows, recycle, name_repair)
 }
 
+cpp_list_as_df <- function(x) {
+  .Call(`_cheapr_cpp_list_as_df`, x)
+}
+
 cpp_df_assign_cols <- function(x, cols) {
   .Call(`_cheapr_cpp_df_assign_cols`, x, cols)
+}
+
+cpp_as_df <- function(x) {
+  .Call(`_cheapr_cpp_as_df`, x)
 }
 
 cpp_num_na <- function(x, recursive) {

@@ -237,6 +237,8 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place);
 SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns);
 SEXP clean_locs(SEXP locs, SEXP x);
 SEXP cpp_common_template(SEXP x);
+SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template);
+SEXP cpp_as_df(SEXP x);
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
@@ -380,7 +382,6 @@ extern cpp11::function base_paste0;
 extern cpp11::function cheapr_fast_match;
 extern cpp11::function cheapr_fast_unique;
 extern cpp11::function cheapr_rebuild;
-extern cpp11::function cheapr_as_df;
 extern cpp11::function base_cast;
 extern cpp11::function base_assign;
 
@@ -924,23 +925,13 @@ inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_inherits(x, "data.frame") && Rf_inherits(y, "data.frame")){
     return rebuild(x, y, true);
-  } else if (is_simple_vec2(x)){
-    SEXP out = SHIELD(new_vec(VECSXP, 1));
-    SET_VECTOR_ELT(out, 0, x);
-    SEXP names = SHIELD(make_utf8_str("x"));
-    set_names(out, names);
-    set_list_as_df(out); // as data_frame in-place
-    YIELD(2);
-    return out;
-
   } else {
     int32_t NP = 0;
-    SEXP out = SHIELD(cheapr_as_df(x)); ++NP;
+    SEXP out = SHIELD(cpp_as_df(x)); ++NP;
 
     if (Rf_inherits(y, "data.frame")){
       SHIELD(out = rebuild(out, y, true)); ++NP;
     }
-
     YIELD(NP);
     return out;
   }

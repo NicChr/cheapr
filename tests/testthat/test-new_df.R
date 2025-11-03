@@ -36,13 +36,17 @@ test_that("data frames", {
     new_df(value = x)
   )
   expect_identical(
-    as_df(matrix(1:10, ncol = 2)),
-    new_df(V1 = 1:5, V2 = 6:10)
+    suppressWarnings(as_df(matrix(1:10, ncol = 2))),
+    new_df(value = 1:10)
   )
 
   expect_identical(
     as_df(list(x = x)),
-    list_as_df(list(x = x))
+    structure(
+      list(name = "x", value = list(x = 1:5)),
+      row.names = c(NA, -1L),
+      class = "data.frame"
+    )
   )
 
 })

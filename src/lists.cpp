@@ -11,7 +11,7 @@ SEXP cpp_list_args(SEXP args1, SEXP args2){
   if (use_dots && use_list){
     Rf_error("Please supply either `...` or `.args` in %s", __func__);
   }
-  if (use_list && (TYPEOF(args2) != VECSXP || Rf_isObject(args2))){
+  if (use_list && TYPEOF(args2) != VECSXP){
     Rf_error("`.args` must be a plain list in %s", __func__);
   }
   return use_list ? args2 : args1;
@@ -497,33 +497,140 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 
 // Data-frames
 
-[[cpp11::register]]
-SEXP cpp_list_as_df(SEXP x) {
-  int N; // Number of rows
-  int32_t NP = 0; // Number of protects
-  SEXP out = SHIELD(cpp_drop_null(x, true)); ++NP;
-  int n_items = Rf_length(out);
-  if (is_df(x)){
-    N = df_nrow(x);
-  } else if (n_items == 0){
-    N = 0;
+// SEXP cpp_matrix_to_df(SEXP x){
+//   if (!Rf_isMatrix(x)){
+//     Rf_error("`x` must be a `matrix`");
+//   }
+//   int32_t NP = 0;
+//   SEXP dim = SHIELD(Rf_getAttrib(x, R_DimSymbol)); ++NP;
+//   SEXP dimnames = SHIELD(Rf_getAttrib(x, R_DimNamesSymbol)); ++NP;
+//
+//   int nrows = INTEGER(dim)[0];
+//   int ncols = INTEGER(dim)[1];
+//
+//   SEXP r_nrows = SHIELD(Rf_ScalarInteger(nrows)); ++NP;
+//
+//   // Initialise data frame
+//   SEXP out = SHIELD(init<r_list_t>(ncols, false)); ++NP;
+//   if (!is_null(dimnames)){
+//     set_names(out, VECTOR_ELT(dimnames, 1));
+//   }
+//
+//   R_xlen_t k = 0;
+//
+//   SEXP vec;
+//   PROTECT_INDEX vec_idx;
+//   R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
+//
+//   int vec_type = TYPEOF(x);
+//
+//   switch ( vec_type){
+//   case NILSXP: {
+//     break;
+//   }
+//   case LGLSXP:
+//   case INTSXP: {
+//     int *p_x = INTEGER(x);
+//
+//     for (int j = 0; j < ncols; ++j){
+//       R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
+//       int* RESTRICT p_vec = INTEGER(vec);
+//
+//       for (int i = 0; i < nrows; ++i, ++k){
+//         p_vec[i] = p_x[k];
+//       }
+//       SET_VECTOR_ELT(out, j, vec);
+//     }
+//     break;
+//   }
+//   case REALSXP: {
+//     double *p_x = REAL(x);
+//
+//     for (int j = 0; j < ncols; ++j){
+//       R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
+//       double* RESTRICT p_vec = REAL(vec);
+//
+//       for (int i = 0; i < nrows; ++i, ++k){
+//         p_vec[i] = p_x[k];
+//       }
+//       SET_VECTOR_ELT(out, j, vec);
+//     }
+//     break;
+//   }
+//   case STRSXP: {
+//     const SEXP *p_x = STRING_PTR_RO(x);
+//     for (int j = 0; j < ncols; ++j){
+//       R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
+//
+//       for (int i = 0; i < nrows; ++i, ++k){
+//         SET_STRING_ELT(vec, i, p_x[k]);
+//       }
+//       SET_VECTOR_ELT(out, j, vec);
+//     }
+//     break;
+//   }
+//   case RAWSXP: {
+//     const Rbyte *p_x = RAW_RO(x);
+//     for (int j = 0; j < ncols; ++j){
+//       R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
+//
+//       for (int i = 0; i < nrows; ++i, ++k){
+//         SET_RAW_ELT(vec, i, p_x[k]);
+//       }
+//       SET_VECTOR_ELT(out, j, vec);
+//     }
+//     break;
+//   }
+//   case CPLXSXP: {
+//     const Rcomplex *p_x = COMPLEX_RO(x);
+//     for (int j = 0; j < ncols; ++j){
+//       R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
+//
+//       for (int i = 0; i < nrows; ++i, ++k){
+//         SET_COMPLEX_ELT(vec, i, p_x[k]);
+//       }
+//       SET_VECTOR_ELT(out, j, vec);
+//     }
+//   }
+//   case VECSXP: {
+//     const SEXP *p_x = VECTOR_PTR_RO(x);
+//     for (int j = 0; j < ncols; ++j){
+//       R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
+//
+//       for (int i = 0; i < nrows; ++i, ++k){
+//         SET_VECTOR_ELT(vec, i, p_x[k]);
+//       }
+//       SET_VECTOR_ELT(out, j, vec);
+//     }
+//     break;
+//   }
+//   default: {
+//     YIELD(NP);
+//     Rf_error("%s Cannot handle type: %s", __func__, Rf_type2char(vec_type));
+//   }
+//   }
+//
+//   SHIELD(out = cpp_new_df(out, r_nrows, false, true)); ++NP;
+//   YIELD(NP);
+//   return out;
+// }
+
+// Remove dimensions from arrays
+// because cheapr doesn't work with arrays
+SEXP rm_dim(SEXP x){
+  if (Rf_isArray(x)){
+    Rf_warning("cheapr pkg cannot handle arrays, please use data frames");
+    SEXP out = SHIELD(Rf_shallow_duplicate(x));
+    clear_attributes(out);
+    // Rf_setAttrib(out, R_DimSymbol, R_NilValue);
+    // Rf_setAttrib(out, R_DimNamesSymbol, R_NilValue);
+    // Rf_setAttrib(out, R_TspSymbol, R_NilValue);
+    // Rf_classgets(out, R_NilValue);
+    YIELD(1);
+    return out;
   } else {
-    N = vec_length(VECTOR_ELT(out, 0));
+    return x;
   }
-
-  SEXP df_str = SHIELD(make_utf8_str("data.frame")); ++NP;
-  SEXP row_names = SHIELD(create_df_row_names(N)); ++NP;
-
-  // If no names then add names
-  SEXP names = SHIELD(get_names(out)); ++NP;
-  if (is_null(names)){
-    SHIELD(names = new_vec(STRSXP, n_items)); ++NP;
-    set_names(out, names);
-  }
-  Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  Rf_classgets(out, df_str);
-  YIELD(NP);
-  return out;
 }
 
 
@@ -569,6 +676,13 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
     SHIELD(out = cpp_drop_null(out, true)); ++NP;
   }
 
+  // Remove array dimensions
+
+  // We can assign in-place because we have shallow-duplicated above
+  for (int i = 0; i < Rf_length(out); ++i){
+    SET_VECTOR_ELT(out, i, rm_dim(VECTOR_ELT(out, i)));
+  }
+
   SEXP row_names;
 
   if (is_null(nrows)){
@@ -598,6 +712,11 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
   Rf_classgets(out, make_utf8_str("data.frame"));
   YIELD(NP);
   return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_list_as_df(SEXP x) {
+  return cpp_new_df(x, R_NilValue, false, false);
 }
 
 // Multi-assign recycled variables to data frame
@@ -672,4 +791,35 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   SHIELD(out = rebuild(out, x, false)); ++NP;
   YIELD(NP);
   return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_as_df(SEXP x){
+  if (Rf_inherits(x, "data.frame")){
+    SEXP n_rows = SHIELD(Rf_ScalarInteger(df_nrow(x)));
+    SEXP out = SHIELD(cpp_new_df(x, n_rows, false, false));
+    YIELD(2);
+    return out;
+  } else if (is_simple_vec2(x)){
+    SEXP out = SHIELD(init<r_list_t>(2, false));
+    SEXP names = SHIELD(init<r_character_t>(2, false));
+    SET_STRING_ELT(names, 0, make_utf8_char("name"));
+    SET_STRING_ELT(names, 1, make_utf8_char("value"));
+    SET_VECTOR_ELT(out, 0, get_names(x));
+    SET_VECTOR_ELT(out, 1, x);
+    set_names(out, names);
+    SHIELD(out = cpp_new_df(out, R_NilValue, false, false));
+    YIELD(3);
+    return out;
+  } else {
+    SEXP out = SHIELD(cpp11::package("base")["as.data.frame"](x));
+    SEXP names = SHIELD(get_names(out));
+    SEXP col_seq = SHIELD(cpp_seq_len(Rf_length(out)));
+    SEXP col_str = SHIELD(make_utf8_str("col_"));
+    SEXP new_names = SHIELD(base_paste0(col_str, col_seq));
+    SHIELD(new_names = cpp11::package("cheapr")["str_coalesce"](names, new_names));
+    set_names(out, new_names);
+    YIELD(6);
+    return out;
+  }
 }

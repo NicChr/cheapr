@@ -6,7 +6,7 @@
 #' `cast()` will attempt to cast `x` into an object similar to `y`.
 #'
 #' @param x A vector.
-#' @param y A vector.
+#' @param archetype An archetype vector.
 #' @param ... Vectors.
 #' @param .args An alternative to `...` so you can supply arguments directly
 #' in a list. \cr
@@ -24,8 +24,8 @@
 #'
 #' @rdname cast
 #' @export
-cast <- function(x, y){
-  .Call(`_cheapr_cpp_cast`, x, y)
+cast <- function(x, archetype){
+  .Call(`_cheapr_cpp_cast`, x, archetype)
 }
 #' @rdname cast
 #' @export

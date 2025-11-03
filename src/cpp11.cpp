@@ -300,13 +300,6 @@ extern "C" SEXP _cheapr_cpp_list_assign(SEXP x, SEXP values) {
   END_CPP11
 }
 // lists.cpp
-SEXP cpp_list_as_df(SEXP x);
-extern "C" SEXP _cheapr_cpp_list_as_df(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_list_as_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// lists.cpp
 SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair);
 extern "C" SEXP _cheapr_cpp_new_df(SEXP x, SEXP nrows, SEXP recycle, SEXP name_repair) {
   BEGIN_CPP11
@@ -314,10 +307,24 @@ extern "C" SEXP _cheapr_cpp_new_df(SEXP x, SEXP nrows, SEXP recycle, SEXP name_r
   END_CPP11
 }
 // lists.cpp
+SEXP cpp_list_as_df(SEXP x);
+extern "C" SEXP _cheapr_cpp_list_as_df(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_list_as_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// lists.cpp
 SEXP cpp_df_assign_cols(SEXP x, SEXP cols);
 extern "C" SEXP _cheapr_cpp_df_assign_cols(SEXP x, SEXP cols) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_df_assign_cols(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(cols)));
+  END_CPP11
+}
+// lists.cpp
+SEXP cpp_as_df(SEXP x);
+extern "C" SEXP _cheapr_cpp_as_df(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_as_df(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // nas.cpp
@@ -796,6 +803,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
+    {"_cheapr_cpp_as_df",                   (DL_FUNC) &_cheapr_cpp_as_df,                   1},
     {"_cheapr_cpp_assign",                  (DL_FUNC) &_cheapr_cpp_assign,                  4},
     {"_cheapr_cpp_bin",                     (DL_FUNC) &_cheapr_cpp_bin,                     6},
     {"_cheapr_cpp_c",                       (DL_FUNC) &_cheapr_cpp_c,                       1},

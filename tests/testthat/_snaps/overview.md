@@ -129,7 +129,7 @@
       overview(df)
     Output
       obs: 25 
-      cols: 3 
+      cols: 7 
       
       ----- Time-Series -----
                col n_missng p_complt n_unique  mean    p0   p25  p50  p75 p100  iqr
