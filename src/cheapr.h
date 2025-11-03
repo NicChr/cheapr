@@ -921,20 +921,14 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
-  if (Rf_inherits(x, "data.frame") && !Rf_inherits(y, "data.frame")){
-    return x;
-  } else if (Rf_inherits(x, "data.frame") && Rf_inherits(y, "data.frame")){
-    return rebuild(x, y, true);
-  } else {
-    int32_t NP = 0;
-    SEXP out = SHIELD(cpp_as_df(x)); ++NP;
+  int32_t NP = 0;
+  SEXP out = SHIELD(cpp_as_df(x)); ++NP;
 
-    if (Rf_inherits(y, "data.frame")){
-      SHIELD(out = rebuild(out, y, true)); ++NP;
-    }
-    YIELD(NP);
-    return out;
+  if (Rf_inherits(y, "data.frame")){
+    SHIELD(out = rebuild(out, y, true)); ++NP;
   }
+  YIELD(NP);
+  return out;
 }
 
 template<>
