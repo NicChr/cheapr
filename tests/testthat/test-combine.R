@@ -18,9 +18,12 @@ test_that("combining", {
 
   objs <- named_list(A, a, b, c, d, e, f, g, h, i, j, k, l)
 
-  result <- Reduce(c_, objs, simplify = FALSE, accumulate = TRUE) |>
-    suppressWarnings() |>
-    stats::setNames(names(objs))
+  result <- new_list(length(objs))
+  names(result) <- names(objs)
+
+  for (ii in seq_along(objs)){
+    result <- replace_(result, ii, list(a = suppressWarnings(c_(.args = sset(objs, seq_len(ii))))))
+  }
 
   expect_snapshot(dput(result))
 })
