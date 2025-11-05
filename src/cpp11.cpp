@@ -749,6 +749,13 @@ extern "C" SEXP _cheapr_cpp_str_coalesce(SEXP x) {
   END_CPP11
 }
 // utils.cpp
+SEXP cpp_paste(SEXP x, const std::string sep);
+extern "C" SEXP _cheapr_cpp_paste(SEXP x, SEXP sep) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_paste(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<const std::string>>(sep)));
+  END_CPP11
+}
+// utils.cpp
 SEXP cpp_tabulate(SEXP x, uint32_t n_bins);
 extern "C" SEXP _cheapr_cpp_tabulate(SEXP x, SEXP n_bins) {
   BEGIN_CPP11
@@ -863,6 +870,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
+    {"_cheapr_cpp_paste",                   (DL_FUNC) &_cheapr_cpp_paste,                   2},
     {"_cheapr_cpp_rebuild",                 (DL_FUNC) &_cheapr_cpp_rebuild,                 5},
     {"_cheapr_cpp_recycle",                 (DL_FUNC) &_cheapr_cpp_recycle,                 2},
     {"_cheapr_cpp_rep",                     (DL_FUNC) &_cheapr_cpp_rep,                     2},

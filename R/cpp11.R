@@ -424,6 +424,10 @@ cpp_str_coalesce <- function(x) {
   .Call(`_cheapr_cpp_str_coalesce`, x)
 }
 
+cpp_paste <- function(x, sep) {
+  .Call(`_cheapr_cpp_paste`, x, sep)
+}
+
 cpp_tabulate <- function(x, n_bins) {
   .Call(`_cheapr_cpp_tabulate`, x, n_bins)
 }

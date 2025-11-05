@@ -833,6 +833,62 @@ SEXP cpp_str_coalesce(SEXP x){
   return out;
 }
 
+[[cpp11::register]]
+SEXP cpp_paste(SEXP x, const std::string sep){
+
+  if (TYPEOF(x) != VECSXP){
+    Rf_error("`x` must be a list of character vectors in %s", __func__);
+  }
+
+  R_xlen_t n = Rf_xlength(x);
+
+  if (n == 0){
+    return new_vec(STRSXP, 0);
+  }
+
+  int32_t NP = 0;
+
+  SEXP chars = SHIELD(cpp_recycle(x, R_NilValue)); ++NP;
+  if (MAYBE_REFERENCED(chars)){
+    SHIELD(chars = Rf_shallow_duplicate(chars)); ++NP;
+  }
+
+  R_xlen_t out_size = 0;
+
+  const SEXP *p_chars = VECTOR_PTR_RO(chars);
+  std::vector<const SEXP *> char_ptrs(n);
+
+  // First cast all to character vectors
+
+  for (R_xlen_t i = 0; i < n; ++i){
+    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], R_NilValue));
+    char_ptrs[i] = STRING_PTR_RO(p_chars[i]);
+  }
+
+  out_size = vec_length(p_chars[0]);
+
+  SEXP out = SHIELD(new_vec(STRSXP, out_size)); ++NP;
+
+  std::string strng;
+
+  // Along the length of each char vec
+
+  for (R_xlen_t j = 0; j < out_size; ++j){
+
+    strng = utf8_char(char_ptrs[0][j]);
+
+    for (R_xlen_t i = 1; i < n; ++i){
+      str_paste(strng, sep, utf8_char(char_ptrs[i][j]));
+    }
+    SET_STRING_ELT(out, j, Rf_mkChar(strng.c_str()));
+
+  }
+
+  YIELD(NP);
+  return out;
+}
+
+
 // R's internal tabulate with faster unsigned int check
 [[cpp11::register]]
 SEXP cpp_tabulate(SEXP x, uint32_t n_bins){

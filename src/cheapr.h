@@ -256,6 +256,12 @@ inline SEXP install_utf8(const char *x){
   return Rf_installChar(Rf_mkCharCE(x, CE_UTF8));
 }
 
+// string paste helper
+inline void str_paste(std::string &x, const std::string &sep, const std::string &y){
+  x += sep;
+  x += y;
+}
+
 inline bool is_null(SEXP x){
   return x == R_NilValue;
 }
