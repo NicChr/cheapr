@@ -635,6 +635,20 @@ extern "C" SEXP _cheapr_cpp_sset(SEXP x, SEXP indices, SEXP check) {
     return cpp11::as_sexp(cpp_sset(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<bool>>(check)));
   END_CPP11
 }
+// strings.cpp
+SEXP cpp_str_coalesce(SEXP x);
+extern "C" SEXP _cheapr_cpp_str_coalesce(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_str_coalesce(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// strings.cpp
+SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse);
+extern "C" SEXP _cheapr_cpp_paste(SEXP x, SEXP sep, SEXP collapse) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_paste(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<std::string>>(sep), cpp11::as_cpp<cpp11::decay_t<SEXP>>(collapse)));
+  END_CPP11
+}
 // utils.cpp
 SEXP cpp_is_simple_atomic_vec(SEXP x);
 extern "C" SEXP _cheapr_cpp_is_simple_atomic_vec(SEXP x) {
@@ -739,20 +753,6 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_a
 extern "C" SEXP _cheapr_cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names, SEXP source_attr_names, SEXP shallow_copy) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_rebuild(cpp11::as_cpp<cpp11::decay_t<SEXP>>(target), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source), cpp11::as_cpp<cpp11::decay_t<SEXP>>(target_attr_names), cpp11::as_cpp<cpp11::decay_t<SEXP>>(source_attr_names), cpp11::as_cpp<cpp11::decay_t<bool>>(shallow_copy)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_str_coalesce(SEXP x);
-extern "C" SEXP _cheapr_cpp_str_coalesce(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_str_coalesce(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// utils.cpp
-SEXP cpp_paste(SEXP x, const std::string sep);
-extern "C" SEXP _cheapr_cpp_paste(SEXP x, SEXP sep) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_paste(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<const std::string>>(sep)));
   END_CPP11
 }
 // utils.cpp
@@ -870,7 +870,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_new_list",                (DL_FUNC) &_cheapr_cpp_new_list,                2},
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
-    {"_cheapr_cpp_paste",                   (DL_FUNC) &_cheapr_cpp_paste,                   2},
+    {"_cheapr_cpp_paste",                   (DL_FUNC) &_cheapr_cpp_paste,                   3},
     {"_cheapr_cpp_rebuild",                 (DL_FUNC) &_cheapr_cpp_rebuild,                 5},
     {"_cheapr_cpp_recycle",                 (DL_FUNC) &_cheapr_cpp_recycle,                 2},
     {"_cheapr_cpp_rep",                     (DL_FUNC) &_cheapr_cpp_rep,                     2},

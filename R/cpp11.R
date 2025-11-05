@@ -360,6 +360,14 @@ cpp_sset <- function(x, indices, check) {
   .Call(`_cheapr_cpp_sset`, x, indices, check)
 }
 
+cpp_str_coalesce <- function(x) {
+  .Call(`_cheapr_cpp_str_coalesce`, x)
+}
+
+cpp_paste <- function(x, sep, collapse) {
+  .Call(`_cheapr_cpp_paste`, x, sep, collapse)
+}
+
 cpp_is_simple_atomic_vec <- function(x) {
   .Call(`_cheapr_cpp_is_simple_atomic_vec`, x)
 }
@@ -418,14 +426,6 @@ cpp_name_repair <- function(names, dup_sep, empty_sep) {
 
 cpp_rebuild <- function(target, source, target_attr_names, source_attr_names, shallow_copy) {
   .Call(`_cheapr_cpp_rebuild`, target, source, target_attr_names, source_attr_names, shallow_copy)
-}
-
-cpp_str_coalesce <- function(x) {
-  .Call(`_cheapr_cpp_str_coalesce`, x)
-}
-
-cpp_paste <- function(x, sep) {
-  .Call(`_cheapr_cpp_paste`, x, sep)
 }
 
 cpp_tabulate <- function(x, n_bins) {
