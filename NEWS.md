@@ -10,6 +10,8 @@ value replacement.
 - New functions `cast`, `cast_common`, `archetype`, `archetype_common`, `r_type`
 and `r_type_common` to help with fast type-stable coercion.
 
+- `paste_` as a fast alternative tp `base::paste`.
+
 - New function `na_init` to help with fast initialisation of vectors based off
 a template vector.
 
