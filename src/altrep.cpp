@@ -2,10 +2,6 @@
 
 // Altrep utils
 
-inline bool is_altrep(SEXP x){
-  return ALTREP(x);
-}
-
 // Symbols
 static SEXP CHEAPR_COMPACT_INTSEQ = NULL;
 static SEXP CHEAPR_COMPACT_REALSEQ = NULL;

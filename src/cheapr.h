@@ -265,10 +265,9 @@ inline bool is_null(SEXP x){
   return x == R_NilValue;
 }
 
-// Helper to install symbols if they are not already installed
-// inline SEXP maybe_install(const char *sym, SEXP sym_sexp){
-//   return sym_sexp == NULL ? Rf_install(sym) : sym_sexp;
-// }
+inline bool is_altrep(SEXP x){
+  return ALTREP(x);
+}
 
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
