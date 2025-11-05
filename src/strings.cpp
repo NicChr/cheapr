@@ -107,6 +107,12 @@ SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse){
 
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
 
+  if (n_strings == 0){
+    SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    YIELD(NP);
+    return out;
+  }
+
   std::string strng;
 
   if (!is_null(collapse)){
@@ -128,7 +134,9 @@ SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse){
     }
 
     for (R_xlen_t j = 1; j < n_strings; ++j){
-      for (R_xlen_t i = 0; i < n_chars; ++i){
+      // Don't concatenate between separate char vecs
+      str_paste(strng, "", utf8_char(char_ptrs[0][j]));
+      for (R_xlen_t i = 1; i < n_chars; ++i){
         str_paste(strng, sep, utf8_char(char_ptrs[i][j]));
       }
     }
