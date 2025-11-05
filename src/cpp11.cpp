@@ -5,13 +5,6 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
-// assign.cpp
-SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place);
-extern "C" SEXP _cheapr_cpp_assign(SEXP x, SEXP where, SEXP with, SEXP in_place) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_assign(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(with), cpp11::as_cpp<cpp11::decay_t<bool>>(in_place)));
-  END_CPP11
-}
 // attrs.cpp
 SEXP cpp_set_rm_attributes(SEXP x);
 extern "C" SEXP _cheapr_cpp_set_rm_attributes(SEXP x) {
@@ -409,6 +402,13 @@ SEXP cpp_col_na_counts(SEXP x, bool names);
 extern "C" SEXP _cheapr_cpp_col_na_counts(SEXP x, SEXP names) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_col_na_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(names)));
+  END_CPP11
+}
+// replace.cpp
+SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place);
+extern "C" SEXP _cheapr_cpp_replace(SEXP x, SEXP where, SEXP with, SEXP in_place) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(with), cpp11::as_cpp<cpp11::decay_t<bool>>(in_place)));
   END_CPP11
 }
 // scalars.cpp
@@ -811,7 +811,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
     {"_cheapr_cpp_as_df",                   (DL_FUNC) &_cheapr_cpp_as_df,                   1},
-    {"_cheapr_cpp_assign",                  (DL_FUNC) &_cheapr_cpp_assign,                  4},
     {"_cheapr_cpp_bin",                     (DL_FUNC) &_cheapr_cpp_bin,                     6},
     {"_cheapr_cpp_c",                       (DL_FUNC) &_cheapr_cpp_c,                       1},
     {"_cheapr_cpp_cast",                    (DL_FUNC) &_cheapr_cpp_cast,                    2},
@@ -876,6 +875,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_rep",                     (DL_FUNC) &_cheapr_cpp_rep,                     2},
     {"_cheapr_cpp_rep_each",                (DL_FUNC) &_cheapr_cpp_rep_each,                2},
     {"_cheapr_cpp_rep_len",                 (DL_FUNC) &_cheapr_cpp_rep_len,                 2},
+    {"_cheapr_cpp_replace",                 (DL_FUNC) &_cheapr_cpp_replace,                 4},
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
     {"_cheapr_cpp_semi_copy",               (DL_FUNC) &_cheapr_cpp_semi_copy,               1},

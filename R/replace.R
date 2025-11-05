@@ -31,7 +31,7 @@
 #' @rdname replace
 #' @export
 replace_ <- function(x, where, with, in_place = FALSE){
-  .Call(`_cheapr_cpp_assign`, x, where, with, in_place)
+  .Call(`_cheapr_cpp_replace`, x, where, with, in_place)
 }
 
 base_assign_at <- function(x, where, with){

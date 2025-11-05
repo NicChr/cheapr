@@ -10,63 +10,54 @@ SEXP cpp_str_coalesce(SEXP x){
   }
 
   int32_t NP = 0;
-  uint_fast64_t n = Rf_xlength(x);
-  uint_fast64_t out_size = 0;
-  uint_fast64_t m;
 
-  const SEXP *p_x = VECTOR_PTR_RO(x);
-  std::vector<const SEXP*> str_ptrs(n);
-
-  SEXP char_vec = R_NilValue;
-  uint32_t xtype;
-
-  bool shallow_duplicated = false;
-
-  for (uint_fast64_t i = 0; i < n; ++i){
-    char_vec = p_x[i];
-    xtype = TYPEOF(char_vec);
-
-    if (xtype != STRSXP){
-      if (!shallow_duplicated){
-        SHIELD(x = Rf_shallow_duplicate(x)); ++NP;
-        p_x = VECTOR_PTR_RO(x);
-        shallow_duplicated = true;
-      }
-      SET_VECTOR_ELT(x, i, base_as_character(char_vec));
-      char_vec = p_x[i];
-    }
-
-    str_ptrs[i] = STRING_PTR_RO(char_vec);
-
-    if (xtype != NILSXP){
-      m = Rf_xlength(char_vec);
-      if (m == 0){
-        YIELD(NP);
-        return Rf_allocVector(STRSXP, 0);
-      }
-      out_size = std::max(out_size, m);
-    }
+  SEXP chars = SHIELD(cpp_recycle(x, R_NilValue)); ++NP;
+  if (MAYBE_REFERENCED(chars)){
+    SHIELD(chars = Rf_shallow_duplicate(chars)); ++NP;
   }
 
-  SEXP out = SHIELD(Rf_allocVector(STRSXP, out_size)); ++NP;
+  R_xlen_t n_chars = Rf_xlength(chars);
 
+  if (n_chars == 0){
+    SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    YIELD(NP);
+    return out;
+  }
+
+  const SEXP *p_chars = VECTOR_PTR_RO(chars);
+  std::vector<const SEXP *> char_ptrs(n_chars);
+
+  // First cast all to character vectors
+
+  for (R_xlen_t i = 0; i < n_chars; ++i){
+    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], R_NilValue));
+    char_ptrs[i] = STRING_PTR_RO(p_chars[i]);
+  }
+
+  R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
+
+  if (n_strings == 0){
+    SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    YIELD(NP);
+    return out;
+  }
+
+  SEXP out = SHIELD(Rf_allocVector(STRSXP, n_strings)); ++NP;
   SEXP inner_char = R_BlankString;
 
-  uint_fast64_t n_nas;
+  R_xlen_t n_nas;
 
-  for (uint_fast64_t i = 0; i < out_size; ++i){
+  for (R_xlen_t i = 0; i < n_strings; ++i){
     n_nas = 0;
-    for (uint_fast64_t j = 0; j < n; ++j){
-      m = Rf_xlength(p_x[j]);
-      if (m == 0) continue;
-      inner_char = str_ptrs[j][i % m];
-      n_nas += inner_char == NA_STRING;
-      if (!(inner_char == R_BlankString || inner_char == NA_STRING)){
+    for (R_xlen_t j = 0; j < n_chars; ++j){
+      inner_char = char_ptrs[j][i];
+      n_nas += static_cast<int>(is_na_str(inner_char));
+      if (!(inner_char == R_BlankString || is_na_str(inner_char))){
         SET_STRING_ELT(out, i, inner_char);
         break;
       }
       // If all ith elements are NA, then return NA
-      if (n_nas == n){
+      if (n_nas == n_chars){
         SET_STRING_ELT(out, i, NA_STRING);
       }
     }
@@ -82,17 +73,19 @@ SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse){
     Rf_error("`x` must be a list of character vectors in %s", __func__);
   }
 
-  R_xlen_t n_chars = Rf_xlength(x);
-
-  if (n_chars == 0){
-    return new_vec(STRSXP, 0);
-  }
-
   int32_t NP = 0;
 
   SEXP chars = SHIELD(cpp_recycle(x, R_NilValue)); ++NP;
   if (MAYBE_REFERENCED(chars)){
     SHIELD(chars = Rf_shallow_duplicate(chars)); ++NP;
+  }
+
+  R_xlen_t n_chars = Rf_xlength(chars);
+
+  if (n_chars == 0){
+    SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    YIELD(NP);
+    return out;
   }
 
   const SEXP *p_chars = VECTOR_PTR_RO(chars);

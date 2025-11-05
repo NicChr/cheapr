@@ -29,20 +29,24 @@
 #' paste_("hello", character(), letters)
 #' paste_("hello", character(), letters, collapse = "")
 #'
-#' # Concatenating many objects is very fast via `.args`
+#' library(bench)
 #'
 #' sampled_letters <- sample_(letters, 5e04, TRUE)
 #'
 #' # Pasting multiple character vectors
 #' mark(
 #'   paste_(sampled_letters, sep = ","),
-#'   paste(sampled_letters, sep = ",")
+#'   paste(sampled_letters, sep = ","),
+#'   iterations = 50
 #' )
 #' # Collapsing is very fast compared to base R
 #' mark(
 #'   paste_(sampled_letters, collapse = ""),
-#'   paste(sampled_letters, collapse = "")
+#'   paste(sampled_letters, collapse = ""),
+#'   iterations = 50
 #' )
+#'
+#' # Concatenating many objects is very fast via `.args`
 #'
 #' strings <- sampled_letters |>
 #'   with_local_seed(1) |>
@@ -50,15 +54,16 @@
 #'
 #' strings <- lapply(strings, rep_len_, 3)
 #'
-#' library(bench)
 #' mark(
 #'   paste_(.args = strings),
-#'   do.call(paste0, strings)
+#'   do.call(paste0, strings),
+#'   iterations = 15
 #' )
 #' mark(
 #'   paste_(.args = strings, collapse = ""),
 #'   do.call(paste_, c(strings, list(collapse = ""))),
-#'   do.call(paste0, c(strings, list(collapse = "")))
+#'   do.call(paste0, c(strings, list(collapse = ""))),
+#'   iterations = 10
 #' )
 #'
 #' @rdname strings

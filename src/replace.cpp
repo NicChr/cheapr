@@ -1,7 +1,7 @@
 #include "cheapr.h"
 
 [[cpp11::register]]
-SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
+SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place){
 
   // Modify `x` in-place?
   bool maybe_shared = MAYBE_SHARED(x);
@@ -111,7 +111,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
   case r_pxct: {
     SEXP x_cls = SHIELD(Rf_getAttrib(x, R_ClassSymbol)); ++NP;
     Rf_classgets(x, R_NilValue);
-    static_cast<void>(cpp_assign(x, where, with, true));
+    static_cast<void>(cpp_replace(x, where, with, true));
     Rf_classgets(x, x_cls);
     break;
   }
@@ -133,7 +133,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     SEXP x_nms = SHIELD(get_names(x)); ++NP;
     SHIELD(x = cpp_list_as_df(x)); ++NP;
     SHIELD(with = cpp_list_as_df(with)); ++NP;
-    SHIELD(x = cpp_assign(x, where, with, in_place)); ++NP;
+    SHIELD(x = cpp_replace(x, where, with, in_place)); ++NP;
     clear_attributes(x);
     set_names(x, x_nms);
     Rf_classgets(x, x_cls);
@@ -161,7 +161,7 @@ SEXP cpp_assign(SEXP x, SEXP where, SEXP with, bool in_place){
     }
 
     for (int j = 0; j < ncol; ++j){
-      SET_VECTOR_ELT(x, j, cpp_assign(p_x[j], where, p_with[j], in_place));
+      SET_VECTOR_ELT(x, j, cpp_replace(p_x[j], where, p_with[j], in_place));
     }
 
     break;
