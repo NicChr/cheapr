@@ -540,24 +540,6 @@ SEXP cpp_set_or(SEXP x, SEXP y){
   return x;
 }
 
-// coerceVector() that accounts for int64
-
-SEXP coerce_vector(SEXP source, SEXPTYPE type){
-  if (type == CHEAPR_INT64SXP){
-    SEXP temp = SHIELD(coerce_vec(source, REALSXP));
-    SEXP out = SHIELD(cpp_numeric_to_int64(temp));
-    YIELD(2);
-    return out;
-  } else if (is_int64(source)){
-    SEXP temp = SHIELD(cpp_int64_to_numeric(source));
-    SEXP out = SHIELD(coerce_vec(temp, type));
-    YIELD(2);
-    return out;
-  } else {
-    return coerce_vec(source, type);
-  }
-}
-
 // Basic growth rate
 // i.e the expected percent change per unit of time
 // eqn: (new / old ) ^ 1/n
@@ -664,7 +646,8 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP out = SHIELD(new_vec(STRSXP, n)); ++NP;
   cpp_set_copy_elements(names, out);
 
-  SEXP temp, replace;
+  SEXP temp = R_NilValue;
+  SEXP replace = R_NilValue;
 
   if (n_dups > 0){
     temp = SHIELD(sset_vec(names, dup_locs, true)); ++NP;

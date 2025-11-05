@@ -176,7 +176,6 @@ SEXP cpp_numeric_to_int64(SEXP x);
 SEXP cpp_int64_to_numeric(SEXP x);
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
 SEXP cpp_set_rm_attributes(SEXP x);
-SEXP coerce_vector(SEXP source, SEXPTYPE type);
 bool implicit_na_coercion(SEXP x, SEXP target);
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
 SEXP cpp_set_divide(SEXP x, SEXP y);
