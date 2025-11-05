@@ -44,7 +44,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       double* RESTRICT p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
-      CHEAPR_WHICH_VAL_INVERTED(TRUE);
+      CHEAPR_WHICH_VAL_INVERTED(1);
       YIELD(1);
       return out;
     } else {
@@ -54,7 +54,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       int* RESTRICT p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
-      CHEAPR_WHICH_VAL_INVERTED(TRUE);
+      CHEAPR_WHICH_VAL_INVERTED(1);
       YIELD(1);
       return out;
     }
@@ -65,7 +65,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       double* RESTRICT p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
-      CHEAPR_WHICH_VAL(TRUE);
+      CHEAPR_WHICH_VAL(1);
       YIELD(1);
       return out;
     } else {
@@ -74,7 +74,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       int* RESTRICT p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
-      CHEAPR_WHICH_VAL(TRUE);
+      CHEAPR_WHICH_VAL(1);
       YIELD(1);
       return out;
     }
@@ -795,12 +795,12 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
 
 // SEXP cpp_which1(SEXP x){
 //   int n = Rf_length(x);
-//   const int* __restrict__ p_x = LOGICAL(x);
+//   const int *p_x = INTEGER_RO(x);
 //   SEXP out = SHIELD(new_vec(INTSXP, n));
-//   int* __restrict__ p_out = INTEGER(out);
+//   int* RESTRICT p_out = INTEGER(out);
 //   int k = 0;
 //   for (int i = 0; i < n; ++i){
-//     if (p_x[i] == TRUE) p_out[k++] = i + 1;
+//     if (p_x[i] == 1) p_out[k++] = i + 1;
 //   }
 //   SHIELD(out = Rf_lengthgets(out, k));
 //   YIELD(2);
@@ -811,15 +811,15 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
 
 // cpp11::integers cpp_which2(cpp11::logicals x){
 //   int n = x.size();
-//   const int* __restrict__ p_x = LOGICAL(x);
+//   const int *p_x = INTEGER_RO(x);
 //   int m = n / 2;
 //   cpp11::writable::integers out(m);
-//   int *p_out = INTEGER(out);
+//   int* RESTRICT p_out = INTEGER(out);
 //   int k = 0, l = 0;
 //   // k keeps track of how many elements we've added to out
 //   // l keeps track of how many elements we've removed
 //   for (int i = 0; i < n; ++i){
-//     if (p_x[i] == TRUE){
+//     if (p_x[i] == 1){
 //       if (k >= (m - l)){
 //         out.push_back(i + 1);
 //       } else {

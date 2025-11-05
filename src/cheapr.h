@@ -491,7 +491,7 @@ inline r_type common_type(const r_type &a, const r_type &b) {
 }
 
 // Convert single SEXP into r_* code.
-inline const r_type get_r_type(SEXP x) {
+inline r_type get_r_type(SEXP x) {
 
   if (!Rf_isObject(x)){
     switch (TYPEOF(x)) {
@@ -685,7 +685,7 @@ inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_vctrs_rcrd_t>(R_xlen_t n, bool with_na) {
-  Rf_error("Don't know how to initialise an object of type <vctrs_rcrd>");
+  Rf_error("Don't know how to initialise an object of type `<vctrs_rcrd>`");
 }
 
 template<>
@@ -697,7 +697,7 @@ inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
 template<typename T>
 inline SEXP cast(SEXP x, SEXP y) {
   Rf_error(
-    "Don't know how to cast `x` of type %s to type %s",
+    "Don't know how to cast `x` of type `%s` to type `%s`",
     r_type_char(x), r_type_char(y)
   );
 }
