@@ -130,28 +130,10 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
     for (R_xlen_t j = 0; j < n_strings; ++j){
       if (j != 0) strng += sep2;
       for (R_xlen_t i = 0; i < n_chars; ++i){
-        strng += static_cast<std::string>(utf8_char(char_ptrs[i][j]));
+        strng += utf8_char(char_ptrs[i][j]);
         if (i != (n_chars - 1)) strng += sep1;
       }
     }
-
-    // The above commented-out code represents
-    // what the below loops are doing
-
-    // for (R_xlen_t i = 0; i < (n_chars - 1); ++i){
-    //   strng += static_cast<std::string>(utf8_char(char_ptrs[i][0]));
-    //   strng += sep1;
-    // }
-    // strng += static_cast<std::string>(utf8_char(char_ptrs[n_chars - 1][0]));
-    //
-    // for (R_xlen_t j = 1; j < n_strings; ++j){
-    //   strng += sep2;
-    //   for (R_xlen_t i = 0; i < (n_chars - 1); ++i){
-    //     strng += static_cast<std::string>(utf8_char(char_ptrs[i][j]));
-    //     strng += sep1;
-    //   }
-    //   strng += static_cast<std::string>(utf8_char(char_ptrs[n_chars - 1][j]));
-    // }
 
     SEXP out = SHIELD(Rf_mkString(strng.c_str())); ++NP;
 
