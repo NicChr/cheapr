@@ -476,6 +476,7 @@ enum : r_type {
     r_list = 12,
     r_df = 13,
     r_unk = 14,
+    r_err = 15 // Special type to signal incompatible cast (Currently unused)
 };
 
 // R type chars
@@ -509,7 +510,7 @@ constexpr r_type r_type_pairs[15][15] = {
   /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw, r_date,  r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
   /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,   r_raw,  r_raw,  r_raw, r_unk,   r_unk, r_unk,  r_chr,  r_fct,   r_list, r_df,   r_unk },
   /* DATE */  { r_date, r_date, r_date, r_date,  r_date, r_date,  r_unk, r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_date, r_unk, r_pxct, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_pxct, r_unk, r_pxct, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
   /* RCRD */  { r_rcrd, r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk, r_unk,  r_unk, r_rcrd, r_unk,  r_unk,  r_unk,  r_unk,  r_unk },
   /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,   r_chr,  r_chr,  r_chr,  r_chr,  r_chr, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
   /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,   r_fct,  r_fct,  r_df,   r_fct,  r_fct, r_unk,  r_fct,  r_fct,  r_list, r_df,   r_unk },
@@ -725,7 +726,6 @@ inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
   Rf_error("Don't know how to initialise unknown type");
 }
 
-
 inline void check_casted_length(SEXP x, SEXP out){
 
   if (vec_length(x) != vec_length(out)){
@@ -736,13 +736,17 @@ inline void check_casted_length(SEXP x, SEXP out){
   }
 }
 
+inline void signal_bad_cast(SEXP from, SEXP to){
+  Rf_error(
+    "Don't know how to cast from type %s to type %s",
+    r_type_char(from), r_type_char(to)
+  );
+}
+
 // cast template with specialisations
 template<typename T>
 inline SEXP cast(SEXP x, SEXP y) {
-  Rf_error(
-    "Don't know how to cast `x` of type `%s` to type `%s`",
-    r_type_char(x), r_type_char(y)
-  );
+  Rf_error("Unimplemented cast specialisation");
 }
 
 template<>
