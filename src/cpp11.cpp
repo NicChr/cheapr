@@ -643,10 +643,10 @@ extern "C" SEXP _cheapr_cpp_str_coalesce(SEXP x) {
   END_CPP11
 }
 // strings.cpp
-SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse);
+SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse);
 extern "C" SEXP _cheapr_cpp_paste(SEXP x, SEXP sep, SEXP collapse) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_paste(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<std::string>>(sep), cpp11::as_cpp<cpp11::decay_t<SEXP>>(collapse)));
+    return cpp11::as_sexp(cpp_paste(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(sep), cpp11::as_cpp<cpp11::decay_t<SEXP>>(collapse)));
   END_CPP11
 }
 // utils.cpp

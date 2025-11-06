@@ -693,6 +693,17 @@ inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
   Rf_error("Don't know how to initialise unknown type");
 }
 
+
+inline void check_casted_length(SEXP x, SEXP out){
+
+  if (vec_length(x) != vec_length(out)){
+    Rf_error(
+      "Bad cast from type %s to type %s. \n`vector_length(x)` %lld doesn't match returned length of %lld",
+      r_type_char(x), r_type_char(out), vec_length(x), vec_length(out)
+    );
+  }
+}
+
 // cast template with specialisations
 template<typename T>
 inline SEXP cast(SEXP x, SEXP y) {
@@ -713,7 +724,10 @@ inline SEXP cast<r_logical_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_isObject(x)){
     as_lgl = as_lgl != NULL ? as_lgl : Rf_install("as.logical");
-    return Rf_eval(Rf_lang2(as_lgl, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_lgl, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   } else {
     return coerce_vec(x, LGLSXP);
   }
@@ -725,7 +739,10 @@ inline SEXP cast<r_integer_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_isObject(x)){
     as_int = as_int != NULL ? as_int : Rf_install("as.integer");
-    return Rf_eval(Rf_lang2(as_int, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_int, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   } else {
     return coerce_vec(x, INTSXP);
   }
@@ -737,7 +754,10 @@ inline SEXP cast<r_numeric_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_isObject(x)){
     as_dbl = as_dbl != NULL ? as_dbl : Rf_install("as.double");
-    return Rf_eval(Rf_lang2(as_dbl, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_dbl, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   } else {
     return coerce_vec(x, REALSXP);
   }
@@ -763,7 +783,10 @@ inline SEXP cast<r_character_t>(SEXP x, SEXP y) {
     return factor_as_character(x);
   } else if (Rf_isObject(x)){
     as_char = as_char != NULL ? as_char : Rf_install("as.character");
-    return Rf_eval(Rf_lang2(as_char, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_char, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   } else {
     return coerce_vec(x, STRSXP);
   }
@@ -775,7 +798,10 @@ inline SEXP cast<r_complex_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_isObject(x)){
     as_cplx = as_cplx != NULL ? as_cplx : Rf_install("as.complex");
-    return Rf_eval(Rf_lang2(as_cplx, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_cplx, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   } else {
     return coerce_vec(x, CPLXSXP);
   }
@@ -787,7 +813,10 @@ inline SEXP cast<r_raw_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_isObject(x)){
     as_raw = as_raw != NULL ? as_raw : Rf_install("as.raw");
-    return Rf_eval(Rf_lang2(as_raw, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_raw, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   } else {
     return coerce_vec(x, RAWSXP);
   }
@@ -799,7 +828,10 @@ inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_isObject(x)){
     as_list = as_list != NULL ? as_list : Rf_install("as.list");
-    return Rf_eval(Rf_lang2(as_list, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_list, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   } else {
     return coerce_vec(x, VECSXP);
   }
@@ -823,7 +855,10 @@ inline SEXP cast<r_factor_t>(SEXP x, SEXP y) {
   } else if (is_null(x)){
     return init<r_factor_t>(0, true);
   } else {
-    return cheapr_factor(x);
+    SEXP out = SHIELD(cheapr_factor(x));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   }
 }
 
@@ -841,7 +876,10 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
     return init<r_date_t>(vec_length(x), true);
   } else if (Rf_isObject(x)){
     as_date = as_date != NULL ? as_date : Rf_install("as.Date");
-    return Rf_eval(Rf_lang2(as_date, x), R_GetCurrentEnv());
+    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_date, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   } else {
 
     int32_t NP = 0;
@@ -916,6 +954,7 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
   } else {
     as_posixct = as_posixct != NULL ? as_posixct : Rf_install("as.POSIXct");
     SEXP out = SHIELD(Rf_eval(Rf_lang2(as_posixct, x), R_GetCurrentEnv()));
+    check_casted_length(x, out);
     SHIELD(out = cast<r_posixt_t>(out, y)); // To set the correct attributes
     YIELD(2);
     return out;
@@ -941,7 +980,10 @@ inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
       Rf_getAttrib(y, R_ClassSymbol), 0))){
     return x;
   } else {
-    return base_cast(x, y);
+    SEXP out = SHIELD(base_cast(x, y));
+    check_casted_length(x, out);
+    YIELD(1);
+    return out;
   }
 }
 

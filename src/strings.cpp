@@ -67,13 +67,20 @@ SEXP cpp_str_coalesce(SEXP x){
 }
 
 [[cpp11::register]]
-SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse){
+SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
 
   if (TYPEOF(x) != VECSXP){
     Rf_error("`x` must be a list of character vectors in %s", __func__);
   }
 
   int32_t NP = 0;
+
+  SHIELD(sep = cast<r_character_t>(sep, R_NilValue)); ++NP;
+
+  if (Rf_length(sep) != 1){
+    YIELD(NP);
+    Rf_error("`sep` must be a `<character>` vector of length 1 in %s", __func__);
+  }
 
   SEXP chars = SHIELD(cpp_recycle(x, R_NilValue)); ++NP;
   if (MAYBE_REFERENCED(chars)){
@@ -106,7 +113,9 @@ SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse){
     return out;
   }
 
-  std::string strng;
+  std::string sep1 = utf8_char(STRING_ELT(sep, 0));
+  std::string sep2 = utf8_char(R_BlankString);
+  std::string strng = utf8_char(R_BlankString);
 
   if (!is_null(collapse)){
 
@@ -116,25 +125,35 @@ SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse){
       Rf_error("`.collapse` must be a length 1 character vector in %s", __func__);
     }
 
-    sep += static_cast<std::string>(utf8_char(STRING_ELT(collapse, 0)));
-    SEXP out = SHIELD(new_vec(STRSXP, 1)); ++NP;
+    sep2 = static_cast<std::string>(utf8_char(STRING_ELT(collapse, 0)));
 
-    // Initialise string to first collapsed string
-
-    strng = utf8_char(char_ptrs[0][0]);
-    for (R_xlen_t i = 1; i < n_chars; ++i){
-      str_paste(strng, sep, utf8_char(char_ptrs[i][0]));
-    }
-
-    for (R_xlen_t j = 1; j < n_strings; ++j){
-      // Don't concatenate between separate char vecs
-      str_paste(strng, "", utf8_char(char_ptrs[0][j]));
-      for (R_xlen_t i = 1; i < n_chars; ++i){
-        str_paste(strng, sep, utf8_char(char_ptrs[i][j]));
+    for (R_xlen_t j = 0; j < n_strings; ++j){
+      if (j != 0) strng += sep2;
+      for (R_xlen_t i = 0; i < n_chars; ++i){
+        strng += static_cast<std::string>(utf8_char(char_ptrs[i][j]));
+        if (i != (n_chars - 1)) strng += sep1;
       }
     }
 
-    SET_STRING_ELT(out, 0, Rf_mkChar(strng.c_str()));
+    // The above commented-out code represents
+    // what the below loops are doing
+
+    // for (R_xlen_t i = 0; i < (n_chars - 1); ++i){
+    //   strng += static_cast<std::string>(utf8_char(char_ptrs[i][0]));
+    //   strng += sep1;
+    // }
+    // strng += static_cast<std::string>(utf8_char(char_ptrs[n_chars - 1][0]));
+    //
+    // for (R_xlen_t j = 1; j < n_strings; ++j){
+    //   strng += sep2;
+    //   for (R_xlen_t i = 0; i < (n_chars - 1); ++i){
+    //     strng += static_cast<std::string>(utf8_char(char_ptrs[i][j]));
+    //     strng += sep1;
+    //   }
+    //   strng += static_cast<std::string>(utf8_char(char_ptrs[n_chars - 1][j]));
+    // }
+
+    SEXP out = SHIELD(Rf_mkString(strng.c_str())); ++NP;
 
     YIELD(NP);
     return out;
@@ -150,7 +169,7 @@ SEXP cpp_paste(SEXP x, std::string sep, SEXP collapse){
       strng = utf8_char(char_ptrs[0][j]);
 
       for (R_xlen_t i = 1; i < n_chars; ++i){
-        str_paste(strng, sep, utf8_char(char_ptrs[i][j]));
+        str_paste(strng, sep1, utf8_char(char_ptrs[i][j]));
       }
       SET_STRING_ELT(out, j, Rf_mkChar(strng.c_str()));
     }
