@@ -125,7 +125,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
       Rf_error("`.collapse` must be a length 1 character vector in %s", __func__);
     }
 
-    sep2 = static_cast<std::string>(utf8_char(STRING_ELT(collapse, 0)));
+    sep2 = utf8_char(STRING_ELT(collapse, 0));
 
     for (R_xlen_t j = 0; j < n_strings; ++j){
       if (j != 0) strng += sep2;
