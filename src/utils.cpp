@@ -20,34 +20,6 @@ SEXP xlen_to_r(R_xlen_t x){
   return x > INTEGER_MAX ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
 }
 
-R_xlen_t vec_length(SEXP x){
-  if (!Rf_isObject(x) || Rf_isVectorAtomic(x)){
-    return Rf_xlength(x);
-  } else if (is_df(x)){
-    return df_nrow(x);
-    // Is x a list?
-  } else if (TYPEOF(x) == VECSXP){
-    if (Rf_inherits(x, "vctrs_rcrd")){
-      return Rf_length(x) > 0 ? vec_length(VECTOR_ELT(x, 0)) : 0;
-    } else if (Rf_inherits(x, "POSIXlt")){
-      const SEXP *p_x = VECTOR_PTR_RO(x);
-      R_xlen_t out = 0;
-      for (int i = 0; i != 10; ++i){
-        out = std::max(out, Rf_xlength(p_x[i]));
-      }
-      return out;
-      // return Rf_xlength(VECTOR_ELT(x, 0));
-    } else if (Rf_isObject(x)){
-      return r_length(x);
-    } else {
-      return Rf_xlength(x);
-    }
-    // Catch-all
-  } else {
-    return r_length(x);
-  }
-}
-
 [[cpp11::register]]
 SEXP cpp_vector_length(SEXP x){
   return xlen_to_r(vec_length(x));

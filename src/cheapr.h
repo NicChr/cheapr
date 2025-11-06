@@ -157,7 +157,6 @@ int num_cores();
 SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 SEXP xlen_to_r(R_xlen_t x);
-R_xlen_t vec_length(SEXP x);
 SEXP r_address(SEXP x);
 R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive);
 SEXP cpp_list_as_df(SEXP x);
@@ -239,6 +238,22 @@ SEXP cpp_common_template(SEXP x);
 SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template);
 SEXP cpp_as_df(SEXP x);
 
+// R fns
+// Defined in r_imports.cpp
+
+extern cpp11::function cheapr_sset;
+extern cpp11::function cheapr_is_na;
+extern cpp11::function cheapr_factor;
+extern cpp11::function base_rep;
+extern cpp11::function base_do_call;
+extern cpp11::function base_paste0;
+extern cpp11::function cheapr_fast_match;
+extern cpp11::function cheapr_fast_unique;
+extern cpp11::function cheapr_rebuild;
+extern cpp11::function base_cast;
+extern cpp11::function base_assign;
+extern cpp11::function base_length;
+
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
 }
@@ -285,12 +300,43 @@ inline bool is_df(SEXP x){
   return Rf_inherits(x, "data.frame");
 }
 
-inline R_xlen_t r_length(SEXP x){
-  return Rf_asReal(cpp11::package("base")["length"](x));
-}
-
 inline int df_nrow(SEXP x){
   return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
+}
+
+inline R_xlen_t r_length(SEXP x){
+  // return Rf_asReal(base_length(x));
+  SEXP length_fn = SHIELD(find_pkg_fun("length", "base", false));
+  SEXP expr = SHIELD(Rf_lang2(length_fn, x));
+  SEXP r_length = SHIELD(Rf_eval(expr, R_BaseEnv));
+  R_xlen_t out = TYPEOF(r_length) == INTSXP ? INTEGER(r_length)[0] : REAL(r_length)[0];
+  YIELD(3);
+  return out;
+}
+
+inline R_xlen_t vec_length(SEXP x){
+  if (!Rf_isObject(x) || Rf_isVectorAtomic(x)){
+    return Rf_xlength(x);
+  } else if (is_df(x)){
+    return df_nrow(x);
+    // Is x a list?
+  } else if (TYPEOF(x) == VECSXP){
+    if (Rf_inherits(x, "vctrs_rcrd")){
+      return Rf_length(x) > 0 ? vec_length(VECTOR_ELT(x, 0)) : 0;
+    } else if (Rf_inherits(x, "POSIXlt")){
+      const SEXP *p_x = VECTOR_PTR_RO(x);
+      R_xlen_t out = 0;
+      for (int i = 0; i != 10; ++i){
+        out = std::max(out, Rf_xlength(p_x[i]));
+      }
+      return out;
+    } else {
+      return r_length(x);
+    }
+    // Catch-all
+  } else {
+    return r_length(x);
+  }
 }
 
 // Definition of simple vector is one in which
@@ -373,20 +419,6 @@ inline double round_nearest_even(double x){
 inline bool is_whole_number(double x, double tolerance){
   return (std::fabs(x - std::round(x)) < tolerance);
 }
-
-// Defined in r_imports.cpp
-
-extern cpp11::function cheapr_sset;
-extern cpp11::function cheapr_is_na;
-extern cpp11::function cheapr_factor;
-extern cpp11::function base_rep;
-extern cpp11::function base_do_call;
-extern cpp11::function base_paste0;
-extern cpp11::function cheapr_fast_match;
-extern cpp11::function cheapr_fast_unique;
-extern cpp11::function cheapr_rebuild;
-extern cpp11::function base_cast;
-extern cpp11::function base_assign;
 
 inline bool address_equal(SEXP x, SEXP y){
   return r_address(x) == r_address(y);

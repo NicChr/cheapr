@@ -13,3 +13,4 @@ cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
 cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
 cpp11::function base_cast = cpp11::package("cheapr")["base_cast"];
 cpp11::function base_assign = cpp11::package("cheapr")["base_assign_at"];
+cpp11::function base_length = cpp11::package("base")["length"];
