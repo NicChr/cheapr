@@ -6,7 +6,7 @@
 #' @param times `[integer(n)]` A vector of times to repeat elements of `x`. Can be length 1
 #' or the same length as `vector_length(x)`.
 #' @param length `[integer(1)]` - Length of the recycled result.
-#' @param each `[integer(1)]` - How many times to repeat out each element of `x`.
+#' @param each `[integer(n)]` - How many times to repeat out each element of `x`.
 #'
 #' @returns
 #' Repeated out object.

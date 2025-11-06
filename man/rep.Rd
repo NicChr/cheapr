@@ -30,7 +30,7 @@ or the same length as \code{vector_length(x)}.}
 
 \item{length}{\verb{[integer(1)]} - Length of the recycled result.}
 
-\item{each}{\verb{[integer(1)]} - How many times to repeat out each element of \code{x}.}
+\item{each}{\verb{[integer(n)]} - How many times to repeat out each element of \code{x}.}
 }
 \value{
 Repeated out object.
