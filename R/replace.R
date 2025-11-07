@@ -7,7 +7,9 @@
 #' @param with Replacement values.
 #' @param in_place `[logical(1)]` - Should assignment be done in-place
 #' (no copies)? Default is `FALSE`. Please note that assignment will occur
-#' in-place where possible.
+#' in-place where possible even if `in_place` is set to `FALSE`.
+#' @param quiet Should warnings be suppressed when `in_place = TRUE` and `x`
+#' is shared my multiple objects? Default is `FALSE`.
 #'
 #' @returns
 #' A vector whose values are
@@ -30,8 +32,8 @@
 #'
 #' @rdname replace
 #' @export
-replace_ <- function(x, where, with, in_place = FALSE){
-  .Call(`_cheapr_cpp_replace`, x, where, with, in_place)
+replace_ <- function(x, where, with, in_place = FALSE, quiet = FALSE){
+  .Call(`_cheapr_cpp_replace`, x, where, with, in_place, quiet)
 }
 
 base_assign_at <- function(x, where, with){

@@ -346,6 +346,29 @@ SEXP cpp_rep_each(SEXP x, SEXP each){
   return out;
 }
 
+SEXP cpp_length_common(SEXP x){
+
+  if (TYPEOF(x) != VECSXP){
+    Rf_error("x` must be a list");
+  }
+
+  R_xlen_t n = Rf_xlength(x);
+
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+  R_xlen_t out = 0;
+
+  for (R_xlen_t i = 0; i < n; ++i){
+    if (is_null(p_x[i])) continue;
+
+    if (vec_length(p_x[i]) == 0){
+      out = 0;
+      break;
+    }
+    out = std::max(out, vec_length(p_x[i]));
+  }
+  return xlen_to_r(out);
+}
+
 // Recycle elements of a list `x`
 
 [[cpp11::register]]

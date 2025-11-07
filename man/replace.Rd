@@ -5,7 +5,7 @@
 \alias{replace_}
 \title{Fast vector replacement, an alternative to \verb{[<-}}
 \usage{
-replace_(x, where, with, in_place = FALSE)
+replace_(x, where, with, in_place = FALSE, quiet = FALSE)
 }
 \arguments{
 \item{x}{A vector.}
@@ -16,7 +16,10 @@ replace_(x, where, with, in_place = FALSE)
 
 \item{in_place}{\verb{[logical(1)]} - Should assignment be done in-place
 (no copies)? Default is \code{FALSE}. Please note that assignment will occur
-in-place where possible.}
+in-place where possible even if \code{in_place} is set to \code{FALSE}.}
+
+\item{quiet}{Should warnings be suppressed when \code{in_place = TRUE} and \code{x}
+is shared my multiple objects? Default is \code{FALSE}.}
 }
 \value{
 A vector whose values are

@@ -140,9 +140,12 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
   .b <- !is.null(by)
   .s <- !is.null(size)
 
+  if (.t && .b && .s && .f){
+    stop("Please supply only up to 3 arguments between `from`, `to`, `by` and `size`")
+  }
+
   if (.f && .t && .b){
     size <- seq_size(from = from, to = to, by = by)
-  # } else if (.f && .b && .s){
   } else if (.t && .b && .s){
     from <- seq_start(size, to = to, by = by)
   } else if (.f && .t && .s){
@@ -160,47 +163,73 @@ seq_ <- function(from = NULL, to = NULL, by = NULL, size = NULL, add_id = FALSE,
 #' @rdname sequences
 #' @export
 seq_size <- function(from, to, by = 1L){
+
   del <- numeric_subtraction(to, from)
-  if (is.integer(by) && allv2(by, 1L)){
-    size <- del
-  } else {
-    size <- del / by
-    size[which_val(del, 0)] <- 0
-  }
+
+  size <-
+    # When from == to and the increment is 0, this is a well defined edge case
+    # Also, using both del and by in this way naturally recycles them
+    # in the same way del and by are recycled to produce size
+    # Also, by doing all this in one expression, it allows `replace_()`
+    # to modify in-place
+    .Call(
+      `_cheapr_cpp_replace`,
+      (del / by),
+      if (length(del) > length(by)){
+        del == 0L & by == 0L
+      } else {
+        by == 0L & del == 0L
+      },
+      with = 0,
+      FALSE,
+      FALSE
+    )
+
   size_rng <- collapse::frange(size, na.rm = TRUE)
-  if (isTRUE(any(size_rng < 0))){
+  if (any(size_rng < 0, na.rm = TRUE)){
     stop("At least 1 sequence length is negative, please check the sign of `by`")
   }
-  if (length(size) == 0 || all(is_integerable(abs(size_rng) + 1), na.rm = TRUE)){
-    if (is.integer(size)){
-      size <- set_add(size, 1L)
-    } else {
-      size <- set_add(size, 1e-10)
-      size <- as.integer(size)
-      size <- set_add(size, 1L)
-    }
-  } else {
-    size <- trunc(size + 1e-10) + 1
+
+  # Account for floating point errors
+  size |>
+    set_add(1e-10) |>
+    set_trunc() |>
+    set_add(1)
+  size_rng |>
+    set_add(1e-10) |>
+    set_trunc() |>
+    set_add(1)
+
+  if (all(size_rng <= .Machine[["integer.max"]], na.rm = TRUE)){
+    size <- as.integer(size)
   }
+
   size
 }
 #' @rdname sequences
 #' @export
 seq_start <- function(size, to, by = 1L){
-  numeric_subtraction(to, pmax(size - 1L, 0L) * by)
+  numeric_subtraction(to, pmax.int(size - 1L, 0L) * by)
 }
 #' @rdname sequences
 #' @export
 seq_end <- function(size, from, by = 1L){
-  numeric_addition(from, pmax(size - 1L, 0L) * by)
+  numeric_addition(from, pmax.int(size - 1L, 0L) * by)
 }
 #' @rdname sequences
 #' @export
 seq_increment <- function(size, from, to){
   del <- numeric_subtraction(to, from)
-  out <- del / pmax.int(size - 1L, 0L)
-  out[which_val(del, 0)] <- 0
-  out
+  # ( del / pmax.int(size - 1L, 0L) ) |>
+  #   replace_(where = from == to | size == 1L, with = 0)
+  .Call(
+    `_cheapr_cpp_replace`,
+    del / pmax.int(size - 1L, 0L),
+    from == to | size == 1L,
+    with = 0,
+    FALSE,
+    FALSE
+  )
 }
 #' @rdname sequences
 #' @export

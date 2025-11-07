@@ -114,7 +114,7 @@ as_discrete <- function(x, ...){
 #' @rdname as_discrete
 #' @export
 as_discrete.numeric <- function(
-    x, breaks = if (left_closed) get_breaks(x) else cheapr_rev(-get_breaks(-x)),
+    x, breaks = if (left_closed) get_breaks(x) else rev_(-get_breaks(-x)),
     left_closed = TRUE,
     include_endpoint = FALSE,
     include_oob = FALSE,

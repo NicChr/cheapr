@@ -12,7 +12,7 @@ SEXP cpp_list_args(SEXP args1, SEXP args2){
     Rf_error("Please supply either `...` or `.args` in %s", __func__);
   }
   if (use_list && TYPEOF(args2) != VECSXP){
-    Rf_error("`.args` must be a plain list in %s", __func__);
+    Rf_error("`.args` must be a list in %s", __func__);
   }
   return use_list ? args2 : args1;
 }
@@ -619,13 +619,9 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 // because cheapr doesn't work with arrays
 SEXP rm_dim(SEXP x){
   if (Rf_isArray(x)){
-    Rf_warning("cheapr pkg cannot handle arrays, please use data frames");
+    Rf_warning("cheapr pkg cannot handle arrays, please use data frames \n or call `as.data.frame()` on your matrix or array");
     SEXP out = SHIELD(Rf_shallow_duplicate(x));
     clear_attributes(out);
-    // Rf_setAttrib(out, R_DimSymbol, R_NilValue);
-    // Rf_setAttrib(out, R_DimNamesSymbol, R_NilValue);
-    // Rf_setAttrib(out, R_TspSymbol, R_NilValue);
-    // Rf_classgets(out, R_NilValue);
     YIELD(1);
     return out;
   } else {
@@ -802,7 +798,7 @@ SEXP cpp_as_df(SEXP x){
     return out;
   } else if (is_null(x)){
     return init<r_data_frame_t>(0, false);
-  } else if (is_simple_vec2(x)){
+  } else if (is_simple_vec2(x) || Rf_isArray(x)){
     SEXP out = SHIELD(init<r_list_t>(2, false));
     SEXP names = SHIELD(init<r_character_t>(2, false));
     SET_STRING_ELT(names, 0, make_utf8_char("name"));

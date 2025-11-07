@@ -228,8 +228,8 @@ cpp_col_na_counts <- function(x, names) {
   .Call(`_cheapr_cpp_col_na_counts`, x, names)
 }
 
-cpp_replace <- function(x, where, with, in_place) {
-  .Call(`_cheapr_cpp_replace`, x, where, with, in_place)
+cpp_replace <- function(x, where, with, in_place, quiet) {
+  .Call(`_cheapr_cpp_replace`, x, where, with, in_place, quiet)
 }
 
 cpp_count_val <- function(x, value, recursive) {

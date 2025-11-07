@@ -71,7 +71,7 @@ randomly into your vector.}
 \item{prop}{Proportion of scalar values (or \code{NA}) values to insert
 randomly into your vector.}
 
-\item{na.rm}{Should \code{NA} values be ignored in \code{cheapr_var()} Default is
+\item{na.rm}{Should \code{NA} values be ignored in \code{var_()} Default is
 \code{TRUE}.}
 
 \item{expr}{Expression that will be evaluated with a local seed that
@@ -97,9 +97,9 @@ data frame rows through \code{sset()}. It also does not have a special case when
 Useful for replacing lots of data with a single value. \cr
 \code{na_insert} inserts \code{NA} values randomly into your vector.
 Useful for generating missing data. \cr
-\code{cheapr_var} returns the variance of a numeric vector.
+\code{var_} returns the variance of a numeric vector.
 No coercion happens for integer vectors and so is very cheap. \cr
-\code{cheapr_rev} is a much cheaper version of \code{rev()}. \cr
+\code{rev_} is a much cheaper version of \code{rev()}. \cr
 \code{with_local_seed} offers no speed improvements but is extremely handy
 in executing random number based expressions like \code{rnorm()} without
 affecting the global RNG state. It allows you to run these expressions in a

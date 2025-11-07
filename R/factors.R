@@ -355,7 +355,7 @@ levels_lump <- function(x, n, prop, other_category = "Other",
   check_length(n, 1)
   ties <- match.arg(ties)
   check_length(other_category, 1)
-  counts <- cheapr_table(x, names = FALSE)
+  counts <- table_(x, names = FALSE)
 
   # Order counts
   o <- order(counts, decreasing = (n >= 0))

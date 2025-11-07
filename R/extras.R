@@ -13,7 +13,7 @@
 #' randomly into your vector.
 #' @param prop Proportion of scalar values (or `NA`) values to insert
 #' randomly into your vector.
-#' @param na.rm Should `NA` values be ignored in `cheapr_var()` Default is
+#' @param na.rm Should `NA` values be ignored in `var_()` Default is
 #' `TRUE`.
 #' @param expr Expression that will be evaluated with a local seed that
 #' is independent and has absolutely no effect on the global RNG state.
@@ -34,9 +34,9 @@
 #' Useful for replacing lots of data with a single value. \cr
 #' `na_insert` inserts `NA` values randomly into your vector.
 #' Useful for generating missing data. \cr
-#' `cheapr_var` returns the variance of a numeric vector.
+#' `var_` returns the variance of a numeric vector.
 #' No coercion happens for integer vectors and so is very cheap. \cr
-#' `cheapr_rev` is a much cheaper version of `rev()`. \cr
+#' `rev_` is a much cheaper version of `rev()`. \cr
 #' `with_local_seed` offers no speed improvements but is extremely handy
 #' in executing random number based expressions like `rnorm()` without
 #' affecting the global RNG state. It allows you to run these expressions in a

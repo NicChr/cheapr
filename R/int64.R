@@ -20,7 +20,7 @@ fsum.integer64 <- function(x, g = NULL, ...){
   if (is.null(g)){
     collapse::fsum(cpp_int64_to_numeric(x), ...)
   } else {
-    collapse::fsum(as.double(x), ...)
+    collapse::fsum(cpp_int64_to_double(x), g = g, ...)
   }
 }
 #' @exportS3Method collapse::fmin

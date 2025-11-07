@@ -37,6 +37,7 @@
 #' my_list <- list(from = 1L, to = 10L, by = seq(0.1, 1, 0.1))
 #' recycle(.args = my_list)
 #'
+#' @rdname recycle
 #' @export
 recycle <- function (..., length = NULL, .args = NULL){
   .Call(`_cheapr_cpp_recycle`, .Call(`_cheapr_cpp_list_args`, list(...), .args), length)

@@ -405,10 +405,10 @@ extern "C" SEXP _cheapr_cpp_col_na_counts(SEXP x, SEXP names) {
   END_CPP11
 }
 // replace.cpp
-SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place);
-extern "C" SEXP _cheapr_cpp_replace(SEXP x, SEXP where, SEXP with, SEXP in_place) {
+SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet);
+extern "C" SEXP _cheapr_cpp_replace(SEXP x, SEXP where, SEXP with, SEXP in_place, SEXP quiet) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(with), cpp11::as_cpp<cpp11::decay_t<bool>>(in_place)));
+    return cpp11::as_sexp(cpp_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(where), cpp11::as_cpp<cpp11::decay_t<SEXP>>(with), cpp11::as_cpp<cpp11::decay_t<bool>>(in_place), cpp11::as_cpp<cpp11::decay_t<bool>>(quiet)));
   END_CPP11
 }
 // scalars.cpp
@@ -875,7 +875,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_rep",                     (DL_FUNC) &_cheapr_cpp_rep,                     2},
     {"_cheapr_cpp_rep_each",                (DL_FUNC) &_cheapr_cpp_rep_each,                2},
     {"_cheapr_cpp_rep_len",                 (DL_FUNC) &_cheapr_cpp_rep_len,                 2},
-    {"_cheapr_cpp_replace",                 (DL_FUNC) &_cheapr_cpp_replace,                 4},
+    {"_cheapr_cpp_replace",                 (DL_FUNC) &_cheapr_cpp_replace,                 5},
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
     {"_cheapr_cpp_semi_copy",               (DL_FUNC) &_cheapr_cpp_semi_copy,               1},

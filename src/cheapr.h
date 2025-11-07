@@ -231,7 +231,7 @@ SEXP factor_as_character(SEXP x);
 SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
 SEXP character_as_factor(SEXP x, SEXP levels);
 SEXP match(SEXP y, SEXP x, int no_match);
-SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place);
+SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet);
 SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns);
 SEXP clean_locs(SEXP locs, SEXP x);
 SEXP cpp_common_template(SEXP x);
@@ -999,11 +999,15 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
+  if (Rf_inherits(x, "data.frame") && !Rf_inherits(y, "data.frame")){
+    return x;
+  }
+
   int32_t NP = 0;
   SEXP out = SHIELD(cpp_as_df(x)); ++NP;
 
   if (Rf_inherits(y, "data.frame")){
-    SHIELD(out = rebuild(out, y, true)); ++NP;
+    SHIELD(out = rebuild(out, y, static_cast<bool>(MAYBE_REFERENCED(out)))); ++NP;
   }
   YIELD(NP);
   return out;

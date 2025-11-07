@@ -1,11 +1,11 @@
 #include "cheapr.h"
 
 [[cpp11::register]]
-SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place){
+SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   // Modify `x` in-place?
   bool maybe_shared = MAYBE_SHARED(x);
-  if (in_place && maybe_shared){
+  if (in_place && maybe_shared && !quiet){
     Rf_warning("`in_place` is `TRUE` but `x` may be shared by multiple objects");
   }
 
@@ -111,7 +111,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place){
   case r_pxct: {
     SEXP x_cls = SHIELD(Rf_getAttrib(x, R_ClassSymbol)); ++NP;
     Rf_classgets(x, R_NilValue);
-    static_cast<void>(cpp_replace(x, where, with, true));
+    static_cast<void>(cpp_replace(x, where, with, true, false));
     Rf_classgets(x, x_cls);
     break;
   }
@@ -133,7 +133,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place){
     SEXP x_nms = SHIELD(get_names(x)); ++NP;
     SHIELD(x = cpp_list_as_df(x)); ++NP;
     SHIELD(with = cpp_list_as_df(with)); ++NP;
-    SHIELD(x = cpp_replace(x, where, with, in_place)); ++NP;
+    SHIELD(x = cpp_replace(x, where, with, in_place, quiet)); ++NP;
     clear_attributes(x);
     set_names(x, x_nms);
     Rf_classgets(x, x_cls);
@@ -161,7 +161,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place){
     }
 
     for (int j = 0; j < ncol; ++j){
-      SET_VECTOR_ELT(x, j, cpp_replace(p_x[j], where, p_with[j], in_place));
+      SET_VECTOR_ELT(x, j, cpp_replace(p_x[j], where, p_with[j], in_place, quiet));
     }
 
     break;
