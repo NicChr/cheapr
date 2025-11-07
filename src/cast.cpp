@@ -54,9 +54,9 @@ SEXP cpp_common_template(SEXP x){
 
   r_type common = r_common_type(x);
 
-  if (common == r_unk){
+  const SEXP *p_x = VECTOR_PTR_RO(x);
 
-    const SEXP *p_x = VECTOR_PTR_RO(x);
+  if (common == r_unk){
 
     SEXP vec_template;
     PROTECT_INDEX vec_template_idx;
@@ -69,9 +69,13 @@ SEXP cpp_common_template(SEXP x){
     out = vec_template;
 
   } else {
+
+    // Initialise based on R type
     SHIELD(out = init_(common, 0, false)); ++NP;
 
     switch (common){
+
+    // Combine levels
     case r_fct: {
 
       SEXP all_lvls, new_lvls;
@@ -80,7 +84,6 @@ SEXP cpp_common_template(SEXP x){
       R_ProtectWithIndex(all_lvls = new_vec(STRSXP, 0), &all_lvls_idx); ++NP;
       R_ProtectWithIndex(new_lvls = new_vec(STRSXP, 0), &new_lvls_idx); ++NP;
 
-      const SEXP *p_x = VECTOR_PTR_RO(x);
       int n = Rf_length(x);
 
       for (int i = 0; i < n; ++i){
@@ -99,9 +102,27 @@ SEXP cpp_common_template(SEXP x){
       Rf_setAttrib(out, R_LevelsSymbol, all_lvls);
       break;
     }
-    case r_pxct: {
+    // Figure out if date is integer or double
+    case r_date: {
+
       if (Rf_xlength(x) > 0){
-      SHIELD(out = cast<r_posixt_t>(out, VECTOR_ELT(x, 0))); ++NP;
+      int date_type = INTSXP;
+
+      for (int i = 0; i < n; ++i){
+        if (TYPEOF(p_x[i]) != INTSXP){
+          date_type = REALSXP;
+          break;
+        }
+      }
+      SHIELD(out = coerce_vec(out, date_type)); ++NP;
+    }
+
+      break;
+    }
+    case r_pxct: {
+      // Initialised date-time gets timezone of first date-time
+      if (Rf_xlength(x) > 0){
+      SHIELD(out = cast<r_posixt_t>(out, p_x[0])); ++NP;
     }
       break;
     }

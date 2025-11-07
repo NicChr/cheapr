@@ -839,3 +839,47 @@ SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   YIELD(2);
   return out;
 }
+
+const char* r_class(SEXP obj){
+  if (Rf_isObject(obj)){
+    return CHAR(STRING_ELT(Rf_getAttrib(obj, R_ClassSymbol), 0));
+  } else {
+    switch(TYPEOF(obj)) {
+    case CLOSXP:
+    case SPECIALSXP:
+    case BUILTINSXP: {
+      return "function";
+    }
+    case SYMSXP: {
+      return "name";
+    }
+    case OBJSXP: {
+      return Rf_isS4(obj) ? "S4" : "object";
+    }
+    case LGLSXP: {
+      return "logical";
+    }
+    case INTSXP: {
+      return "integer";
+    }
+    case REALSXP: {
+      return "numeric";
+    }
+    case STRSXP: {
+      return "character";
+    }
+    case CPLXSXP: {
+      return "complex";
+    }
+    case RAWSXP: {
+      return "raw";
+    }
+    case VECSXP: {
+      return "list";
+    }
+    default: {
+      return Rf_type2char(TYPEOF(obj));
+    }
+    }
+  }
+}

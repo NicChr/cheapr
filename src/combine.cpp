@@ -939,7 +939,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_lgl: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_logical_t>(out_size, false)); ++NP;
 
     int* RESTRICT p_out = INTEGER(out);
 
@@ -952,7 +952,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_int: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_integer_t>(out_size, false)); ++NP;
 
     int* RESTRICT p_out = INTEGER(out);
 
@@ -965,7 +965,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_int64: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_integer64_t>(out_size, false)); ++NP;
 
     int64_t* RESTRICT p_out = INTEGER64_PTR(out);
 
@@ -978,7 +978,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_dbl: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_numeric_t>(out_size, false)); ++NP;
 
     double* RESTRICT p_out = REAL(out);
 
@@ -991,7 +991,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_chr: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_character_t>(out_size, false)); ++NP;
 
     for (int i = 0; i < n; ++i){
       R_Reprotect(vec = cast<r_character_t>(p_x[i], vec_template), vec_idx);
@@ -1006,7 +1006,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_cplx: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_complex_t>(out_size, false)); ++NP;
 
     Rcomplex *p_out = COMPLEX(out);
 
@@ -1019,7 +1019,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_raw: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_raw_t>(out_size, false)); ++NP;
 
     Rbyte *p_out = RAW(out);
 
@@ -1032,7 +1032,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_list: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_list_t>(out_size, false)); ++NP;
 
     for (int i = 0; i < n; ++i){
       R_Reprotect(vec = cast<r_list_t>(p_x[i], vec_template), vec_idx);
@@ -1060,8 +1060,22 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case r_date: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
-    SHIELD(out = coerce_vec(out, REALSXP)); ++NP;
+    if (TYPEOF(vec_template) == INTSXP){
+    SHIELD(out = init<r_integer_t>(out_size, false)); ++NP;
+    Rf_classgets(out, make_utf8_str("Date"));
+
+    int* RESTRICT p_out = INTEGER(out);
+
+    for (int i = 0; i < n; ++i, k += m){
+      R_Reprotect(vec = cast<r_date_t>(p_x[i], vec_template), vec_idx);
+      R_Reprotect(vec = coerce_vec(vec, INTSXP), vec_idx);
+      m = Rf_xlength(vec);
+      std::copy_n(INTEGER_RO(vec), m, &p_out[k]);
+    }
+  } else {
+    SHIELD(out = init<r_numeric_t>(out_size, false)); ++NP;
+    Rf_classgets(out, make_utf8_str("Date"));
+
     double* RESTRICT p_out = REAL(out);
 
     for (int i = 0; i < n; ++i, k += m){
@@ -1070,11 +1084,15 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
       m = Rf_xlength(vec);
       std::copy_n(REAL_RO(vec), m, &p_out[k]);
     }
-    break;
+  }
+  break;
   }
   case r_pxct: {
 
-    SHIELD(out = cpp_rep_len(vec_template, out_size)); ++NP;
+    SHIELD(out = init<r_posixt_t>(out_size, false)); ++NP;
+    SEXP out_tzone = SHIELD(Rf_getAttrib(vec_template, install_utf8("tzone"))); ++NP;
+    Rf_setAttrib(out, install_utf8("tzone"), out_tzone);
+
     double* RESTRICT p_out = REAL(out);
 
     for (int i = 0; i < n; ++i, k += m){

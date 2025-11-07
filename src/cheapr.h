@@ -237,6 +237,7 @@ SEXP clean_locs(SEXP locs, SEXP x);
 SEXP cpp_common_template(SEXP x);
 SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template);
 SEXP cpp_as_df(SEXP x);
+const char* r_class(SEXP obj);
 
 // R fns
 // Defined in r_imports.cpp
@@ -556,13 +557,7 @@ inline const char *r_type_char(SEXP x){
 
   // If unknown type
   if (type == r_unk){
-    if (!Rf_isObject(x)){
-      return R_typeToChar(x);
-    } else if (TYPEOF(Rf_getAttrib(x, R_ClassSymbol)) == STRSXP && Rf_length(Rf_getAttrib(x, R_ClassSymbol)) > 0){
-      return CHAR(STRING_ELT(Rf_getAttrib(x, R_ClassSymbol), 0));
-    } else {
-      return r_type_names[type];
-    }
+    return r_class(x);
   } else {
     return r_type_names[type];
   }
@@ -1015,9 +1010,7 @@ inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
-  if (static_cast<bool>(R_compute_identical(
-      Rf_getAttrib(x, R_ClassSymbol),
-      Rf_getAttrib(y, R_ClassSymbol), 0))){
+  if (std::strcmp(r_class(x), r_class(y)) == 0){
     return x;
   } else {
     SEXP out = SHIELD(base_cast(x, y));
