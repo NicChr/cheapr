@@ -62,14 +62,13 @@ r_type_common <- function(..., .args = NULL){
   )
 }
 
+# Internal function, do not use
 base_cast <- function(x, template){
   if (is.null(template)){
     NULL
   } else if (is.null(x)){
     template[0]
   } else {
-    x[0] <- template[0]
-    x
-    # c(x, template[0])
+    c(template[0], x)
   }
 }

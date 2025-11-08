@@ -11,17 +11,17 @@ SEXP as_posixct = NULL;
 SEXP as_list = NULL;
 
 // The order of functions here MUST MATCH the order of defined r types
-const cast_fn CAST_FNS[15] = {
+const cast_fn CAST_FNS[14] = {
   cast_null, cast_logical, cast_integer, cast_integer64,
   cast_numeric, cast_complex, cast_raw, cast_date, cast_posixt,
-  cast_vctrs_rcrd, cast_character, cast_factor, cast_list,
+  cast_character, cast_factor, cast_list,
   cast_data_frame, cast_unknown
 };
 
-const init_fn INIT_FNS[15] = {
+const init_fn INIT_FNS[14] = {
   init_null, init_logical, init_integer, init_integer64,
   init_numeric, init_complex, init_raw, init_date, init_posixt,
-  init_vctrs_rcrd, init_character, init_factor, init_list,
+  init_character, init_factor, init_list,
   init_data_frame, init_unknown
 };
 
@@ -218,12 +218,6 @@ SEXP cpp_cast_common(SEXP x){
   case r_pxct: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_posixt_t>(p_x[i], vec_template));
-  }
-    break;
-  }
-  case r_rcrd: {
-    for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_vctrs_rcrd_t>(p_x[i], vec_template));
   }
     break;
   }

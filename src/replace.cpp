@@ -125,21 +125,6 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_rcrd: {
-
-    // Treat vctrs_rcrd as df and use r_df method
-
-    SEXP x_cls = SHIELD(Rf_getAttrib(x, R_ClassSymbol)); ++NP;
-    SEXP x_nms = SHIELD(get_names(x)); ++NP;
-    SHIELD(x = cpp_list_as_df(x)); ++NP;
-    SHIELD(with = cpp_list_as_df(with)); ++NP;
-    SHIELD(x = cpp_replace(x, where, with, in_place, quiet)); ++NP;
-    clear_attributes(x);
-    set_names(x, x_nms);
-    Rf_classgets(x, x_cls);
-    break;
-  }
-
   case r_df: {
 
     const SEXP *p_x = VECTOR_PTR_RO(x);

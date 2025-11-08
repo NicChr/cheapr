@@ -452,7 +452,6 @@ struct r_complex_t {};
 struct r_raw_t {};
 struct r_date_t {};
 struct r_posixt_t {};
-struct r_vctrs_rcrd_t {}; // Special type for vctrs-style record objects
 struct r_character_t {};
 struct r_factor_t {};
 struct r_list_t {};
@@ -471,13 +470,12 @@ enum : r_type {
     r_raw = 6,
     r_date = 7,
     r_pxct = 8,
-    r_rcrd = 9,
-    r_chr = 10,
-    r_fct = 11,
-    r_list = 12,
-    r_df = 13,
-    r_unk = 14,
-    r_err = 15 // Special type to signal incompatible cast (Currently unused)
+    r_chr = 9,
+    r_fct = 10,
+    r_list = 11,
+    r_df = 12,
+    r_unk = 13,
+    r_err = 14 // Special type to signal incompatible cast (Currently unused)
 };
 
 // R type chars
@@ -491,7 +489,6 @@ constexpr const char* r_type_names[15] = {
   "raw",     // 6
   "Date",    // 7
   "POSIXct",    // 8
-  "vctrs_rcrd",    // 9
   "character",     // 10
   "factor",     // 11
   "list",    // 12
@@ -501,23 +498,22 @@ constexpr const char* r_type_names[15] = {
 
 // An n x n matrix of r types and their common cast type
 
-constexpr r_type r_type_pairs[15][15] = {
+constexpr r_type r_type_pairs[14][14] = {
   /*            NULL    LGL     INT     I64     DBL     CPLX    RAW     DATE    PXCT    RCRD    CHR     FCT     LIST    DF      Unknown */
-  /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_rcrd, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* I64  */  { r_int64,r_int64, r_int64, r_int64, r_dbl, r_cplx, r_raw, r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,   r_dbl,  r_cplx, r_raw, r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw, r_date,  r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,   r_raw,  r_raw,  r_raw, r_unk,   r_unk, r_unk,  r_chr,  r_fct,   r_list, r_df,   r_unk },
-  /* DATE */  { r_date, r_date, r_date, r_date,  r_date, r_date,  r_unk, r_date, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_pxct, r_unk, r_pxct, r_pxct, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* RCRD */  { r_rcrd, r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk, r_unk,  r_unk, r_rcrd, r_unk,  r_unk,  r_unk,  r_unk,  r_unk },
-  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,   r_chr,  r_chr,  r_chr,  r_chr,  r_chr, r_unk,  r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,   r_fct,  r_fct,  r_df,   r_fct,  r_fct, r_unk,  r_fct,  r_fct,  r_list, r_df,   r_unk },
-  /* LIST */  { r_list, r_list, r_list, r_list,  r_list, r_list, r_list, r_list, r_list, r_unk,  r_list, r_list, r_list, r_df,   r_unk },
-  /* DF   */  { r_df,   r_df,   r_df,   r_df,    r_df,   r_df,   r_df,   r_df,   r_df,   r_unk,  r_df,   r_df,   r_df,   r_df,   r_unk },
-  /* Unknown */ { r_unk,  r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk }
+  /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* I64  */  { r_int64,r_int64, r_int64, r_int64, r_dbl, r_cplx, r_raw, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,   r_dbl,  r_cplx, r_raw, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw, r_date,  r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,   r_raw,  r_raw,  r_raw, r_unk,   r_unk, r_chr,  r_fct,   r_list, r_df,   r_unk },
+  /* DATE */  { r_date, r_date, r_date, r_date,  r_date, r_date,  r_unk, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_pxct, r_unk, r_pxct, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,   r_chr,  r_chr,  r_chr,  r_chr,  r_chr, r_chr,  r_fct,  r_list, r_df,   r_unk },
+  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,   r_fct,  r_fct,  r_df,   r_fct,  r_fct, r_fct,  r_fct,  r_list, r_df,   r_unk },
+  /* LIST */  { r_list, r_list, r_list, r_list,  r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_df,   r_unk },
+  /* DF   */  { r_df,   r_df,   r_df,   r_df,    r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_unk },
+  /* Unknown */ { r_unk,  r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk }
 };
 
 inline r_type common_type(const r_type &a, const r_type &b) {
@@ -545,7 +541,6 @@ inline r_type get_r_type(SEXP x) {
     if (Rf_inherits(x, "Date"))       return r_date;
     if (Rf_inherits(x, "POSIXct"))    return r_pxct;
     if (Rf_inherits(x, "data.frame")) return r_df;
-    if (Rf_inherits(x, "vctrs_rcrd")) return r_rcrd;
     if (Rf_inherits(x, "integer64"))  return r_int64;
     return r_unk;
   }
@@ -711,10 +706,20 @@ inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
   return out;
 }
 
-template<>
-inline SEXP init<r_vctrs_rcrd_t>(R_xlen_t n, bool with_na) {
-  Rf_error("Don't know how to initialise an object of type `<vctrs_rcrd>`");
-}
+// template<>
+// inline SEXP init<r_vctrs_rcrd_t>(R_xlen_t n, bool with_na) {
+//   SEXP out = SHIELD(new_vec(VECSXP, 0));
+//   SEXP cls = SHIELD(new_vec(STRSXP, 3));
+//   SEXP nms = SHIELD(new_vec(STRSXP, 0));
+//   SET_STRING_ELT(cls, 0, make_utf8_char("cheapr_rcrd"));
+//   SET_STRING_ELT(cls, 1, make_utf8_char("vctrs_rcrd"));
+//   SET_STRING_ELT(cls, 2, make_utf8_char("vctrs_vctr"));
+//   set_names(out, nms);
+//   Rf_classgets(out, cls);
+//   YIELD(3);
+//   return out;
+//   // Rf_error("Don't know how to initialise an object of type `<vctrs_rcrd>`");
+// }
 
 template<>
 inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
@@ -1020,14 +1025,6 @@ inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
   }
 }
 
-template<>
-inline SEXP cast<r_vctrs_rcrd_t>(SEXP x, SEXP y) {
-  if (Rf_inherits(x, "vctrs_rcrd")){
-    return x;
-  } else {
-    return cast<r_unknown_t>(x, y);
-  }
-}
 
 // Wrapper functions for cast fns
 using cast_fn = SEXP(*)(SEXP, SEXP);
@@ -1044,7 +1041,6 @@ inline SEXP cast_factor(SEXP x, SEXP y) { return cast<r_factor_t>(x, y); }
 inline SEXP cast_date(SEXP x, SEXP y) { return cast<r_date_t>(x, y); }
 inline SEXP cast_posixt(SEXP x, SEXP y) { return cast<r_posixt_t>(x, y); }
 inline SEXP cast_data_frame(SEXP x, SEXP y) { return cast<r_data_frame_t>(x, y); }
-inline SEXP cast_vctrs_rcrd(SEXP x, SEXP y) { return cast<r_vctrs_rcrd_t>(x, y); }
 inline SEXP cast_unknown(SEXP x, SEXP y) { return cast<r_unknown_t>(x, y); }
 
 // Wrapper functions for init fns
@@ -1062,12 +1058,11 @@ inline SEXP init_factor(R_xlen_t n, bool with_na) { return init<r_factor_t>(n, w
 inline SEXP init_date(R_xlen_t n, bool with_na) { return init<r_date_t>(n, with_na); }
 inline SEXP init_posixt(R_xlen_t n, bool with_na) { return init<r_posixt_t>(n, with_na); }
 inline SEXP init_data_frame(R_xlen_t n, bool with_na) { return init<r_data_frame_t>(n, with_na); }
-inline SEXP init_vctrs_rcrd(R_xlen_t n, bool with_na) { return init<r_vctrs_rcrd_t>(n, with_na); }
 inline SEXP init_unknown(R_xlen_t n, bool with_na) { return init<r_unknown_t>(n, with_na); }
 
 // Defined cast.cpp
-extern const cast_fn CAST_FNS[15];
-extern const init_fn INIT_FNS[15];
+extern const cast_fn CAST_FNS[14];
+extern const init_fn INIT_FNS[14];
 
 // Dispatcher functions
 inline SEXP cast_(r_type cast_type, SEXP x, SEXP y) {
