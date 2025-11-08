@@ -260,7 +260,7 @@ c(x, letters)
 c(letters, x)
 ```
 
-With cheapr the order of arguments doesn't matter
+With cheapr the order of arguments doesn't affect the outcome type
 
 ```{r}
 c_(x, letters);c_(letters, x)
@@ -309,9 +309,6 @@ cast(fctr, chrs) |> print() |> class()
 cast(dbls, fctr) |> print() |> class()
 cast(fctr, dbls) |> print() |> class()
 cast(ints, df) |> print() |> class()
-cast(dbls, df) |> print() |> class()
-cast(chrs, df) |> print() |> class()
-cast(fctr, df) |> print() |> class()
 ```
 
 We can also cast multiple objects to a common type
