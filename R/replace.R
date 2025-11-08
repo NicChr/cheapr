@@ -3,8 +3,11 @@
 #' @name replace
 #'
 #' @param x A vector.
-#' @param where `[integer(n)]` - Where to assign replacement values.
-#' @param with Replacement values.
+#' @param where `[integer(n)]` - Where to assign replacement values. This can
+#' be an integer vector of locations, a logical vector (passed to `which_()`),
+#' or a character vector of names.
+#' @param with Replacement values. These will be recycled against the
+#' resulting `where` integer locations.
 #' @param in_place `[logical(1)]` - Should assignment be done in-place
 #' (no copies)? Default is `FALSE`. Please note that assignment will occur
 #' in-place where possible even if `in_place` is set to `FALSE`.

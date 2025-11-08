@@ -23,11 +23,6 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   int where_size = vec_length(where);
   int with_size = vec_length(with);
 
-  if (with_size > where_size){
-    YIELD(NP);
-    Rf_error("`length(with)` cannot be greater than `length(where)`");
-  }
-
   R_xlen_t xi;
   R_xlen_t withi = 0;
 

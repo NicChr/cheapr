@@ -62,7 +62,7 @@ void check_atomic(SEXP x){
 }
 
 bool implicit_na_coercion(SEXP x, SEXP target){
-  SEXP coerced = SHIELD(cast_(get_r_type(target), x, R_NilValue));
+  SEXP coerced = SHIELD(cast_(get_r_type(target), x, target));
   bool out = na_count(x, true) != na_count(coerced, true);
   YIELD(1);
   return out;

@@ -69,6 +69,8 @@ base_cast <- function(x, template){
   } else if (is.null(x)){
     template[0]
   } else {
-    c(template[0], x)
+    x[0] <- template[0]
+    x
+    # c(template[0], x)
   }
 }

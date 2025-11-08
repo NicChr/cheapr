@@ -10,9 +10,12 @@ replace_(x, where, with, in_place = FALSE, quiet = FALSE)
 \arguments{
 \item{x}{A vector.}
 
-\item{where}{\verb{[integer(n)]} - Where to assign replacement values.}
+\item{where}{\verb{[integer(n)]} - Where to assign replacement values. This can
+be an integer vector of locations, a logical vector (passed to \code{which_()}),
+or a character vector of names.}
 
-\item{with}{Replacement values.}
+\item{with}{Replacement values. These will be recycled against the
+resulting \code{where} integer locations.}
 
 \item{in_place}{\verb{[logical(1)]} - Should assignment be done in-place
 (no copies)? Default is \code{FALSE}. Please note that assignment will occur
