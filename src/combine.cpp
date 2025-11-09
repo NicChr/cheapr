@@ -346,7 +346,7 @@ SEXP cpp_rep_each(SEXP x, SEXP each){
   return out;
 }
 
-SEXP cpp_length_common(SEXP x){
+R_xlen_t length_common(SEXP x){
 
   if (TYPEOF(x) != VECSXP){
     Rf_error("x` must be a list");
@@ -366,72 +366,42 @@ SEXP cpp_length_common(SEXP x){
     }
     out = std::max(out, vec_length(p_x[i]));
   }
-  return xlen_to_r(out);
+  return out;
 }
 
 // Recycle elements of a list `x`
 
+void recycle_in_place(SEXP x, R_xlen_t n){
+
+  int xn = Rf_length(x);
+  const SEXP *p_x = VECTOR_PTR_RO(x);
+
+  for (int i = 0; i < xn; ++i){
+    if (!is_null(p_x[i])){
+      SET_VECTOR_ELT(x, i, cpp_rep_len(p_x[i], n));
+    }
+  }
+}
+
 [[cpp11::register]]
 SEXP cpp_recycle(SEXP x, SEXP length){
 
-  int32_t NP = 0;
-  int xn = Rf_length(x);
-  int n_objs = xn - static_cast<int>(null_count(x));
-
-  const SEXP *p_x = VECTOR_PTR_RO(x);
-  SEXP out = SHIELD(new_vec(VECSXP, n_objs)); ++NP;
-  SEXP sizes = SHIELD(cpp_lengths(x, false)); ++NP;
-  const int* RESTRICT p_sizes = INTEGER_RO(sizes);
-  bool has_length = !is_null(length);
-  SHIELD(length = coerce_vec(length, INTSXP)); ++NP;
+  SEXP out = SHIELD(cpp_drop_null(x, true));
 
   int n = 0;
 
-  if (!has_length){
-    if (n_objs > 0){
-      n = -1;
-      // We calculate `max(sizes)`
-      // We won't have any NA in sizes so no NA checking is needed
-      for (int i = 0; i < xn; ++i){
-        if (is_null(p_x[i])){
-          continue;
-        } else if (p_sizes[i] == 0){
-          n = 0;
-          break;
-        } else {
-          n = std::max(n, p_sizes[i]);
-        }
-      }
-    }
-  } else {
+  if (!is_null(length)){
     n = Rf_asInteger(length);
-  }
-
-  n = std::max(n, 0);
-
-  int k = 0;
-
-  SEXP names = SHIELD(get_names(x)); ++NP;
-  SEXP new_names = R_NilValue;
-
-  if (xn == n_objs || is_null(names)){
-    for (int i = 0; i < xn; ++i){
-      if (is_null(p_x[i])) continue;
-      SET_VECTOR_ELT(out, k++, cpp_rep_len(p_x[i], n));
+    if (n < 0){
+      Rf_error("Recycled `length` must be >= 0 in %s", __func__);
     }
-    set_names(out, names);
   } else {
-    new_names = SHIELD(new_vec(STRSXP, n_objs)); ++NP;
-    const SEXP *p_names = STRING_PTR_RO(names);
-    for (int i = 0; i < xn; ++i){
-      if (is_null(p_x[i])) continue;
-      SET_VECTOR_ELT(out, k, cpp_rep_len(p_x[i], n));
-      SET_STRING_ELT(new_names, k++, p_names[i]);
-    }
-    set_names(out, new_names);
+    n = length_common(x);
   }
 
-  YIELD(NP);
+  recycle_in_place(x, n);
+
+  YIELD(1);
   return out;
 }
 
@@ -803,7 +773,7 @@ SEXP cpp_df_c(SEXP x){
       }
       SET_VECTOR_ELT(vectors, i, vec);
     }
-    SET_VECTOR_ELT(out, j, combine_internal(vectors, out_size, p_ptypes[j]));
+    SET_VECTOR_ELT(out, j, cpp_c(vectors));
   }
   set_list_as_df(out);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
@@ -812,6 +782,131 @@ SEXP cpp_df_c(SEXP x){
   YIELD(NP);
   return out;
 }
+// SEXP cpp_df_c(SEXP x){
+//
+//   if (TYPEOF(x) != VECSXP){
+//     Rf_error("`x` must be a list of data frames");
+//   }
+//
+//   int n_frames = Rf_length(x);
+//
+//   if (n_frames == 0) return R_NilValue;
+//
+//   int32_t NP = 0;
+//
+//   // Since we are casting potential non-dfs to dfs we need a new list
+//   SEXP frames = SHIELD(init<r_list_t>(n_frames, false)); ++NP;
+//
+//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//   const SEXP *p_frames = VECTOR_PTR_RO(frames);
+//
+//   SEXP df;
+//   PROTECT_INDEX df_idx;
+//   R_ProtectWithIndex(df = cast<r_data_frame_t>(p_x[0], R_NilValue), &df_idx); ++NP;
+//   SET_VECTOR_ELT(frames, 0, df);
+//
+//   SEXP df_template = df;
+//
+//   SEXP new_names,
+//   old_names,
+//   temp_list, df_names, ptype_names;
+//   PROTECT_INDEX
+//   new_names_idx, old_names_idx,
+//   temp_list_idx, df_names_idx, ptype_names_idx;
+//
+//   R_ProtectWithIndex(new_names = R_NilValue, &new_names_idx); ++NP;
+//   R_ProtectWithIndex(old_names = R_NilValue, &old_names_idx); ++NP;
+//   R_ProtectWithIndex(temp_list = new_vec(VECSXP, 2), &temp_list_idx); ++NP;
+//   R_ProtectWithIndex(df_names = R_NilValue, &df_names_idx); ++NP;
+//   R_ProtectWithIndex(ptype_names = get_names(df), &ptype_names_idx); ++NP;
+//
+//   // Initialise common R types
+//   std::vector<r_type> archetypes(static_cast<int>(Rf_length(df)));
+//   for (uint32_t i = 0; i < archetypes.size(); ++i){
+//     archetypes[i] = get_r_type(VECTOR_ELT(df, i));
+//   }
+//
+//   // We do 2 passes
+//   // 1st pass: Check inputs are dfs and construct prototype list
+//   // 2nd pass: initialise data frame vecs (if need be) and combine simultaneously
+//
+//   int out_size = df_nrow(df);
+//
+//   for (int i = 1; i < n_frames; ++i){
+//     R_Reprotect(df = cast<r_data_frame_t>(p_x[i], R_NilValue), df_idx);
+//     R_Reprotect(df_names = get_names(df), df_names_idx);
+//
+//     R_Reprotect(new_names = cpp_setdiff(
+//       df_names, ptype_names, false
+//     ), new_names_idx);
+//
+//     R_Reprotect(old_names = cpp_intersect(
+//       ptype_names, df_names, false
+//     ), old_names_idx);
+//
+//     // Adjust prototype list
+//     if (Rf_length(new_names) > 0){
+//       SET_VECTOR_ELT(temp_list, 0, ptype_names);
+//       SET_VECTOR_ELT(temp_list, 1, new_names);
+//       R_Reprotect(ptype_names = cpp_c(temp_list), ptype_names_idx);
+//       for (int j = 0; j < Rf_length(new_names); ++j){
+//         archetypes.push_back(get_r_type(get_list_element(df, STRING_ELT(new_names, j))));
+//       }
+//     }
+//
+//     // Accumulating common archetype
+//     // We are using cpp_intersect(ptype_names, names(df)) above
+//     // and hence the order should be safe here
+//     for (int k = 0; k < Rf_length(old_names); ++k){
+//       archetypes[k] = common_type(archetypes[k], get_r_type(get_list_element(df, STRING_ELT(ptype_names, k))));
+//     }
+//
+//     out_size += df_nrow(df);
+//     SET_VECTOR_ELT(frames, i, df);
+//   }
+//
+//   int n_cols = Rf_length(ptype_names);
+//
+//   SEXP vec;
+//   PROTECT_INDEX vec_idx;
+//   R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
+//
+//   SEXP out = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
+//   SEXP vectors = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
+//
+//   // SEXP vec_archetype;
+//   // PROTECT_INDEX vec_archetype_idx;
+//   // R_ProtectWithIndex(vec_archetype = R_NilValue, &vec_archetype_idx); ++NP;
+//
+//   SEXP vec_archetypes = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
+//   const SEXP *p_vec_archetypes = VECTOR_PTR_RO(vec_archetypes);
+//   const SEXP *p_ptype_names = STRING_PTR_RO(ptype_names);
+//
+//   // Get archetype for each col
+//   for (int j = 0; j < n_cols; ++j){
+//     for (int i = 0; i < n_frames; ++i){
+//       SET_VECTOR_ELT(vectors, i, get_list_element(p_frames[i], p_ptype_names[j]));
+//     }
+//     SET_VECTOR_ELT(vec_archetypes, j, cpp_common_template(vectors));
+//   }
+//
+//   for (int j = 0; j < n_cols; ++j){
+//     for (int i = 0; i < n_frames; ++i){
+//       vec = get_list_element(p_frames[i], p_ptype_names[j]);
+//       if (is_null(vec)){
+//         R_Reprotect(vec = cpp_rep_len(p_vec_archetypes[j], df_nrow(p_frames[i])), vec_idx);
+//       }
+//       SET_VECTOR_ELT(vectors, i, vec);
+//     }
+//     SET_VECTOR_ELT(out, j, combine_internal(vectors, out_size, p_vec_archetypes[j]));
+//   }
+//   set_list_as_df(out);
+//   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
+//   set_names(out, ptype_names);
+//   SHIELD(out = rebuild(out, df_template, false)); ++NP;
+//   YIELD(NP);
+//   return out;
+// }
 
 // Helper to concatenate data frames by col
 

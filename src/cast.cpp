@@ -35,7 +35,7 @@ r_type r_common_type(SEXP x){
   const SEXP *p_x = VECTOR_PTR_RO(x);
 
   // Initialise to null
-  r_type common = 0;
+  r_type common = r_null;
 
   for (R_xlen_t i = 0; i < n; ++i){
     common = common_type(common, get_r_type(p_x[i]));

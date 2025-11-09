@@ -238,6 +238,8 @@ SEXP cpp_common_template(SEXP x);
 SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template);
 SEXP cpp_as_df(SEXP x);
 const char* r_class(SEXP obj);
+void recycle_in_place(SEXP x, R_xlen_t n);
+R_xlen_t length_common(SEXP x);
 
 // R fns
 // Defined in r_imports.cpp
@@ -999,8 +1001,12 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
-  if (Rf_inherits(x, "data.frame") && !Rf_inherits(y, "data.frame")){
-    return x;
+  if (Rf_inherits(x, "data.frame")){
+    if (!Rf_inherits(y, "data.frame")){
+      return x;
+    } else {
+      return rebuild(x, y, static_cast<bool>(MAYBE_REFERENCED(x)));
+    }
   }
 
   int32_t NP = 0;
