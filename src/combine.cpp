@@ -396,10 +396,10 @@ SEXP cpp_recycle(SEXP x, SEXP length){
       Rf_error("Recycled `length` must be >= 0 in %s", __func__);
     }
   } else {
-    n = length_common(x);
+    n = length_common(out);
   }
 
-  recycle_in_place(x, n);
+  recycle_in_place(out, n);
 
   YIELD(1);
   return out;
@@ -710,7 +710,7 @@ SEXP cpp_df_c(SEXP x){
   R_ProtectWithIndex(ptype_names = get_names(df), &ptype_names_idx); ++NP;
 
   // We do 2 passes
-  // 1st pass: Check inputs are dfs and construct prototype list
+  // 1st pass: Check inputs are dfs and construct prototypes
   // 2nd pass: initialise data frame vecs (if need be) and combine simultaneously
 
   int out_size = df_nrow(df);
@@ -777,18 +777,6 @@ SEXP cpp_df_c(SEXP x){
       SET_VECTOR_ELT(out, j, cpp_c(vectors));
     }
   }
-
-
-  // for (int j = 0; j < n_cols; ++j){
-  //   for (int i = 0; i < n_frames; ++i){
-  //     vec = get_list_element(p_frames[i], p_ptype_names[j]);
-  //     if (is_null(vec)){
-  //       R_Reprotect(vec = init<r_integer_t>(df_nrow(p_frames[i]), true), vec_idx);
-  //     }
-  //     SET_VECTOR_ELT(vectors, i, vec);
-  //   }
-  //   SET_VECTOR_ELT(out, j, cpp_c(vectors));
-  // }
 
   set_list_as_df(out);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
@@ -1018,15 +1006,14 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case r_list: {
 
     SHIELD(out = init<r_list_t>(out_size, false)); ++NP;
+    SEXP *p_out = UNSAFE_VECTOR_PTR(out);
 
-    for (int i = 0; i < n; ++i){
+    for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_list_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
 
       const SEXP *p_vec = VECTOR_PTR_RO(vec);
-      for (R_xlen_t j = 0; j < m; ++k, ++j){
-        SET_VECTOR_ELT(out, k, p_vec[j]);
-      }
+      std::copy_n(p_vec, m, &p_out[k]);
     }
     break;
   }

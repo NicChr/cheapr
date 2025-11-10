@@ -20,6 +20,9 @@
 // inline can be safely used for functions
 // After R 4.3.0 + C++17 we can use inline keyword in header file only here
 
+#ifndef UNSAFE_VECTOR_PTR
+#define UNSAFE_VECTOR_PTR(x) ((SEXP*) DATAPTR(x))
+#endif
 #ifndef VECTOR_PTR_RO
 #define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
 #endif
