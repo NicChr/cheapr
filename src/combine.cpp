@@ -649,31 +649,6 @@ SEXP cpp_list_c(SEXP x){
   return out;
 }
 
-// Helper to concatenate 2 lists
-
-SEXP list_c2(SEXP x, SEXP y){
-  SEXP temp = SHIELD(new_vec(VECSXP, 2));
-
-  SET_VECTOR_ELT(temp, 0, x);
-  SET_VECTOR_ELT(temp, 1, y);
-  SEXP out = SHIELD(cpp_list_c(temp));
-
-  YIELD(2);
-  return out;
-}
-
-// Helper to concatenate two vectors
-SEXP c2(SEXP x, SEXP y){
-  SEXP temp = SHIELD(new_vec(VECSXP, 2));
-
-  SET_VECTOR_ELT(temp, 0, x);
-  SET_VECTOR_ELT(temp, 1, y);
-  SEXP out = SHIELD(cpp_c(temp));
-
-  YIELD(2);
-  return out;
-}
-
 // Concatenate a list of data frames
 
 SEXP cpp_df_c(SEXP x){
@@ -699,18 +674,17 @@ SEXP cpp_df_c(SEXP x){
   R_ProtectWithIndex(df = cast<r_data_frame_t>(p_x[0], R_NilValue), &df_idx); ++NP;
   SET_VECTOR_ELT(frames, 0, df);
 
-  SEXP df_template = df;
-
-  SEXP new_names, temp_list, df_names, ptype_names;
-  PROTECT_INDEX new_names_idx, temp_list_idx, df_names_idx, ptype_names_idx;
+  SEXP new_names, df_names, ptype_names;
+  PROTECT_INDEX new_names_idx, df_names_idx, ptype_names_idx;
 
   R_ProtectWithIndex(new_names = R_NilValue, &new_names_idx); ++NP;
-  R_ProtectWithIndex(temp_list = new_vec(VECSXP, 2), &temp_list_idx); ++NP;
   R_ProtectWithIndex(df_names = R_NilValue, &df_names_idx); ++NP;
   R_ProtectWithIndex(ptype_names = get_names(df), &ptype_names_idx); ++NP;
 
+  int n_cols = Rf_length(ptype_names);
+
   // We do 2 passes
-  // 1st pass: Check inputs are dfs and construct prototypes
+  // 1st pass: Cast inputs to dfs and construct prototypes
   // 2nd pass: initialise data frame vecs (if need be) and combine simultaneously
 
   int out_size = df_nrow(df);
@@ -728,15 +702,14 @@ SEXP cpp_df_c(SEXP x){
     // Adjust prototype names
     if (Rf_length(new_names) > 0){
       na_padding = true;
-      SET_VECTOR_ELT(temp_list, 0, ptype_names);
-      SET_VECTOR_ELT(temp_list, 1, new_names);
-      R_Reprotect(ptype_names = cpp_c(temp_list), ptype_names_idx);
+      R_Reprotect(ptype_names = r_combine(ptype_names, new_names), ptype_names_idx);
     }
+    na_padding = na_padding || Rf_length(df) != n_cols;
     out_size += df_nrow(df);
     SET_VECTOR_ELT(frames, i, df);
   }
 
-  int n_cols = Rf_length(ptype_names);
+  n_cols = Rf_length(ptype_names);
 
   SEXP vec;
   PROTECT_INDEX vec_idx;
@@ -781,7 +754,7 @@ SEXP cpp_df_c(SEXP x){
   set_list_as_df(out);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   set_names(out, ptype_names);
-  SHIELD(out = rebuild(out, df_template, false)); ++NP;
+  SHIELD(out = rebuild(out, VECTOR_ELT(frames, 0), false)); ++NP;
   YIELD(NP);
   return out;
 }
@@ -965,15 +938,14 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case r_chr: {
 
     SHIELD(out = init<r_character_t>(out_size, false)); ++NP;
+    SEXP *p_out = UNSAFE_STRING_PTR(out);
 
-    for (int i = 0; i < n; ++i){
+    for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_character_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
 
       const SEXP *p_vec = STRING_PTR_RO(vec);
-      for (R_xlen_t j = 0; j < m; ++k, ++j){
-        SET_STRING_ELT(out, k, p_vec[j]);
-      }
+      std::copy_n(p_vec, m, &p_out[k]);
     }
     break;
   }

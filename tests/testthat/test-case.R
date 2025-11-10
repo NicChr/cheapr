@@ -54,7 +54,6 @@ test_that("matching", {
       target
     )
 
-    x
     expect_identical(
       case(x == 100 ~ 1L,
            is.na(x) ~ 2L,
@@ -75,4 +74,3 @@ test_that("matching", {
   },
   .seed = 12345)
 })
-

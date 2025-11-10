@@ -651,8 +651,8 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 
   if (n_dups > 0){
     temp = SHIELD(sset_vec(names, dup_locs, true)); ++NP;
-    replace = SHIELD(base_paste0(temp, dup_sep, dup_locs)); ++NP;
-    cpp_loc_set_replace(out, dup_locs, replace);
+    replace = SHIELD(r_paste(R_BlankScalarString, R_NilValue, temp, dup_sep, dup_locs)); ++NP;
+    static_cast<void>(cpp_replace(out, dup_locs, replace, true, false));
   }
 
   SEXP is_empty = SHIELD(new_vec(LGLSXP, n)); ++NP;
@@ -671,8 +671,8 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   if (n_empty > 0){
     SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
     temp = SHIELD(sset_vec(names, empty_locs, true)); ++NP;
-    replace = SHIELD(base_paste0(temp, empty_sep, empty_locs)); ++NP;
-    cpp_loc_set_replace(out, empty_locs, replace);
+    replace = SHIELD(r_paste(R_BlankScalarString, R_NilValue, temp, empty_sep, empty_locs)); ++NP;
+    static_cast<void>(cpp_replace(out, empty_locs, replace, true, false));
   }
 
   YIELD(NP);

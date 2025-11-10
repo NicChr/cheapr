@@ -171,3 +171,9 @@ numeric_subtraction <- function(x, y){
 numeric_addition <- function(x, y){
   as_numeric(x) + as_numeric(y)
 }
+
+# Kept for legacy reasons
+
+cpp_loc_set_replace <- function(x, where, what){
+  replace_(x, where, what, in_place = TRUE, quiet = TRUE)
+}

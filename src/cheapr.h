@@ -23,6 +23,9 @@
 #ifndef UNSAFE_VECTOR_PTR
 #define UNSAFE_VECTOR_PTR(x) ((SEXP*) DATAPTR(x))
 #endif
+#ifndef UNSAFE_STRING_PTR
+#define UNSAFE_STRING_PTR(x) ((SEXP*) DATAPTR(x))
+#endif
 #ifndef VECTOR_PTR_RO
 #define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
 #endif
@@ -208,8 +211,6 @@ SEXP cpp_setdiff(SEXP x, SEXP y, bool unique);
 SEXP cpp_intersect(SEXP x, SEXP y, bool unique);
 SEXP get_ptype(SEXP x);
 SEXP get_list_element(SEXP list, SEXP str);
-SEXP list_c2(SEXP x, SEXP y);
-SEXP c2(SEXP x, SEXP y);
 SEXP rebuild(SEXP x, SEXP source, bool shallow_copy);
 SEXP cpp_df_assign_cols(SEXP x, SEXP cols);
 SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair);
@@ -243,6 +244,7 @@ SEXP cpp_as_df(SEXP x);
 const char* r_class(SEXP obj);
 void recycle_in_place(SEXP x, R_xlen_t n);
 R_xlen_t length_common(SEXP x);
+SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse);
 
 // R fns
 // Defined in r_imports.cpp
@@ -251,14 +253,17 @@ extern cpp11::function cheapr_sset;
 extern cpp11::function cheapr_is_na;
 extern cpp11::function cheapr_factor;
 extern cpp11::function base_rep;
-extern cpp11::function base_do_call;
-extern cpp11::function base_paste0;
 extern cpp11::function cheapr_fast_match;
 extern cpp11::function cheapr_fast_unique;
 extern cpp11::function cheapr_rebuild;
 extern cpp11::function base_cast;
 extern cpp11::function base_assign;
 extern cpp11::function base_length;
+
+template<typename T>
+inline constexpr void recycle(T& v, T size) {
+  v = (++v == size) ? static_cast<T>(0) : v;
+}
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
@@ -428,6 +433,44 @@ inline bool is_whole_number(double x, double tolerance){
 
 inline bool address_equal(SEXP x, SEXP y){
   return r_address(x) == r_address(y);
+}
+
+template<typename... Args>
+inline SEXP make_r_list(Args... args){
+  constexpr int n = sizeof...(args);
+  SEXP out = SHIELD(new_vec(VECSXP, n));
+  int i = 0;
+  int dummy[] = {(SET_VECTOR_ELT(out, i++, args), 0)...};
+  static_cast<void>(dummy);
+  YIELD(1);
+  return out;
+}
+
+template<typename... Args>
+inline SEXP make_r_chars(Args... args){
+  constexpr int n = sizeof...(args);
+  SEXP out = SHIELD(new_vec(STRSXP, n));
+  int i = 0;
+  int dummy[] = {(SET_STRING_ELT(out, i++, args), 0)...};
+  static_cast<void>(dummy);
+  YIELD(1);
+  return out;
+}
+
+template<typename... Args>
+inline SEXP r_paste(SEXP sep, SEXP collapse, Args... args){
+  SEXP objs = SHIELD(make_r_list(args...));
+  SEXP out = SHIELD(cpp_paste(objs, sep, collapse));
+  YIELD(2);
+  return out;
+}
+
+template<typename... Args>
+inline SEXP r_combine(Args... args){
+  SEXP objs = SHIELD(make_r_list(args...));
+  SEXP out = SHIELD(cpp_c(objs));
+  YIELD(2);
+  return out;
 }
 
 // Defining custom R types

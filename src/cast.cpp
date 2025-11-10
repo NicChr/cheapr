@@ -95,7 +95,7 @@ SEXP cpp_common_template(SEXP x){
         if (!R_compute_identical(all_lvls, new_lvls, 0)){
           R_Reprotect(new_lvls = cpp_setdiff(new_lvls, all_lvls, false), new_lvls_idx);
           if (Rf_length(new_lvls) != 0){
-            R_Reprotect(all_lvls = c2(all_lvls, new_lvls), all_lvls_idx);
+            R_Reprotect(all_lvls = r_combine(all_lvls, new_lvls), all_lvls_idx);
           }
         }
       }
