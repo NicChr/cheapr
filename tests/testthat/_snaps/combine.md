@@ -28,8 +28,12 @@
               "H", "f"), class = "factor"), structure(1L, levels = c("f", 
               "G", "g"), class = "factor"), structure(3L, levels = c("f", 
               "G", "g"), class = "factor"), 10), l = structure(list(
-              value = c(FALSE, TRUE, NA, TRUE, TRUE, TRUE, FALSE, FALSE, 
-              FALSE, NA, NA, NA, NA, NA, NA, NA, TRUE, NA), y = c(NA, 
-              NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
-              NA, NA, "ok")), row.names = c(NA, -18L), class = "data.frame"))
+              value = structure(c(1L, 2L, 3L, 4L, 5L, 6L, 7L, 7L, 8L, 
+              9L, 3L, 10L, 12L, 3L, 12L, 14L, NA, NA), levels = c("FALSE", 
+              "TRUE", NA, "3", "1970-01-08", "1.5+3.6i", "1970-01-01", 
+              "1969-12-31 19:00:00", "e", "h", "H", "f", "G", "g"), class = "factor"), 
+              col_1 = c(NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+              NA, NA, NA, NA, NA, 10, NA), y = c(NA, NA, NA, NA, NA, 
+              NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, "ok")), row.names = c(NA, 
+          -18L), class = "data.frame"))
 

@@ -14,6 +14,7 @@ test_that("combining", {
   i <- factor(c("h", "f", NA), levels = c("h", "H", "f"))
   j <- factor(c("f", "g"), levels = c("f", "G", "g"))
   k <- list(10)
+  # l <- list(value = 123)
   l <- new_df(y = "ok")
 
   objs <- named_list(A, a, b, c, d, e, f, g, h, i, j, k, l)

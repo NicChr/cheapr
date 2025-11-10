@@ -207,11 +207,10 @@
           "POSIXt"), tzone = "UTC")), list(10)), list(list(structure(0, class = c("POSIXct", 
           "POSIXt"), tzone = "America/New_York")), list(10)), list(
               list(10), list(10)), list(structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame"), structure(list(value = list(
-              10)), row.names = c(NA, -1L), class = "data.frame")), 
-          list(structure(list(value = 1L), row.names = c(NA, -1L), class = "data.frame"), 
-              structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame")), 
-          list(structure(list(value = structure(2, class = "Date")), row.names = c(NA, 
+          -1L), class = "data.frame"), structure(list(col_1 = 10), row.names = c(NA, 
+          -1L), class = "data.frame")), list(structure(list(value = 1L), row.names = c(NA, 
+          -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
+          -1L), class = "data.frame")), list(structure(list(value = structure(2, class = "Date")), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
           -1L), class = "data.frame")), list(structure(list(value = FALSE), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
@@ -233,9 +232,9 @@
           list(structure(list(value = structure(0, class = c("POSIXct", 
           "POSIXt"), tzone = "America/New_York")), row.names = c(NA, 
           -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
-          -1L), class = "data.frame")), list(structure(list(value = list(
-              10)), row.names = c(NA, -1L), class = "data.frame"), 
-              structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame")), 
-          list(structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame"), 
-              structure(list(x = "ok"), row.names = c(NA, -1L), class = "data.frame")))
+          -1L), class = "data.frame")), list(structure(list(col_1 = 10), row.names = c(NA, 
+          -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
+          -1L), class = "data.frame")), list(structure(list(x = "ok"), row.names = c(NA, 
+          -1L), class = "data.frame"), structure(list(x = "ok"), row.names = c(NA, 
+          -1L), class = "data.frame")))
 

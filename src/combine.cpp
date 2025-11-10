@@ -699,25 +699,15 @@ SEXP cpp_df_c(SEXP x){
   R_ProtectWithIndex(df = cast<r_data_frame_t>(p_x[0], R_NilValue), &df_idx); ++NP;
   SET_VECTOR_ELT(frames, 0, df);
 
-  SEXP names;
-  PROTECT_INDEX names_idx;
-  R_ProtectWithIndex(names = get_names(df), &names_idx); ++NP;
-
   SEXP df_template = df;
 
-  SEXP ptypes, new_names, new_ptypes, new_cols,
-  temp_list, df_names, ptype_names;
-  PROTECT_INDEX
-  new_names_idx, ptypes_idx, new_ptypes_idx, new_cols_idx,
-  temp_list_idx, df_names_idx, ptype_names_idx;
+  SEXP new_names, temp_list, df_names, ptype_names;
+  PROTECT_INDEX new_names_idx, temp_list_idx, df_names_idx, ptype_names_idx;
 
-  R_ProtectWithIndex(ptypes = get_ptypes(df), &ptypes_idx); ++NP;
   R_ProtectWithIndex(new_names = R_NilValue, &new_names_idx); ++NP;
-  R_ProtectWithIndex(new_ptypes = R_NilValue, &new_ptypes_idx); ++NP;
-  R_ProtectWithIndex(new_cols = R_NilValue, &new_cols_idx); ++NP;
   R_ProtectWithIndex(temp_list = new_vec(VECSXP, 2), &temp_list_idx); ++NP;
   R_ProtectWithIndex(df_names = R_NilValue, &df_names_idx); ++NP;
-  R_ProtectWithIndex(ptype_names = R_NilValue, &ptype_names_idx); ++NP;
+  R_ProtectWithIndex(ptype_names = get_names(df), &ptype_names_idx); ++NP;
 
   // We do 2 passes
   // 1st pass: Check inputs are dfs and construct prototype list
@@ -725,188 +715,88 @@ SEXP cpp_df_c(SEXP x){
 
   int out_size = df_nrow(df);
 
+  bool na_padding = false;
+
   for (int i = 1; i < n_frames; ++i){
     R_Reprotect(df = cast<r_data_frame_t>(p_x[i], R_NilValue), df_idx);
-
     R_Reprotect(df_names = get_names(df), df_names_idx);
-    R_Reprotect(ptype_names = get_names(ptypes), ptype_names_idx);
 
     R_Reprotect(new_names = cpp_setdiff(
       df_names, ptype_names, false
     ), new_names_idx);
 
-    // Adjust prototype list
+    // Adjust prototype names
     if (Rf_length(new_names) > 0){
-      R_Reprotect(new_cols = cpp_df_select(df, new_names), new_cols_idx);
-      R_Reprotect(new_ptypes = get_ptypes(new_cols), new_ptypes_idx);
-      SET_VECTOR_ELT(temp_list, 0, ptypes);
-      SET_VECTOR_ELT(temp_list, 1, new_ptypes);
-      R_Reprotect(ptypes = cpp_list_c(temp_list), ptypes_idx);
-      SET_VECTOR_ELT(temp_list, 0, names);
+      na_padding = true;
+      SET_VECTOR_ELT(temp_list, 0, ptype_names);
       SET_VECTOR_ELT(temp_list, 1, new_names);
-      R_Reprotect(names = cpp_c(temp_list), names_idx);
-      set_names(ptypes, names);
+      R_Reprotect(ptype_names = cpp_c(temp_list), ptype_names_idx);
     }
     out_size += df_nrow(df);
     SET_VECTOR_ELT(frames, i, df);
   }
 
-  int n_cols = Rf_length(names);
+  int n_cols = Rf_length(ptype_names);
 
-  SEXP vec, name_locs;
-  PROTECT_INDEX vec_idx, name_locs_idx;
+  SEXP vec;
+  PROTECT_INDEX vec_idx;
   R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
-  R_ProtectWithIndex(name_locs = R_NilValue, &name_locs_idx); ++NP;
 
   SEXP out = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
   SEXP vectors = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
 
-  const SEXP *p_ptypes = VECTOR_PTR_RO(ptypes);
-  const SEXP *p_names = VECTOR_PTR_RO(names);
+  const SEXP *p_ptype_names = STRING_PTR_RO(ptype_names);
 
-  for (int j = 0; j < n_cols; ++j){
-    for (int i = 0; i < n_frames; ++i){
-      vec = get_list_element(p_frames[i], p_names[j]);
-
-      if (is_null(vec)){
-        R_Reprotect(vec = cpp_na_init(p_ptypes[j], df_nrow(p_frames[i])), vec_idx);
+  if (na_padding){
+    // Get archetype of each col
+    SEXP vec_archetypes = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
+    const SEXP *p_vec_archetypes = VECTOR_PTR_RO(vec_archetypes);
+    for (int j = 0; j < n_cols; ++j){
+      for (int i = 0; i < n_frames; ++i){
+        SET_VECTOR_ELT(vectors, i, get_list_element(p_frames[i], p_ptype_names[j]));
       }
-      SET_VECTOR_ELT(vectors, i, vec);
+      SET_VECTOR_ELT(vec_archetypes, j, cpp_common_template(vectors));
     }
-    SET_VECTOR_ELT(out, j, cpp_c(vectors));
+    // Combine all cols
+    for (int j = 0; j < n_cols; ++j){
+      for (int i = 0; i < n_frames; ++i){
+        vec = get_list_element(p_frames[i], p_ptype_names[j]);
+        if (is_null(vec)){
+          R_Reprotect(vec = cpp_na_init(p_vec_archetypes[j], df_nrow(p_frames[i])), vec_idx);
+        }
+        SET_VECTOR_ELT(vectors, i, vec);
+      }
+      SET_VECTOR_ELT(out, j, combine_internal(vectors, out_size, p_vec_archetypes[j]));
+    }
+  } else {
+    // Simply combine rows with no NA padding
+    for (int j = 0; j < n_cols; ++j){
+      for (int i = 0; i < n_frames; ++i){
+        SET_VECTOR_ELT(vectors, i, get_list_element(p_frames[i], p_ptype_names[j]));
+      }
+      SET_VECTOR_ELT(out, j, cpp_c(vectors));
+    }
   }
+
+
+  // for (int j = 0; j < n_cols; ++j){
+  //   for (int i = 0; i < n_frames; ++i){
+  //     vec = get_list_element(p_frames[i], p_ptype_names[j]);
+  //     if (is_null(vec)){
+  //       R_Reprotect(vec = init<r_integer_t>(df_nrow(p_frames[i]), true), vec_idx);
+  //     }
+  //     SET_VECTOR_ELT(vectors, i, vec);
+  //   }
+  //   SET_VECTOR_ELT(out, j, cpp_c(vectors));
+  // }
+
   set_list_as_df(out);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
-  set_names(out, names);
+  set_names(out, ptype_names);
   SHIELD(out = rebuild(out, df_template, false)); ++NP;
   YIELD(NP);
   return out;
 }
-// SEXP cpp_df_c(SEXP x){
-//
-//   if (TYPEOF(x) != VECSXP){
-//     Rf_error("`x` must be a list of data frames");
-//   }
-//
-//   int n_frames = Rf_length(x);
-//
-//   if (n_frames == 0) return R_NilValue;
-//
-//   int32_t NP = 0;
-//
-//   // Since we are casting potential non-dfs to dfs we need a new list
-//   SEXP frames = SHIELD(init<r_list_t>(n_frames, false)); ++NP;
-//
-//   const SEXP *p_x = VECTOR_PTR_RO(x);
-//   const SEXP *p_frames = VECTOR_PTR_RO(frames);
-//
-//   SEXP df;
-//   PROTECT_INDEX df_idx;
-//   R_ProtectWithIndex(df = cast<r_data_frame_t>(p_x[0], R_NilValue), &df_idx); ++NP;
-//   SET_VECTOR_ELT(frames, 0, df);
-//
-//   SEXP df_template = df;
-//
-//   SEXP new_names,
-//   old_names,
-//   temp_list, df_names, ptype_names;
-//   PROTECT_INDEX
-//   new_names_idx, old_names_idx,
-//   temp_list_idx, df_names_idx, ptype_names_idx;
-//
-//   R_ProtectWithIndex(new_names = R_NilValue, &new_names_idx); ++NP;
-//   R_ProtectWithIndex(old_names = R_NilValue, &old_names_idx); ++NP;
-//   R_ProtectWithIndex(temp_list = new_vec(VECSXP, 2), &temp_list_idx); ++NP;
-//   R_ProtectWithIndex(df_names = R_NilValue, &df_names_idx); ++NP;
-//   R_ProtectWithIndex(ptype_names = get_names(df), &ptype_names_idx); ++NP;
-//
-//   // Initialise common R types
-//   std::vector<r_type> archetypes(static_cast<int>(Rf_length(df)));
-//   for (uint32_t i = 0; i < archetypes.size(); ++i){
-//     archetypes[i] = get_r_type(VECTOR_ELT(df, i));
-//   }
-//
-//   // We do 2 passes
-//   // 1st pass: Check inputs are dfs and construct prototype list
-//   // 2nd pass: initialise data frame vecs (if need be) and combine simultaneously
-//
-//   int out_size = df_nrow(df);
-//
-//   for (int i = 1; i < n_frames; ++i){
-//     R_Reprotect(df = cast<r_data_frame_t>(p_x[i], R_NilValue), df_idx);
-//     R_Reprotect(df_names = get_names(df), df_names_idx);
-//
-//     R_Reprotect(new_names = cpp_setdiff(
-//       df_names, ptype_names, false
-//     ), new_names_idx);
-//
-//     R_Reprotect(old_names = cpp_intersect(
-//       ptype_names, df_names, false
-//     ), old_names_idx);
-//
-//     // Adjust prototype list
-//     if (Rf_length(new_names) > 0){
-//       SET_VECTOR_ELT(temp_list, 0, ptype_names);
-//       SET_VECTOR_ELT(temp_list, 1, new_names);
-//       R_Reprotect(ptype_names = cpp_c(temp_list), ptype_names_idx);
-//       for (int j = 0; j < Rf_length(new_names); ++j){
-//         archetypes.push_back(get_r_type(get_list_element(df, STRING_ELT(new_names, j))));
-//       }
-//     }
-//
-//     // Accumulating common archetype
-//     // We are using cpp_intersect(ptype_names, names(df)) above
-//     // and hence the order should be safe here
-//     for (int k = 0; k < Rf_length(old_names); ++k){
-//       archetypes[k] = common_type(archetypes[k], get_r_type(get_list_element(df, STRING_ELT(ptype_names, k))));
-//     }
-//
-//     out_size += df_nrow(df);
-//     SET_VECTOR_ELT(frames, i, df);
-//   }
-//
-//   int n_cols = Rf_length(ptype_names);
-//
-//   SEXP vec;
-//   PROTECT_INDEX vec_idx;
-//   R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
-//
-//   SEXP out = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
-//   SEXP vectors = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
-//
-//   // SEXP vec_archetype;
-//   // PROTECT_INDEX vec_archetype_idx;
-//   // R_ProtectWithIndex(vec_archetype = R_NilValue, &vec_archetype_idx); ++NP;
-//
-//   SEXP vec_archetypes = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
-//   const SEXP *p_vec_archetypes = VECTOR_PTR_RO(vec_archetypes);
-//   const SEXP *p_ptype_names = STRING_PTR_RO(ptype_names);
-//
-//   // Get archetype for each col
-//   for (int j = 0; j < n_cols; ++j){
-//     for (int i = 0; i < n_frames; ++i){
-//       SET_VECTOR_ELT(vectors, i, get_list_element(p_frames[i], p_ptype_names[j]));
-//     }
-//     SET_VECTOR_ELT(vec_archetypes, j, cpp_common_template(vectors));
-//   }
-//
-//   for (int j = 0; j < n_cols; ++j){
-//     for (int i = 0; i < n_frames; ++i){
-//       vec = get_list_element(p_frames[i], p_ptype_names[j]);
-//       if (is_null(vec)){
-//         R_Reprotect(vec = cpp_rep_len(p_vec_archetypes[j], df_nrow(p_frames[i])), vec_idx);
-//       }
-//       SET_VECTOR_ELT(vectors, i, vec);
-//     }
-//     SET_VECTOR_ELT(out, j, combine_internal(vectors, out_size, p_vec_archetypes[j]));
-//   }
-//   set_list_as_df(out);
-//   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
-//   set_names(out, ptype_names);
-//   SHIELD(out = rebuild(out, df_template, false)); ++NP;
-//   YIELD(NP);
-//   return out;
-// }
 
 // Helper to concatenate data frames by col
 
