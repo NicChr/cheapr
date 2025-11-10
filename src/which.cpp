@@ -582,15 +582,10 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_na[k3++] = i + 1;
       }
     }
-    SEXP out = SHIELD(new_vec(VECSXP, 3));
-    SET_VECTOR_ELT(out, 0, true_locs);
-    SET_VECTOR_ELT(out, 1, false_locs);
-    SET_VECTOR_ELT(out, 2, na_locs);
-
-    SEXP names = SHIELD(new_vec(STRSXP, 3));
-    SET_STRING_ELT(names, 0, make_utf8_char("true"));
-    SET_STRING_ELT(names, 1, make_utf8_char("false"));
-    SET_STRING_ELT(names, 2, make_utf8_char("na"));
+    SEXP out = SHIELD(make_r_list(true_locs, false_locs, na_locs));
+    SEXP names = SHIELD(make_r_chars(
+      make_utf8_char("true"), make_utf8_char("false"), make_utf8_char("na")
+    ));
     set_names(out, names);
 
     YIELD(5);
@@ -617,15 +612,10 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_na[k3++] = i + 1;
       }
     }
-    SEXP out = SHIELD(new_vec(VECSXP, 3));
-    SET_VECTOR_ELT(out, 0, true_locs);
-    SET_VECTOR_ELT(out, 1, false_locs);
-    SET_VECTOR_ELT(out, 2, na_locs);
-
-    SEXP names = SHIELD(new_vec(STRSXP, 3));
-    SET_STRING_ELT(names, 0, make_utf8_char("true"));
-    SET_STRING_ELT(names, 1, make_utf8_char("false"));
-    SET_STRING_ELT(names, 2, make_utf8_char("na"));
+    SEXP out = SHIELD(make_r_list(true_locs, false_locs, na_locs));
+    SEXP names = SHIELD(make_r_chars(
+      make_utf8_char("true"), make_utf8_char("false"), make_utf8_char("na")
+    ));
     set_names(out, names);
 
     YIELD(5);

@@ -646,21 +646,14 @@ inline SEXP init<r_integer_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_integer64_t>(R_xlen_t n, bool with_na) {
+  SEXP out = SHIELD(new_vec(REALSXP, n));
   if (with_na){
-    SEXP out = SHIELD(new_vec(REALSXP, 0));
-    SHIELD(out = cpp_na_init(out, n));
-    SHIELD(out = cpp_numeric_to_int64(out));
-    YIELD(3);
-    return out;
-  } else {
-    SEXP out = SHIELD(new_vec(REALSXP, n));
-    double* RESTRICT p_out = REAL(out);
-    std::fill(p_out, p_out + n, NA_REAL);
-    SHIELD(out = cpp_numeric_to_int64(out));
-    YIELD(2);
-    return out;
+    int64_t* RESTRICT p_out = INTEGER64_PTR(out);
+    std::fill(p_out, p_out + n, NA_INTEGER64);
   }
-
+  Rf_classgets(out, make_utf8_str("integer64"));
+  YIELD(1);
+  return out;
 }
 
 template<>
@@ -736,9 +729,7 @@ template<>
 inline SEXP init<r_posixt_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(init<r_numeric_t>(n, with_na));
   SEXP tz = SHIELD(new_vec(STRSXP, 1));
-  SEXP cls = SHIELD(new_vec(STRSXP, 2));
-  SET_STRING_ELT(cls, 0, make_utf8_char("POSIXct"));
-  SET_STRING_ELT(cls, 1, make_utf8_char("POSIXt"));
+  SEXP cls = SHIELD(make_r_chars(make_utf8_char("POSIXct"), make_utf8_char("POSIXt")));
   Rf_classgets(out, cls);
   Rf_setAttrib(out, install_utf8("tzone"), tz);
   YIELD(3);
@@ -753,21 +744,6 @@ inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
   YIELD(3);
   return out;
 }
-
-// template<>
-// inline SEXP init<r_vctrs_rcrd_t>(R_xlen_t n, bool with_na) {
-//   SEXP out = SHIELD(new_vec(VECSXP, 0));
-//   SEXP cls = SHIELD(new_vec(STRSXP, 3));
-//   SEXP nms = SHIELD(new_vec(STRSXP, 0));
-//   SET_STRING_ELT(cls, 0, make_utf8_char("cheapr_rcrd"));
-//   SET_STRING_ELT(cls, 1, make_utf8_char("vctrs_rcrd"));
-//   SET_STRING_ELT(cls, 2, make_utf8_char("vctrs_vctr"));
-//   set_names(out, nms);
-//   Rf_classgets(out, cls);
-//   YIELD(3);
-//   return out;
-//   // Rf_error("Don't know how to initialise an object of type `<vctrs_rcrd>`");
-// }
 
 template<>
 inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
@@ -1001,11 +977,8 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
   } else if (Rf_inherits(x, "Date") && Rf_inherits(y, "POSIXct")){
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(new_vec(REALSXP, n));
-    SEXP out_class = SHIELD(new_vec(STRSXP, 2));
+    SEXP out_class = SHIELD(make_r_chars(make_utf8_char("POSIXct"), make_utf8_char("POSIXt")));
     SEXP out_tzone = SHIELD(Rf_getAttrib(y, install_utf8("tzone")));
-
-    SET_STRING_ELT(out_class, 0, make_utf8_char("POSIXct"));
-    SET_STRING_ELT(out_class, 1, make_utf8_char("POSIXt"));
     Rf_classgets(out, out_class);
     Rf_setAttrib(out, install_utf8("tzone"), out_tzone);
 
@@ -1026,10 +999,8 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     return out;
   } else if (!Rf_isObject(x)){
     SEXP out = SHIELD(coerce_vec(x, REALSXP));
-    SEXP out_class = SHIELD(new_vec(STRSXP, 2));
+    SEXP out_class = SHIELD(make_r_chars(make_utf8_char("POSIXct"), make_utf8_char("POSIXt")));
     SEXP out_tzone = SHIELD(new_vec(STRSXP, 1));
-    SET_STRING_ELT(out_class, 0, make_utf8_char("POSIXct"));
-    SET_STRING_ELT(out_class, 1, make_utf8_char("POSIXt"));
     Rf_classgets(out, out_class);
     Rf_setAttrib(out, install_utf8("tzone"), out_tzone);
     SHIELD(out = cast<r_posixt_t>(out, y)); // To set the correct attributes

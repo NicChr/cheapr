@@ -813,12 +813,8 @@ SEXP cpp_as_df(SEXP x){
   } else if (Rf_isArray(x)){
     return matrix_to_df(x);
   } else if (is_simple_atomic_vec2(x)){
-    SEXP out = SHIELD(init<r_list_t>(2, false));
-    SEXP names = SHIELD(init<r_character_t>(2, false));
-    SET_STRING_ELT(names, 0, make_utf8_char("name"));
-    SET_STRING_ELT(names, 1, make_utf8_char("value"));
-    SET_VECTOR_ELT(out, 0, get_names(x));
-    SET_VECTOR_ELT(out, 1, x);
+    SEXP out = SHIELD(make_r_list(get_names(x), x));
+    SEXP names = SHIELD(make_r_chars(make_utf8_char("name"), make_utf8_char("value")));
     set_names(out, names);
     SHIELD(out = cpp_new_df(out, R_NilValue, false, false));
     YIELD(3);

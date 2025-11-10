@@ -324,13 +324,11 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     }
   }
 
-  SEXP out = SHIELD(new_vec(VECSXP, 3)); ++NP;
-
-  // There are the `Rf_Scalar` shortcuts BUT R crashes sometimes when
-  // using the scalar logical shortcuts so I avoid it
-  SET_VECTOR_ELT(out, 0, clean_indices);
-  SET_VECTOR_ELT(out, 1, Rf_ScalarReal(is_na_int64(out_size) ? NA_REAL : static_cast<double>(out_size)));
-  SET_VECTOR_ELT(out, 2, scalar_lgl(check_indices));
+  SEXP out = SHIELD(make_r_list(
+    clean_indices,
+    Rf_ScalarReal(is_na_int64(out_size) ? NA_REAL : static_cast<double>(out_size)),
+    scalar_lgl(check_indices)
+  )); ++NP;
 
   YIELD(NP);
   return out;

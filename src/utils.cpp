@@ -461,10 +461,11 @@ SEXP cpp_lgl_count(SEXP x){
   R_xlen_t nna = n - ntrue - nfalse;
 
   SEXP out = SHIELD(new_vec(n > INTEGER_MAX ? REALSXP : INTSXP, 3));
-  SEXP names = SHIELD(new_vec(STRSXP, 3));
-  SET_STRING_ELT(names, 0, make_utf8_char("true"));
-  SET_STRING_ELT(names, 1, make_utf8_char("false"));
-  SET_STRING_ELT(names, 2, make_utf8_char("na"));
+  SEXP names = SHIELD(make_r_chars(
+    make_utf8_char("true"),
+    make_utf8_char("false"),
+    make_utf8_char("na")
+  ));
 
   if (n > INTEGER_MAX){
     SET_REAL_ELT(out, 0, static_cast<double>(ntrue));
