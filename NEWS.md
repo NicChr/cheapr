@@ -10,7 +10,7 @@ value replacement.
 - New functions `cast`, `cast_common`, `archetype`, `archetype_common`, `r_type`
 and `r_type_common` to help with fast type-stable coercion.
 
-- `paste_` as a fast alternative tp `base::paste`.
+- `paste_` as a fast alternative to `base::paste`.
 
 - New function `na_init` to help with fast initialisation of vectors based off
 a template vector.
@@ -49,8 +49,8 @@ the RHS was greater than 1.
 correct method. One can still define a subset method for custom objects 
 via `[` which `sset` falls back on when it can't find an appropriate method.
 
-- Combining vectors via `c_` has been internally made simpler, 
-utilising type-stable casting.
+- Combining vectors via `c_` has been internally made simpler, faster and 
+utilises type-stable common-casting.
 
 - `if_else_` has been re-written mostly in C/C++ and should be faster.
 
@@ -74,11 +74,8 @@ for a long while.
 
 ### Breaking changes
 
-- Matrices and arrays are converted to bare vectors when using data frames via
-`new_df` and other data frame constructors.
-
-- Bare lists of length `n` are now always converted to data frames of nrow `n`
-via `as_df`.
+- Matrices are converted to data frames and arrays are converted to bare vectors 
+when using data frames via `new_df` and other data frame constructors.
 
 - `enframe_()`, `deframe_()` and `cut_numeric()` have been removed as they have
 been deprecated for a while.
