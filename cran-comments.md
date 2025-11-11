@@ -1,13 +1,19 @@
-* Updated to version 1.3.2
+Updated to version 1.4.0
 
-* A bug where `sset_col` sometimes crashed R has been fixed.
+Regarding the CRAN check note:
+
+This package makes use of the non-API call to DATAPTR in limited areas
+where performance is crucial and its usage is deemed safe. The macros 
+'UNSAFE_STRING_PTR' and 'UNSAFE_VECTOR_PTR' are aliases for DATAPTR and
+are named as such to signal that these pointers are to be used with care.
+I hope that this is not an issue for the purposes of publishing to CRAN.
 
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
  * We saw 0 new problems
  * We failed to check 0 packages
 
-* Checked and passed using rhub v2.0.0 in the following environments:
+* Checked and passed using rhub v2.0.1 in the following environments:
 
 ## Test environments
 - R-hubv2 windows (R-devel)

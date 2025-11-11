@@ -1,4 +1,4 @@
-# cheapr (development version)
+# cheapr 1.4.0
 
 ### New features 
 
