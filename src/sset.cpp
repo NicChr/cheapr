@@ -324,10 +324,13 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     }
   }
 
+  SEXP r_out_size = SHIELD(Rf_ScalarReal(is_na_int64(out_size) ? NA_REAL : static_cast<double>(out_size))); ++NP;
+  SEXP r_check_indices = SHIELD(scalar_lgl(check_indices)); ++NP;
+
   SEXP out = SHIELD(make_r_list(
     clean_indices,
-    Rf_ScalarReal(is_na_int64(out_size) ? NA_REAL : static_cast<double>(out_size)),
-    scalar_lgl(check_indices)
+    r_out_size,
+    r_check_indices
   )); ++NP;
 
   YIELD(NP);
