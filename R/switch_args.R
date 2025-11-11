@@ -8,6 +8,10 @@
 #' functions that take a variable number of arguments.\cr
 #' See examples for info.
 #'
+#' @param ... Arguments passed individually.
+#' @param .args Alternative list of arguments.
+#' Either `...` or `.args` can be used, not both.
+#'
 #' @details
 #' Using `switch_args` simply allows the user to avoid having to use
 #' `do.call(fn, args)`. This can be advantageous for developers who write

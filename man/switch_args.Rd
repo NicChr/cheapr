@@ -6,6 +6,12 @@
 \usage{
 switch_args(..., .args = NULL)
 }
+\arguments{
+\item{...}{Arguments passed individually.}
+
+\item{.args}{Alternative list of arguments.
+Either \code{...} or \code{.args} can be used, not both.}
+}
 \value{
 A list of arguments
 }
