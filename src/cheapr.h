@@ -759,7 +759,10 @@ inline void check_casted_length(SEXP x, SEXP out){
   if (vec_length(x) != vec_length(out)){
     Rf_error(
       "Bad cast from type %s to type %s. \n`vector_length(x)` %lld doesn't match returned length of %lld",
-      r_type_char(x), r_type_char(out), vec_length(x), vec_length(out)
+      r_type_char(x),
+      r_type_char(out),
+      static_cast<long long int>(vec_length(x)),
+      static_cast<long long int>(vec_length(out))
     );
   }
 }
