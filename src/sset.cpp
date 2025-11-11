@@ -1329,6 +1329,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     cols = SHIELD(cpp_which_(locs, false)); ++NP;
     n_locs = Rf_length(cols);
     check = false;
+    break;
   }
   default: {
     // Catch-all make sure cols is an int vector
