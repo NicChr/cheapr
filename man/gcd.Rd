@@ -120,4 +120,5 @@ x <- rnorm(10^5)
 gcd(x)
 gcd(x, round = FALSE)
 mark(gcd(x))
+
 }

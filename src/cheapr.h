@@ -260,10 +260,13 @@ extern cpp11::function base_cast;
 extern cpp11::function base_assign;
 extern cpp11::function base_length;
 
+// Recycle loop indices
 template<typename T>
 inline constexpr void recycle(T& v, T size) {
   v = (++v == size) ? static_cast<T>(0) : v;
 }
+
+// UTF-8 helpers
 
 inline const char* utf8_char(SEXP x){
   return Rf_translateCharUTF8(x);
@@ -446,12 +449,13 @@ inline SEXP make_r_list(Args... args){
   return out;
 }
 
+// Make a character vec from const char ptrs
 template<typename... Args>
 inline SEXP make_r_chars(Args... args){
   constexpr int n = sizeof...(args);
   SEXP out = SHIELD(new_vec(STRSXP, n));
   int i = 0;
-  int dummy[] = {(SET_STRING_ELT(out, i++, args), 0)...};
+  int dummy[] = {(SET_STRING_ELT(out, i++, make_utf8_char(args)), 0)...};
   static_cast<void>(dummy);
   YIELD(1);
   return out;
@@ -729,7 +733,7 @@ template<>
 inline SEXP init<r_posixt_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(init<r_numeric_t>(n, with_na));
   SEXP tz = SHIELD(new_vec(STRSXP, 1));
-  SEXP cls = SHIELD(make_r_chars(make_utf8_char("POSIXct"), make_utf8_char("POSIXt")));
+  SEXP cls = SHIELD(make_r_chars("POSIXct", "POSIXt"));
   Rf_classgets(out, cls);
   Rf_setAttrib(out, install_utf8("tzone"), tz);
   YIELD(3);
@@ -977,7 +981,7 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
   } else if (Rf_inherits(x, "Date") && Rf_inherits(y, "POSIXct")){
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(new_vec(REALSXP, n));
-    SEXP out_class = SHIELD(make_r_chars(make_utf8_char("POSIXct"), make_utf8_char("POSIXt")));
+    SEXP out_class = SHIELD(make_r_chars("POSIXct", "POSIXt"));
     SEXP out_tzone = SHIELD(Rf_getAttrib(y, install_utf8("tzone")));
     Rf_classgets(out, out_class);
     Rf_setAttrib(out, install_utf8("tzone"), out_tzone);
@@ -999,7 +1003,7 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     return out;
   } else if (!Rf_isObject(x)){
     SEXP out = SHIELD(coerce_vec(x, REALSXP));
-    SEXP out_class = SHIELD(make_r_chars(make_utf8_char("POSIXct"), make_utf8_char("POSIXt")));
+    SEXP out_class = SHIELD(make_r_chars("POSIXct", "POSIXt"));
     SEXP out_tzone = SHIELD(new_vec(STRSXP, 1));
     Rf_classgets(out, out_class);
     Rf_setAttrib(out, install_utf8("tzone"), out_tzone);

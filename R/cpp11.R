@@ -76,12 +76,8 @@ cpp_if_else <- function(condition, yes, no, na) {
   .Call(`_cheapr_cpp_if_else`, condition, yes, no, na)
 }
 
-cpp_gcd2 <- function(x, y, tol, na_rm) {
-  .Call(`_cheapr_cpp_gcd2`, x, y, tol, na_rm)
-}
-
-cpp_lcm2 <- function(x, y, tol, na_rm) {
-  .Call(`_cheapr_cpp_lcm2`, x, y, tol, na_rm)
+lcm2 <- function(x, y, tol, na_rm) {
+  .Call(`_cheapr_lcm2`, x, y, tol, na_rm)
 }
 
 cpp_gcd <- function(x, tol, na_rm, break_early, round) {

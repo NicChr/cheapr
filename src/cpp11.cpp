@@ -139,17 +139,10 @@ extern "C" SEXP _cheapr_cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na) 
   END_CPP11
 }
 // gcd.cpp
-double cpp_gcd2(double x, double y, double tol, bool na_rm);
-extern "C" SEXP _cheapr_cpp_gcd2(SEXP x, SEXP y, SEXP tol, SEXP na_rm) {
+double lcm2(double x, double y, double tol, bool na_rm);
+extern "C" SEXP _cheapr_lcm2(SEXP x, SEXP y, SEXP tol, SEXP na_rm) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_gcd2(cpp11::as_cpp<cpp11::decay_t<double>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(y), cpp11::as_cpp<cpp11::decay_t<double>>(tol), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
-  END_CPP11
-}
-// gcd.cpp
-double cpp_lcm2(double x, double y, double tol, bool na_rm);
-extern "C" SEXP _cheapr_cpp_lcm2(SEXP x, SEXP y, SEXP tol, SEXP na_rm) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_lcm2(cpp11::as_cpp<cpp11::decay_t<double>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(y), cpp11::as_cpp<cpp11::decay_t<double>>(tol), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
+    return cpp11::as_sexp(lcm2(cpp11::as_cpp<cpp11::decay_t<double>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(y), cpp11::as_cpp<cpp11::decay_t<double>>(tol), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
   END_CPP11
 }
 // gcd.cpp
@@ -824,7 +817,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_fixed_width_breaks",      (DL_FUNC) &_cheapr_cpp_fixed_width_breaks,      6},
     {"_cheapr_cpp_format_numeric_as_int64", (DL_FUNC) &_cheapr_cpp_format_numeric_as_int64, 1},
     {"_cheapr_cpp_gcd",                     (DL_FUNC) &_cheapr_cpp_gcd,                     5},
-    {"_cheapr_cpp_gcd2",                    (DL_FUNC) &_cheapr_cpp_gcd2,                    4},
     {"_cheapr_cpp_gcd2_vectorised",         (DL_FUNC) &_cheapr_cpp_gcd2_vectorised,         4},
     {"_cheapr_cpp_group_counts",            (DL_FUNC) &_cheapr_cpp_group_counts,            2},
     {"_cheapr_cpp_group_starts",            (DL_FUNC) &_cheapr_cpp_group_starts,            2},
@@ -843,7 +835,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_lag2",                    (DL_FUNC) &_cheapr_cpp_lag2,                    6},
     {"_cheapr_cpp_lag_sequence",            (DL_FUNC) &_cheapr_cpp_lag_sequence,            3},
     {"_cheapr_cpp_lcm",                     (DL_FUNC) &_cheapr_cpp_lcm,                     3},
-    {"_cheapr_cpp_lcm2",                    (DL_FUNC) &_cheapr_cpp_lcm2,                    4},
     {"_cheapr_cpp_lcm2_vectorised",         (DL_FUNC) &_cheapr_cpp_lcm2_vectorised,         4},
     {"_cheapr_cpp_lead_sequence",           (DL_FUNC) &_cheapr_cpp_lead_sequence,           3},
     {"_cheapr_cpp_lengths",                 (DL_FUNC) &_cheapr_cpp_lengths,                 2},
@@ -911,6 +902,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
+    {"_cheapr_lcm2",                        (DL_FUNC) &_cheapr_lcm2,                        4},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}

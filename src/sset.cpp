@@ -1297,12 +1297,15 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   SEXP cols;
   int loc_type = TYPEOF(locs);
 
-  if (loc_type == NILSXP){
+  switch(loc_type){
+  case NILSXP: {
     // If NULL then select all cols
     cols = SHIELD(cpp_seq_len(n_cols)); ++NP;
     n_locs = n_cols;
     check = false;
-  } else if (loc_type == STRSXP){
+    break;
+  }
+  case STRSXP: {
     cols = SHIELD(match(names, locs, NA_INTEGER)); ++NP;
     int *match_locs = INTEGER(cols);
     if (cpp_any_na(cols, false)){
@@ -1315,18 +1318,23 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
       }
     }
     check = false;
-  } else if (loc_type == LGLSXP){
+    break;
+  }
+  case LGLSXP: {
     // If logical then find locs using `which_()`
     if (Rf_length(locs) != n_cols){
-      YIELD(NP);
-      Rf_error("`length(j)` must match `ncol(x)` when `j` is a logical vector");
-    }
+    YIELD(NP);
+    Rf_error("`length(j)` must match `ncol(x)` when `j` is a logical vector");
+  }
     cols = SHIELD(cpp_which_(locs, false)); ++NP;
     n_locs = Rf_length(cols);
     check = false;
-  } else {
+  }
+  default: {
     // Catch-all make sure cols is an int vector
-    cols = SHIELD(coerce_vec(locs, INTSXP)); ++NP;
+    cols = SHIELD(cast<r_integer_t>(locs, R_NilValue)); ++NP;
+    break;
+  }
   }
 
   // Negative subscripting
@@ -1504,11 +1512,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
         SHIELD(out = cheapr_sset(x, i, j)); ++NP;
       } else {
         SEXP usual_args = SHIELD(make_r_list(x, i, j)); ++NP;
-        SEXP arg_names = SHIELD(make_r_chars(
-          make_utf8_char("x"),
-          make_utf8_char("i"),
-          make_utf8_char("j")
-        )); ++NP;
+        SEXP arg_names = SHIELD(make_r_chars("x", "i", "j")); ++NP;
         set_names(usual_args, arg_names);
 
         // Combine all args into one list
@@ -1529,11 +1533,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       SHIELD(out = cheapr_sset(x, i, j)); ++NP;
     } else {
       SEXP usual_args = SHIELD(make_r_list(x, i, j)); ++NP;
-      SEXP arg_names = SHIELD(make_r_chars(
-        make_utf8_char("x"),
-        make_utf8_char("i"),
-        make_utf8_char("j")
-      )); ++NP;
+      SEXP arg_names = SHIELD(make_r_chars("x", "i", "j")); ++NP;
       set_names(usual_args, arg_names);
 
       // Combine all args into one list

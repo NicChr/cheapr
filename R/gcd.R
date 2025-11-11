@@ -91,6 +91,7 @@
 #' gcd(x)
 #' gcd(x, round = FALSE)
 #' mark(gcd(x))
+#'
 #' @rdname gcd
 #' @export
 gcd <- function(x, tol = sqrt(.Machine$double.eps),

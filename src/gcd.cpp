@@ -11,22 +11,21 @@ template<typename T> T cpp_sign(T x) {
   return (x > 0) - (x < 0);
 }
 
-[[cpp11::register]]
-double cpp_gcd2(double x, double y, double tol, bool na_rm){
-  double zero = 0.0;
-  if (!na_rm && ( !(x == x) || !(y == y) )){
+double gcd2(double x, double y, double tol, bool na_rm){
+
+  if (!na_rm && ( is_na_dbl(x) || is_na_dbl(y))){
     return NA_REAL;
   }
   // GCD(0,0)=0
-  if (x == zero && y == zero){
-    return zero;
+  if (x == 0.0 && y == 0.0){
+    return 0.0;
   }
   // GCD(a,0)=a
-  if (x == zero){
+  if (x == 0.0){
     return y;
   }
   // GCD(a,0)=a
-  if (y == zero){
+  if (y == 0.0){
     return x;
   }
   double r;
@@ -39,34 +38,33 @@ double cpp_gcd2(double x, double y, double tol, bool na_rm){
   return x;
 }
 
-int cpp_gcd2_int(int x, int y, bool na_rm){
-  int zero = 0;
-  bool has_na = ( x == NA_INTEGER || y == NA_INTEGER );
+int gcd2_int(int x, int y, bool na_rm){
+  bool has_na = is_na_int(x) || is_na_int(y);
   if (!na_rm && has_na){
     return NA_INTEGER;
   }
   if (na_rm && has_na){
-    if (x == NA_INTEGER){
+    if (is_na_int(x)){
       return y;
     } else {
       return x;
     }
   }
   // GCD(0,0)=0
-  if (x == zero && y == zero){
-    return zero;
+  if (x == 0 && y == 0){
+    return 0;
   }
   // GCD(a,0)=a
-  if (x == zero){
+  if (x == 0){
     return y;
   }
   // GCD(a,0)=a
-  if (y == zero){
+  if (y == 0){
     return x;
   }
   int r;
   // Taken from number theory lecture notes
-  while(y != zero){
+  while(y != 0){
     r = x % y;
     x = y;
     y = r;
@@ -74,7 +72,7 @@ int cpp_gcd2_int(int x, int y, bool na_rm){
   return x;
 }
 
-int64_t cpp_gcd2_int64(int64_t x, int64_t y, bool na_rm){
+int64_t gcd2_int64(int64_t x, int64_t y, bool na_rm){
   int64_t zero = 0;
   bool has_na = ( x == NA_INTEGER64 || y == NA_INTEGER64 );
   if (!na_rm && has_na){
@@ -110,17 +108,17 @@ int64_t cpp_gcd2_int64(int64_t x, int64_t y, bool na_rm){
 }
 
 [[cpp11::register]]
-double cpp_lcm2(double x, double y, double tol, bool na_rm){
+double lcm2(double x, double y, double tol, bool na_rm){
   if (na_rm && ( !(x == x) || !(y == y) )){
     return ( !(x == x) ? y : x);
   }
   if (x == 0.0 && y == 0.0){
     return 0.0;
   }
-  return ( std::fabs(x) / cpp_gcd2(x, y, tol, true) ) * std::fabs(y);
+  return ( std::fabs(x) / gcd2(x, y, tol, true) ) * std::fabs(y);
 }
 
-int64_t cpp_lcm2_int64(int64_t x, int64_t y, bool na_rm){
+int64_t lcm2_int64(int64_t x, int64_t y, bool na_rm){
   int num_nas = (x == NA_INTEGER64) + (y == NA_INTEGER64);
   if ( num_nas >= 1 ){
     if (na_rm && num_nas == 1){
@@ -138,7 +136,7 @@ int64_t cpp_lcm2_int64(int64_t x, int64_t y, bool na_rm){
   // res can be an int because the gcd ensures the denom
   // divides x by a whole number
 
-  int64_t res = std::llabs(x) / cpp_gcd2_int64(x, y, false);
+  int64_t res = std::llabs(x) / gcd2_int64(x, y, false);
   if (y != 0 && (std::llabs(res) > (INTEGER64_MAX / std::llabs(y)))){
     Rf_error("64-bit integer overflow, please use doubles");
   } else {
@@ -146,7 +144,7 @@ int64_t cpp_lcm2_int64(int64_t x, int64_t y, bool na_rm){
   }
 }
 
-double cpp_lcm2_int(int x, int y, bool na_rm){
+double lcm2_int(int x, int y, bool na_rm){
   int num_nas = (x == NA_INTEGER) + (y == NA_INTEGER);
   if ( num_nas >= 1 ){
     if (na_rm && num_nas == 1){
@@ -158,7 +156,7 @@ double cpp_lcm2_int(int x, int y, bool na_rm){
   if (x == 0 && y == 0){
     return 0.0;
   }
-  return ( std::fabs(x) / cpp_gcd2_int(x, y, false) ) * std::fabs(y);
+  return ( std::fabs(x) / gcd2_int(x, y, false) ) * std::fabs(y);
 }
 
 [[cpp11::register]]
@@ -176,16 +174,12 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     SEXP out = SHIELD(new_vec(INTSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
       int gcd = p_x[0];
-      int agcd;
       for (R_xlen_t i = 1; i < n; ++i) {
-        gcd = cpp_gcd2_int(gcd, p_x[i], na_rm);
-        if (gcd == NA_INTEGER){
+        gcd = gcd2_int(gcd, p_x[i], na_rm);
+        if (is_na_int(gcd)){
           if (!na_rm) break;
-        } else {
-          agcd = std::abs(gcd);
-          if (agcd > 0 && agcd == 1){
-            break;
-          }
+        } else if (std::abs(gcd) == 1){
+          break;
         }
       }
       INTEGER(out)[0] = gcd;
@@ -198,16 +192,12 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     SEXP out = SHIELD(new_vec(REALSXP, n == 0 ? 0 : 1)); ++NP;
     if (n > 0){
       int64_t gcd = p_x[0];
-      int64_t agcd;
       for (R_xlen_t i = 1; i < n; ++i) {
-        gcd = cpp_gcd2_int64(gcd, p_x[i], na_rm);
-        if (gcd == NA_INTEGER64){
+        gcd = gcd2_int64(gcd, p_x[i], na_rm);
+        if (is_na_int64(gcd)){
           if (!na_rm) break;
-        } else {
-          agcd = std::abs(gcd);
-          if (agcd > 0 && agcd == 1){
-            break;
-          }
+        } else if (std::abs(gcd) == 1){
+          break;
         }
       }
       REAL(out)[0] = CHEAPR_INT64_TO_DBL(gcd);
@@ -222,7 +212,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
       double gcd = p_x[0];
       double agcd;
       for (R_xlen_t i = 1; i < n; ++i) {
-        gcd = cpp_gcd2(gcd, p_x[i], tol, na_rm);
+        gcd = gcd2(gcd, p_x[i], tol, na_rm);
         agcd = std::fabs(gcd);
         if ((!na_rm && !(gcd == gcd))){
           break;
@@ -270,7 +260,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         if (!na_rm && lcm == NA_INTEGER64){
           break;
         }
-        lcm = cpp_lcm2_int64(lcm, CHEAPR_INT_TO_INT64(p_x[i]), na_rm);
+        lcm = lcm2_int64(lcm, CHEAPR_INT_TO_INT64(p_x[i]), na_rm);
       }
       bool is_short = is_na_int64(lcm) || is_integerable<int64_t>(lcm);
       out = SHIELD(new_vec(is_short ? INTSXP : REALSXP, 1)); ++NP;
@@ -300,7 +290,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         if (!na_rm && lcm == NA_INTEGER64){
           break;
         }
-        lcm = cpp_lcm2_int64(lcm, p_x[i], na_rm);
+        lcm = lcm2_int64(lcm, p_x[i], na_rm);
       }
       double temp = CHEAPR_INT64_TO_DBL(lcm);
       REAL(out)[0] = temp;
@@ -318,7 +308,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
           lcm = NA_REAL;
           break;
         }
-        lcm = cpp_lcm2(lcm, p_x[i], tol, na_rm);
+        lcm = lcm2(lcm, p_x[i], tol, na_rm);
         if (lcm == R_PosInf || lcm == R_NegInf) break;
       }
       REAL(out)[0] = lcm;
@@ -358,9 +348,10 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    xi = (++xi == xn) ? 0 : xi,
-      yi = (++yi == yn) ? 0 : yi, ++i){
-      p_out[i] = cpp_gcd2_int(p_x[xi], p_y[yi], na_rm);
+    recycle<R_xlen_t>(xi, xn),
+    recycle<R_xlen_t>(yi, yn),
+    ++i){
+      p_out[i] = gcd2_int(p_x[xi], p_y[yi], na_rm);
     }
     YIELD(NP);
     return out;
@@ -373,9 +364,10 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    xi = (++xi == xn) ? 0 : xi,
-      yi = (++yi == yn) ? 0 : yi, ++i){
-      p_out[i] = cpp_gcd2(p_x[xi], p_y[yi], tol, na_rm);
+    recycle<R_xlen_t>(xi, xn),
+    recycle<R_xlen_t>(yi, yn),
+      ++i){
+      p_out[i] = gcd2(p_x[xi], p_y[yi], tol, na_rm);
     }
     YIELD(NP);
     return out;
@@ -415,9 +407,10 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    xi = (++xi == xn) ? 0 : xi,
-      yi = (++yi == yn) ? 0 : yi, ++i){
-      dbl_lcm = cpp_lcm2_int(p_x[xi], p_y[yi], na_rm);
+    recycle<R_xlen_t>(xi, xn),
+    recycle<R_xlen_t>(yi, yn),
+    ++i){
+      dbl_lcm = lcm2_int(p_x[xi], p_y[yi], na_rm);
       if (!(dbl_lcm == dbl_lcm) || std::fabs(dbl_lcm) > int_max){
         p_out[i] = NA_INTEGER;
       } else {
@@ -436,9 +429,10 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    xi = (++xi == xn) ? 0 : xi,
-      yi = (++yi == yn) ? 0 : yi, ++i){
-      p_out[i] = cpp_lcm2(p_x[xi], p_y[yi], tol, na_rm);
+    recycle<R_xlen_t>(xi, xn),
+    recycle<R_xlen_t>(yi, yn),
+    ++i){
+      p_out[i] = lcm2(p_x[xi], p_y[yi], tol, na_rm);
     }
     YIELD(NP);
     return out;
