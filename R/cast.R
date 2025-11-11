@@ -3,7 +3,7 @@
 #' @description
 #' `cast_common()` is type-commutative, meaning the order of objects doesn't
 #' affect the outcome type.
-#' `cast()` will attempt to cast `x` into an object similar to `y`.
+#' `cast()` will attempt to cast `x` into an object similar to `archetype`.
 #'
 #' @param x A vector.
 #' @param archetype An archetype vector.
@@ -13,15 +13,16 @@
 #' This is equivalent to `do.call(f, .args)` but much more efficient.
 #'
 #' @returns
-#' `cast()` will attempt to cast `x` into an object similar to `y`.
-#' `cast_common()` coerces all supplied vectors into a common type between them.
-#' `archetype()` returns the zero-length template/archetype of `x`.
+#' `cast()` will attempt to cast `x` into an object similar to `archetype`. \cr
+#' `cast_common()` coerces all supplied vectors into a
+#' common type between them. \cr
+#' `archetype()` returns the zero-length template/archetype of `x`. \cr
 #' `archetype_common()` returns the common zero-length
-#' template between all supplied vectors.
+#' template between all supplied vectors. \cr
 #' `r_type()` will return the internal cheapr-defined type of `x` as a
 #' character vector of length 1. This will usually match `class(x)`
-#' but not always.
-#' `r_type_common()` returns the common r_type between all objects.
+#' but not always. \cr
+#' `r_type_common()` returns the common type between all objects.
 #'
 #' @rdname cast
 #' @export

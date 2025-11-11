@@ -33,18 +33,19 @@ in a list. \cr
 This is equivalent to \code{do.call(f, .args)} but much more efficient.}
 }
 \value{
-\code{cast()} will attempt to cast \code{x} into an object similar to \code{y}.
-\code{cast_common()} coerces all supplied vectors into a common type between them.
-\code{archetype()} returns the zero-length template/archetype of \code{x}.
+\code{cast()} will attempt to cast \code{x} into an object similar to \code{archetype}. \cr
+\code{cast_common()} coerces all supplied vectors into a
+common type between them. \cr
+\code{archetype()} returns the zero-length template/archetype of \code{x}. \cr
 \code{archetype_common()} returns the common zero-length
-template between all supplied vectors.
+template between all supplied vectors. \cr
 \code{r_type()} will return the internal cheapr-defined type of \code{x} as a
 character vector of length 1. This will usually match \code{class(x)}
-but not always.
-\code{r_type_common()} returns the common r_type between all objects.
+but not always. \cr
+\code{r_type_common()} returns the common type between all objects.
 }
 \description{
 \code{cast_common()} is type-commutative, meaning the order of objects doesn't
 affect the outcome type.
-\code{cast()} will attempt to cast \code{x} into an object similar to \code{y}.
+\code{cast()} will attempt to cast \code{x} into an object similar to \code{archetype}.
 }

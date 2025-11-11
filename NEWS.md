@@ -30,6 +30,9 @@ with sequence generation.
 - New function `is_whole_number` to check that a numeric vector consists 
 only of whole numbers. 
 
+- New function `switch_args` to give more flexibility to developers creating
+functions that accept the `...` argument.
+
 - Exported `cpp_rebuild`, a low-level convenience function for rebuilding
 attributes from a template.
 
