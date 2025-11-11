@@ -950,9 +950,10 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
     return init<r_date_t>(vec_length(x), true);
   } else if (Rf_isObject(x)){
     as_date = as_date != NULL ? as_date : Rf_install("as.Date");
-    SEXP out = SHIELD(Rf_eval(Rf_lang2(as_date, x), R_GetCurrentEnv()));
+    SEXP expr = SHIELD(Rf_lang2(as_date, x));
+    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
-    YIELD(1);
+    YIELD(2);
     return out;
   } else {
 
