@@ -239,6 +239,9 @@ SEXP cpp_cast_common(SEXP x){
     Rf_error("Unimplemented cast type");
   }
   }
+  SEXP names = SHIELD(get_names(x)); ++NP;
+  set_names(out, names);
+
   YIELD(NP);
   return out;
 }
