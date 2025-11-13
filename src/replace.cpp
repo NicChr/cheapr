@@ -124,7 +124,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   }
 
   case r_list: {
-    const SEXP *p_with = VECTOR_PTR_RO(with);
+    const SEXP *p_with = LIST_PTR_RO(with);
 
     if (!internal_in_place){
       SEXP *p_x = UNSAFE_VECTOR_PTR(x);
@@ -141,8 +141,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case r_df: {
 
-    const SEXP *p_x = VECTOR_PTR_RO(x);
-    const SEXP *p_with = VECTOR_PTR_RO(with);
+    const SEXP *p_x = LIST_PTR_RO(x);
+    const SEXP *p_with = LIST_PTR_RO(with);
 
     int ncol = Rf_length(x);
 

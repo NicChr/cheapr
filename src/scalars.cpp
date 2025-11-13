@@ -168,7 +168,7 @@ case STRSXP: {
 }
 case VECSXP: {
   if (recursive){
-  const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_x = LIST_PTR_RO(x);
   for (R_xlen_t i = 0; i < n; ++i){
     count += scalar_count(p_x[i], value, true);
   }

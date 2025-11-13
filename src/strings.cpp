@@ -24,7 +24,7 @@ SEXP cpp_str_coalesce(SEXP x){
     return out;
   }
 
-  const SEXP *p_chars = VECTOR_PTR_RO(chars);
+  const SEXP *p_chars = LIST_PTR_RO(chars);
   std::vector<const SEXP *> char_ptrs(n_chars);
 
   // First cast all to character vectors
@@ -95,7 +95,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
     return out;
   }
 
-  const SEXP *p_chars = VECTOR_PTR_RO(chars);
+  const SEXP *p_chars = LIST_PTR_RO(chars);
   std::vector<const SEXP *> char_ptrs(n_chars);
 
   // First cast all to character vectors

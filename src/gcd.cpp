@@ -11,33 +11,6 @@ template<typename T> T cpp_sign(T x) {
   return (x > 0) - (x < 0);
 }
 
-double gcd2(double x, double y, double tol, bool na_rm){
-
-  if (!na_rm && ( is_na<double>(x) || is_na<double>(y))){
-    return NA_REAL;
-  }
-  // GCD(0,0)=0
-  if (x == 0.0 && y == 0.0){
-    return 0.0;
-  }
-  // GCD(a,0)=a
-  if (x == 0.0){
-    return y;
-  }
-  // GCD(a,0)=a
-  if (y == 0.0){
-    return x;
-  }
-  double r;
-  // Taken from number theory lecture notes
-  while(std::fabs(y) > tol){
-    r = std::fmod(x, y);
-    x = y;
-    y = r;
-  }
-  return x;
-}
-
 int gcd2_int(int x, int y, bool na_rm){
   bool has_na = is_na<int>(x) || is_na<int>(y);
   if (!na_rm && has_na){

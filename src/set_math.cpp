@@ -716,3 +716,158 @@ SEXP cpp_int_sign(SEXP x){
   YIELD(1);
   return out;
 }
+
+// Math functions
+
+SEXP cpp_abs(SEXP x){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_abs(x)); ++NP;
+  YIELD(NP);
+  return out;
+}
+SEXP cpp_floor(SEXP x){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_floor(x)); ++NP;
+  YIELD(NP);
+  return out;
+}
+SEXP cpp_ceiling(SEXP x){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_ceiling(x)); ++NP;
+  YIELD(NP);
+  return out;
+}
+SEXP cpp_trunc(SEXP x){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_trunc(x)); ++NP;
+  YIELD(NP);
+  return out;
+}
+SEXP cpp_invert_sign(SEXP x){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_change_sign(x)); ++NP;
+  YIELD(NP);
+  return out;
+}
+SEXP cpp_exp(SEXP x){
+  int32_t NP = 0;
+  SHIELD(x = cast<r_numeric_t>(x, R_NilValue)); ++NP;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_exp(x)); ++NP;
+  YIELD(NP);
+  return out;
+}
+SEXP cpp_sqrt(SEXP x){
+  int32_t NP = 0;
+  SHIELD(x = cast<r_numeric_t>(x, R_NilValue)); ++NP;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_sqrt(x)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_log10(SEXP x){
+  int32_t NP = 0;
+  SHIELD(x = cast<r_numeric_t>(x, R_NilValue)); ++NP;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP log10 = SHIELD(Rf_ScalarReal(10)); ++NP;
+  SEXP out = SHIELD(cpp_set_log(x, log10)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_log(SEXP x, SEXP base){
+  int32_t NP = 0;
+  SHIELD(x = cast<r_numeric_t>(x, R_NilValue)); ++NP;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_log(x, base)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_round(SEXP x, SEXP digits){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_round(x, digits)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_pow(SEXP x, SEXP y){
+  int32_t NP = 0;
+  SHIELD(x = cast<r_numeric_t>(x, R_NilValue)); ++NP;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_pow(x, y)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_add(SEXP x, SEXP y){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_add(x, y)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_subtract(SEXP x, SEXP y){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_subtract(x, y)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_multiply(SEXP x, SEXP y){
+  int32_t NP = 0;
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_multiply(x, y)); ++NP;
+  YIELD(NP);
+  return out;
+}
+
+SEXP cpp_divide(SEXP x, SEXP y){
+  int32_t NP = 0;
+
+  SHIELD(x = cast<r_numeric_t>(x, R_NilValue)); ++NP;
+
+  if (MAYBE_REFERENCED(x)){
+    SHIELD(x = Rf_duplicate(x)); ++NP;
+  }
+  SEXP out = SHIELD(cpp_set_divide(x, y)); ++NP;
+  YIELD(NP);
+  return out;
+}

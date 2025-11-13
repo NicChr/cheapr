@@ -684,7 +684,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case VECSXP: {
-    const SEXP *p_x = VECTOR_PTR_RO(x);
+    const SEXP *p_x = LIST_PTR_RO(x);
     out = SHIELD(new_vec(VECSXP, out_size)); ++NP;
     SEXP *p_out = UNSAFE_VECTOR_PTR(out);
     if (double_loop){
@@ -841,7 +841,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case VECSXP: {
-        const SEXP *p_x = VECTOR_PTR_RO(x);
+        const SEXP *p_x = LIST_PTR_RO(x);
         out = SHIELD(new_vec(VECSXP, n));
         SEXP *p_out = UNSAFE_VECTOR_PTR(out);
           for (int_fast64_t i = 0; i < n; ++i){
@@ -988,7 +988,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case VECSXP: {
-        const SEXP *p_x = VECTOR_PTR_RO(x);
+        const SEXP *p_x = LIST_PTR_RO(x);
         out = SHIELD(new_vec(VECSXP, n));
         SEXP *p_out = UNSAFE_VECTOR_PTR(out);
         for (unsigned int i = 0; i < n; ++i){
@@ -1080,7 +1080,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case VECSXP: {
-        const SEXP *p_x = VECTOR_PTR_RO(x);
+        const SEXP *p_x = LIST_PTR_RO(x);
         out = SHIELD(new_vec(VECSXP, n));
         SEXP *p_out = UNSAFE_VECTOR_PTR(out);
         for (int_fast64_t i = 0; i < n; ++i) p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
@@ -1149,7 +1149,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case VECSXP: {
-        const SEXP *p_x = VECTOR_PTR_RO(x);
+        const SEXP *p_x = LIST_PTR_RO(x);
         out = SHIELD(new_vec(VECSXP, n));
         SEXP *p_out = UNSAFE_VECTOR_PTR(out);
         for (int i = 0; i != n; ++i) p_out[i] = p_x[pind[i] - 1];
@@ -1353,7 +1353,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   SEXP out = SHIELD(new_vec(VECSXP, n_locs)); ++NP;
   SEXP out_names = SHIELD(new_vec(STRSXP, n_locs)); ++NP;
 
-  const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_x = LIST_PTR_RO(x);
   const SEXP *p_names = STRING_PTR_RO(names);
   int k = 0;
   int col;
@@ -1409,7 +1409,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   }
   int ncols = Rf_length(x);
   int32_t NP = 0;
-  const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_x = LIST_PTR_RO(x);
   SEXP out = SHIELD(new_vec(VECSXP, ncols)); ++NP;
 
   // Clean indices and get metadata

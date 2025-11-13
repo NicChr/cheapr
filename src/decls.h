@@ -88,5 +88,7 @@ void recycle_in_place(SEXP x, R_xlen_t n);
 R_xlen_t length_common(SEXP x);
 SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse);
 cheapr::r_type r_common_type(SEXP x);
+SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na);
+SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round);
 
 #endif

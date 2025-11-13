@@ -118,7 +118,7 @@ SEXP cpp_semi_copy(SEXP x){
 
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(new_vec(VECSXP, n));
-    const SEXP *p_x = VECTOR_PTR_RO(x);
+    const SEXP *p_x = LIST_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, Rf_duplicate(p_x[i]));
     }
@@ -757,45 +757,8 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 // non-whole numbers and there is at least 1 NA
 
 [[cpp11::register]]
-SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_) {
-
-  R_xlen_t n = Rf_xlength(x);
-  // Use int instead of bool as int can hold NA
-  int out = 0;
-  bool any_na = false;
-
-  switch ( get_r_type(x) ){
-  case r_lgl:
-  case r_int:
-  case r_int64: {
-    out = 1;
-    break;
-  }
-  case r_dbl: {
-    // Re-initialise so that we can break when we find non-whole num
-    out = 1;
-    const double *p_x = REAL_RO(x);
-    for (R_xlen_t i = 0; i < n; ++i) {
-      if (is_na<double>(p_x[i])){
-        any_na = true;
-        continue;
-      }
-
-      out = is_whole_number(p_x[i], tol_);
-      if (out == 0){
-        break;
-      }
-    }
-    if (!na_rm_ && any_na){
-      out = NA_INTEGER;
-    }
-    break;
-  }
-  default: {
-    break;
-  }
-  }
-  return Rf_ScalarLogical(out);
+SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_){
+  return Rf_ScalarLogical(is_whole_number(x, tol_, na_rm_));
 }
 
 SEXP match(SEXP y, SEXP x, int no_match){

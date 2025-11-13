@@ -309,6 +309,20 @@ replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   return fn(x, where, with, in_place, quiet);
 }
 
+inline SEXP
+if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_if_else");
+  return fn(condition, yes, no, na);
+}
+
+inline SEXP
+gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
+  typedef SEXP fn_t(SEXP, double, bool, bool, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_gcd");
+  return fn(x, tol, na_rm, break_early, round);
+}
+
 }
 
 // -----------------------------------------------------------------------------

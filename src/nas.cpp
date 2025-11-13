@@ -92,7 +92,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     // We use a recursive method if recursive is true
     // Otherwise we skip to the default section below
     if (recursive){
-    const SEXP *p_x = VECTOR_PTR_RO(x);
+    const SEXP *p_x = LIST_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       count += na_count(p_x[i], true);
     }
@@ -332,7 +332,7 @@ SEXP cpp_is_na(SEXP x){
     if (!Rf_isObject(x)){
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
-    const SEXP *p_x = VECTOR_PTR_RO(x);
+    const SEXP *p_x = LIST_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       p_out[i] = cpp_all_na(p_x[i], false, true);
     }
@@ -353,7 +353,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
   if (!is_df(x)){
     Rf_error("x must be a data frame");
   }
-  const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_x = LIST_PTR_RO(x);
   int32_t NP = 0;
   int num_col = Rf_length(x);
   int num_row = df_nrow(x);
@@ -422,7 +422,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
         p_out[k] += p_is_missing[k];
       }
     } else {
-      const SEXP *p_xj = VECTOR_PTR_RO(p_x[j]);
+      const SEXP *p_xj = LIST_PTR_RO(p_x[j]);
       for (int i = 0; i < num_row; ++i){
         p_out[i] += cpp_all_na(p_xj[i], false, true);
       }
@@ -444,7 +444,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   if (!is_df(x)){
     Rf_error("x must be a data frame");
   }
-  const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_x = LIST_PTR_RO(x);
   int num_col = Rf_length(x);
   int32_t NP = 0;
   int num_row = df_nrow(x);
@@ -490,7 +490,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
   if (!is_df(x)){
     Rf_error("x must be a data frame");
   }
-  const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_x = LIST_PTR_RO(x);
 
   int32_t NP = 0;
   int num_row = df_nrow(x);
@@ -549,7 +549,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
   if (!is_df(x)){
     Rf_error("x must be a data frame");
   }
-  const SEXP *p_x = VECTOR_PTR_RO(x);
+  const SEXP *p_x = LIST_PTR_RO(x);
 
   int32_t NP = 0;
   int num_row = df_nrow(x);
@@ -611,7 +611,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //   if (!is_df(x)){
 //     Rf_error("x must be a data frame");
 //   }
-//   const SEXP *p_x = VECTOR_PTR_RO(x);
+//   const SEXP *p_x = LIST_PTR_RO(x);
 //
 //   int32_t NP = 0;
 //   int num_row = df_nrow(x);

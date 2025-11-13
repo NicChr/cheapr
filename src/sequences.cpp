@@ -525,42 +525,8 @@ double pretty_ceiling(double x){
   return nearest_ceiling(x, (std::pow(10.0, log10_scale(x))));
 }
 
-// Not sure yet if approximate division is needed
-
-// double aprx_floor(double x, double tol){
-//   return is_whole_number(x, tol) ? std::round(x) : std::floor(x);
-// }
-// double aprx_ceil(double x, double tol){
-//   return is_whole_number(x, tol) ? std::round(x) : std::ceil(x);
-// }
-// double aprx_trunc(double x, double tol){
-//   return is_whole_number(x, tol) ? std::round(x) : std::trunc(x);
-// }
-
-// truncated division with a tolerance
-// aka integer division towards zero
-// double int_div_towards_zero(double x, double y, double tol){
-//   return aprx_trunc(x / y, tol);
-// }
-
-// approximate ceiling division
-// double ceil_div(double x, double y, double tol){
-//   return aprx_ceil(x / y, tol);
-// }
-
-// integer division away from zero
-// double int_div_away_from_zero(double x, double y, double tolerance){
-//   double out = x / y;
-//   if (is_whole_number(out, tolerance)){
-//     return std::round(out);
-//   } else {
-//     double sign = (out > 0) - (out < 0);
-//     return std::ceil(std::fabs(out)) * sign;
-//   }
-// }
-
 bool can_be_int(double x, double tolerance){
-  return is_whole_number(x, tolerance) && is_integerable<double>(x);
+  return is_whole_number_(x, tolerance) && is_integerable<double>(x);
 }
 
 double seq_end(double size, double from, double by){
@@ -702,7 +668,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       // Not sure if adj_start needs rounding here
       adj_start *= scale_adj;
 
-      if (is_whole_number(adj_start, tol)){
+      if (is_whole_number_(adj_start, tol)){
         adj_start = round_nearest_even(adj_start);
       }
       start *= scale_adj;

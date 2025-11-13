@@ -417,8 +417,84 @@ inline double round_nearest_even(double x){
   return x - std::remainder(x, 1.0);
 }
 
-inline bool is_whole_number(double x, double tolerance){
+inline bool is_whole_number_(double x, double tolerance){
   return (std::fabs(x - std::round(x)) < tolerance);
+}
+
+inline SEXP deep_copy(SEXP x){
+  return Rf_duplicate(x);
+}
+
+inline SEXP shallow_copy(SEXP x){
+  return Rf_shallow_duplicate(x);
+}
+
+// int not bool because bool can't be NA
+inline int is_whole_number(SEXP x, double tol_, bool na_rm_){
+
+  R_xlen_t n = Rf_xlength(x);
+
+  // Use int instead of bool as int can hold NA
+  int out = 1;
+  bool any_na = false;
+
+  switch ( CHEAPR_TYPEOF(x) ){
+  case LGLSXP:
+  case INTSXP:
+  case CHEAPR_INT64SXP: {
+    break;
+  }
+  case REALSXP: {
+    const double *p_x = REAL_RO(x);
+    for (R_xlen_t i = 0; i < n; ++i) {
+      if (is_na<double>(p_x[i])){
+        any_na = true;
+        continue;
+      }
+
+      out = is_whole_number_(p_x[i], tol_);
+      if (out == 0){
+        break;
+      }
+    }
+    if (!na_rm_ && any_na){
+      out = NA_INTEGER;
+    }
+    break;
+  }
+  default: {
+    out = 0;
+    break;
+  }
+  }
+  return out;
+}
+
+inline double gcd2(double x, double y, double tol, bool na_rm){
+
+  if (!na_rm && ( is_na<double>(x) || is_na<double>(y))){
+    return NA_REAL;
+  }
+  // GCD(0,0)=0
+  if (x == 0.0 && y == 0.0){
+    return 0.0;
+  }
+  // GCD(a,0)=a
+  if (x == 0.0){
+    return y;
+  }
+  // GCD(a,0)=a
+  if (y == 0.0){
+    return x;
+  }
+  double r;
+  // Taken from number theory lecture notes
+  while(std::fabs(y) > tol){
+    r = std::fmod(x, y);
+    x = y;
+    y = r;
+  }
+  return x;
 }
 
 // Variadic function to create R list
