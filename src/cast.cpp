@@ -1,30 +1,5 @@
 #include "cheapr.h"
 
-SEXP as_lgl = NULL;
-SEXP as_int = NULL;
-SEXP as_dbl = NULL;
-SEXP as_char = NULL;
-SEXP as_cplx = NULL;
-SEXP as_raw = NULL;
-SEXP as_date = NULL;
-SEXP as_posixct = NULL;
-SEXP as_list = NULL;
-
-// The order of functions here MUST MATCH the order of defined r types
-const cast_fn CAST_FNS[14] = {
-  cast_null, cast_logical, cast_integer, cast_integer64,
-  cast_numeric, cast_complex, cast_raw, cast_date, cast_posixt,
-  cast_character, cast_factor, cast_list,
-  cast_data_frame, cast_unknown
-};
-
-const init_fn INIT_FNS[14] = {
-  init_null, init_logical, init_integer, init_integer64,
-  init_numeric, init_complex, init_raw, init_date, init_posixt,
-  init_character, init_factor, init_list,
-  init_data_frame, init_unknown
-};
-
 r_type r_common_type(SEXP x){
 
   if (!Rf_isVectorList(x)){

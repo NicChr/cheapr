@@ -4,8 +4,6 @@
 // Miscellaneous functions
 // Author: Nick Christofides
 
-static SEXP CHEAPR_CORES = NULL;
-
 [[cpp11::register]]
 SEXP cpp_is_simple_atomic_vec(SEXP x){
   return scalar_lgl(is_simple_atomic_vec(x));
@@ -23,20 +21,6 @@ SEXP xlen_to_r(R_xlen_t x){
 [[cpp11::register]]
 SEXP cpp_vector_length(SEXP x){
   return xlen_to_r(vec_length(x));
-}
-
-int num_cores(){
-  if (CHEAPR_CORES == NULL){
-    CHEAPR_CORES = install_utf8("cheapr.cores");
-  }
-  int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
-  return n_cores >= 1 ? n_cores : 1;
-}
-
-SEXP r_address(SEXP x) {
-  static char buf[1000];
-  snprintf(buf, 1000, "%p", (void*) x);
-  return make_utf8_char(buf);
 }
 
 [[cpp11::register]]
@@ -820,21 +804,6 @@ SEXP match(SEXP y, SEXP x, int no_match){
   } else {
     return cheapr_fast_match(x, y, no_match);
   }
-}
-
-// Return R function from a specified package
-SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
-
-  SEXP expr = R_NilValue;
-
-  if (all_fns){
-    expr = SHIELD(Rf_lang3(R_TripleColonSymbol, Rf_install(pkg), Rf_install(name)));
-  } else {
-    expr = SHIELD(Rf_lang3(R_DoubleColonSymbol, Rf_install(pkg), Rf_install(name)));
-  }
-  SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
-  YIELD(2);
-  return out;
 }
 
 const char* r_class(SEXP obj){
