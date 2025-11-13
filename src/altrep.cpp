@@ -3,9 +3,9 @@
 // Altrep utils
 
 // Symbols
-static SEXP CHEAPR_COMPACT_INTSEQ = NULL;
-static SEXP CHEAPR_COMPACT_REALSEQ = NULL;
-static SEXP CHEAPR_BASE = NULL;
+static SEXP CHEAPR_COMPACT_INTSEQ = R_NilValue;
+static SEXP CHEAPR_COMPACT_REALSEQ = R_NilValue;
+static SEXP CHEAPR_BASE = R_NilValue;
 
 SEXP alt_class(SEXP x){
   if (is_altrep(x)){
@@ -35,13 +35,13 @@ bool is_compact_seq(SEXP x){
   SEXP alt_class_sym = alt_class(x);
   SEXP alt_pkg_sym = alt_pkg(x);
 
-  if (CHEAPR_COMPACT_INTSEQ == NULL){
+  if (is_null(CHEAPR_COMPACT_INTSEQ)){
     CHEAPR_COMPACT_INTSEQ = install_utf8("compact_intseq");
   }
-  if (CHEAPR_COMPACT_REALSEQ == NULL){
+  if (is_null(CHEAPR_COMPACT_REALSEQ)){
     CHEAPR_COMPACT_REALSEQ = install_utf8("compact_realseq");
   }
-  if (CHEAPR_BASE == NULL){
+  if (is_null(CHEAPR_BASE)){
     CHEAPR_BASE = install_utf8("base");
   }
   return (alt_class_sym == CHEAPR_COMPACT_INTSEQ ||

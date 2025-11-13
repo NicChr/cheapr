@@ -85,6 +85,7 @@ inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
 template<typename T>
 inline bool is_na(T x) {
   Rf_error("Unimplemented `is_na` specialisation");
+  return false;
 }
 
 template<>
@@ -187,6 +188,10 @@ inline SEXP install_utf8(const char *x){
   return Rf_installChar(Rf_mkCharCE(x, CE_UTF8));
 }
 
+inline const char* char_as_utf8(const char *x){
+  return CHAR(Rf_mkCharCE(x, CE_UTF8));
+}
+
 // string paste helper
 inline void str_paste(std::string &x, const std::string &sep, const std::string &y){
   x += sep;
@@ -221,10 +226,10 @@ inline int df_nrow(SEXP x){
   return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
 }
 
-inline SEXP CHEAPR_CORES = NULL;
+inline SEXP CHEAPR_CORES = R_NilValue;
 
 inline int num_cores(){
-  if (CHEAPR_CORES == NULL){
+  if (is_null(CHEAPR_CORES)){
     CHEAPR_CORES = install_utf8("cheapr.cores");
   }
   int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
@@ -353,6 +358,50 @@ inline bool is_bare_tbl(SEXP x){
     std::strcmp(CHAR(STRING_ELT(xclass, 0)), "tbl_df") == 0 &&
     std::strcmp(CHAR(STRING_ELT(xclass, 1)), "tbl") == 0 &&
     std::strcmp(CHAR(STRING_ELT(xclass, 2)), "data.frame") == 0;
+}
+
+inline const char* r_class(SEXP obj){
+  if (Rf_isObject(obj)){
+    return CHAR(STRING_ELT(Rf_getAttrib(obj, R_ClassSymbol), 0));
+  } else {
+    switch(TYPEOF(obj)) {
+    case CLOSXP:
+    case SPECIALSXP:
+    case BUILTINSXP: {
+      return "function";
+    }
+    case SYMSXP: {
+      return "name";
+    }
+    case OBJSXP: {
+      return Rf_isS4(obj) ? "S4" : "object";
+    }
+    case LGLSXP: {
+      return "logical";
+    }
+    case INTSXP: {
+      return "integer";
+    }
+    case REALSXP: {
+      return "numeric";
+    }
+    case STRSXP: {
+      return "character";
+    }
+    case CPLXSXP: {
+      return "complex";
+    }
+    case RAWSXP: {
+      return "raw";
+    }
+    case VECSXP: {
+      return "list";
+    }
+    default: {
+      return Rf_type2char(TYPEOF(obj));
+    }
+    }
+  }
 }
 
 // Can't use `Rf_namesgets(x, R_NilValue)`

@@ -84,7 +84,6 @@ SEXP clean_locs(SEXP locs, SEXP x);
 SEXP cpp_common_template(SEXP x);
 SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template);
 SEXP cpp_as_df(SEXP x);
-const char* r_class(SEXP obj);
 void recycle_in_place(SEXP x, R_xlen_t n);
 R_xlen_t length_common(SEXP x);
 SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse);

@@ -10,15 +10,15 @@
 
 // Symbols for R conversion fns
 
-inline SEXP as_lgl = NULL;
-inline SEXP as_int = NULL;
-inline SEXP as_dbl = NULL;
-inline SEXP as_char = NULL;
-inline SEXP as_cplx = NULL;
-inline SEXP as_raw = NULL;
-inline SEXP as_date = NULL;
-inline SEXP as_posixct = NULL;
-inline SEXP as_list = NULL;
+inline SEXP as_lgl = R_NilValue;
+inline SEXP as_int = R_NilValue;
+inline SEXP as_dbl = R_NilValue;
+inline SEXP as_char = R_NilValue;
+inline SEXP as_cplx = R_NilValue;
+inline SEXP as_raw = R_NilValue;
+inline SEXP as_date = R_NilValue;
+inline SEXP as_posixct = R_NilValue;
+inline SEXP as_list = R_NilValue;
 
 // Custom r types
 
@@ -130,7 +130,7 @@ inline const char *r_type_char(SEXP x){
 
   // If unknown type
   if (type == r_unk){
-    return r_class(x);
+    return cheapr::r_class(x);
   } else {
     return r_type_names[type];
   }
@@ -140,6 +140,7 @@ inline const char *r_type_char(SEXP x){
 template<typename T>
 inline SEXP init(R_xlen_t n, bool with_na) {
   Rf_error("Unimplemented initialisation");
+  return R_NilValue;
 }
 
 template<>
@@ -278,6 +279,7 @@ inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
   Rf_error("Don't know how to initialise unknown type");
+  return R_NilValue;
 }
 
 inline void check_casted_length(SEXP x, SEXP out){
@@ -304,6 +306,7 @@ inline void signal_bad_cast(SEXP from, SEXP to){
 template<typename T>
 inline SEXP cast(SEXP x, SEXP y) {
   Rf_error("Unimplemented cast specialisation");
+  return R_NilValue;
 }
 
 template<>
@@ -316,7 +319,7 @@ inline SEXP cast<r_logical_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "logical")){
     return x;
   } else if (Rf_isObject(x)){
-    as_lgl = as_lgl != NULL ? as_lgl : Rf_install("as.logical");
+    as_lgl = !cheapr::is_null(as_lgl) ? as_lgl : Rf_install("as.logical");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_lgl, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -332,7 +335,7 @@ inline SEXP cast<r_integer_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "integer")){
     return x;
   } else if (Rf_isObject(x)){
-    as_int = as_int != NULL ? as_int : Rf_install("as.integer");
+    as_int = !cheapr::is_null(as_int) ? as_int : Rf_install("as.integer");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_int, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -348,7 +351,7 @@ inline SEXP cast<r_numeric_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "numeric")){
     return x;
   } else if (Rf_isObject(x)){
-    as_dbl = as_dbl != NULL ? as_dbl : Rf_install("as.double");
+    as_dbl = !cheapr::is_null(as_dbl) ? as_dbl : Rf_install("as.double");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_dbl, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -378,7 +381,7 @@ inline SEXP cast<r_character_t>(SEXP x, SEXP y) {
   } else if (Rf_inherits(x, "factor")){
     return factor_as_character(x);
   } else if (Rf_isObject(x)){
-    as_char = as_char != NULL ? as_char : Rf_install("as.character");
+    as_char = !cheapr::is_null(as_char) ? as_char : Rf_install("as.character");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_char, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -394,7 +397,7 @@ inline SEXP cast<r_complex_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "complex")){
     return x;
   } else if (Rf_isObject(x)){
-    as_cplx = as_cplx != NULL ? as_cplx : Rf_install("as.complex");
+    as_cplx = !cheapr::is_null(as_cplx) ? as_cplx : Rf_install("as.complex");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_cplx, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -410,7 +413,7 @@ inline SEXP cast<r_raw_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "raw")){
     return x;
   } else if (Rf_isObject(x)){
-    as_raw = as_raw != NULL ? as_raw : Rf_install("as.raw");
+    as_raw = !cheapr::is_null(as_raw) ? as_raw : Rf_install("as.raw");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_raw, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -426,7 +429,7 @@ inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "list")){
     return x;
   } else if (Rf_isObject(x)){
-    as_list = as_list != NULL ? as_list : Rf_install("as.list");
+    as_list = !cheapr::is_null(as_list) ? as_list : Rf_install("as.list");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_list, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -475,7 +478,7 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_null(x) && cheapr::is_null(y)){
     return init<r_date_t>(cheapr::vector_length(x), true);
   } else if (Rf_isObject(x)){
-    as_date = as_date != NULL ? as_date : Rf_install("as.Date");
+    as_date = !cheapr::is_null(as_date) ? as_date : Rf_install("as.Date");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_date, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -548,7 +551,7 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     cheapr::YIELD(4);
     return out;
   } else {
-    as_posixct = as_posixct != NULL ? as_posixct : Rf_install("as.POSIXct");
+    as_posixct = !cheapr::is_null(as_posixct) ? as_posixct : Rf_install("as.POSIXct");
     SEXP expr = cheapr::SHIELD(Rf_lang2(as_posixct, x));
     SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -580,7 +583,7 @@ inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
-  if (std::strcmp(r_class(x), r_class(y)) == 0){
+  if (std::strcmp(cheapr::r_class(x), cheapr::r_class(y)) == 0){
     return x;
   } else {
     SEXP out = cheapr::SHIELD(cheapr::base_cast(x, y));
