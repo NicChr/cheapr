@@ -164,7 +164,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
 // checked (internal flag)
 
 SEXP clean_indices(SEXP indices, SEXP x, bool count){
-  R_xlen_t xn = vec_length(x);
+  R_xlen_t xn = vector_length(x);
   int32_t NP = 0;
   R_xlen_t zero_count = 0,
     pos_count = 0,
@@ -344,7 +344,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
 
 SEXP clean_locs(SEXP locs, SEXP x){
 
-  R_xlen_t xn = vec_length(x);
+  R_xlen_t xn = vector_length(x);
 
   int32_t NP = 0;
 
@@ -1475,7 +1475,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 
   SEXP out = R_NilValue;
 
-  if (is_simple_vec(x)){
+  if (cheapr_is_simple_vec(x)){
 
     if (!is_null(j)){
       YIELD(NP);

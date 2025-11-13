@@ -47,7 +47,7 @@ SEXP cpp_lengths(SEXP x, bool names){
   } else {
     const SEXP *p_x = VECTOR_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i) {
-      p_out[i] = vec_length(p_x[i]);
+      p_out[i] = vector_length(p_x[i]);
     }
   }
   SEXP x_names = SHIELD(get_names(x));
@@ -650,7 +650,7 @@ void set_list_as_df(SEXP x) {
   } else if (n_items == 0){
     N = 0;
   } else {
-    N = vec_length(VECTOR_ELT(x, 0));
+    N = vector_length(VECTOR_ELT(x, 0));
   }
 
   SEXP df_str = SHIELD(make_utf8_str("data.frame")); ++NP;
@@ -697,7 +697,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
     if (Rf_length(out) == 0){
       row_names = SHIELD(new_vec(INTSXP, 0)); ++NP;
     } else {
-      row_names = SHIELD(create_df_row_names(vec_length(VECTOR_ELT(out, 0)))); ++NP;
+      row_names = SHIELD(create_df_row_names(vector_length(VECTOR_ELT(out, 0)))); ++NP;
     }
   } else {
     row_names = SHIELD(create_df_row_names(Rf_asInteger(nrows))); ++NP;
@@ -812,7 +812,7 @@ SEXP cpp_as_df(SEXP x){
     return init<r_data_frame_t>(0, false);
   } else if (Rf_isArray(x)){
     return matrix_to_df(x);
-  } else if (is_simple_atomic_vec2(x)){
+  } else if (cheapr_is_simple_atomic_vec2(x)){
     SEXP x_names = SHIELD(get_names(x));
     SEXP out = SHIELD(make_r_list(x_names, x));
     SEXP names = SHIELD(make_r_chars("name", "value"));

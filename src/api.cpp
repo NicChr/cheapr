@@ -9,7 +9,7 @@
 R_xlen_t
 api_vec_length(SEXP x) {
   try {
-    return vec_length(x);
+    return vector_length(x);
   } catch (...) {
     return (R_xlen_t) 0;
   }
@@ -18,7 +18,7 @@ api_vec_length(SEXP x) {
 SEXP
 api_r_address(SEXP x) {
   try {
-    return r_address(x);
+    return address(x);
   } catch (...) {
     return R_NilValue;
   }
@@ -170,7 +170,7 @@ api_seq_len(R_xlen_t n){
 bool
 api_is_simple_atomic_vec(SEXP x){
   try {
-    return is_simple_atomic_vec(x);
+    return cheapr_is_simple_atomic_vec(x);
   } catch (...) {
     return false;
   }
@@ -178,7 +178,7 @@ api_is_simple_atomic_vec(SEXP x){
 bool
 api_is_simple_vec(SEXP x){
   try {
-    return is_simple_vec(x);
+    return cheapr_is_simple_vec(x);
   } catch (...) {
     return false;
   }

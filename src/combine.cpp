@@ -60,7 +60,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     SHIELD(out = rebuild(out, x, false));
     YIELD(3);
     return out;
-  } else if (is_simple_vec2(x)){
+  } else if (cheapr_is_simple_vec2(x)){
 
     int size = Rf_length(x);
     int n_chunks, k, chunk_size;
@@ -224,7 +224,7 @@ SEXP cpp_rep_len(SEXP x, int length){
 [[cpp11::register]]
 SEXP cpp_rep(SEXP x, SEXP times){
 
-  R_xlen_t n = vec_length(x);
+  R_xlen_t n = vector_length(x);
 
   R_xlen_t out_size;
   R_xlen_t n_times = Rf_xlength(times);
@@ -260,7 +260,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
         return out;
       }
 
-    } else if (is_simple_vec2(x)){
+    } else if (cheapr_is_simple_vec2(x)){
       SEXP out = SHIELD(new_vec(TYPEOF(x), cpp_sum(times)));
       switch (TYPEOF(x)){
       case LGLSXP:
@@ -339,7 +339,7 @@ SEXP cpp_rep_each(SEXP x, SEXP each){
       Rf_unprotect(NP);
       return x;
     }
-    SHIELD(each = cpp_rep_len(each, vec_length(x))); ++NP;
+    SHIELD(each = cpp_rep_len(each, vector_length(x))); ++NP;
   }
   SEXP out = SHIELD(cpp_rep(x, each)); ++NP;
   YIELD(NP);
@@ -360,11 +360,11 @@ R_xlen_t length_common(SEXP x){
   for (R_xlen_t i = 0; i < n; ++i){
     if (is_null(p_x[i])) continue;
 
-    if (vec_length(p_x[i]) == 0){
+    if (vector_length(p_x[i]) == 0){
       out = 0;
       break;
     }
-    out = std::max(out, vec_length(p_x[i]));
+    out = std::max(out, vector_length(p_x[i]));
   }
   return out;
 }
@@ -411,7 +411,7 @@ SEXP cpp_unique(SEXP x, bool names){
 
   int32_t NP = 0;
 
-  bool is_simple = is_simple_atomic_vec(x);
+  bool is_simple = cheapr_is_simple_atomic_vec(x);
 
   if (is_compact_seq(x)){
     return x;
@@ -497,7 +497,7 @@ SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
 }
 // SEXP cpp_setdiff(SEXP x, SEXP y, bool dups){
 //
-//   bool is_simple = is_simple_atomic_vec(x) && is_simple_atomic_vec(y);
+//   bool is_simple = cheapr_is_simple_atomic_vec(x) && cheapr_is_simple_atomic_vec(y);
 //
 //   int32_t NP = 0;
 //   if (is_simple){
@@ -841,7 +841,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 
   SEXP r_nrows = SHIELD(R_NilValue); ++NP;
   if (Rf_length(out) == 0 && Rf_length(x) != 0){
-    SHIELD(r_nrows = Rf_ScalarInteger(vec_length(VECTOR_ELT(x, 0)))); ++NP;
+    SHIELD(r_nrows = Rf_ScalarInteger(vector_length(VECTOR_ELT(x, 0)))); ++NP;
   }
 
   SHIELD(out = cpp_new_df(out, r_nrows, false, name_repair)); ++NP;
@@ -860,7 +860,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 // This allows us to eliminate a few loops
 SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
-  if (vec_length(vec_template) != 0){
+  if (vector_length(vec_template) != 0){
     Rf_error("`vec_template` must be of length 0");
   }
 
@@ -1085,7 +1085,7 @@ SEXP cpp_c(SEXP x){
 
   // Figure out final size
   R_xlen_t out_size = 0;
-  for (int i = 0; i < n; ++i) out_size += vec_length(p_x[i]);
+  for (int i = 0; i < n; ++i) out_size += vector_length(p_x[i]);
 
   // 'vec_template' here acts as a template for the final result
   SEXP vec_template = SHIELD(cpp_common_template(x));

@@ -2,6 +2,8 @@
 #define CHEAPR_H
 
 #include <cheapr_core.h>
+using namespace cheapr;
+
 #include "types.h"
 #include "decls.h"
 #include "variadic.h"

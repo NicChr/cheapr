@@ -282,13 +282,13 @@ inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
 
 inline void check_casted_length(SEXP x, SEXP out){
 
-  if (vec_length(x) != vec_length(out)){
+  if (vector_length(x) != vector_length(out)){
     Rf_error(
       "Bad cast from type %s to type %s. \n`vector_length(x)` %lld doesn't match returned length of %lld",
       r_type_char(x),
       r_type_char(out),
-      static_cast<long long int>(vec_length(x)),
-      static_cast<long long int>(vec_length(out))
+      static_cast<long long int>(vector_length(x)),
+      static_cast<long long int>(vector_length(out))
     );
   }
 }
@@ -473,7 +473,7 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
       return coerce_vec(x, TYPEOF(y));
     }
   } else if (is_null(x) && is_null(y)){
-    return init<r_date_t>(vec_length(x), true);
+    return init<r_date_t>(vector_length(x), true);
   } else if (Rf_isObject(x)){
     as_date = as_date != NULL ? as_date : Rf_install("as.Date");
     SEXP expr = SHIELD(Rf_lang2(as_date, x));

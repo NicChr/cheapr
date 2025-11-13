@@ -69,7 +69,7 @@ bool implicit_na_coercion(SEXP x, SEXP target){
 }
 
 R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
-  if (vec_length(value) != 1){
+  if (vector_length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }
   R_xlen_t n = Rf_xlength(x);

@@ -348,8 +348,8 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    recycle<R_xlen_t>(xi, xn),
-    recycle<R_xlen_t>(yi, yn),
+    recycle_index<R_xlen_t>(xi, xn),
+    recycle_index<R_xlen_t>(yi, yn),
     ++i){
       p_out[i] = gcd2_int(p_x[xi], p_y[yi], na_rm);
     }
@@ -364,8 +364,8 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    recycle<R_xlen_t>(xi, xn),
-    recycle<R_xlen_t>(yi, yn),
+    recycle_index<R_xlen_t>(xi, xn),
+    recycle_index<R_xlen_t>(yi, yn),
       ++i){
       p_out[i] = gcd2(p_x[xi], p_y[yi], tol, na_rm);
     }
@@ -407,8 +407,8 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    recycle<R_xlen_t>(xi, xn),
-    recycle<R_xlen_t>(yi, yn),
+    recycle_index<R_xlen_t>(xi, xn),
+    recycle_index<R_xlen_t>(yi, yn),
     ++i){
       dbl_lcm = lcm2_int(p_x[xi], p_y[yi], na_rm);
       if (!(dbl_lcm == dbl_lcm) || std::fabs(dbl_lcm) > int_max){
@@ -429,8 +429,8 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    recycle<R_xlen_t>(xi, xn),
-    recycle<R_xlen_t>(yi, yn),
+    recycle_index<R_xlen_t>(xi, xn),
+    recycle_index<R_xlen_t>(yi, yn),
     ++i){
       p_out[i] = lcm2(p_x[xi], p_y[yi], tol, na_rm);
     }

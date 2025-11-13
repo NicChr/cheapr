@@ -20,8 +20,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   // Cast replacement to type of x
   SHIELD(with = cast_(get_r_type(x), with, x)); ++NP;
 
-  R_xlen_t where_size = vec_length(where);
-  R_xlen_t with_size = vec_length(with);
+  R_xlen_t where_size = vector_length(where);
+  R_xlen_t with_size = vector_length(with);
 
   R_xlen_t xi;
   R_xlen_t withi = 0;
@@ -47,7 +47,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     int* RESTRICT p_x = INTEGER(x);
     const int* RESTRICT p_with = INTEGER_RO(with);
 
-    for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+    for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
       p_x[p_where[i] - 1] = p_with[withi];
     }
     break;
@@ -57,7 +57,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     double* RESTRICT p_x = REAL(x);
     const double* RESTRICT p_with = REAL_RO(with);
 
-    for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+    for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
       p_x[p_where[i] - 1] = p_with[withi];
     }
     break;
@@ -68,7 +68,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     int64_t* RESTRICT p_x = INTEGER64_PTR(x);
     const int64_t* RESTRICT p_with = INTEGER64_PTR_RO(with);
 
-    for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+    for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
       p_x[p_where[i] - 1] = p_with[withi];
     }
     break;
@@ -80,11 +80,11 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
     if (!internal_in_place){
       SEXP *p_x = UNSAFE_STRING_PTR(x);
-      for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+      for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
         p_x[p_where[i] - 1] = p_with[withi];
       }
     } else {
-      for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+      for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
         SET_STRING_ELT(x, p_where[i] - 1, p_with[withi]);
       }
     }
@@ -96,7 +96,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     Rcomplex* p_x = COMPLEX(x);
     const Rcomplex *p_with = COMPLEX_RO(with);
 
-    for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+    for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
       xi = p_where[i] - 1;
       p_x[xi].r = p_with[withi].r;
       p_x[xi].i = p_with[withi].i;
@@ -108,7 +108,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
     const Rbyte *p_with = RAW_RO(with);
 
-    for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+    for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
       SET_RAW_ELT(x, p_where[i] - 1, p_with[withi]);
     }
     break;
@@ -128,11 +128,11 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
     if (!internal_in_place){
       SEXP *p_x = UNSAFE_VECTOR_PTR(x);
-      for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+      for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
         p_x[p_where[i] - 1] = p_with[withi];
       }
     } else {
-      for (R_xlen_t i = 0; i < where_size; recycle<R_xlen_t>(withi, with_size), ++i){
+      for (R_xlen_t i = 0; i < where_size; recycle_index<R_xlen_t>(withi, with_size), ++i){
         SET_VECTOR_ELT(x, p_where[i] - 1, p_with[withi]);
       }
     }

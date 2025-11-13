@@ -7,6 +7,8 @@
 
 #include <cpp11.hpp>
 
+namespace cheapr {
+
 #ifdef _MSC_VER
 #define RESTRICT __restrict
 #else
@@ -169,7 +171,7 @@ inline constexpr bool is_integerable(T x){
 
 // Recycle loop indices
 template<typename T>
-inline constexpr void recycle(T& v, T size) {
+inline constexpr void recycle_index(T& v, T size) {
   v = (++v == size) ? static_cast<T>(0) : v;
 }
 
@@ -236,14 +238,14 @@ inline int num_cores(){
 }
 
 // Memory address of R obj
-inline SEXP r_address(SEXP x) {
+inline SEXP address(SEXP x) {
   static char buf[1000];
   snprintf(buf, 1000, "%p", (void*) x);
   return make_utf8_char(buf);
 }
 
 inline bool address_equal(SEXP x, SEXP y){
-  return r_address(x) == r_address(y);
+  return address(x) == address(y);
 }
 
 // Return R function from a specified package
@@ -270,7 +272,7 @@ inline R_xlen_t r_length(SEXP x){
   return out;
 }
 
-inline R_xlen_t vec_length(SEXP x){
+inline R_xlen_t vector_length(SEXP x){
   if (!Rf_isObject(x) || Rf_isVectorAtomic(x)){
     return Rf_xlength(x);
   } else if (is_df(x)){
@@ -278,7 +280,7 @@ inline R_xlen_t vec_length(SEXP x){
     // Is x a list?
   } else if (TYPEOF(x) == VECSXP){
     if (Rf_inherits(x, "vctrs_rcrd")){
-      return Rf_length(x) > 0 ? vec_length(VECTOR_ELT(x, 0)) : 0;
+      return Rf_length(x) > 0 ? vector_length(VECTOR_ELT(x, 0)) : 0;
     } else if (Rf_inherits(x, "POSIXlt")){
       const SEXP *p_x = VECTOR_PTR_RO(x);
       R_xlen_t out = 0;
@@ -304,7 +306,7 @@ inline R_xlen_t vec_length(SEXP x){
 // e.g. for factors (different levels) and POSIXct (different timezones)
 //
 
-inline bool is_simple_atomic_vec(SEXP x){
+inline bool cheapr_is_simple_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (
           !Rf_isObject(x) || (
@@ -324,16 +326,16 @@ inline bool is_bare_atomic(SEXP x){
 }
 
 // Sometimes bare lists can be easily handled
-inline bool is_simple_vec(SEXP x){
-  return (is_simple_atomic_vec(x) || is_bare_list(x));
+inline bool cheapr_is_simple_vec(SEXP x){
+  return (cheapr_is_simple_atomic_vec(x) || is_bare_list(x));
 }
 
-inline bool is_simple_atomic_vec2(SEXP x){
-  return is_simple_atomic_vec(x) || is_int64(x);
+inline bool cheapr_is_simple_atomic_vec2(SEXP x){
+  return cheapr_is_simple_atomic_vec(x) || is_int64(x);
 }
 
-inline bool is_simple_vec2(SEXP x){
-  return is_simple_vec(x) || is_int64(x);
+inline bool cheapr_is_simple_vec2(SEXP x){
+  return cheapr_is_simple_vec(x) || is_int64(x);
 }
 
 // Because Rf_ScalarLogical sometimes crashes R?.. Need to look into this
@@ -399,5 +401,7 @@ inline SEXP make_r_chars(Args... args){
   YIELD(1);
   return out;
 }
+
+} // End of cheapr namespace
 
 #endif
