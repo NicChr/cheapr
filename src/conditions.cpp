@@ -339,9 +339,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       SHIELD(out = init<r_list_t>(n, false)); ++NP;
       SEXP *p_out = UNSAFE_VECTOR_PTR(out);
 
-      const SEXP *p_yes = VECTOR_PTR_RO(yes);
-      const SEXP *p_no = VECTOR_PTR_RO(no);
-      const SEXP *p_na = VECTOR_PTR_RO(na);
+      const SEXP *p_yes = LIST_PTR_RO(yes);
+      const SEXP *p_no = LIST_PTR_RO(no);
+      const SEXP *p_na = LIST_PTR_RO(na);
 
       if (all_scalar){
         const SEXP yes_value = p_yes[0];

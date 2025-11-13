@@ -7,8 +7,6 @@
 
 #include <cpp11.hpp>
 
-namespace cheapr {
-
 #ifdef _MSC_VER
 #define RESTRICT __restrict
 #else
@@ -17,22 +15,6 @@ namespace cheapr {
 
 #ifndef R_NO_REMAP
 #define R_NO_REMAP
-#endif
-
-#ifndef UNSAFE_VECTOR_PTR
-#define UNSAFE_VECTOR_PTR(x) ((SEXP*) DATAPTR(x))
-#endif
-#ifndef UNSAFE_STRING_PTR
-#define UNSAFE_STRING_PTR(x) ((SEXP*) DATAPTR(x))
-#endif
-#ifndef VECTOR_PTR_RO
-#define VECTOR_PTR_RO(x) ((const SEXP*) DATAPTR_RO(x))
-#endif
-#ifndef INTEGER64_PTR
-#define INTEGER64_PTR(x) ((int64_t*) REAL(x))
-#endif
-#ifndef INTEGER64_PTR_RO
-#define INTEGER64_PTR_RO(x) ((const int64_t*) REAL_RO(x))
 #endif
 
 #ifdef _OPENMP
@@ -52,94 +34,106 @@ namespace cheapr {
 #define OMP_PARALLEL_FOR_SIMD
 #endif
 
-// Not always guaranteed to be 32-bits
+namespace cheapr {
 
-#ifndef INTEGER_MIN
-#define INTEGER_MIN std::numeric_limits<int>::min() + 1
-#endif
+// Constants
 
-#ifndef INTEGER_MAX
-#define INTEGER_MAX std::numeric_limits<int>::max()
-#endif
+inline constexpr int INTEGER_MIN = std::numeric_limits<int>::min() + 1;
+inline constexpr int INTEGER_MAX = std::numeric_limits<int>::max();
 
-// Guaranteed to be 64-bits
-
-#ifndef INTEGER64_MIN
-#define INTEGER64_MIN std::numeric_limits<int64_t>::min() + 1
-#endif
-
-#ifndef INTEGER64_MAX
-#define INTEGER64_MAX std::numeric_limits<int64_t>::max()
-#endif
-
-#ifndef NA_INTEGER64
-#define NA_INTEGER64 std::numeric_limits<int64_t>::min()
-#endif
+inline constexpr int64_t INTEGER64_MIN = std::numeric_limits<int64_t>::min() + 1;
+inline constexpr int64_t INTEGER64_MAX = std::numeric_limits<int64_t>::max();
+inline constexpr int64_t NA_INTEGER64 = std::numeric_limits<int64_t>::min();
 
 
-// is_na macro functions
+inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
+inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 
-#ifndef is_na_lgl
-#define is_na_lgl(x) ((bool) (x == NA_LOGICAL))
-#endif
+// Functions
 
-#ifndef is_na_int
-#define is_na_int(x) ((bool) (x == NA_INTEGER))
-#endif
+inline SEXP* UNSAFE_VECTOR_PTR(SEXP x) {
+  return static_cast<SEXP*>(DATAPTR(x));
+}
+inline SEXP* UNSAFE_STRING_PTR(SEXP x) {
+  return static_cast<SEXP*>(DATAPTR(x));
+}
+inline const SEXP* LIST_PTR_RO(SEXP x) {
+  return static_cast<const SEXP*>(DATAPTR_RO(x));
+}
+inline int64_t* INTEGER64_PTR(SEXP x) {
+  return reinterpret_cast<int64_t*>(REAL(x));
+}
+inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
+  return reinterpret_cast<const int64_t*>(REAL_RO(x));
+}
 
-#ifndef is_na_dbl
-#define is_na_dbl(x) ((bool) (x != x))
-#endif
+inline SEXP SHIELD(SEXP x){
+  return Rf_protect(x);
+}
 
-#ifndef is_na_str
-#define is_na_str(x) ((bool) (x == NA_STRING))
-#endif
+inline void YIELD(int n){
+  Rf_unprotect(n);
+}
 
-#ifndef is_na_cplx
-#define is_na_cplx(x) ((bool) (x.r != x.r) || (x.i != x.i))
-#endif
-
-#ifndef is_na_raw
-#define is_na_raw(x) ((bool) false)
-#endif
-
-#ifndef is_na_int64
-#define is_na_int64(x) ((bool) (x == NA_INTEGER64))
-#endif
+inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
+  return Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x);
+}
 
 
-#ifndef CHEAPR_INT_TO_INT64
-#define CHEAPR_INT_TO_INT64(x) ((int64_t) (x == NA_INTEGER ? NA_INTEGER64 : x))
-#endif
-#ifndef CHEAPR_DBL_TO_INT64
-#define CHEAPR_DBL_TO_INT64(x) ((int64_t) (x != x ? NA_INTEGER64 : x))
-#endif
-#ifndef CHEAPR_INT64_TO_INT
-#define CHEAPR_INT64_TO_INT(x) ((int) (x == NA_INTEGER64 ? NA_INTEGER : x))
-#endif
-#ifndef CHEAPR_INT64_TO_DBL
-#define CHEAPR_INT64_TO_DBL(x) ((double) (x == NA_INTEGER64 ? NA_REAL : x))
-#endif
+// is_na C++ template
 
-#ifndef CHEAPR_OMP_THRESHOLD
-#define CHEAPR_OMP_THRESHOLD 100000
-#endif
+template<typename T>
+inline bool is_na(T x) {
+  Rf_error("Unimplemented `is_na` specialisation");
+}
 
-#ifndef CHEAPR_INT64SXP
-#define CHEAPR_INT64SXP 64
-#endif
+template<>
+inline bool is_na<bool>(bool x){
+  return x == NA_LOGICAL;
+}
 
-#ifndef CHEAPR_TYPEOF
-#define CHEAPR_TYPEOF(x) ( (SEXPTYPE) (Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x)) )
-#endif
+template<>
+inline bool is_na<int>(int x){
+  return x == NA_INTEGER;
+}
 
-#ifndef SHIELD
-#define SHIELD(x) (Rf_protect(x))
-#endif
+template<>
+inline bool is_na<double>(double x){
+  return x != x;
+}
 
-#ifndef YIELD
-#define YIELD(n) (Rf_unprotect(n))
-#endif
+template<>
+inline bool is_na<int64_t>(int64_t x){
+  return x == NA_INTEGER64;
+}
+
+// is_na<SEXP> will always be for CHARSXP
+template<>
+inline bool is_na<SEXP>(SEXP x){
+  return x == NA_STRING;
+}
+
+template<>
+inline bool is_na<Rcomplex>(Rcomplex x){
+  return is_na<double>(x.r) || is_na<double>(x.i);
+}
+
+template<>
+inline bool is_na<Rbyte>(Rbyte x){
+  return false;
+}
+
+inline int64_t CHEAPR_INT_TO_INT64(int x){
+  return is_na<int>(x) ? NA_INTEGER64 : x;
+}
+
+inline int CHEAPR_INT64_TO_INT(int64_t x){
+  return is_na<int64_t>(x) ? NA_INTEGER : x;
+}
+
+inline double CHEAPR_INT64_TO_DBL(int64_t x){
+  return is_na<int64_t>(x) ? NA_REAL : x;
+}
 
 // R fns
 
@@ -282,7 +276,7 @@ inline R_xlen_t vector_length(SEXP x){
     if (Rf_inherits(x, "vctrs_rcrd")){
       return Rf_length(x) > 0 ? vector_length(VECTOR_ELT(x, 0)) : 0;
     } else if (Rf_inherits(x, "POSIXlt")){
-      const SEXP *p_x = VECTOR_PTR_RO(x);
+      const SEXP *p_x = LIST_PTR_RO(x);
       R_xlen_t out = 0;
       for (int i = 0; i != 10; ++i){
         out = std::max(out, Rf_xlength(p_x[i]));

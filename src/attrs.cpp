@@ -76,7 +76,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
       YIELD(NP);
       Rf_error("attributes must be a named list");
     }
-    const SEXP *p_attributes = VECTOR_PTR_RO(attributes);
+    const SEXP *p_attributes = LIST_PTR_RO(attributes);
     const SEXP *p_names = STRING_PTR_RO(names);
 
     SEXP attr_nm = R_NilValue;

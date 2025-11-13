@@ -221,14 +221,14 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     SEXP fill_value = SHIELD(coerce_vec(fill_size >= 1 ? fill : R_NilValue, VECSXP)); ++NP;
     out = SHIELD(set ? xvec : new_vec(VECSXP, size)); ++NP;
-    const SEXP *p_out = VECTOR_PTR_RO(out);
+    const SEXP *p_out = LIST_PTR_RO(out);
     if (set){
       R_xlen_t tempi;
       // If k = 0 then no lag occurs
       if (std::abs(k) >= 1){
         SEXP lag_temp = SHIELD(new_vec(VECSXP, std::abs(k))); ++NP;
         SEXP tempv = SHIELD(new_vec(VECSXP, 1)); ++NP;
-        const SEXP *p_lag = VECTOR_PTR_RO(lag_temp);
+        const SEXP *p_lag = LIST_PTR_RO(lag_temp);
         // Positive lags
         if (k >= 0){
           for (R_xlen_t i = 0; i < k; ++i) {
@@ -256,7 +256,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
         }
       }
     } else {
-      const SEXP *p_x = VECTOR_PTR_RO(xvec);
+      const SEXP *p_x = LIST_PTR_RO(xvec);
       if (k >= 0){
         for (R_xlen_t i = 0; i < size; ++i) {
           SET_VECTOR_ELT(out, i, i >= k ? p_x[i - k] : VECTOR_ELT(fill_value, 0));
@@ -287,7 +287,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive){
   SEXP out = R_NilValue;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
-    const SEXP *p_x = VECTOR_PTR_RO(x);
+    const SEXP *p_x = LIST_PTR_RO(x);
     out = SHIELD(new_vec(VECSXP, size)); ++NP;
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (R_xlen_t i = 0; i < size; ++i){
@@ -667,7 +667,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    const SEXP *p_x = VECTOR_PTR_RO(x);
+    const SEXP *p_x = LIST_PTR_RO(x);
     SEXP fill_value = SHIELD(VECTOR_ELT(coerce_vec(fill_size >= 1 ? fill : R_NilValue, VECSXP), 0)); ++NP;
     out = SHIELD(new_vec(VECSXP, size)); ++NP;
     for (int i = 0; i != rl_size; ++i){
@@ -727,7 +727,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   SEXP out = R_NilValue;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
-    const SEXP *p_x = VECTOR_PTR_RO(x);
+    const SEXP *p_x = LIST_PTR_RO(x);
     out = SHIELD(new_vec(VECSXP, size)); ++NP;
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (R_xlen_t i = 0; i < size; ++i){

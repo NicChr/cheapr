@@ -553,7 +553,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
 
       if (cpp_any_na(value, true)){
         for (R_xlen_t i = 0; i < n; ++i){
-          eq = is_na_dbl(p_x[i]);
+          eq = is_na<double>(p_x[i]);
           if (!eq){
             p_out[k++] = p_x[i];
           }

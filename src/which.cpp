@@ -348,7 +348,7 @@ SEXP cpp_which_na(SEXP x){
       int i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += is_na_cplx(p_x[i]);
+        whichi += is_na<Rcomplex>(p_x[i]);
         ++i;
       }
       YIELD(1);
@@ -361,7 +361,7 @@ SEXP cpp_which_na(SEXP x){
       R_xlen_t i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += is_na_cplx(p_x[i]);
+        whichi += is_na<Rcomplex>(p_x[i]);
         ++i;
       }
       YIELD(1);
@@ -522,7 +522,7 @@ SEXP cpp_which_not_na(SEXP x){
       int i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += !is_na_cplx(p_x[i]);
+        whichi += !is_na<Rcomplex>(p_x[i]);
         ++i;
       }
       YIELD(1);
@@ -535,7 +535,7 @@ SEXP cpp_which_not_na(SEXP x){
       R_xlen_t i = 0;
       while (whichi < out_size){
         p_out[whichi] = i + 1;
-        whichi += !is_na_cplx(p_x[i]);
+        whichi += !is_na<Rcomplex>(p_x[i]);
         ++i;
       }
       YIELD(1);
@@ -578,7 +578,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_true[k1++] = i + 1;
       } else if (include_false && p_x[i] == 0){
         p_false[k2++] = i + 1;
-      } else if (include_na && is_na_int(p_x[i])){
+      } else if (include_na && is_na<int>(p_x[i])){
         p_na[k3++] = i + 1;
       }
     }
@@ -606,7 +606,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_true[k1++] = i + 1;
       } else if (include_false && p_x[i] == 0){
         p_false[k2++] = i + 1;
-      } else if (include_na && is_na_int(p_x[i])){
+      } else if (include_na && is_na<int>(p_x[i])){
         p_na[k3++] = i + 1;
       }
     }
@@ -680,13 +680,13 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
         if (invert){
           while (whichi < out_size){
             p_out[whichi] = i + 1;
-            whichi += !is_na_dbl(p_x[i]);
+            whichi += !is_na<double>(p_x[i]);
             ++i;
           }
         } else {
           while (whichi < out_size){
             p_out[whichi] = i + 1;
-            whichi += is_na_dbl(p_x[i]);
+            whichi += is_na<double>(p_x[i]);
             ++i;
           }
         }
