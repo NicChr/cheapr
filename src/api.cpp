@@ -375,6 +375,15 @@ api_semi_copy(SEXP x){
   }
 }
 
+SEXP
+api_paste(SEXP x, SEXP sep, SEXP collapse){
+  try {
+    return cpp_paste(x, sep, collapse);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -420,4 +429,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_str_coalesce",    (DL_FUNC)api_str_coalesce);
   R_RegisterCCallable("cheapr", "api_rebuild",    (DL_FUNC)api_rebuild);
   R_RegisterCCallable("cheapr", "api_semi_copy",    (DL_FUNC)api_semi_copy);
+  R_RegisterCCallable("cheapr", "api_paste",    (DL_FUNC)api_paste);
 }

@@ -298,6 +298,13 @@ semi_copy(SEXP x){
   return fn(x);
 }
 
+static inline SEXP
+paste(SEXP x, SEXP sep, SEXP collapse){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_paste");
+  return fn(x, sep, collapse);
+}
+
 }
 
 // -----------------------------------------------------------------------------
