@@ -1,7 +1,7 @@
 #ifndef CHEAPR_CAST_H
 #define CHEAPR_CAST_H
 
-#include "cheapr_core.h"
+#include <core.h>
 #include "types.h"
 #include "variadic.h"
 

@@ -1,7 +1,7 @@
 #ifndef CHEAPR_H
 #define CHEAPR_H
 
-#include <cheapr_core.h>
+#include <core.h>
 #include "types.h"
 #include "decls.h"
 #include "variadic.h"

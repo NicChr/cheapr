@@ -2,7 +2,7 @@
 #define CHEAPR_API_H
 
 // Core constants and small functions
-#include <cheapr_core.h>
+#include <core.h>
 // R tools for exporting C fns
 #include <R_ext/Rdynload.h>
 

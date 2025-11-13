@@ -1,7 +1,7 @@
 #ifndef CHEAPR_VARIADIC_H
 #define CHEAPR_VARIADIC_H
 
-#include "cheapr_core.h"
+#include <core.h>
 #include "decls.h"
 
 template<typename... Args>
