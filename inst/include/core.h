@@ -210,6 +210,14 @@ inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
 }
 
+inline SEXP new_immutable_vec(SEXPTYPE type, R_xlen_t n){
+  SEXP out = SHIELD(Rf_allocVector(type, n));
+  MARK_NOT_MUTABLE(out);
+  YIELD(1);
+  return out;
+}
+
+
 inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
   return Rf_coerceVector(x, type);
 }
@@ -305,7 +313,7 @@ inline R_xlen_t vector_length(SEXP x){
 // e.g. for factors (different levels) and POSIXct (different timezones)
 //
 
-inline bool cheapr_is_simple_atomic_vec(SEXP x){
+inline bool is_simple_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (
           !Rf_isObject(x) || (
@@ -325,16 +333,16 @@ inline bool is_bare_atomic(SEXP x){
 }
 
 // Sometimes bare lists can be easily handled
-inline bool cheapr_is_simple_vec(SEXP x){
-  return (cheapr_is_simple_atomic_vec(x) || is_bare_list(x));
+inline bool is_simple_vec(SEXP x){
+  return (is_simple_atomic_vec(x) || is_bare_list(x));
 }
 
-inline bool cheapr_is_simple_atomic_vec2(SEXP x){
-  return cheapr_is_simple_atomic_vec(x) || is_int64(x);
+inline bool is_simple_atomic_vec2(SEXP x){
+  return is_simple_atomic_vec(x) || is_int64(x);
 }
 
-inline bool cheapr_is_simple_vec2(SEXP x){
-  return cheapr_is_simple_vec(x) || is_int64(x);
+inline bool is_simple_vec2(SEXP x){
+  return is_simple_vec(x) || is_int64(x);
 }
 
 // Because Rf_ScalarLogical sometimes crashes R?.. Need to look into this

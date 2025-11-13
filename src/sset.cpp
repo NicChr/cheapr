@@ -1475,7 +1475,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 
   SEXP out = R_NilValue;
 
-  if (cheapr_is_simple_vec(x)){
+  if (is_simple_vec(x)){
 
     if (!is_null(j)){
       YIELD(NP);

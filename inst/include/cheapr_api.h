@@ -135,17 +135,6 @@ seq_len(R_xlen_t n){
   return fn(n);
 }
 
-// Deprecated, use cheapr::cheapr_is_simple_atomic_vec
-inline bool
-is_simple_atomic_vec(SEXP x){
-  return cheapr::cheapr_is_simple_atomic_vec(x);
-}
-// Deprecated, use cheapr::cheapr_is_simple_vec
-inline bool
-is_simple_vec(SEXP x){
-  return cheapr::cheapr_is_simple_vec(x);
-}
-
 inline SEXP
 rep_len(SEXP x, int length){
   typedef SEXP fn_t(SEXP, int);
@@ -303,10 +292,10 @@ paste(SEXP x, SEXP sep, SEXP collapse){
 }
 
 inline SEXP
-replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
-  typedef SEXP fn_t(SEXP, SEXP, SEXP, bool, bool);
+replace(SEXP x, SEXP where, SEXP with, bool quiet){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_replace");
-  return fn(x, where, with, in_place, quiet);
+  return fn(x, where, with, quiet);
 }
 
 inline SEXP

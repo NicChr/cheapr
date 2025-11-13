@@ -348,12 +348,11 @@ api_paste(SEXP x, SEXP sep, SEXP collapse){
   }
 }
 
-SEXP
-api_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
+void
+api_replace(SEXP x, SEXP where, SEXP with, bool quiet){
   try {
-    return cpp_replace(x, where, with, in_place, quiet);
+    static_cast<void>(cpp_replace(x, where, with, true, quiet));
   } catch (...) {
-    return R_NilValue;
   }
 }
 
