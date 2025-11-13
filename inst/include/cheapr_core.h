@@ -425,24 +425,30 @@ inline bool is_whole_number(double x, double tolerance){
 template<typename... Args>
 inline SEXP make_r_list(Args... args){
   constexpr int n = sizeof...(args);
-  SEXP out = SHIELD(new_vec(VECSXP, n));
-  int i = 0;
-  int dummy[] = {(SET_VECTOR_ELT(out, i++, args), 0)...};
-  static_cast<void>(dummy);
-  YIELD(1);
-  return out;
+  if (n == 0){
+    return new_vec(VECSXP, 0);
+  } else {
+    SEXP out = SHIELD(new_vec(VECSXP, n));
+    int i = 0;
+    ((SET_VECTOR_ELT(out, i++, args), void()), ...);
+    YIELD(1);
+    return out;
+  }
 }
 
 // Make a character vec from const char ptrs
 template<typename... Args>
 inline SEXP make_r_chars(Args... args){
   constexpr int n = sizeof...(args);
-  SEXP out = SHIELD(new_vec(STRSXP, n));
-  int i = 0;
-  int dummy[] = {(SET_STRING_ELT(out, i++, make_utf8_char(args)), 0)...};
-  static_cast<void>(dummy);
-  YIELD(1);
-  return out;
+  if (n == 0){
+    return new_vec(STRSXP, 0);
+  } else {
+    SEXP out = SHIELD(new_vec(STRSXP, n));
+    int i = 0;
+    ((SET_STRING_ELT(out, i++, make_utf8_char(args)), void()), ...);
+    YIELD(1);
+    return out;
+  }
 }
 
 } // End of cheapr namespace

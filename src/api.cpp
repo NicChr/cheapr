@@ -384,6 +384,15 @@ api_paste(SEXP x, SEXP sep, SEXP collapse){
   }
 }
 
+SEXP
+api_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
+  try {
+    return cpp_replace(x, where, with, in_place, quiet);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -430,4 +439,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_rebuild",    (DL_FUNC)api_rebuild);
   R_RegisterCCallable("cheapr", "api_semi_copy",    (DL_FUNC)api_semi_copy);
   R_RegisterCCallable("cheapr", "api_paste",    (DL_FUNC)api_paste);
+  R_RegisterCCallable("cheapr", "api_replace",    (DL_FUNC)api_replace);
 }
