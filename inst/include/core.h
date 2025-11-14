@@ -49,6 +49,8 @@ inline constexpr int64_t NA_INTEGER64 = std::numeric_limits<int64_t>::min();
 inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 
+inline const Rcomplex NA_COMPLEX = {NA_REAL, NA_REAL};
+
 // Functions
 
 inline SEXP* UNSAFE_VECTOR_PTR(SEXP x) {
@@ -89,11 +91,6 @@ inline bool is_na(T x) {
 }
 
 template<>
-inline bool is_na<bool>(bool x){
-  return x == NA_LOGICAL;
-}
-
-template<>
 inline bool is_na<int>(int x){
   return x == NA_INTEGER;
 }
@@ -116,7 +113,7 @@ inline bool is_na<SEXP>(SEXP x){
 
 template<>
 inline bool is_na<Rcomplex>(Rcomplex x){
-  return is_na(x.r) || is_na(x.i);
+  return is_na<double>(x.r) || is_na<double>(x.i);
 }
 
 template<>
@@ -124,15 +121,56 @@ inline bool is_na<Rbyte>(Rbyte x){
   return false;
 }
 
-// Generic equals fn for R that accounts for NA
 template<typename T>
-inline bool equals(const T& x, const T& y) {
+inline T na_type(T x) {
+  Rf_error("Unimplemented `na_type` specialisation");
+}
+
+template<>
+inline int na_type<int>(int x){
+  return NA_INTEGER;
+}
+
+template<>
+inline double na_type<double>(double x){
+  return NA_REAL;
+}
+
+template<>
+inline int64_t na_type<int64_t>(int64_t x){
+  return NA_INTEGER64;
+}
+
+template<>
+inline SEXP na_type<SEXP>(SEXP x){
+  return NA_STRING;
+}
+
+template<>
+inline Rcomplex na_type<Rcomplex>(Rcomplex x){
+  return NA_COMPLEX;
+}
+
+// C++ equals fn for R that accounts for NA
+// It differs from R in the sense that NA == NA returns true here
+template<typename T>
+inline bool eq(const T& x, const T& y) {
   return x == y;
 }
 template<>
-inline bool equals<double>(const double& x, const double& y) {
+inline bool eq<double>(const double& x, const double& y) {
   return is_na(x) ? is_na(y) : (is_na(y) ? is_na(x) : x == y);
 }
+template<>
+inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
+  return is_na(x) ? is_na(y) : (is_na(y) ? is_na(x) : ( (x.r == y.r) && (x.i == y.i)));
+}
+
+// Equals fn that behaves like R's `==` in the presence of NAs
+// template<typename T>
+// inline int r_eq(const T& x, const T& y) {
+//   return (is_na(x) || is_na(y) ) ? x == y : NA_INTEGER;
+// }
 
 inline int64_t CHEAPR_INT_TO_INT64(int x){
   return is_na(x) ? NA_INTEGER64 : x;
@@ -435,7 +473,7 @@ inline double round_nearest_even(double x){
   return x - std::remainder(x, 1.0);
 }
 
-inline bool is_whole_number_(double x, double tolerance){
+inline bool is_whole_number(double x, double tolerance){
   return (std::fabs(x - std::round(x)) < tolerance);
 }
 
@@ -448,7 +486,7 @@ inline SEXP shallow_copy(SEXP x){
 }
 
 // int not bool because bool can't be NA
-inline int is_whole_number(SEXP x, double tol_, bool na_rm_){
+inline int vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
 
   R_xlen_t n = Rf_xlength(x);
 
@@ -470,7 +508,7 @@ inline int is_whole_number(SEXP x, double tol_, bool na_rm_){
         continue;
       }
 
-      out = is_whole_number_(p_x[i], tol_);
+      out = is_whole_number(p_x[i], tol_);
       if (out == 0){
         break;
       }

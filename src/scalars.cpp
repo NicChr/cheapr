@@ -17,15 +17,9 @@ bool implicit_na_coercion(SEXP x, SEXP target){
 }
 
 #define CHEAPR_VAL_COUNT(VAL)                                  \
-if (is_na(VAL)){                                               \
   for (R_xlen_t i = 0; i < n; ++i){                            \
-    count += is_na(p_x[i]);                                    \
-  }                                                            \
-} else {                                                       \
-  for (R_xlen_t i = 0; i < n; ++i){                            \
-    count += (p_x[i] == VAL);                                  \
-  }                                                            \
-}
+    count += eq(p_x[i], VAL);                                  \
+  }
 
 
 R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){

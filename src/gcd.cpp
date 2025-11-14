@@ -235,7 +235,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, CHEAPR_INT_TO_INT64(p_x[i]), na_rm);
       }
-      bool is_short = is_na(lcm) || is_integerable<int64_t>(lcm);
+      bool is_short = is_na(lcm) || is_integerable(lcm);
       out = SHIELD(new_vec(is_short ? INTSXP : REALSXP, 1)); ++NP;
       if (is_short){
         int temp = CHEAPR_INT64_TO_INT(lcm);
@@ -321,8 +321,8 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    recycle_index<R_xlen_t>(xi, xn),
-    recycle_index<R_xlen_t>(yi, yn),
+    recycle_index(xi, xn),
+    recycle_index(yi, yn),
     ++i){
       p_out[i] = gcd2_int(p_x[xi], p_y[yi], na_rm);
     }
@@ -337,8 +337,8 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    recycle_index<R_xlen_t>(xi, xn),
-    recycle_index<R_xlen_t>(yi, yn),
+    recycle_index(xi, xn),
+    recycle_index(yi, yn),
       ++i){
       p_out[i] = gcd2(p_x[xi], p_y[yi], tol, na_rm);
     }
@@ -380,8 +380,8 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    recycle_index<R_xlen_t>(xi, xn),
-    recycle_index<R_xlen_t>(yi, yn),
+    recycle_index(xi, xn),
+    recycle_index(yi, yn),
     ++i){
       dbl_lcm = lcm2_int(p_x[xi], p_y[yi], na_rm);
       if (!(dbl_lcm == dbl_lcm) || std::fabs(dbl_lcm) > int_max){
@@ -402,8 +402,8 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
-    recycle_index<R_xlen_t>(xi, xn),
-    recycle_index<R_xlen_t>(yi, yn),
+    recycle_index(xi, xn),
+    recycle_index(yi, yn),
     ++i){
       p_out[i] = lcm2(p_x[xi], p_y[yi], tol, na_rm);
     }

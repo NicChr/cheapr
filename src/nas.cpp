@@ -3,21 +3,43 @@
 // NA handling functions
 // Author: Nick Christofides
 
-#define CHEAPR_ANY_NA(IS_NA)                                  \
+#define CHEAPR_ANY_NA                                          \
 for (R_xlen_t i = 0; i < n; ++i){                              \
-  if (IS_NA(p_x[i])){                                         \
+  if (is_na(p_x[i])){                                          \
     out = true;                                                \
     break;                                                     \
   }                                                            \
 }                                                              \
 
-#define CHEAPR_ALL_NA(IS_NA)                                  \
+#define CHEAPR_ALL_NA                                          \
 for (R_xlen_t i = 0; i < n; ++i){                              \
-  if (!IS_NA(p_x[i])){                                        \
+  if (!is_na(p_x[i])){                                         \
     out = false;                                               \
     break;                                                     \
   }                                                            \
-}                                                              \
+}
+
+#define CHEAPR_IS_NA                                             \
+if (n_cores > 1){                                                \
+  OMP_PARALLEL_FOR_SIMD                                          \
+  for (R_xlen_t i = 0; i < n; ++i){                              \
+    p_out[i] = is_na(p_x[i]);                                    \
+  }                                                              \
+} else {                                                         \
+  OMP_FOR_SIMD                                                   \
+  for (R_xlen_t i = 0; i < n; ++i){                              \
+    p_out[i] = is_na(p_x[i]);                                    \
+  }                                                              \
+}
+
+#define CHEAPR_NA_COUNT                                              \
+if (do_parallel){                                                    \
+_Pragma("omp parallel for simd num_threads(n_cores) reduction(+:count)")\
+  for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);           \
+} else {                                                             \
+  OMP_FOR_SIMD                                                       \
+  for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);           \
+}
 
 
 R_xlen_t na_count(SEXP x, bool recursive){
@@ -33,45 +55,22 @@ R_xlen_t na_count(SEXP x, bool recursive){
   case LGLSXP:
   case INTSXP: {
     const int *p_x = INTEGER_RO(x);
-    if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
-    }
+    CHEAPR_NA_COUNT
     break;
   }
   case CHEAPR_INT64SXP: {
     const int64_t *p_x = INTEGER64_PTR_RO(x);
-    if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
-    }
+    CHEAPR_NA_COUNT
     break;
   }
   case REALSXP: {
     const double *p_x = REAL_RO(x);
-    if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
-    }
+    CHEAPR_NA_COUNT
     break;
   }
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
-    if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
-    } else {
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
-    }
+    CHEAPR_NA_COUNT
     break;
   }
   case RAWSXP: {
@@ -79,13 +78,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   case CPLXSXP: {
     const Rcomplex *p_x = COMPLEX_RO(x);
-    if (do_parallel){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<Rcomplex>(p_x[i]);
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<Rcomplex>(p_x[i]);
-    }
+    CHEAPR_NA_COUNT
     break;
   }
   case VECSXP: {
@@ -128,22 +121,22 @@ bool cpp_any_na(SEXP x, bool recursive){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
-    CHEAPR_ANY_NA(is_na);
+    CHEAPR_ANY_NA;
     break;
   }
   case CHEAPR_INT64SXP: {
     int64_t *p_x = INTEGER64_PTR(x);
-    CHEAPR_ANY_NA(is_na);
+    CHEAPR_ANY_NA;
     break;
   }
   case REALSXP: {
     double *p_x = REAL(x);
-    CHEAPR_ANY_NA(is_na);
+    CHEAPR_ANY_NA;
     break;
   }
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
-    CHEAPR_ANY_NA(is_na);
+    CHEAPR_ANY_NA;
     break;
   }
   case RAWSXP: {
@@ -151,7 +144,7 @@ bool cpp_any_na(SEXP x, bool recursive){
   }
   case CPLXSXP: {
     Rcomplex *p_x = COMPLEX(x);
-    CHEAPR_ANY_NA(is_na<Rcomplex>);
+    CHEAPR_ANY_NA;
     break;
   }
   case VECSXP: {
@@ -190,22 +183,22 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
-    CHEAPR_ALL_NA(is_na);
+    CHEAPR_ALL_NA;
     break;
   }
   case CHEAPR_INT64SXP: {
     int64_t *p_x = INTEGER64_PTR(x);
-    CHEAPR_ALL_NA(is_na);
+    CHEAPR_ALL_NA;
     break;
   }
   case REALSXP: {
     double *p_x = REAL(x);
-    CHEAPR_ALL_NA(is_na);
+    CHEAPR_ALL_NA;
     break;
   }
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
-    CHEAPR_ALL_NA(is_na);
+    CHEAPR_ALL_NA;
     break;
   }
   case RAWSXP: {
@@ -213,7 +206,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   }
   case CPLXSXP: {
     Rcomplex *p_x = COMPLEX(x);
-    CHEAPR_ALL_NA(is_na<Rcomplex>);
+    CHEAPR_ALL_NA;
     break;
   }
   case VECSXP: {
@@ -255,61 +248,28 @@ SEXP cpp_is_na(SEXP x){
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const int *p_x = INTEGER(x);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na(p_x[i]);
-      }
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na(p_x[i]);
-      }
-    }
-
+    CHEAPR_IS_NA
     break;
   }
   case CHEAPR_INT64SXP: {
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const int64_t *p_x = INTEGER64_PTR_RO(x);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na(p_x[i]);
-      }
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na(p_x[i]);
-      }
-    }
+    CHEAPR_IS_NA
     break;
   }
   case REALSXP: {
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const double *p_x = REAL(x);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na(p_x[i]);
-      }
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na(p_x[i]);
-      }
-    }
+    CHEAPR_IS_NA
     break;
   }
   case STRSXP: {
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = STRING_PTR_RO(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = is_na(p_x[i]);
-    }
+    CHEAPR_IS_NA
     break;
   }
   case RAWSXP: {
@@ -322,10 +282,7 @@ SEXP cpp_is_na(SEXP x){
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const Rcomplex *p_x = COMPLEX(x);
-    OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = is_na<Rcomplex>(p_x[i]);
-    }
+    CHEAPR_IS_NA
     break;
   }
   case VECSXP: {
@@ -402,7 +359,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       const Rcomplex *p_xj = COMPLEX_RO(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
-        p_out[i] += is_na<Rcomplex>(p_xj[i]);
+        p_out[i] += is_na(p_xj[i]);
       }
       break;
     }
@@ -749,7 +706,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       Rcomplex *p_x = COMPLEX(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
-        p_out[rowi] += is_na<Rcomplex>(p_x[i]);
+        p_out[rowi] += is_na(p_x[i]);
       }
       break;
     }
@@ -836,7 +793,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
           ++coli;
           rowi = 0;
         }
-        p_out[coli] += is_na<Rcomplex>(p_x[i]);
+        p_out[coli] += is_na(p_x[i]);
       }
       break;
     }

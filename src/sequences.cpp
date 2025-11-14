@@ -526,7 +526,7 @@ double pretty_ceiling(double x){
 }
 
 bool can_be_int(double x, double tolerance){
-  return is_whole_number_(x, tolerance) && is_integerable<double>(x);
+  return is_whole_number(x, tolerance) && is_integerable(x);
 }
 
 double seq_end(double size, double from, double by){
@@ -668,7 +668,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       // Not sure if adj_start needs rounding here
       adj_start *= scale_adj;
 
-      if (is_whole_number_(adj_start, tol)){
+      if (is_whole_number(adj_start, tol)){
         adj_start = round_nearest_even(adj_start);
       }
       start *= scale_adj;
@@ -734,7 +734,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     seq_from = R_NilValue, seq_width = R_NilValue;
 
     if (!scale_up && can_be_int(adj_width, tol) && can_be_int(adj_start, tol) &&
-       is_integerable<double>(adj_end)){
+       is_integerable(adj_end)){
       adj_width = round_nearest_even(adj_width);
       adj_start = round_nearest_even(adj_start);
 

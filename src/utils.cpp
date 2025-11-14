@@ -758,7 +758,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
 [[cpp11::register]]
 SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_){
-  return Rf_ScalarLogical(is_whole_number(x, tol_, na_rm_));
+  return Rf_ScalarLogical(vec_is_whole_number(x, tol_, na_rm_));
 }
 
 SEXP match(SEXP y, SEXP x, int no_match){
