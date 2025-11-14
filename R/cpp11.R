@@ -236,10 +236,6 @@ cpp_val_replace <- function(x, value, replace, recursive) {
   .Call(`_cheapr_cpp_val_replace`, x, value, replace, recursive)
 }
 
-cpp_val_set_replace <- function(x, value, replace, recursive) {
-  .Call(`_cheapr_cpp_val_set_replace`, x, value, replace, recursive)
-}
-
 cpp_val_remove <- function(x, value) {
   .Call(`_cheapr_cpp_val_remove`, x, value)
 }

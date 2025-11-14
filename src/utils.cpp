@@ -164,7 +164,7 @@ double cpp_sum(SEXP x){
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_na<double>(sum) || is_na<int>(p_x[i]) ? NA_REAL : sum + p_x[i];
+      sum = is_na(sum) || is_na(p_x[i]) ? NA_REAL : sum + p_x[i];
     }
     break;
   }
@@ -174,7 +174,7 @@ double cpp_sum(SEXP x){
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_na<double>(sum) || is_na<int64_t>(p_x[i]) ? NA_REAL : sum + p_x[i];
+      sum = is_na(sum) || is_na(p_x[i]) ? NA_REAL : sum + p_x[i];
     }
     break;
   }
@@ -214,8 +214,8 @@ SEXP cpp_range(SEXP x){
         min = std::min(min, p_x[i]);
         max = std::max(max, p_x[i]);
       }
-      lo = is_na<int>(min) ? NA_REAL : min;
-      hi = is_na<int>(min) ? NA_REAL : max;
+      lo = is_na(min) ? NA_REAL : min;
+      hi = is_na(min) ? NA_REAL : max;
       break;
     }
     case CHEAPR_INT64SXP: {
@@ -230,8 +230,8 @@ SEXP cpp_range(SEXP x){
         min = std::min(min, p_x[i]);
         max = std::max(max, p_x[i]);
       }
-      lo = is_na<int64_t>(min) ? NA_REAL : min;
-      hi = is_na<int64_t>(min) ? NA_REAL : max;
+      lo = is_na(min) ? NA_REAL : min;
+      hi = is_na(min) ? NA_REAL : max;
       break;
     }
     default: {
@@ -242,7 +242,7 @@ SEXP cpp_range(SEXP x){
       double max = R_NegInf;
 
       for (R_xlen_t i = 0; i < n; ++i){
-        if (is_na<double>(p_x[i])){
+        if (is_na(p_x[i])){
           min = NA_REAL;
           max = NA_REAL;
           break;
@@ -281,13 +281,13 @@ double var_sum_squared_diff(SEXP x, double mu){
 
   // NA values are always ignored here
 
-  if (!is_na<double>(mu)){
+  if (!is_na(mu)){
     switch (TYPEOF(x)){
 
     case INTSXP: {
       const int *p_x = INTEGER(x);
       for (R_xlen_t i = 0; i < n; ++i){
-        if (is_na<int>(p_x[i])) continue;
+        if (is_na(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
       }
       break;
@@ -295,7 +295,7 @@ double var_sum_squared_diff(SEXP x, double mu){
     default: {
       const double *p_x = REAL(x);
       for (R_xlen_t i = 0; i < n; ++i){
-        if (is_na<double>(p_x[i])) continue;
+        if (is_na(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
       }
       break;
@@ -378,7 +378,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     const int *p_x = INTEGER(x);
     const double *p_b = REAL(breaks);
     int* RESTRICT p_out = INTEGER(out);
-    CHEAPR_BIN_CODES(is_na<int>, NA_INTEGER);
+    CHEAPR_BIN_CODES(is_na, NA_INTEGER);
     YIELD(2);
     return out;
   } else {
@@ -387,7 +387,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     const int *p_x = INTEGER(x);
     const double *p_b = REAL(breaks);
     int* RESTRICT p_out = INTEGER(out);
-    CHEAPR_BIN_NCODES(is_na<int>, NA_INTEGER);
+    CHEAPR_BIN_NCODES(is_na, NA_INTEGER);
     YIELD(2);
     return out;
   }
@@ -399,7 +399,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     const double *p_x = REAL(x);
     const double *p_b = REAL(breaks);
     int* RESTRICT p_out = INTEGER(out);
-    CHEAPR_BIN_CODES(is_na<double>, NA_INTEGER);
+    CHEAPR_BIN_CODES(is_na, NA_INTEGER);
     YIELD(2);
     return out;
   } else {
@@ -408,7 +408,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     const double *p_x = REAL(x);
     const double *p_b = REAL(breaks);
     double* RESTRICT p_out = REAL(out);
-    CHEAPR_BIN_NCODES(is_na<double>, NA_REAL);
+    CHEAPR_BIN_NCODES(is_na, NA_REAL);
     YIELD(2);
     return out;
   }

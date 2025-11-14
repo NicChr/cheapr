@@ -314,7 +314,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     // otherwise we're modifying an existing one
     loc = p_add_locs[j];
 
-    if (is_na<int>(loc)){
+    if (is_na(loc)){
       if (is_null(p_y[j])){
         null_locs.push_back(-(n + 1));
       }
@@ -369,7 +369,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 //   int loc;
 //   for (int j = 0; j < n_cols; ++j){
 //     loc = add_locs[j];
-//     if (is_na<int>(loc) && values[j] != R_NilValue){
+//     if (is_na(loc) && values[j] != R_NilValue){
 //       x.push_back(values[j]);
 //       names.push_back(col_names[j]);
 //     } else {
@@ -456,7 +456,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 //   for (int j = 0; j < n_cols; ++j){
 //     loc = p_add_locs[j];
 //     any_null = any_null || is_null(p_y[j]);
-//     if (is_na<int>(loc)){
+//     if (is_na(loc)){
 //       SET_VECTOR_ELT(out, n, p_y[j]);
 //       SET_STRING_ELT(out_names, n, p_col_names[j]);
 //       ++n;
@@ -778,7 +778,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
     loc = p_add_locs[j];
     vec = p_cols[j];
     any_null = any_null || is_null(vec);
-    if (is_na<int>(loc)){
+    if (is_na(loc)){
       SET_VECTOR_ELT(out, n, cpp_rep_len(vec, n_rows));
       SET_STRING_ELT(out_names, n, p_col_names[j]);
       ++n;

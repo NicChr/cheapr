@@ -12,12 +12,12 @@ template<typename T> T cpp_sign(T x) {
 }
 
 int gcd2_int(int x, int y, bool na_rm){
-  bool has_na = is_na<int>(x) || is_na<int>(y);
+  bool has_na = is_na(x) || is_na(y);
   if (!na_rm && has_na){
     return NA_INTEGER;
   }
   if (na_rm && has_na){
-    if (is_na<int>(x)){
+    if (is_na(x)){
       return y;
     } else {
       return x;
@@ -149,7 +149,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
       int gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
         gcd = gcd2_int(gcd, p_x[i], na_rm);
-        if (is_na<int>(gcd)){
+        if (is_na(gcd)){
           if (!na_rm) break;
         } else if (std::abs(gcd) == 1){
           break;
@@ -167,7 +167,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
       int64_t gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
         gcd = gcd2_int64(gcd, p_x[i], na_rm);
-        if (is_na<int64_t>(gcd)){
+        if (is_na(gcd)){
           if (!na_rm) break;
         } else if (std::abs(gcd) == 1){
           break;
@@ -235,7 +235,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, CHEAPR_INT_TO_INT64(p_x[i]), na_rm);
       }
-      bool is_short = is_na<int64_t>(lcm) || is_integerable<int64_t>(lcm);
+      bool is_short = is_na(lcm) || is_integerable<int64_t>(lcm);
       out = SHIELD(new_vec(is_short ? INTSXP : REALSXP, 1)); ++NP;
       if (is_short){
         int temp = CHEAPR_INT64_TO_INT(lcm);

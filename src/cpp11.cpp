@@ -419,13 +419,6 @@ extern "C" SEXP _cheapr_cpp_val_replace(SEXP x, SEXP value, SEXP replace, SEXP r
   END_CPP11
 }
 // scalars.cpp
-SEXP cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
-extern "C" SEXP _cheapr_cpp_val_set_replace(SEXP x, SEXP value, SEXP replace, SEXP recursive) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_val_set_replace(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(value), cpp11::as_cpp<cpp11::decay_t<SEXP>>(replace), cpp11::as_cpp<cpp11::decay_t<bool>>(recursive)));
-  END_CPP11
-}
-// scalars.cpp
 SEXP cpp_val_remove(SEXP x, SEXP value);
 extern "C" SEXP _cheapr_cpp_val_remove(SEXP x, SEXP value) {
   BEGIN_CPP11
@@ -895,7 +888,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_unnested_length",         (DL_FUNC) &_cheapr_cpp_unnested_length,         1},
     {"_cheapr_cpp_val_remove",              (DL_FUNC) &_cheapr_cpp_val_remove,              2},
     {"_cheapr_cpp_val_replace",             (DL_FUNC) &_cheapr_cpp_val_replace,             4},
-    {"_cheapr_cpp_val_set_replace",         (DL_FUNC) &_cheapr_cpp_val_set_replace,         4},
     {"_cheapr_cpp_vector_length",           (DL_FUNC) &_cheapr_cpp_vector_length,           1},
     {"_cheapr_cpp_which_",                  (DL_FUNC) &_cheapr_cpp_which_,                  2},
     {"_cheapr_cpp_which_na",                (DL_FUNC) &_cheapr_cpp_which_na,                1},

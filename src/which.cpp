@@ -19,17 +19,36 @@ R_xlen_t count_true(const int* px, uint_fast64_t n){
   }
 }
 
-#define CHEAPR_WHICH_VAL(VAL)                                \
-while (whichi < out_size){                                     \
-  p_out[whichi] = i + 1;                                       \
-  whichi += (p_x[i++] == VAL);                               \
-}                                                              \
+#define CHEAPR_WHICH_VAL(VAL)                                    \
+if (is_na(VAL)){                                                 \
+  while (whichi < out_size){                                     \
+                                                                 \
+    p_out[whichi] = i + 1;                                       \
+    whichi += is_na(p_x[i++]);                                   \
+  }                                                              \
+} else {                                                         \
+  while (whichi < out_size){                                     \
+                                                                 \
+    p_out[whichi] = i + 1;                                       \
+    whichi += (p_x[i++] == VAL);                                 \
+  }                                                              \
+}
 
-#define CHEAPR_WHICH_VAL_INVERTED(VAL)                       \
-while (whichi < out_size){                                     \
-  p_out[whichi] = i + 1;                                       \
-  whichi += (p_x[i++] != VAL);                               \
-}                                                              \
+#define CHEAPR_WHICH_VAL_INVERTED(VAL)                           \
+if (is_na(VAL)){                                                 \
+  while (whichi < out_size){                                     \
+                                                                 \
+    p_out[whichi] = i + 1;                                       \
+    whichi += !is_na(p_x[i++]);                                  \
+  }                                                              \
+} else {                                                         \
+  while (whichi < out_size){                                     \
+                                                                 \
+    p_out[whichi] = i + 1;                                       \
+    whichi += (p_x[i++] != VAL);                                 \
+  }                                                              \
+}
+
 
 [[cpp11::register]]
 SEXP cpp_which_(SEXP x, bool invert){
@@ -81,39 +100,23 @@ SEXP cpp_which_(SEXP x, bool invert){
   }
 }
 
-[[cpp11::register]]
-SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
+SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
   bool is_long = (n > INTEGER_MAX);
   if (Rf_length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }
-  if (TYPEOF(x) == VECSXP){
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-  }
-  SEXP val_is_na = SHIELD(cpp_is_na(value)); ++NP;
-  if (Rf_asLogical(val_is_na)){
-    if (invert){
-      SEXP out = SHIELD(cpp_which_not_na(x)); ++NP;
-      YIELD(NP);
-      return out;
-    } else {
-      SEXP out = SHIELD(cpp_which_na(x)); ++NP;
-      YIELD(NP);
-      return out;
-    }
-  }
 
   if (implicit_na_coercion(value, x)){
     YIELD(NP);
     Rf_error("Value has been implicitly converted to NA, please check");
   }
-
-  R_xlen_t n_vals = scalar_count(x, value, false);
+  R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : Rf_asReal(n_values);
   R_xlen_t out_size = invert ? n - n_vals : n_vals;
   R_xlen_t whichi = 0;
   R_xlen_t i = 0;
+
   switch ( CHEAPR_TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
@@ -209,346 +212,48 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
     return out;
   }
   default: {
+    if (cpp_all_na(value, true, false)){
+    SEXP expr = SHIELD(cheapr_is_na(x)); ++NP;
+    SEXP is_equal = SHIELD(Rf_eval(expr, R_GetCurrentEnv())); ++NP;
+    SEXP out = SHIELD(cpp_which_(is_equal, invert)); ++NP;
     YIELD(NP);
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+    return out;
+  } else {
+    SEXP expr = SHIELD(Rf_lang3(install_utf8("=="), x, value)); ++NP;
+    SEXP is_equal = SHIELD(Rf_eval(expr, R_GetCurrentEnv())); ++NP;
+    SEXP out = SHIELD(cpp_which_(is_equal, invert)); ++NP;
+    YIELD(NP);
+    return out;
+  }
+
   }
   }
+}
+
+[[cpp11::register]]
+SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
+  SEXP n_vals = SHIELD(Rf_ScalarReal(scalar_count(x, value, false)));
+  SEXP out = SHIELD(cpp_val_find(x, value, invert, n_vals));
+  YIELD(2);
+  return out;
 }
 
 // Memory-efficient which(is.na(x))
 
 [[cpp11::register]]
 SEXP cpp_which_na(SEXP x){
-  R_xlen_t n = Rf_xlength(x);
-  bool is_short = (n <= INTEGER_MAX);
-  switch ( CHEAPR_TYPEOF(x) ){
-  case NILSXP: {
-    return new_vec(INTSXP, 0);
-  }
-  case LGLSXP:
-  case INTSXP: {
-    R_xlen_t count = na_count(x, true);
-    const int *p_x = INTEGER(x);
-    if (is_short){
-      int out_size = count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int* RESTRICT p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      CHEAPR_WHICH_VAL(NA_INTEGER);
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double* RESTRICT p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      CHEAPR_WHICH_VAL(NA_INTEGER);
-      YIELD(1);
-      return out;
-    }
-  }
-  case CHEAPR_INT64SXP: {
-    R_xlen_t count = na_count(x, true);
-    const int64_t *p_x = INTEGER64_PTR_RO(x);
-    if (is_short){
-      int out_size = count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int* RESTRICT p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i++] == NA_INTEGER64);
-      }
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double* RESTRICT p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i++] == NA_INTEGER64);
-      }
-      YIELD(1);
-      return out;
-    }
-  }
-  case REALSXP: {
-    R_xlen_t count = na_count(x, true);
-    const double *p_x = REAL(x);
-    if (is_short){
-      int out_size = count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int* RESTRICT p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i] != p_x[i]);
-        ++i;
-      }
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double* RESTRICT p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i] != p_x[i]);
-        ++i;
-      }
-      YIELD(1);
-      return out;
-    }
-  }
-  case STRSXP: {
-    R_xlen_t count = na_count(x, true);
-    const SEXP *p_x = STRING_PTR_RO(x);
-    if (is_short){
-      int out_size = count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int *p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      CHEAPR_WHICH_VAL(NA_STRING);
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double *p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      CHEAPR_WHICH_VAL(NA_STRING);
-      YIELD(1);
-      return out;
-    }
-  }
-  case RAWSXP: {
-    SEXP out = SHIELD(new_vec(INTSXP, 0));
-    YIELD(1);
-    return out;
-  }
-  case CPLXSXP: {
-    R_xlen_t count = na_count(x, true);
-    Rcomplex *p_x = COMPLEX(x);
-    if (is_short){
-      int out_size = count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int *p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += is_na<Rcomplex>(p_x[i]);
-        ++i;
-      }
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double *p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += is_na<Rcomplex>(p_x[i]);
-        ++i;
-      }
-      YIELD(1);
-      return out;
-    }
-  }
-  default: {
-    SEXP is_missing = SHIELD(cheapr_is_na(x));
-    SEXP out = SHIELD(cpp_which_(is_missing, false));
-    YIELD(2);
-    return out;
-  }
-  }
+  SEXP na = SHIELD(Rf_ScalarInteger(NA_INTEGER));
+  SEXP out = SHIELD(cpp_which_val(x, na, false));
+  YIELD(2);
+  return out;
 }
 
 [[cpp11::register]]
 SEXP cpp_which_not_na(SEXP x){
-  R_xlen_t n = Rf_xlength(x);
-  bool is_short = (n <= INTEGER_MAX);
-  switch ( CHEAPR_TYPEOF(x) ){
-  case NILSXP: {
-    return new_vec(INTSXP, 0);
-  }
-  case LGLSXP:
-  case INTSXP: {
-    R_xlen_t count = na_count(x, true);
-    const int *p_x = INTEGER(x);
-    if (is_short){
-      int out_size = n - count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int* RESTRICT p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      CHEAPR_WHICH_VAL_INVERTED(NA_INTEGER);
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = n - count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double* RESTRICT p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      CHEAPR_WHICH_VAL_INVERTED(NA_INTEGER);
-      YIELD(1);
-      return out;
-    }
-  }
-  case CHEAPR_INT64SXP: {
-    R_xlen_t count = na_count(x, true);
-    const int64_t *p_x = INTEGER64_PTR_RO(x);
-    if (is_short){
-      int out_size = n - count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int* RESTRICT p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i++] != NA_INTEGER64);
-      }
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = n - count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double* RESTRICT p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i++] != NA_INTEGER64);
-      }
-      YIELD(1);
-      return out;
-    }
-  }
-  case REALSXP: {
-    R_xlen_t count = na_count(x, true);
-    const double *p_x = REAL(x);
-    if (is_short){
-      int out_size = n - count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int* RESTRICT p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i] == p_x[i]);
-        ++i;
-      }
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = n - count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double* RESTRICT p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += (p_x[i] == p_x[i]);
-        ++i;
-      }
-      YIELD(1);
-      return out;
-    }
-  }
-  case STRSXP: {
-    R_xlen_t count = na_count(x, true);
-    const SEXP *p_x = STRING_PTR_RO(x);
-    if (is_short){
-      int out_size = n - count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int* RESTRICT p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      CHEAPR_WHICH_VAL_INVERTED(NA_STRING);
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = n - count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double* RESTRICT p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      CHEAPR_WHICH_VAL_INVERTED(NA_STRING);
-      YIELD(1);
-      return out;
-    }
-  }
-  case RAWSXP: {
-    if (is_short){
-    SEXP out = SHIELD(new_vec(INTSXP, n));
-    int* RESTRICT p_out = INTEGER(out);
-    for (int i = 0; i < n; ++i){
-      p_out[i] = i + 1;
-    }
-    YIELD(1);
-    return out;
-  } else {
-    SEXP out = SHIELD(new_vec(REALSXP, n));
-    double* RESTRICT p_out = REAL(out);
-    for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = i + 1;
-    }
-    YIELD(1);
-    return out;
-  }
-  }
-  case CPLXSXP: {
-    R_xlen_t count = na_count(x, true);
-    Rcomplex *p_x = COMPLEX(x);
-    if (is_short){
-      int out_size = n - count;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
-      int* RESTRICT p_out = INTEGER(out);
-      int whichi = 0;
-      int i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += !is_na<Rcomplex>(p_x[i]);
-        ++i;
-      }
-      YIELD(1);
-      return out;
-    } else {
-      R_xlen_t out_size = n - count;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
-      double* RESTRICT p_out = REAL(out);
-      R_xlen_t whichi = 0;
-      R_xlen_t i = 0;
-      while (whichi < out_size){
-        p_out[whichi] = i + 1;
-        whichi += !is_na<Rcomplex>(p_x[i]);
-        ++i;
-      }
-      YIELD(1);
-      return out;
-    }
-  }
-  default: {
-    SEXP is_missing = SHIELD(cheapr_is_na(x));
-    SEXP out = SHIELD(cpp_which_(is_missing, true));
-    YIELD(2);
-    return out;
-  }
-  }
+  SEXP na = SHIELD(Rf_ScalarInteger(NA_INTEGER));
+  SEXP out = SHIELD(cpp_which_val(x, na, true));
+  YIELD(2);
+  return out;
 }
 
 // Return the locations of T, F, and NA in one pass
@@ -578,7 +283,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_true[k1++] = i + 1;
       } else if (include_false && p_x[i] == 0){
         p_false[k2++] = i + 1;
-      } else if (include_na && is_na<int>(p_x[i])){
+      } else if (include_na && is_na(p_x[i])){
         p_na[k3++] = i + 1;
       }
     }
@@ -606,7 +311,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_true[k1++] = i + 1;
       } else if (include_false && p_x[i] == 0){
         p_false[k2++] = i + 1;
-      } else if (include_na && is_na<int>(p_x[i])){
+      } else if (include_na && is_na(p_x[i])){
         p_na[k3++] = i + 1;
       }
     }
@@ -618,161 +323,6 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
     return out;
   }
 }
-
-// like cpp_which_val but an optional n_values arg to skip counting
-SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
-  int32_t NP = 0;
-  R_xlen_t n = Rf_xlength(x);
-  bool is_long = (n > INTEGER_MAX);
-  if (Rf_length(value) != 1){
-    Rf_error("value must be a vector of length 1");
-  }
-  if (TYPEOF(x) == VECSXP){
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-  }
-
-  bool val_is_na = cpp_any_na(value, true);
-
-  if (implicit_na_coercion(value, x)){
-    YIELD(NP);
-    Rf_error("Value has been implicitly converted to NA, please check");
-  }
-
-  R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : Rf_asReal(n_values);
-  R_xlen_t out_size = invert ? n - n_vals : n_vals;
-  R_xlen_t whichi = 0;
-  R_xlen_t i = 0;
-  switch ( CHEAPR_TYPEOF(x) ){
-  case LGLSXP:
-  case INTSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
-    ++NP;
-    SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
-    int val = Rf_asInteger(value);
-    int *p_x = INTEGER(x);
-    if (is_long){
-      double *p_out = REAL(out);
-      if (invert){
-        CHEAPR_WHICH_VAL_INVERTED(val);
-      } else {
-        CHEAPR_WHICH_VAL(val);
-      }
-    } else {
-      int *p_out = INTEGER(out);
-      if (invert){
-        CHEAPR_WHICH_VAL_INVERTED(val);
-      } else {
-        CHEAPR_WHICH_VAL(val);
-      }
-    }
-    YIELD(NP);
-    return out;
-  }
-  case REALSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
-    ++NP;
-    SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
-    double val = Rf_asReal(value);
-    double *p_x = REAL(x);
-    if (val_is_na){
-      if (is_long){
-        double *p_out = REAL(out);
-        if (invert){
-          while (whichi < out_size){
-            p_out[whichi] = i + 1;
-            whichi += !is_na<double>(p_x[i]);
-            ++i;
-          }
-        } else {
-          while (whichi < out_size){
-            p_out[whichi] = i + 1;
-            whichi += is_na<double>(p_x[i]);
-            ++i;
-          }
-        }
-      } else {
-        int *p_out = INTEGER(out);
-        if (invert){
-          CHEAPR_WHICH_VAL_INVERTED(val);
-        } else {
-          CHEAPR_WHICH_VAL(val);
-        }
-      }
-    } else {
-      if (is_long){
-        double *p_out = REAL(out);
-        if (invert){
-          CHEAPR_WHICH_VAL_INVERTED(val);
-        } else {
-          CHEAPR_WHICH_VAL(val);
-        }
-      } else {
-        int *p_out = INTEGER(out);
-        if (invert){
-          CHEAPR_WHICH_VAL_INVERTED(val);
-        } else {
-          CHEAPR_WHICH_VAL(val);
-        }
-      }
-    }
-    YIELD(NP);
-    return out;
-  }
-  case CHEAPR_INT64SXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
-    ++NP;
-    SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
-    int64_t val = INTEGER64_PTR(value)[0];
-    int64_t *p_x = INTEGER64_PTR(x);
-    if (is_long){
-      double *p_out = REAL(out);
-      if (invert){
-        CHEAPR_WHICH_VAL_INVERTED(val);
-      } else {
-        CHEAPR_WHICH_VAL(val);
-      }
-    } else {
-      int *p_out = INTEGER(out);
-      if (invert){
-        CHEAPR_WHICH_VAL_INVERTED(val);
-      } else {
-        CHEAPR_WHICH_VAL(val);
-      }
-    }
-    YIELD(NP);
-    return out;
-  }
-  case STRSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size));
-    ++NP;
-    SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
-    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
-    const SEXP *p_x = STRING_PTR_RO(x);
-    if (is_long){
-      double *p_out = REAL(out);
-      if (invert){
-        CHEAPR_WHICH_VAL_INVERTED(val);
-      } else {
-        CHEAPR_WHICH_VAL(val);
-      }
-    } else {
-      int *p_out = INTEGER(out);
-      if (invert){
-        CHEAPR_WHICH_VAL_INVERTED(val);
-      } else {
-        CHEAPR_WHICH_VAL(val);
-      }
-    }
-    YIELD(NP);
-    return out;
-  }
-  default: {
-    YIELD(NP);
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-  }
-  }
-}
-
 
 // 4 alternatives
 

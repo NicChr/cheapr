@@ -116,7 +116,7 @@ inline bool is_na<SEXP>(SEXP x){
 
 template<>
 inline bool is_na<Rcomplex>(Rcomplex x){
-  return is_na<double>(x.r) || is_na<double>(x.i);
+  return is_na(x.r) || is_na(x.i);
 }
 
 template<>
@@ -124,16 +124,26 @@ inline bool is_na<Rbyte>(Rbyte x){
   return false;
 }
 
+// Generic equals fn for R that accounts for NA
+template<typename T>
+inline bool equals(const T& x, const T& y) {
+  return x == y;
+}
+template<>
+inline bool equals<double>(const double& x, const double& y) {
+  return is_na(x) ? is_na(y) : (is_na(y) ? is_na(x) : x == y);
+}
+
 inline int64_t CHEAPR_INT_TO_INT64(int x){
-  return is_na<int>(x) ? NA_INTEGER64 : x;
+  return is_na(x) ? NA_INTEGER64 : x;
 }
 
 inline int CHEAPR_INT64_TO_INT(int64_t x){
-  return is_na<int64_t>(x) ? NA_INTEGER : x;
+  return is_na(x) ? NA_INTEGER : x;
 }
 
 inline double CHEAPR_INT64_TO_DBL(int64_t x){
-  return is_na<int64_t>(x) ? NA_REAL : x;
+  return is_na(x) ? NA_REAL : x;
 }
 
 // R fns
@@ -455,7 +465,7 @@ inline int is_whole_number(SEXP x, double tol_, bool na_rm_){
   case REALSXP: {
     const double *p_x = REAL_RO(x);
     for (R_xlen_t i = 0; i < n; ++i) {
-      if (is_na<double>(p_x[i])){
+      if (is_na(p_x[i])){
         any_na = true;
         continue;
       }
@@ -480,7 +490,7 @@ inline int is_whole_number(SEXP x, double tol_, bool na_rm_){
 
 inline double gcd2(double x, double y, double tol, bool na_rm){
 
-  if (!na_rm && ( is_na<double>(x) || is_na<double>(y))){
+  if (!na_rm && ( is_na(x) || is_na(y))){
     return NA_REAL;
   }
   // GCD(0,0)=0

@@ -106,16 +106,8 @@ na_rm <- function(x){
 
   ## This part is for legacy reasons
   ## Some users might be using `na_rm` to remove empty rows of a data frame
-  if (is.list(x)){
-    n_na <- na_count(x, recursive = TRUE)
-    if (n_na == unlisted_length(x)){
-      sset(x, 0L)
-    } else if (n_na == 0){
-      x
-    } else {
-      na_locs <- na_find(x, invert = TRUE)
-      sset(x, na_locs)
-    }
+  if (inherits(x, "data.frame")){
+    sset(x, val_find(row_all_na(x), FALSE))
   } else {
     .Call(`_cheapr_cpp_val_remove`, x, NA)
   }

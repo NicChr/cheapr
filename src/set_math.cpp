@@ -24,12 +24,12 @@ SEXP check_transform_altrep(SEXP x){
 
 #define CHEAPR_MATH_INT_LOOP(FUN)                                         \
 for (R_xlen_t i = 0; i < n; ++i) {                                          \
-  p_out[i] = is_na<int>(p_out[i]) ? p_out[i] : FUN(p_out[i]);           \
+  p_out[i] = is_na(p_out[i]) ? p_out[i] : FUN(p_out[i]);           \
 }                                                                           \
 
 #define CHEAPR_MATH_REAL_LOOP(FUN)                                      \
 for (R_xlen_t i = 0; i < n; ++i) {                                        \
-  p_out[i] = is_na<double>(p_out[i]) ? p_out[i] : FUN(p_out[i]);           \
+  p_out[i] = is_na(p_out[i]) ? p_out[i] : FUN(p_out[i]);           \
 }                                                                         \
 
 
@@ -44,7 +44,7 @@ SEXP convert_int_to_real(SEXP x){
   SEXP out = SHIELD(new_vec(REALSXP, n));
   double* RESTRICT p_out = REAL(out);
   for (int i = 0; i < n; ++i){
-    p_out[i] = is_na<int>(p_x[i]) ? NA_REAL : static_cast<double>(p_x[i]);
+    p_out[i] = is_na(p_x[i]) ? NA_REAL : static_cast<double>(p_x[i]);
   }
   YIELD(1);
   return out;
@@ -270,7 +270,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
     int *p_x = INTEGER(out);
     int *p_y = INTEGER(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<int>(p_x[i]) || is_na<int>(p_y[yi])) ?
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ?
       NA_INTEGER : p_x[i] + p_y[yi];
     }
     break;
@@ -281,7 +281,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
     double *p_x = REAL(out);
     double *p_y = REAL(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<double>(p_y[yi]))?
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi]))?
       NA_REAL : p_x[i] + p_y[yi];
     }
     break;
@@ -296,7 +296,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
     double *p_x = REAL(out);
     int *p_y = INTEGER(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<int>(p_y[yi])) ?
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ?
       NA_REAL : p_x[i] + p_y[yi];
     }
     break;
@@ -305,7 +305,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
     double *p_x = REAL(out);
     double *p_y = REAL(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<double>(p_y[yi])) ? NA_REAL : p_x[i] + p_y[yi];
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ? NA_REAL : p_x[i] + p_y[yi];
     }
     break;
   }
@@ -346,7 +346,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
     int *p_x = INTEGER(out);
     int *p_y = INTEGER(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<int>(p_x[i]) || is_na<int>(p_y[yi])) ?
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ?
       NA_INTEGER : p_x[i] - p_y[yi];
     }
     break;
@@ -357,7 +357,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
     double *p_x = REAL(out);
     double *p_y = REAL(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<double>(p_y[yi]))?
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi]))?
       NA_REAL : p_x[i] - p_y[yi];
     }
     break;
@@ -372,7 +372,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
     double *p_x = REAL(out);
     int *p_y = INTEGER(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<int>(p_y[yi])) ?
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ?
       NA_REAL : p_x[i] - p_y[yi];
     }
     break;
@@ -381,7 +381,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
     double *p_x = REAL(out);
     double *p_y = REAL(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<double>(p_y[yi])) ? NA_REAL : p_x[i] - p_y[yi];
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ? NA_REAL : p_x[i] - p_y[yi];
     }
     break;
   }
@@ -433,7 +433,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
     double *p_x = REAL(out);
     double *p_y = REAL(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<double>(p_y[yi])) ?
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ?
       NA_REAL : p_x[i] * p_y[yi];
     }
     break;
@@ -448,7 +448,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
     double *p_x = REAL(out);
     int *p_y = INTEGER(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<int>(p_y[yi])) ?
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ?
       NA_REAL : p_x[i] * p_y[yi];
     }
     break;
@@ -457,7 +457,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
     double *p_x = REAL(out);
     double *p_y = REAL(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) ||is_na<double>(p_y[yi])) ?
+      p_x[i] = (is_na(p_x[i]) ||is_na(p_y[yi])) ?
       NA_REAL : p_x[i] * p_y[yi];
     }
     break;
@@ -500,7 +500,7 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
     double *p_x = REAL(out);
     int *p_y = INTEGER(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<int>(p_y[yi])) ? NA_REAL : p_x[i] / p_y[yi];
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ? NA_REAL : p_x[i] / p_y[yi];
     }
     break;
   }
@@ -508,7 +508,7 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
     double *p_x = REAL(out);
     double *p_y = REAL(y);
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_na<double>(p_x[i]) || is_na<double>(p_y[yi])) ? NA_REAL : p_x[i] / p_y[yi];
+      p_x[i] = (is_na(p_x[i]) || is_na(p_y[yi])) ? NA_REAL : p_x[i] / p_y[yi];
     }
     break;
   }
@@ -648,7 +648,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
       double *p_x = REAL(out);
       const int *p_digits = INTEGER(digits);
         for (uint_fast64_t i = 0; i < xn; digitsi = (++digitsi == digitsn) ? 0 : digitsi, ++i) {
-          if ( (!is_na<double>(p_x[i]) && !is_na<int>(p_digits[digitsi])) ){
+          if ( (!is_na(p_x[i]) && !is_na(p_digits[digitsi])) ){
             tempx = p_x[i];
             mfactor = std::pow(10, p_digits[digitsi]);
             tempx *= mfactor;
@@ -665,7 +665,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
       double *p_x = REAL(out);
       const double *p_digits = REAL(digits);
       for (uint_fast64_t i = 0; i < xn; digitsi = (++digitsi == digitsn) ? 0 : digitsi, ++i) {
-          if ( (!is_na<double>(p_x[i]) && !is_na<double>(p_digits[digitsi])) ){
+          if ( (!is_na(p_x[i]) && !is_na(p_digits[digitsi])) ){
             tempx = p_x[i];
             mfactor = std::pow(10, p_digits[digitsi]);
             tempx *= mfactor;
@@ -700,7 +700,7 @@ SEXP cpp_int_sign(SEXP x){
     const int *p_x = INTEGER(x);
     OMP_FOR_SIMD
     for (uint_fast64_t i = 0; i < n; ++i) {
-      p_out[i] = is_na<int>(p_x[i]) ? NA_INTEGER : static_cast<int>(CHEAPR_SIGN(p_x[i]));
+      p_out[i] = is_na(p_x[i]) ? NA_INTEGER : static_cast<int>(CHEAPR_SIGN(p_x[i]));
     }
     break;
   }
@@ -708,7 +708,7 @@ SEXP cpp_int_sign(SEXP x){
     double *p_x = REAL(x);
     OMP_FOR_SIMD
     for (uint_fast64_t i = 0; i < n; ++i) {
-      p_out[i] = is_na<double>(p_x[i]) ? NA_INTEGER : static_cast<int>(CHEAPR_SIGN(p_x[i]));
+      p_out[i] = is_na(p_x[i]) ? NA_INTEGER : static_cast<int>(CHEAPR_SIGN(p_x[i]));
     }
     break;
   }

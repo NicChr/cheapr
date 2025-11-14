@@ -107,7 +107,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     double *p_excl = REAL(exclude);
 
     for (int j = 0; j < m; ++j) {
-      if (is_na<double>(p_excl[j])) continue;
+      if (is_na(p_excl[j])) continue;
       if (p_excl[j] > 0){
         YIELD(NP);
         Rf_error("Cannot mix positive and negative subscripts");
@@ -134,7 +134,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     int *p_excl = INTEGER(exclude);
 
     for (int j = 0; j < m; ++j) {
-      if (is_na<int>(p_excl[j])) continue;
+      if (is_na(p_excl[j])) continue;
       if (p_excl[j] > 0){
         YIELD(NP);
         Rf_error("Cannot mix positive and negative subscripts");
@@ -324,7 +324,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     }
   }
 
-  SEXP r_out_size = SHIELD(Rf_ScalarReal(is_na<int64_t>(out_size) ? NA_REAL : static_cast<double>(out_size))); ++NP;
+  SEXP r_out_size = SHIELD(Rf_ScalarReal(is_na(out_size) ? NA_REAL : static_cast<double>(out_size))); ++NP;
   SEXP r_check_indices = SHIELD(scalar_lgl(check_indices)); ++NP;
 
   SEXP out = SHIELD(make_r_list(
@@ -396,7 +396,7 @@ SEXP clean_locs(SEXP locs, SEXP x){
     zero_count += (loc == 0);
     pos_count += (loc > 0);
     oob_count += std::abs(static_cast<int_fast64_t>(loc)) > xn;
-    na_count += is_na<int>(loc);
+    na_count += is_na(loc);
   }
 
   oob_count = oob_count - na_count;
@@ -1313,7 +1313,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     int *match_locs = INTEGER(cols);
     if (cpp_any_na(cols, false)){
       for (int i = 0; i < Rf_length(cols); ++i){
-        if (is_na<int>(match_locs[i])){
+        if (is_na(match_locs[i])){
           const char *bad_loc = utf8_char(STRING_ELT(locs, i));
           YIELD(NP);
           Rf_error("Column %s does not exist", bad_loc);

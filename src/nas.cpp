@@ -35,10 +35,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
     const int *p_x = INTEGER_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<int>(p_x[i]);
+      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
     } else {
       OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<int>(p_x[i]);
+      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
     }
     break;
   }
@@ -46,10 +46,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<int64_t>(p_x[i]);
+      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
     } else {
       OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<int64_t>(p_x[i]);
+      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
     }
     break;
   }
@@ -57,10 +57,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
     const double *p_x = REAL_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<double>(p_x[i]);
+      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
     } else {
       OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<double>(p_x[i]);
+      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
     }
     break;
   }
@@ -68,9 +68,9 @@ R_xlen_t na_count(SEXP x, bool recursive){
     const SEXP *p_x = STRING_PTR_RO(x);
     if (do_parallel){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:count)
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<SEXP>(p_x[i]);
+      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
     } else {
-      for (R_xlen_t i = 0; i < n; ++i) count += is_na<SEXP>(p_x[i]);
+      for (R_xlen_t i = 0; i < n; ++i) count += is_na(p_x[i]);
     }
     break;
   }
@@ -128,22 +128,22 @@ bool cpp_any_na(SEXP x, bool recursive){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
-    CHEAPR_ANY_NA(is_na<int>);
+    CHEAPR_ANY_NA(is_na);
     break;
   }
   case CHEAPR_INT64SXP: {
     int64_t *p_x = INTEGER64_PTR(x);
-    CHEAPR_ANY_NA(is_na<int64_t>);
+    CHEAPR_ANY_NA(is_na);
     break;
   }
   case REALSXP: {
     double *p_x = REAL(x);
-    CHEAPR_ANY_NA(is_na<double>);
+    CHEAPR_ANY_NA(is_na);
     break;
   }
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
-    CHEAPR_ANY_NA(is_na<SEXP>);
+    CHEAPR_ANY_NA(is_na);
     break;
   }
   case RAWSXP: {
@@ -190,22 +190,22 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
-    CHEAPR_ALL_NA(is_na<int>);
+    CHEAPR_ALL_NA(is_na);
     break;
   }
   case CHEAPR_INT64SXP: {
     int64_t *p_x = INTEGER64_PTR(x);
-    CHEAPR_ALL_NA(is_na<int64_t>);
+    CHEAPR_ALL_NA(is_na);
     break;
   }
   case REALSXP: {
     double *p_x = REAL(x);
-    CHEAPR_ALL_NA(is_na<double>);
+    CHEAPR_ALL_NA(is_na);
     break;
   }
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
-    CHEAPR_ALL_NA(is_na<SEXP>);
+    CHEAPR_ALL_NA(is_na);
     break;
   }
   case RAWSXP: {
@@ -258,12 +258,12 @@ SEXP cpp_is_na(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na<int>(p_x[i]);
+        p_out[i] = is_na(p_x[i]);
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na<int>(p_x[i]);
+        p_out[i] = is_na(p_x[i]);
       }
     }
 
@@ -276,12 +276,12 @@ SEXP cpp_is_na(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na<int64_t>(p_x[i]);
+        p_out[i] = is_na(p_x[i]);
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na<int64_t>(p_x[i]);
+        p_out[i] = is_na(p_x[i]);
       }
     }
     break;
@@ -293,12 +293,12 @@ SEXP cpp_is_na(SEXP x){
     if (n_cores > 1){
       OMP_PARALLEL_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na<double>(p_x[i]);
+        p_out[i] = is_na(p_x[i]);
       }
     } else {
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
-        p_out[i] = is_na<double>(p_x[i]);
+        p_out[i] = is_na(p_x[i]);
       }
     }
     break;
@@ -308,7 +308,7 @@ SEXP cpp_is_na(SEXP x){
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = STRING_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = is_na<SEXP>(p_x[i]);
+      p_out[i] = is_na(p_x[i]);
     }
     break;
   }
@@ -367,7 +367,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       const int *p_xj = INTEGER_RO(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
-        p_out[i] += is_na<int>(p_xj[i]);
+        p_out[i] += is_na(p_xj[i]);
       }
       break;
     }
@@ -375,7 +375,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       const int64_t *p_xj = INTEGER64_PTR_RO(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
-        p_out[i] += is_na<int64_t>(p_xj[i]);
+        p_out[i] += is_na(p_xj[i]);
       }
      break;
     }
@@ -383,7 +383,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       const double *p_xj = REAL_RO(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
-        p_out[i] += is_na<double>(p_xj[i]);
+        p_out[i] += is_na(p_xj[i]);
       }
       break;
     }
@@ -391,7 +391,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       const SEXP *p_xj = STRING_PTR_RO(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
-        p_out[i] += is_na<SEXP>(p_xj[i]);
+        p_out[i] += is_na(p_xj[i]);
       }
       break;
     }
@@ -628,7 +628,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //       switch ( TYPEOF(p_x[j]) ){
 //       case LGLSXP:
 //       case INTSXP: {
-//         if (is_na<int>(INTEGER(p_x[j])[i])){
+//         if (is_na(INTEGER(p_x[j])[i])){
 //         row_has_na = true;
 //         break;
 //       }
@@ -637,12 +637,12 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //       case REALSXP: {
 //         if (is_int64(p_x[j])){
 //         int64_t *p_xj = (int64_t *) REAL(p_x[j]);
-//         if (is_na<int64_t>(p_xj[i])){
+//         if (is_na(p_xj[i])){
 //           row_has_na = true;
 //           break;
 //         }
 //       } else {
-//         if (is_na<double>(REAL(p_x[j])[i])){
+//         if (is_na(REAL(p_x[j])[i])){
 //           row_has_na = true;
 //           break;
 //         }
@@ -650,7 +650,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 //         break;
 //       }
 //       case STRSXP: {
-//         if (is_na<SEXP>(STRING_PTR_RO(p_x[j])[i])){
+//         if (is_na(STRING_PTR_RO(p_x[j])[i])){
 //         row_has_na = true;
 //         break;
 //       }
@@ -714,7 +714,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       int *p_x = INTEGER(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
-        p_out[rowi] += is_na<int>(p_x[i]);
+        p_out[rowi] += is_na(p_x[i]);
       }
       break;
     }
@@ -722,7 +722,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       double *p_x = REAL(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
-        p_out[rowi] += is_na<double>(p_x[i]);
+        p_out[rowi] += is_na(p_x[i]);
       }
       break;
     }
@@ -730,7 +730,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       int64_t *p_x = INTEGER64_PTR(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
-        p_out[rowi] += is_na<int64_t>(p_x[i]);
+        p_out[rowi] += is_na(p_x[i]);
       }
       break;
     }
@@ -738,7 +738,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       const SEXP *p_x = STRING_PTR_RO(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
-        p_out[rowi] += is_na<SEXP>(p_x[i]);
+        p_out[rowi] += is_na(p_x[i]);
       }
       break;
     }
@@ -785,7 +785,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
           ++coli;
           rowi = 0;
         }
-        p_out[coli] += is_na<int>(p_x[i]);
+        p_out[coli] += is_na(p_x[i]);
       }
       break;
     }
@@ -797,7 +797,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
           ++coli;
           rowi = 0;
         }
-        p_out[coli] += is_na<double>(p_x[i]);
+        p_out[coli] += is_na(p_x[i]);
       }
       break;
     }
@@ -809,7 +809,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
           ++coli;
           rowi = 0;
         }
-        p_out[coli] += is_na<int64_t>(p_x[i]);
+        p_out[coli] += is_na(p_x[i]);
       }
       break;
     }
@@ -821,7 +821,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
           ++coli;
           rowi = 0;
         }
-        p_out[coli] += is_na<SEXP>(p_x[i]);
+        p_out[coli] += is_na(p_x[i]);
       }
       break;
     }
