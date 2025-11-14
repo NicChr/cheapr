@@ -323,7 +323,7 @@ inline R_xlen_t vector_length(SEXP x){
 // e.g. for factors (different levels) and POSIXct (different timezones)
 //
 
-inline bool is_simple_atomic_vec(SEXP x){
+inline bool cheapr_is_simple_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (
           !Rf_isObject(x) || (
@@ -343,16 +343,16 @@ inline bool is_bare_atomic(SEXP x){
 }
 
 // Sometimes bare lists can be easily handled
-inline bool is_simple_vec(SEXP x){
-  return (is_simple_atomic_vec(x) || is_bare_list(x));
+inline bool cheapr_is_simple_vec(SEXP x){
+  return (cheapr_is_simple_atomic_vec(x) || is_bare_list(x));
 }
 
-inline bool is_simple_atomic_vec2(SEXP x){
-  return is_simple_atomic_vec(x) || is_int64(x);
+inline bool cheapr_is_simple_atomic_vec2(SEXP x){
+  return cheapr_is_simple_atomic_vec(x) || is_int64(x);
 }
 
-inline bool is_simple_vec2(SEXP x){
-  return is_simple_vec(x) || is_int64(x);
+inline bool cheapr_is_simple_vec2(SEXP x){
+  return cheapr_is_simple_vec(x) || is_int64(x);
 }
 
 // Because Rf_ScalarLogical sometimes crashes R?.. Need to look into this

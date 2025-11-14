@@ -6,12 +6,12 @@
 
 [[cpp11::register]]
 SEXP cpp_is_simple_atomic_vec(SEXP x){
-  return scalar_lgl(is_simple_atomic_vec(x));
+  return scalar_lgl(cheapr_is_simple_atomic_vec(x));
 }
 
 [[cpp11::register]]
 SEXP cpp_is_simple_vec(SEXP x){
-  return scalar_lgl(is_simple_vec(x));
+  return scalar_lgl(cheapr_is_simple_vec(x));
 }
 
 SEXP xlen_to_r(R_xlen_t x){
@@ -125,7 +125,7 @@ SEXP cpp_semi_copy(SEXP x){
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     YIELD(1);
     return out;
-  } else if (!altrep && is_simple_atomic_vec(x)){
+  } else if (!altrep && cheapr_is_simple_atomic_vec(x)){
 
     // Atomic vectors
 

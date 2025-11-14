@@ -374,6 +374,43 @@ api_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   }
 }
 
+// Deprecated fns
+
+R_xlen_t
+api_vec_length(SEXP x) {
+  try {
+    return cheapr::vector_length(x);
+  } catch (...) {
+    return (R_xlen_t) 0;
+  }
+}
+
+SEXP
+api_r_address(SEXP x) {
+  try {
+    return cheapr::address(x);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
+bool
+api_is_simple_atomic_vec(SEXP x){
+  try {
+    return cheapr::cheapr_is_simple_atomic_vec(x);
+  } catch (...) {
+    return false;
+  }
+}
+bool
+api_is_simple_vec(SEXP x){
+  try {
+    return cheapr::cheapr_is_simple_vec(x);
+  } catch (...) {
+    return false;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -419,4 +456,8 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_replace",    (DL_FUNC)api_replace);
   R_RegisterCCallable("cheapr", "api_if_else",    (DL_FUNC)api_if_else);
   R_RegisterCCallable("cheapr", "api_gcd",    (DL_FUNC)api_gcd);
+  R_RegisterCCallable("cheapr", "api_vec_length",    (DL_FUNC)api_vec_length);
+  R_RegisterCCallable("cheapr", "api_r_address",    (DL_FUNC)api_r_address);
+  R_RegisterCCallable("cheapr", "api_is_simple_atomic_vec",    (DL_FUNC)api_is_simple_atomic_vec);
+  R_RegisterCCallable("cheapr", "api_is_simple_vec",    (DL_FUNC)api_is_simple_vec);
 }

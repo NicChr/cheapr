@@ -10,18 +10,6 @@
 
 namespace cheapr {
 
-// Deprecated, use cheapr::vector_length
-inline R_xlen_t
-vec_length(SEXP x){
-  return cheapr::vector_length(x);
-}
-
-// Deprecated, use cheapr::address
-inline SEXP
-r_address(SEXP x){
-  return cheapr::address(x);
-}
-
 inline bool
 is_compact_seq(SEXP x) {
   typedef bool fn_t(SEXP);
@@ -111,14 +99,6 @@ val_remove(SEXP x, SEXP value){
   typedef SEXP fn_t(SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_val_remove");
   return fn(x, value);
-}
-
-// Deprecated, use cheapr::replace
-inline SEXP
-loc_set_replace(SEXP x, SEXP where, SEXP what){
-  typedef SEXP fn_t(SEXP, SEXP, SEXP);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_loc_set_replace");
-  return fn(x, where, what);
 }
 
 inline SEXP
@@ -291,9 +271,9 @@ paste(SEXP x, SEXP sep, SEXP collapse){
   return fn(x, sep, collapse);
 }
 
-inline SEXP
+inline void
 replace(SEXP x, SEXP where, SEXP with, bool quiet){
-  typedef SEXP fn_t(SEXP, SEXP, SEXP, bool);
+  typedef void fn_t(SEXP, SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_replace");
   return fn(x, where, with, quiet);
 }
@@ -310,6 +290,45 @@ gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   typedef SEXP fn_t(SEXP, double, bool, bool, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_gcd");
   return fn(x, tol, na_rm, break_early, round);
+}
+
+// Deprecated, use cheapr::vector_length
+inline R_xlen_t
+vec_length(SEXP x){
+  typedef R_xlen_t fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_vec_length");
+  return fn(x);
+}
+
+// Deprecated, use cheapr::address
+inline SEXP
+r_address(SEXP x){
+  typedef SEXP fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_r_address");
+  return fn(x);
+}
+
+// Deprecated, use cheapr::replace
+inline SEXP
+loc_set_replace(SEXP x, SEXP where, SEXP what){
+  typedef SEXP fn_t(SEXP, SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_loc_set_replace");
+  return fn(x, where, what);
+}
+
+// Deprecated
+inline bool
+is_simple_vec(SEXP x){
+  typedef bool fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_is_simple_vec");
+  return fn(x);
+}
+// Deprecated
+inline bool
+is_simple_atomic_vec(SEXP x){
+  typedef bool fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_is_simple_atomic_vec");
+  return fn(x);
 }
 
 }
