@@ -1623,19 +1623,3 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
   }
   }
 }
-
-// template<int SEXPTYPE, typename T>
-// SEXP foo(T px, T pi, int n) {
-//   if constexpr (SEXPTYPE == INTSXP) {
-//     SEXP out = SHIELD(new_vec(INTSXP, n));
-//     int* RESTRICT p_out = INTEGER(out);
-//     OMP_FOR_SIMD
-//     for (int i = 0; i < n; ++i){
-//       p_out[i] = px[pi[i] - 1];
-//     }
-//     YIELD(1);
-//     return out;
-//   } else {
-//     Rf_error("error");
-//   }
-// }

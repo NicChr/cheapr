@@ -36,7 +36,7 @@
 
 namespace cheapr {
 
-// bool type, similar to Rboolean
+// type-safe bool type, similar to Rboolean
 
 enum class r_bool : int {
   r_true = 1,
@@ -47,14 +47,6 @@ enum class r_bool : int {
 inline constexpr r_bool r_true = r_bool::r_true;
 inline constexpr r_bool r_false = r_bool::r_false;
 inline constexpr r_bool r_na = r_bool::r_na;
-
-// Nice but not type-safe
-// using r_bool = int;
-// enum : r_bool {
-//   r_true = 1,
-//   r_false = 0,
-//   r_na = INT_MIN
-// };
 
 // Constants
 

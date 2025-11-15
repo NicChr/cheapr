@@ -6,15 +6,15 @@
 
 // Count the number of true values
 
-R_xlen_t count_true(const int* px, uint_fast64_t n){
+R_xlen_t count_true(const r_bool* RESTRICT px, const uint_fast64_t n){
   uint_fast64_t size = 0;
   if (n >= CHEAPR_OMP_THRESHOLD){
 #pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
-    for (uint_fast64_t j = 0; j != n; ++j) size += static_cast<uint_fast64_t>(px[j] == 1);
+    for (uint_fast64_t j = 0; j != n; ++j) size += static_cast<uint_fast64_t>(px[j] == r_true);
     return size;
   } else {
     OMP_FOR_SIMD
-    for (uint_fast64_t j = 0; j != n; ++j) size += static_cast<uint_fast64_t>(px[j] == 1);
+    for (uint_fast64_t j = 0; j != n; ++j) size += static_cast<uint_fast64_t>(px[j] == r_true);
     return size;
   }
 }
@@ -35,7 +35,7 @@ while (whichi < out_size){                                       \
 [[cpp11::register]]
 SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
-  const int *p_x = LOGICAL_RO(x);
+  const r_bool *p_x = BOOLEAN_RO(x);
   bool is_long = (n > INTEGER_MAX);
   if (invert){
     if (is_long){
@@ -45,7 +45,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       double* RESTRICT p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
-      CHEAPR_WHICH_VAL_INVERTED(1);
+      CHEAPR_WHICH_VAL_INVERTED(r_true);
       YIELD(1);
       return out;
     } else {
@@ -55,7 +55,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       int* RESTRICT p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
-      CHEAPR_WHICH_VAL_INVERTED(1);
+      CHEAPR_WHICH_VAL_INVERTED(r_true);
       YIELD(1);
       return out;
     }
@@ -66,7 +66,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       double* RESTRICT p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
-      CHEAPR_WHICH_VAL(1);
+      CHEAPR_WHICH_VAL(r_true);
       YIELD(1);
       return out;
     } else {
@@ -75,7 +75,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       int* RESTRICT p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
-      CHEAPR_WHICH_VAL(1);
+      CHEAPR_WHICH_VAL(r_true);
       YIELD(1);
       return out;
     }
