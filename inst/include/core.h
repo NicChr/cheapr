@@ -88,6 +88,12 @@ inline int64_t* INTEGER64_PTR(SEXP x) {
 inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
   return reinterpret_cast<const int64_t*>(REAL_RO(x));
 }
+inline r_bool* BOOLEAN(SEXP x) {
+  return reinterpret_cast<r_bool*>(INTEGER(x));
+}
+inline const r_bool* BOOLEAN_RO(SEXP x) {
+  return reinterpret_cast<const r_bool*>(INTEGER_RO(x));
+}
 
 inline SEXP SHIELD(SEXP x){
   return Rf_protect(x);
