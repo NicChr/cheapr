@@ -742,7 +742,7 @@ extern "C" SEXP _cheapr_cpp_tabulate(SEXP x, SEXP n_bins) {
   END_CPP11
 }
 // utils.cpp
-SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_);
+r_bool cpp_is_whole_number(SEXP x, double tol_, bool na_rm_);
 extern "C" SEXP _cheapr_cpp_is_whole_number(SEXP x, SEXP tol_, SEXP na_rm_) {
   BEGIN_CPP11
     return cpp11::as_sexp(cpp_is_whole_number(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(tol_), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm_)));

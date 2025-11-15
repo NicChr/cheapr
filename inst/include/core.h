@@ -36,6 +36,26 @@
 
 namespace cheapr {
 
+// bool type, similar to Rboolean
+
+enum class r_bool : int {
+  r_true = 1,
+  r_false = 0,
+  r_na = INT_MIN
+};
+
+inline constexpr r_bool r_true = r_bool::r_true;
+inline constexpr r_bool r_false = r_bool::r_false;
+inline constexpr r_bool r_na = r_bool::r_na;
+
+// Nice but not type-safe
+// using r_bool = int;
+// enum : r_bool {
+//   r_true = 1,
+//   r_false = 0,
+//   r_na = INT_MIN
+// };
+
 // Constants
 
 inline constexpr int INTEGER_MIN = std::numeric_limits<int>::min() + 1;
@@ -91,6 +111,11 @@ inline bool is_na(T x) {
 }
 
 template<>
+inline bool is_na<r_bool>(r_bool x){
+  return x == r_na;
+}
+
+template<>
 inline bool is_na<int>(int x){
   return x == NA_INTEGER;
 }
@@ -124,6 +149,11 @@ inline bool is_na<Rbyte>(Rbyte x){
 template<typename T>
 inline T na_type(T x) {
   Rf_error("Unimplemented `na_type` specialisation");
+}
+
+template<>
+inline r_bool na_type<r_bool>(r_bool x){
+  return r_na;
 }
 
 template<>
@@ -486,12 +516,12 @@ inline SEXP shallow_copy(SEXP x){
 }
 
 // int not bool because bool can't be NA
-inline int vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
+inline r_bool vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
 
   R_xlen_t n = Rf_xlength(x);
 
   // Use int instead of bool as int can hold NA
-  int out = 1;
+  r_bool out = r_true;
   bool any_na = false;
 
   switch ( CHEAPR_TYPEOF(x) ){
@@ -507,19 +537,18 @@ inline int vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
         any_na = true;
         continue;
       }
-
-      out = is_whole_number(p_x[i], tol_);
-      if (out == 0){
+      out = static_cast<r_bool>(is_whole_number(p_x[i], tol_));
+      if (out == r_false){
         break;
       }
     }
     if (!na_rm_ && any_na){
-      out = NA_INTEGER;
+      out = r_na;
     }
     break;
   }
   default: {
-    out = 0;
+    out = r_false;
     break;
   }
   }
