@@ -497,6 +497,22 @@ inline SEXP get_names(SEXP x){
   return Rf_getAttrib(x, R_NamesSymbol);
 }
 
+template <typename T>
+inline int sign(T x) {
+  return (T(0) < x) - (x < T(0));
+}
+
+template<typename T>
+inline T negate(T x){
+  return -x;
+}
+
+// trunc but eliminates negative zeroes
+template<typename T>
+inline double trunc(T x){
+  return std::trunc(x) + 0.0;
+}
+
 inline double round_nearest_even(double x){
   return x - std::remainder(x, 1.0);
 }

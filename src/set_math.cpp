@@ -14,7 +14,7 @@ void copy_warning(){
 }
 
 SEXP check_transform_altrep(SEXP x){
-  if (ALTREP(x)){
+  if (is_altrep(x)){
     Rf_warning("Cannot update an ALTREP by reference, a copy has been made. \n\tEnsure the result is assigned to an object if used in further calculations\n\te.g. `x <- set_abs(x)`");
     return altrep_materialise(x);
   } else {
@@ -22,19 +22,19 @@ SEXP check_transform_altrep(SEXP x){
   }
 }
 
-#define CHEAPR_MATH_INT_LOOP(FUN)                                         \
-for (R_xlen_t i = 0; i < n; ++i) {                                          \
-  p_out[i] = is_na(p_out[i]) ? p_out[i] : FUN(p_out[i]);           \
-}                                                                           \
-
-#define CHEAPR_MATH_REAL_LOOP(FUN)                                      \
+#define CHEAPR_MATH_LOOP(FUN)                                             \
 for (R_xlen_t i = 0; i < n; ++i) {                                        \
-  p_out[i] = is_na(p_out[i]) ? p_out[i] : FUN(p_out[i]);           \
+  p_out[i] = is_na(p_out[i]) ? p_out[i] : FUN(p_out[i]);                  \
 }                                                                         \
 
-
-#define CHEAPR_TRUNC(x) (std::trunc(x) + 0.0)
-#define CHEAPR_SIGN(x) ((x > 0) - (x < 0))
+#define CHEAPR_PARALLEL_MATH_LOOP(FUN)                         \
+if (n_cores > 1){                                              \
+  OMP_PARALLEL_FOR_SIMD                                        \
+  CHEAPR_MATH_LOOP(FUN);                                       \
+} else {                                                       \
+  OMP_FOR_SIMD                                                 \
+  CHEAPR_MATH_LOOP(FUN);                                       \
+}
 
 // Convert integer vector to plain double vector
 
@@ -59,25 +59,12 @@ SEXP cpp_set_abs(SEXP x){
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = INTEGER(out);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      CHEAPR_MATH_INT_LOOP(std::abs);
-    } else {
-      OMP_FOR_SIMD
-      CHEAPR_MATH_INT_LOOP(std::abs);
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(std::abs)
     break;
   }
-  case REALSXP: {
+  default: {
     double *p_out = REAL(out);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      CHEAPR_MATH_INT_LOOP(std::fabs);
-    }
-    else {
-      OMP_FOR_SIMD
-      CHEAPR_MATH_INT_LOOP(std::fabs);
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(std::abs)
     break;
   }
   }
@@ -93,13 +80,7 @@ SEXP cpp_set_floor(SEXP x){
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
     double *p_out = REAL(out);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      CHEAPR_MATH_REAL_LOOP(std::floor);
-    } else {
-      OMP_FOR_SIMD
-      CHEAPR_MATH_REAL_LOOP(std::floor);
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(std::floor)
   }
   YIELD(1);
   return out;
@@ -113,13 +94,7 @@ SEXP cpp_set_ceiling(SEXP x){
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
     double *p_out = REAL(out);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      CHEAPR_MATH_REAL_LOOP(std::ceil);
-    } else {
-      OMP_FOR_SIMD
-      CHEAPR_MATH_REAL_LOOP(std::ceil);
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(std::ceil)
   }
   YIELD(1);
   return out;
@@ -133,13 +108,7 @@ SEXP cpp_set_trunc(SEXP x){
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   if (Rf_isReal(out)){
     double *p_out = REAL(out);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      CHEAPR_MATH_REAL_LOOP(CHEAPR_TRUNC);
-    } else {
-      OMP_FOR_SIMD
-      CHEAPR_MATH_REAL_LOOP(CHEAPR_TRUNC);
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(cheapr::trunc)
   }
   YIELD(1);
   return out;
@@ -154,33 +123,12 @@ SEXP cpp_set_change_sign(SEXP x){
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = INTEGER(out);
-    if (n_cores > 1){
-      OMP_PARALLEL_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) {
-        p_out[i] = (p_out[i] == NA_INTEGER) ? p_out[i] : -p_out[i];
-      }
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) {
-        p_out[i] = (p_out[i] == NA_INTEGER) ? p_out[i] : -p_out[i];
-      }
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(cheapr::negate)
     break;
   }
   case REALSXP: {
     double *p_out = REAL(out);
-    if (n_cores > 1){
-      int n_cores = num_cores();
-      OMP_PARALLEL_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) {
-        p_out[i] = (p_out[i] == p_out[i]) ? -p_out[i] : p_out[i];
-      }
-    } else {
-      OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) {
-        p_out[i] = (p_out[i] == p_out[i]) ? -p_out[i] : p_out[i];
-      }
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(cheapr::negate)
     break;
   }
   }
@@ -203,13 +151,7 @@ SEXP cpp_set_exp(SEXP x){
     out = SHIELD(check_transform_altrep(x));
   }
   double *p_out = REAL(out);
-  if (n_cores > 1){
-    OMP_PARALLEL_FOR_SIMD
-    CHEAPR_MATH_REAL_LOOP(std::exp);
-  } else {
-    OMP_FOR_SIMD
-    CHEAPR_MATH_REAL_LOOP(std::exp);
-  }
+  CHEAPR_PARALLEL_MATH_LOOP(std::exp)
   YIELD(1);
   return out;
 }
@@ -229,13 +171,7 @@ SEXP cpp_set_sqrt(SEXP x){
     out = SHIELD(check_transform_altrep(x));
   }
   double *p_out = REAL(out);
-  if (n_cores > 1){
-    OMP_PARALLEL_FOR_SIMD
-    CHEAPR_MATH_REAL_LOOP(std::sqrt);
-  } else {
-    OMP_FOR_SIMD
-    CHEAPR_MATH_REAL_LOOP(std::sqrt);
-  }
+  CHEAPR_PARALLEL_MATH_LOOP(std::sqrt)
   YIELD(1);
   return out;
 }
@@ -700,7 +636,7 @@ SEXP cpp_int_sign(SEXP x){
     const int *p_x = INTEGER(x);
     OMP_FOR_SIMD
     for (uint_fast64_t i = 0; i < n; ++i) {
-      p_out[i] = is_na(p_x[i]) ? NA_INTEGER : static_cast<int>(CHEAPR_SIGN(p_x[i]));
+      p_out[i] = is_na(p_x[i]) ? NA_INTEGER : sign(p_x[i]);
     }
     break;
   }
@@ -708,7 +644,7 @@ SEXP cpp_int_sign(SEXP x){
     double *p_x = REAL(x);
     OMP_FOR_SIMD
     for (uint_fast64_t i = 0; i < n; ++i) {
-      p_out[i] = is_na(p_x[i]) ? NA_INTEGER : static_cast<int>(CHEAPR_SIGN(p_x[i]));
+      p_out[i] = is_na(p_x[i]) ? NA_INTEGER : sign(p_x[i]);
     }
     break;
   }
@@ -718,6 +654,13 @@ SEXP cpp_int_sign(SEXP x){
 }
 
 // Math functions
+
+// I wanted to export these to C but there is an issue with C allocated R
+// vectors and the NAMED mechanism of reference counting
+// Vectors created through Rf_allocVector are not named when assigned
+// to a C SEXP
+// This means we can't use the MAYBE_REFERENCED functions safely in this case
+// These are also inefficient as R fns as they are doing an unnecessary loop
 
 // SEXP cpp_abs(SEXP x){
 //   int32_t NP = 0;

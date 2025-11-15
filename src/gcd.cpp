@@ -7,10 +7,6 @@
 
 // Author: Nick Christofides
 
-template<typename T> T cpp_sign(T x) {
-  return (x > 0) - (x < 0);
-}
-
 int gcd2_int(int x, int y, bool na_rm){
   bool has_na = is_na(x) || is_na(y);
   if (!na_rm && has_na){
@@ -191,7 +187,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
         if (break_early && agcd > 0.0 && agcd < (tol + tol)){
-          gcd = tol * cpp_sign<double>(gcd);
+          gcd = tol * static_cast<double>(sign(gcd));
           break;
         }
       }
