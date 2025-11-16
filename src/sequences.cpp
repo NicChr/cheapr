@@ -746,9 +746,9 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     }
 
     if (scale_up){
-      seq_size = SHIELD(Rf_ScalarInteger(n_breaks)); ++NP;
-      seq_from = SHIELD(Rf_ScalarReal(adj_start)); ++NP;
-      seq_width = SHIELD(Rf_ScalarReal(adj_width)); ++NP;
+      seq_size = SHIELD(as_vec_scalar<int>(n_breaks)); ++NP;
+      seq_from = SHIELD(as_vec_scalar<double>(adj_start)); ++NP;
+      seq_width = SHIELD(as_vec_scalar<double>(adj_width)); ++NP;
 
       out = SHIELD(cpp_dbl_sequence(seq_size, seq_from, seq_width, false)); ++NP;
       int seq_n = n_breaks;

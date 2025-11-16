@@ -108,7 +108,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
 
 [[cpp11::register]]
 SEXP cpp_count_val(SEXP x, SEXP value, bool recursive){
-  return xlen_to_r(scalar_count(x, value, recursive));
+  return as_vec_scalar(scalar_count(x, value, recursive));
 }
 
 [[cpp11::register]]
@@ -406,7 +406,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
       break;
     }
     default: {
-      SEXP sexp_n_vals = SHIELD(Rf_ScalarReal(n_vals)); ++NP;
+      SEXP sexp_n_vals = SHIELD(as_vec_scalar<double>(n_vals)); ++NP;
       SEXP val_locs = SHIELD(cpp_val_find(x, value, true, sexp_n_vals)); ++NP;
       out = SHIELD(cheapr_sset(x, val_locs)); ++NP;
       break;

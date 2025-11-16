@@ -43,12 +43,12 @@ int gcd2_int(int x, int y, bool na_rm){
 
 int64_t gcd2_int64(int64_t x, int64_t y, bool na_rm){
   int64_t zero = 0;
-  bool has_na = ( x == NA_INTEGER64 || y == NA_INTEGER64 );
+  bool has_na = is_na(x) || is_na(y);
   if (!na_rm && has_na){
     return NA_INTEGER64;
   }
   if (na_rm && has_na){
-    if (x == NA_INTEGER64){
+    if (is_na(x)){
       return y;
     } else {
       return x;
@@ -88,10 +88,10 @@ double lcm2(double x, double y, double tol, bool na_rm){
 }
 
 int64_t lcm2_int64(int64_t x, int64_t y, bool na_rm){
-  int num_nas = (x == NA_INTEGER64) + (y == NA_INTEGER64);
+  int num_nas = is_na(x) + is_na(y);
   if ( num_nas >= 1 ){
     if (na_rm && num_nas == 1){
-      return (x == NA_INTEGER64 ? y : x);
+      return (is_na(x) ? y : x);
     } else {
       return NA_INTEGER64;
     }
@@ -226,7 +226,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       int64_t lcm = as_int64(p_x[0]);
 
       for (R_xlen_t i = 1; i < n; ++i) {
-        if (!na_rm && lcm == NA_INTEGER64){
+        if (!na_rm && is_na(lcm)){
           break;
         }
         lcm = lcm2_int64(lcm, as_int64(p_x[i]), na_rm);
@@ -254,7 +254,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       int64_t lcm = p_x[0];
 
       for (R_xlen_t i = 1; i < n; ++i) {
-        if (!na_rm && lcm == NA_INTEGER64){
+        if (!na_rm && is_na(lcm)){
           break;
         }
         lcm = lcm2_int64(lcm, p_x[i], na_rm);

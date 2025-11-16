@@ -622,7 +622,7 @@ SEXP cpp_list_c(SEXP x){
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
       if (x_has_names){
-        R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
+        R_Reprotect(names = as_vec_scalar(STRING_ELT(x_names, i)), nm_idx);
       } else {
         R_Reprotect(names = R_NilValue, nm_idx);
       }
@@ -816,7 +816,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
       if (x_has_names){
-        R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
+        R_Reprotect(names = as_vec_scalar(STRING_ELT(x_names, i)), nm_idx);
       } else {
         R_Reprotect(names = R_NilValue, nm_idx);
       }
@@ -841,7 +841,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 
   SEXP r_nrows = SHIELD(R_NilValue); ++NP;
   if (Rf_length(out) == 0 && Rf_length(x) != 0){
-    SHIELD(r_nrows = Rf_ScalarInteger(vector_length(VECTOR_ELT(x, 0)))); ++NP;
+    SHIELD(r_nrows = as_vec_scalar<int>(vector_length(VECTOR_ELT(x, 0)))); ++NP;
   }
 
   SHIELD(out = cpp_new_df(out, r_nrows, false, name_repair)); ++NP;

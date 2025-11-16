@@ -61,6 +61,8 @@ inline constexpr int64_t NA_INTEGER64 = std::numeric_limits<int64_t>::min();
 inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 
+// inline const std::string NA_CPP_STRING = CHAR(NA_STRING);
+
 inline const Rcomplex NA_COMPLEX = {NA_REAL, NA_REAL};
 
 // Functions
@@ -99,6 +101,12 @@ inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
   return Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x);
 }
 
+inline void assert_charsxp(SEXP x){
+  if (TYPEOF(x) != CHARSXP){
+    Rf_error("`x` must be a CHARSXP, not a %s", Rf_type2char(TYPEOF(x)));
+  }
+}
+
 
 // is_na C++ template
 
@@ -128,12 +136,6 @@ inline bool is_na<int64_t>(int64_t x){
   return x == NA_INTEGER64;
 }
 
-// is_na<SEXP> will always be for CHARSXP
-template<>
-inline bool is_na<SEXP>(SEXP x){
-  return x == NA_STRING;
-}
-
 template<>
 inline bool is_na<Rcomplex>(Rcomplex x){
   return is_na<double>(x.r) || is_na<double>(x.i);
@@ -144,74 +146,130 @@ inline bool is_na<Rbyte>(Rbyte x){
   return false;
 }
 
+// is_na<SEXP> will always be for CHARSXP
+template<>
+inline bool is_na<SEXP>(SEXP x){
+  return x == NA_STRING;
+}
+
+// is_na<SEXP> will always be for CHARSXP
+// template<>
+// inline bool is_na<std::string>(std::string& x){
+//   return x == NA_CPP_STRING;
+// }
+
 // NA type
 
 template<typename T>
-inline T na_type(T& x) {
+inline T na_type(T x) {
   Rf_error("Unimplemented `na_type` specialisation");
 }
 
 template<>
-inline r_bool na_type<r_bool>(r_bool& x){
+inline r_bool na_type<r_bool>(r_bool x){
   return r_na;
 }
 
 template<>
-inline int na_type<int>(int& x){
+inline int na_type<int>(int x){
   return NA_INTEGER;
 }
 
 template<>
-inline double na_type<double>(double& x){
+inline double na_type<double>(double x){
   return NA_REAL;
 }
 
 template<>
-inline int64_t na_type<int64_t>(int64_t& x){
+inline int64_t na_type<int64_t>(int64_t x){
   return NA_INTEGER64;
 }
 
 template<>
-inline SEXP na_type<SEXP>(SEXP& x){
-  return NA_STRING;
-}
-
-template<>
-inline Rcomplex na_type<Rcomplex>(Rcomplex& x){
+inline Rcomplex na_type<Rcomplex>(Rcomplex x){
   return NA_COMPLEX;
 }
 
+template<>
+inline SEXP na_type<SEXP>(SEXP x){
+  return NA_STRING;
+}
+// template<>
+// inline std::string na_type<std::string>(std::string& x){
+//   return NA_CPP_STRING;
+// }
 
-
-// C++ equals fn for R that accounts for NA
-// It differs from R in the sense that NA == NA returns true here
-
+// While the commented-out templates would be the cleanest and easiest
+// solution which accounts for NA values
+// we still want to both support complex numbers and be efficient
 template<typename T>
 inline bool eq(const T& x, const T& y) {
   return x == y;
 }
 template<>
+inline bool eq<double>(const double& x, const double& y) {
+  return (is_na(x) && is_na(y)) ? true : x == y;
+}
+template<>
 inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
-  return eq(x.r, y.r) && eq(x.i, y.i);
+  return eq<double>(x.r, y.r) && eq<double>(x.i, y.i);
 }
 
-// While the commented-out templates would be the cleanest and easiest
-// solution which accounts for NA values
-// we still want to both support complex numbers and be efficient
-// template<typename T>
-// inline bool eq(const T& x, const T& y) {
-//   return x == y;
-// }
+template<typename T>
+inline SEXP as_vec_scalar(T x){
+  Rf_error("Unimplemented scalar constructor");
+}
+template<>
+inline SEXP as_vec_scalar<bool>(bool x){
+  return Rf_ScalarLogical(static_cast<int>(x));
+}
+template<>
+inline SEXP as_vec_scalar<r_bool>(r_bool x){
+  return Rf_ScalarLogical(static_cast<int>(x));
+}
+template<>
+inline SEXP as_vec_scalar<int>(int x){
+  return Rf_ScalarInteger(x);
+}
+template<>
+inline SEXP as_vec_scalar<R_xlen_t>(R_xlen_t x){
+  if (x <= INTEGER_MAX){
+    return Rf_ScalarInteger(static_cast<int>(x));
+  } else {
+    return Rf_ScalarReal(static_cast<double>(x));
+  }
+}
 // template<>
-// inline bool eq<double>(const double& x, const double& y) {
-//   return (is_na(x) && is_na(y)) ? true : x == y;
+// inline SEXP as_vec_scalar<int64_t>(int64_t x){
+//   SEXP out = SHIELD(Rf_allocVector(REALSXP, 1));
+//   Rf_classgets(out, Rf_ScalarString(Rf_mkCharCE("integer64", CE_UTF8)));
+//   INTEGER64_PTR(out)[0] = x;
+//   YIELD(1);
+//   return out;
 // }
+template<>
+inline SEXP as_vec_scalar<double>(double x){
+  return Rf_ScalarReal(x);
+}
+template<>
+inline SEXP as_vec_scalar<Rcomplex>(Rcomplex x){
+  return Rf_ScalarComplex(x);
+}
+template<>
+inline SEXP as_vec_scalar<Rbyte>(Rbyte x){
+  return Rf_ScalarRaw(x);
+}
+// Scalar string
+template<>
+inline SEXP as_vec_scalar<SEXP>(SEXP x){
+  return Rf_ScalarString(x);
+}
 // template<>
-// inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
-//   return eq<double>(x.r, y.r) && eq<double>(x.i, y.i);
+// inline SEXP as_vec_scalar<std::string>(std::string x){
+//   return Rf_mkString(x.c_str());
 // }
 
-// Coerce fns that account for NA
+// Coerce functions that account for NA
 template<typename T>
 inline r_bool as_r_bool(T x){
   return is_na(x) ? r_na : static_cast<r_bool>(x);
@@ -236,11 +294,31 @@ template<typename T>
 inline Rbyte as_raw(T x){
   return is_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
 }
+// As CHARSXP
+template<typename T>
+inline SEXP as_char(T x){
+  if (is_na(x)){
+   return NA_STRING;
+  } else {
+    SEXP scalar = SHIELD(as_vec_scalar(x));
+    SEXP str = SHIELD(Rf_coerceVector(scalar, STRSXP));
+    SEXP out = STRING_ELT(str, 0);
+    YIELD(2);
+    return out;
+  }
+}
 
-// Equals fn that behaves like R's `==` in the presence of NAs
 // template<typename T>
-// inline int r_eq(const T& x, const T& y) {
-//   return (is_na(x) || is_na(y) ) ? x == y : NA_INTEGER;
+// inline std::string as_cpp_string(T x){
+//   if (is_na(x)){
+//     return NA_CPP_STRING;
+//   } else {
+//     SEXP scalar = SHIELD(as_vec_scalar(x));
+//     SEXP str = SHIELD(Rf_coerceVector(scalar, STRSXP));
+//     SEXP out = STRING_ELT(str, 0);
+//     YIELD(2);
+//     return out;
+//   }
 // }
 
 // R fns
@@ -450,14 +528,6 @@ inline bool cheapr_is_simple_atomic_vec2(SEXP x){
 
 inline bool cheapr_is_simple_vec2(SEXP x){
   return cheapr_is_simple_vec(x) || is_int64(x);
-}
-
-// Because Rf_ScalarLogical sometimes crashes R?.. Need to look into this
-inline SEXP scalar_lgl(bool x){
-  SEXP out = SHIELD(Rf_allocVector(LGLSXP, 1));
-  LOGICAL(out)[0] = x;
-  YIELD(1);
-  return out;
 }
 
 inline bool is_bare_df(SEXP x){

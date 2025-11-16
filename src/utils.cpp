@@ -14,18 +14,14 @@ bool cpp_is_simple_vec(SEXP x){
   return cheapr_is_simple_vec(x);
 }
 
-SEXP xlen_to_r(R_xlen_t x){
-  return x > INTEGER_MAX ? Rf_ScalarReal(x) : Rf_ScalarInteger(x);
-}
-
 [[cpp11::register]]
 SEXP cpp_vector_length(SEXP x){
-  return xlen_to_r(vector_length(x));
+  return as_vec_scalar(vector_length(x));
 }
 
 [[cpp11::register]]
 SEXP cpp_address(SEXP x){
-  return Rf_ScalarString(address(x));
+  return as_vec_scalar(address(x));
 }
 
 // Copy atomic elements from source to target
@@ -555,7 +551,7 @@ SEXP cpp_growth_rate(SEXP x){
     return new_vec(REALSXP, 0);
   }
   if (n == 1){
-    return Rf_ScalarReal(NA_REAL);
+    return as_vec_scalar(NA_REAL);
   }
   double a, b;
   switch(CHEAPR_TYPEOF(x)){
@@ -583,7 +579,7 @@ SEXP cpp_growth_rate(SEXP x){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  return Rf_ScalarReal(growth_rate(a, b, n));
+  return as_vec_scalar(growth_rate(a, b, n));
 }
 
 SEXP create_df_row_names(int n){
@@ -617,7 +613,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP is_dup_from_last = SHIELD(Rf_duplicated(names, TRUE)); ++NP;
   cpp_set_or(is_dup, is_dup_from_last);
 
-  SEXP r_true = SHIELD(scalar_lgl(true)); ++NP;
+  SEXP r_true = SHIELD(as_vec_scalar(true)); ++NP;
   SEXP dup_locs = SHIELD(cpp_which_val(is_dup, r_true, false)); ++NP;
 
   int n_dups = Rf_length(dup_locs);
@@ -645,7 +641,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
     p_is_empty[i] = empty;
   }
 
-  SEXP r_n_empty = SHIELD(Rf_ScalarInteger(n_empty)); ++NP;
+  SEXP r_n_empty = SHIELD(as_vec_scalar(n_empty)); ++NP;
 
   if (n_empty > 0){
     SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
@@ -756,7 +752,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
 [[cpp11::register]]
 SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_){
-  return Rf_ScalarLogical(static_cast<int>(vec_is_whole_number(x, tol_, na_rm_)));
+  return as_vec_scalar(static_cast<int>(vec_is_whole_number(x, tol_, na_rm_)));
 }
 
 SEXP match(SEXP y, SEXP x, int no_match){

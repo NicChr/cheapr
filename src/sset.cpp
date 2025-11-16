@@ -14,8 +14,8 @@ SEXP compact_seq_len(R_xlen_t n){
   if (n == 0){
     return new_vec(INTSXP, 0);
   }
-  SEXP start = SHIELD(Rf_ScalarReal(1));
-  SEXP end = SHIELD(Rf_ScalarReal(n));
+  SEXP start = SHIELD(as_vec_scalar(1));
+  SEXP end = SHIELD(as_vec_scalar(n));
   SEXP expr = SHIELD(Rf_lang3(Rf_install(":"), start, end));
   SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
   YIELD(4);
@@ -324,8 +324,8 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     }
   }
 
-  SEXP r_out_size = SHIELD(Rf_ScalarReal(is_na(out_size) ? NA_REAL : static_cast<double>(out_size))); ++NP;
-  SEXP r_check_indices = SHIELD(scalar_lgl(check_indices)); ++NP;
+  SEXP r_out_size = SHIELD(as_vec_scalar(is_na(out_size) ? NA_REAL : static_cast<double>(out_size))); ++NP;
+  SEXP r_check_indices = SHIELD(as_vec_scalar(check_indices)); ++NP;
 
   SEXP out = SHIELD(make_r_list(
     clean_indices,
@@ -1571,12 +1571,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
   }
 
   if (Rf_isObject(x)){
-    SEXP loc;
-    if (i <= INTEGER_MAX){
-      loc = SHIELD(Rf_ScalarInteger(i));
-    } else {
-      loc = SHIELD(Rf_ScalarReal(i));
-    }
+    SEXP loc = SHIELD(as_vec_scalar(i));
     SEXP out = SHIELD(cpp_sset(x, loc, true));
     YIELD(2);
     return out;
@@ -1598,22 +1593,22 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
     return R_NilValue;
   }
   case LGLSXP: {
-    return scalar_lgl(LOGICAL(x)[i]);
+    return as_vec_scalar(LOGICAL(x)[i]);
   }
   case INTSXP: {
-    return Rf_ScalarInteger(INTEGER(x)[i]);
+    return as_vec_scalar(INTEGER(x)[i]);
   }
   case REALSXP: {
-    return Rf_ScalarReal(REAL(x)[i]);
+    return as_vec_scalar(REAL(x)[i]);
   }
   case STRSXP: {
-    return Rf_ScalarString(STRING_ELT(x, i));
+    return as_vec_scalar(STRING_ELT(x, i));
   }
   case CPLXSXP: {
-    return Rf_ScalarComplex(COMPLEX(x)[i]);
+    return as_vec_scalar(COMPLEX(x)[i]);
   }
   case RAWSXP: {
-    return Rf_ScalarRaw(RAW(x)[i]);
+    return as_vec_scalar(RAW(x)[i]);
   }
   case VECSXP: {
     return VECTOR_ELT(x, i);

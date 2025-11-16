@@ -120,8 +120,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     out = SHIELD(new_vec(REALSXP, n));
     int64_t *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
-      repl = is_na(p_x[i]) ? NA_INTEGER64 : p_x[i];
-      p_out[i] = repl;
+      p_out[i] = as_int64(p_x[i]);
     }
     Rf_classgets(out, make_utf8_str("integer64"));
     break;

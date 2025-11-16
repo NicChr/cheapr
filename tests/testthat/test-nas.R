@@ -1,3 +1,19 @@
+
+is.na2 <- function(x){
+  is.na(x)
+}
+
+recursive_na_count <- function(x){
+  sum(unlist(rapply(x, \(x) sum(is.na2(x)), how = "list")))
+}
+
+all_na2 <- function(x){
+  all(is.na2(x))
+}
+any_na2 <- function(x){
+  any(is.na2(x))
+}
+
 test_that("NAs", {
   set.seed(42)
   x <- na_insert(1:20, 10)
@@ -8,8 +24,8 @@ test_that("NAs", {
   names(z) <- paste0("col_", 1:4)
   z
 
-  expect_identical(num_na(NULL), 0L)
-  expect_identical(num_na(numeric()), 0L)
+  expect_identical(na_count(NULL), 0L)
+  expect_identical(na_count(numeric()), 0L)
 
   which_row_any_na <- function(x, invert = FALSE){
     which_(row_any_na(x), invert)
@@ -19,27 +35,27 @@ test_that("NAs", {
   }
   # Which missing? ----------------------------------------------------------
 
-  expect_identical(which_na(x), which(is.na(x)))
-  expect_identical(which_not_na(x), which(!is.na(x)))
-  expect_identical(which_na(y), which(is.na(y)))
-  expect_identical(which_not_na(y), which(!is.na(y)))
+  expect_identical(which_na(x), which(is.na2(x)))
+  expect_identical(which_not_na(x), which(!is.na2(x)))
+  expect_identical(which_na(y), which(is.na2(y)))
+  expect_identical(which_not_na(y), which(!is.na2(y)))
   expect_identical(which_row_all_na(z), 5L)
   expect_identical(which_row_all_na(z, TRUE), 1:4)
 
 
 # How many missing? -------------------------------------------------------
 
-  expect_identical(num_na(x), sum(is.na(x)))
-  expect_identical(num_na(y), sum(is.na(y)))
-  expect_identical(num_na(z), sum(is.na(z)))
-  # expect_identical(num_na(z), sum(apply(z, 1, function(x) sum(is.na(x)) == ncol(z))))
+  expect_identical(na_count(x), sum(is.na2(x)))
+  expect_identical(na_count(y), sum(is.na2(y)))
+  expect_identical(na_count(z), sum(is.na2(z)))
+  # expect_identical(na_count(z), sum(apply(z, 1, function(x) sum(is.na2(x)) == ncol(z))))
 
   expect_error(row_na_counts(x))
   expect_error(col_na_counts(x))
-  expect_equal(row_na_counts(y), rowSums(is.na(y)))
-  expect_equal(col_na_counts(y), colSums(is.na(y)))
-  expect_equal(row_na_counts(z), rowSums(is.na(z)))
-  expect_equal(col_na_counts(z), unname(colSums(is.na(z))))
+  expect_equal(row_na_counts(y), rowSums(is.na2(y)))
+  expect_equal(col_na_counts(y), colSums(is.na2(y)))
+  expect_equal(row_na_counts(z), rowSums(is.na2(z)))
+  expect_equal(col_na_counts(z), unname(colSums(is.na2(z))))
 
 
 # Any/All NA? -------------------------------------------------------------
@@ -56,17 +72,17 @@ test_that("NAs", {
 
   expect_error(row_any_na(x))
   expect_error(col_any_na(x))
-  expect_identical(row_any_na(y), apply(y, 1, function(x) sum(is.na(x)) >= 1))
-  expect_identical(col_any_na(y), apply(y, 2, function(x) sum(is.na(x)) >= 1))
-  expect_identical(row_any_na(z), apply(z, 1, function(x) sum(is.na(x)) >= 1))
-  expect_identical(col_any_na(z), unname(apply(z, 2, function(x) sum(is.na(x)) >= 1)))
+  expect_identical(row_any_na(y), apply(y, 1, function(x) sum(is.na2(x)) >= 1))
+  expect_identical(col_any_na(y), apply(y, 2, function(x) sum(is.na2(x)) >= 1))
+  expect_identical(row_any_na(z), apply(z, 1, function(x) sum(is.na2(x)) >= 1))
+  expect_identical(col_any_na(z), unname(apply(z, 2, function(x) sum(is.na2(x)) >= 1)))
 
   expect_error(row_all_na(x))
   expect_error(col_all_na(x))
-  expect_identical(row_all_na(y), apply(y, 1, function(x) sum(is.na(x)) >= length(x)))
-  expect_identical(col_all_na(y), apply(y, 2, function(x) sum(is.na(x)) >= length(x)))
-  expect_identical(row_all_na(z), apply(z, 1, function(x) sum(is.na(x)) >= length(x)))
-  expect_identical(col_all_na(z), unname(apply(z, 2, function(x) sum(is.na(x)) >= length(x))))
+  expect_identical(row_all_na(y), apply(y, 1, function(x) sum(is.na2(x)) >= length(x)))
+  expect_identical(col_all_na(y), apply(y, 2, function(x) sum(is.na2(x)) >= length(x)))
+  expect_identical(row_all_na(z), apply(z, 1, function(x) sum(is.na2(x)) >= length(x)))
+  expect_identical(col_all_na(z), unname(apply(z, 2, function(x) sum(is.na2(x)) >= length(x))))
 })
 
 test_that("different classes", {
@@ -83,72 +99,68 @@ test_that("different classes", {
   a30 <- a3[0]
   a40 <- a4[0]
 
-  allNA <- function(x){
-    all(is.na(x))
-  }
+  expect_identical(is_na(a10), is.na2(a10))
+  expect_identical(is_na(a20), is.na2(a20))
+  expect_identical(is_na(a30), is.na2(a30))
+  expect_identical(is_na(a40), is.na2(a40))
 
-  expect_identical(is_na(a10), is.na(a10))
-  expect_identical(is_na(a20), is.na(a20))
-  expect_identical(is_na(a30), is.na(a30))
-  expect_identical(is_na(a40), is.na(a40))
+  expect_identical(is_na(a1), is.na2(a1))
+  expect_identical(is_na(a2), is.na2(a2))
+  expect_identical(is_na(a3), is.na2(a3))
+  expect_identical(is_na(a4), is.na2(a4))
 
-  expect_identical(is_na(a1), is.na(a1))
-  expect_identical(is_na(a2), is.na(a2))
-  expect_identical(is_na(a3), is.na(a3))
-  expect_identical(is_na(a4), is.na(a4))
+  expect_identical(na_count(a10), sum(is.na2(a10)))
+  expect_identical(na_count(a20), sum(is.na2(a20)))
+  expect_identical(na_count(a30), sum(is.na2(a30)))
+  expect_identical(na_count(a40), sum(is.na2(a40)))
 
-  expect_identical(num_na(a10), sum(is.na(a10)))
-  expect_identical(num_na(a20), sum(is.na(a20)))
-  expect_identical(num_na(a30), sum(is.na(a30)))
-  expect_identical(num_na(a40), sum(is.na(a40)))
+  expect_identical(na_count(a1), sum(is.na2(a1)))
+  expect_identical(na_count(a2), sum(is.na2(a2)))
+  expect_identical(na_count(a3), sum(is.na2(a3)))
+  expect_identical(na_count(a4), sum(is.na2(a4)))
 
-  expect_identical(num_na(a1), sum(is.na(a1)))
-  expect_identical(num_na(a2), sum(is.na(a2)))
-  expect_identical(num_na(a3), sum(is.na(a3)))
-  expect_identical(num_na(a4), sum(is.na(a4)))
+  expect_identical(na_count(l[0]), recursive_na_count(l[0]))
+  expect_identical(na_count(l), recursive_na_count(l))
 
-  expect_identical(num_na(l[0]), sum(is.na(unlist(l[0]))))
-  expect_identical(num_na(l), sum(is.na(unlist(l))))
+  expect_identical(which_na(a10), which(is.na2(a10)))
+  expect_identical(which_na(a20), which(is.na2(a20)))
+  expect_identical(which_na(a30), which(is.na2(a30)))
+  expect_identical(which_na(a40), which(is.na2(a40)))
 
-  expect_identical(which_na(a10), which(is.na(a10)))
-  expect_identical(which_na(a20), which(is.na(a20)))
-  expect_identical(which_na(a30), which(is.na(a30)))
-  expect_identical(which_na(a40), which(is.na(a40)))
+  expect_identical(which_na(a1), which(is.na2(a1)))
+  expect_identical(which_na(a2), which(is.na2(a2)))
+  expect_identical(which_na(a3), which(is.na2(a3)))
+  expect_identical(which_na(a4), which(is.na2(a4)))
 
-  expect_identical(which_na(a1), which(is.na(a1)))
-  expect_identical(which_na(a2), which(is.na(a2)))
-  expect_identical(which_na(a3), which(is.na(a3)))
-  expect_identical(which_na(a4), which(is.na(a4)))
+  expect_identical(which_not_na(a10), which(!is.na2(a10)))
+  expect_identical(which_not_na(a20), which(!is.na2(a20)))
+  expect_identical(which_not_na(a30), which(!is.na2(a30)))
+  expect_identical(which_not_na(a40), which(!is.na2(a40)))
 
-  expect_identical(which_not_na(a10), which(!is.na(a10)))
-  expect_identical(which_not_na(a20), which(!is.na(a20)))
-  expect_identical(which_not_na(a30), which(!is.na(a30)))
-  expect_identical(which_not_na(a40), which(!is.na(a40)))
+  expect_identical(which_not_na(a1), which(!is.na2(a1)))
+  expect_identical(which_not_na(a2), which(!is.na2(a2)))
+  expect_identical(which_not_na(a3), which(!is.na2(a3)))
+  expect_identical(which_not_na(a4), which(!is.na2(a4)))
 
-  expect_identical(which_not_na(a1), which(!is.na(a1)))
-  expect_identical(which_not_na(a2), which(!is.na(a2)))
-  expect_identical(which_not_na(a3), which(!is.na(a3)))
-  expect_identical(which_not_na(a4), which(!is.na(a4)))
+  expect_identical(any_na(a10), any_na2(a10))
+  expect_identical(any_na(a20), any_na2(a20))
+  expect_identical(any_na(a30), any_na2(a30))
+  expect_identical(any_na(a40), any_na2(a40))
 
-  expect_identical(any_na(a10), anyNA(a10))
-  expect_identical(any_na(a20), anyNA(a20))
-  expect_identical(any_na(a30), anyNA(a30))
-  expect_identical(any_na(a40), anyNA(a40))
+  expect_identical(any_na(a1), any_na2(a1))
+  expect_identical(any_na(a2), any_na2(a2))
+  expect_identical(any_na(a3), any_na2(a3))
+  expect_identical(any_na(a4), any_na2(a4))
 
-  expect_identical(any_na(a1), anyNA(a1))
-  expect_identical(any_na(a2), anyNA(a2))
-  expect_identical(any_na(a3), anyNA(a3))
-  expect_identical(any_na(a4), anyNA(a4))
+  expect_identical(all_na(a10), all_na2(a10))
+  expect_identical(all_na(a20), all_na2(a20))
+  expect_identical(all_na(a30), all_na2(a30))
+  expect_identical(all_na(a40), all_na2(a40))
 
-  expect_identical(all_na(a10), allNA(a10))
-  expect_identical(all_na(a20), allNA(a20))
-  expect_identical(all_na(a30), allNA(a30))
-  expect_identical(all_na(a40), allNA(a40))
-
-  expect_identical(all_na(a1), allNA(a1))
-  expect_identical(all_na(a2), allNA(a2))
-  expect_identical(all_na(a3), allNA(a3))
-  expect_identical(all_na(a4), allNA(a4))
+  expect_identical(all_na(a1), all_na2(a1))
+  expect_identical(all_na(a2), all_na2(a2))
+  expect_identical(all_na(a3), all_na2(a3))
+  expect_identical(all_na(a4), all_na2(a4))
 })
 
 test_that("multiple cores", {
@@ -161,40 +173,37 @@ test_that("multiple cores", {
                 imaginary = na_insert(1:10^5, 10))
   l <- list(a1, list(a1, a2), list(a1, a2, a3), list(a1, a2, a3, a4))
 
-  allNA <- function(x){
-    all(is.na(x))
-  }
-  expect_identical(is_na(a1), is.na(a1))
-  expect_identical(is_na(a2), is.na(a2))
-  expect_identical(is_na(a3), is.na(a3))
-  expect_identical(is_na(a4), is.na(a4))
+  expect_identical(is_na(a1), is.na2(a1))
+  expect_identical(is_na(a2), is.na2(a2))
+  expect_identical(is_na(a3), is.na2(a3))
+  expect_identical(is_na(a4), is.na2(a4))
 
-  expect_identical(num_na(a1), sum(is.na(a1)))
-  expect_identical(num_na(a2), sum(is.na(a2)))
-  expect_identical(num_na(a3), sum(is.na(a3)))
-  expect_identical(num_na(a4), sum(is.na(a4)))
+  expect_identical(na_count(a1), sum(is.na2(a1)))
+  expect_identical(na_count(a2), sum(is.na2(a2)))
+  expect_identical(na_count(a3), sum(is.na2(a3)))
+  expect_identical(na_count(a4), sum(is.na2(a4)))
 
-  expect_identical(num_na(l), sum(is.na(unlist(l))))
+  expect_identical(na_count(l), recursive_na_count(l))
 
-  expect_identical(which_na(a1), which(is.na(a1)))
-  expect_identical(which_na(a2), which(is.na(a2)))
-  expect_identical(which_na(a3), which(is.na(a3)))
-  expect_identical(which_na(a4), which(is.na(a4)))
+  expect_identical(which_na(a1), which(is.na2(a1)))
+  expect_identical(which_na(a2), which(is.na2(a2)))
+  expect_identical(which_na(a3), which(is.na2(a3)))
+  expect_identical(which_na(a4), which(is.na2(a4)))
 
-  expect_identical(which_not_na(a1), which(!is.na(a1)))
-  expect_identical(which_not_na(a2), which(!is.na(a2)))
-  expect_identical(which_not_na(a3), which(!is.na(a3)))
-  expect_identical(which_not_na(a4), which(!is.na(a4)))
+  expect_identical(which_not_na(a1), which(!is.na2(a1)))
+  expect_identical(which_not_na(a2), which(!is.na2(a2)))
+  expect_identical(which_not_na(a3), which(!is.na2(a3)))
+  expect_identical(which_not_na(a4), which(!is.na2(a4)))
 
-  expect_identical(any_na(a1), anyNA(a1))
-  expect_identical(any_na(a2), anyNA(a2))
-  expect_identical(any_na(a3), anyNA(a3))
-  expect_identical(any_na(a4), anyNA(a4))
+  expect_identical(any_na(a1), any_na2(a1))
+  expect_identical(any_na(a2), any_na2(a2))
+  expect_identical(any_na(a3), any_na2(a3))
+  expect_identical(any_na(a4), any_na2(a4))
 
-  expect_identical(all_na(a1), allNA(a1))
-  expect_identical(all_na(a2), allNA(a2))
-  expect_identical(all_na(a3), allNA(a3))
-  expect_identical(all_na(a4), allNA(a4))
+  expect_identical(all_na(a1), all_na2(a1))
+  expect_identical(all_na(a2), all_na2(a2))
+  expect_identical(all_na(a3), all_na2(a3))
+  expect_identical(all_na(a4), all_na2(a4))
   options(cheapr.cores = 1)
 })
 
@@ -262,7 +271,7 @@ test_that("lists", {
   )
 
   x <- list(1, 1:5, NA, list(1:10, list(c(2, NA, NA))))
-  expect_identical(num_na(x), 3L)
+  expect_identical(na_count(x), 3L)
   expect_true(any_na(x))
   expect_false(all_na(x))
 
@@ -273,7 +282,7 @@ test_that("lists", {
   df
   expect_identical(
     row_na_counts(df),
-    vapply(df$x, function(x) (sum(is.na(unlist(x))) > 0L) + 1L, 0L)
+    vapply(df$x, function(x) (sum(is.na2(unlist(x))) > 0L) + 1L, 0L)
   )
   expect_identical(
     col_na_counts(df),
@@ -296,15 +305,15 @@ test_that("lists", {
   expect_identical(
     row_na_counts(df),
     # Add 1 every time ALL unlist elements are NA
-    vapply(df$a, function(x) (sum(is.na(unlist(x))) > 0L), 0L) +
-      is.na(df$b) +
-      is.na(df$c) +
-      is.na(df$d) +
-      is.na(df$e)
+    vapply(df$a, is_na, TRUE) +
+      is.na2(df$b) +
+      is.na2(df$c) +
+      is.na2(df$d) +
+      is.na2(df$e)
   )
   expect_identical(
     col_na_counts(df),
-    c(10000L, 1000L, 1000L, sum(is.na(df$d)), 10000L)
+    c(10000L, 1000L, 1000L, sum(is.na2(df$d)), 10000L)
   )
   options(cheapr.cores = 1)
 })
