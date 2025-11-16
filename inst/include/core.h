@@ -144,54 +144,97 @@ inline bool is_na<Rbyte>(Rbyte x){
   return false;
 }
 
+// NA type
+
 template<typename T>
-inline T na_type(T x) {
+inline T na_type(T& x) {
   Rf_error("Unimplemented `na_type` specialisation");
 }
 
 template<>
-inline r_bool na_type<r_bool>(r_bool x){
+inline r_bool na_type<r_bool>(r_bool& x){
   return r_na;
 }
 
 template<>
-inline int na_type<int>(int x){
+inline int na_type<int>(int& x){
   return NA_INTEGER;
 }
 
 template<>
-inline double na_type<double>(double x){
+inline double na_type<double>(double& x){
   return NA_REAL;
 }
 
 template<>
-inline int64_t na_type<int64_t>(int64_t x){
+inline int64_t na_type<int64_t>(int64_t& x){
   return NA_INTEGER64;
 }
 
 template<>
-inline SEXP na_type<SEXP>(SEXP x){
+inline SEXP na_type<SEXP>(SEXP& x){
   return NA_STRING;
 }
 
 template<>
-inline Rcomplex na_type<Rcomplex>(Rcomplex x){
+inline Rcomplex na_type<Rcomplex>(Rcomplex& x){
   return NA_COMPLEX;
 }
 
+
+
 // C++ equals fn for R that accounts for NA
 // It differs from R in the sense that NA == NA returns true here
+
 template<typename T>
 inline bool eq(const T& x, const T& y) {
   return x == y;
 }
 template<>
-inline bool eq<double>(const double& x, const double& y) {
-  return is_na(x) ? is_na(y) : (is_na(y) ? is_na(x) : x == y);
-}
-template<>
 inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
-  return is_na(x) ? is_na(y) : (is_na(y) ? is_na(x) : ( (x.r == y.r) && (x.i == y.i)));
+  return eq(x.r, y.r) && eq(x.i, y.i);
+}
+
+// While the commented-out templates would be the cleanest and easiest
+// solution which accounts for NA values
+// we still want to both support complex numbers and be efficient
+// template<typename T>
+// inline bool eq(const T& x, const T& y) {
+//   return x == y;
+// }
+// template<>
+// inline bool eq<double>(const double& x, const double& y) {
+//   return (is_na(x) && is_na(y)) ? true : x == y;
+// }
+// template<>
+// inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
+//   return eq<double>(x.r, y.r) && eq<double>(x.i, y.i);
+// }
+
+// Coerce fns that account for NA
+template<typename T>
+inline r_bool as_r_bool(T x){
+  return is_na(x) ? r_na : static_cast<r_bool>(x);
+}
+template<typename T>
+inline int as_int(T x){
+  return is_na(x) ? NA_INTEGER : static_cast<int>(x);
+}
+template<typename T>
+inline int64_t as_int64(T x){
+  return is_na(x) ? NA_INTEGER64 : static_cast<int64_t>(x);
+}
+template<typename T>
+inline double as_double(T x){
+  return is_na(x) ? NA_REAL : static_cast<double>(x);
+}
+template<typename T>
+inline Rcomplex as_complex(T x){
+  return is_na(x) ? NA_COMPLEX : static_cast<Rcomplex>(x);
+}
+template<typename T>
+inline Rbyte as_raw(T x){
+  return is_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
 }
 
 // Equals fn that behaves like R's `==` in the presence of NAs
@@ -199,18 +242,6 @@ inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
 // inline int r_eq(const T& x, const T& y) {
 //   return (is_na(x) || is_na(y) ) ? x == y : NA_INTEGER;
 // }
-
-inline int64_t CHEAPR_INT_TO_INT64(int x){
-  return is_na(x) ? NA_INTEGER64 : x;
-}
-
-inline int CHEAPR_INT64_TO_INT(int64_t x){
-  return is_na(x) ? NA_INTEGER : x;
-}
-
-inline double CHEAPR_INT64_TO_DBL(int64_t x){
-  return is_na(x) ? NA_REAL : x;
-}
 
 // R fns
 

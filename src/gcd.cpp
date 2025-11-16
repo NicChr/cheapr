@@ -169,7 +169,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
       }
-      REAL(out)[0] = CHEAPR_INT64_TO_DBL(gcd);
+      REAL(out)[0] = as_double(gcd);
     }
     YIELD(NP);
     return out;
@@ -223,22 +223,20 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     if (n > 0){
 
       // Initialise first value as lcm
-      int64_t lcm = CHEAPR_INT_TO_INT64(p_x[0]);
+      int64_t lcm = as_int64(p_x[0]);
 
       for (R_xlen_t i = 1; i < n; ++i) {
         if (!na_rm && lcm == NA_INTEGER64){
           break;
         }
-        lcm = lcm2_int64(lcm, CHEAPR_INT_TO_INT64(p_x[i]), na_rm);
+        lcm = lcm2_int64(lcm, as_int64(p_x[i]), na_rm);
       }
       bool is_short = is_na(lcm) || is_integerable(lcm);
       out = SHIELD(new_vec(is_short ? INTSXP : REALSXP, 1)); ++NP;
       if (is_short){
-        int temp = CHEAPR_INT64_TO_INT(lcm);
-        INTEGER(out)[0] = temp;
+        INTEGER(out)[0] = as_int(lcm);
       } else {
-        double temp = CHEAPR_INT64_TO_DBL(lcm);
-        REAL(out)[0] = temp;
+        REAL(out)[0] = as_double(lcm);
       }
     } else {
       out = SHIELD(new_vec(INTSXP, 0)); ++NP;
@@ -261,8 +259,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, p_x[i], na_rm);
       }
-      double temp = CHEAPR_INT64_TO_DBL(lcm);
-      REAL(out)[0] = temp;
+      REAL(out)[0] = as_double(lcm);
     }
     YIELD(NP);
     return out;

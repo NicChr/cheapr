@@ -17,9 +17,15 @@ bool implicit_na_coercion(SEXP x, SEXP target){
 }
 
 #define CHEAPR_VAL_COUNT(VAL)                                  \
+if (is_na(VAL)){                                               \
+  for (R_xlen_t i = 0; i < n; ++i){                            \
+    count += is_na(p_x[i]);                                    \
+  }                                                            \
+} else {                                                       \
   for (R_xlen_t i = 0; i < n; ++i){                            \
     count += eq(p_x[i], VAL);                                  \
-  }
+  }                                                            \
+}
 
 
 R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
@@ -65,6 +71,14 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
     SEXP val = SHIELD(Rf_asChar(value)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
+    CHEAPR_VAL_COUNT(val);
+    break;
+  }
+  case CPLXSXP: {
+    if (implicit_na_coercion(value, x)) break;
+    SHIELD(value = cast<r_complex_t>(value, R_NilValue)); ++NP;
+    Rcomplex val = as_complex(COMPLEX(value)[0]);
+    const Rcomplex *p_x = COMPLEX_RO(x);
     CHEAPR_VAL_COUNT(val);
     break;
   }

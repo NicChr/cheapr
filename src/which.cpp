@@ -19,16 +19,31 @@ R_xlen_t count_true(const r_bool* RESTRICT px, const uint_fast64_t n){
   }
 }
 
-#define CHEAPR_WHICH_VAL(VAL)                                    \
-while (whichi < out_size){                                       \
-  p_out[whichi] = i + 1;                                         \
-  whichi += eq(p_x[i++], VAL);                                   \
-}                                                                \
+#define CHEAPR_WHICH_VAL(VAL)                                      \
+if (is_na(VAL)){                                                   \
+  while (whichi < out_size){                                       \
+    p_out[whichi] = i + 1;                                         \
+    whichi += is_na(p_x[i++]);                                     \
+  }                                                                \
+} else {                                                           \
+  while (whichi < out_size){                                       \
+    p_out[whichi] = i + 1;                                         \
+    whichi += eq(p_x[i++], VAL);                                   \
+  }                                                                \
+}
+
 
 #define CHEAPR_WHICH_VAL_INVERTED(VAL)                           \
-while (whichi < out_size){                                       \
-  p_out[whichi] = i + 1;                                         \
-  whichi += !eq(p_x[i++], VAL);                                  \
+if (is_na(VAL)){                                                 \
+  while (whichi < out_size){                                     \
+    p_out[whichi] = i + 1;                                       \
+    whichi += !is_na(p_x[i++]);                                  \
+  }                                                              \
+} else {                                                         \
+  while (whichi < out_size){                                     \
+    p_out[whichi] = i + 1;                                       \
+    whichi += !eq(p_x[i++], VAL);                                \
+  }                                                              \
 }
 
 
@@ -184,6 +199,29 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
       }
     } else {
       int *p_out = INTEGER(out);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
+    }
+    YIELD(NP);
+    return out;
+  }
+  case CPLXSXP: {
+    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
+    SHIELD(value = cast<r_complex_t>(value, R_NilValue)); ++NP;
+    Rcomplex val = as_complex(COMPLEX(value)[0]);
+    const Rcomplex *p_x = COMPLEX_RO(x);
+    if (is_long){
+      double* RESTRICT p_out = REAL(out);
+      if (invert){
+        CHEAPR_WHICH_VAL_INVERTED(val);
+      } else {
+        CHEAPR_WHICH_VAL(val);
+      }
+    } else {
+      int* RESTRICT p_out = INTEGER(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
