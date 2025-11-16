@@ -191,6 +191,11 @@ inline Rcomplex na_type<Rcomplex>(Rcomplex x){
 }
 
 template<>
+inline Rbyte na_type<Rbyte>(Rbyte x){
+  return 0;
+}
+
+template<>
 inline SEXP na_type<SEXP>(SEXP x){
   return NA_STRING;
 }
