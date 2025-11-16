@@ -90,6 +90,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
       count += na_count(p_x[i], true);
     }
     break;
+  } else {
+    const SEXP *p_x = LIST_PTR_RO(x);
+    CHEAPR_NA_COUNT
+    break;
   }
   }
   default: {
@@ -290,9 +294,7 @@ SEXP cpp_is_na(SEXP x){
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = LIST_PTR_RO(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = cpp_all_na(p_x[i], false, true);
-    }
+    CHEAPR_IS_NA
     break;
   }
   }

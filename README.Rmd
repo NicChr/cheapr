@@ -155,19 +155,18 @@ mark(is.na(hours), is_na(hours))
 
 It differs in 2 regards:
 
--   List elements are regarded as `NA` when either that element is an
-    `NA` value or it is a list containing only `NA` values.
+-   List elements are regarded as `NA` only when that element is `NULL`
 -   For data frames, `is_na` returns a logical vector where `TRUE`
     defines an empty row of only `NA` values.
 
 ```{r}
 # List example
-is.na(list(NA, list(NA, NA), 10))
-is_na(list(NA, list(NA, NA), 10))
+is.na(list(NA, NULL, 10))
+is_na(list(NA, NULL, 10))
 
 # Data frame example
 df <- new_df(x = c(1, NA, 3),
-                 y = c(NA, NA, NA))
+             y = c(NA, NA, NA))
 df
 is_na(df)
 is_na(df)

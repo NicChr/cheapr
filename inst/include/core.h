@@ -101,239 +101,6 @@ inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
   return Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x);
 }
 
-inline void assert_charsxp(SEXP x){
-  if (TYPEOF(x) != CHARSXP){
-    Rf_error("`x` must be a CHARSXP, not a %s", Rf_type2char(TYPEOF(x)));
-  }
-}
-
-
-// is_na C++ template
-
-template<typename T>
-inline bool is_na(T x) {
-  Rf_error("Unimplemented `is_na` specialisation");
-  return false;
-}
-
-template<>
-inline bool is_na<r_bool>(r_bool x){
-  return x == r_na;
-}
-
-template<>
-inline bool is_na<int>(int x){
-  return x == NA_INTEGER;
-}
-
-template<>
-inline bool is_na<double>(double x){
-  return x != x;
-}
-
-template<>
-inline bool is_na<int64_t>(int64_t x){
-  return x == NA_INTEGER64;
-}
-
-template<>
-inline bool is_na<Rcomplex>(Rcomplex x){
-  return is_na<double>(x.r) || is_na<double>(x.i);
-}
-
-template<>
-inline bool is_na<Rbyte>(Rbyte x){
-  return false;
-}
-
-// is_na<SEXP> will always be for CHARSXP
-template<>
-inline bool is_na<SEXP>(SEXP x){
-  return x == NA_STRING;
-}
-
-// is_na<SEXP> will always be for CHARSXP
-// template<>
-// inline bool is_na<std::string>(std::string& x){
-//   return x == NA_CPP_STRING;
-// }
-
-// NA type
-
-template<typename T>
-inline T na_type(T x) {
-  Rf_error("Unimplemented `na_type` specialisation");
-}
-
-template<>
-inline r_bool na_type<r_bool>(r_bool x){
-  return r_na;
-}
-
-template<>
-inline int na_type<int>(int x){
-  return NA_INTEGER;
-}
-
-template<>
-inline double na_type<double>(double x){
-  return NA_REAL;
-}
-
-template<>
-inline int64_t na_type<int64_t>(int64_t x){
-  return NA_INTEGER64;
-}
-
-template<>
-inline Rcomplex na_type<Rcomplex>(Rcomplex x){
-  return NA_COMPLEX;
-}
-
-template<>
-inline Rbyte na_type<Rbyte>(Rbyte x){
-  return 0;
-}
-
-template<>
-inline SEXP na_type<SEXP>(SEXP x){
-  return NA_STRING;
-}
-// template<>
-// inline std::string na_type<std::string>(std::string& x){
-//   return NA_CPP_STRING;
-// }
-
-// equals template that doesn't support NA values
-// use is_na template functions
-template<typename T>
-inline bool eq(const T& x, const T& y) {
-  return x == y;
-}
-template<>
-inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
-  return eq(x.r, y.r) && eq(x.i, y.i);
-}
-
-template<typename T>
-inline SEXP as_vec_scalar(T x){
-  Rf_error("Unimplemented scalar constructor");
-}
-template<>
-inline SEXP as_vec_scalar<bool>(bool x){
-  return Rf_ScalarLogical(static_cast<int>(x));
-}
-template<>
-inline SEXP as_vec_scalar<r_bool>(r_bool x){
-  return Rf_ScalarLogical(static_cast<int>(x));
-}
-template<>
-inline SEXP as_vec_scalar<int>(int x){
-  return Rf_ScalarInteger(x);
-}
-template<>
-inline SEXP as_vec_scalar<R_xlen_t>(R_xlen_t x){
-  if (x <= INTEGER_MAX){
-    return Rf_ScalarInteger(static_cast<int>(x));
-  } else {
-    return Rf_ScalarReal(static_cast<double>(x));
-  }
-}
-// template<>
-// inline SEXP as_vec_scalar<int64_t>(int64_t x){
-//   SEXP out = SHIELD(Rf_allocVector(REALSXP, 1));
-//   Rf_classgets(out, Rf_ScalarString(Rf_mkCharCE("integer64", CE_UTF8)));
-//   INTEGER64_PTR(out)[0] = x;
-//   YIELD(1);
-//   return out;
-// }
-template<>
-inline SEXP as_vec_scalar<double>(double x){
-  return Rf_ScalarReal(x);
-}
-template<>
-inline SEXP as_vec_scalar<Rcomplex>(Rcomplex x){
-  return Rf_ScalarComplex(x);
-}
-template<>
-inline SEXP as_vec_scalar<Rbyte>(Rbyte x){
-  return Rf_ScalarRaw(x);
-}
-// Scalar string
-template<>
-inline SEXP as_vec_scalar<SEXP>(SEXP x){
-  return Rf_ScalarString(x);
-}
-// template<>
-// inline SEXP as_vec_scalar<std::string>(std::string x){
-//   return Rf_mkString(x.c_str());
-// }
-
-// Coerce functions that account for NA
-template<typename T>
-inline r_bool as_r_bool(T x){
-  return is_na(x) ? r_na : static_cast<r_bool>(x);
-}
-template<typename T>
-inline int as_int(T x){
-  return is_na(x) ? NA_INTEGER : static_cast<int>(x);
-}
-template<typename T>
-inline int64_t as_int64(T x){
-  return is_na(x) ? NA_INTEGER64 : static_cast<int64_t>(x);
-}
-template<typename T>
-inline double as_double(T x){
-  return is_na(x) ? NA_REAL : static_cast<double>(x);
-}
-template<typename T>
-inline Rcomplex as_complex(T x){
-  return is_na(x) ? NA_COMPLEX : static_cast<Rcomplex>(x);
-}
-template<typename T>
-inline Rbyte as_raw(T x){
-  return is_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
-}
-// As CHARSXP
-template<typename T>
-inline SEXP as_char(T x){
-  if (is_na(x)){
-   return NA_STRING;
-  } else {
-    SEXP scalar = SHIELD(as_vec_scalar(x));
-    SEXP str = SHIELD(Rf_coerceVector(scalar, STRSXP));
-    SEXP out = STRING_ELT(str, 0);
-    YIELD(2);
-    return out;
-  }
-}
-
-// template<typename T>
-// inline std::string as_cpp_string(T x){
-//   if (is_na(x)){
-//     return NA_CPP_STRING;
-//   } else {
-//     SEXP scalar = SHIELD(as_vec_scalar(x));
-//     SEXP str = SHIELD(Rf_coerceVector(scalar, STRSXP));
-//     SEXP out = STRING_ELT(str, 0);
-//     YIELD(2);
-//     return out;
-//   }
-// }
-
-// R fns
-
-inline cpp11::function cheapr_sset = cpp11::package("cheapr")["cheapr_sset"];
-inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
-inline cpp11::function cheapr_factor = cpp11::package("cheapr")["factor_"];
-inline cpp11::function base_rep = cpp11::package("base")["rep"];
-inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
-inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
-inline cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
-inline cpp11::function base_cast = cpp11::package("cheapr")["base_cast"];
-inline cpp11::function base_assign = cpp11::package("cheapr")["base_assign_at"];
-inline cpp11::function base_length = cpp11::package("base")["length"];
-
 // Check that n = 0 to avoid R CMD warnings
 inline void *safe_memmove(void *dst, const void *src, size_t n){
   return n ? memmove(dst, src, n) : dst;
@@ -396,7 +163,7 @@ inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
 }
 
 inline SEXP new_immutable_vec(SEXPTYPE type, R_xlen_t n){
-  SEXP out = SHIELD(Rf_allocVector(type, n));
+  SEXP out = SHIELD(new_vec(type, n));
   MARK_NOT_MUTABLE(out);
   YIELD(1);
   return out;
@@ -418,6 +185,272 @@ inline bool is_df(SEXP x){
 inline int df_nrow(SEXP x){
   return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
 }
+
+inline void assert_charsxp(SEXP x){
+  if (TYPEOF(x) != CHARSXP){
+    Rf_error("`x` must be a CHARSXP, not a %s", Rf_type2char(TYPEOF(x)));
+  }
+}
+
+
+// is_na C++ template
+
+template<typename T>
+inline bool is_na(T x) {
+  Rf_error("Unimplemented `is_na` specialisation");
+  return false;
+}
+
+template<>
+inline bool is_na<r_bool>(r_bool x){
+  return x == r_na;
+}
+
+template<>
+inline bool is_na<int>(int x){
+  return x == NA_INTEGER;
+}
+
+template<>
+inline bool is_na<double>(double x){
+  return x != x;
+}
+
+template<>
+inline bool is_na<int64_t>(int64_t x){
+  return x == NA_INTEGER64;
+}
+
+template<>
+inline bool is_na<Rcomplex>(Rcomplex x){
+  return is_na<double>(x.r) || is_na<double>(x.i);
+}
+
+template<>
+inline bool is_na<Rbyte>(Rbyte x){
+  return false;
+}
+
+// Works for CHARSXP and NULL
+template<>
+inline bool is_na<SEXP>(SEXP x){
+  return is_null(x) || x == NA_STRING;
+  // switch (TYPEOF(x)){
+  // case CHARSXP: {
+  //   return x == NA_STRING;
+  // }
+  // case VECSXP: {
+  //   return is_null(x);
+  // }
+  // default: {
+  //   Rf_error("No `is_na` specialisation for R type %s", Rf_type2char(TYPEOF(x)));
+  // }
+  // }
+
+}
+// is_na<SEXP> will always be for CHARSXP
+// template<>
+// inline bool is_na<std::string>(std::string& x){
+//   return x == NA_CPP_STRING;
+// }
+
+// NA type
+
+template<typename T>
+inline T na_type(T x) {
+  Rf_error("Unimplemented `na_type` specialisation");
+}
+
+template<>
+inline r_bool na_type<r_bool>(r_bool x){
+  return r_na;
+}
+
+template<>
+inline int na_type<int>(int x){
+  return NA_INTEGER;
+}
+
+template<>
+inline double na_type<double>(double x){
+  return NA_REAL;
+}
+
+template<>
+inline int64_t na_type<int64_t>(int64_t x){
+  return NA_INTEGER64;
+}
+
+template<>
+inline Rcomplex na_type<Rcomplex>(Rcomplex x){
+  return NA_COMPLEX;
+}
+
+template<>
+inline Rbyte na_type<Rbyte>(Rbyte x){
+  return 0;
+}
+
+template<>
+inline SEXP na_type<SEXP>(SEXP x){
+  switch (TYPEOF(x)){
+  case CHARSXP: {
+    return NA_STRING;
+  }
+  case VECSXP: {
+    return R_NilValue;
+  }
+  default: {
+   Rf_error("No `na_type` specialisation for R type %s", Rf_type2char(TYPEOF(x)));
+  }
+  }
+}
+
+// template<>
+// inline std::string na_type<std::string>(std::string& x){
+//   return NA_CPP_STRING;
+// }
+
+// equals template that doesn't support NA values
+// use is_na template functions
+template<typename T>
+inline bool eq(const T& x, const T& y) {
+  return x == y;
+}
+template<>
+inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
+  return eq(x.r, y.r) && eq(x.i, y.i);
+}
+
+template<typename T>
+inline SEXP as_vec_scalar(T x){
+  Rf_error("Unimplemented scalar constructor");
+}
+template<>
+inline SEXP as_vec_scalar<bool>(bool x){
+  return Rf_ScalarLogical(static_cast<int>(x));
+}
+template<>
+inline SEXP as_vec_scalar<r_bool>(r_bool x){
+  return Rf_ScalarLogical(static_cast<int>(x));
+}
+template<>
+inline SEXP as_vec_scalar<int>(int x){
+  return Rf_ScalarInteger(x);
+}
+template<>
+inline SEXP as_vec_scalar<R_xlen_t>(R_xlen_t x){
+  if (x <= INTEGER_MAX){
+    return Rf_ScalarInteger(static_cast<int>(x));
+  } else {
+    return Rf_ScalarReal(static_cast<double>(x));
+  }
+}
+// template<>
+// inline SEXP as_vec_scalar<int64_t>(int64_t x){
+//   SEXP out = SHIELD(new_vec(REALSXP, 1));
+//   Rf_classgets(out, Rf_ScalarString(Rf_mkCharCE("integer64", CE_UTF8)));
+//   INTEGER64_PTR(out)[0] = x;
+//   YIELD(1);
+//   return out;
+// }
+template<>
+inline SEXP as_vec_scalar<double>(double x){
+  return Rf_ScalarReal(x);
+}
+template<>
+inline SEXP as_vec_scalar<Rcomplex>(Rcomplex x){
+  return Rf_ScalarComplex(x);
+}
+template<>
+inline SEXP as_vec_scalar<Rbyte>(Rbyte x){
+  return Rf_ScalarRaw(x);
+}
+// Scalar string
+template<>
+inline SEXP as_vec_scalar<SEXP>(SEXP x){
+  switch (TYPEOF(x)){
+  case CHARSXP: {
+    return Rf_ScalarString(x);
+  }
+  default: {
+    SEXP out = SHIELD(new_vec(VECSXP, 1));
+    SET_VECTOR_ELT(out, 0, x);
+    YIELD(1);
+    return out;
+  }
+  }
+}
+// template<>
+// inline SEXP as_vec_scalar<std::string>(std::string x){
+//   return Rf_mkString(x.c_str());
+// }
+
+// Coerce functions that account for NA
+template<typename T>
+inline r_bool as_r_bool(T x){
+  return is_na(x) ? r_na : static_cast<r_bool>(x);
+}
+template<typename T>
+inline int as_int(T x){
+  return is_na(x) ? NA_INTEGER : static_cast<int>(x);
+}
+template<typename T>
+inline int64_t as_int64(T x){
+  return is_na(x) ? NA_INTEGER64 : static_cast<int64_t>(x);
+}
+template<typename T>
+inline double as_double(T x){
+  return is_na(x) ? NA_REAL : static_cast<double>(x);
+}
+template<typename T>
+inline Rcomplex as_complex(T x){
+  return is_na(x) ? NA_COMPLEX : static_cast<Rcomplex>(x);
+}
+template<typename T>
+inline Rbyte as_raw(T x){
+  return is_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
+}
+// As CHARSXP
+template<typename T>
+inline SEXP as_char(T x){
+  if (is_na(x)){
+   return NA_STRING;
+  } else {
+    SEXP scalar = SHIELD(as_vec_scalar(x));
+    SEXP str = SHIELD(coerce_vec(scalar, STRSXP));
+    SEXP out = STRING_ELT(str, 0);
+    YIELD(2);
+    return out;
+  }
+}
+
+// template<typename T>
+// inline std::string as_cpp_string(T x){
+//   if (is_na(x)){
+//     return NA_CPP_STRING;
+//   } else {
+//     SEXP scalar = SHIELD(as_vec_scalar(x));
+//     SEXP str = SHIELD(Rf_coerceVector(scalar, STRSXP));
+//     SEXP out = STRING_ELT(str, 0);
+//     YIELD(2);
+//     return out;
+//   }
+// }
+
+// R fns
+
+inline cpp11::function cheapr_sset = cpp11::package("cheapr")["cheapr_sset"];
+inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
+inline cpp11::function cheapr_factor = cpp11::package("cheapr")["factor_"];
+inline cpp11::function base_rep = cpp11::package("base")["rep"];
+inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
+inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
+inline cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
+inline cpp11::function base_cast = cpp11::package("cheapr")["base_cast"];
+inline cpp11::function base_assign = cpp11::package("cheapr")["base_assign_at"];
+inline cpp11::function base_length = cpp11::package("base")["length"];
+
 
 inline SEXP CHEAPR_CORES = R_NilValue;
 
