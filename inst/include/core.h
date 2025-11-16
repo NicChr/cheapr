@@ -199,20 +199,15 @@ inline SEXP na_type<SEXP>(SEXP x){
 //   return NA_CPP_STRING;
 // }
 
-// While the commented-out templates would be the cleanest and easiest
-// solution which accounts for NA values
-// we still want to both support complex numbers and be efficient
+// equals template that doesn't support NA values
+// use is_na template functions
 template<typename T>
 inline bool eq(const T& x, const T& y) {
   return x == y;
 }
 template<>
-inline bool eq<double>(const double& x, const double& y) {
-  return (is_na(x) && is_na(y)) ? true : x == y;
-}
-template<>
 inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
-  return eq<double>(x.r, y.r) && eq<double>(x.i, y.i);
+  return eq(x.r, y.r) && eq(x.i, y.i);
 }
 
 template<typename T>
