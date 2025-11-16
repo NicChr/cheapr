@@ -61,8 +61,6 @@ inline constexpr int64_t NA_INTEGER64 = std::numeric_limits<int64_t>::min();
 inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 
-// inline const std::string NA_CPP_STRING = CHAR(NA_STRING);
-
 inline const Rcomplex NA_COMPLEX = {NA_REAL, NA_REAL};
 
 // Functions
@@ -193,7 +191,7 @@ inline void assert_charsxp(SEXP x){
 }
 
 
-// is_na C++ template
+// C++ templates
 
 template<typename T>
 inline bool is_na(T x) {
@@ -235,23 +233,10 @@ inline bool is_na<Rbyte>(Rbyte x){
 template<>
 inline bool is_na<SEXP>(SEXP x){
   return is_null(x) || x == NA_STRING;
-  // switch (TYPEOF(x)){
-  // case CHARSXP: {
-  //   return x == NA_STRING;
-  // }
-  // case VECSXP: {
-  //   return is_null(x);
-  // }
-  // default: {
-  //   Rf_error("No `is_na` specialisation for R type %s", Rf_type2char(TYPEOF(x)));
-  // }
-  // }
-
 }
-// is_na<SEXP> will always be for CHARSXP
 // template<>
-// inline bool is_na<std::string>(std::string& x){
-//   return x == NA_CPP_STRING;
+// inline bool is_na<cpp11::r_string>(cpp11::r_string x){
+//   return x == cpp11::na<cpp11::r_string>();
 // }
 
 // NA type
@@ -305,20 +290,19 @@ inline SEXP na_type<SEXP>(SEXP x){
   }
   }
 }
-
 // template<>
-// inline std::string na_type<std::string>(std::string& x){
-//   return NA_CPP_STRING;
+// inline cpp11::r_string na_type<cpp11::r_string>(cpp11::r_string x){
+//   return NA_STRING;
 // }
 
 // equals template that doesn't support NA values
 // use is_na template functions
 template<typename T>
-inline bool eq(const T& x, const T& y) {
+inline bool eq(const T x, const T y) {
   return x == y;
 }
 template<>
-inline bool eq<Rcomplex>(const Rcomplex& x, const Rcomplex& y) {
+inline bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
   return eq(x.r, y.r) && eq(x.i, y.i);
 }
 
@@ -382,8 +366,8 @@ inline SEXP as_vec_scalar<SEXP>(SEXP x){
   }
 }
 // template<>
-// inline SEXP as_vec_scalar<std::string>(std::string x){
-//   return Rf_mkString(x.c_str());
+// inline SEXP as_vec_scalar<cpp11::r_string>(cpp11::r_string x){
+//   return Rf_ScalarString(x);
 // }
 
 // Coerce functions that account for NA
@@ -412,26 +396,13 @@ inline Rbyte as_raw(T x){
   return is_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
 }
 // As CHARSXP
-template<typename T>
-inline SEXP as_char(T x){
-  if (is_na(x)){
-   return NA_STRING;
-  } else {
-    SEXP scalar = SHIELD(as_vec_scalar(x));
-    SEXP str = SHIELD(coerce_vec(scalar, STRSXP));
-    SEXP out = STRING_ELT(str, 0);
-    YIELD(2);
-    return out;
-  }
-}
-
 // template<typename T>
-// inline std::string as_cpp_string(T x){
+// inline cpp11::r_string as_char(T x){
 //   if (is_na(x)){
-//     return NA_CPP_STRING;
+//    return NA_STRING;
 //   } else {
 //     SEXP scalar = SHIELD(as_vec_scalar(x));
-//     SEXP str = SHIELD(Rf_coerceVector(scalar, STRSXP));
+//     SEXP str = SHIELD(coerce_vec(scalar, STRSXP));
 //     SEXP out = STRING_ELT(str, 0);
 //     YIELD(2);
 //     return out;

@@ -38,14 +38,13 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
 
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
-    YIELD(NP);
-    return count;
+    break;
   }
   case LGLSXP:
   case INTSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
-    int val = Rf_asInteger(value);
+    const int val = INTEGER(value)[0];
     const int *p_x = INTEGER(x);
     CHEAPR_VAL_COUNT(val)
     break;
@@ -53,7 +52,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case REALSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
-    double val = Rf_asReal(value);
+    const double val = REAL(value)[0];
     const double *p_x = REAL(x);
     CHEAPR_VAL_COUNT(val)
     break;
@@ -61,7 +60,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case CHEAPR_INT64SXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
-    int64_t val = INTEGER64_PTR(value)[0];
+    const int64_t val = INTEGER64_PTR(value)[0];
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     CHEAPR_VAL_COUNT(val)
     break;
@@ -69,15 +68,28 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
-    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+    const SEXP val = STRING_ELT(value, 0);
     const SEXP *p_x = STRING_PTR_RO(x);
-    CHEAPR_VAL_COUNT(val);
+    CHEAPR_VAL_COUNT(val)
+
+    // cpp11::writable::strings p_x = x;
+    // SEXP val = STRING_ELT(value, 0);
+    // if (is_na<cpp11::r_string>(val)){
+    //   for (R_xlen_t i = 0; i < n; ++i){
+    //     count += is_na<cpp11::r_string>(p_x[i]);
+    //   }
+    // } else {
+    //   for (R_xlen_t i = 0; i < n; ++i){
+    //     count += (p_x[i] == val);
+    //   }
+    //
+    // }
     break;
   }
   case CPLXSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_complex_t>(value, R_NilValue)); ++NP;
-    Rcomplex val = as_complex(COMPLEX(value)[0]);
+    const Rcomplex val = as_complex(COMPLEX(value)[0]);
     const Rcomplex *p_x = COMPLEX_RO(x);
     CHEAPR_VAL_COUNT(val);
     break;
