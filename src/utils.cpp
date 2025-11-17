@@ -160,7 +160,7 @@ double cpp_sum(SEXP x){
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_na(sum) || is_na(p_x[i]) ? NA_REAL : sum + p_x[i];
+      sum = is_r_na(sum) || is_r_na(p_x[i]) ? NA_REAL : sum + p_x[i];
     }
     break;
   }
@@ -170,7 +170,7 @@ double cpp_sum(SEXP x){
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_na(sum) || is_na(p_x[i]) ? NA_REAL : sum + p_x[i];
+      sum = is_r_na(sum) || is_r_na(p_x[i]) ? NA_REAL : sum + p_x[i];
     }
     break;
   }
@@ -210,8 +210,8 @@ SEXP cpp_range(SEXP x){
         min = std::min(min, p_x[i]);
         max = std::max(max, p_x[i]);
       }
-      lo = is_na(min) ? NA_REAL : min;
-      hi = is_na(min) ? NA_REAL : max;
+      lo = is_r_na(min) ? NA_REAL : min;
+      hi = is_r_na(min) ? NA_REAL : max;
       break;
     }
     case CHEAPR_INT64SXP: {
@@ -226,8 +226,8 @@ SEXP cpp_range(SEXP x){
         min = std::min(min, p_x[i]);
         max = std::max(max, p_x[i]);
       }
-      lo = is_na(min) ? NA_REAL : min;
-      hi = is_na(min) ? NA_REAL : max;
+      lo = is_r_na(min) ? NA_REAL : min;
+      hi = is_r_na(min) ? NA_REAL : max;
       break;
     }
     default: {
@@ -238,7 +238,7 @@ SEXP cpp_range(SEXP x){
       double max = R_NegInf;
 
       for (R_xlen_t i = 0; i < n; ++i){
-        if (is_na(p_x[i])){
+        if (is_r_na(p_x[i])){
           min = NA_REAL;
           max = NA_REAL;
           break;
@@ -277,13 +277,13 @@ double var_sum_squared_diff(SEXP x, double mu){
 
   // NA values are always ignored here
 
-  if (!is_na(mu)){
+  if (!is_r_na(mu)){
     switch (TYPEOF(x)){
 
     case INTSXP: {
       const int *p_x = INTEGER(x);
       for (R_xlen_t i = 0; i < n; ++i){
-        if (is_na(p_x[i])) continue;
+        if (is_r_na(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
       }
       break;
@@ -291,7 +291,7 @@ double var_sum_squared_diff(SEXP x, double mu){
     default: {
       const double *p_x = REAL(x);
       for (R_xlen_t i = 0; i < n; ++i){
-        if (is_na(p_x[i])) continue;
+        if (is_r_na(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
       }
       break;
@@ -311,7 +311,7 @@ double var_sum_squared_diff(SEXP x, double mu){
 #define CHEAPR_BIN_CODES                                                                                \
 for (R_xlen_t i = 0; i < n; ++i) {                                                                      \
   p_out[i] = na_type(p_out[0]);                                                                         \
-  if (!is_na(p_x[i])) {                                                                                 \
+  if (!is_r_na(p_x[i])) {                                                                                 \
     lo = 0;                                                                                             \
     hi = nb1;                                                                                           \
     if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||          \
@@ -335,7 +335,7 @@ for (R_xlen_t i = 0; i < n; ++i) {                                              
 #define CHEAPR_BIN_NCODES                                                                                                            \
 for (R_xlen_t i = 0; i < n; ++i) {                                                                                                   \
   p_out[i] = na_type(p_out[0]);                                                                                                      \
-  if (!is_na(p_x[i])) {                                                                                                              \
+  if (!is_r_na(p_x[i])) {                                                                                                              \
     lo = 0;                                                                                                                          \
     hi = nb1;                                                                                                                        \
     if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||                                       \

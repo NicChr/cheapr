@@ -17,9 +17,9 @@ bool implicit_na_coercion(SEXP x, SEXP target){
 }
 
 #define CHEAPR_VAL_COUNT(VAL)                                  \
-if (is_na(VAL)){                                               \
+if (is_r_na(VAL)){                                       \
   for (R_xlen_t i = 0; i < n; ++i){                            \
-    count += is_na(p_x[i]);                                    \
+    count += is_r_na(p_x[i]);                            \
   }                                                            \
 } else {                                                       \
   for (R_xlen_t i = 0; i < n; ++i){                            \
@@ -349,7 +349,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
 
       if (cpp_any_na(value, true)){
         for (R_xlen_t i = 0; i < n; ++i){
-          eq = is_na(p_x[i]);
+          eq = is_r_na(p_x[i]);
           if (!eq){
             p_out[k++] = p_x[i];
           }

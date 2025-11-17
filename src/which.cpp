@@ -20,10 +20,10 @@ R_xlen_t count_true(const r_bool* RESTRICT px, const uint_fast64_t n){
 }
 
 #define CHEAPR_WHICH_VAL(VAL)                                      \
-if (is_na(VAL)){                                                   \
+if (is_r_na(VAL)){                                                   \
   while (whichi < out_size){                                       \
     p_out[whichi] = i + 1;                                         \
-    whichi += is_na(p_x[i++]);                                     \
+    whichi += is_r_na(p_x[i++]);                                     \
   }                                                                \
 } else {                                                           \
   while (whichi < out_size){                                       \
@@ -34,10 +34,10 @@ if (is_na(VAL)){                                                   \
 
 
 #define CHEAPR_WHICH_VAL_INVERTED(VAL)                           \
-if (is_na(VAL)){                                                 \
+if (is_r_na(VAL)){                                                 \
   while (whichi < out_size){                                     \
     p_out[whichi] = i + 1;                                       \
-    whichi += !is_na(p_x[i++]);                                  \
+    whichi += !is_r_na(p_x[i++]);                                  \
   }                                                              \
 } else {                                                         \
   while (whichi < out_size){                                     \
@@ -303,7 +303,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_true[k1++] = i + 1;
       } else if (include_false && p_x[i] == 0){
         p_false[k2++] = i + 1;
-      } else if (include_na && is_na(p_x[i])){
+      } else if (include_na && is_r_na(p_x[i])){
         p_na[k3++] = i + 1;
       }
     }
@@ -331,7 +331,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_true[k1++] = i + 1;
       } else if (include_false && p_x[i] == 0){
         p_false[k2++] = i + 1;
-      } else if (include_na && is_na(p_x[i])){
+      } else if (include_na && is_r_na(p_x[i])){
         p_na[k3++] = i + 1;
       }
     }

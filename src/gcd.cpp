@@ -8,12 +8,12 @@
 // Author: Nick Christofides
 
 int gcd2_int(int x, int y, bool na_rm){
-  bool has_na = is_na(x) || is_na(y);
+  bool has_na = is_r_na(x) || is_r_na(y);
   if (!na_rm && has_na){
     return NA_INTEGER;
   }
   if (na_rm && has_na){
-    if (is_na(x)){
+    if (is_r_na(x)){
       return y;
     } else {
       return x;
@@ -43,12 +43,12 @@ int gcd2_int(int x, int y, bool na_rm){
 
 int64_t gcd2_int64(int64_t x, int64_t y, bool na_rm){
   int64_t zero = 0;
-  bool has_na = is_na(x) || is_na(y);
+  bool has_na = is_r_na(x) || is_r_na(y);
   if (!na_rm && has_na){
     return NA_INTEGER64;
   }
   if (na_rm && has_na){
-    if (is_na(x)){
+    if (is_r_na(x)){
       return y;
     } else {
       return x;
@@ -88,10 +88,10 @@ double lcm2(double x, double y, double tol, bool na_rm){
 }
 
 int64_t lcm2_int64(int64_t x, int64_t y, bool na_rm){
-  int num_nas = is_na(x) + is_na(y);
+  int num_nas = is_r_na(x) + is_r_na(y);
   if ( num_nas >= 1 ){
     if (na_rm && num_nas == 1){
-      return (is_na(x) ? y : x);
+      return (is_r_na(x) ? y : x);
     } else {
       return NA_INTEGER64;
     }
@@ -145,7 +145,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
       int gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
         gcd = gcd2_int(gcd, p_x[i], na_rm);
-        if (is_na(gcd)){
+        if (is_r_na(gcd)){
           if (!na_rm) break;
         } else if (std::abs(gcd) == 1){
           break;
@@ -163,7 +163,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
       int64_t gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
         gcd = gcd2_int64(gcd, p_x[i], na_rm);
-        if (is_na(gcd)){
+        if (is_r_na(gcd)){
           if (!na_rm) break;
         } else if (std::abs(gcd) == 1){
           break;
@@ -226,12 +226,12 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       int64_t lcm = as_int64(p_x[0]);
 
       for (R_xlen_t i = 1; i < n; ++i) {
-        if (!na_rm && is_na(lcm)){
+        if (!na_rm && is_r_na(lcm)){
           break;
         }
         lcm = lcm2_int64(lcm, as_int64(p_x[i]), na_rm);
       }
-      bool is_short = is_na(lcm) || is_integerable(lcm);
+      bool is_short = is_r_na(lcm) || is_integerable(lcm);
       out = SHIELD(new_vec(is_short ? INTSXP : REALSXP, 1)); ++NP;
       if (is_short){
         INTEGER(out)[0] = as_int(lcm);
@@ -254,7 +254,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       int64_t lcm = p_x[0];
 
       for (R_xlen_t i = 1; i < n; ++i) {
-        if (!na_rm && is_na(lcm)){
+        if (!na_rm && is_r_na(lcm)){
           break;
         }
         lcm = lcm2_int64(lcm, p_x[i], na_rm);

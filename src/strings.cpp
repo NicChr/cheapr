@@ -51,8 +51,8 @@ SEXP cpp_str_coalesce(SEXP x){
     n_nas = 0;
     for (R_xlen_t j = 0; j < n_chars; ++j){
       inner_char = char_ptrs[j][i];
-      n_nas += static_cast<int>(is_na(inner_char));
-      if (!(inner_char == R_BlankString || is_na(inner_char))){
+      n_nas += static_cast<int>(is_r_na(inner_char));
+      if (!(inner_char == R_BlankString || is_r_na(inner_char))){
         SET_STRING_ELT(out, i, inner_char);
         break;
       }

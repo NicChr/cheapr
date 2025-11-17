@@ -28,7 +28,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
 
   double out_size = cpp_sum(size);
   double min_size = cpp_min(size);
-  if (is_na(out_size)){
+  if (is_r_na(out_size)){
     Rf_error("size must not contain NA values");
   }
   if (min_size < 0){
@@ -60,11 +60,11 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
         int* RESTRICT p_curr_seq = INTEGER(curr_seq);
         start = p_from[fi];
         increment = p_by[bi];
-        if (is_na(start)){
+        if (is_r_na(start)){
           YIELD(NP);
           Rf_error("from contains NA values");
         }
-        if (is_na(increment)){
+        if (is_r_na(increment)){
           YIELD(NP);
           Rf_error("by contains NA values");
         }
@@ -96,11 +96,11 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
         seq_size = p_size[i];
         start = p_from[fi];
         increment = p_by[bi];
-        if (is_na(start)){
+        if (is_r_na(start)){
           YIELD(NP);
           Rf_error("from contains NA values");
         }
-        if (is_na(increment)){
+        if (is_r_na(increment)){
           YIELD(NP);
           Rf_error("by contains NA values");
         }
@@ -131,7 +131,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
   }
   double out_size = cpp_sum(size);
   double min_size = cpp_min(size);
-  if (is_na(out_size)){
+  if (is_r_na(out_size)){
     Rf_error("size must not contain NA values");
   }
   if (min_size < 0){
@@ -167,11 +167,11 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
         double* RESTRICT p_curr_seq = REAL(curr_seq);
         start = p_from[fi];
         increment = p_by[bi];
-        if (is_na(start)){
+        if (is_r_na(start)){
           YIELD(NP);
           Rf_error("from contains NA values");
         }
-        if (is_na(increment)){
+        if (is_r_na(increment)){
           YIELD(NP);
           Rf_error("by contains NA values");
         }
@@ -204,11 +204,11 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
         seq_size = p_size[i];
         start = p_from[fi];
         increment = p_by[bi];
-        if (is_na(start)){
+        if (is_r_na(start)){
           YIELD(NP);
           Rf_error("from contains NA values");
         }
-        if (is_na(increment)){
+        if (is_r_na(increment)){
           YIELD(NP);
           Rf_error("by contains NA values");
         }
@@ -546,7 +546,7 @@ bool is_infinite(double x){
 SEXP cpp_fixed_width_breaks(double start, double end, double n,
                             bool pretty, bool expand_min, bool expand_max){
   int32_t NP = 0;
-  if (is_na(n)){
+  if (is_r_na(n)){
     Rf_error("n must not be `NA`");
   }
   if (n < 1){
@@ -555,7 +555,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
   if (n >= R_PosInf){
     Rf_error("n must be finite");
   }
-  if (is_na(start) || is_na(end) ||
+  if (is_r_na(start) || is_r_na(end) ||
       is_infinite(start) || is_infinite(end)){
     return Rf_ScalarReal(NA_REAL);
   }

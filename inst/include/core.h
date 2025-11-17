@@ -195,51 +195,91 @@ inline void assert_charsxp(SEXP x){
 
 // C++ templates
 
+// Alternative way of specifying compile-time template function in C++17
+// template<typename T>
+// inline bool is_r_na(const T &x) {
+//   using U = std::decay_t<T>;
+//
+//   if constexpr (std::is_same_v<U, cheapr::r_bool>) {
+//     return x == r_na;
+//   } else if constexpr (std::is_same_v<U, int>) {
+//     return x == NA_INTEGER;
+//   } else if constexpr (std::is_same_v<U, double>) {
+//     return x != x;
+//   } else if constexpr (std::is_same_v<U, cpp11::r_string>) {
+//     return x == NA_STRING;
+//   } else if constexpr (std::is_same_v<U, cpp11::r_bool>) {
+//     return x == NA_LOGICAL;
+//   } else if constexpr (std::is_same_v<U, int64_t>) {
+//     return x == NA_INTEGER64;
+//   } else if constexpr (std::is_same_v<U, Rcomplex>) {
+//     return is_r_na(x.r) || is_r_na(x.i);
+//   } else if constexpr (std::is_same_v<U, Rbyte>) {
+//     return false;
+//   } else if constexpr (std::is_same_v<U, SEXP>){
+//     return is_null(x) || x == NA_STRING;
+//   } else {
+//     Rf_error("`is_r_na` not implemented for this type");
+//     return false;
+//   }
+// }
+
+
 template<typename T>
-inline bool is_na(T x) {
-  Rf_error("Unimplemented `is_na` specialisation");
+inline bool is_r_na(T x) {
+  Rf_error("Unimplemented `is_r_na` specialisation");
   return false;
 }
 
 template<>
-inline bool is_na<r_bool>(r_bool x){
+inline bool is_r_na<r_bool>(r_bool x){
   return x == r_na;
 }
 
 template<>
-inline bool is_na<int>(int x){
+inline bool is_r_na<cpp11::r_bool>(cpp11::r_bool x){
+  return x == cpp11::na<cpp11::r_bool>();
+}
+
+template<>
+inline bool is_r_na<int>(int x){
   return x == NA_INTEGER;
 }
 
 template<>
-inline bool is_na<double>(double x){
+inline bool is_r_na<double>(double x){
   return x != x;
 }
 
 template<>
-inline bool is_na<int64_t>(int64_t x){
+inline bool is_r_na<int64_t>(int64_t x){
   return x == NA_INTEGER64;
 }
 
 template<>
-inline bool is_na<Rcomplex>(Rcomplex x){
-  return is_na<double>(x.r) || is_na<double>(x.i);
+inline bool is_r_na<Rcomplex>(Rcomplex x){
+  return is_r_na<double>(x.r) || is_r_na<double>(x.i);
 }
 
 template<>
-inline bool is_na<Rbyte>(Rbyte x){
+inline bool is_r_na<Rbyte>(Rbyte x){
   return false;
+}
+
+template<>
+inline bool is_r_na<cpp11::r_string>(cpp11::r_string x){
+  return x == NA_STRING;
 }
 
 // Works for CHARSXP and NULL
 template<>
-inline bool is_na<SEXP>(SEXP x){
+inline bool is_r_na<SEXP>(SEXP x){
   return is_null(x) || x == NA_STRING;
 }
 
-inline bool is_na_char(SEXP x){
-  return x == NA_STRING;
-}
+// inline bool is_r_na_char(SEXP x){
+//   return x == NA_STRING;
+// }
 
 // NA type
 
@@ -298,7 +338,7 @@ inline SEXP na_type<SEXP>(SEXP x){
 // }
 
 // equals template that doesn't support NA values
-// use is_na template functions
+// use is_r_na template functions
 template<typename T>
 inline bool eq(const T x, const T y) {
   return x == y;
@@ -363,32 +403,32 @@ inline SEXP as_vec_scalar<SEXP>(SEXP x){
 // Coerce functions that account for NA
 template<typename T>
 inline r_bool as_r_bool(T x){
-  return is_na(x) ? r_na : static_cast<r_bool>(x);
+  return is_r_na(x) ? r_na : static_cast<r_bool>(x);
 }
 template<typename T>
 inline int as_int(T x){
-  return is_na(x) ? NA_INTEGER : static_cast<int>(x);
+  return is_r_na(x) ? NA_INTEGER : static_cast<int>(x);
 }
 template<typename T>
 inline int64_t as_int64(T x){
-  return is_na(x) ? NA_INTEGER64 : static_cast<int64_t>(x);
+  return is_r_na(x) ? NA_INTEGER64 : static_cast<int64_t>(x);
 }
 template<typename T>
 inline double as_double(T x){
-  return is_na(x) ? NA_REAL : static_cast<double>(x);
+  return is_r_na(x) ? NA_REAL : static_cast<double>(x);
 }
 template<typename T>
 inline Rcomplex as_complex(T x){
-  return is_na(x) ? NA_COMPLEX : static_cast<Rcomplex>(x);
+  return is_r_na(x) ? NA_COMPLEX : static_cast<Rcomplex>(x);
 }
 template<typename T>
 inline Rbyte as_raw(T x){
-  return is_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
+  return is_r_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
 }
 // As CHARSXP
 template<typename T>
 inline SEXP as_char(T x){
-  if (is_na(x)){
+  if (is_r_na(x)){
    return NA_STRING;
   } else {
     SEXP scalar = SHIELD(as_vec_scalar(x));
@@ -642,7 +682,7 @@ inline r_bool vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
   case REALSXP: {
     const double *p_x = REAL_RO(x);
     for (R_xlen_t i = 0; i < n; ++i) {
-      if (is_na(p_x[i])){
+      if (is_r_na(p_x[i])){
         any_na = true;
         continue;
       }
@@ -666,7 +706,7 @@ inline r_bool vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
 
 inline double gcd2(double x, double y, double tol, bool na_rm){
 
-  if (!na_rm && ( is_na(x) || is_na(y))){
+  if (!na_rm && ( is_r_na(x) || is_r_na(y))){
     return NA_REAL;
   }
   // GCD(0,0)=0

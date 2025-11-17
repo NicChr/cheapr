@@ -531,7 +531,7 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     if (TYPEOF(x) == INTSXP){
       const int *p_x = INTEGER_RO(x);
       OMP_FOR_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) p_out[i] = cheapr::is_na(p_x[i]) ? NA_REAL : static_cast<double>(p_x[i]) * 86400;
+      for (R_xlen_t i = 0; i < n; ++i) p_out[i] = cheapr::is_r_na(p_x[i]) ? NA_REAL : static_cast<double>(p_x[i]) * 86400;
 
     } else {
       const double *p_x = REAL_RO(x);
