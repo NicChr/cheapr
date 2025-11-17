@@ -71,19 +71,6 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     const SEXP val = STRING_ELT(value, 0);
     const SEXP *p_x = STRING_PTR_RO(x);
     CHEAPR_VAL_COUNT(val)
-
-    // cpp11::writable::strings p_x = x;
-    // SEXP val = STRING_ELT(value, 0);
-    // if (is_na<cpp11::r_string>(val)){
-    //   for (R_xlen_t i = 0; i < n; ++i){
-    //     count += is_na<cpp11::r_string>(p_x[i]);
-    //   }
-    // } else {
-    //   for (R_xlen_t i = 0; i < n; ++i){
-    //     count += (p_x[i] == val);
-    //   }
-    //
-    // }
     break;
   }
   case CPLXSXP: {

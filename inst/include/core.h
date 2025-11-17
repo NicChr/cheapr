@@ -37,6 +37,8 @@
 namespace cheapr {
 
 // type-safe bool type, similar to Rboolean
+// I would use cpp11::r_bool but it doesn't seem to work in
+// many cases, throwing ambiguous conversion errors
 
 enum class r_bool : int {
   r_true = 1,
@@ -234,10 +236,10 @@ template<>
 inline bool is_na<SEXP>(SEXP x){
   return is_null(x) || x == NA_STRING;
 }
-// template<>
-// inline bool is_na<cpp11::r_string>(cpp11::r_string x){
-//   return x == cpp11::na<cpp11::r_string>();
-// }
+
+inline bool is_na_char(SEXP x){
+  return x == NA_STRING;
+}
 
 // NA type
 
@@ -330,14 +332,6 @@ inline SEXP as_vec_scalar<R_xlen_t>(R_xlen_t x){
     return Rf_ScalarReal(static_cast<double>(x));
   }
 }
-// template<>
-// inline SEXP as_vec_scalar<int64_t>(int64_t x){
-//   SEXP out = SHIELD(new_vec(REALSXP, 1));
-//   Rf_classgets(out, Rf_ScalarString(Rf_mkCharCE("integer64", CE_UTF8)));
-//   INTEGER64_PTR(out)[0] = x;
-//   YIELD(1);
-//   return out;
-// }
 template<>
 inline SEXP as_vec_scalar<double>(double x){
   return Rf_ScalarReal(x);
@@ -365,10 +359,6 @@ inline SEXP as_vec_scalar<SEXP>(SEXP x){
   }
   }
 }
-// template<>
-// inline SEXP as_vec_scalar<cpp11::r_string>(cpp11::r_string x){
-//   return Rf_ScalarString(x);
-// }
 
 // Coerce functions that account for NA
 template<typename T>
@@ -396,18 +386,18 @@ inline Rbyte as_raw(T x){
   return is_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
 }
 // As CHARSXP
-// template<typename T>
-// inline cpp11::r_string as_char(T x){
-//   if (is_na(x)){
-//    return NA_STRING;
-//   } else {
-//     SEXP scalar = SHIELD(as_vec_scalar(x));
-//     SEXP str = SHIELD(coerce_vec(scalar, STRSXP));
-//     SEXP out = STRING_ELT(str, 0);
-//     YIELD(2);
-//     return out;
-//   }
-// }
+template<typename T>
+inline SEXP as_char(T x){
+  if (is_na(x)){
+   return NA_STRING;
+  } else {
+    SEXP scalar = SHIELD(as_vec_scalar(x));
+    SEXP str = SHIELD(coerce_vec(scalar, STRSXP));
+    SEXP out = STRING_ELT(str, 0);
+    YIELD(2);
+    return out;
+  }
+}
 
 // R fns
 
