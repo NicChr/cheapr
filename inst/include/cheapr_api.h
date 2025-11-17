@@ -285,6 +285,13 @@ if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   return fn(condition, yes, no, na);
 }
 
+inline SEXP
+gcd(SEXP x, double tol, bool na_rm){
+  typedef SEXP fn_t(SEXP, double, bool);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_gcd");
+  return fn(x, tol, na_rm);
+}
+
 // Deprecated, use cheapr::vector_length
 inline R_xlen_t
 vec_length(SEXP x){
