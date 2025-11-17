@@ -441,17 +441,6 @@ inline SEXP as_char(T x){
 
 // R fns
 
-inline cpp11::function cheapr_sset = cpp11::package("cheapr")["cheapr_sset"];
-inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
-inline cpp11::function cheapr_factor = cpp11::package("cheapr")["factor_"];
-inline cpp11::function base_rep = cpp11::package("base")["rep"];
-inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
-inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
-inline cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
-inline cpp11::function base_cast = cpp11::package("cheapr")["base_cast"];
-inline cpp11::function base_assign = cpp11::package("cheapr")["base_assign_at"];
-inline cpp11::function base_length = cpp11::package("base")["length"];
-
 
 inline SEXP CHEAPR_CORES = R_NilValue;
 

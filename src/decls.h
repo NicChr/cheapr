@@ -2,9 +2,20 @@
 #define CHEAPR_DECLARATIONS_H
 
 #include "types.h"
+#include <cpp11/function.hpp>
+
+// R fns
+
+inline cpp11::function cheapr_sset = cpp11::package("cheapr")["cheapr_sset"];
+inline cpp11::function cheapr_is_na = cpp11::package("cheapr")["is_na"];
+inline cpp11::function base_rep = cpp11::package("base")["rep"];
+inline cpp11::function cheapr_fast_match = cpp11::package("cheapr")["fast_match"];
+inline cpp11::function cheapr_fast_unique = cpp11::package("cheapr")["fast_unique"];
+inline cpp11::function cheapr_rebuild = cpp11::package("cheapr")["rebuild"];
+inline cpp11::function base_assign = cpp11::package("cheapr")["base_assign_at"];
+inline cpp11::function base_length = cpp11::package("base")["length"];
 
 // Make function definitions visible to all C++ files
-
 SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);
 SEXP xlen_to_r(R_xlen_t x);

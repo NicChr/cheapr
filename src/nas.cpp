@@ -3,42 +3,42 @@
 // NA handling functions
 // Author: Nick Christofides
 
-#define CHEAPR_ANY_NA                                          \
-for (R_xlen_t i = 0; i < n; ++i){                              \
+#define CHEAPR_ANY_NA                                            \
+for (R_xlen_t i = 0; i < n; ++i){                                \
   if (is_r_na(p_x[i])){                                          \
-    out = true;                                                \
-    break;                                                     \
-  }                                                            \
-}                                                              \
+    out = true;                                                  \
+    break;                                                       \
+  }                                                              \
+}                                                                \
 
-#define CHEAPR_ALL_NA                                          \
-for (R_xlen_t i = 0; i < n; ++i){                              \
+#define CHEAPR_ALL_NA                                            \
+for (R_xlen_t i = 0; i < n; ++i){                                \
   if (!is_r_na(p_x[i])){                                         \
-    out = false;                                               \
-    break;                                                     \
-  }                                                            \
-}
-
-#define CHEAPR_IS_NA                                             \
-if (n_cores > 1){                                                \
-  OMP_PARALLEL_FOR_SIMD                                          \
-  for (R_xlen_t i = 0; i < n; ++i){                              \
-    p_out[i] = is_r_na(p_x[i]);                                    \
-  }                                                              \
-} else {                                                         \
-  OMP_FOR_SIMD                                                   \
-  for (R_xlen_t i = 0; i < n; ++i){                              \
-    p_out[i] = is_r_na(p_x[i]);                                    \
+    out = false;                                                 \
+    break;                                                       \
   }                                                              \
 }
 
-#define CHEAPR_NA_COUNT                                              \
-if (do_parallel){                                                    \
-_Pragma("omp parallel for simd num_threads(n_cores) reduction(+:count)")\
-  for (R_xlen_t i = 0; i < n; ++i) count += is_r_na(p_x[i]);           \
-} else {                                                             \
-  OMP_FOR_SIMD                                                       \
-  for (R_xlen_t i = 0; i < n; ++i) count += is_r_na(p_x[i]);           \
+#define CHEAPR_IS_NA                                               \
+if (n_cores > 1){                                                  \
+  OMP_PARALLEL_FOR_SIMD                                            \
+  for (R_xlen_t i = 0; i < n; ++i){                                \
+    p_out[i] = is_r_na(p_x[i]);                                    \
+  }                                                                \
+} else {                                                           \
+  OMP_FOR_SIMD                                                     \
+  for (R_xlen_t i = 0; i < n; ++i){                                \
+    p_out[i] = is_r_na(p_x[i]);                                    \
+  }                                                                \
+}
+
+#define CHEAPR_NA_COUNT                                                   \
+if (do_parallel){                                                         \
+  _Pragma("omp parallel for simd num_threads(n_cores) reduction(+:count)")\
+  for (R_xlen_t i = 0; i < n; ++i) count += is_r_na(p_x[i]);              \
+} else {                                                                  \
+  OMP_FOR_SIMD                                                            \
+  for (R_xlen_t i = 0; i < n; ++i) count += is_r_na(p_x[i]);              \
 }
 
 

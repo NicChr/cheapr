@@ -19,31 +19,31 @@ R_xlen_t count_true(const r_bool* RESTRICT px, const uint_fast64_t n){
   }
 }
 
-#define CHEAPR_WHICH_VAL(VAL)                                      \
+#define CHEAPR_WHICH_VAL(VAL)                                        \
 if (is_r_na(VAL)){                                                   \
+  while (whichi < out_size){                                         \
+    p_out[whichi] = i + 1;                                           \
+    whichi += is_r_na(p_x[i++]);                                     \
+  }                                                                  \
+} else {                                                             \
+  while (whichi < out_size){                                         \
+    p_out[whichi] = i + 1;                                           \
+    whichi += eq(p_x[i++], VAL);                                     \
+  }                                                                  \
+}
+
+
+#define CHEAPR_WHICH_VAL_INVERTED(VAL)                             \
+if (is_r_na(VAL)){                                                 \
   while (whichi < out_size){                                       \
     p_out[whichi] = i + 1;                                         \
-    whichi += is_r_na(p_x[i++]);                                     \
+    whichi += !is_r_na(p_x[i++]);                                  \
   }                                                                \
 } else {                                                           \
   while (whichi < out_size){                                       \
     p_out[whichi] = i + 1;                                         \
-    whichi += eq(p_x[i++], VAL);                                   \
+    whichi += !eq(p_x[i++], VAL);                                  \
   }                                                                \
-}
-
-
-#define CHEAPR_WHICH_VAL_INVERTED(VAL)                           \
-if (is_r_na(VAL)){                                                 \
-  while (whichi < out_size){                                     \
-    p_out[whichi] = i + 1;                                       \
-    whichi += !is_r_na(p_x[i++]);                                  \
-  }                                                              \
-} else {                                                         \
-  while (whichi < out_size){                                     \
-    p_out[whichi] = i + 1;                                       \
-    whichi += !eq(p_x[i++], VAL);                                \
-  }                                                              \
 }
 
 
