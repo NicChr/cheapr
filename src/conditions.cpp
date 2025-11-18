@@ -45,7 +45,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     SHIELD(na = cpp_na_init(no, 1)); ++NP;
   }
 
-  SEXP args = SHIELD(make_r_list(yes, no, na)); ++NP;
+  SEXP args = SHIELD(new_r_list(yes, no, na)); ++NP;
   SHIELD(args = cpp_cast_common(args)); ++NP;
   yes = VECTOR_ELT(args, 0);
   no = VECTOR_ELT(args, 1);

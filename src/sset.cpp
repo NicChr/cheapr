@@ -327,7 +327,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   SEXP r_out_size = SHIELD(as_vec_scalar(as_double(out_size))); ++NP;
   SEXP r_check_indices = SHIELD(as_vec_scalar(check_indices)); ++NP;
 
-  SEXP out = SHIELD(make_r_list(
+  SEXP out = SHIELD(new_r_list(
     clean_indices,
     r_out_size,
     r_check_indices
@@ -1515,8 +1515,8 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       if (Rf_length(args) == 0){
         SHIELD(out = cheapr_sset(x, i, j)); ++NP;
       } else {
-        SEXP usual_args = SHIELD(make_r_list(x, i, j)); ++NP;
-        SEXP arg_names = SHIELD(make_r_chars("x", "i", "j")); ++NP;
+        SEXP usual_args = SHIELD(new_r_list(x, i, j)); ++NP;
+        SEXP arg_names = SHIELD(new_r_chars("x", "i", "j")); ++NP;
         set_names(usual_args, arg_names);
 
         // Combine all args into one list
@@ -1536,8 +1536,8 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
     if (Rf_length(args) == 0){
       SHIELD(out = cheapr_sset(x, i, j)); ++NP;
     } else {
-      SEXP usual_args = SHIELD(make_r_list(x, i, j)); ++NP;
-      SEXP arg_names = SHIELD(make_r_chars("x", "i", "j")); ++NP;
+      SEXP usual_args = SHIELD(new_r_list(x, i, j)); ++NP;
+      SEXP arg_names = SHIELD(new_r_chars("x", "i", "j")); ++NP;
       set_names(usual_args, arg_names);
 
       // Combine all args into one list

@@ -307,8 +307,8 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_na[k3++] = i + 1;
       }
     }
-    SEXP out = SHIELD(make_r_list(true_locs, false_locs, na_locs));
-    SEXP names = SHIELD(make_r_chars("true", "false", "na"));
+    SEXP out = SHIELD(new_r_list(true_locs, false_locs, na_locs));
+    SEXP names = SHIELD(new_r_chars("true", "false", "na"));
     set_names(out, names);
 
     YIELD(5);
@@ -335,8 +335,8 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_na[k3++] = i + 1;
       }
     }
-    SEXP out = SHIELD(make_r_list(true_locs, false_locs, na_locs));
-    SEXP names = SHIELD(make_r_chars("true", "false", "na"));
+    SEXP out = SHIELD(new_r_list(true_locs, false_locs, na_locs));
+    SEXP names = SHIELD(new_r_chars("true", "false", "na"));
     set_names(out, names);
 
     YIELD(5);

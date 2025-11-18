@@ -318,6 +318,11 @@ inline Rbyte na_type<Rbyte>(Rbyte x){
   return 0;
 }
 
+// template<>
+// inline cpp11::r_string na_type<cpp11::r_string>(cpp11::r_string x){
+//   return NA_STRING;
+// }
+
 template<>
 inline SEXP na_type<SEXP>(SEXP x){
   switch (TYPEOF(x)){
@@ -384,6 +389,10 @@ template<>
 inline SEXP as_vec_scalar<Rbyte>(Rbyte x){
   return Rf_ScalarRaw(x);
 }
+// template<>
+// inline SEXP as_vec_scalar<cpp11::r_string>(cpp11::r_string x){
+//   return Rf_ScalarString(x);
+// }
 // Scalar string
 template<>
 inline SEXP as_vec_scalar<SEXP>(SEXP x){
@@ -720,24 +729,148 @@ inline double gcd2(double x, double y, double tol, bool na_rm){
   return x;
 }
 
-// Variadic function to create R list
+template<typename T>
+inline void set_val(SEXP x, R_xlen_t i, T val, T* p_x = nullptr){
+  Rf_error("Unimplemented `set_val` specialisation");
+}
+
+inline void set_val(SEXP x, R_xlen_t i, bool val, int* p_x = nullptr){
+  if (p_x != nullptr){
+    p_x[i] = static_cast<int>(val);
+  } else {
+    SET_LOGICAL_ELT(x, i, static_cast<int>(val));
+  }
+}
+inline void set_val(SEXP x, R_xlen_t i, r_bool val, int* p_x = nullptr){
+  if (p_x != nullptr){
+    p_x[i] = static_cast<int>(val);
+  } else {
+    SET_LOGICAL_ELT(x, i, static_cast<int>(val));
+  }
+}
+inline void set_val(SEXP x, R_xlen_t i, int val, int* p_x = nullptr){
+  if (p_x != nullptr){
+    p_x[i] = val;
+  } else {
+    SET_INTEGER_ELT(x, i, val);
+  }
+}
+inline void set_val(SEXP x, R_xlen_t i, double val, double* p_x = nullptr){
+  if (p_x != nullptr){
+    p_x[i] = val;
+  } else {
+    SET_REAL_ELT(x, i, val);
+  }
+}
+inline void set_val(SEXP x, R_xlen_t i, Rcomplex val, Rcomplex* p_x = nullptr){
+  if (p_x != nullptr){
+    p_x[i] = val;
+  } else {
+    SET_COMPLEX_ELT(x, i, val);
+  }
+}
+inline void set_val(SEXP x, R_xlen_t i, Rbyte val, Rbyte* p_x = nullptr){
+  if (p_x != nullptr){
+    p_x[i] = val;
+  } else {
+    SET_RAW_ELT(x, i, val);
+  }
+}
+inline void set_val(SEXP x, R_xlen_t i, const char* val, const SEXP* p_x = nullptr){
+  SET_STRING_ELT(x, i, make_utf8_char(val));
+}
+// Never use the pointer here to assign
+inline void set_val(SEXP x, R_xlen_t i, SEXP val, const SEXP *p_x = nullptr){
+  switch (TYPEOF(x)){
+  case NILSXP: {
+   break;
+  }
+  case STRSXP: {
+    SET_STRING_ELT(x, i, val);
+    break;
+  }
+  case VECSXP: {
+    SET_VECTOR_ELT(x, i, val);
+    break;
+  }
+  default: {
+    Rf_error("Unimplemented `set_val` specialisation for %s", Rf_type2char(TYPEOF(x)));
+  }
+  }
+}
+
 template<typename... Args>
-inline SEXP make_r_list(Args... args){
+inline SEXP new_r_vec(SEXPTYPE type, Args... args){
   constexpr int n = sizeof...(args);
   if (n == 0){
-    return new_vec(VECSXP, 0);
+    return new_vec(type, 0);
   } else {
-    SEXP out = SHIELD(new_vec(VECSXP, n));
+    SEXP out = SHIELD(new_vec(type, n));
     int i = 0;
-    ((SET_VECTOR_ELT(out, i++, args), void()), ...);
+    ((set_val(out, i++, args), void()), ...);
     YIELD(1);
     return out;
   }
 }
 
+// Named argument
+
+struct arg {
+  const char* name;
+  SEXP value;
+
+  // Constructor
+  arg(const char* n) : name(n), value(R_NilValue) {}
+
+  // Constructor with name and value
+  arg(const char* n, SEXP v) : name(n), value(v) {}
+
+  arg operator=(SEXP v) const {
+    return arg(name, v);
+  }
+};
+
+// Variadic list constructor
+template<typename... Args>
+inline SEXP new_r_list(Args... args) {
+  constexpr int n = sizeof...(args);
+
+  if (n == 0){
+    return new_vec(VECSXP, 0);
+  }
+
+  SEXP out = SHIELD(new_vec(VECSXP, n));
+
+  // Are any args named?
+  constexpr bool any_named = (std::is_same_v<std::decay_t<Args>, arg> || ...);
+
+  SEXP nms;
+
+  int i = 0;
+  if (any_named){
+    nms = SHIELD(new_vec(STRSXP, n));
+  } else {
+    nms = SHIELD(R_NilValue);
+  }
+
+  (([&]() {
+    if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
+      SET_VECTOR_ELT(out, i, args.value);
+      SET_STRING_ELT(nms, i, make_utf8_char(args.name));
+    } else {
+      SET_VECTOR_ELT(out, i, args);
+    }
+    ++i;
+  }()), ...);
+
+  set_names(out, nms);
+  YIELD(2);
+  return out;
+}
+
 // Make a character vec from const char ptrs
 template<typename... Args>
-inline SEXP make_r_chars(Args... args){
+inline SEXP new_r_chars(Args... args){
   constexpr int n = sizeof...(args);
   if (n == 0){
     return new_vec(STRSXP, 0);
