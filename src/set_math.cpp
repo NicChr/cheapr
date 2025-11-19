@@ -734,7 +734,7 @@ SEXP cpp_int_sign(SEXP x){
 //   if (MAYBE_REFERENCED(x)){
 //     SHIELD(x = Rf_duplicate(x)); ++NP;
 //   }
-//   SEXP log10 = SHIELD(as_vec_scalar(10.0)); ++NP;
+//   SEXP log10 = SHIELD(as_r_scalar(10.0)); ++NP;
 //   SEXP out = SHIELD(cpp_set_log(x, log10)); ++NP;
 //   YIELD(NP);
 //   return out;

@@ -1,5 +1,19 @@
 #include "cheapr.h"
 
+[[cpp11::init]]
+void init_assert_symmetric_r_types(DllInfo* dll){
+  for (int i = 0; i < n_types; ++i){
+    for (int j = 0; j < n_types; ++j){
+      if (r_type_pairs[i][j] != r_type_pairs[j][i]){
+        Rf_error(
+          "Internal error, `r_type_pairs[%d][%d]` returns %s while `r_type_pairs[%d][%d]` returns %s",
+          i, j, r_type_names[r_type_pairs[i][j]], j, i, r_type_names[r_type_pairs[j][i]]
+        );
+      }
+    }
+  }
+}
+
 r_type r_common_type(SEXP x){
 
   if (!Rf_isVectorList(x)){

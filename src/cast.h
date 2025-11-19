@@ -52,12 +52,13 @@ enum : cheapr::r_type {
     r_fct = 10,
     r_list = 11,
     r_df = 12,
-    r_unk = 13,
-    r_err = 14 // Special type to signal incompatible cast (Currently unused)
+    r_unk = 13
 };
 
+inline constexpr int n_types = 14;
+
 // R type chars
-inline constexpr const char* r_type_names[15] = {
+inline constexpr const char* r_type_names[14] = {
   "NULL",        // 0
   "logical",     // 1
   "integer",     // 2
@@ -67,31 +68,31 @@ inline constexpr const char* r_type_names[15] = {
   "raw",         // 6
   "Date",        // 7
   "POSIXct",     // 8
-  "character",  // 10
-  "factor",     // 11
-  "list",       // 12
-  "data.frame", // 13
-  "unknown"     // 14
+  "character",  // 9
+  "factor",     // 10
+  "list",       // 11
+  "data.frame", // 12
+  "unknown"     // 13
 };
 
 // An n x n matrix of r types and their common cast type
 
 inline constexpr cheapr::r_type r_type_pairs[14][14] = {
-  /*            NULL    LGL     INT     I64     DBL     CPLX    RAW     DATE    PXCT    RCRD    CHR     FCT     LIST    DF      Unknown */
-  /* NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* I64  */  { r_int64,r_int64, r_int64, r_int64, r_dbl, r_cplx, r_raw, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,   r_dbl,  r_cplx, r_raw, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw, r_date,  r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* RAW  */  { r_raw,  r_raw,  r_raw,  r_raw,   r_raw,  r_raw,  r_raw, r_unk,   r_unk, r_chr,  r_fct,   r_list, r_df,   r_unk },
-  /* DATE */  { r_date, r_date, r_date, r_date,  r_date, r_date,  r_unk, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_pxct, r_unk, r_pxct, r_pxct, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* CHR  */  { r_chr,  r_chr,  r_chr,  r_chr,   r_chr,  r_chr,  r_chr,  r_chr,  r_chr, r_chr,  r_fct,  r_list, r_df,   r_unk },
-  /* FCT  */  { r_fct,  r_fct,  r_fct,  r_fct,   r_fct,  r_fct,  r_df,   r_fct,  r_fct, r_fct,  r_fct,  r_list, r_df,   r_unk },
-  /* LIST */  { r_list, r_list, r_list, r_list,  r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_df,   r_unk },
-  /* DF   */  { r_df,   r_df,   r_df,   r_df,    r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_df,   r_unk },
-  /* Unknown */ { r_unk,  r_unk,  r_unk,  r_unk,   r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk }
+  /*                0-NULL  1-LGL   2-INT   3-I64   4-DBL    5-CPLX  6-RAW   7-DATE  8-PXCT  9-CHR   10-FCT  11-LIST 12-DF 13-UNK */
+  /* 0 - NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 1 - LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 2 - INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 3 - I64  */  { r_int64,r_int64, r_int64, r_int64, r_dbl, r_cplx, r_raw, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 4 - DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,   r_dbl,  r_cplx, r_raw, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 5 - CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw, r_date,  r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 6 - RAW  */  { r_raw,  r_raw,  r_raw,  r_raw, r_raw,  r_raw,  r_raw, r_unk, r_unk, r_chr,  r_fct, r_list, r_df, r_unk },
+  /* 7 - DATE */  { r_date, r_date, r_date, r_date,  r_date, r_date,  r_unk, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 8 - PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_pxct, r_unk, r_pxct, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 9 - CHR  */  { r_chr,  r_chr,  r_chr,  r_chr, r_chr,  r_chr,  r_chr,  r_chr,  r_chr, r_chr,  r_fct,  r_list, r_df, r_unk },
+  /* 10 - FCT  */  { r_fct,  r_fct,  r_fct,  r_fct, r_fct,  r_fct,  r_fct, r_fct,  r_fct, r_fct,  r_fct,  r_list, r_df, r_unk },
+  /* 11 - LIST */  { r_list, r_list, r_list, r_list,  r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_df, r_unk },
+  /* 12 - DF */    { r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_unk },
+  /* 13 - Unknown */ { r_unk,  r_unk,  r_unk,  r_unk, r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk }
 };
 
 inline cheapr::r_type common_type(const cheapr::r_type &a, const cheapr::r_type &b) {

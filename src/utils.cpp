@@ -16,12 +16,12 @@ bool cpp_is_simple_vec(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_vector_length(SEXP x){
-  return as_vec_scalar(vector_length(x));
+  return as_r_scalar(vector_length(x));
 }
 
 [[cpp11::register]]
 SEXP cpp_address(SEXP x){
-  return as_vec_scalar(address(x));
+  return as_r_scalar(address(x));
 }
 
 // Copy atomic elements from source to target
@@ -419,7 +419,7 @@ SEXP cpp_lgl_count(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
-  const int *p_x = INTEGER_RO(x);
+  const r_boolean *p_x = BOOLEAN_RO(x);
 
   R_xlen_t i;
   R_xlen_t ntrue = 0, nfalse = 0;
@@ -427,14 +427,14 @@ SEXP cpp_lgl_count(SEXP x){
   if (n_cores > 1){
 #pragma omp parallel for simd num_threads(n_cores) reduction(+:ntrue, nfalse)
     for (i = 0; i < n; ++i){
-      ntrue += p_x[i] == 1;
-      nfalse += p_x[i] == 0;
+      ntrue += p_x[i] == r_true;
+      nfalse += p_x[i] == r_false;
     }
   } else {
     OMP_FOR_SIMD
     for (i = 0; i < n; ++i){
-      ntrue += p_x[i] == 1;
-      nfalse += p_x[i] == 0;
+      ntrue += p_x[i] == r_true;
+      nfalse += p_x[i] == r_false;
     }
   }
 
@@ -444,19 +444,15 @@ SEXP cpp_lgl_count(SEXP x){
   SEXP out;
 
   if (n > INTEGER_MAX){
-    out = SHIELD(new_r_vec(
-      REALSXP,
-      static_cast<double>(ntrue),
-      static_cast<double>(nfalse),
-      static_cast<double>(nna)
-    ));
+    out = SHIELD(new_vec(REALSXP, 3));
+    SET_REAL_ELT(out, 0, static_cast<double>(ntrue));
+    SET_REAL_ELT(out, 1, static_cast<double>(nfalse));
+    SET_REAL_ELT(out, 2, static_cast<double>(nna));
   } else {
-    out = SHIELD(new_r_vec(
-      INTSXP,
-      static_cast<int>(ntrue),
-      static_cast<int>(nfalse),
-      static_cast<int>(nna)
-    ));
+    out = SHIELD(new_vec(INTSXP, 3));
+    SET_INTEGER_ELT(out, 0, static_cast<int>(ntrue));
+    SET_INTEGER_ELT(out, 1, static_cast<int>(nfalse));
+    SET_INTEGER_ELT(out, 2, static_cast<int>(nna));
   }
 
   set_names(out, names);
@@ -557,7 +553,7 @@ SEXP cpp_growth_rate(SEXP x){
     return new_vec(REALSXP, 0);
   }
   if (n == 1){
-    return as_vec_scalar(NA_REAL);
+    return as_r_scalar(NA_REAL);
   }
   double a, b;
   switch(CHEAPR_TYPEOF(x)){
@@ -585,7 +581,7 @@ SEXP cpp_growth_rate(SEXP x){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  return as_vec_scalar(growth_rate(a, b, n));
+  return as_r_scalar(growth_rate(a, b, n));
 }
 
 SEXP create_df_row_names(int n){
@@ -619,7 +615,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP is_dup_from_last = SHIELD(Rf_duplicated(names, TRUE)); ++NP;
   cpp_set_or(is_dup, is_dup_from_last);
 
-  SEXP r_true = SHIELD(as_vec_scalar(true)); ++NP;
+  SEXP r_true = SHIELD(as_r_scalar(true)); ++NP;
   SEXP dup_locs = SHIELD(cpp_which_val(is_dup, r_true, false)); ++NP;
 
   int n_dups = Rf_length(dup_locs);
@@ -647,7 +643,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
     p_is_empty[i] = empty;
   }
 
-  SEXP r_n_empty = SHIELD(as_vec_scalar(n_empty)); ++NP;
+  SEXP r_n_empty = SHIELD(as_r_scalar(n_empty)); ++NP;
 
   if (n_empty > 0){
     SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
@@ -758,7 +754,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
 [[cpp11::register]]
 SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_){
-  return as_vec_scalar(static_cast<int>(vec_is_whole_number(x, tol_, na_rm_)));
+  return as_r_scalar(static_cast<int>(vec_is_whole_number(x, tol_, na_rm_)));
 }
 
 SEXP match(SEXP y, SEXP x, int no_match){

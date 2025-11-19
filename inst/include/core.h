@@ -40,15 +40,15 @@ namespace cheapr {
 // I would use cpp11::r_bool but it doesn't seem to work in
 // many cases, throwing ambiguous conversion errors
 
-enum class r_bool : int {
+enum class r_boolean : int {
   r_true = 1,
   r_false = 0,
   r_na = INT_MIN
 };
 
-inline constexpr r_bool r_true = r_bool::r_true;
-inline constexpr r_bool r_false = r_bool::r_false;
-inline constexpr r_bool r_na = r_bool::r_na;
+inline constexpr r_boolean r_true = r_boolean::r_true;
+inline constexpr r_boolean r_false = r_boolean::r_false;
+inline constexpr r_boolean r_na = r_boolean::r_na;
 
 // Constants
 
@@ -82,11 +82,11 @@ inline int64_t* INTEGER64_PTR(SEXP x) {
 inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
   return reinterpret_cast<const int64_t*>(REAL_RO(x));
 }
-inline r_bool* BOOLEAN(SEXP x) {
-  return reinterpret_cast<r_bool*>(INTEGER(x));
+inline r_boolean* BOOLEAN(SEXP x) {
+  return reinterpret_cast<r_boolean*>(INTEGER(x));
 }
-inline const r_bool* BOOLEAN_RO(SEXP x) {
-  return reinterpret_cast<const r_bool*>(INTEGER_RO(x));
+inline const r_boolean* BOOLEAN_RO(SEXP x) {
+  return reinterpret_cast<const r_boolean*>(INTEGER_RO(x));
 }
 
 inline SEXP SHIELD(SEXP x){
@@ -200,7 +200,7 @@ inline void assert_charsxp(SEXP x){
 // inline bool is_r_na(const T &x) {
 //   using U = std::decay_t<T>;
 //
-//   if constexpr (std::is_same_v<U, cheapr::r_bool>) {
+//   if constexpr (std::is_same_v<U, cheapr::r_boolean>) {
 //     return x == r_na;
 //   } else if constexpr (std::is_same_v<U, int>) {
 //     return x == NA_INTEGER;
@@ -232,7 +232,7 @@ inline bool is_r_na(T x) {
 }
 
 template<>
-inline bool is_r_na<r_bool>(r_bool x){
+inline bool is_r_na<r_boolean>(r_boolean x){
   return x == r_na;
 }
 
@@ -289,7 +289,7 @@ inline T na_type(T x) {
 }
 
 template<>
-inline r_bool na_type<r_bool>(r_bool x){
+inline r_boolean na_type<r_boolean>(r_boolean x){
   return r_na;
 }
 
@@ -354,23 +354,23 @@ inline bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
 }
 
 template<typename T>
-inline SEXP as_vec_scalar(T x){
+inline SEXP as_r_scalar(T x){
   Rf_error("Unimplemented scalar constructor");
 }
 template<>
-inline SEXP as_vec_scalar<bool>(bool x){
+inline SEXP as_r_scalar<bool>(bool x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_vec_scalar<r_bool>(r_bool x){
+inline SEXP as_r_scalar<r_boolean>(r_boolean x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_vec_scalar<int>(int x){
+inline SEXP as_r_scalar<int>(int x){
   return Rf_ScalarInteger(x);
 }
 template<>
-inline SEXP as_vec_scalar<R_xlen_t>(R_xlen_t x){
+inline SEXP as_r_scalar<R_xlen_t>(R_xlen_t x){
   if (x <= INTEGER_MAX){
     return Rf_ScalarInteger(static_cast<int>(x));
   } else {
@@ -378,24 +378,28 @@ inline SEXP as_vec_scalar<R_xlen_t>(R_xlen_t x){
   }
 }
 template<>
-inline SEXP as_vec_scalar<double>(double x){
+inline SEXP as_r_scalar<double>(double x){
   return Rf_ScalarReal(x);
 }
 template<>
-inline SEXP as_vec_scalar<Rcomplex>(Rcomplex x){
+inline SEXP as_r_scalar<Rcomplex>(Rcomplex x){
   return Rf_ScalarComplex(x);
 }
 template<>
-inline SEXP as_vec_scalar<Rbyte>(Rbyte x){
+inline SEXP as_r_scalar<Rbyte>(Rbyte x){
   return Rf_ScalarRaw(x);
 }
+template<>
+inline SEXP as_r_scalar<const char *>(const char* x){
+  return make_utf8_char(x);
+}
 // template<>
-// inline SEXP as_vec_scalar<cpp11::r_string>(cpp11::r_string x){
+// inline SEXP as_r_scalar<cpp11::r_string>(cpp11::r_string x){
 //   return Rf_ScalarString(x);
 // }
 // Scalar string
 template<>
-inline SEXP as_vec_scalar<SEXP>(SEXP x){
+inline SEXP as_r_scalar<SEXP>(SEXP x){
   switch (TYPEOF(x)){
   case CHARSXP: {
     return Rf_ScalarString(x);
@@ -411,8 +415,8 @@ inline SEXP as_vec_scalar<SEXP>(SEXP x){
 
 // Coerce functions that account for NA
 template<typename T>
-inline r_bool as_r_bool(T x){
-  return is_r_na(x) ? r_na : static_cast<r_bool>(x);
+inline r_boolean as_r_boolean(T x){
+  return is_r_na(x) ? r_na : static_cast<r_boolean>(x);
 }
 template<typename T>
 inline int as_int(T x){
@@ -440,7 +444,7 @@ inline SEXP as_char(T x){
   if (is_r_na(x)){
    return NA_STRING;
   } else {
-    SEXP scalar = SHIELD(as_vec_scalar(x));
+    SEXP scalar = SHIELD(as_r_scalar(x));
     SEXP str = SHIELD(coerce_vec(scalar, STRSXP));
     SEXP out = STRING_ELT(str, 0);
     YIELD(2);
@@ -629,6 +633,12 @@ inline void set_names(SEXP x, SEXP names){
 inline SEXP get_names(SEXP x){
   return Rf_getAttrib(x, R_NamesSymbol);
 }
+inline bool has_names(SEXP x){
+  SEXP names = SHIELD(get_names(x));
+  bool out = !is_null(names);
+  YIELD(1);
+  return out;
+}
 
 template <typename T>
 inline int sign(T x) {
@@ -663,12 +673,12 @@ inline SEXP shallow_copy(SEXP x){
 }
 
 // int not bool because bool can't be NA
-inline r_bool vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
+inline r_boolean vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
 
   R_xlen_t n = Rf_xlength(x);
 
   // Use int instead of bool as int can hold NA
-  r_bool out = r_true;
+  r_boolean out = r_true;
   bool any_na = false;
 
   switch ( CHEAPR_TYPEOF(x) ){
@@ -684,7 +694,7 @@ inline r_bool vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
         any_na = true;
         continue;
       }
-      out = static_cast<r_bool>(is_whole_number(p_x[i], tol_));
+      out = static_cast<r_boolean>(is_whole_number(p_x[i], tol_));
       if (out == r_false){
         break;
       }
@@ -741,7 +751,7 @@ inline void set_val(SEXP x, R_xlen_t i, bool val, int* p_x = nullptr){
     SET_LOGICAL_ELT(x, i, static_cast<int>(val));
   }
 }
-inline void set_val(SEXP x, R_xlen_t i, r_bool val, int* p_x = nullptr){
+inline void set_val(SEXP x, R_xlen_t i, r_boolean val, int* p_x = nullptr){
   if (p_x != nullptr){
     p_x[i] = static_cast<int>(val);
   } else {
@@ -796,20 +806,6 @@ inline void set_val(SEXP x, R_xlen_t i, SEXP val, const SEXP *p_x = nullptr){
   default: {
     Rf_error("Unimplemented `set_val` specialisation for %s", Rf_type2char(TYPEOF(x)));
   }
-  }
-}
-
-template<typename... Args>
-inline SEXP new_r_vec(SEXPTYPE type, Args... args){
-  constexpr int n = sizeof...(args);
-  if (n == 0){
-    return new_vec(type, 0);
-  } else {
-    SEXP out = SHIELD(new_vec(type, n));
-    int i = 0;
-    ((set_val(out, i++, args), void()), ...);
-    YIELD(1);
-    return out;
   }
 }
 

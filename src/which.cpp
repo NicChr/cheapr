@@ -6,7 +6,7 @@
 
 // Count the number of true values
 
-R_xlen_t count_true(const r_bool* RESTRICT px, const uint_fast64_t n){
+R_xlen_t count_true(const r_boolean* RESTRICT px, const uint_fast64_t n){
   uint_fast64_t size = 0;
   if (n >= CHEAPR_OMP_THRESHOLD){
 #pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
@@ -50,7 +50,7 @@ if (is_r_na(VAL)){                                                 \
 [[cpp11::register]]
 SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
-  const r_bool *p_x = BOOLEAN_RO(x);
+  const r_boolean *p_x = BOOLEAN_RO(x);
   bool is_long = (n > INTEGER_MAX);
   if (invert){
     if (is_long){
@@ -252,7 +252,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
 
 [[cpp11::register]]
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
-  SEXP n_vals = SHIELD(as_vec_scalar(scalar_count(x, value, false)));
+  SEXP n_vals = SHIELD(as_r_scalar(scalar_count(x, value, false)));
   SEXP out = SHIELD(cpp_val_find(x, value, invert, n_vals));
   YIELD(2);
   return out;
@@ -262,7 +262,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
 
 [[cpp11::register]]
 SEXP cpp_which_na(SEXP x){
-  SEXP na = SHIELD(as_vec_scalar(NA_INTEGER));
+  SEXP na = SHIELD(as_r_scalar(NA_INTEGER));
   SEXP out = SHIELD(cpp_which_val(x, na, false));
   YIELD(2);
   return out;
@@ -270,7 +270,7 @@ SEXP cpp_which_na(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_which_not_na(SEXP x){
-  SEXP na = SHIELD(as_vec_scalar(NA_INTEGER));
+  SEXP na = SHIELD(as_r_scalar(NA_INTEGER));
   SEXP out = SHIELD(cpp_which_val(x, na, true));
   YIELD(2);
   return out;
@@ -307,11 +307,13 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_na[k3++] = i + 1;
       }
     }
-    SEXP out = SHIELD(new_r_list(true_locs, false_locs, na_locs));
-    SEXP names = SHIELD(new_r_chars("true", "false", "na"));
-    set_names(out, names);
 
-    YIELD(5);
+    SEXP out = SHIELD(new_r_list(
+      arg("true") = true_locs,
+      arg("false") = false_locs,
+      arg("na") = na_locs
+    ));
+    YIELD(4);
     return out;
   } else {
     SEXP true_locs = SHIELD(new_vec(INTSXP, include_true ? n_true : 0));
@@ -335,11 +337,13 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
         p_na[k3++] = i + 1;
       }
     }
-    SEXP out = SHIELD(new_r_list(true_locs, false_locs, na_locs));
-    SEXP names = SHIELD(new_r_chars("true", "false", "na"));
-    set_names(out, names);
+    SEXP out = SHIELD(new_r_list(
+      arg("true") = true_locs,
+      arg("false") = false_locs,
+      arg("na") = na_locs
+    ));
 
-    YIELD(5);
+    YIELD(4);
     return out;
   }
 }
