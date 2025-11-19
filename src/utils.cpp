@@ -444,15 +444,21 @@ SEXP cpp_lgl_count(SEXP x){
   SEXP out;
 
   if (n > INTEGER_MAX){
-    out = SHIELD(new_vec(REALSXP, 3));
-    SET_REAL_ELT(out, 0, static_cast<double>(ntrue));
-    SET_REAL_ELT(out, 1, static_cast<double>(nfalse));
-    SET_REAL_ELT(out, 2, static_cast<double>(nna));
+    out = SHIELD(cpp11::writable::doubles(
+    {
+      static_cast<double>(ntrue),
+      static_cast<double>(nfalse),
+      static_cast<double>(nna)
+    }
+    ));
   } else {
-    out = SHIELD(new_vec(INTSXP, 3));
-    SET_INTEGER_ELT(out, 0, static_cast<int>(ntrue));
-    SET_INTEGER_ELT(out, 1, static_cast<int>(nfalse));
-    SET_INTEGER_ELT(out, 2, static_cast<int>(nna));
+    out = SHIELD(cpp11::writable::integers(
+    {
+      static_cast<int>(ntrue),
+      static_cast<int>(nfalse),
+      static_cast<int>(nna)
+    }
+    ));
   }
 
   set_names(out, names);
