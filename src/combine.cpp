@@ -495,38 +495,6 @@ SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
     return out;
   }
 }
-// SEXP cpp_setdiff(SEXP x, SEXP y, bool dups){
-//
-//   bool is_simple = cheapr_is_simple_atomic_vec(x) && cheapr_is_simple_atomic_vec(y);
-//
-//   int32_t NP = 0;
-//   if (is_simple){
-//     if (!dups){
-//       SHIELD(x = cpp_unique(x)); ++NP;
-//     }
-//     SEXP matches;
-//     if (Rf_length(x) < 10000){
-//       matches = SHIELD(match(y, x, NA_INTEGER)); ++NP;
-//     } else {
-//       matches = SHIELD(cheapr_fast_match(x, y)); ++NP;
-//     }
-//     SEXP locs = SHIELD(cpp_which_na(matches)); ++NP;
-//     SEXP out = SHIELD(sset_vec(x, locs, false)); ++NP;
-//
-//     Rf_copyMostAttrib(x, out);
-//     YIELD(NP);
-//     return out;
-//   } else {
-//     if (!dups){
-//       SHIELD(x = cheapr_fast_unique(x)); ++NP;
-//     }
-//     SEXP matches = SHIELD(cheapr_fast_match(x, y)); ++NP;
-//     SEXP locs = SHIELD(cpp_which_na(matches)); ++NP;
-//     SEXP out = SHIELD(cheapr_sset(x, locs)); ++NP;
-//     YIELD(NP);
-//     return out;
-//   }
-// }
 
 [[cpp11::register]]
 SEXP cpp_na_init(SEXP x, int n){
@@ -1077,7 +1045,15 @@ SEXP cpp_c(SEXP x){
   int n = Rf_length(x);
 
   if (n == 1){
-    return VECTOR_ELT(x, 0);
+    if (!vec_has_names(x)){
+      return VECTOR_ELT(x, 0);
+    } else {
+      SEXP names = SHIELD(get_vec_names(x));
+      SHIELD(names = cpp_rep_len(names, vector_length(VECTOR_ELT(x, 0))));
+      SEXP out = SHIELD(set_vec_names(VECTOR_ELT(x, 0), names));
+      YIELD(3);
+      return out;
+    }
   }
 
   // Cast all objects to common type
@@ -1091,27 +1067,15 @@ SEXP cpp_c(SEXP x){
   SEXP vec_template = SHIELD(cpp_common_template(x));
   SEXP out = SHIELD(combine_internal(x, out_size, vec_template));
 
-  // if (has_names(x)){
-  //   SEXP name_sizes = SHIELD(new_vec(INTSXP, n));
-  //   SEXP names = SHIELD(get_names(x));
-  //   R_xlen_t final_name_size = 0;
-  //   int *p_name_sizes = INTEGER(name_sizes);
-  //   for (int i = 0; i < n; ++i){
-  //     R_xlen_t name_size = Rf_xlength(p_x[i]);
-  //     p_name_sizes[i] = name_size;
-  //     final_name_size += name_size;
-  //   }
-  //   if (Rf_xlength(out) == final_name_size){
-  //     SHIELD(names = cpp_rep(names, name_sizes));
-  //     set_names(out, names);
-  //     YIELD(5);
-  //     return out;
-  //   } else {
-  //     YIELD(4);
-  //     return out;
-  //   }
-  // } else {
+  if (vec_has_names(x)){
+    SEXP names = SHIELD(get_vec_names(x));
+    SEXP name_sizes = SHIELD(cpp_lengths(x, false));
+    SHIELD(names = cpp_rep(names, name_sizes));
+    SHIELD(out = set_vec_names(out, names));
+    YIELD(6);
+    return out;
+  } else {
     YIELD(2);
     return out;
-  // }
+  }
 }

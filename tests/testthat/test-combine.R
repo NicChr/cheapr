@@ -23,7 +23,9 @@ test_that("combining", {
   names(result) <- names(objs)
 
   for (ii in seq_along(objs)){
-    result <- replace_(result, ii, list(a = suppressWarnings(c_(.args = sset(objs, seq_len(ii))))))
+    result <- replace_(
+      result, ii, list(a = suppressWarnings(c_(.args = sset(unname(objs), seq_len(ii)))))
+    )
   }
 
   expect_snapshot(dput(result))

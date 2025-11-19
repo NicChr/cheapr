@@ -770,3 +770,63 @@ SEXP match(SEXP y, SEXP x, int no_match){
     return cheapr_fast_match(x, y, no_match);
   }
 }
+
+SEXP get_vec_names(SEXP x){
+  if (Rf_isVectorAtomic(x)){
+    return get_names(x);
+  } else {
+    switch(get_r_type(x)){
+    case r_null:
+    case r_df: {
+      return R_NilValue;
+    }
+    case r_list: {
+      return get_names(x);
+    }
+    case r_unk: {
+      SEXP r_names_fn = SHIELD(find_pkg_fun("names", "base", false));
+      SEXP expr = SHIELD(Rf_lang2(r_names_fn, x));
+      SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+      YIELD(3);
+      return out;
+    }
+    }
+    return R_NilValue;
+  }
+}
+
+SEXP set_vec_names(SEXP x, SEXP names){
+  if (is_null(names)){
+    return x;
+  } else if (Rf_isVectorAtomic(x)){
+    SEXP out = SHIELD(shallow_copy(x));
+    Rf_namesgets(out, names);
+    YIELD(1);
+    return out;
+  } else {
+    switch(get_r_type(x)){
+    case r_null:
+    case r_df: {
+      return x;
+    }
+    case r_list: {
+      SEXP out = SHIELD(shallow_copy(x));
+      Rf_namesgets(out, names);
+      YIELD(1);
+      return out;
+    }
+    case r_unk: {
+      SEXP r_names_fn = SHIELD(find_pkg_fun("names<-", "base", false));
+      SEXP expr = SHIELD(Rf_lang3(r_names_fn, x, names));
+      SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+      YIELD(3);
+      return out;
+    }
+    }
+    return R_NilValue;
+  }
+}
+
+bool vec_has_names(SEXP x){
+  return !is_null(get_vec_names(x));
+}
