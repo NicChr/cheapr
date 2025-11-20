@@ -821,6 +821,23 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   return out;
 }
 
+// define CHEAPR_COMBINE_NAMES
+// if (any_names){
+//   R_xlen_t ii = 0;
+//   SHIELD(combined_names = new_vec(STRSXP, out_size)); ++NP;
+//   for (int i = 0; i < n; ++i){
+//     R_Reprotect(vec_names = get_vec_names(p_x[i]), vec_names_idx);
+//     const SEXP *p_vec_names = STRING_PTR_RO(vec_names);
+//     if (is_null(vec_names)){
+//       ii += vector_length(p_x[i]);
+//     } else {
+//       for (R_xlen_t j = 0; j < Rf_xlength(vec_names); ++j, ++ii){
+//         SET_STRING_ELT(combined_names, ii, p_vec_names[j]);
+//       }
+//     }
+//   }
+// }
+
 // Combine vectors given the following args:
 // * A list of vectors
 // * The final size of the combined vector
@@ -846,6 +863,13 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
 
   r_type common = get_r_type(vec_template);
+  SEXP combined_names = R_NilValue;
+  bool has_top_level_names = vec_has_names(x);
+
+  // If in the future it is decided that inner names are to be kept
+  // Use this condition within the inner loop and then use the macro
+  // defined above combine_internal
+  // any_names = !has_top_level_names && (any_names || has_names(vec));
 
   switch (common){
   case r_null: {
@@ -1029,6 +1053,13 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     Rf_error("Don't know how to combine elements");
   }
   }
+
+  if (has_top_level_names){
+    SEXP top_level_names = SHIELD(get_vec_names(x)); ++NP;
+    SEXP name_sizes = SHIELD(cpp_lengths(x, false)); ++NP;
+    SHIELD(combined_names = cpp_rep(top_level_names, name_sizes)); ++NP;
+  }
+  SHIELD(out = set_vec_names(out, combined_names)); ++NP;
   YIELD(NP);
   return out;
 }
@@ -1044,18 +1075,6 @@ SEXP cpp_c(SEXP x){
 
   int n = Rf_length(x);
 
-  if (n == 1){
-    if (!vec_has_names(x)){
-      return VECTOR_ELT(x, 0);
-    } else {
-      SEXP names = SHIELD(get_vec_names(x));
-      SHIELD(names = cpp_rep_len(names, vector_length(VECTOR_ELT(x, 0))));
-      SEXP out = SHIELD(set_vec_names(VECTOR_ELT(x, 0), names));
-      YIELD(3);
-      return out;
-    }
-  }
-
   // Cast all objects to common type
   const SEXP *p_x = LIST_PTR_RO(x);
 
@@ -1066,16 +1085,6 @@ SEXP cpp_c(SEXP x){
   // 'vec_template' here acts as a template for the final result
   SEXP vec_template = SHIELD(cpp_common_template(x));
   SEXP out = SHIELD(combine_internal(x, out_size, vec_template));
-
-  if (vec_has_names(x)){
-    SEXP names = SHIELD(get_vec_names(x));
-    SEXP name_sizes = SHIELD(cpp_lengths(x, false));
-    SHIELD(names = cpp_rep(names, name_sizes));
-    SHIELD(out = set_vec_names(out, names));
-    YIELD(6);
-    return out;
-  } else {
-    YIELD(2);
-    return out;
-  }
+  YIELD(2);
+  return out;
 }
