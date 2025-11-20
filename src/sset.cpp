@@ -602,28 +602,27 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
     out = SHIELD(new_vec(STRSXP, out_size)); ++NP;
-    SEXP *p_out = UNSAFE_STRING_PTR(out);
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
-        p_out[k] = p_x[i];
+        SET_STRING_ELT(out, k, p_x[i]);
       }
       for (R_xlen_t j = istart2 - 1, k = iend1; j < iend2; ++j, ++k){
-        p_out[k] = p_x[j];
+        SET_STRING_ELT(out, k, p_x[j]);
       }
     } else {
       if (by > 0){
         for (R_xlen_t i = istart - 1, k = 0; i < (iend - n_oob); ++i, ++k){
-          p_out[k] = p_x[i];
+          SET_STRING_ELT(out, k, p_x[i]);
         }
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          p_out[in_bounds_size + i] = NA_STRING;
+          SET_STRING_ELT(out, in_bounds_size + i, NA_STRING);
         }
       } else {
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          p_out[i] = NA_STRING;
+          SET_STRING_ELT(out, i, NA_STRING);
         }
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i){
-          p_out[istart - i - 1] = p_x[i];
+          SET_STRING_ELT(out, istart - i - 1, p_x[i]);
         }
       }
     }
@@ -686,25 +685,24 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   case VECSXP: {
     const SEXP *p_x = LIST_PTR_RO(x);
     out = SHIELD(new_vec(VECSXP, out_size)); ++NP;
-    SEXP *p_out = UNSAFE_VECTOR_PTR(out);
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
-        p_out[k] = p_x[i];
+        SET_VECTOR_ELT(out, k, p_x[i]);
       }
       for (R_xlen_t j = istart2 - 1, k = iend1; j < iend2; ++j, ++k){
-        p_out[k] = p_x[j];
+        SET_VECTOR_ELT(out, k, p_x[j]);
       }
     } else {
       if (by > 0){
         for (R_xlen_t i = istart - 1, k = 0; i < iend; ++i, ++k){
           if (i < n){
-            p_out[k] = p_x[i];
+            SET_VECTOR_ELT(out, k, p_x[i]);
           }
         }
       } else {
         for (R_xlen_t i = istart - 1, k = 0; i >= iend - 1; --i, ++k){
           if (i < n){
-            p_out[k] = p_x[i];
+            SET_VECTOR_ELT(out, k, p_x[i]);
           }
         }
       }
@@ -783,7 +781,6 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
         out = SHIELD(new_vec(STRSXP, n));
-        SEXP *p_out = UNSAFE_STRING_PTR(out);
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -792,7 +789,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              p_out[k++] = (pind[i] != pind[i] || j > xn) ? NA_STRING : p_x[j - 1];
+              SET_STRING_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? NA_STRING : p_x[j - 1]);
             }
           }
         break;
@@ -843,7 +840,6 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case VECSXP: {
         const SEXP *p_x = LIST_PTR_RO(x);
         out = SHIELD(new_vec(VECSXP, n));
-        SEXP *p_out = UNSAFE_VECTOR_PTR(out);
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -852,7 +848,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              p_out[k++] = (pind[i] != pind[i] || j > xn) ? R_NilValue : p_x[j - 1];
+              SET_VECTOR_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? R_NilValue : p_x[j - 1]);
             }
           }
         break;
@@ -930,11 +926,10 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
         out = SHIELD(new_vec(STRSXP, n));
-        SEXP *p_out = UNSAFE_STRING_PTR(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
-            p_out[k++] = p_x[--j];
+            SET_STRING_ELT(out, k++, p_x[--j]);
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
@@ -942,7 +937,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            p_out[k++] = NA_STRING;
+            SET_STRING_ELT(out, k++, NA_STRING);
           }
         }
         break;
@@ -990,11 +985,10 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case VECSXP: {
         const SEXP *p_x = LIST_PTR_RO(x);
         out = SHIELD(new_vec(VECSXP, n));
-        SEXP *p_out = UNSAFE_VECTOR_PTR(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
-            p_out[k++] = p_x[--j];
+            SET_VECTOR_ELT(out, k++, p_x[--j]);
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
@@ -1002,7 +996,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            p_out[k++] = R_NilValue;
+            SET_VECTOR_ELT(out, k++, R_NilValue);
           }
         }
         break;
@@ -1059,8 +1053,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
         out = SHIELD(new_vec(STRSXP, n));
-        SEXP *p_out = UNSAFE_VECTOR_PTR(out);
-        for (int_fast64_t i = 0; i < n; ++i) p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
+        for (int_fast64_t i = 0; i < n; ++i){
+          SET_STRING_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
+        }
         break;
       }
       case CPLXSXP: {
@@ -1082,8 +1077,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case VECSXP: {
         const SEXP *p_x = LIST_PTR_RO(x);
         out = SHIELD(new_vec(VECSXP, n));
-        SEXP *p_out = UNSAFE_VECTOR_PTR(out);
-        for (int_fast64_t i = 0; i < n; ++i) p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
+        for (int_fast64_t i = 0; i < n; ++i){
+          SET_VECTOR_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
+        }
         break;
       }
       default: {
@@ -1128,8 +1124,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
         out = SHIELD(new_vec(STRSXP, n));
-        SEXP *p_out = UNSAFE_STRING_PTR(out);
-        for (int i = 0; i != n; ++i) p_out[i] = p_x[pind[i] - 1];
+        for (int i = 0; i != n; ++i){
+          SET_STRING_ELT(out, i, p_x[pind[i] - 1]);
+        }
         break;
       }
       case CPLXSXP: {
@@ -1151,8 +1148,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case VECSXP: {
         const SEXP *p_x = LIST_PTR_RO(x);
         out = SHIELD(new_vec(VECSXP, n));
-        SEXP *p_out = UNSAFE_VECTOR_PTR(out);
-        for (int i = 0; i != n; ++i) p_out[i] = p_x[pind[i] - 1];
+        for (int i = 0; i != n; ++i){
+          SET_VECTOR_ELT(out, i, p_x[pind[i] - 1]);
+        }
         break;
       }
       default: {

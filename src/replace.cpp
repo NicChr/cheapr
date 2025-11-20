@@ -79,9 +79,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     const SEXP *p_with = STRING_PTR_RO(with);
 
     if (!internal_in_place){
-      SEXP *p_x = UNSAFE_STRING_PTR(x);
       for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
-        p_x[p_where[i] - 1] = p_with[withi];
+        SET_STRING_ELT(x, p_where[i] - 1, p_with[withi]);
       }
     } else {
       for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
@@ -127,9 +126,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     const SEXP *p_with = LIST_PTR_RO(with);
 
     if (!internal_in_place){
-      SEXP *p_x = UNSAFE_VECTOR_PTR(x);
       for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
-        p_x[p_where[i] - 1] = p_with[withi];
+        SET_VECTOR_ELT(x, p_where[i] - 1, p_with[withi]);
       }
     } else {
       for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){

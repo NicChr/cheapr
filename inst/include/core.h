@@ -66,13 +66,6 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 inline const Rcomplex NA_COMPLEX = {NA_REAL, NA_REAL};
 
 // Functions
-
-inline SEXP* UNSAFE_VECTOR_PTR(SEXP x) {
-  return static_cast<SEXP*>(DATAPTR(x));
-}
-inline SEXP* UNSAFE_STRING_PTR(SEXP x) {
-  return static_cast<SEXP*>(DATAPTR(x));
-}
 inline const SEXP* LIST_PTR_RO(SEXP x) {
   return static_cast<const SEXP*>(DATAPTR_RO(x));
 }
@@ -833,35 +826,35 @@ inline SEXP new_r_list(Args... args) {
 
   if (n == 0){
     return new_vec(VECSXP, 0);
-  }
-
-  SEXP out = SHIELD(new_vec(VECSXP, n));
-
-  // Are any args named?
-  constexpr bool any_named = (std::is_same_v<std::decay_t<Args>, arg> || ...);
-
-  SEXP nms;
-
-  int i = 0;
-  if (any_named){
-    nms = SHIELD(new_vec(STRSXP, n));
   } else {
-    nms = SHIELD(R_NilValue);
-  }
+    SEXP out = SHIELD(new_vec(VECSXP, n));
 
-  (([&]() {
-    if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
-      SET_VECTOR_ELT(out, i, args.value);
-      SET_STRING_ELT(nms, i, make_utf8_char(args.name));
+    // Are any args named?
+    constexpr bool any_named = (std::is_same_v<std::decay_t<Args>, arg> || ...);
+
+    SEXP nms;
+
+    int i = 0;
+    if (any_named){
+      nms = SHIELD(new_vec(STRSXP, n));
     } else {
-      SET_VECTOR_ELT(out, i, args);
+      nms = SHIELD(R_NilValue);
     }
-    ++i;
-  }()), ...);
 
-  set_names(out, nms);
-  YIELD(2);
-  return out;
+    (([&]() {
+      if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
+        SET_VECTOR_ELT(out, i, args.value);
+        SET_STRING_ELT(nms, i, make_utf8_char(args.name));
+      } else {
+        SET_VECTOR_ELT(out, i, args);
+      }
+      ++i;
+    }()), ...);
+
+    set_names(out, nms);
+    YIELD(2);
+    return out;
+  }
 }
 
 // Make a character vec from const char ptrs

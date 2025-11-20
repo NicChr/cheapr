@@ -930,14 +930,15 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case r_chr: {
 
     SHIELD(out = init<r_character_t>(out_size, false)); ++NP;
-    SEXP *p_out = UNSAFE_STRING_PTR(out);
 
-    for (int i = 0; i < n; ++i, k += m){
+    for (int i = 0; i < n; ++i){
       R_Reprotect(vec = cast<r_character_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
 
       const SEXP *p_vec = STRING_PTR_RO(vec);
-      std::copy_n(p_vec, m, &p_out[k]);
+      for (R_xlen_t j = 0; j < m; ++k, ++j){
+        SET_STRING_ELT(out, k, p_vec[j]);
+      }
     }
     break;
   }
@@ -970,14 +971,15 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case r_list: {
 
     SHIELD(out = init<r_list_t>(out_size, false)); ++NP;
-    SEXP *p_out = UNSAFE_VECTOR_PTR(out);
 
-    for (int i = 0; i < n; ++i, k += m){
+    for (int i = 0; i < n; ++i){
       R_Reprotect(vec = cast<r_list_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
 
       const SEXP *p_vec = LIST_PTR_RO(vec);
-      std::copy_n(p_vec, m, &p_out[k]);
+      for (R_xlen_t j = 0; j < m; ++k, ++j){
+        SET_VECTOR_ELT(out, k, p_vec[j]);
+      }
     }
     break;
   }

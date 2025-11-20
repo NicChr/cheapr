@@ -143,7 +143,6 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   } else {
 
     SEXP out = SHIELD(new_vec(STRSXP, n_strings)); ++NP;
-    SEXP *p_out = UNSAFE_STRING_PTR(out);
 
     // Along the length of each char vec
 
@@ -154,7 +153,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
       for (R_xlen_t i = 1; i < n_chars; ++i){
         str_paste(strng, sep1, utf8_char(char_ptrs[i][j]));
       }
-      p_out[j] = Rf_mkChar(strng.c_str());
+      SET_STRING_ELT(out, j, Rf_mkChar(strng.c_str()));
     }
 
     YIELD(NP);

@@ -1,13 +1,5 @@
 Updated to version 1.4.0
 
-Regarding the CRAN check note:
-
-This package makes use of the non-API call to DATAPTR in limited areas
-where performance is crucial and its usage is deemed safe. The macros 
-'UNSAFE_STRING_PTR' and 'UNSAFE_VECTOR_PTR' are aliases for DATAPTR and
-are named as such to signal that these pointers are to be used with care.
-I hope that this is not an issue for the purposes of publishing to CRAN.
-
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
  * We saw 0 new problems
