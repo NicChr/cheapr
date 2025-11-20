@@ -130,6 +130,13 @@ rep(SEXP x, SEXP times){
 }
 
 inline SEXP
+rep_each(SEXP x, SEXP each){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_rep_each");
+  return fn(x, each);
+}
+
+inline SEXP
 recycle(SEXP x, SEXP length){
   typedef SEXP fn_t(SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_recycle");

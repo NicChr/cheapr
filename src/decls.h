@@ -56,6 +56,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert);
 SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list, bool add_id);
 SEXP cpp_rep_len(SEXP x, int length);
 SEXP cpp_rep(SEXP x, SEXP times);
+SEXP cpp_rep_each(SEXP x, SEXP each);
 SEXP cpp_recycle(SEXP x, SEXP length);
 SEXP cpp_c(SEXP x);
 SEXP cpp_list_c(SEXP x);
