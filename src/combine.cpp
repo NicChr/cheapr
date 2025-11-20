@@ -336,7 +336,7 @@ SEXP cpp_rep_each(SEXP x, SEXP each){
   SHIELD(each = cast<r_integer_t>(each, R_NilValue)); ++NP;
   if (Rf_length(each) == 1){
     if (INTEGER(each)[0] == 1){
-      Rf_unprotect(NP);
+      YIELD(NP);
       return x;
     }
     SHIELD(each = cpp_rep_len(each, vector_length(x))); ++NP;
