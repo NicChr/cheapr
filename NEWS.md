@@ -6,7 +6,7 @@
 
 To make use of the API, include the API header file
 
-`#include "cheapr_api.h"` 
+`#include <cheapr_api.h>` 
 
 and then link to cheapr
 
