@@ -6,16 +6,21 @@
 
 To make use of the API, include the API header file
 
-`#include <cheapr_api.h>` 
+```c++
+#include <cheapr_api.h>
+```
 
 and then link to cheapr
 
 in R package description file.
+
 `LinkingTo: cheapr`
 
 or directly in C++ code
-`[[cpp11::linking_to("cheapr")]]`
 
+```c++
+[[cpp11::linking_to("cheapr")]]
+```
 
 - New function `unique_` as a cheaper alternative to `unique`.
 
