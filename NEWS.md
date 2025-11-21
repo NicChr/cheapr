@@ -89,6 +89,10 @@ for a long while.
 
 ### Breaking changes
 
+- fastplyr versions 0.9.91 and later must depend on cheapr version 1.4.0 and 
+later. This means that you can't for example install both fastplyr 0.9.9 and 
+cheapr 1.3.2
+
 - Matrices are converted to data frames and arrays are converted to bare vectors 
 when using data frames via `new_df` and other data frame constructors.
 
