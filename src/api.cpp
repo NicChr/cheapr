@@ -360,7 +360,7 @@ api_paste(SEXP x, SEXP sep, SEXP collapse){
 void
 api_replace(SEXP x, SEXP where, SEXP with, bool quiet){
   try {
-    static_cast<void>(cpp_replace(x, where, with, true, quiet));
+    replace_in_place(x, where, with, quiet);
   } catch (...) {
   }
 }

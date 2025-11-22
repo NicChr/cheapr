@@ -117,7 +117,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   case r_pxct: {
     SEXP x_cls = SHIELD(Rf_getAttrib(x, R_ClassSymbol)); ++NP;
     Rf_classgets(x, R_NilValue);
-    static_cast<void>(cpp_replace(x, where, with, true, false));
+    replace_in_place(x, where, with, false);
     Rf_classgets(x, x_cls);
     break;
   }
@@ -178,4 +178,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   }
   YIELD(NP);
   return x;
+}
+
+void replace_in_place(SEXP x, SEXP where, SEXP with, bool quiet){
+ cpp_replace(x, where, with, true, quiet);
 }

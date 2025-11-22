@@ -106,5 +106,6 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive);
 SEXP get_vec_names(SEXP x);
 SEXP set_vec_names(SEXP x, SEXP names);
 bool vec_has_names(SEXP x);
+void replace_in_place(SEXP x, SEXP where, SEXP with, bool quiet);
 
 #endif
