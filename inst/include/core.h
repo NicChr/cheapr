@@ -848,21 +848,6 @@ inline SEXP new_r_list(Args... args) {
   }
 }
 
-// Make a character vec from const char ptrs
-template<typename... Args>
-inline SEXP new_r_chars(Args... args){
-  constexpr int n = sizeof...(args);
-  if (n == 0){
-    return new_vec(STRSXP, 0);
-  } else {
-    SEXP out = SHIELD(new_vec(STRSXP, n));
-    int i = 0;
-    ((SET_STRING_ELT(out, i++, make_utf8_char(args)), void()), ...);
-    YIELD(1);
-    return out;
-  }
-}
-
 } // End of cheapr namespace
 
 #endif
