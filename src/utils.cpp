@@ -26,12 +26,12 @@ void check_r_pkgs(DllInfo* dll){
 
 [[cpp11::register]]
 bool cpp_is_simple_atomic_vec(SEXP x){
-  return cheapr_is_simple_atomic_vec(x);
+  return is_simple_atomic_vec(x);
 }
 
 [[cpp11::register]]
 bool cpp_is_simple_vec(SEXP x){
-  return cheapr_is_simple_vec(x);
+  return is_simple_vec(x);
 }
 
 [[cpp11::register]]
@@ -141,7 +141,7 @@ SEXP cpp_semi_copy(SEXP x){
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     YIELD(1);
     return out;
-  } else if (!altrep && cheapr_is_simple_atomic_vec(x)){
+  } else if (!altrep && is_simple_atomic_vec(x)){
 
     // Atomic vectors
 

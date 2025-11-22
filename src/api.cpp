@@ -403,23 +403,6 @@ api_r_address(SEXP x) {
   }
 }
 
-bool
-api_is_simple_atomic_vec(SEXP x){
-  try {
-    return cheapr::cheapr_is_simple_atomic_vec(x);
-  } catch (...) {
-    return false;
-  }
-}
-bool
-api_is_simple_vec(SEXP x){
-  try {
-    return cheapr::cheapr_is_simple_vec(x);
-  } catch (...) {
-    return false;
-  }
-}
-
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -468,6 +451,4 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_gcd",    (DL_FUNC)api_gcd);
   R_RegisterCCallable("cheapr", "api_vec_length",    (DL_FUNC)api_vec_length);
   R_RegisterCCallable("cheapr", "api_r_address",    (DL_FUNC)api_r_address);
-  R_RegisterCCallable("cheapr", "api_is_simple_atomic_vec",    (DL_FUNC)api_is_simple_atomic_vec);
-  R_RegisterCCallable("cheapr", "api_is_simple_vec",    (DL_FUNC)api_is_simple_vec);
 }
