@@ -200,6 +200,11 @@ inline bool is_r_na<r_boolean>(r_boolean x){
 }
 
 template<>
+inline bool is_r_na<Rboolean>(Rboolean x){
+  return x == NA_LOGICAL;
+}
+
+template<>
 inline bool is_r_na<cpp11::r_bool>(cpp11::r_bool x){
   return x == cpp11::na<cpp11::r_bool>();
 }
@@ -326,6 +331,10 @@ inline SEXP as_r_scalar<bool>(bool x){
 }
 template<>
 inline SEXP as_r_scalar<r_boolean>(r_boolean x){
+  return Rf_ScalarLogical(static_cast<int>(x));
+}
+template<>
+inline SEXP as_r_scalar<Rboolean>(Rboolean x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>

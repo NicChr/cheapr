@@ -14,7 +14,7 @@ inline SEXP r_paste(SEXP sep, SEXP collapse, Args... args){
   return out;
 }
 
-// R vector constructor from C++ types and SEXP
+// Powerful R vector constructor from C++ types and SEXP
 template<typename... Args>
 SEXP new_r_vec(Args... args) {
   SEXP out = cheapr::SHIELD(cheapr::new_r_list(args...));
