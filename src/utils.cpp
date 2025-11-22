@@ -211,7 +211,6 @@ SEXP cpp_range(SEXP x){
 
   R_xlen_t n = Rf_xlength(x);
 
-  SEXP out = SHIELD(new_vec(REALSXP, 2));
   double lo = R_PosInf;
   double hi = R_NegInf;
 
@@ -272,10 +271,7 @@ SEXP cpp_range(SEXP x){
     }
     }
   }
-  SET_REAL_ELT(out, 0, lo);
-  SET_REAL_ELT(out, 1, hi);
-  YIELD(1);
-  return out;
+  return new_r_vec(lo, hi);
 }
 
 double cpp_min(SEXP x){
@@ -460,30 +456,13 @@ SEXP cpp_lgl_count(SEXP x){
 
   R_xlen_t nna = n - ntrue - nfalse;
 
-  SEXP names = SHIELD(new_r_chars("true", "false", "na"));
-  SEXP out;
+  SEXP out = SHIELD(new_r_vec(
+    arg("true") = ntrue,
+    arg("false") = nfalse,
+    arg("na") = nna
+  ));
 
-  if (n > INTEGER_MAX){
-    out = SHIELD(cpp11::writable::doubles(
-    {
-      static_cast<double>(ntrue),
-      static_cast<double>(nfalse),
-      static_cast<double>(nna)
-    }
-    ));
-  } else {
-    out = SHIELD(cpp11::writable::integers(
-    {
-      static_cast<int>(ntrue),
-      static_cast<int>(nfalse),
-      static_cast<int>(nna)
-    }
-    ));
-  }
-
-  set_names(out, names);
-
-  YIELD(2);
+  YIELD(1);
   return out;
 }
 

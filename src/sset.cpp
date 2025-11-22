@@ -1520,7 +1520,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
         )); ++NP;
 
         // Combine all args into one list
-        SEXP all_args = SHIELD(r_combine(usual_args, args)); ++NP;
+        SEXP all_args = SHIELD(new_r_vec(usual_args, args)); ++NP;
         SEXP get_fn_expr = SHIELD(find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
         SEXP cheapr_sset_fn = SHIELD(Rf_eval(get_fn_expr, R_BaseEnv)); ++NP;
 
@@ -1543,7 +1543,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       )); ++NP;
 
       // Combine all args into one list
-      SEXP all_args = SHIELD(r_combine(usual_args, args)); ++NP;
+      SEXP all_args = SHIELD(new_r_vec(usual_args, args)); ++NP;
       SEXP get_fn_expr = SHIELD(find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
       SEXP cheapr_sset_fn = SHIELD(Rf_eval(get_fn_expr, R_BaseEnv)); ++NP;
 

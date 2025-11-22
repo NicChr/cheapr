@@ -188,36 +188,6 @@ inline void assert_charsxp(SEXP x){
 
 // C++ templates
 
-// Alternative way of specifying compile-time template function in C++17
-// template<typename T>
-// inline bool is_r_na(const T &x) {
-//   using U = std::decay_t<T>;
-//
-//   if constexpr (std::is_same_v<U, cheapr::r_boolean>) {
-//     return x == r_na;
-//   } else if constexpr (std::is_same_v<U, int>) {
-//     return x == NA_INTEGER;
-//   } else if constexpr (std::is_same_v<U, double>) {
-//     return x != x;
-//   } else if constexpr (std::is_same_v<U, cpp11::r_string>) {
-//     return x == NA_STRING;
-//   } else if constexpr (std::is_same_v<U, cpp11::r_bool>) {
-//     return x == NA_LOGICAL;
-//   } else if constexpr (std::is_same_v<U, int64_t>) {
-//     return x == NA_INTEGER64;
-//   } else if constexpr (std::is_same_v<U, Rcomplex>) {
-//     return is_r_na(x.r) || is_r_na(x.i);
-//   } else if constexpr (std::is_same_v<U, Rbyte>) {
-//     return false;
-//   } else if constexpr (std::is_same_v<U, SEXP>){
-//     return is_null(x) || x == NA_STRING;
-//   } else {
-//     Rf_error("`is_r_na` not implemented for this type");
-//     return false;
-//   }
-// }
-
-
 template<typename T>
 inline bool is_r_na(T x) {
   Rf_error("Unimplemented `is_r_na` specialisation");
@@ -330,10 +300,6 @@ inline SEXP na_type<SEXP>(SEXP x){
   }
   }
 }
-// template<>
-// inline cpp11::r_string na_type<cpp11::r_string>(cpp11::r_string x){
-//   return NA_STRING;
-// }
 
 // equals template that doesn't support NA values
 // use is_r_na template functions
@@ -348,7 +314,11 @@ inline bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
 
 template<typename T>
 inline SEXP as_r_scalar(T x){
-  Rf_error("Unimplemented scalar constructor");
+  if constexpr (std::is_integral<T>::value){
+    return as_r_scalar<int64_t>(x);
+  } else {
+    Rf_error("Unimplemented scalar constructor");
+  }
 }
 template<>
 inline SEXP as_r_scalar<bool>(bool x){
@@ -359,13 +329,13 @@ inline SEXP as_r_scalar<r_boolean>(r_boolean x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_r_scalar<int>(int x){
+inline SEXP as_r_scalar<int32_t>(int32_t x){
   return Rf_ScalarInteger(x);
 }
 template<>
-inline SEXP as_r_scalar<R_xlen_t>(R_xlen_t x){
+inline SEXP as_r_scalar<int64_t>(int64_t x){
   if (x <= INTEGER_MAX){
-    return Rf_ScalarInteger(static_cast<int>(x));
+    return Rf_ScalarInteger(static_cast<int32_t>(x));
   } else {
     return Rf_ScalarReal(static_cast<double>(x));
   }
@@ -384,12 +354,16 @@ inline SEXP as_r_scalar<Rbyte>(Rbyte x){
 }
 template<>
 inline SEXP as_r_scalar<const char *>(const char* x){
-  return make_utf8_char(x);
+  return make_utf8_str(x);
 }
-// template<>
-// inline SEXP as_r_scalar<cpp11::r_string>(cpp11::r_string x){
-//   return Rf_ScalarString(x);
-// }
+template<>
+inline SEXP as_r_scalar<std::string>(std::string x){
+  return as_r_scalar<const char *>(x.c_str());
+}
+template<>
+inline SEXP as_r_scalar<cpp11::r_string>(cpp11::r_string x){
+  return Rf_ScalarString(x);
+}
 // Scalar string
 template<>
 inline SEXP as_r_scalar<SEXP>(SEXP x){
@@ -402,6 +376,22 @@ inline SEXP as_r_scalar<SEXP>(SEXP x){
     SET_VECTOR_ELT(out, 0, x);
     YIELD(1);
     return out;
+  }
+  }
+}
+
+template<typename T>
+inline SEXP as_r_vec(T x){
+  return as_r_scalar(x);
+}
+template<>
+inline SEXP as_r_vec<SEXP>(SEXP x){
+  switch (TYPEOF(x)){
+  case CHARSXP: {
+    return Rf_ScalarString(x);
+  }
+  default: {
+    return x;
   }
   }
 }
@@ -814,8 +804,9 @@ struct arg {
   // Constructor with name and value
   arg(const char* n, SEXP v) : name(n), value(v) {}
 
-  arg operator=(SEXP v) const {
-    return arg(name, v);
+  template<typename T>
+  arg operator=(T v) const {
+    return arg(name, as_r_vec(v));
   }
 };
 
@@ -846,7 +837,7 @@ inline SEXP new_r_list(Args... args) {
         SET_VECTOR_ELT(out, i, args.value);
         SET_STRING_ELT(nms, i, make_utf8_char(args.name));
       } else {
-        SET_VECTOR_ELT(out, i, args);
+        SET_VECTOR_ELT(out, i, as_r_vec(args));
       }
       ++i;
     }()), ...);

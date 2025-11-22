@@ -670,7 +670,7 @@ SEXP cpp_df_c(SEXP x){
     // Adjust prototype names
     if (Rf_length(new_names) > 0){
       na_padding = true;
-      R_Reprotect(ptype_names = r_combine(ptype_names, new_names), ptype_names_idx);
+      R_Reprotect(ptype_names = new_r_vec(ptype_names, new_names), ptype_names_idx);
     }
     na_padding = na_padding || Rf_length(df) != n_cols;
     out_size += df_nrow(df);
