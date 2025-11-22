@@ -185,6 +185,9 @@ inline void assert_charsxp(SEXP x){
   }
 }
 
+inline bool is_r_inf(const double& x){
+  return x == R_PosInf || x == R_NegInf;
+}
 
 // C++ templates
 
@@ -245,10 +248,6 @@ inline bool is_r_na<SEXP>(SEXP x){
   return is_null(x) || x == NA_STRING;
 }
 
-// inline bool is_r_na_char(SEXP x){
-//   return x == NA_STRING;
-// }
-
 // NA type
 
 template<typename T>
@@ -259,6 +258,11 @@ inline T na_type(T x) {
 template<>
 inline r_boolean na_type<r_boolean>(r_boolean x){
   return r_na;
+}
+
+template<>
+inline cpp11::r_bool na_type<cpp11::r_bool>(cpp11::r_bool x){
+  return cpp11::na<cpp11::r_bool>();
 }
 
 template<>
@@ -286,10 +290,10 @@ inline Rbyte na_type<Rbyte>(Rbyte x){
   return 0;
 }
 
-// template<>
-// inline cpp11::r_string na_type<cpp11::r_string>(cpp11::r_string x){
-//   return NA_STRING;
-// }
+template<>
+inline cpp11::r_string na_type<cpp11::r_string>(cpp11::r_string x){
+  return cpp11::na<cpp11::r_string>();
+}
 
 template<>
 inline SEXP na_type<SEXP>(SEXP x){
@@ -321,6 +325,8 @@ template<typename T>
 inline SEXP as_r_scalar(T x){
   if constexpr (std::is_integral<T>::value){
     return as_r_scalar<int64_t>(x);
+  } else if constexpr (std::is_convertible_v<T, SEXP>){
+    return as_r_scalar<SEXP>(x);
   } else {
     Rf_error("Unimplemented scalar constructor");
   }
@@ -373,6 +379,7 @@ template<>
 inline SEXP as_r_scalar<cpp11::r_string>(cpp11::r_string x){
   return Rf_ScalarString(x);
 }
+
 // Scalar string
 template<>
 inline SEXP as_r_scalar<SEXP>(SEXP x){
@@ -391,7 +398,11 @@ inline SEXP as_r_scalar<SEXP>(SEXP x){
 
 template<typename T>
 inline SEXP as_r_vec(T x){
-  return as_r_scalar(x);
+  if constexpr (std::is_convertible_v<T, SEXP>){
+    return as_r_vec<SEXP>(x);
+  } else {
+    return as_r_scalar(x);
+  }
 }
 template<>
 inline SEXP as_r_vec<SEXP>(SEXP x){
@@ -807,16 +818,15 @@ struct arg {
   const char* name;
   SEXP value;
 
-  // Constructor
-  arg(const char* n) : name(n), value(R_NilValue) {}
+  explicit arg(const char* n) : name(n), value(R_NilValue) {}
+  explicit arg(const char* n, SEXP v) : name(n), value(v) {}
 
-  // Constructor with name and value
-  arg(const char* n, SEXP v) : name(n), value(v) {}
-
-  template<typename T>
-  arg operator=(T v) const {
-    return arg(name, as_r_vec(v));
-  }
+  // template<typename T,
+  //          typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, arg>>>
+    template<typename T>
+    arg operator=(T v) const {
+      return arg(name, as_r_vec(v));
+    }
 };
 
 // Variadic list constructor

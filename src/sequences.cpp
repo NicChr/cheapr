@@ -538,10 +538,6 @@ double seq_width(double size, double from, double to){
   return del == 0.0 ? 0.0 : out;
 }
 
-bool is_infinite(double x){
-  return (x == R_NegInf) || (x == R_PosInf);
-}
-
 [[cpp11::register]]
 SEXP cpp_fixed_width_breaks(double start, double end, double n,
                             bool pretty, bool expand_min, bool expand_max){
@@ -556,7 +552,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     Rf_error("n must be finite");
   }
   if (is_r_na(start) || is_r_na(end) ||
-      is_infinite(start) || is_infinite(end)){
+      is_r_inf(start) || is_r_inf(end)){
     return as_r_scalar(NA_REAL);
   }
   // Switch them if needed
