@@ -4,6 +4,26 @@
 // Miscellaneous functions
 // Author: Nick Christofides
 
+// Check that fastplyr >= 0.9.91 is available
+
+[[cpp11::init]]
+void check_r_pkgs(DllInfo* dll){
+  SEXP pkg_ver_fn = SHIELD(find_pkg_fun("packageVersion", "utils", false));
+  SEXP fp_str = SHIELD(make_utf8_str("fastplyr"));
+  SEXP expr = SHIELD(Rf_lang2(pkg_ver_fn, fp_str));
+  SEXP pkg_ver = SHIELD(Rf_eval(expr, R_BaseEnv));
+  SEXP single_pkg_ver = SHIELD(cpp_paste(pkg_ver, R_BlankScalarString, R_BlankScalarString));
+  std::string pkg_ver_str = CHAR(STRING_ELT(single_pkg_ver, 0));
+
+  if (pkg_ver_str < "0991"){
+    YIELD(5);
+    Rf_error(
+      "fastplyr version >= 0.9.91 is needed with this version of cheapr, please install it using `install.packages('fastplyr')`"
+    );
+  }
+  YIELD(5);
+}
+
 [[cpp11::register]]
 bool cpp_is_simple_atomic_vec(SEXP x){
   return cheapr_is_simple_atomic_vec(x);

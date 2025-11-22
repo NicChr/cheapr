@@ -2,7 +2,7 @@
 #define CHEAPR_VARIADIC_H
 
 #include <core.h>
-#include "decls.h"
+#include "declarations.h"
 
 template<typename... Args>
 inline SEXP r_combine(Args... args){

@@ -1,5 +1,5 @@
 #include <core.h>
-#include "decls.h"
+#include "declarations.h"
 #include <R_ext/Rdynload.h> // For DllInfo on R 3.3
 
 // -----------------------------------------------------------------------------
