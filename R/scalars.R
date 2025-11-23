@@ -94,22 +94,10 @@ na_count <- num_na
 #' @rdname scalars
 #' @export
 na_find <- function(x, invert = FALSE){
-  if (invert){
-    which_not_na(x)
-  } else {
-    which_na(x)
-  }
+  val_find(x, NA, invert = invert)
 }
 #' @rdname scalars
 #' @export
 na_rm <- function(x){
-
-  ## This part is for legacy reasons
-  ## Some users might be using `na_rm` to remove empty rows of a data frame
-  if (inherits(x, "data.frame")){
-    sset(x, val_find(row_all_na(x), FALSE))
-  } else {
-    .Call(`_cheapr_cpp_val_remove`, x, NA)
-  }
-
+  sset(x, na_find(x, invert = TRUE))
 }
