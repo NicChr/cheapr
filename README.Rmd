@@ -46,13 +46,14 @@ remotes::install_github("NicChr/cheapr")
 ```
 
 cheapr is primarily an extension to R for developers that want to write
-clean, fast and safe code without sacrificing any one of these core design 
-principles. 
+clean, fast and safe code without sacrificing any one of these core
+design principles.
 
-cheapr includes both an R API in the usual form of an R package, as well as 
-a C++ API for writing C++ code. It can be used interchangeably with the
-R C API, Rcpp and cpp11 because all return types are either `SEXP` (R object in C) or
-basic C/C++ types. The biggest requirement is that C++17 or later is needed.
+cheapr includes both an R API in the usual form of an R package, as well
+as a C++ API for writing C++ code. It can be used interchangeably with
+the R C API, Rcpp and cpp11 because all return types are either `SEXP`
+(R object in C) or basic C/C++ types. The biggest requirement is that
+C++17 or later is needed.
 
 Let's first load the required packages
 
@@ -63,19 +64,22 @@ library(bench)
 
 ### Using the cheapr C++ API
 
-To install cheapr and make use of its C++ functionality you'll need C++17 or later.
+To install cheapr and make use of its C++ functionality you'll need
+C++17 or later.
 
-For help on getting started with C++ in R, see [Getting started with cpp11](https://cpp11.r-lib.org/articles/cpp11.html)
+For help on getting started with C++ in R, see [Getting started with
+cpp11](https://cpp11.r-lib.org/articles/cpp11.html)
 
-All the public user-facing C++ code is included in inst/include. To make use
-of the API, simply include the cheapr API header file.
+All the public user-facing C++ code is included in inst/include. To make
+use of the API, simply include the cheapr API header file.
 
-After this you have to link to cheapr either via the description file if writing an
-R package 
+After this you have to link to cheapr either via the description file if
+writing an R package
 
 `LinkingTo: cheapr`
 
-or by including the cpp11 tag `[[cpp11::linking_to("cheapr")]]` in your C++ code.
+or by including the cpp11 tag `[[cpp11::linking_to("cheapr")]]` in your
+C++ code.
 
 ```{r}
 
@@ -83,6 +87,7 @@ setup_code <- '
 #include <cpp11.hpp>
 #include <cheapr_api.h>
 [[cpp11::linking_to("cheapr")]]
+using namespace cheapr;
 using namespace cpp11;
 
 '
@@ -107,9 +112,8 @@ cpp11::cpp_source(
 foo()
 ```
 
-Write `using namespace cheapr` to make cheapr C++ fns available without 
+Write `using namespace cheapr` to make cheapr C++ fns available without
 needing to use `cheapr::`
-
 
 ```{r}
 cpp11::cpp_source(
@@ -131,6 +135,88 @@ bar()
 ```
 
 cheapr has many useful C++ functions you can use in your own C++ code.
+
+One of the most powerful functions in cheapr's C++ API is `new_r_vec`
+which allows for creating R vectors by combining both C++ types 
+as well as other R vectors into one single R vector.
+
+```{r}
+cpp11::cpp_source(
+  code = paste_(
+    setup_code,
+    '
+  [[cpp11::register]]
+  sexp foo(){
+  return new_r_vec(1, 2, 3);
+  }
+  [[cpp11::register]]
+  sexp bar(){
+  return new_r_vec(arg("x") = 1, arg("y") = 2, arg("z") = 3);
+  }
+  [[cpp11::register]]
+  sexp foobar(){
+  return new_r_vec(1, R_NilValue, NA_INTEGER, "hello");
+  }
+  '
+  )
+  , 
+  cxx_std = "CXX17"
+)
+foo()
+bar()
+foobar() # Implicit cast to character
+```
+
+It acts like a C++ version of `base::c()` and utilises type-stable
+common-casting. For more info on casting see the 'Casting and Coercion'
+section further below.
+
+```{r}
+cpp11::cpp_source(
+  code = paste_(
+    setup_code,
+    '
+  [[cpp11::register]]
+  sexp foo(sexp x, sexp y){
+  return new_r_vec(arg("x") = x, arg("y") = y);
+  }
+  '
+  )
+  , 
+  cxx_std = "CXX17"
+)
+foo(pi, 1:3)
+```
+
+Similarly, `new_r_list` can create an R list from both C++ types and R
+vectors
+
+```{r}
+cpp11::cpp_source(
+  code = paste_(
+    setup_code,
+    '
+  [[cpp11::register]]
+  sexp foo(){
+  return new_r_list(
+  true, // bool
+  1, // int
+  2.5, // Double
+  3U, // Unsigned int
+  4LL, // long-long int
+  "hi", // const char *
+  make_utf8_char("hey"), // CHARSXP
+  make_utf8_str("hello") // STRSXP 
+  );
+  }
+  '
+  )
+  , 
+  cxx_std = "CXX17"
+)
+foo()
+foo() |> c_(.args = _)
+```
 
 Subsetting vectors with `sset()`
 
@@ -186,9 +272,10 @@ cpp_rep_len(x, 20)
 cpp_rep_each(x, 3)
 ```
 
-There are many more useful C++ functions in the API. Navigate to 
+There are many more useful C++ functions in the API. Navigate to
 inst/include to see all of them.
 
+### cheapr R API
 
 Some common R operations that cheapr can do much faster and more
 efficiently include:
@@ -214,7 +301,7 @@ efficiently include:
 
 -   Lags/leads
 
--  `integer64` support
+-   `integer64` support
 
 -   In-memory Math (no copies, vectors updated by reference)
 
@@ -398,7 +485,7 @@ x[TRUE]
 sset(x)
 ```
 
-## Combining vectors fast and consistently 
+## Combining vectors fast and consistently
 
 ```{r}
 x <- as_factor(letters)
@@ -441,7 +528,7 @@ sset(iris, 1:3, j = 1) |>
   col_c(sset(iris, 1:3, j = 2))
 ```
 
-## Casting and coercion
+## Casting and Coercion
 
 We can cast from one type to another with `cast()`
 
@@ -477,7 +564,6 @@ When common-casting factors, their levels are combined
 cast_common(fctr, as_factor(LETTERS))
 cast_common(as_factor(LETTERS), fctr)
 ```
-
 
 ## Vector and data frame lags with `lag_()`
 
