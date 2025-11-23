@@ -139,13 +139,6 @@ extern "C" SEXP _cheapr_cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na) 
   END_CPP11
 }
 // gcd.cpp
-double lcm2(double x, double y, double tol, bool na_rm);
-extern "C" SEXP _cheapr_lcm2(SEXP x, SEXP y, SEXP tol, SEXP na_rm) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(lcm2(cpp11::as_cpp<cpp11::decay_t<double>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(y), cpp11::as_cpp<cpp11::decay_t<double>>(tol), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
-  END_CPP11
-}
-// gcd.cpp
 SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round);
 extern "C" SEXP _cheapr_cpp_gcd(SEXP x, SEXP tol, SEXP na_rm, SEXP break_early, SEXP round) {
   BEGIN_CPP11
@@ -894,7 +887,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
-    {"_cheapr_lcm2",                        (DL_FUNC) &_cheapr_lcm2,                        4},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}

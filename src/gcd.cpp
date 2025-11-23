@@ -1,5 +1,7 @@
 #include "cheapr.h"
 
+using namespace cpp11;
+
 // Greatest common divisor and least (smallest) common multiple in R
 // Very safe, fast, efficient and works for bit64's vectors
 // Use `gcd()` for the GCD across a vector of numbers
@@ -76,10 +78,9 @@ int64_t gcd2_int64(int64_t x, int64_t y, bool na_rm){
   return x;
 }
 
-[[cpp11::register]]
 double lcm2(double x, double y, double tol, bool na_rm){
-  if (na_rm && ( !(x == x) || !(y == y) )){
-    return ( !(x == x) ? y : x);
+  if (na_rm && ( is_r_na(x) || is_r_na(y))){
+    return ( is_r_na(x) ? y : x);
   }
   if (x == 0.0 && y == 0.0){
     return 0.0;
@@ -114,10 +115,11 @@ int64_t lcm2_int64(int64_t x, int64_t y, bool na_rm){
 }
 
 double lcm2_int(int x, int y, bool na_rm){
-  int num_nas = (x == NA_INTEGER) + (y == NA_INTEGER);
+  int num_nas = is_r_na(x) + is_r_na(y);
+
   if ( num_nas >= 1 ){
     if (na_rm && num_nas == 1){
-      return (x == NA_INTEGER ? y : x);
+      return (is_r_na(x) ? y : x);
     } else {
       return NA_REAL;
     }
@@ -130,17 +132,19 @@ double lcm2_int(int x, int y, bool na_rm){
 
 [[cpp11::register]]
 SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
+
   if (tol < 0 || tol >= 1){
     Rf_error("tol must be >= 0 and < 1");
   }
-  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
 
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
     const int *p_x = INTEGER(x);
-    SEXP out = SHIELD(new_vec(INTSXP, n == 0 ? 0 : 1)); ++NP;
+
+    writable::integers out(n == 0 ? 0 : 1);
+
     if (n > 0){
       int gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
@@ -151,14 +155,15 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
       }
-      INTEGER(out)[0] = gcd;
+      out[0] = gcd;
     }
-    YIELD(NP);
     return out;
   }
   case CHEAPR_INT64SXP: {
     const int64_t *p_x = INTEGER64_PTR_RO(x);
-    SEXP out = SHIELD(new_vec(REALSXP, n == 0 ? 0 : 1)); ++NP;
+
+    writable::doubles out(n == 0 ? 0 : 1);
+
     if (n > 0){
       int64_t gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
@@ -169,21 +174,20 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
       }
-      REAL(out)[0] = as_double(gcd);
+      out[0] = as_double(gcd);
     }
-    YIELD(NP);
     return out;
   }
   default: {
     const double *p_x = REAL(x);
-    SEXP out = SHIELD(new_vec(REALSXP, n == 0 ? 0 : 1)); ++NP;
+    writable::doubles out(n == 0 ? 0 : 1);
     if (n > 0){
       double gcd = p_x[0];
       double agcd;
       for (R_xlen_t i = 1; i < n; ++i) {
         gcd = gcd2(gcd, p_x[i], tol, na_rm);
         agcd = std::fabs(gcd);
-        if ((!na_rm && !(gcd == gcd))){
+        if (!na_rm && is_r_na(gcd)){
           break;
         }
         if (break_early && agcd > 0.0 && agcd < (tol + tol)){
@@ -195,9 +199,8 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
         double factor = std::pow(10, std::ceil(std::fabs(std::log10(tol))) + 1);
         gcd = std::round(gcd * factor) / factor;
       }
-      REAL(out)[0] = gcd;
+      out[0] = gcd;
     }
-    YIELD(NP);
     return out;
   }
   }
@@ -211,14 +214,13 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     Rf_error("tol must be >= 0 and < 1");
   }
   R_xlen_t n = Rf_xlength(x);
-  int32_t NP = 0;
 
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
     int *p_x = INTEGER(x);
 
-    SEXP out;
+    sexp out = new_vec(INTSXP, 0);
 
     if (n > 0){
 
@@ -231,23 +233,14 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, as_int64(p_x[i]), na_rm);
       }
-      bool is_short = is_r_na(lcm) || is_integerable(lcm);
-      out = SHIELD(new_vec(is_short ? INTSXP : REALSXP, 1)); ++NP;
-      if (is_short){
-        INTEGER(out)[0] = as_int(lcm);
-      } else {
-        REAL(out)[0] = as_double(lcm);
-      }
-    } else {
-      out = SHIELD(new_vec(INTSXP, 0)); ++NP;
+      out = as_r_vec(lcm);
     }
-    YIELD(NP);
     return out;
   }
   case CHEAPR_INT64SXP: {
     int64_t *p_x = INTEGER64_PTR(x);
 
-    SEXP out = SHIELD(new_vec(REALSXP, n == 0 ? 0 : 1)); ++NP;
+    sexp out = new_vec(INTSXP, 0);
 
     if (n > 0){
       // Initialise first value as lcm
@@ -259,27 +252,26 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, p_x[i], na_rm);
       }
-      REAL(out)[0] = as_double(lcm);
+      out = as_r_vec(lcm);
     }
-    YIELD(NP);
     return out;
   }
   default: {
     double *p_x = REAL(x);
-    SEXP out = SHIELD(new_vec(REALSXP, n == 0 ? 0 : 1)); ++NP;
+    writable::doubles out(n == 0 ? 0 : 1);
+
     if (n > 0){
       double lcm = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
-        if (!na_rm && !(lcm == lcm)){
+        if (!na_rm && is_r_na(lcm)){
           lcm = NA_REAL;
           break;
         }
         lcm = lcm2(lcm, p_x[i], tol, na_rm);
-        if (lcm == R_PosInf || lcm == R_NegInf) break;
+        if (is_r_inf(lcm)) break;
       }
-      REAL(out)[0] = lcm;
+      out[0] = lcm;
     }
-    YIELD(NP);
     return out;
   }
   }
@@ -289,9 +281,11 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
 
 [[cpp11::register]]
 SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
+
   if (tol < 0 || tol >= 1){
     Rf_error("tol must be >= 0 and < 1");
   }
+
   int32_t NP = 0;
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t yn = Rf_xlength(y);
@@ -299,6 +293,7 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   if (xn == 0 || yn == 0){
     n = 0;
   }
+
   if (is_int64(x)){
     SHIELD(x = cpp_int64_to_double(x)); ++NP;
   }
@@ -377,7 +372,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(yi, yn),
     ++i){
       dbl_lcm = lcm2_int(p_x[xi], p_y[yi], na_rm);
-      if (!(dbl_lcm == dbl_lcm) || std::fabs(dbl_lcm) > int_max){
+      if (is_r_na(dbl_lcm)|| std::fabs(dbl_lcm) > int_max){
         p_out[i] = NA_INTEGER;
       } else {
         int_lcm = dbl_lcm;
