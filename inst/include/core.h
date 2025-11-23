@@ -352,8 +352,10 @@ inline SEXP as_r_scalar<int32_t>(int32_t x){
 }
 template<>
 inline SEXP as_r_scalar<int64_t>(int64_t x){
-  if (x <= INTEGER_MAX){
-    return Rf_ScalarInteger(static_cast<int32_t>(x));
+  if (is_r_na(x)){
+    return Rf_ScalarInteger(NA_INTEGER);
+  } else if (is_integerable(x)){
+    return Rf_ScalarInteger(static_cast<int>(x));
   } else {
     return Rf_ScalarReal(static_cast<double>(x));
   }
@@ -450,7 +452,7 @@ inline SEXP as_char(T x){
   if (is_r_na(x)){
    return NA_STRING;
   } else {
-    SEXP scalar = SHIELD(as_r_scalar(x));
+    SEXP scalar = SHIELD(as_r_vec(x));
     SEXP str = SHIELD(coerce_vec(scalar, STRSXP));
     SEXP out = STRING_ELT(str, 0);
     YIELD(2);
