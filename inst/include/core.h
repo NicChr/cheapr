@@ -34,6 +34,12 @@
 #define OMP_PARALLEL_FOR_SIMD
 #endif
 
+// Kept for dependency reasons
+
+#ifndef VECTOR_PTR_RO
+#define VECTOR_PTR_RO(x) ((const SEXP *) DATAPTR_RO(x))
+#endif
+
 namespace cheapr {
 
 // type-safe bool type, similar to Rboolean
@@ -66,9 +72,6 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 inline const Rcomplex NA_COMPLEX = {NA_REAL, NA_REAL};
 
 // Functions
-inline const SEXP* VECTOR_PTR_RO(SEXP x) {
-  return static_cast<const SEXP*>(DATAPTR_RO(x));
-}
 inline const SEXP* LIST_PTR_RO(SEXP x) {
   return static_cast<const SEXP*>(DATAPTR_RO(x));
 }
