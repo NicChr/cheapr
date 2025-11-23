@@ -66,6 +66,9 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 inline const Rcomplex NA_COMPLEX = {NA_REAL, NA_REAL};
 
 // Functions
+inline const SEXP* VECTOR_PTR_RO(SEXP x) {
+  return static_cast<const SEXP*>(DATAPTR_RO(x));
+}
 inline const SEXP* LIST_PTR_RO(SEXP x) {
   return static_cast<const SEXP*>(DATAPTR_RO(x));
 }
