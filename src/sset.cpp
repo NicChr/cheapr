@@ -342,7 +342,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
 // Converts logical to integer locations
 // Converts character to integer locations
 
-SEXP clean_locs(SEXP locs, SEXP x){
+SEXP cpp_clean_locs(SEXP locs, SEXP x){
 
   R_xlen_t xn = vector_length(x);
 

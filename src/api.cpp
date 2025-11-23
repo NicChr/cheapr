@@ -403,6 +403,15 @@ api_r_address(SEXP x) {
   }
 }
 
+SEXP
+api_clean_indices(SEXP locs, SEXP x){
+  try {
+    return cpp_clean_locs(locs, x);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // -----------------------------------------------------------------------------
 
 [[cpp11::init]]
@@ -451,4 +460,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_gcd",    (DL_FUNC)api_gcd);
   R_RegisterCCallable("cheapr", "api_vec_length",    (DL_FUNC)api_vec_length);
   R_RegisterCCallable("cheapr", "api_r_address",    (DL_FUNC)api_r_address);
+  R_RegisterCCallable("cheapr", "api_clean_indices",    (DL_FUNC)api_clean_indices);
 }

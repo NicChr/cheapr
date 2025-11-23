@@ -14,7 +14,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   int32_t NP = 0;
 
   // Clean where vector
-  SHIELD(where = clean_locs(where, x)); ++NP;
+  SHIELD(where = cpp_clean_locs(where, x)); ++NP;
   const int* RESTRICT p_where = INTEGER_RO(where);
 
   // Cast replacement to type of x

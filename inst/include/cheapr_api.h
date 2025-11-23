@@ -299,6 +299,13 @@ gcd(SEXP x, double tol, bool na_rm){
   return fn(x, tol, na_rm);
 }
 
+inline SEXP
+clean_indices(SEXP locs, SEXP x){
+  typedef SEXP fn_t(SEXP, SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_clean_indices");
+  return fn(locs, x);
+}
+
 // Deprecated, use cheapr::vector_length
 inline R_xlen_t
 vec_length(SEXP x){
