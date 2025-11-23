@@ -903,13 +903,11 @@ static const R_CallMethodDef CallEntries[] = {
 
 void api_init(DllInfo* dll);
 void init_assert_symmetric_r_types(DllInfo* dll);
-void check_r_pkgs(DllInfo* dll);
 
 extern "C" attribute_visible void R_init_cheapr(DllInfo* dll){
   R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, FALSE);
   api_init(dll);
   init_assert_symmetric_r_types(dll);
-  check_r_pkgs(dll);
   R_forceSymbols(dll, TRUE);
 }
