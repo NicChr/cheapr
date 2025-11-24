@@ -571,11 +571,7 @@ SEXP cpp_growth_rate(SEXP x){
 
 SEXP create_df_row_names(int n){
   if (n > 0){
-    SEXP out = SHIELD(new_vec(INTSXP, 2));
-    INTEGER(out)[0] = NA_INTEGER;
-    INTEGER(out)[1] = -n;
-    YIELD(1);
-    return out;
+    return new_r_vec(NA_INTEGER, -n);
   } else {
     return new_vec(INTSXP, 0);
   }
