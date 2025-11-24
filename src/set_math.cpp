@@ -556,7 +556,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
             tempx = p_x[i];
             mfactor = std::pow(10, p_digits[digitsi]);
             tempx *= mfactor;
-            tempx = round_nearest_even(tempx);
+            tempx = r_round(tempx);
             tempx /= mfactor;
             p_x[i] = tempx;
           } else {
@@ -573,7 +573,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
             tempx = p_x[i];
             mfactor = std::pow(10, p_digits[digitsi]);
             tempx *= mfactor;
-            tempx = round_nearest_even(tempx);
+            tempx = r_round(tempx);
             tempx /= mfactor;
             p_x[i] = tempx;
           } else {

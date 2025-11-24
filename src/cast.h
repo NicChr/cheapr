@@ -125,13 +125,57 @@ inline cheapr::r_type get_r_type(SEXP x) {
   }
 }
 
+inline const char* r_class(SEXP obj){
+  if (Rf_isObject(obj)){
+    return CHAR(STRING_ELT(Rf_getAttrib(obj, R_ClassSymbol), 0));
+  } else {
+    switch(TYPEOF(obj)) {
+    case CLOSXP:
+    case SPECIALSXP:
+    case BUILTINSXP: {
+      return "function";
+    }
+    case SYMSXP: {
+      return "name";
+    }
+    case OBJSXP: {
+      return Rf_isS4(obj) ? "S4" : "object";
+    }
+    case LGLSXP: {
+      return "logical";
+    }
+    case INTSXP: {
+      return "integer";
+    }
+    case REALSXP: {
+      return "numeric";
+    }
+    case STRSXP: {
+      return "character";
+    }
+    case CPLXSXP: {
+      return "complex";
+    }
+    case RAWSXP: {
+      return "raw";
+    }
+    case VECSXP: {
+      return "list";
+    }
+    default: {
+      return Rf_type2char(TYPEOF(obj));
+    }
+    }
+  }
+}
+
 inline const char *r_type_char(SEXP x){
 
   cheapr::r_type type = get_r_type(x);
 
   // If unknown type
   if (type == r_unk){
-    return cheapr::r_class(x);
+    return r_class(x);
   } else {
     return r_type_names[type];
   }
@@ -586,7 +630,7 @@ inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
 
 template<>
 inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
-  if (std::strcmp(cheapr::r_class(x), cheapr::r_class(y)) == 0){
+  if (std::strcmp(r_class(x), r_class(y)) == 0){
     return x;
   } else {
     SEXP base_cast = cheapr::SHIELD(cheapr::find_pkg_fun("base_cast", "cheapr", true));

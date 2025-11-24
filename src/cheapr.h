@@ -2,6 +2,7 @@
 #define CHEAPR_H
 
 #include <core.h>
+#include "internal_helpers.h"
 #include "types.h"
 #include "declarations.h"
 #include "variadic.h"

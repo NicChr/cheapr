@@ -526,7 +526,7 @@ double pretty_ceiling(double x){
 }
 
 bool can_be_int(double x, double tolerance){
-  return is_whole_number(x, tolerance) && is_integerable(x);
+  return is_r_whole_number(x, tolerance) && is_r_integerable(x);
 }
 
 double seq_end(double size, double from, double by){
@@ -659,13 +659,13 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
 
       scale = std::fabs(log10_scale(adj_width));
       scale_adj = std::pow(10.0, scale);
-      adj_width = round_nearest_even(adj_width * scale_adj);
+      adj_width = r_round(adj_width * scale_adj);
 
       // Not sure if adj_start needs rounding here
       adj_start *= scale_adj;
 
-      if (is_whole_number(adj_start, tol)){
-        adj_start = round_nearest_even(adj_start);
+      if (is_r_whole_number(adj_start, tol)){
+        adj_start = r_round(adj_start);
       }
       start *= scale_adj;
       end *= scale_adj;
@@ -730,9 +730,9 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     seq_from = R_NilValue, seq_width = R_NilValue;
 
     if (!scale_up && can_be_int(adj_width, tol) && can_be_int(adj_start, tol) &&
-       is_integerable(adj_end)){
-      adj_width = round_nearest_even(adj_width);
-      adj_start = round_nearest_even(adj_start);
+       is_r_integerable(adj_end)){
+      adj_width = r_round(adj_width);
+      adj_start = r_round(adj_start);
 
       seq_size = SHIELD(as_r_scalar<int>(n_breaks)); ++NP;
       seq_from = SHIELD(as_r_scalar<int>(adj_start)); ++NP;

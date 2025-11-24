@@ -110,11 +110,6 @@ inline constexpr bool between(T x, T lo, T hi) {
   return x >= lo && x <= hi;
 }
 
-template<typename T>
-inline constexpr bool is_integerable(T x){
-  return between<T>(x, INTEGER_MIN, INTEGER_MAX);
-}
-
 // Recycle loop indices
 template<typename T>
 inline constexpr void recycle_index(T& v, T size) {
@@ -143,18 +138,31 @@ inline const char* char_as_utf8(const char *x){
   return CHAR(Rf_mkCharCE(x, CE_UTF8));
 }
 
-// string paste helper
-inline void str_paste(std::string &x, const std::string &sep, const std::string &y){
-  x += sep;
-  x += y;
-}
-
 inline bool is_null(SEXP x){
   return x == R_NilValue;
 }
 
 inline bool is_altrep(SEXP x){
   return ALTREP(x);
+}
+
+inline bool is_simple_atomic_vec(SEXP x){
+  return (
+      Rf_isVectorAtomic(x) && (
+          !Rf_isObject(x) || (
+              Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
+              Rf_inherits(x, "POSIXct")
+          )
+      )
+  );
+}
+
+inline bool is_bare_list(SEXP x){
+  return (!Rf_isObject(x) && TYPEOF(x) == VECSXP);
+}
+
+inline bool is_simple_vec(SEXP x){
+  return (is_simple_atomic_vec(x) || is_bare_list(x));
 }
 
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
@@ -168,27 +176,12 @@ inline SEXP new_immutable_vec(SEXPTYPE type, R_xlen_t n){
   return out;
 }
 
-
 inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
   return Rf_coerceVector(x, type);
 }
 
-inline bool is_int64(SEXP x){
-  return Rf_isReal(x) && Rf_inherits(x, "integer64");
-}
-
-inline bool is_df(SEXP x){
-  return Rf_inherits(x, "data.frame");
-}
-
 inline int df_nrow(SEXP x){
   return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
-}
-
-inline void assert_charsxp(SEXP x){
-  if (TYPEOF(x) != CHARSXP){
-    Rf_error("`x` must be a CHARSXP, not a %s", Rf_type2char(TYPEOF(x)));
-  }
 }
 
 inline bool is_r_inf(const double& x){
@@ -357,7 +350,7 @@ template<>
 inline SEXP as_r_scalar<int64_t>(int64_t x){
   if (is_r_na(x)){
     return Rf_ScalarInteger(NA_INTEGER);
-  } else if (is_integerable(x)){
+  } else if (between<int64_t>(x, INTEGER_MIN, INTEGER_MAX)){
     return Rf_ScalarInteger(static_cast<int>(x));
   } else {
     return Rf_ScalarReal(static_cast<double>(x));
@@ -424,6 +417,10 @@ inline SEXP as_r_vec<SEXP>(SEXP x){
   }
 }
 
+// inline cpp11::sexp as_sexp<r_boolean>(SEXP x){
+//   cpp11::as_
+// }
+
 // Coerce functions that account for NA
 template<typename T>
 inline r_boolean as_r_boolean(T x){
@@ -465,26 +462,11 @@ inline SEXP as_char(T x){
 
 // R fns
 
-
-inline SEXP CHEAPR_CORES = R_NilValue;
-
-inline int num_cores(){
-  if (is_null(CHEAPR_CORES)){
-    CHEAPR_CORES = install_utf8("cheapr.cores");
-  }
-  int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
-  return n_cores >= 1 ? n_cores : 1;
-}
-
 // Memory address of R obj
 inline SEXP address(SEXP x) {
   static char buf[1000];
   snprintf(buf, 1000, "%p", (void*) x);
   return make_utf8_char(buf);
-}
-
-inline bool address_equal(SEXP x, SEXP y){
-  return address(x) == address(y);
 }
 
 // Return R function from a specified package
@@ -502,19 +484,12 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   return out;
 }
 
-inline R_xlen_t r_length(SEXP x){
-  SEXP length_fn = SHIELD(find_pkg_fun("length", "base", false));
-  SEXP expr = SHIELD(Rf_lang2(length_fn, x));
-  SEXP r_length = SHIELD(Rf_eval(expr, R_BaseEnv));
-  R_xlen_t out = TYPEOF(r_length) == INTSXP ? INTEGER(r_length)[0] : REAL(r_length)[0];
-  YIELD(3);
-  return out;
-}
+inline SEXP r_length_sym = R_NilValue;
 
 inline R_xlen_t vector_length(SEXP x){
   if (!Rf_isObject(x) || Rf_isVectorAtomic(x)){
     return Rf_xlength(x);
-  } else if (is_df(x)){
+  } else if (Rf_inherits(x, "data.frame")){
     return df_nrow(x);
     // Is x a list?
   } else if (TYPEOF(x) == VECSXP){
@@ -528,111 +503,29 @@ inline R_xlen_t vector_length(SEXP x){
       }
       return out;
     } else {
-      return r_length(x);
+      if (is_null(r_length_sym)){
+        SHIELD(r_length_sym = install_utf8("length"));
+      } else {
+        SHIELD(r_length_sym);
+      }
+      SEXP expr = SHIELD(Rf_lang2(r_length_sym, x));
+      SEXP r_len = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+      R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
+      YIELD(3);
+      return out;
     }
     // Catch-all
   } else {
-    return r_length(x);
-  }
-}
-
-// Definition of simple vector is one in which
-// - It is a vector or it is a list with no class
-// - Attributes are data-independent
-//
-// Care must be taken when combining different simple vectors
-// as attributes may only be applicable within a single vector
-// e.g. for factors (different levels) and POSIXct (different timezones)
-//
-
-inline bool is_simple_atomic_vec(SEXP x){
-  return (
-      Rf_isVectorAtomic(x) && (
-          !Rf_isObject(x) || (
-              Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
-              Rf_inherits(x, "POSIXct")
-          )
-      )
-  );
-}
-
-inline bool is_bare_list(SEXP x){
-  return (!Rf_isObject(x) && TYPEOF(x) == VECSXP);
-}
-
-inline bool is_bare_atomic(SEXP x){
-  return !Rf_isObject(x) && Rf_isVectorAtomic(x);
-}
-
-// Sometimes bare lists can be easily handled
-inline bool is_simple_vec(SEXP x){
-  return (is_simple_atomic_vec(x) || is_bare_list(x));
-}
-
-inline bool is_simple_atomic_vec2(SEXP x){
-  return is_simple_atomic_vec(x) || is_int64(x);
-}
-
-inline bool is_simple_vec2(SEXP x){
-  return is_simple_vec(x) || is_int64(x);
-}
-
-inline bool is_bare_df(SEXP x){
-  SEXP cls = Rf_getAttrib(x, R_ClassSymbol);
-  return Rf_length(cls) == 1 &&
-    std::strcmp(CHAR(STRING_ELT(cls, 0)), "data.frame") == 0;
-}
-
-inline bool is_bare_tbl(SEXP x){
-  SEXP xclass = Rf_getAttrib(x, R_ClassSymbol);
-
-  return Rf_length(xclass) == 3 &&
-    std::strcmp(CHAR(STRING_ELT(xclass, 0)), "tbl_df") == 0 &&
-    std::strcmp(CHAR(STRING_ELT(xclass, 1)), "tbl") == 0 &&
-    std::strcmp(CHAR(STRING_ELT(xclass, 2)), "data.frame") == 0;
-}
-
-inline const char* r_class(SEXP obj){
-  if (Rf_isObject(obj)){
-    return CHAR(STRING_ELT(Rf_getAttrib(obj, R_ClassSymbol), 0));
-  } else {
-    switch(TYPEOF(obj)) {
-    case CLOSXP:
-    case SPECIALSXP:
-    case BUILTINSXP: {
-      return "function";
+    if (is_null(r_length_sym)){
+      SHIELD(r_length_sym = install_utf8("length"));
+    } else {
+      SHIELD(r_length_sym);
     }
-    case SYMSXP: {
-      return "name";
-    }
-    case OBJSXP: {
-      return Rf_isS4(obj) ? "S4" : "object";
-    }
-    case LGLSXP: {
-      return "logical";
-    }
-    case INTSXP: {
-      return "integer";
-    }
-    case REALSXP: {
-      return "numeric";
-    }
-    case STRSXP: {
-      return "character";
-    }
-    case CPLXSXP: {
-      return "complex";
-    }
-    case RAWSXP: {
-      return "raw";
-    }
-    case VECSXP: {
-      return "list";
-    }
-    default: {
-      return Rf_type2char(TYPEOF(obj));
-    }
-    }
+    SEXP expr = SHIELD(Rf_lang2(r_length_sym, x));
+    SEXP r_len = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
+    YIELD(3);
+    return out;
   }
 }
 
@@ -651,28 +544,12 @@ inline bool has_names(SEXP x){
   return out;
 }
 
-template <typename T>
-inline int sign(T x) {
-  return (T(0) < x) - (x < T(0));
+inline double r_round(double x){
+  return is_r_na(x) ? na_type(x) : x - std::remainder(x, 1.0);
 }
 
-template<typename T>
-inline T negate(T x){
-  return -x;
-}
-
-// trunc but eliminates negative zeroes
-template<typename T>
-inline double trunc(T x){
-  return std::trunc(x) + 0.0;
-}
-
-inline double round_nearest_even(double x){
-  return x - std::remainder(x, 1.0);
-}
-
-inline bool is_whole_number(double x, double tolerance){
-  return (std::fabs(x - std::round(x)) < tolerance);
+inline bool is_r_whole_number(double x, double tolerance){
+  return std::fabs(x - std::round(x)) < tolerance;
 }
 
 inline SEXP deep_copy(SEXP x){
@@ -705,7 +582,7 @@ inline r_boolean vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
         any_na = true;
         continue;
       }
-      out = static_cast<r_boolean>(is_whole_number(p_x[i], tol_));
+      out = static_cast<r_boolean>(is_r_whole_number(p_x[i], tol_));
       if (out == r_false){
         break;
       }
@@ -762,7 +639,14 @@ inline void set_val(SEXP x, R_xlen_t i, bool val, int* p_x = nullptr){
     SET_LOGICAL_ELT(x, i, static_cast<int>(val));
   }
 }
-inline void set_val(SEXP x, R_xlen_t i, r_boolean val, int* p_x = nullptr){
+inline void set_val(SEXP x, R_xlen_t i, r_boolean val, r_boolean* p_x = nullptr){
+  if (p_x != nullptr){
+    p_x[i] = val;
+  } else {
+    SET_LOGICAL_ELT(x, i, static_cast<int>(val));
+  }
+}
+inline void set_val(SEXP x, R_xlen_t i, cpp11::r_bool val, int* p_x = nullptr){
   if (p_x != nullptr){
     p_x[i] = static_cast<int>(val);
   } else {
@@ -800,6 +684,9 @@ inline void set_val(SEXP x, R_xlen_t i, Rbyte val, Rbyte* p_x = nullptr){
 inline void set_val(SEXP x, R_xlen_t i, const char* val, const SEXP* p_x = nullptr){
   SET_STRING_ELT(x, i, make_utf8_char(val));
 }
+inline void set_val(SEXP x, R_xlen_t i, std::string val, const SEXP* p_x = nullptr){
+  SET_STRING_ELT(x, i, make_utf8_char(val.c_str()));
+}
 // Never use the pointer here to assign
 inline void set_val(SEXP x, R_xlen_t i, SEXP val, const SEXP *p_x = nullptr){
   switch (TYPEOF(x)){
@@ -829,12 +716,10 @@ struct arg {
   explicit arg(const char* n) : name(n), value(R_NilValue) {}
   explicit arg(const char* n, SEXP v) : name(n), value(v) {}
 
-  // template<typename T,
-  //          typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, arg>>>
-    template<typename T>
-    arg operator=(T v) const {
-      return arg(name, as_r_vec(v));
-    }
+  template<typename T>
+  arg operator=(T v) const {
+    return arg(name, as_r_vec(v));
+  }
 };
 
 // Variadic list constructor
