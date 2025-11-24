@@ -46,17 +46,17 @@ unnested_length(SEXP x){
 }
 
 inline SEXP
-drop_null(SEXP l, bool always_shallow_copy) {
+drop_null(SEXP list_of_vecs, bool always_shallow_copy) {
   typedef SEXP fn_t(SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_drop_null");
-  return fn(l, always_shallow_copy);
+  return fn(list_of_vecs, always_shallow_copy);
 }
 
 inline SEXP
-lengths(SEXP x, bool names){
+lengths(SEXP list_of_vecs, bool names){
   typedef SEXP fn_t(SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_lengths");
-  return fn(x, names);
+  return fn(list_of_vecs, names);
 }
 
 inline SEXP
@@ -137,24 +137,24 @@ rep_each(SEXP x, SEXP each){
 }
 
 inline SEXP
-recycle(SEXP x, SEXP length){
+recycle(SEXP list_of_vecs, SEXP length){
   typedef SEXP fn_t(SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_recycle");
-  return fn(x, length);
+  return fn(list_of_vecs, length);
 }
 
 inline SEXP
-c(SEXP x){
+c(SEXP list_of_vecs){
   typedef SEXP fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_c");
-  return fn(x);
+  return fn(list_of_vecs);
 }
 
 inline SEXP
-list_c(SEXP x){
+list_c(SEXP list_of_vecs){
   typedef SEXP fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_list_c");
-  return fn(x);
+  return fn(list_of_vecs);
 }
 
 inline SEXP
@@ -209,10 +209,10 @@ list_as_df(SEXP x){
 }
 
 inline SEXP
-new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
+new_df(SEXP list_of_vecs, SEXP nrows, bool recycle, bool name_repair){
   typedef SEXP fn_t(SEXP, SEXP, bool, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_new_df");
-  return fn(x, nrows, recycle, name_repair);
+  return fn(list_of_vecs, nrows, recycle, name_repair);
 }
 
 inline SEXP
@@ -244,17 +244,17 @@ df_assign_cols(SEXP x, SEXP cols){
 }
 
 inline SEXP
-df_col_c(SEXP x, bool recycle, bool name_repair){
+df_col_c(SEXP list_of_vecs, bool recycle, bool name_repair){
   typedef SEXP fn_t(SEXP, bool, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_df_col_c");
-  return fn(x, recycle, name_repair);
+  return fn(list_of_vecs, recycle, name_repair);
 }
 
 inline SEXP
-str_coalesce(SEXP x){
+str_coalesce(SEXP list_of_vecs){
   typedef SEXP fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_str_coalesce");
-  return fn(x);
+  return fn(list_of_vecs);
 }
 
 inline SEXP
@@ -332,6 +332,14 @@ template<typename... Args>
 SEXP new_r_vec(Args... args) {
   SEXP out = cheapr::SHIELD(cheapr::new_r_list(args...));
   cheapr::SHIELD(out = cheapr::c(out));
+  cheapr::YIELD(2);
+  return out;
+}
+
+template<typename... Args>
+SEXP new_r_df(Args... args) {
+  SEXP out = cheapr::SHIELD(cheapr::new_r_list(args...));
+  cheapr::SHIELD(out = new_df(out, R_NilValue, true, true));
   cheapr::YIELD(2);
   return out;
 }
