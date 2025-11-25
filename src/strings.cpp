@@ -1,4 +1,5 @@
 #include "cheapr.h"
+#include <R.h>
 
 // Coalesce a list of string vectors
 
@@ -25,12 +26,20 @@ SEXP cpp_str_coalesce(SEXP x){
   }
 
   const SEXP *p_chars = LIST_PTR_RO(chars);
-  std::vector<const SEXP *> char_ptrs(n_chars);
 
   // First cast all to character vectors
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
     SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], R_NilValue));
+  }
+
+  // The reason for not assigning these ptrs in the previous loop is because
+  // cast<> may fail and the R_Calloc'd memory will leak if this happens
+  // At this point onwards the code is assumed to be safe
+
+  const SEXP **char_ptrs = (const SEXP **) R_Calloc(n_chars, const SEXP *);
+
+  for (R_xlen_t i = 0; i < n_chars; ++i){
     char_ptrs[i] = STRING_PTR_RO(p_chars[i]);
   }
 
@@ -38,6 +47,7 @@ SEXP cpp_str_coalesce(SEXP x){
 
   if (n_strings == 0){
     SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    R_Free(char_ptrs);
     YIELD(NP);
     return out;
   }
@@ -62,6 +72,7 @@ SEXP cpp_str_coalesce(SEXP x){
       }
     }
   }
+  R_Free(char_ptrs);
   YIELD(NP);
   return out;
 }
@@ -96,12 +107,24 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   }
 
   const SEXP *p_chars = LIST_PTR_RO(chars);
-  std::vector<const SEXP *> char_ptrs(n_chars);
 
   // First cast all to character vectors
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
     SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], R_NilValue));
+  }
+
+  if (!is_null(collapse)){
+    SHIELD(collapse = cast<r_character_t>(collapse, R_NilValue)); ++NP;
+    if (Rf_length(collapse) != 1){
+      YIELD(NP);
+      Rf_error("`.collapse` must be a length 1 character vector in %s", __func__);
+    }
+  }
+
+  const SEXP **char_ptrs = (const SEXP **) R_Calloc(n_chars, const SEXP *);
+
+  for (R_xlen_t i = 0; i < n_chars; ++i){
     char_ptrs[i] = STRING_PTR_RO(p_chars[i]);
   }
 
@@ -109,6 +132,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
 
   if (n_strings == 0){
     SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    R_Free(char_ptrs);
     YIELD(NP);
     return out;
   }
@@ -118,12 +142,6 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   std::string strng = utf8_char(R_BlankString);
 
   if (!is_null(collapse)){
-
-    SHIELD(collapse = cast<r_character_t>(collapse, R_NilValue)); ++NP;
-    if (Rf_length(collapse) != 1){
-      YIELD(NP);
-      Rf_error("`.collapse` must be a length 1 character vector in %s", __func__);
-    }
 
     sep2 = utf8_char(STRING_ELT(collapse, 0));
 
@@ -136,7 +154,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
     }
 
     SEXP out = SHIELD(Rf_mkString(strng.c_str())); ++NP;
-
+    R_Free(char_ptrs);
     YIELD(NP);
     return out;
 
@@ -156,6 +174,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
       SET_STRING_ELT(out, j, Rf_mkChar(strng.c_str()));
     }
 
+    R_Free(char_ptrs);
     YIELD(NP);
     return out;
   }
