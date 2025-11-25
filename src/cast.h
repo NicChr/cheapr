@@ -633,11 +633,10 @@ inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
   if (std::strcmp(r_class(x), r_class(y)) == 0){
     return x;
   } else {
-    SEXP base_cast = cheapr::SHIELD(cheapr::find_pkg_fun("base_cast", "cheapr", true));
-    SEXP expr = cheapr::SHIELD(Rf_lang3(base_cast, x, y));
-    SEXP out = cheapr::SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP base_cast_fn = cheapr::SHIELD(cheapr::find_pkg_fun("base_cast", "cheapr", true));
+    SEXP out = cheapr::SHIELD(cheapr::eval_fun(base_cast_fn, R_GetCurrentEnv(), x, y));
     check_casted_length(x, out);
-    cheapr::YIELD(3);
+    cheapr::YIELD(2);
     return out;
   }
 }

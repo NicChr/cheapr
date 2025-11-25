@@ -232,20 +232,15 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     return out;
   }
   default: {
+    SEXP is_equal;
     if (cpp_all_na(value, true, false)){
-    SEXP expr = SHIELD(cheapr_is_na(x)); ++NP;
-    SEXP is_equal = SHIELD(Rf_eval(expr, R_GetCurrentEnv())); ++NP;
+      is_equal = SHIELD(cheapr_is_na(x)); ++NP;
+    } else {
+      is_equal = SHIELD(eval_pkg_fun("==", "base", R_GetCurrentEnv(), x, value)); ++NP;
+    }
     SEXP out = SHIELD(cpp_which_(is_equal, invert)); ++NP;
     YIELD(NP);
     return out;
-  } else {
-    SEXP expr = SHIELD(Rf_lang3(install_utf8("=="), x, value)); ++NP;
-    SEXP is_equal = SHIELD(Rf_eval(expr, R_GetCurrentEnv())); ++NP;
-    SEXP out = SHIELD(cpp_which_(is_equal, invert)); ++NP;
-    YIELD(NP);
-    return out;
-  }
-
   }
   }
 }

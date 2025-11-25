@@ -42,6 +42,35 @@ if (do_parallel){                                                         \
 }
 
 
+bool vec_any(SEXP x){
+  R_xlen_t n = Rf_xlength(x);
+  const r_boolean *p_x = BOOLEAN_RO(x);
+
+  bool out = false;
+  for (R_xlen_t i = 0; i < n; ++i){
+    if (p_x[i] == r_true){
+     out = true;
+      break;
+    }
+  }
+  return out;
+}
+
+bool vec_all(SEXP x){
+  R_xlen_t n = Rf_xlength(x);
+  const r_boolean *p_x = BOOLEAN_RO(x);
+
+  bool out = true;
+
+  for (R_xlen_t i = 0; i < n; ++i){
+    if (p_x[i] == r_false){
+      out = false;
+      break;
+    }
+  }
+  return out;
+}
+
 R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
@@ -162,8 +191,7 @@ bool cpp_any_na(SEXP x, bool recursive){
   }
   default: {
     SEXP is_missing = SHIELD(cheapr_is_na(x)); ++NP;
-    SEXP any_missing = SHIELD(cpp11::package("base")["any"](is_missing)); ++NP;
-    out = Rf_asLogical(any_missing);
+    out = vec_any(is_missing);
     break;
   }
   }
@@ -224,8 +252,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   }
   default: {
     SEXP is_missing = SHIELD(cheapr_is_na(x)); ++NP;
-    SEXP all_missing = SHIELD(cpp11::package("base")["all"](is_missing)); ++NP;
-    out = Rf_asLogical(all_missing);
+    out = vec_all(is_missing);
     break;
   }
   }
@@ -299,8 +326,7 @@ SEXP cpp_is_na(SEXP x){
   }
   }
   default: {
-    out = SHIELD(cpp11::package("base")["is.na"](x));
-    break;
+    return eval_pkg_fun("is.na", "base", R_GetCurrentEnv(), x);
   }
   }
   YIELD(1);
@@ -463,7 +489,6 @@ SEXP cpp_col_any_na(SEXP x, bool names){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
       SEXP is_missing = SHIELD(cheapr_is_na(p_x[j]));
-      cpp11::function r_any = cpp11::package("base")["any"]; ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_xlength(is_missing); ++NP;
@@ -472,8 +497,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
                  utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
       }
-      SEXP r_any_true = SHIELD(r_any(is_missing)); ++NP;
-      p_out[j] = Rf_asLogical(r_any_true);
+      p_out[j] = static_cast<int>(vec_any(is_missing));
     } else {
       bool any_na = false;
       bool all_na;
@@ -522,8 +546,6 @@ SEXP cpp_col_all_na(SEXP x, bool names){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
       SEXP is_missing = SHIELD(cheapr_is_na(p_x[j]));
-      cpp11::function r_all = cpp11::package("base")["all"];
-      ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_xlength(is_missing); ++NP;
@@ -532,8 +554,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
                  utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
       }
-      SEXP r_all_true = SHIELD(r_all(is_missing)); ++NP;
-      p_out[j] = Rf_asLogical(r_all_true);
+      p_out[j] = static_cast<int>(vec_all(is_missing));
     } else {
       bool all_na2 = true;
       bool all_na;

@@ -415,6 +415,7 @@ SEXP cpp_unique(SEXP x, bool names){
   bool is_simple = is_simple_atomic_vec(x);
 
   if (is_compact_seq(x)){
+    YIELD(NP);
     return x;
   } else if (is_simple && Rf_length(x) < 10000){
     SEXP dup = SHIELD(Rf_duplicated(x, FALSE)); ++NP;
@@ -434,26 +435,13 @@ SEXP cpp_unique(SEXP x, bool names){
       return out;
     }
   } else if (is_simple){
-    SEXP out = SHIELD(cheapr_fast_unique(x)); ++NP;
-    if (names){
-      SEXP names = SHIELD(get_names(x)); ++NP;
-      SHIELD(names = cheapr_fast_unique(names)); ++NP;
-      set_names(out, names);
-    }
+    SEXP out = SHIELD(eval_pkg_fun("unique_", "cheapr", R_GetCurrentEnv(), x)); ++NP;
     YIELD(NP);
     return out;
   } else {
-    SEXP out = SHIELD(cpp11::package("base")["unique"](x)); ++NP;
-    if (names){
-      SEXP names = SHIELD(cpp11::package("base")["names"](x)); ++NP;
-      SHIELD(names = cheapr_fast_unique(names)); ++NP;
-      SHIELD(out = cpp11::package("base")["names<-"](out, names)); ++NP;
-      YIELD(NP);
-      return out;
-    } else {
-      YIELD(NP);
-      return out;
-    }
+    SEXP out = SHIELD(eval_pkg_fun("unique", "base", R_GetCurrentEnv(), x)); ++NP;
+    YIELD(NP);
+    return out;
   }
 }
 

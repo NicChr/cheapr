@@ -760,6 +760,104 @@ inline SEXP new_r_list(Args... args) {
   }
 }
 
+template<typename... Args>
+inline SEXP new_r_pairlist(Args... args) {
+  constexpr int n = sizeof...(args);
+
+  if (n == 0){
+    return Rf_allocList(0);
+  } else {
+    SEXP out = SHIELD(Rf_allocList(n));
+
+    SEXP current = out;
+
+    (([&]() {
+      if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
+        SETCAR(current, args.value);
+        SET_TAG(current, install_utf8(args.name));
+      } else {
+        SETCAR(current, as_r_vec(args));
+      }
+      current = CDR(current);
+    }()), ...);
+
+    YIELD(1);
+    return out;
+  }
+}
+
+template<typename... Args>
+inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
+  // Expression
+  SEXP call = SHIELD(LCONS(r_fn, new_r_pairlist(args...)));
+  // Evaluate exxpression
+  SEXP out = SHIELD(Rf_eval(call, envir));
+
+  YIELD(2);
+  return out;
+}
+
+
+// template<typename... Args>
+// inline SEXP eval_fn2(SEXP r_fn, SEXP envir, Args... args){
+//   constexpr int n = sizeof...(args);
+//
+//   // Pairlist expression
+//   SEXP call = SHIELD(LCONS(r_fn, Rf_allocList(n)));
+//
+//   // Fill in the arguments
+//   SEXP current = CDR(call);
+//   int i = 0;
+//
+//   (([&]() {
+//     if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
+//       SETCAR(current, args.value);
+//       SET_TAG(current, install_utf8(args.name));
+//     } else {
+//       SETCAR(current, as_r_vec(args));
+//     }
+//     current = CDR(current);
+//     ++i;
+//   }()), ...);
+//
+//   // Evaluate exxpression
+//   SEXP out = SHIELD(Rf_eval(call, envir));
+//
+//   YIELD(2);
+//   return out;
+// }
+// template<typename... Args>
+// inline SEXP eval_pkg_fn(const char* fn, const char* pkg, SEXP envir, Args... args){
+//   constexpr int n = sizeof...(args);
+//
+//   // package:::function
+//   SEXP fun = SHIELD(find_pkg_fun(fn, pkg, true));
+//
+//   // Pairlist expression
+//   SEXP call = SHIELD(LCONS(fun, Rf_allocList(n)));
+//
+//   // Fill in the arguments
+//   SEXP current = CDR(call);
+//   int i = 0;
+//
+//   (([&]() {
+//     if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
+//       SETCAR(current, args.value);
+//       SET_TAG(current, install_utf8(args.name));
+//     } else {
+//       SETCAR(current, as_r_vec(args));
+//     }
+//     current = CDR(current);
+//     ++i;
+//   }()), ...);
+//
+//   // Evaluate the call
+//   SEXP out = SHIELD(Rf_eval(call, envir));
+//
+//   YIELD(3);
+//   return out;
+// }
+
 } // End of cheapr namespace
 
 #endif

@@ -14,12 +14,7 @@ SEXP compact_seq_len(R_xlen_t n){
   if (n == 0){
     return new_vec(INTSXP, 0);
   }
-  SEXP start = SHIELD(as_r_scalar(1));
-  SEXP end = SHIELD(as_r_scalar(n));
-  SEXP expr = SHIELD(Rf_lang3(Rf_install(":"), start, end));
-  SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
-  YIELD(4);
-  return out;
+  return eval_pkg_fun(":", "base", R_BaseEnv, 1, n);
 }
 
 // Helper to convert altrep sequences into the final subsetted length
@@ -1527,14 +1522,8 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 
         // Combine all args into one list
         SEXP all_args = SHIELD(new_r_vec(usual_args, args)); ++NP;
-        SEXP get_fn_expr = SHIELD(find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
-        SEXP cheapr_sset_fn = SHIELD(Rf_eval(get_fn_expr, R_BaseEnv)); ++NP;
-
-        SEXP expr = SHIELD(Rf_lang3(
-          install_utf8("do.call"), cheapr_sset_fn, all_args
-        )); ++NP;
-        SEXP env = SHIELD(R_GetCurrentEnv()); ++NP;
-        SHIELD(out = Rf_eval(expr, env)); ++NP;
+        SEXP cheapr_sset_fn = SHIELD(find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
+        SHIELD(out = eval_pkg_fun("do.call", "base", R_GetCurrentEnv(), cheapr_sset_fn, all_args)); ++NP;
       }
     }
   } else {
@@ -1550,14 +1539,8 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 
       // Combine all args into one list
       SEXP all_args = SHIELD(new_r_vec(usual_args, args)); ++NP;
-      SEXP get_fn_expr = SHIELD(find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
-      SEXP cheapr_sset_fn = SHIELD(Rf_eval(get_fn_expr, R_BaseEnv)); ++NP;
-
-      SEXP expr = SHIELD(Rf_lang3(
-        install_utf8("do.call"), cheapr_sset_fn, all_args
-      )); ++NP;
-      SEXP env = SHIELD(R_GetCurrentEnv()); ++NP;
-      SHIELD(out = Rf_eval(expr, env)); ++NP;
+      SEXP cheapr_sset_fn = SHIELD(find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
+      SHIELD(out = eval_pkg_fun("do.call", "base", R_GetCurrentEnv(), cheapr_sset_fn, all_args)); ++NP;
     }
   }
   YIELD(NP);

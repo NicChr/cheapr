@@ -94,8 +94,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     if (cpp_all_na(value, true, false)){
     count = na_count(x, false);
   } else {
-    SEXP expr = SHIELD(Rf_lang3(install_utf8("=="), x, value)); ++NP;
-    SEXP is_equal = SHIELD(Rf_eval(expr, R_GetCurrentEnv())); ++NP;
+    SEXP is_equal = SHIELD(eval_pkg_fun("==", "base", R_GetCurrentEnv(), x, value)); ++NP;
     count = cpp_sum(is_equal);
   }
     break;

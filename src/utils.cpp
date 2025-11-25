@@ -759,11 +759,7 @@ SEXP get_vec_names(SEXP x){
       return get_names(x);
     }
     case r_unk: {
-      SEXP r_names_fn = SHIELD(find_pkg_fun("names", "base", false));
-      SEXP expr = SHIELD(Rf_lang2(r_names_fn, x));
-      SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
-      YIELD(3);
-      return out;
+      return eval_pkg_fun("names", "base", R_GetCurrentEnv(), x);
     }
     }
     return R_NilValue;
@@ -791,11 +787,7 @@ SEXP set_vec_names(SEXP x, SEXP names){
       return out;
     }
     case r_unk: {
-      SEXP r_names_fn = SHIELD(find_pkg_fun("names<-", "base", false));
-      SEXP expr = SHIELD(Rf_lang3(r_names_fn, x, names));
-      SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
-      YIELD(3);
-      return out;
+      return eval_pkg_fun("names<-", "base", R_GetCurrentEnv(), x, names);
     }
     }
     return R_NilValue;

@@ -33,12 +33,18 @@ inline int num_cores(){
   return n_cores >= 1 ? n_cores : 1;
 }
 
+template<typename... Args>
+inline SEXP eval_pkg_fun(const char* fn, const char* pkg, SEXP envir, Args... args){
+  SEXP r_fn = SHIELD(find_pkg_fun(fn, pkg, true));
+  SEXP out = SHIELD(eval_fun(r_fn, envir, args...));
+  YIELD(2);
+  return out;
+}
+
 inline R_xlen_t r_length(SEXP x){
-  SEXP length_fn = SHIELD(find_pkg_fun("length", "base", false));
-  SEXP expr = SHIELD(Rf_lang2(length_fn, x));
-  SEXP r_length = SHIELD(Rf_eval(expr, R_BaseEnv));
+  SEXP r_length = SHIELD(eval_pkg_fun("length", "base", R_BaseEnv, x));
   R_xlen_t out = TYPEOF(r_length) == INTSXP ? INTEGER(r_length)[0] : REAL(r_length)[0];
-  YIELD(3);
+  YIELD(1);
   return out;
 }
 

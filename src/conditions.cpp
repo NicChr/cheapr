@@ -414,15 +414,11 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     YIELD(NP);
     return out;
   } else {
-    SEXP if_else_fn = SHIELD(find_pkg_fun("if_else2", "cheapr", true)); ++NP;
-
     // We're calling an R function instead of doing it here in C/C++
     // to take advantage of the fact that `[<-` avoids creating copies due to
     // correct reference-tracking in R
     // If we call `[<-` directly then unnecessary copies are made
-
-    SEXP expr = SHIELD(Rf_lang5(if_else_fn, condition, yes, no, na)); ++NP;
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv())); ++NP;
+    SEXP out = SHIELD(eval_pkg_fun("if_else2", "cheapr", R_GetCurrentEnv(), yes, no, na)); ++NP;
     YIELD(NP);
     return out;
   }

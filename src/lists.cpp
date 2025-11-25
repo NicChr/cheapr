@@ -697,14 +697,12 @@ SEXP cpp_as_df(SEXP x){
   } else if (is_bare_list(x)){
     return cpp_new_df(x, R_NilValue, true, true);
   } else {
-    SEXP base_as_df = SHIELD(find_pkg_fun("as.data.frame", "base", false));
-    SEXP expr = SHIELD(Rf_lang2(base_as_df, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(eval_pkg_fun("as.data.frame", "base", R_GetCurrentEnv(), x));
     SEXP col_seq = SHIELD(cpp_seq_len(Rf_length(out)));
     SEXP col_str = SHIELD(make_utf8_str("col_"));
     SEXP new_names = SHIELD(r_paste(R_BlankScalarString, R_NilValue, col_str, col_seq));
     set_names(out, new_names);
-    YIELD(6);
+    YIELD(4);
     return out;
   }
 }
