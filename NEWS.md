@@ -98,8 +98,11 @@ for a long while.
 later. This means that you can't for example install both fastplyr 0.9.9 and 
 cheapr 1.3.2
 
-- Matrices are converted to data frames and arrays are converted to bare vectors 
+- Matrices and arrays are explicitly converted to vectors 
 when using data frames via `new_df` and other data frame constructors.
+Since the internal structure of a matrix is a vector with dimension attributes 
+it is much more efficient to treat it as a vector. 
+To work with rectangular data in cheapr it is advised to use data frames. 
 
 - `enframe_()`, `deframe_()` and `cut_numeric()` have been removed as they have
 been deprecated for a while.

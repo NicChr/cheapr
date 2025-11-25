@@ -495,147 +495,17 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 
 // Data-frames
 
-SEXP matrix_to_df(SEXP x){
-  if (!Rf_isMatrix(x)){
-    Rf_error("`x` must be a `matrix`");
-  }
-  int32_t NP = 0;
-  SEXP dim = SHIELD(Rf_getAttrib(x, R_DimSymbol)); ++NP;
-  SEXP dimnames = SHIELD(Rf_getAttrib(x, R_DimNamesSymbol)); ++NP;
-  SEXP tsp = SHIELD(Rf_getAttrib(x, R_TspSymbol)); ++NP;
-
-  int nrows = INTEGER(dim)[0];
-  int ncols = INTEGER(dim)[1];
-
-  SEXP r_nrows = SHIELD(as_r_scalar(nrows)); ++NP;
-
-  // Initialise data frame
-  SEXP out = SHIELD(init<r_list_t>(ncols, false)); ++NP;
-  if (!is_null(dimnames)){
-    set_names(out, VECTOR_ELT(dimnames, 1));
-  }
-
-  R_xlen_t k = 0;
-
-  SEXP vec;
-  PROTECT_INDEX vec_idx;
-  R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
-
-  int vec_type = TYPEOF(x);
-
-  switch (vec_type){
-  case NILSXP: {
-    break;
-  }
-  case LGLSXP:
-  case INTSXP: {
-    int *p_x = INTEGER(x);
-
-    for (int j = 0; j < ncols; ++j){
-      R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
-      int* RESTRICT p_vec = INTEGER(vec);
-
-      for (int i = 0; i < nrows; ++i, ++k){
-        p_vec[i] = p_x[k];
-      }
-      SET_VECTOR_ELT(out, j, vec);
-    }
-    break;
-  }
-  case REALSXP: {
-    double *p_x = REAL(x);
-
-    for (int j = 0; j < ncols; ++j){
-      R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
-      double* RESTRICT p_vec = REAL(vec);
-
-      for (int i = 0; i < nrows; ++i, ++k){
-        p_vec[i] = p_x[k];
-      }
-      SET_VECTOR_ELT(out, j, vec);
-    }
-    break;
-  }
-  case STRSXP: {
-    const SEXP *p_x = STRING_PTR_RO(x);
-    for (int j = 0; j < ncols; ++j){
-      R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
-
-      for (int i = 0; i < nrows; ++i, ++k){
-        SET_STRING_ELT(vec, i, p_x[k]);
-      }
-      SET_VECTOR_ELT(out, j, vec);
-    }
-    break;
-  }
-  case RAWSXP: {
-    const Rbyte *p_x = RAW_RO(x);
-    for (int j = 0; j < ncols; ++j){
-      R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
-
-      for (int i = 0; i < nrows; ++i, ++k){
-        SET_RAW_ELT(vec, i, p_x[k]);
-      }
-      SET_VECTOR_ELT(out, j, vec);
-    }
-    break;
-  }
-  case CPLXSXP: {
-    const Rcomplex *p_x = COMPLEX_RO(x);
-    for (int j = 0; j < ncols; ++j){
-      R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
-
-      for (int i = 0; i < nrows; ++i, ++k){
-        SET_COMPLEX_ELT(vec, i, p_x[k]);
-      }
-      SET_VECTOR_ELT(out, j, vec);
-    }
-  }
-  case VECSXP: {
-    const SEXP *p_x = LIST_PTR_RO(x);
-    for (int j = 0; j < ncols; ++j){
-      R_Reprotect(vec = new_vec(vec_type, nrows), vec_idx);
-
-      for (int i = 0; i < nrows; ++i, ++k){
-        SET_VECTOR_ELT(vec, i, p_x[k]);
-      }
-      SET_VECTOR_ELT(out, j, vec);
-    }
-    break;
-  }
-  default: {
-    YIELD(NP);
-    Rf_error("%s Cannot handle type: %s", __func__, Rf_type2char(vec_type));
-  }
-  }
-
-  SHIELD(out = cpp_new_df(out, r_nrows, false, true)); ++NP;
-  if (Rf_isTs(x) && !is_null(tsp)){
-    for (int j = 0; j < ncols; ++j){
-      Rf_setAttrib(VECTOR_ELT(out, j), R_TspSymbol, tsp);
-      Rf_classgets(VECTOR_ELT(out, j), make_utf8_str("ts"));
-    }
-  }
-  YIELD(NP);
-  return out;
-}
-
 // Remove dimensions from arrays
 // because cheapr doesn't work with arrays
 SEXP maybe_cast_array(SEXP x){
   if (!Rf_isArray(x)){
     return x;
   } else {
-    if (Rf_isMatrix(x)){
-      cpp11::message("cheapr pkg cannot handle matrices. Matrix will be converted to a data frame");
-      return matrix_to_df(x);
-    } else {
-      cpp11::message("cheapr pkg cannot handle arrays. Array will be converted to a vector");
-      SEXP out = SHIELD(Rf_shallow_duplicate(x));
-      clear_attributes(out);
-      YIELD(1);
-      return out;
-    }
+    Rprintf("cheapr pkg cannot handle arrays. Array will be converted to a vector\n");
+    SEXP out = SHIELD(Rf_shallow_duplicate(x));
+    clear_attributes(out);
+    YIELD(1);
+    return out;
   }
 }
 
@@ -811,7 +681,10 @@ SEXP cpp_as_df(SEXP x){
   } else if (is_null(x)){
     return init<r_data_frame_t>(0, false);
   } else if (Rf_isArray(x)){
-    return matrix_to_df(x);
+    SEXP vec = SHIELD(maybe_cast_array(x));
+    SEXP out = SHIELD(cpp_as_df(vec));
+    YIELD(2);
+    return out;
   } else if (is_simple_atomic_vec2(x)){
     SEXP x_names = SHIELD(get_names(x));
     SEXP out = SHIELD(new_r_list(
