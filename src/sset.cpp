@@ -99,8 +99,10 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
   R_xlen_t i = 0, k = 0;
 
   // Which elements do we keep?
-  std::vector<uint8_t> keep(n);
-  std::fill(keep.begin(), keep.end(), 1);
+  uint8_t *keep = (uint8_t *) R_Calloc(n, uint8_t);
+  if (n > 0){
+    std::memset(keep, 1, n);
+  }
 
   if (xn > INTEGER_MAX){
     SHIELD(exclude = coerce_vec(exclude, REALSXP)); ++NP;
@@ -109,6 +111,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     for (int j = 0; j < m; ++j) {
       if (is_r_na(p_excl[j])) continue;
       if (p_excl[j] > 0){
+        R_Free(keep);
         YIELD(NP);
         Rf_error("Cannot mix positive and negative subscripts");
       }
@@ -128,6 +131,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       }
       ++i;
     }
+    R_Free(keep);
     YIELD(NP);
     return out;
   } else {
@@ -136,6 +140,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     for (int j = 0; j < m; ++j) {
       if (is_r_na(p_excl[j])) continue;
       if (p_excl[j] > 0){
+        R_Free(keep);
         YIELD(NP);
         Rf_error("Cannot mix positive and negative subscripts");
       }
@@ -154,6 +159,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
         p_out[k++] = i;
       }
     }
+    R_Free(keep);
     YIELD(NP);
     return out;
   }
