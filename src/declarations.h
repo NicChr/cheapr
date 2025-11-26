@@ -33,7 +33,7 @@ SEXP create_df_row_names(int n);
 SEXP cpp_shallow_copy(SEXP x);
 SEXP exclude_locs(SEXP exclude, R_xlen_t xn);
 R_xlen_t unnested_length(SEXP x);
-SEXP cpp_drop_null(SEXP l, bool always_shallow_copy);
+SEXP cpp_drop_null(SEXP l);
 SEXP cpp_lengths(SEXP x, bool names);
 SEXP sset_vec(SEXP x, SEXP indices, bool check);
 SEXP cpp_sset(SEXP x, SEXP indices, bool check);

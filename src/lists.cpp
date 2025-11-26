@@ -94,32 +94,26 @@ uint_fast64_t null_count(SEXP x){
 // Remove NULL elements from list
 
 [[cpp11::register]]
-SEXP cpp_drop_null(SEXP l, bool always_shallow_copy){
-  const SEXP *p_l = LIST_PTR_RO(l);
-  uint_fast64_t n = Rf_xlength(l);
-  uint_fast64_t n_null = null_count(l);
+SEXP cpp_drop_null(SEXP x){
+  const SEXP *p_l = LIST_PTR_RO(x);
+  uint_fast64_t n = Rf_xlength(x);
+  uint_fast64_t n_null = null_count(x);
+  SEXP names = SHIELD(get_names(x));
 
   if (n_null == 0){
     // Always return a plain-list
-    if (!always_shallow_copy && is_bare_list(l)){
-      return l;
-    } else {
-      SEXP out = SHIELD(new_vec(VECSXP, n));
-      for (uint_fast64_t i = 0; i < n; ++i) SET_VECTOR_ELT(out, i, p_l[i]);
-      SEXP names = SHIELD(get_names(l));
-      set_names(out, names);
-      YIELD(2);
-      return out;
-    }
+    SEXP out = SHIELD(new_vec(VECSXP, n));
+    for (uint_fast64_t i = 0; i < n; ++i) SET_VECTOR_ELT(out, i, p_l[i]);
+    set_names(out, names);
+    YIELD(2);
+    return out;
   }
 
-  uint_fast64_t n_keep = n - n_null;
-  uint_fast64_t k = 0;
 
   // Subset on both the list and names of the list
-
+  uint_fast64_t n_keep = n - n_null;
+  uint_fast64_t k = 0;
   SEXP out = SHIELD(new_vec(VECSXP, n_keep));
-  SEXP names = SHIELD(get_names(l));
 
   if (is_null(names)){
     for (uint_fast64_t i = 0; i < n; ++i){
@@ -142,7 +136,6 @@ SEXP cpp_drop_null(SEXP l, bool always_shallow_copy){
     return out;
   }
 }
-
 
 SEXP which_not_null(SEXP x){
   const SEXP *p_x = LIST_PTR_RO(x);
@@ -306,7 +299,24 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     SET_STRING_ELT(out_names, i, p_names[i]);
   }
 
-  cpp11::writable::integers null_locs;
+  int null_count = 0;
+
+  for (int j = 0; j < n_cols; ++j){
+
+    // If loc == NA then we're adding a new element
+    // otherwise we're modifying an existing one
+    loc = p_add_locs[j];
+
+    if (is_r_na(loc) && is_null(p_y[j])){
+      ++null_count;
+    } else {
+      null_count += is_null(p_y[j]);
+    }
+  }
+
+  SEXP null_locs = SHIELD(new_vec(INTSXP, null_count)); ++NP;
+  int *p_null_locs = INTEGER(null_locs);
+  int nulli = 0;
 
   for (int j = 0; j < n_cols; ++j){
 
@@ -316,21 +326,21 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 
     if (is_r_na(loc)){
       if (is_null(p_y[j])){
-        null_locs.push_back(-(n + 1));
+        p_null_locs[nulli++] = -(n + 1);
       }
       SET_VECTOR_ELT(out, n, p_y[j]);
       SET_STRING_ELT(out_names, n, p_col_names[j]);
       ++n;
     } else {
       if (is_null(p_y[j])){
-        null_locs.push_back(-loc);
+        p_null_locs[nulli++] = -loc;
       }
       --loc;
       SET_VECTOR_ELT(out, loc, p_y[j]);
       SET_STRING_ELT(out_names, loc, p_col_names[j]);
     }
   }
-  if (null_locs.size() != 0){
+  if (null_count != 0){
     SEXP keep = SHIELD(exclude_locs(null_locs, out_size)); ++NP;
     SHIELD(out = sset_vec(out, keep, false)); ++NP;
     SHIELD(out_names = sset_vec(out_names, keep, false)); ++NP;
@@ -510,7 +520,9 @@ SEXP maybe_cast_array(SEXP x){
 }
 
 
-// Same as above but always in-place so assuming no NULL elements
+// in-place convert list to df
+// No recycling and assumes no elements
+// must be a clean data frame like list
 void set_list_as_df(SEXP x) {
   int N; // Number of rows
   int32_t NP = 0; // Number of protects
@@ -537,14 +549,12 @@ void set_list_as_df(SEXP x) {
   YIELD(NP);
 }
 
-// Can use in the future once I figure out how to re-write named_list() in C++
-
 [[cpp11::register]]
 SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
 
   int32_t NP = 0;
 
-  SEXP out = SHIELD(cpp_drop_null(x, true)); ++NP;
+  SEXP out = SHIELD(cpp_drop_null(x)); ++NP;
 
   // Remove array dimensions
 

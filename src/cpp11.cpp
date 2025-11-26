@@ -265,10 +265,10 @@ extern "C" SEXP _cheapr_cpp_new_list(SEXP size, SEXP default_value) {
   END_CPP11
 }
 // lists.cpp
-SEXP cpp_drop_null(SEXP l, bool always_shallow_copy);
-extern "C" SEXP _cheapr_cpp_drop_null(SEXP l, SEXP always_shallow_copy) {
+SEXP cpp_drop_null(SEXP x);
+extern "C" SEXP _cheapr_cpp_drop_null(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_drop_null(cpp11::as_cpp<cpp11::decay_t<SEXP>>(l), cpp11::as_cpp<cpp11::decay_t<bool>>(always_shallow_copy)));
+    return cpp11::as_sexp(cpp_drop_null(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // lists.cpp
@@ -799,7 +799,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_df_select",               (DL_FUNC) &_cheapr_cpp_df_select,               2},
     {"_cheapr_cpp_df_slice",                (DL_FUNC) &_cheapr_cpp_df_slice,                3},
     {"_cheapr_cpp_df_subset",               (DL_FUNC) &_cheapr_cpp_df_subset,               4},
-    {"_cheapr_cpp_drop_null",               (DL_FUNC) &_cheapr_cpp_drop_null,               2},
+    {"_cheapr_cpp_drop_null",               (DL_FUNC) &_cheapr_cpp_drop_null,               1},
     {"_cheapr_cpp_fixed_width_breaks",      (DL_FUNC) &_cheapr_cpp_fixed_width_breaks,      6},
     {"_cheapr_cpp_format_numeric_as_int64", (DL_FUNC) &_cheapr_cpp_format_numeric_as_int64, 1},
     {"_cheapr_cpp_gcd",                     (DL_FUNC) &_cheapr_cpp_gcd,                     5},

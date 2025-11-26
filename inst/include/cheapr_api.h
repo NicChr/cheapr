@@ -46,10 +46,10 @@ unnested_length(SEXP x){
 }
 
 inline SEXP
-drop_null(SEXP list_of_vecs, bool always_shallow_copy) {
-  typedef SEXP fn_t(SEXP, bool);
+drop_null(SEXP list_of_vecs) {
+  typedef SEXP fn_t(SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_drop_null");
-  return fn(list_of_vecs, always_shallow_copy);
+  return fn(list_of_vecs);
 }
 
 inline SEXP

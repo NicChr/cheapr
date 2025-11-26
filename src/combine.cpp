@@ -387,7 +387,7 @@ void recycle_in_place(SEXP x, R_xlen_t n){
 [[cpp11::register]]
 SEXP cpp_recycle(SEXP x, SEXP length){
 
-  SEXP out = SHIELD(cpp_drop_null(x, true));
+  SEXP out = SHIELD(cpp_drop_null(x));
 
   int n = 0;
 

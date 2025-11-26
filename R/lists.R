@@ -80,6 +80,4 @@ list_combine <- function(..., .args = NULL){
 
 #' @export
 #' @rdname lists
-list_drop_null <- function(x){
-  .Call(`_cheapr_cpp_drop_null`, x, FALSE)
-}
+list_drop_null <- cpp_drop_null

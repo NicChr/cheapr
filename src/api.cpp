@@ -51,9 +51,9 @@ api_unnested_length(SEXP x){
 }
 
 SEXP
-api_drop_null(SEXP l, bool always_shallow_copy) {
+api_drop_null(SEXP l) {
   try {
-    return cpp_drop_null(l, always_shallow_copy);
+    return cpp_drop_null(l);
   } catch (...) {
     return R_NilValue;
   }
