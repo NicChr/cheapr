@@ -126,7 +126,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   }
   default: {
-    SEXP is_missing = SHIELD(cheapr_is_na(x)); ++NP;
+    SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), x)); ++NP;
     SEXP r_true = SHIELD(as_r_scalar(true)); ++NP;
     count = scalar_count(is_missing, r_true, true);
     break;
@@ -190,7 +190,7 @@ bool cpp_any_na(SEXP x, bool recursive){
   }
   }
   default: {
-    SEXP is_missing = SHIELD(cheapr_is_na(x)); ++NP;
+    SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), x)); ++NP;
     out = vec_any(is_missing);
     break;
   }
@@ -251,7 +251,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   }
   }
   default: {
-    SEXP is_missing = SHIELD(cheapr_is_na(x)); ++NP;
+    SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), x)); ++NP;
     out = vec_all(is_missing);
     break;
   }
@@ -393,7 +393,8 @@ SEXP cpp_df_row_na_counts(SEXP x){
     }
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = SHIELD(cheapr_is_na(p_x[j])); ++NP;
+
+      SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_length(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_length(is_missing); ++NP;
@@ -440,7 +441,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = SHIELD(cheapr_is_na(p_x[j])); ++NP;
+      SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_length(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_length(is_missing); ++NP;
@@ -488,7 +489,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = SHIELD(cheapr_is_na(p_x[j]));
+      SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_xlength(is_missing); ++NP;
@@ -545,7 +546,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
       if (Rf_isObject(p_x[j])){
-      SEXP is_missing = SHIELD(cheapr_is_na(p_x[j]));
+      SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
         int element_length = Rf_xlength(is_missing); ++NP;

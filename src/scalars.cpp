@@ -406,7 +406,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     default: {
       SEXP sexp_n_vals = SHIELD(as_r_scalar<double>(n_vals)); ++NP;
       SEXP val_locs = SHIELD(cpp_val_find(x, value, true, sexp_n_vals)); ++NP;
-      out = SHIELD(cheapr_sset(x, val_locs)); ++NP;
+      out = SHIELD(eval_pkg_fun("cheapr_sset", "cheapr", R_GetCurrentEnv(), x, val_locs)); ++NP;
       break;
     }
     }

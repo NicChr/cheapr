@@ -742,7 +742,7 @@ SEXP match(SEXP y, SEXP x, int no_match){
   if (Rf_xlength(x) < 100000 && Rf_xlength(y) < 100000){
     return Rf_match(y, x, no_match);
   } else {
-    return cheapr_fast_match(x, y, no_match);
+    return eval_pkg_fun("fast_match", "cheapr", R_GetCurrentEnv(), x, y, no_match);
   }
 }
 

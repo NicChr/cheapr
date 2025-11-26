@@ -234,7 +234,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   default: {
     SEXP is_equal;
     if (cpp_all_na(value, true, false)){
-      is_equal = SHIELD(cheapr_is_na(x)); ++NP;
+      is_equal = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), x)); ++NP;
     } else {
       is_equal = SHIELD(eval_pkg_fun("==", "base", R_GetCurrentEnv(), x, value)); ++NP;
     }

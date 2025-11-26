@@ -1512,7 +1512,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       SHIELD(out = cpp_df_subset(x, i, j, check)); ++NP;
     } else {
       if (Rf_length(args) == 0){
-        SHIELD(out = cheapr_sset(x, i, j)); ++NP;
+        SHIELD(out = eval_pkg_fun("cheapr_sset", "cheapr", R_GetCurrentEnv(), x, i, j)); ++NP;
       } else {
         SEXP usual_args = SHIELD(new_r_list(
           arg("x") = x,
@@ -1529,7 +1529,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
   } else {
     // Fall-back to `cheapr_sset()` S3 methods
     if (Rf_length(args) == 0){
-      SHIELD(out = cheapr_sset(x, i, j)); ++NP;
+      SHIELD(out = eval_pkg_fun("cheapr_sset", "cheapr", R_GetCurrentEnv(), x, i, j)); ++NP;
     } else {
       SEXP usual_args = SHIELD(new_r_list(
         arg("x") = x,
