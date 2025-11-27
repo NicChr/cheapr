@@ -790,7 +790,7 @@ template<typename... Args>
 inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
   // Expression
   SEXP call = SHIELD(LCONS(r_fn, new_r_pairlist(args...)));
-  // Evaluate exxpression
+  // Evaluate expression
   SEXP out = SHIELD(Rf_eval(call, envir));
 
   YIELD(2);
@@ -828,40 +828,7 @@ r_safe_impl(                                                                 \
     -> decltype(F(std::forward<decltype(args)>(args)...)) {                  \
       return F(std::forward<decltype(args)>(args)...);                       \
     }                                                                        \
-)                                                              \
-
-template <typename... Args>
-void r_stop(const char* fmt, Args&&... args) {
-  cpp11::unwind_protect([&] {
-    Rf_error(fmt, std::forward<Args>(args)...);
-  });
-}
-
-// template <typename F>
-// auto r_safe_impl(F f) {
-//   return [f](auto&&... args)
-//     -> decltype(f(std::forward<decltype(args)>(args)...)) {
-//
-//       using result_t = decltype(f(std::forward<decltype(args)>(args)...));
-//
-//       return cpp11::unwind_protect([&]() -> result_t {
-//         return f(std::forward<decltype(args)>(args)...);
-//       });
-//     };
-// }
-
-// C++20 only
-// Working..
-// r_safe(F)
-// ([&]<class... Args>(Args&&... args)
-//    -> decltype(F(std::forward<Args>(args)...)) {
-//
-//      using result_t = decltype(F(std::forward<Args>(args)...));
-//
-//      return cpp11::unwind_protect([&]() -> result_t {
-//        return F(std::forward<Args>(args)...);
-//      });
-//    })
+)
 
 } // End of cheapr namespace
 
