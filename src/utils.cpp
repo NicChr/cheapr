@@ -818,6 +818,6 @@ SEXP cheapr_unsafe_init_memory_leak(){
   SEXP repl = r_safe(SHIELD)(r_safe(new_r_vec)(-1));
   r_safe(replace_in_place)(r_ints, seq, repl, true);
   r_safe(YIELD)(3);
-  r_safe(Rf_error)("%s", "Expected error! This should not cause a C++ memory leak");
+  Rf_error("%s", "Expected error! This will cause a C++ memory leak");
   return r_ints; // Never reached
 }
