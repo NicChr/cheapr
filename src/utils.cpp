@@ -304,52 +304,52 @@ double var_sum_squared_diff(SEXP x, double mu){
 // The main difference is that codes or breaks can be returned efficiently
 // Values outside the (right or left) intervals can be included too
 
-#define CHEAPR_BIN_CODES                                                                                \
-for (R_xlen_t i = 0; i < n; ++i) {                                                                      \
-  p_out[i] = na_type(p_out[0]);                                                                         \
+#define CHEAPR_BIN_CODES                                                                                  \
+for (R_xlen_t i = 0; i < n; ++i) {                                                                        \
+  p_out[i] = na_type(p_out[0]);                                                                           \
   if (!is_r_na(p_x[i])) {                                                                                 \
-    lo = 0;                                                                                             \
-    hi = nb1;                                                                                           \
-    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||          \
-         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                              \
-      p_out[i] = (left ? hi : lo) + 1;                                                                  \
-    }                                                                                                   \
-    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                  \
-             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                      \
-      while (hi - lo >= 2) {                                                                            \
-        cutpoint = (hi + lo)/2;                                                                         \
-        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                \
-          lo = cutpoint;                                                                                \
-        else                                                                                            \
-          hi = cutpoint;                                                                                \
-      }                                                                                                 \
-      p_out[i] = lo + 1 + (right && include_oob);                                                       \
-    }                                                                                                   \
-  }                                                                                                     \
+    lo = 0;                                                                                               \
+    hi = nb1;                                                                                             \
+    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||            \
+         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                                \
+      p_out[i] = (left ? hi : lo) + 1;                                                                    \
+    }                                                                                                     \
+    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                    \
+             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                        \
+      while (hi - lo >= 2) {                                                                              \
+        cutpoint = (hi + lo)/2;                                                                           \
+        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                  \
+          lo = cutpoint;                                                                                  \
+        else                                                                                              \
+          hi = cutpoint;                                                                                  \
+      }                                                                                                   \
+      p_out[i] = lo + 1 + (right && include_oob);                                                         \
+    }                                                                                                     \
+  }                                                                                                       \
 }
 
-#define CHEAPR_BIN_NCODES                                                                                                            \
-for (R_xlen_t i = 0; i < n; ++i) {                                                                                                   \
-  p_out[i] = na_type(p_out[0]);                                                                                                      \
+#define CHEAPR_BIN_NCODES                                                                                                              \
+for (R_xlen_t i = 0; i < n; ++i) {                                                                                                     \
+  p_out[i] = na_type(p_out[0]);                                                                                                        \
   if (!is_r_na(p_x[i])) {                                                                                                              \
-    lo = 0;                                                                                                                          \
-    hi = nb1;                                                                                                                        \
-    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||                                       \
-         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                                                           \
-      p_out[i] = p_b[(left ? hi : lo)];                                                                                              \
-    }                                                                                                                                \
-    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                                               \
-             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                                                   \
-      while (hi - lo >= 2) {                                                                                                         \
-        cutpoint = (hi + lo)/2;                                                                                                      \
-        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                                             \
-          lo = cutpoint;                                                                                                             \
-        else                                                                                                                         \
-          hi = cutpoint;                                                                                                             \
-      }                                                                                                                              \
-      p_out[i] = p_b[lo + (right && include_oob)];                                                                                   \
-    }                                                                                                                                \
-  }                                                                                                                                  \
+    lo = 0;                                                                                                                            \
+    hi = nb1;                                                                                                                          \
+    if ( (include_oob && !include_border && (left ? p_x[i] == p_b[hi] : p_x[i] == p_b[lo])) ||                                         \
+         ((include_oob && (left ? p_x[i] > p_b[hi] : p_x[i] < p_b[lo])))){                                                             \
+      p_out[i] = p_b[(left ? hi : lo)];                                                                                                \
+    }                                                                                                                                  \
+    else if (!(p_x[i] < p_b[lo] || p_x[i] > p_b[hi] ||                                                                                 \
+             (p_x[i] == p_b[left ? hi : lo] && !include_border))){                                                                     \
+      while (hi - lo >= 2) {                                                                                                           \
+        cutpoint = (hi + lo)/2;                                                                                                        \
+        if (p_x[i] > p_b[cutpoint] || (left && p_x[i] == p_b[cutpoint]))                                                               \
+          lo = cutpoint;                                                                                                               \
+        else                                                                                                                           \
+          hi = cutpoint;                                                                                                               \
+      }                                                                                                                                \
+      p_out[i] = p_b[lo + (right && include_oob)];                                                                                     \
+    }                                                                                                                                  \
+  }                                                                                                                                    \
 }
 
 [[cpp11::register]]
@@ -800,6 +800,18 @@ bool vec_has_names(SEXP x){
 
 [[cpp11::register]]
 SEXP cheapr_do_memory_leak_test(){
+  std::vector<int> ints(1000);
+  SEXP r_ints = r_safe(SHIELD)(r_safe(new_vec)(INTSXP, ints.size()));
+  SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
+  SEXP repl = r_safe(SHIELD)(r_safe(new_r_vec)(-1));
+  r_safe(replace_in_place)(r_ints, seq, repl, true);
+  r_safe(YIELD)(3);
+  r_safe(Rf_error)("%s", "Expected error! This should not cause a C++ memory leak");
+  return r_ints; // Never reached
+}
+
+[[cpp11::register]]
+SEXP cheapr_unsafe_init_memory_leak(){
   std::vector<int> ints(1000);
   SEXP r_ints = r_safe(SHIELD)(r_safe(new_vec)(INTSXP, ints.size()));
   SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));

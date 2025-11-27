@@ -424,6 +424,10 @@ cheapr_do_memory_leak_test <- function() {
   .Call(`_cheapr_cheapr_do_memory_leak_test`)
 }
 
+cheapr_unsafe_init_memory_leak <- function() {
+  .Call(`_cheapr_cheapr_unsafe_init_memory_leak`)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }
