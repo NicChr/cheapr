@@ -797,66 +797,71 @@ inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
   return out;
 }
 
+// Wrap any callable f, and return a new callable that:
+//   - takes (auto&&... args)
+//   - calls f(args...) inside cpp11::unwind_protect
 
-// template<typename... Args>
-// inline SEXP eval_fn2(SEXP r_fn, SEXP envir, Args... args){
-//   constexpr int n = sizeof...(args);
+// Like cpp11::safe but works also  for variadic fns
+template <typename F>
+auto r_safe_impl(F f) {
+  return [f](auto&&... args)
+    -> decltype(f(std::forward<decltype(args)>(args)...)) {
+
+      using result_t = decltype(f(std::forward<decltype(args)>(args)...));
+
+      if constexpr (std::is_void_v<result_t>) {
+        cpp11::unwind_protect([&] {
+          f(std::forward<decltype(args)>(args)...);
+        });
+        // no return; result_t is void
+      } else {
+        return cpp11::unwind_protect([&]() -> result_t {
+          return f(std::forward<decltype(args)>(args)...);
+        });
+      }
+    };
+}
+
+#define r_safe(F)                                                            \
+r_safe_impl(                                                                 \
+  [&](auto&&... args)                                                        \
+    -> decltype(F(std::forward<decltype(args)>(args)...)) {                  \
+      return F(std::forward<decltype(args)>(args)...);                       \
+    }                                                                        \
+)                                                              \
+
+template <typename... Args>
+void r_stop(const char* fmt, Args&&... args) {
+  cpp11::unwind_protect([&] {
+    Rf_error(fmt, std::forward<Args>(args)...);
+  });
+}
+
+// template <typename F>
+// auto r_safe_impl(F f) {
+//   return [f](auto&&... args)
+//     -> decltype(f(std::forward<decltype(args)>(args)...)) {
 //
-//   // Pairlist expression
-//   SEXP call = SHIELD(LCONS(r_fn, Rf_allocList(n)));
+//       using result_t = decltype(f(std::forward<decltype(args)>(args)...));
 //
-//   // Fill in the arguments
-//   SEXP current = CDR(call);
-//   int i = 0;
-//
-//   (([&]() {
-//     if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
-//       SETCAR(current, args.value);
-//       SET_TAG(current, install_utf8(args.name));
-//     } else {
-//       SETCAR(current, as_r_vec(args));
-//     }
-//     current = CDR(current);
-//     ++i;
-//   }()), ...);
-//
-//   // Evaluate exxpression
-//   SEXP out = SHIELD(Rf_eval(call, envir));
-//
-//   YIELD(2);
-//   return out;
+//       return cpp11::unwind_protect([&]() -> result_t {
+//         return f(std::forward<decltype(args)>(args)...);
+//       });
+//     };
 // }
-// template<typename... Args>
-// inline SEXP eval_pkg_fn(const char* fn, const char* pkg, SEXP envir, Args... args){
-//   constexpr int n = sizeof...(args);
+
+// C++20 only
+// Working..
+// r_safe(F)
+// ([&]<class... Args>(Args&&... args)
+//    -> decltype(F(std::forward<Args>(args)...)) {
 //
-//   // package:::function
-//   SEXP fun = SHIELD(find_pkg_fun(fn, pkg, true));
+//      using result_t = decltype(F(std::forward<Args>(args)...));
 //
-//   // Pairlist expression
-//   SEXP call = SHIELD(LCONS(fun, Rf_allocList(n)));
-//
-//   // Fill in the arguments
-//   SEXP current = CDR(call);
-//   int i = 0;
-//
-//   (([&]() {
-//     if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
-//       SETCAR(current, args.value);
-//       SET_TAG(current, install_utf8(args.name));
-//     } else {
-//       SETCAR(current, as_r_vec(args));
-//     }
-//     current = CDR(current);
-//     ++i;
-//   }()), ...);
-//
-//   // Evaluate the call
-//   SEXP out = SHIELD(Rf_eval(call, envir));
-//
-//   YIELD(3);
-//   return out;
-// }
+//      return cpp11::unwind_protect([&]() -> result_t {
+//        return F(std::forward<Args>(args)...);
+//      });
+//    })
 
 } // End of cheapr namespace
 

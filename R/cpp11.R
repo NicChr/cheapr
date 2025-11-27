@@ -420,6 +420,10 @@ cpp_is_whole_number <- function(x, tol_, na_rm_) {
   .Call(`_cheapr_cpp_is_whole_number`, x, tol_, na_rm_)
 }
 
+cheapr_do_memory_leak_test <- function() {
+  .Call(`_cheapr_cheapr_do_memory_leak_test`)
+}
+
 cpp_which_ <- function(x, invert) {
   .Call(`_cheapr_cpp_which_`, x, invert)
 }

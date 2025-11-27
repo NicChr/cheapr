@@ -50,25 +50,76 @@ clean, fast and safe code without sacrificing any one of these core
 design principles.
 
 cheapr includes both an R API in the usual form of an R package, as well
-as a C++ API for writing C++ code. It can be used interchangeably with
-the R C API, Rcpp and cpp11 because all return types are either `SEXP`
-(R object in C) or basic C/C++ types. The biggest requirement is that
-C++17 or later is needed.
+as a C++ API for writing C/C++ code. It can be used interchangeably with
+the R C API. C++17 or later is required to install and use cheapr.
+
+**Important note:** While cheapr makes heavy usage of C++ templates and
+variadic functions, it still internally uses the R C API only and throws
+R errors via `Rf_error()`. This means that even though C++ templates are
+heavily used, it still remains effectively a 'pure C' extension to the R
+C API.
+
+### Using C++ with cheapr
+
+cheapr tries to strike a nice balance between speed, readability, safety
+and flexibility. To achieve that speed and efficiency, we have opted to
+internally rely on the R C API entirely. This doesn't come without its
+tradeoffs, the biggest one being that using cheapr with C++ or cpp11
+becomes more complicated and requires using `cheapr::r_safe`
+
+When using C++ objects like for example std::string or cpp11::integers
+you must call any pure R C function or any cheapr function with either
+`cpp11::safe` or `cheapr::r_safe`. They both attempt to do the same
+thing, catch any errors thrown by R and run any C++ destructors to make
+sure no memory allocated to a C++ object is leaked. For more info see
+cpp11's FAQ section 15 [Should I call cpp11::unwind_protect()
+manually?](https://cpp11.r-lib.org/articles/FAQ.html) The only
+difference is that `r_safe` can accept template functions, which cheapr
+makes heavy use of.
+
+### DONT
+
+``` cpp
+#include <cpp11.hpp>
+#include <cheapr_api.h>
+
+cpp11::integers foo(cpp11::integers x){
+  return cheapr::sset(x, 1, true); // First value of x
+}
+```
+
+### DO
+
+``` cpp
+#include <cpp11.hpp>
+#include <cheapr_api.h>
+
+cpp11::integers foo(cpp11::integers x){
+  return cheapr::r_safe(cheapr::sset)(x, 1, true); // First value of x
+}
+```
+
+### OR
+
+``` cpp
+#include <cheapr_api.h>
+
+SEXP foo(SEXP x){
+  return cheapr::sset(x, 1, true); // First value of x
+}
+```
+
+For help on getting started with C++ in R, see [Getting started with
+cpp11](https://cpp11.r-lib.org/articles/cpp11.html)
+
+### Using the cheapr C++ API
 
 Let's first load the required packages
 
 ```{r}
-library(cheapr)
+library(cheapr) 
 library(bench)
 ```
-
-### Using the cheapr C++ API
-
-To install cheapr and make use of its C++ functionality you'll need
-C++17 or later.
-
-For help on getting started with C++ in R, see [Getting started with
-cpp11](https://cpp11.r-lib.org/articles/cpp11.html)
 
 All the public user-facing C++ code is included in inst/include. To make
 use of the API, simply include the cheapr API header file.
@@ -84,7 +135,6 @@ C++ code.
 ```{r}
 
 setup_code <- '
-#include <cpp11.hpp>
 #include <cheapr_api.h>
 [[cpp11::linking_to("cheapr")]]
 using namespace cheapr;
@@ -137,8 +187,8 @@ bar()
 cheapr has many useful C++ functions you can use in your own C++ code.
 
 One of the most powerful functions in cheapr's C++ API is `new_r_vec`
-which allows for creating R vectors by combining both C++ types 
-as well as other R vectors into one single R vector.
+which allows for creating R vectors by combining both C++ types as well
+as other R vectors into one single R vector.
 
 ```{r}
 cpp11::cpp_source(
@@ -146,15 +196,15 @@ cpp11::cpp_source(
     setup_code,
     '
   [[cpp11::register]]
-  sexp foo(){
+  SEXP foo(){
   return new_r_vec(1, 2, 3);
   }
   [[cpp11::register]]
-  sexp bar(){
+  SEXP bar(){
   return new_r_vec(arg("x") = 1, arg("y") = 2, arg("z") = 3);
   }
   [[cpp11::register]]
-  sexp foobar(){
+  SEXP foobar(){
   return new_r_vec(1, R_NilValue, NA_INTEGER, "hello");
   }
   '
@@ -177,7 +227,7 @@ cpp11::cpp_source(
     setup_code,
     '
   [[cpp11::register]]
-  sexp foo(sexp x, sexp y){
+  SEXP foo(SEXP x, SEXP y){
   return new_r_vec(arg("x") = x, arg("y") = y);
   }
   '
@@ -197,7 +247,7 @@ cpp11::cpp_source(
     setup_code,
     '
   [[cpp11::register]]
-  sexp foo(){
+  SEXP foo(){
   return new_r_list(
   true, // bool
   1, // int
@@ -226,7 +276,7 @@ cpp11::cpp_source(
         setup_code,
         '
   [[cpp11::register]]
-  sexp foobar(sexp x, sexp i){
+  SEXP foobar(SEXP x, SEXP i){
   return cheapr::sset(x, i, true);
   }
   '
@@ -250,15 +300,15 @@ cpp11::cpp_source(
         setup_code,
         '
   [[cpp11::register]]
-  sexp cpp_rep(sexp x, sexp times){
+  SEXP cpp_rep(SEXP x, SEXP times){
   return cheapr::rep(x, times);
   }
     [[cpp11::register]]
-  sexp cpp_rep_len(sexp x, int64_t n){
+  SEXP cpp_rep_len(SEXP x, int64_t n){
   return cheapr::rep_len(x, n);
   }
     [[cpp11::register]]
-  sexp cpp_rep_each(sexp x, sexp each){
+  SEXP cpp_rep_each(SEXP x, SEXP each){
   return cheapr::rep_each(x, each);
   }
   '

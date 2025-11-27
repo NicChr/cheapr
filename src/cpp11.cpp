@@ -741,6 +741,13 @@ extern "C" SEXP _cheapr_cpp_is_whole_number(SEXP x, SEXP tol_, SEXP na_rm_) {
     return cpp11::as_sexp(cpp_is_whole_number(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<double>>(tol_), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm_)));
   END_CPP11
 }
+// utils.cpp
+SEXP cheapr_do_memory_leak_test();
+extern "C" SEXP _cheapr_cheapr_do_memory_leak_test() {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cheapr_do_memory_leak_test());
+  END_CPP11
+}
 // which.cpp
 SEXP cpp_which_(SEXP x, bool invert);
 extern "C" SEXP _cheapr_cpp_which_(SEXP x, SEXP invert) {
@@ -779,6 +786,7 @@ extern "C" SEXP _cheapr_cpp_lgl_locs(SEXP x, SEXP n_true, SEXP n_false, SEXP inc
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
+    {"_cheapr_cheapr_do_memory_leak_test",  (DL_FUNC) &_cheapr_cheapr_do_memory_leak_test,  0},
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},

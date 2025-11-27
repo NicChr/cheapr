@@ -797,3 +797,15 @@ SEXP set_vec_names(SEXP x, SEXP names){
 bool vec_has_names(SEXP x){
   return !is_null(get_vec_names(x));
 }
+
+[[cpp11::register]]
+SEXP cheapr_do_memory_leak_test(){
+  std::vector<int> ints(1000);
+  SEXP r_ints = r_safe(SHIELD)(r_safe(new_vec)(INTSXP, ints.size()));
+  SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
+  SEXP repl = r_safe(SHIELD)(r_safe(new_r_vec)(-1));
+  r_safe(replace_in_place)(r_ints, seq, repl, true);
+  r_safe(YIELD)(3);
+  r_stop("Expected error! This should not cause a C++ memory leak");
+  return r_ints; // Never reached
+}
