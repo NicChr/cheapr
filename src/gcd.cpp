@@ -1,7 +1,5 @@
 #include "cheapr.h"
 
-using namespace cpp11;
-
 // Greatest common divisor and least (smallest) common multiple in R
 // Very safe, fast, efficient and works for bit64's vectors
 // Use `gcd()` for the GCD across a vector of numbers
@@ -138,12 +136,14 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   }
   R_xlen_t n = Rf_xlength(x);
 
+  SEXP out;
+
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
     const int *p_x = INTEGER(x);
 
-    writable::integers out(n == 0 ? 0 : 1);
+    out = SHIELD(new_vec(INTSXP, (n == 0) ? 0 : 1));
 
     if (n > 0){
       int gcd = p_x[0];
@@ -155,14 +155,14 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
       }
-      out[0] = gcd;
+      set_val(out, 0, gcd);
     }
-    return out;
+    break;
   }
   case CHEAPR_INT64SXP: {
     const int64_t *p_x = INTEGER64_PTR_RO(x);
 
-    writable::doubles out(n == 0 ? 0 : 1);
+    out = SHIELD(new_vec(REALSXP, (n == 0) ? 0 : 1));
 
     if (n > 0){
       int64_t gcd = p_x[0];
@@ -174,13 +174,13 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
       }
-      out[0] = as_double(gcd);
+      set_val(out, 0, as_double(gcd));
     }
-    return out;
+    break;
   }
   default: {
     const double *p_x = REAL(x);
-    writable::doubles out(n == 0 ? 0 : 1);
+    out = SHIELD(new_vec(REALSXP, (n == 0) ? 0 : 1));
     if (n > 0){
       double gcd = p_x[0];
       double agcd;
@@ -199,11 +199,13 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
         double factor = std::pow(10, std::ceil(std::fabs(std::log10(tol))) + 1);
         gcd = std::round(gcd * factor) / factor;
       }
-      out[0] = gcd;
+      set_val(out, 0, gcd);
     }
-    return out;
+    break;
   }
   }
+  YIELD(1);
+  return out;
 }
 
 // Lowest common multiple using GCD Euclidean algorithm
@@ -220,8 +222,6 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
   case INTSXP: {
     int *p_x = INTEGER(x);
 
-    sexp out = new_vec(INTSXP, 0);
-
     if (n > 0){
 
       // Initialise first value as lcm
@@ -233,14 +233,13 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, as_int64(p_x[i]), na_rm);
       }
-      out = as_r_vec(lcm);
+      return as_r_vec(lcm);
+    } else {
+      return new_vec(INTSXP, (n == 0) ? 0 : 1);
     }
-    return out;
   }
   case CHEAPR_INT64SXP: {
     int64_t *p_x = INTEGER64_PTR(x);
-
-    sexp out = new_vec(INTSXP, 0);
 
     if (n > 0){
       // Initialise first value as lcm
@@ -252,13 +251,13 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, p_x[i], na_rm);
       }
-      out = as_r_vec(lcm);
+      return as_r_vec(lcm);
+    } else {
+      return new_vec(INTSXP, (n == 0) ? 0 : 1);
     }
-    return out;
   }
   default: {
     double *p_x = REAL(x);
-    writable::doubles out(n == 0 ? 0 : 1);
 
     if (n > 0){
       double lcm = p_x[0];
@@ -270,9 +269,10 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         lcm = lcm2(lcm, p_x[i], tol, na_rm);
         if (is_r_inf(lcm)) break;
       }
-      out[0] = lcm;
+      return as_r_vec(lcm);
+    } else {
+      return new_vec(REALSXP, (n == 0) ? 0 : 1);
     }
-    return out;
   }
   }
 }
