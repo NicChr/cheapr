@@ -1,4 +1,8 @@
-Updated to version 1.4.0
+Updated to version 1.5.0
+
+- Fixed cheapr causing fastplyr to not be able to be installed.
+
+- Removed non-API C entry point `DATAPTR`
 
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 
