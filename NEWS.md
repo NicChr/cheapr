@@ -1,5 +1,7 @@
 # cheapr 1.5.0
 
+- The C/C++ API has been re-written to use pure R C API code internally. 
+
 # cheapr 1.4.0
 
 ### New features 
