@@ -800,7 +800,12 @@ bool vec_has_names(SEXP x){
 
 [[cpp11::register]]
 SEXP cheapr_do_memory_leak_test(){
-  std::vector<int> ints(1000);
+
+  // To be run in valgrind
+
+  // Check that 4000 bytes are not lost
+
+  std::vector<int32_t> ints(1000);
   SEXP r_ints = r_safe(SHIELD)(r_safe(new_vec)(INTSXP, ints.size()));
   SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
   SEXP repl = r_safe(SHIELD)(r_safe(new_r_vec)(-1));
@@ -810,6 +815,7 @@ SEXP cheapr_do_memory_leak_test(){
   return r_ints; // Never reached
 }
 
+// Below will trigger a memory leak, only use for testing purposes
 // SEXP cheapr_unsafe_init_memory_leak(){
 //   std::vector<int> ints(1000);
 //   SEXP r_ints = r_safe(SHIELD)(r_safe(new_vec)(INTSXP, ints.size()));

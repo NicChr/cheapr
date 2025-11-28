@@ -50,8 +50,8 @@ clean, fast and safe code without sacrificing any one of these core
 design principles.
 
 cheapr includes both an R API in the usual form of an R package, as well
-as a C++ API for writing C/C++ code. It can be used interchangeably with
-the R C API. C++17 or later is required to install and use cheapr.
+as a C/C++ API for writing C/C++ code. It can be used interchangeably
+with the R C API. C++17 or later is required to install and use cheapr.
 
 **Important note:** While cheapr makes heavy usage of C++ templates and
 variadic functions, it still internally uses the R C API only and throws
@@ -63,9 +63,53 @@ C API.
 
 cheapr tries to strike a nice balance between speed, readability, safety
 and flexibility. To achieve that speed and efficiency, we have opted to
-internally rely on the R C API entirely. This doesn't come without its
-tradeoffs, the biggest one being that using cheapr with C++ or cpp11
-becomes more complicated and requires using `cheapr::r_safe`
+internally rely on the R C API entirely.\
+This doesn't come without its tradeoffs, the biggest one being that
+using cheapr with C++ or cpp11 becomes more complicated and requires
+using `cheapr::r_safe`
+
+### Notes on using cheapr with the R C API vs with C++/cpp11
+
++---------------------+---------------------+---------------------+
+| Feature             | R C API             | C++/cpp11           |
++=====================+=====================+=====================+
+| Protecting objects  | Pros: Fast          | Pros: No manual     |
+| from GC             |                     | protection needed.\ |
+|                     | Cons: Manually      | Cons: Slow if       |
+|                     | protect with        | re-protecting an    |
+|                     | PROTECT/UNPROTECT   | object many times   |
+|                     |                     | (e.g. \>10k)        |
++---------------------+---------------------+---------------------+
+| Safety              | No need to use      | Must use `r_safe`   |
+|                     | `r_safe` when not   | on either cheapr    |
+|                     | using C++ objects.  | functions or R C    |
+|                     |                     | API functions when  |
+|                     |                     | C++ objects are     |
+|                     |                     | created.            |
++---------------------+---------------------+---------------------+
+| Type declarations   | All R objects are   | Pros: Uses proper   |
+|                     | declared as SEXP\   | C++ types, e.g.     |
+|                     | Pros: Sometimes     | integers, doubles,  |
+|                     | this ambiguity is   | etc, making the     |
+|                     | useful.\            | return type clear.\ |
+|                     | Cons: Unclear what  | Cons: Not flexible  |
+|                     | the return type     | if needing an input |
+|                     | should be.          | which can be either |
+|                     |                     | integer or double   |
+|                     |                     | in which case       |
+|                     |                     | cpp11::sexp can be  |
+|                     |                     | used.               |
++---------------------+---------------------+---------------------+
+| Exporting C/C++     | Use                 | Use                 |
+| functions to R      | [[cpp11::register]] | [[cpp11::register]] |
++---------------------+---------------------+---------------------+
+| Using               | No need to use      | You must use        |
+| r_safe/cpp11::safe  | `r_safe` when       | `r_safe` **on**     |
+|                     | **ONLY** using      | cheapr/R C API      |
+|                     | cheapr + R C API    | functions **IF**    |
+|                     |                     | you have used any   |
+|                     |                     | cpp11/C++ code.     |
++---------------------+---------------------+---------------------+
 
 When using C++ objects like for example std::string or cpp11::integers
 you must call any pure R C function or any cheapr function with either
@@ -99,13 +143,55 @@ cpp11::integers foo(cpp11::integers x){
 }
 ```
 
-### OR
+### OR (using C objects only)
 
 ``` cpp
 #include <cheapr_api.h>
 
 SEXP foo(SEXP x){
   return cheapr::sset(x, 1, true); // First value of x
+}
+```
+
+### DONT
+
+``` cpp
+#include <cheapr_api.h>
+SEXP foo(SEXP x){
+  SEXP first = cheapr::sset(x, 1, true);
+  first = coerce_vec(first, INTSXP);
+  return first;
+}
+```
+
+### DO
+
+``` cpp
+#include <cheapr_api.h>
+SEXP foo(SEXP x){
+  SEXP first = SHIELD(cheapr::sset(x, 1, true));
+  first = SHIELD(coerce_vec(first, INTSXP));
+  YIELD(2);
+  return first;
+}
+```
+
+## Exporting your C/C++ code to R
+
+It is recommended to use the `[[cpp11::register]]` tag always to safely
+export your C/C++ functions to R.
+
+``` cpp
+#include <cheapr_api.h>
+[[cpp11::register]]
+SEXP my_last(SEXP x){
+  // max(length(x), 1)
+  SEXP last_loc = SHIELD(as_r_vec(
+    std::max(Rf_xlength(x), static_cast<R_xlen_t>(1))
+  ));
+  SEXP last_value = SHIELD(cheapr::sset(x, last_loc, true));
+  YIELD(2);
+  return last_value;
 }
 ```
 
@@ -121,8 +207,8 @@ library(cheapr)
 library(bench)
 ```
 
-All the public user-facing C++ code is included in inst/include. To make
-use of the API, simply include the cheapr API header file.
+All the public user-facing C/C++ code is included in inst/include. To
+make use of the API, simply include the cheapr API header file.
 
 After this you have to link to cheapr either via the description file if
 writing an R package
@@ -130,7 +216,7 @@ writing an R package
 `LinkingTo: cheapr`
 
 or by including the cpp11 tag `[[cpp11::linking_to("cheapr")]]` in your
-C++ code.
+C/C++ code.
 
 ```{r}
 
@@ -138,7 +224,6 @@ setup_code <- '
 #include <cheapr_api.h>
 [[cpp11::linking_to("cheapr")]]
 using namespace cheapr;
-using namespace cpp11;
 
 '
 ```
