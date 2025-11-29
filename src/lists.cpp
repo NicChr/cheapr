@@ -597,7 +597,8 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
   }
   set_names(out, out_names);
   Rf_setAttrib(out, R_RowNamesSymbol, row_names);
-  Rf_classgets(out, make_utf8_str("data.frame"));
+  SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
+  Rf_classgets(out, df_cls);
   YIELD(NP);
   return out;
 }
@@ -675,7 +676,8 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   }
   set_names(out, out_names);
   Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
-  Rf_classgets(out, make_utf8_str("data.frame"));
+  SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
+  Rf_classgets(out, df_cls);
   SHIELD(out = rebuild(out, x, false)); ++NP;
   YIELD(NP);
   return out;

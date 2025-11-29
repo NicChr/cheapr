@@ -109,6 +109,8 @@ SEXP cpp_int64_to_numeric(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_numeric_to_int64(SEXP x){
+
+  int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
 
   SEXP out;
@@ -117,21 +119,22 @@ SEXP cpp_numeric_to_int64(SEXP x){
   switch (CHEAPR_TYPEOF(x)){
   case INTSXP: {
     int *p_x = INTEGER(x);
-    out = SHIELD(new_vec(REALSXP, n));
+    out = SHIELD(new_vec(REALSXP, n)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
       p_out[i] = as_int64(p_x[i]);
     }
-    Rf_classgets(out, make_utf8_str("integer64"));
+    SEXP int64_cls = SHIELD(make_utf8_str("integer64")); ++NP;
+    Rf_classgets(out, int64_cls);
     break;
   }
   case CHEAPR_INT64SXP: {
-    out = SHIELD(x);
+    out = x;
     break;
   }
   case REALSXP: {
     double *p_x = REAL(x);
-    out = SHIELD(new_vec(REALSXP, n));
+    out = SHIELD(new_vec(REALSXP, n)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
     double temp;
     for (R_xlen_t i = 0; i < n; ++i){
@@ -143,14 +146,16 @@ SEXP cpp_numeric_to_int64(SEXP x){
       }
       p_out[i] = repl;
     }
-    Rf_classgets(out, make_utf8_str("integer64"));
+    SEXP int64_cls = SHIELD(make_utf8_str("integer64")); ++NP;
+    Rf_classgets(out, int64_cls);
     break;
   }
   default: {
+    YIELD(NP);
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  YIELD(1);
+  YIELD(NP);
   return out;
 }
 

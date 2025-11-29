@@ -227,8 +227,9 @@ inline SEXP init<r_integer64_t>(R_xlen_t n, bool with_na) {
     int64_t* RESTRICT p_out = cheapr::INTEGER64_PTR(out);
     std::fill(p_out, p_out + n, cheapr::NA_INTEGER64);
   }
-  Rf_classgets(out, cheapr::make_utf8_str("integer64"));
-  cheapr::YIELD(1);
+  SEXP int64_cls = cheapr::SHIELD(cheapr::make_utf8_str("integer64"));
+  Rf_classgets(out, int64_cls);
+  cheapr::YIELD(2);
   return out;
 }
 
@@ -539,7 +540,8 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
     if (TYPEOF(x) != INTSXP){
       cheapr::SHIELD(out = cheapr::coerce_vec(x, REALSXP)); ++NP;
     }
-    Rf_classgets(out, cheapr::make_utf8_str("Date"));
+    SEXP date_cls = cheapr::SHIELD(cheapr::make_utf8_str("Date")); ++NP;
+    Rf_classgets(out, date_cls);
     cheapr::YIELD(NP);
     return out;
   }

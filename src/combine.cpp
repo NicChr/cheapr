@@ -912,7 +912,8 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     if (TYPEOF(vec_template) == INTSXP){
     SHIELD(out = init<r_integer_t>(out_size, false)); ++NP;
-    Rf_classgets(out, make_utf8_str("Date"));
+    SEXP date_cls = SHIELD(make_utf8_str("Date")); ++NP;
+    Rf_classgets(out, date_cls);
 
     int* RESTRICT p_out = INTEGER(out);
 
@@ -924,7 +925,8 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     }
   } else {
     SHIELD(out = init<r_numeric_t>(out_size, false)); ++NP;
-    Rf_classgets(out, make_utf8_str("Date"));
+    SEXP date_cls = SHIELD(make_utf8_str("Date")); ++NP;
+    Rf_classgets(out, date_cls);
 
     double* RESTRICT p_out = REAL(out);
 

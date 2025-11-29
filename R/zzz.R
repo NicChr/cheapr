@@ -7,7 +7,7 @@
   if (length(fastplyr_pkg) > 0){
     fastplyr_version <- utils::packageVersion("fastplyr")
     if (fastplyr_version < package_version("0.9.91")){
-      stop(
+      message(
         "fastplyr version >= 0.9.91 is needed with this version of cheapr,
         please install it using `install.packages('fastplyr')`"
       )
