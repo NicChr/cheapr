@@ -2,6 +2,8 @@
 
 - The C/C++ API has been re-written to use pure R C API code internally. 
 
+- Removed all non-API C entry points.
+
 # cheapr 1.4.0
 
 ### New features 
