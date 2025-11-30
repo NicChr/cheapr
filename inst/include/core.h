@@ -668,22 +668,19 @@ inline void set_val(SEXP x, const R_xlen_t i, const char* val, const SEXP* p_x =
 inline void set_val(SEXP x, const R_xlen_t i, std::string val, const SEXP* p_x = nullptr){
   SET_STRING_ELT(x, i, make_utf8_char(val.c_str()));
 }
+inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_string val, const SEXP* p_x = nullptr){
+  SET_STRING_ELT(x, i, val);
+}
 // Never use the pointer here to assign
 inline void set_val(SEXP x, const R_xlen_t i, SEXP val, const SEXP *p_x = nullptr){
-  switch (TYPEOF(x)){
-  case NILSXP: {
-   break;
-  }
-  case STRSXP: {
+  switch (TYPEOF(val)){
+  case CHARSXP: {
     SET_STRING_ELT(x, i, val);
     break;
   }
-  case VECSXP: {
+  default: {
     SET_VECTOR_ELT(x, i, val);
     break;
-  }
-  default: {
-    Rf_error("Unimplemented `set_val` specialisation for %s", Rf_type2char(TYPEOF(x)));
   }
   }
 }
