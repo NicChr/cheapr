@@ -1,30 +1,10 @@
-# cheapr 2.0.0
+# cheapr 1.5.0
 
-cheapr 2.0.0 supersedes cheapr 1.4.0
+cheapr 1.5.0 supersedes cheapr 1.4.0
 
 ### New features 
 
-- A rich C/C++ API is now available. 
-
-The C/C++ API has been re-written to use pure R C API code internally.
-
-To make use of the API, include the API header file
-
-```c++
-#include <cheapr_api.h>
-```
-
-and then link to cheapr
-
-in R package description file.
-
-`LinkingTo: cheapr`
-
-or directly in C++ code
-
-```c++
-[[cpp11::linking_to("cheapr")]]
-```
+- The C/C++ API has been re-written to use pure R C API code internally.
 
 - New function `unique_` as a cheaper alternative to `unique`.
 

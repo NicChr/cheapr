@@ -1,4 +1,4 @@
-Updated to version 2.0.0
+Updated to version 1.5.0
 
 - Fixed cheapr causing fastplyr to not be able to be installed.
 
