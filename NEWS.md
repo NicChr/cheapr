@@ -1,14 +1,12 @@
-# cheapr 1.5.0
+# cheapr 2.0.0
 
-- The C/C++ API has been re-written to use pure R C API code internally. 
-
-- Removed all non-API C entry points.
-
-# cheapr 1.4.0
+cheapr 2.0.0 supersedes cheapr 1.4.0
 
 ### New features 
 
-- A rich C++ API is now available. 
+- A rich C/C++ API is now available. 
+
+The C/C++ API has been re-written to use pure R C API code internally.
 
 To make use of the API, include the API header file
 
@@ -68,6 +66,8 @@ attributes from a template.
 
 - Fixed a bug in `case` that would return incorrect results when the length of 
 the RHS was greater than 1.
+
+- Removed all non-API C entry points.
 
 ### Changes and Improvements
 
