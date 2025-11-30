@@ -96,10 +96,6 @@ cpp_group_starts <- function(group_id, n_groups) {
   .Call(`_cheapr_cpp_group_starts`, group_id, n_groups)
 }
 
-cpp_group_counts <- function(group_id, n_groups) {
-  .Call(`_cheapr_cpp_group_counts`, group_id, n_groups)
-}
-
 cpp_int64_to_int <- function(x) {
   .Call(`_cheapr_cpp_int64_to_int`, x)
 }

@@ -127,7 +127,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   default: {
     SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), x)); ++NP;
-    SEXP r_true = SHIELD(as_r_scalar(true)); ++NP;
+    SEXP r_true = SHIELD(as_r_vec(true)); ++NP;
     count = scalar_count(is_missing, r_true, true);
     break;
   }
@@ -138,7 +138,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
 
 [[cpp11::register]]
 SEXP cpp_num_na(SEXP x, bool recursive){
-  return as_r_scalar(na_count(x, recursive));
+  return as_r_vec(na_count(x, recursive));
 }
 
 

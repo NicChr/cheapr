@@ -1,5 +1,5 @@
-#ifndef CHEAPR_INTERNAL_HELPERS
-#define CHEAPR_INTERNAL_HELPERS
+#ifndef CHEAPR_INTERNAL_HELPERS_H
+#define CHEAPR_INTERNAL_HELPERS_H
 
 #include <core.h>
 
@@ -78,12 +78,31 @@ inline bool is_bare_atomic(SEXP x){
   return !Rf_isObject(x) && Rf_isVectorAtomic(x);
 }
 
-inline bool is_simple_atomic_vec2(SEXP x){
-  return is_simple_atomic_vec(x) || is_int64(x);
+inline bool cheapr_is_simple_atomic_vec(SEXP x){
+  return (
+      Rf_isVectorAtomic(x) && (
+          !Rf_isObject(x) || (
+              Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
+              Rf_inherits(x, "POSIXct")
+          )
+      )
+  );
 }
 
-inline bool is_simple_vec2(SEXP x){
-  return is_simple_vec(x) || is_int64(x);
+inline bool is_bare_list(SEXP x){
+  return (!Rf_isObject(x) && TYPEOF(x) == VECSXP);
+}
+
+inline bool cheapr_is_simple_vec(SEXP x){
+  return (cheapr_is_simple_atomic_vec(x) || is_bare_list(x));
+}
+
+inline bool cheapr_is_simple_atomic_vec2(SEXP x){
+  return cheapr_is_simple_atomic_vec(x) || is_int64(x);
+}
+
+inline bool cheapr_is_simple_vec2(SEXP x){
+  return cheapr_is_simple_vec(x) || is_int64(x);
 }
 
 inline bool is_bare_df(SEXP x){

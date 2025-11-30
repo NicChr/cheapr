@@ -106,7 +106,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
 
 [[cpp11::register]]
 SEXP cpp_count_val(SEXP x, SEXP value, bool recursive){
-  return as_r_scalar(scalar_count(x, value, recursive));
+  return as_r_vec(scalar_count(x, value, recursive));
 }
 
 [[cpp11::register]]

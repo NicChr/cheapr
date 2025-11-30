@@ -553,7 +553,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
   }
   if (is_r_na(start) || is_r_na(end) ||
       is_r_inf(start) || is_r_inf(end)){
-    return as_r_scalar(NA_REAL);
+    return as_r_vec(NA_REAL);
   }
   // Switch them if needed
   if (start > end){

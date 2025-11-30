@@ -48,13 +48,12 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
     }
   }
 
-  SEXP r_sorted = SHIELD(as_r_scalar(sorted));
+  SEXP r_sorted = SHIELD(as_r_vec(sorted));
   Rf_setAttrib(out, Rf_installChar(make_utf8_char("sorted")), r_sorted);
   YIELD(2);
   return out;
 }
 
-[[cpp11::register]]
 SEXP cpp_group_counts(SEXP group_id, int n_groups){
 
   int n = Rf_length(group_id);

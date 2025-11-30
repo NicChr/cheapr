@@ -1,4 +1,5 @@
 #include <core.h>
+#include "internal_helpers.h"
 #include "declarations.h"
 #include <R_ext/Rdynload.h> // For DllInfo on R 3.3
 
@@ -415,7 +416,7 @@ api_r_address(SEXP x) {
 bool
 api_is_simple_atomic_vec(SEXP x) {
   try {
-    return cheapr::is_simple_atomic_vec(x);
+    return cheapr::cheapr_is_simple_atomic_vec(x);
   } catch (...) {
     return false;
   }

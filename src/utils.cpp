@@ -6,22 +6,22 @@
 
 [[cpp11::register]]
 bool cpp_is_simple_atomic_vec(SEXP x){
-  return is_simple_atomic_vec(x);
+  return cheapr_is_simple_atomic_vec(x);
 }
 
 [[cpp11::register]]
 bool cpp_is_simple_vec(SEXP x){
-  return is_simple_vec(x);
+  return cheapr_is_simple_vec(x);
 }
 
 [[cpp11::register]]
 SEXP cpp_vector_length(SEXP x){
-  return as_r_scalar(vector_length(x));
+  return as_r_vec(vector_length(x));
 }
 
 [[cpp11::register]]
 SEXP cpp_address(SEXP x){
-  return as_r_scalar(address(x));
+  return as_r_vec(address(x));
 }
 
 // Copy atomic elements from source to target
@@ -121,7 +121,7 @@ SEXP cpp_semi_copy(SEXP x){
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     YIELD(1);
     return out;
-  } else if (!altrep && is_simple_atomic_vec(x)){
+  } else if (!altrep && cheapr_is_simple_atomic_vec(x)){
 
     // Atomic vectors
 
@@ -538,7 +538,7 @@ SEXP cpp_growth_rate(SEXP x){
     return new_vec(REALSXP, 0);
   }
   if (n == 1){
-    return as_r_scalar(NA_REAL);
+    return as_r_vec(NA_REAL);
   }
   double a, b;
   switch(CHEAPR_TYPEOF(x)){
@@ -566,7 +566,7 @@ SEXP cpp_growth_rate(SEXP x){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  return as_r_scalar(growth_rate(a, b, n));
+  return as_r_vec(growth_rate(a, b, n));
 }
 
 SEXP create_df_row_names(int n){
@@ -596,7 +596,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP is_dup_from_last = SHIELD(Rf_duplicated(names, TRUE)); ++NP;
   cpp_set_or(is_dup, is_dup_from_last);
 
-  SEXP r_true = SHIELD(as_r_scalar(true)); ++NP;
+  SEXP r_true = SHIELD(as_r_vec(true)); ++NP;
   SEXP dup_locs = SHIELD(cpp_which_val(is_dup, r_true, false)); ++NP;
 
   int n_dups = Rf_length(dup_locs);
@@ -624,7 +624,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
     p_is_empty[i] = empty;
   }
 
-  SEXP r_n_empty = SHIELD(as_r_scalar(n_empty)); ++NP;
+  SEXP r_n_empty = SHIELD(as_r_vec(n_empty)); ++NP;
 
   if (n_empty > 0){
     SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
@@ -735,7 +735,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
 [[cpp11::register]]
 SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_){
-  return as_r_scalar(static_cast<int>(vec_is_whole_number(x, tol_, na_rm_)));
+  return as_r_vec(static_cast<int>(vec_is_whole_number(x, tol_, na_rm_)));
 }
 
 SEXP match(SEXP y, SEXP x, int no_match){

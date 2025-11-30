@@ -306,6 +306,13 @@ clean_indices(SEXP locs, SEXP x){
   return fn(locs, x);
 }
 
+inline bool
+is_simple_atomic_vec(SEXP x) {
+  typedef bool fn_t(SEXP);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_is_simple_atomic_vec");
+  return fn(x);
+}
+
 // Deprecated, use cheapr::vector_length
 inline R_xlen_t
 vec_length(SEXP x){

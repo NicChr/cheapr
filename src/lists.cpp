@@ -32,7 +32,7 @@ R_xlen_t unnested_length(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_unnested_length(SEXP x){
-  return as_r_scalar(unnested_length(x));
+  return as_r_vec(unnested_length(x));
 }
 
 [[cpp11::register]]
@@ -492,7 +492,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 //   }
 //
 //   int nrows = df_nrow(x);
-//   SEXP r_nrows = SHIELD(as_r_scalar(nrows));
+//   SEXP r_nrows = SHIELD(as_r_vec(nrows));
 //
 //   SEXP out = SHIELD(cpp_list_assign(x, cols));
 //   SHIELD(out = cpp_recycle(out, r_nrows));
@@ -686,7 +686,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
 [[cpp11::register]]
 SEXP cpp_as_df(SEXP x){
   if (Rf_inherits(x, "data.frame")){
-    SEXP n_rows = SHIELD(as_r_scalar(df_nrow(x)));
+    SEXP n_rows = SHIELD(as_r_vec(df_nrow(x)));
     SEXP out = SHIELD(cpp_new_df(x, n_rows, false, false));
     YIELD(2);
     return out;
@@ -697,7 +697,7 @@ SEXP cpp_as_df(SEXP x){
     SEXP out = SHIELD(cpp_as_df(vec));
     YIELD(2);
     return out;
-  } else if (is_simple_atomic_vec2(x)){
+  } else if (cheapr_is_simple_atomic_vec2(x)){
     SEXP x_names = SHIELD(get_names(x));
     SEXP out = SHIELD(new_r_list(
       arg("name") = x_names,

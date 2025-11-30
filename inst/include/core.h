@@ -146,25 +146,6 @@ inline bool is_altrep(SEXP x){
   return ALTREP(x);
 }
 
-inline bool is_simple_atomic_vec(SEXP x){
-  return (
-      Rf_isVectorAtomic(x) && (
-          !Rf_isObject(x) || (
-              Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
-              Rf_inherits(x, "POSIXct")
-          )
-      )
-  );
-}
-
-inline bool is_bare_list(SEXP x){
-  return (!Rf_isObject(x) && TYPEOF(x) == VECSXP);
-}
-
-inline bool is_simple_vec(SEXP x){
-  return (is_simple_atomic_vec(x) || is_bare_list(x));
-}
-
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
 }

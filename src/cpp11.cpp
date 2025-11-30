@@ -173,13 +173,6 @@ extern "C" SEXP _cheapr_cpp_group_starts(SEXP group_id, SEXP n_groups) {
     return cpp11::as_sexp(cpp_group_starts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(group_id), cpp11::as_cpp<cpp11::decay_t<int>>(n_groups)));
   END_CPP11
 }
-// groups.cpp
-SEXP cpp_group_counts(SEXP group_id, int n_groups);
-extern "C" SEXP _cheapr_cpp_group_counts(SEXP group_id, SEXP n_groups) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(cpp_group_counts(cpp11::as_cpp<cpp11::decay_t<SEXP>>(group_id), cpp11::as_cpp<cpp11::decay_t<int>>(n_groups)));
-  END_CPP11
-}
 // int64.cpp
 SEXP cpp_int64_to_int(SEXP x);
 extern "C" SEXP _cheapr_cpp_int64_to_int(SEXP x) {
@@ -812,7 +805,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_format_numeric_as_int64", (DL_FUNC) &_cheapr_cpp_format_numeric_as_int64, 1},
     {"_cheapr_cpp_gcd",                     (DL_FUNC) &_cheapr_cpp_gcd,                     5},
     {"_cheapr_cpp_gcd2_vectorised",         (DL_FUNC) &_cheapr_cpp_gcd2_vectorised,         4},
-    {"_cheapr_cpp_group_counts",            (DL_FUNC) &_cheapr_cpp_group_counts,            2},
     {"_cheapr_cpp_group_starts",            (DL_FUNC) &_cheapr_cpp_group_starts,            2},
     {"_cheapr_cpp_growth_rate",             (DL_FUNC) &_cheapr_cpp_growth_rate,             1},
     {"_cheapr_cpp_if_else",                 (DL_FUNC) &_cheapr_cpp_if_else,                 4},
