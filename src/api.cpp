@@ -383,6 +383,15 @@ api_gcd(SEXP x, double tol, bool na_rm){
   }
 }
 
+SEXP
+api_clean_indices(SEXP locs, SEXP x){
+  try {
+    return cpp_clean_locs(locs, x);
+  } catch (...) {
+    return R_NilValue;
+  }
+}
+
 // Deprecated fns
 
 R_xlen_t
@@ -403,12 +412,12 @@ api_r_address(SEXP x) {
   }
 }
 
-SEXP
-api_clean_indices(SEXP locs, SEXP x){
+bool
+api_is_simple_atomic_vec(SEXP x) {
   try {
-    return cpp_clean_locs(locs, x);
+    return cheapr::is_simple_atomic_vec(x);
   } catch (...) {
-    return R_NilValue;
+    return false;
   }
 }
 
@@ -461,4 +470,5 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_vec_length",    (DL_FUNC)api_vec_length);
   R_RegisterCCallable("cheapr", "api_r_address",    (DL_FUNC)api_r_address);
   R_RegisterCCallable("cheapr", "api_clean_indices",    (DL_FUNC)api_clean_indices);
+  R_RegisterCCallable("cheapr", "api_is_simple_atomic_vec",    (DL_FUNC)api_is_simple_atomic_vec);
 }
