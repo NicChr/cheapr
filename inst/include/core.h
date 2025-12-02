@@ -40,6 +40,14 @@
 #define VECTOR_PTR_RO(x) ((const SEXP *) DATAPTR_RO(x))
 #endif
 
+#ifndef SHIELD
+#define SHIELD(x) (Rf_protect(x))
+#endif
+
+#ifndef YIELD
+#define YIELD(n) (Rf_unprotect(n))
+#endif
+
 namespace cheapr {
 
 // type-safe bool type, similar to Rboolean
@@ -86,14 +94,6 @@ inline r_boolean* BOOLEAN(SEXP x) {
 }
 inline const r_boolean* BOOLEAN_RO(SEXP x) {
   return reinterpret_cast<const r_boolean*>(INTEGER_RO(x));
-}
-
-inline SEXP SHIELD(SEXP x){
-  return Rf_protect(x);
-}
-
-inline void YIELD(int n){
-  Rf_unprotect(n);
 }
 
 inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){

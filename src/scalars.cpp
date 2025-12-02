@@ -281,9 +281,6 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   return out;
 }
 
-// At the moment this doesn't coerce what to type of x
-// or handle long vectors
-
 SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){
   return cpp_replace(x, where, what, true, true);
 }
