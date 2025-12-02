@@ -733,23 +733,6 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   return out;
 }
 
-// define CHEAPR_COMBINE_NAMES
-// if (any_names){
-//   R_xlen_t ii = 0;
-//   SHIELD(combined_names = new_vec(STRSXP, out_size)); ++NP;
-//   for (int i = 0; i < n; ++i){
-//     R_Reprotect(vec_names = get_vec_names(p_x[i]), vec_names_idx);
-//     const SEXP *p_vec_names = STRING_PTR_RO(vec_names);
-//     if (is_null(vec_names)){
-//       ii += vector_length(p_x[i]);
-//     } else {
-//       for (R_xlen_t j = 0; j < Rf_xlength(vec_names); ++j, ++ii){
-//         SET_STRING_ELT(combined_names, ii, p_vec_names[j]);
-//       }
-//     }
-//   }
-// }
-
 // Combine vectors given the following args:
 // * A list of vectors
 // * The final size of the combined vector

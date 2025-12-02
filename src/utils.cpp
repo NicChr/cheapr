@@ -476,34 +476,6 @@ SEXP cpp_set_or(SEXP x, SEXP y){
   return x;
 }
 
-// SEXP cpp_set_and(SEXP x, SEXP y){
-//
-//   R_xlen_t xn = Rf_xlength(x);
-//   R_xlen_t yn = Rf_xlength(y);
-//
-//   R_xlen_t n = xn == 0 || yn == 0 ? 0 : xn;
-//
-//   R_xlen_t i, yi;
-//
-//   int *p_x = LOGICAL(x);
-//   const int *p_y = LOGICAL_RO(y);
-//
-//   for (i = yi = 0; i < n; yi = (++yi == yn) ? 0 : yi, ++i){
-//
-//     if (p_x[i] != 0){
-//       if (p_y[yi] == 0){
-//         p_x[i] = 0;
-//       } else if ((p_x[i] == NA_LOGICAL) || (p_y[yi] == NA_LOGICAL)){
-//         p_x[i] = NA_LOGICAL;
-//       } else if (p_x[i] == 1 && p_y[yi] == 1){
-//         p_x[i] = 1;
-//       }
-//     }
-//   }
-//
-//   return x;
-// }
-
 // Basic growth rate
 // i.e the expected percent change per unit of time
 // eqn: (new / old ) ^ 1/n
