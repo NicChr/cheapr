@@ -213,13 +213,47 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const Rcomplex *p_na = COMPLEX(na);
 
       if (all_scalar){
-        const Rcomplex yes_value = p_yes[0];
-        const Rcomplex no_value = p_no[0];
-        const Rcomplex na_value = p_na[0];
+
+        const double yes_value_re = p_yes[0].r;
+        const double yes_value_im = p_yes[0].i;
+        const double no_value_re = p_no[0].r;
+        const double no_value_im = p_no[0].i;
+        const double na_value_re = p_na[0].r;
+        const double na_value_im = p_na[0].i;
+
         OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
+        for (R_xlen_t i = 0; i < n; ++i){
+          lgl = p_x[i];
+
+          if (lgl == r_true){
+            p_out[i].r = yes_value_re;
+            p_out[i].i = yes_value_im;
+          } else if (lgl == r_false){
+            p_out[i].r = no_value_re;
+            p_out[i].i = no_value_im;
+          } else {
+            p_out[i].r = na_value_re;
+            p_out[i].i = na_value_im;
+          }
+        }
       } else {
-        CHEAPR_VECTORISED_IF_ELSE
+
+        for (R_xlen_t i = 0; i < n; ++i){
+          switch(p_x[i]){
+          case r_true: {
+            SET_COMPLEX_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+            break;
+          }
+          case r_false: {
+            SET_COMPLEX_ELT(out, i, p_no[no_scalar ? 0 : i]);
+            break;
+          }
+          default: {
+            SET_COMPLEX_ELT(out, i, p_na[na_scalar ? 0 : i]);
+            break;
+          }
+          }
+        }
       }
       break;
     }
@@ -234,9 +268,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       for (R_xlen_t i = 0; i < n; ++i){
         switch(p_x[i]){
         case r_true: {
-        SET_RAW_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-        break;
-      }
+          SET_RAW_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
+          break;
+        }
         case r_false: {
           SET_RAW_ELT(out, i, p_no[no_scalar ? 0 : i]);
           break;
