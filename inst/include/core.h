@@ -77,7 +77,7 @@ inline constexpr int64_t NA_INTEGER64 = std::numeric_limits<int64_t>::min();
 inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 
-inline const Rcomplex NA_COMPLEX = {NA_REAL, NA_REAL};
+inline const Rcomplex NA_COMPLEX = {{NA_REAL, NA_REAL}};
 
 // Functions
 inline const SEXP* LIST_PTR_RO(SEXP x) {
