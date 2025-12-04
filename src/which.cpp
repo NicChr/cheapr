@@ -99,9 +99,9 @@ SEXP cpp_which_(SEXP x, bool invert){
 
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   int32_t NP = 0;
-  R_xlen_t n = Rf_xlength(x);
+  R_xlen_t n = vector_length(x);
   bool is_long = (n > INTEGER_MAX);
-  if (Rf_length(value) != 1){
+  if (vector_length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }
 
@@ -109,7 +109,8 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     YIELD(NP);
     Rf_error("Value has been implicitly converted to NA, please check");
   }
-  R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : Rf_asReal(n_values);
+  SHIELD(n_values = cast<r_numeric_t>(n_values, R_NilValue)); ++NP;
+  R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : REAL(n_values)[0];
   R_xlen_t out_size = invert ? n - n_vals : n_vals;
   R_xlen_t whichi = 0;
   R_xlen_t i = 0;
@@ -119,7 +120,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case INTSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
-    int val = Rf_asInteger(value);
+    int val = INTEGER(value)[0];
     const int *p_x = INTEGER(x);
     if (is_long){
       double* RESTRICT p_out = REAL(out);
@@ -142,7 +143,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case REALSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
-    double val = Rf_asReal(value);
+    double val = REAL(value)[0];
     const double *p_x = REAL(x);
     if (is_long){
       double* RESTRICT p_out = REAL(out);
@@ -188,7 +189,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case STRSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
-    SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+    SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
     if (is_long){
       double *p_out = REAL(out);

@@ -354,7 +354,8 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const int *p_x = INTEGER(x);
     int fill_value = NA_INTEGER;
     if (fill_size >= 1){
-      fill_value = Rf_asInteger(fill);
+      SEXP temp_fill = SHIELD(cast<r_integer_t>(fill, R_NilValue)); ++NP;
+      fill_value = INTEGER(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
@@ -462,7 +463,8 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const double *p_x = REAL(x);
     double fill_value = NA_REAL;
     if (fill_size >= 1){
-      fill_value = Rf_asReal(fill);
+      SEXP temp_fill = SHIELD(cast<r_numeric_t>(fill, R_NilValue)); ++NP;
+      fill_value = REAL(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     double* RESTRICT p_out = REAL(out);
@@ -513,7 +515,8 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const SEXP *p_x = STRING_PTR_RO(x);
-    SEXP fill_value = SHIELD(fill_size >= 1 ? Rf_asChar(fill) : NA_STRING); ++NP;
+    SEXP temp_fill = SHIELD(cast<r_character_t>(fill, R_NilValue)); ++NP;
+    SEXP fill_value = SHIELD(fill_size >= 1 ? STRING_ELT(temp_fill, 0) : NA_STRING); ++NP;
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run

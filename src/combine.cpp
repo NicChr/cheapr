@@ -390,10 +390,18 @@ SEXP cpp_recycle(SEXP x, SEXP length){
   SEXP out = SHIELD(cpp_drop_null(x));
 
   int n = 0;
+  int32_t NP = 1;
 
   if (!is_null(length)){
-    n = Rf_asInteger(length);
+    if (TYPEOF(length) == INTSXP){
+      n = INTEGER(length)[0];
+    } else {
+      SHIELD(length = cast<r_numeric_t>(length, R_NilValue));
+      NP = 2;
+      n = REAL(length)[0];
+    }
     if (n < 0){
+      YIELD(NP);
       Rf_error("Recycled `length` must be >= 0 in %s", __func__);
     }
   } else {
@@ -402,7 +410,7 @@ SEXP cpp_recycle(SEXP x, SEXP length){
 
   recycle_in_place(out, n);
 
-  YIELD(1);
+  YIELD(NP);
   return out;
 }
 
