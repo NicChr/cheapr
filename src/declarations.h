@@ -2,7 +2,6 @@
 #define CHEAPR_DECLARATIONS_H
 
 #include "types.h"
-#include <cpp11/function.hpp>
 
 // Make function definitions visible to all C++ files
 SEXP cpp_which_(SEXP x, bool invert);

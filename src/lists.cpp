@@ -6,7 +6,7 @@
 [[cpp11::register]]
 SEXP cpp_list_args(SEXP args1, SEXP args2){
   bool use_dots = Rf_length(args1) != 0;
-  bool use_list = args2 != R_NilValue;
+  bool use_list = !is_null(args2);
 
   if (use_dots && use_list){
     Rf_error("Please supply either `...` or `.args` in %s", __func__);
@@ -158,7 +158,7 @@ SEXP which_not_null(SEXP x){
 }
 
 SEXP get_list_element(SEXP list, SEXP str){
-  SEXP out = R_NilValue, names = get_names(list);
+  SEXP out = r_null, names = get_names(list);
 
   for (int i = 0; i < Rf_length(list); ++i){
     if (STRING_ELT(names, i) == str){
@@ -382,7 +382,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
 
 [[cpp11::register]]
 SEXP cpp_list_as_df(SEXP x) {
-  return cpp_new_df(x, R_NilValue, false, false);
+  return cpp_new_df(x, r_null, false, false);
 }
 
 // Multi-assign recycled variables to data frame
@@ -430,7 +430,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   bool any_null = false;
 
   int loc;
-  SEXP vec = R_NilValue;
+  SEXP vec = r_null;
 
   for (int j = 0; j < n_cols; ++j){
     loc = p_add_locs[j];
@@ -480,16 +480,16 @@ SEXP cpp_as_df(SEXP x){
       arg("name") = x_names,
       arg("value") = x
     ));
-    SHIELD(out = cpp_new_df(out, R_NilValue, false, false));
+    SHIELD(out = cpp_new_df(out, r_null, false, false));
     YIELD(3);
     return out;
   } else if (is_bare_list(x)){
-    return cpp_new_df(x, R_NilValue, true, true);
+    return cpp_new_df(x, r_null, true, true);
   } else {
     SEXP out = SHIELD(eval_pkg_fun("as.data.frame", "base", R_GetCurrentEnv(), x));
     SEXP col_seq = SHIELD(cpp_seq_len(Rf_length(out)));
     SEXP col_str = SHIELD(make_utf8_str("col_"));
-    SEXP new_names = SHIELD(r_paste(R_BlankScalarString, R_NilValue, col_str, col_seq));
+    SEXP new_names = SHIELD(r_paste(R_BlankScalarString, r_null, col_str, col_seq));
     set_names(out, new_names);
     YIELD(4);
     return out;

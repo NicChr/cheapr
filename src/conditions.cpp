@@ -53,7 +53,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   r_type common = get_r_type(yes);
 
   if (common != R_unk){
-    SEXP out = R_NilValue;
+    SEXP out = r_null;
 
     R_xlen_t n = vector_length(condition);
     R_xlen_t yes_size = vector_length(yes);

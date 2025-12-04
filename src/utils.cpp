@@ -576,12 +576,12 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP out = SHIELD(new_vec(STRSXP, n)); ++NP;
   cpp_set_copy_elements(names, out);
 
-  SEXP temp = R_NilValue;
-  SEXP replace = R_NilValue;
+  SEXP temp = r_null;
+  SEXP replace = r_null;
 
   if (n_dups > 0){
     temp = SHIELD(sset_vec(names, dup_locs, true)); ++NP;
-    replace = SHIELD(r_paste(R_BlankScalarString, R_NilValue, temp, dup_sep, dup_locs)); ++NP;
+    replace = SHIELD(r_paste(R_BlankScalarString, r_null, temp, dup_sep, dup_locs)); ++NP;
     replace_in_place(out, dup_locs, replace, false);
   }
 
@@ -601,7 +601,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   if (n_empty > 0){
     SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
     temp = SHIELD(sset_vec(names, empty_locs, true)); ++NP;
-    replace = SHIELD(r_paste(R_BlankScalarString, R_NilValue, temp, empty_sep, empty_locs)); ++NP;
+    replace = SHIELD(r_paste(R_BlankScalarString, r_null, temp, empty_sep, empty_locs)); ++NP;
     replace_in_place(out, empty_locs, replace, false);
   }
 
@@ -630,8 +630,8 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
   // Start from clean slate - no attributes
   clear_attributes(target);
 
-  SEXP tag = R_NilValue;
-  SEXP current = R_NilValue;
+  SEXP tag = r_null;
+  SEXP current = r_null;
 
   const SEXP *p_ta = STRING_PTR_RO(target_attr_names);
   const SEXP *p_sa = STRING_PTR_RO(source_attr_names);
@@ -725,7 +725,7 @@ SEXP get_vec_names(SEXP x){
     switch(get_r_type(x)){
     case R_null:
     case R_df: {
-      return R_NilValue;
+      return r_null;
     }
     case R_list: {
       return get_names(x);
@@ -734,7 +734,7 @@ SEXP get_vec_names(SEXP x){
       return eval_pkg_fun("names", "base", R_GetCurrentEnv(), x);
     }
     }
-    return R_NilValue;
+    return r_null;
   }
 }
 
@@ -762,7 +762,7 @@ SEXP set_vec_names(SEXP x, SEXP names){
       return eval_pkg_fun("names<-", "base", R_GetCurrentEnv(), x, names);
     }
     }
-    return R_NilValue;
+    return r_null;
   }
 }
 

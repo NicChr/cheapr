@@ -36,7 +36,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
   }
   R_xlen_t interrupt_counter = 0;
   int start, increment, seq_size;
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
 
   if (as_list){
@@ -45,7 +45,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
     SEXP curr_seq;
 
     PROTECT_INDEX curr_seq_idx;
-    R_ProtectWithIndex(curr_seq = R_NilValue, &curr_seq_idx); ++NP;
+    R_ProtectWithIndex(curr_seq = r_null, &curr_seq_idx); ++NP;
 
     if (size_n > 0){
       const int *p_size = INTEGER_RO(size);
@@ -141,7 +141,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
   int seq_size;
   double start;
   double increment;
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
   if (as_list){
 
@@ -149,7 +149,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
     SEXP curr_seq;
 
     PROTECT_INDEX curr_seq_idx;
-    R_ProtectWithIndex(curr_seq = R_NilValue, &curr_seq_idx); ++NP;
+    R_ProtectWithIndex(curr_seq = r_null, &curr_seq_idx); ++NP;
 
     if (size_n > 0){
 
@@ -248,7 +248,7 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list, bool add_id) {
     SHIELD(size = cpp_rep_len(size, n)); ++NP;
   }
 
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
   switch (TYPEOF(from)){
   case INTSXP: {
@@ -726,8 +726,8 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     // hence result is not an integer
 
     SEXP out, seq_size, seq_from, seq_width;
-    out = R_NilValue, seq_size = R_NilValue;
-    seq_from = R_NilValue, seq_width = R_NilValue;
+    out = r_null, seq_size = r_null;
+    seq_from = r_null, seq_width = r_null;
 
     if (!scale_up && can_be_int(adj_width, tol) && can_be_int(adj_start, tol) &&
        is_r_integerable(adj_end)){

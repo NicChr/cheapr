@@ -182,7 +182,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
 
   int_fast64_t out_size = NA_INTEGER64;
   bool check_indices = true;
-  SEXP clean_indices = R_NilValue;
+  SEXP clean_indices = r_null;
 
   if (TYPEOF(indices) == STRSXP){
     SEXP names = SHIELD(get_names(x)); ++NP;
@@ -381,7 +381,7 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
     return locs;
   }
 
-  SHIELD(locs = cast<r_integer_t>(locs, R_NilValue)); ++NP;
+  SHIELD(locs = cast<r_integer_t>(locs, r_null)); ++NP;
 
   const int *p_locs = INTEGER_RO(locs);
 
@@ -552,7 +552,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
 
   switch ( TYPEOF(x) ){
   case NILSXP: {
-    out = R_NilValue;
+    out = r_null;
     break;
   }
   case LGLSXP:
@@ -723,7 +723,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
 
 SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
   int xtype = TYPEOF(x);
 
   if (check){
@@ -740,7 +740,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       switch ( xtype ){
 
       case NILSXP: {
-        out = SHIELD(R_NilValue);
+        out = SHIELD(r_null);
         break;
       }
       case LGLSXP:
@@ -849,7 +849,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              SET_VECTOR_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? R_NilValue : p_x[j - 1]);
+              SET_VECTOR_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? r_null : p_x[j - 1]);
             }
           }
         break;
@@ -880,7 +880,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       switch ( xtype ){
 
       case NILSXP: {
-        out = SHIELD(R_NilValue);
+        out = SHIELD(r_null);
         break;
       }
       case LGLSXP:
@@ -997,7 +997,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            SET_VECTOR_ELT(out, k++, R_NilValue);
+            SET_VECTOR_ELT(out, k++, r_null);
           }
         }
         break;
@@ -1027,7 +1027,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       switch ( xtype ){
 
       case NILSXP: {
-        out = SHIELD(R_NilValue);
+        out = SHIELD(r_null);
         break;
       }
       case LGLSXP:
@@ -1098,7 +1098,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       switch ( xtype ){
 
       case NILSXP: {
-        out = SHIELD(R_NilValue);
+        out = SHIELD(r_null);
         break;
       }
       case LGLSXP:
@@ -1194,7 +1194,7 @@ SEXP rev(SEXP x, bool set){
   SEXP out;
   switch (TYPEOF(x)){
   case NILSXP: {
-    out = R_NilValue;
+    out = r_null;
     break;
   }
   case LGLSXP:
@@ -1335,7 +1335,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
   default: {
     // Catch-all make sure cols is an int vector
-    cols = SHIELD(cast<r_integer_t>(locs, R_NilValue)); ++NP;
+    cols = SHIELD(cast<r_integer_t>(locs, r_null)); ++NP;
     break;
   }
   }
@@ -1474,7 +1474,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 
   int32_t NP = 0;
 
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
   if (cheapr_is_simple_vec(x)){
 
@@ -1489,7 +1489,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       check = LOGICAL(VECTOR_ELT(indices_metadata, 2))[0];
     }
 
-    SEXP names = R_NilValue;
+    SEXP names = r_null;
 
     if (is_compact_seq(i)){
       SEXP seq_data = SHIELD(compact_seq_data(i)); ++NP;
@@ -1553,7 +1553,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 // also keep for legacy reasons as fastplyr directly uses it
 [[cpp11::register]]
 SEXP cpp_sset(SEXP x, SEXP indices, bool check){
-  return cpp_sset2(x, indices, R_NilValue, check, R_NilValue);
+  return cpp_sset2(x, indices, r_null, check, r_null);
 }
 
 // scalar subset
@@ -1583,7 +1583,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
   switch ( TYPEOF(x) ){
 
   case NILSXP: {
-    return R_NilValue;
+    return r_null;
   }
   case LGLSXP: {
     return as_r_vec(LOGICAL(x)[i]);

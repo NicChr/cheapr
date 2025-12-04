@@ -3,22 +3,22 @@
 // Altrep utils
 
 // Symbols
-static SEXP CHEAPR_COMPACT_INTSEQ = R_NilValue;
-static SEXP CHEAPR_COMPACT_REALSEQ = R_NilValue;
-static SEXP CHEAPR_BASE = R_NilValue;
+static SEXP CHEAPR_COMPACT_INTSEQ = r_null;
+static SEXP CHEAPR_COMPACT_REALSEQ = r_null;
+static SEXP CHEAPR_BASE = r_null;
 
 SEXP alt_class(SEXP x){
   if (is_altrep(x)){
     return CAR(ATTRIB(ALTREP_CLASS(x)));
   } else {
-    return R_NilValue;
+    return r_null;
   }
 }
 SEXP alt_pkg(SEXP x){
   if (is_altrep(x)){
     return CADR(ATTRIB(ALTREP_CLASS(x)));
   } else {
-    return R_NilValue;
+    return r_null;
   }
 }
 
@@ -26,7 +26,7 @@ SEXP alt_data1(SEXP x){
   if (is_altrep(x)){
     return R_altrep_data1(x);
   } else {
-    return R_NilValue;
+    return r_null;
   }
 }
 

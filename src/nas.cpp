@@ -775,7 +775,7 @@ SEXP matrix_rownames(SEXP x) {
       TYPEOF(dimnames) != VECSXP ||
       Rf_length(dimnames) != 2){
     YIELD(1);
-    return R_NilValue;
+    return r_null;
   }
   YIELD(1);
   return VECTOR_ELT(dimnames, 0);
@@ -787,7 +787,7 @@ SEXP matrix_colnames(SEXP x) {
       TYPEOF(dimnames) != VECSXP ||
       Rf_length(dimnames) != 2){
     YIELD(1);
-    return R_NilValue;
+    return r_null;
   }
   YIELD(1);
   return VECTOR_ELT(dimnames, 1);

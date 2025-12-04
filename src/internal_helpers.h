@@ -23,7 +23,7 @@ inline double trunc(T x){
   return std::trunc(x) + 0.0;
 }
 
-inline SEXP CHEAPR_CORES = R_NilValue;
+inline SEXP CHEAPR_CORES = r_null;
 
 inline int num_cores(){
   if (is_null(CHEAPR_CORES)){

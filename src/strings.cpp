@@ -12,7 +12,7 @@ SEXP cpp_str_coalesce(SEXP x){
 
   int32_t NP = 0;
 
-  SEXP chars = SHIELD(cpp_recycle(x, R_NilValue)); ++NP;
+  SEXP chars = SHIELD(cpp_recycle(x, r_null)); ++NP;
   if (MAYBE_REFERENCED(chars)){
     SHIELD(chars = Rf_shallow_duplicate(chars)); ++NP;
   }
@@ -30,7 +30,7 @@ SEXP cpp_str_coalesce(SEXP x){
   // First cast all to character vectors
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
-    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], R_NilValue));
+    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], r_null));
   }
 
   // The reason for not assigning these ptrs in the previous loop is because
@@ -86,14 +86,14 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
 
   int32_t NP = 0;
 
-  SHIELD(sep = cast<r_character_t>(sep, R_NilValue)); ++NP;
+  SHIELD(sep = cast<r_character_t>(sep, r_null)); ++NP;
 
   if (Rf_length(sep) != 1){
     YIELD(NP);
     Rf_error("`sep` must be a `<character>` vector of length 1 in %s", __func__);
   }
 
-  SEXP chars = SHIELD(cpp_recycle(x, R_NilValue)); ++NP;
+  SEXP chars = SHIELD(cpp_recycle(x, r_null)); ++NP;
   if (MAYBE_REFERENCED(chars)){
     SHIELD(chars = Rf_shallow_duplicate(chars)); ++NP;
   }
@@ -111,11 +111,11 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   // First cast all to character vectors
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
-    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], R_NilValue));
+    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], r_null));
   }
 
   if (!is_null(collapse)){
-    SHIELD(collapse = cast<r_character_t>(collapse, R_NilValue)); ++NP;
+    SHIELD(collapse = cast<r_character_t>(collapse, r_null)); ++NP;
     if (Rf_length(collapse) != 1){
       YIELD(NP);
       Rf_error("`.collapse` must be a length 1 character vector in %s", __func__);

@@ -77,9 +77,11 @@ inline constexpr int64_t NA_INTEGER64 = std::numeric_limits<int64_t>::min();
 inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 
+inline const SEXP r_null = R_NilValue;
 inline const Rcomplex NA_COMPLEX = {{NA_REAL, NA_REAL}};
 
 // Functions
+
 inline const SEXP* LIST_PTR_RO(SEXP x) {
   return static_cast<const SEXP*>(DATAPTR_RO(x));
 }
@@ -139,7 +141,7 @@ inline const char* char_as_utf8(const char *x){
 }
 
 inline bool is_null(SEXP x){
-  return x == R_NilValue;
+  return x == r_null;
 }
 
 inline bool is_altrep(SEXP x){
@@ -282,7 +284,7 @@ inline SEXP na_type<SEXP>(const SEXP x){
     return NA_STRING;
   }
   case VECSXP: {
-    return R_NilValue;
+    return r_null;
   }
   default: {
    Rf_error("No `na_type` specialisation for R type %s", Rf_type2char(TYPEOF(x)));
@@ -453,7 +455,7 @@ inline SEXP address(SEXP x) {
 // Return R function from a specified package
 inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
 
-  SEXP expr = R_NilValue;
+  SEXP expr = r_null;
 
   if (all_fns){
     expr = SHIELD(Rf_lang3(R_TripleColonSymbol, Rf_install(pkg), Rf_install(name)));
@@ -465,7 +467,7 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   return out;
 }
 
-inline SEXP r_length_sym = R_NilValue;
+inline SEXP r_length_sym = r_null;
 
 inline R_xlen_t vector_length(SEXP x){
   if (!Rf_isObject(x) || Rf_isVectorAtomic(x)){
@@ -510,10 +512,10 @@ inline R_xlen_t vector_length(SEXP x){
   }
 }
 
-// Can't use `Rf_namesgets(x, R_NilValue)`
+// Can't use `Rf_namesgets(x, r_null)`
 // as it adds empty names instead of NULL
 inline void set_names(SEXP x, SEXP names){
-  names == R_NilValue ? Rf_setAttrib(x, R_NamesSymbol, R_NilValue) : Rf_namesgets(x, names);
+  is_null(names) ? Rf_setAttrib(x, R_NamesSymbol, r_null) : Rf_namesgets(x, names);
 }
 inline SEXP get_names(SEXP x){
   return Rf_getAttrib(x, R_NamesSymbol);
@@ -691,7 +693,7 @@ struct arg {
   const char* name;
   SEXP value;
 
-  explicit arg(const char* n) : name(n), value(R_NilValue) {}
+  explicit arg(const char* n) : name(n), value(r_null) {}
   explicit arg(const char* n, SEXP v) : name(n), value(v) {}
 
   template<typename T>
@@ -719,7 +721,7 @@ inline SEXP new_r_list(Args... args) {
     if (any_named){
       nms = SHIELD(new_vec(STRSXP, n));
     } else {
-      nms = SHIELD(R_NilValue);
+      nms = SHIELD(r_null);
     }
 
     (([&]() {

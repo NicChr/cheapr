@@ -142,7 +142,7 @@ SEXP cpp_set_exp(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
   if (!Rf_isReal(x)){
     copy_warning();
@@ -162,7 +162,7 @@ SEXP cpp_set_sqrt(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
   if (!Rf_isReal(x)){
     copy_warning();
@@ -422,7 +422,7 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
     }
   }
 
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
   if (!Rf_isReal(x)){
     copy_warning();

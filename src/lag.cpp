@@ -28,7 +28,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   }
   switch(CHEAPR_TYPEOF(xvec)){
   case NILSXP: {
-    out = R_NilValue;
+    out = r_null;
     break;
   }
   case LGLSXP:
@@ -37,7 +37,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     int *p_x = INTEGER(xvec);
-    SHIELD(fill = cast<r_integer_t>(fill, R_NilValue)); ++NP;
+    SHIELD(fill = cast<r_integer_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? INTEGER(fill)[0] : na_type(p_x[0]);
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
@@ -55,7 +55,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     int64_t* RESTRICT p_out = INTEGER64_PTR(out);
     int64_t *p_x = INTEGER64_PTR(xvec);
-    SHIELD(fill = cast<r_integer64_t>(fill, R_NilValue)); ++NP;
+    SHIELD(fill = cast<r_integer64_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? INTEGER64_PTR(fill)[0] : na_type(p_x[0]);
 
     if (k >= 0){
@@ -74,7 +74,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     double* RESTRICT p_out = REAL(out);
     double *p_x = REAL(xvec);
-    SHIELD(fill = cast<r_double_t>(fill, R_NilValue)); ++NP;
+    SHIELD(fill = cast<r_double_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? REAL(fill)[0] : na_type(p_x[0]);
 
     if (k >= 0){
@@ -93,7 +93,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     Rcomplex *p_out = COMPLEX(out);
     Rcomplex *p_x = COMPLEX(xvec);
-    SHIELD(fill = cast<r_complex_t>(fill, R_NilValue)); ++NP;
+    SHIELD(fill = cast<r_complex_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? COMPLEX(fill)[0] : na_type(p_x[0]);
 
     if (k >= 0){
@@ -112,7 +112,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     const SEXP *p_out = STRING_PTR_RO(out);
     const SEXP *p_x = STRING_PTR_RO(xvec);
 
-    SHIELD(fill = cast<r_character_t>(fill, R_NilValue)); ++NP;
+    SHIELD(fill = cast<r_character_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? STRING_ELT(fill, 0) : na_type(p_x[0]);
 
     if (set){
@@ -165,7 +165,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     Rbyte *p_out = RAW(out);
     const Rbyte *p_x = RAW_RO(xvec);
 
-    SHIELD(fill = cast<r_raw_t>(fill, R_NilValue)); ++NP;
+    SHIELD(fill = cast<r_raw_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? RAW(fill)[0] : na_type(p_x[0]);
 
     if (set){
@@ -216,7 +216,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   }
   case VECSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    SEXP fill_value = SHIELD(coerce_vec(fill_size >= 1 ? fill : R_NilValue, VECSXP)); ++NP;
+    SEXP fill_value = SHIELD(coerce_vec(fill_size >= 1 ? fill : r_null, VECSXP)); ++NP;
     out = SHIELD(set ? xvec : new_vec(VECSXP, size)); ++NP;
     const SEXP *p_out = LIST_PTR_RO(out);
     if (set){
@@ -281,7 +281,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
 [[cpp11::register]]
 SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive){
   int32_t NP = 0;
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
     const SEXP *p_x = LIST_PTR_RO(x);
@@ -324,8 +324,8 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
   // if they are NULL
 
   SHIELD(lag = coerce_vec(lag, INTSXP)); ++NP;
-  SHIELD(order = has_order ? coerce_vec(order, INTSXP) : R_NilValue); ++NP;
-  SHIELD(run_lengths = has_rl ? coerce_vec(run_lengths, INTSXP) : R_NilValue); ++NP;
+  SHIELD(order = has_order ? coerce_vec(order, INTSXP) : r_null); ++NP;
+  SHIELD(run_lengths = has_rl ? coerce_vec(run_lengths, INTSXP) : r_null); ++NP;
   int foo = 42;
   const int *p_o = &foo;
   const int *p_rl = &foo;
@@ -340,7 +340,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
   // Manually set run rl size to 1 if run_lengths = NULL (checked prior)
   if (!has_rl) rl_size = 1;
   bool recycle_lag = lag_size != 1;
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
   switch(CHEAPR_TYPEOF(x)){
   case NILSXP: {
     break;
@@ -354,7 +354,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const int *p_x = INTEGER(x);
     int fill_value = NA_INTEGER;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(cast<r_integer_t>(fill, R_NilValue)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_integer_t>(fill, r_null)); ++NP;
       fill_value = INTEGER(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
@@ -409,7 +409,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     int64_t fill_value = NA_INTEGER64;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(cast<r_integer64_t>(fill, R_NilValue)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_integer64_t>(fill, r_null)); ++NP;
       fill_value = INTEGER64_PTR(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
@@ -463,7 +463,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const double *p_x = REAL(x);
     double fill_value = NA_REAL;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(cast<r_double_t>(fill, R_NilValue)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_double_t>(fill, r_null)); ++NP;
       fill_value = REAL(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
@@ -515,7 +515,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const SEXP *p_x = STRING_PTR_RO(x);
-    SEXP temp_fill = SHIELD(cast<r_character_t>(fill, R_NilValue)); ++NP;
+    SEXP temp_fill = SHIELD(cast<r_character_t>(fill, r_null)); ++NP;
     SEXP fill_value = SHIELD(fill_size >= 1 ? STRING_ELT(temp_fill, 0) : NA_STRING); ++NP;
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
@@ -668,7 +668,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const SEXP *p_x = LIST_PTR_RO(x);
-    SEXP fill_value = SHIELD(VECTOR_ELT(coerce_vec(fill_size >= 1 ? fill : R_NilValue, VECSXP), 0)); ++NP;
+    SEXP fill_value = SHIELD(VECTOR_ELT(coerce_vec(fill_size >= 1 ? fill : r_null, VECSXP), 0)); ++NP;
     out = SHIELD(new_vec(VECSXP, size)); ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
@@ -724,7 +724,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
 [[cpp11::register]]
 SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool recursive){
   int32_t NP = 0;
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
     const SEXP *p_x = LIST_PTR_RO(x);

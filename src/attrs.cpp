@@ -7,7 +7,7 @@
 
 // Taken from Writing R Extensions
 // void CLEAR_ATTRIB(SEXP x){
-//   SET_ATTRIB(x, R_NilValue);
+//   SET_ATTRIB(x, r_null);
 //   SET_OBJECT(x, 0);
 //   UNSET_S4_OBJECT(x);
 // }
@@ -22,8 +22,8 @@
 [[cpp11::register]]
 SEXP cpp_set_rm_attributes(SEXP x){
   SEXP current = ATTRIB(x);
-  while (current != R_NilValue){
-    Rf_setAttrib(x, TAG(current), R_NilValue);
+  while (!is_null(current)){
+    Rf_setAttrib(x, TAG(current), r_null);
     current = CDR(current);
   }
   return x;
@@ -32,8 +32,8 @@ SEXP cpp_set_rm_attributes(SEXP x){
 // Same as above but no return
 void clear_attributes(SEXP x){
   SEXP current = ATTRIB(x);
-  while (current != R_NilValue){
-    Rf_setAttrib(x, TAG(current), R_NilValue);
+  while (!is_null(current)){
+    Rf_setAttrib(x, TAG(current), r_null);
     current = CDR(current);
   }
 }
@@ -54,7 +54,7 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
 
 [[cpp11::register]]
 SEXP cpp_set_rm_attr(SEXP x, SEXP which){
-  Rf_setAttrib(x, Rf_installChar(STRING_ELT(which, 0)), R_NilValue);
+  Rf_setAttrib(x, Rf_installChar(STRING_ELT(which, 0)), r_null);
   return x;
 }
 
@@ -79,7 +79,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
     const SEXP *p_attributes = LIST_PTR_RO(attributes);
     const SEXP *p_names = STRING_PTR_RO(names);
 
-    SEXP attr_nm = R_NilValue;
+    SEXP attr_nm = r_null;
 
     for (int i = 0; i < Rf_length(names); ++i){
       if (p_names[i] != R_BlankString){

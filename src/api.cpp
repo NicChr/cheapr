@@ -20,7 +20,7 @@ api_set_add_attrs(SEXP x, SEXP attributes, bool add){
   try {
     return cpp_set_add_attributes(x, attributes, add);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -29,7 +29,7 @@ api_set_rm_attrs(SEXP x) {
   try {
     return cpp_set_rm_attributes(x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -38,7 +38,7 @@ api_exclude_locs(SEXP exclude, R_xlen_t xn) {
   try {
     return exclude_locs(exclude, xn);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -56,7 +56,7 @@ api_drop_null(SEXP l) {
   try {
     return cpp_drop_null(l);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -65,7 +65,7 @@ api_lengths(SEXP x, bool names){
   try {
     return cpp_lengths(x, names);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 SEXP
@@ -73,7 +73,7 @@ api_new_list(R_xlen_t length, SEXP default_value){
   try {
     return new_list(length, default_value);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -82,7 +82,7 @@ api_list_assign(SEXP x, SEXP values){
   try {
     return cpp_list_assign(x, values);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -91,7 +91,7 @@ api_sset(SEXP x, SEXP indices, bool check){
   try {
     return cpp_sset(x, indices, check);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -100,7 +100,7 @@ api_sset_vec(SEXP x, SEXP indices, bool check){
   try {
     return sset_vec(x, indices, check);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -109,7 +109,7 @@ api_val_find(SEXP x, SEXP value, bool invert){
   try {
     return cpp_which_val(x, value, invert);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -118,7 +118,7 @@ api_val_remove(SEXP x, SEXP value){
   try {
     return cpp_val_remove(x, value, false);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -127,7 +127,7 @@ api_loc_set_replace(SEXP x, SEXP where, SEXP what){
   try {
     return cpp_loc_set_replace(x, where, what);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -136,7 +136,7 @@ api_sequence(SEXP size, SEXP from, SEXP by, bool as_list, bool add_id){
   try {
     return cpp_sequence(size, from, by, as_list, add_id);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -145,7 +145,7 @@ api_seq_len(R_xlen_t n){
   try {
     return cpp_seq_len(n);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -154,7 +154,7 @@ api_rep_len(SEXP x, int length){
   try {
     return cpp_rep_len(x, length);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -163,7 +163,7 @@ api_rep(SEXP x, SEXP times){
   try {
     return cpp_rep(x, times);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -172,7 +172,7 @@ api_rep_each(SEXP x, SEXP each){
   try {
     return cpp_rep_each(x, each);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -181,7 +181,7 @@ api_recycle(SEXP x, SEXP length){
   try {
     return cpp_recycle(x, length);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -190,7 +190,7 @@ api_c(SEXP x){
   try {
     return cpp_c(x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -199,7 +199,7 @@ api_list_c(SEXP x){
   try {
     return cpp_list_c(x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -208,7 +208,7 @@ api_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   try {
     return cpp_name_repair(names, dup_sep, empty_sep);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -217,7 +217,7 @@ api_unique(SEXP x, bool names){
   try {
     return cpp_unique(x, names);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -226,7 +226,7 @@ api_setdiff(SEXP x, SEXP y, bool unique){
   try {
     return cpp_setdiff(x, y, unique);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -235,7 +235,7 @@ api_intersect(SEXP x, SEXP y, bool unique){
   try {
     return cpp_intersect(x, y, unique);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -244,7 +244,7 @@ api_get_ptype(SEXP x){
   try {
     return get_ptype(x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -255,7 +255,7 @@ api_create_df_row_names(int n) {
   try {
     return create_df_row_names(n);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -264,7 +264,7 @@ api_list_as_df(SEXP x){
   try {
     return cpp_list_as_df(x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -273,7 +273,7 @@ api_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
   try {
     return cpp_new_df(x, nrows, recycle, name_repair);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -282,7 +282,7 @@ api_df_slice(SEXP x, SEXP indices, bool check){
   try {
     return cpp_df_slice(x, indices, check);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -291,7 +291,7 @@ api_df_select(SEXP x, SEXP locs){
   try {
     return cpp_df_select(x, locs);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -300,7 +300,7 @@ api_df_subset(SEXP x, SEXP i, SEXP j, bool check){
   try {
     return cpp_df_subset(x, i, j, check);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -309,7 +309,7 @@ api_df_assign_cols(SEXP x, SEXP cols){
   try {
     return cpp_df_assign_cols(x, cols);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -318,7 +318,7 @@ api_df_col_c(SEXP x, bool recycle, bool name_repair){
   try {
     return cpp_df_col_c(x, recycle, name_repair);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -327,7 +327,7 @@ api_str_coalesce(SEXP x){
   try {
     return cpp_str_coalesce(x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -336,7 +336,7 @@ api_rebuild(SEXP x, SEXP source, bool shallow_copy){
   try {
     return rebuild(x, source, shallow_copy);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -345,7 +345,7 @@ api_semi_copy(SEXP x){
   try {
     return cpp_semi_copy(x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -354,7 +354,7 @@ api_paste(SEXP x, SEXP sep, SEXP collapse){
   try {
     return cpp_paste(x, sep, collapse);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -371,7 +371,7 @@ api_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   try {
     return cpp_if_else(condition, yes, no, na);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -380,7 +380,7 @@ api_gcd(SEXP x, double tol, bool na_rm){
   try {
     return cpp_gcd(x, tol, na_rm, true, true);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -389,7 +389,7 @@ api_clean_indices(SEXP locs, SEXP x){
   try {
     return cpp_clean_locs(locs, x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 
@@ -409,7 +409,7 @@ api_r_address(SEXP x) {
   try {
     return cheapr::address(x);
   } catch (...) {
-    return R_NilValue;
+    return cheapr::r_null;
   }
 }
 

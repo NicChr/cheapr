@@ -45,7 +45,7 @@ SEXP cpp_rep_len(SEXP x, int length){
   int out_size = length;
 
   if (is_null(x)){
-    return R_NilValue;
+    return r_null;
   } else if (is_df(x)){
     if (out_size == df_nrow(x)) return x;
     int n_cols = Rf_length(x);
@@ -198,7 +198,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
         for (int i = 0; i < out_size; ++i){
-          SET_VECTOR_ELT(out, i, R_NilValue);
+          SET_VECTOR_ELT(out, i, r_null);
         }
       }
       Rf_copyMostAttrib(x, out);
@@ -229,7 +229,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
 
   R_xlen_t out_size;
   R_xlen_t n_times = Rf_xlength(times);
-  SHIELD(times = cast<r_integer_t>(times, R_NilValue));
+  SHIELD(times = cast<r_integer_t>(times, r_null));
 
   if (n_times == 1){
     out_size = n * INTEGER(times)[0];
@@ -245,7 +245,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
 
     if (is_null(x)){
       YIELD(1);
-      return R_NilValue;
+      return r_null;
     } else if (is_df(x)){
       if (Rf_length(x) == 0){
         SEXP out = SHIELD(Rf_shallow_duplicate(x));
@@ -334,7 +334,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
 [[cpp11::register]]
 SEXP cpp_rep_each(SEXP x, SEXP each){
   int32_t NP = 0;
-  SHIELD(each = cast<r_integer_t>(each, R_NilValue)); ++NP;
+  SHIELD(each = cast<r_integer_t>(each, r_null)); ++NP;
   if (Rf_length(each) == 1){
     if (INTEGER(each)[0] == 1){
       YIELD(NP);
@@ -396,7 +396,7 @@ SEXP cpp_recycle(SEXP x, SEXP length){
     if (TYPEOF(length) == INTSXP){
       n = INTEGER(length)[0];
     } else {
-      SHIELD(length = cast<r_double_t>(length, R_NilValue));
+      SHIELD(length = cast<r_double_t>(length, r_null));
       NP = 2;
       n = REAL(length)[0];
     }
@@ -568,7 +568,7 @@ SEXP cpp_list_c(SEXP x){
 
   SEXP names;
   PROTECT_INDEX nm_idx;
-  R_ProtectWithIndex(names = R_NilValue, &nm_idx); ++NP;
+  R_ProtectWithIndex(names = r_null, &nm_idx); ++NP;
 
   SEXP out_names = SHIELD(new_vec(STRSXP, out_size)); ++NP;
   bool any_names = false;
@@ -587,7 +587,7 @@ SEXP cpp_list_c(SEXP x){
       if (x_has_names){
         R_Reprotect(names = Rf_ScalarString(STRING_ELT(x_names, i)), nm_idx);
       } else {
-        names = R_NilValue;
+        names = r_null;
       }
       p_temp = LIST_PTR_RO(container_list);
       m = 1;
@@ -622,7 +622,7 @@ SEXP cpp_df_c(SEXP x){
 
   int n_frames = Rf_length(x);
 
-  if (n_frames == 0) return R_NilValue;
+  if (n_frames == 0) return r_null;
 
   int32_t NP = 0;
 
@@ -634,14 +634,14 @@ SEXP cpp_df_c(SEXP x){
 
   SEXP df;
   PROTECT_INDEX df_idx;
-  R_ProtectWithIndex(df = cast<r_data_frame_t>(p_x[0], R_NilValue), &df_idx); ++NP;
+  R_ProtectWithIndex(df = cast<r_data_frame_t>(p_x[0], r_null), &df_idx); ++NP;
   SET_VECTOR_ELT(frames, 0, df);
 
   SEXP new_names, df_names, ptype_names;
   PROTECT_INDEX new_names_idx, df_names_idx, ptype_names_idx;
 
-  R_ProtectWithIndex(new_names = R_NilValue, &new_names_idx); ++NP;
-  R_ProtectWithIndex(df_names = R_NilValue, &df_names_idx); ++NP;
+  R_ProtectWithIndex(new_names = r_null, &new_names_idx); ++NP;
+  R_ProtectWithIndex(df_names = r_null, &df_names_idx); ++NP;
   R_ProtectWithIndex(ptype_names = get_names(df), &ptype_names_idx); ++NP;
 
   int n_cols = Rf_length(ptype_names);
@@ -655,7 +655,7 @@ SEXP cpp_df_c(SEXP x){
   bool na_padding = false;
 
   for (int i = 1; i < n_frames; ++i){
-    R_Reprotect(df = cast<r_data_frame_t>(p_x[i], R_NilValue), df_idx);
+    R_Reprotect(df = cast<r_data_frame_t>(p_x[i], r_null), df_idx);
     R_Reprotect(df_names = get_names(df), df_names_idx);
 
     R_Reprotect(new_names = cpp_setdiff(
@@ -676,7 +676,7 @@ SEXP cpp_df_c(SEXP x){
 
   SEXP vec;
   PROTECT_INDEX vec_idx;
-  R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
+  R_ProtectWithIndex(vec = r_null, &vec_idx); ++NP;
 
   SEXP out = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
   SEXP vectors = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
@@ -759,14 +759,14 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
   R_xlen_t k = 0;
   R_xlen_t m = 0;
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
   SEXP vec;
   PROTECT_INDEX vec_idx;
-  R_ProtectWithIndex(vec = R_NilValue, &vec_idx); ++NP;
+  R_ProtectWithIndex(vec = r_null, &vec_idx); ++NP;
 
   r_type common = get_r_type(vec_template);
-  SEXP combined_names = R_NilValue;
+  SEXP combined_names = r_null;
   bool has_top_level_names = vec_has_names(x);
 
   // If in the future it is decided that inner names are to be kept

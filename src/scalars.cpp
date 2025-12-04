@@ -43,7 +43,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case LGLSXP:
   case INTSXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
     const int val = INTEGER(value)[0];
     const int *p_x = INTEGER(x);
     CHEAPR_VAL_COUNT(val)
@@ -51,7 +51,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   case REALSXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = cast<r_double_t>(value, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
     const double val = REAL(value)[0];
     const double *p_x = REAL(x);
     CHEAPR_VAL_COUNT(val)
@@ -59,7 +59,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   case CHEAPR_INT64SXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
     const int64_t val = INTEGER64_PTR(value)[0];
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     CHEAPR_VAL_COUNT(val)
@@ -67,7 +67,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
     const SEXP val = STRING_ELT(value, 0);
     const SEXP *p_x = STRING_PTR_RO(x);
     CHEAPR_VAL_COUNT(val)
@@ -75,7 +75,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   case CPLXSXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = cast<r_complex_t>(value, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
     const Rcomplex val = as_complex(COMPLEX(value)[0]);
     const Rcomplex *p_x = COMPLEX_RO(x);
     CHEAPR_VAL_COUNT(val);
@@ -136,8 +136,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     break;
   }
     int *p_out = INTEGER(out);
-    SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
-    SHIELD(replace = cast<r_integer_t>(replace, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
+    SHIELD(replace = cast<r_integer_t>(replace, r_null)); ++NP;
     int val = INTEGER(value)[0];
     int repl = INTEGER(replace)[0];
     int *p_x = INTEGER(x);
@@ -158,8 +158,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)){
     break;
   }
-    SHIELD(value = cast<r_double_t>(value, R_NilValue)); ++NP;
-    SHIELD(replace = cast<r_double_t>(replace, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
+    SHIELD(replace = cast<r_double_t>(replace, r_null)); ++NP;
     double *p_out = REAL(out);
     double val = REAL(value)[0];
     double repl = REAL(replace)[0];
@@ -193,8 +193,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)){
     break;
   }
-    SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
-    SHIELD(replace = cast<r_integer64_t>(replace, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
+    SHIELD(replace = cast<r_integer64_t>(replace, r_null)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
     int64_t val = INTEGER64_PTR(value)[0];
     int64_t repl = INTEGER64_PTR(replace)[0];
@@ -215,8 +215,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)){
     break;
   }
-    SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
-    SHIELD(replace = cast<r_character_t>(replace, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
+    SHIELD(replace = cast<r_character_t>(replace, r_null)); ++NP;
     SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
     SEXP repl = SHIELD(STRING_ELT(replace, 0)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -235,8 +235,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)){
     break;
   }
-    SHIELD(value = cast<r_complex_t>(value, R_NilValue)); ++NP;
-    SHIELD(replace = cast<r_complex_t>(replace, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
+    SHIELD(replace = cast<r_complex_t>(replace, r_null)); ++NP;
     Rcomplex val = COMPLEX_ELT(value, 0);
     Rcomplex repl = COMPLEX_ELT(replace, 0);
     const Rcomplex *p_x = COMPLEX_RO(x);
@@ -303,7 +303,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
+      SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
       int val = INTEGER(value)[0];
       int *p_x = INTEGER(x);
       int *p_out = INTEGER(out);
@@ -321,7 +321,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = cast<r_double_t>(value, R_NilValue)); ++NP;
+      SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
       double val = REAL(value)[0];
       double *p_x = REAL(x);
       double *p_out = REAL(out);
@@ -347,7 +347,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       break;
     }
       out = SHIELD(new_vec(REALSXP, n_keep)); ++NP;
-      SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
+      SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
       int64_t val = INTEGER64_PTR(value)[0];
       int64_t *p_x = INTEGER64_PTR(x);
       int64_t *p_out = INTEGER64_PTR(out);
@@ -365,7 +365,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       break;
     }
       out = SHIELD(new_vec(STRSXP, n_keep)); ++NP;
-      SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
+      SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
       SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
       const SEXP *p_x = STRING_PTR_RO(x);
 
@@ -382,7 +382,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       break;
     }
       out = SHIELD(new_vec(CPLXSXP, n_keep)); ++NP;
-      SHIELD(value = cast<r_complex_t>(value, R_NilValue)); ++NP;
+      SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
       Rcomplex val = COMPLEX_ELT(value, 0);
       const Rcomplex *p_x = COMPLEX_RO(x);
 

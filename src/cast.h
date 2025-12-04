@@ -10,15 +10,15 @@
 
 // Symbols for R conversion fns
 
-inline SEXP r_as_lgl = R_NilValue;
-inline SEXP r_as_int = R_NilValue;
-inline SEXP r_as_dbl = R_NilValue;
-inline SEXP r_as_char = R_NilValue;
-inline SEXP r_as_cplx = R_NilValue;
-inline SEXP r_as_raw = R_NilValue;
-inline SEXP r_as_date = R_NilValue;
-inline SEXP r_as_posixct = R_NilValue;
-inline SEXP r_as_list = R_NilValue;
+inline SEXP r_as_lgl = cheapr::r_null;
+inline SEXP r_as_int = cheapr::r_null;
+inline SEXP r_as_dbl = cheapr::r_null;
+inline SEXP r_as_char = cheapr::r_null;
+inline SEXP r_as_cplx = cheapr::r_null;
+inline SEXP r_as_raw = cheapr::r_null;
+inline SEXP r_as_date = cheapr::r_null;
+inline SEXP r_as_posixct = cheapr::r_null;
+inline SEXP r_as_list = cheapr::r_null;
 
 // Custom r types
 
@@ -185,12 +185,12 @@ inline const char *r_type_char(SEXP x){
 template<typename T>
 inline SEXP init(R_xlen_t n, bool with_na) {
   Rf_error("Unimplemented initialisation");
-  return R_NilValue;
+  return cheapr::r_null;
 }
 
 template<>
 inline SEXP init<r_null_t>(R_xlen_t n, bool with_na) {
-  return R_NilValue;
+  return cheapr::r_null;
 }
 
 template<>
@@ -316,7 +316,7 @@ inline SEXP init<r_posixt_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(cheapr::new_vec(VECSXP, 0));
-  SHIELD(out = cpp_new_df(out, R_NilValue, false, false));
+  SHIELD(out = cpp_new_df(out, cheapr::r_null, false, false));
   SHIELD(out = cpp_na_init(out, n));
   YIELD(3);
   return out;
@@ -325,7 +325,7 @@ inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
   Rf_error("Don't know how to initialise unknown type");
-  return R_NilValue;
+  return cheapr::r_null;
 }
 
 inline void check_casted_length(SEXP x, SEXP out){
@@ -352,12 +352,12 @@ inline void signal_bad_cast(SEXP from, SEXP to){
 template<typename T>
 inline SEXP cast(SEXP x, SEXP y) {
   Rf_error("Unimplemented cast specialisation");
-  return R_NilValue;
+  return cheapr::r_null;
 }
 
 template<>
 inline SEXP cast<r_null_t>(SEXP x, SEXP y) {
-  return R_NilValue;
+  return cheapr::r_null;
 }
 
 template<>
@@ -413,7 +413,7 @@ inline SEXP cast<r_integer64_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "integer64")){
     return x;
   } else {
-    SEXP out = SHIELD(cast<r_double_t>(x, R_NilValue));
+    SEXP out = SHIELD(cast<r_double_t>(x, cheapr::r_null));
     SHIELD(out = cpp_numeric_to_int64(x));
     YIELD(2);
     return out;
@@ -497,7 +497,7 @@ inline SEXP cast<r_factor_t>(SEXP x, SEXP y) {
       YIELD(2);
       return x;
     }
-    SEXP out = SHIELD(cast<r_character_t>(x, R_NilValue));
+    SEXP out = SHIELD(cast<r_character_t>(x, cheapr::r_null));
     SHIELD(out = character_as_factor(out, out_lvls));
     YIELD(4);
     return out;

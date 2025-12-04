@@ -39,7 +39,7 @@ SEXP cpp_common_template(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   int32_t NP = 0;
 
-  SEXP out = R_NilValue;
+  SEXP out = r_null;
 
   r_type common = r_common_type(x);
 
@@ -49,7 +49,7 @@ SEXP cpp_common_template(SEXP x){
 
     SEXP vec_template;
     PROTECT_INDEX vec_template_idx;
-    R_ProtectWithIndex(vec_template = R_NilValue, &vec_template_idx); ++NP;
+    R_ProtectWithIndex(vec_template = r_null, &vec_template_idx); ++NP;
 
     for (R_xlen_t i = 0; i < n; ++i){
       R_Reprotect(vec_template = cast<r_unknown_t>(vec_template, p_x[i]), vec_template_idx);
@@ -79,7 +79,7 @@ SEXP cpp_common_template(SEXP x){
         if (Rf_isFactor(p_x[i])){
           R_Reprotect(new_lvls = Rf_getAttrib(p_x[i], R_LevelsSymbol), new_lvls_idx);
         } else {
-          R_Reprotect(new_lvls = cast<r_character_t>(p_x[i], R_NilValue), new_lvls_idx);
+          R_Reprotect(new_lvls = cast<r_character_t>(p_x[i], r_null), new_lvls_idx);
         }
         if (!R_compute_identical(all_lvls, new_lvls, 0)){
           R_Reprotect(new_lvls = cpp_setdiff(new_lvls, all_lvls, false), new_lvls_idx);
