@@ -306,7 +306,7 @@ double var_sum_squared_diff(SEXP x, double mu){
 
 #define CHEAPR_BIN_CODES                                                                                  \
 for (R_xlen_t i = 0; i < n; ++i) {                                                                        \
-  p_out[i] = na_type(p_out[0]);                                                                           \
+  p_out[i] = na_value(p_out[0]);                                                                           \
   if (!is_r_na(p_x[i])) {                                                                                 \
     lo = 0;                                                                                               \
     hi = nb1;                                                                                             \
@@ -330,7 +330,7 @@ for (R_xlen_t i = 0; i < n; ++i) {                                              
 
 #define CHEAPR_BIN_NCODES                                                                                                              \
 for (R_xlen_t i = 0; i < n; ++i) {                                                                                                     \
-  p_out[i] = na_type(p_out[0]);                                                                                                        \
+  p_out[i] = na_value(p_out[0]);                                                                                                        \
   if (!is_r_na(p_x[i])) {                                                                                                              \
     lo = 0;                                                                                                                            \
     hi = nb1;                                                                                                                          \

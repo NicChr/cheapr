@@ -233,52 +233,52 @@ inline bool is_r_na<SEXP>(const SEXP x){
 // NA type
 
 template<typename T>
-inline T na_type(const T x) {
-  Rf_error("Unimplemented `na_type` specialisation");
+inline T na_value(const T x) {
+  Rf_error("Unimplemented `na_value` specialisation");
 }
 
 template<>
-inline r_boolean na_type<r_boolean>(const r_boolean x){
+inline r_boolean na_value<r_boolean>(const r_boolean x){
   return r_na;
 }
 
 template<>
-inline cpp11::r_bool na_type<cpp11::r_bool>(const cpp11::r_bool x){
+inline cpp11::r_bool na_value<cpp11::r_bool>(const cpp11::r_bool x){
   return cpp11::na<cpp11::r_bool>();
 }
 
 template<>
-inline int na_type<int>(const int x){
+inline int na_value<int>(const int x){
   return NA_INTEGER;
 }
 
 template<>
-inline double na_type<double>(const double x){
+inline double na_value<double>(const double x){
   return NA_REAL;
 }
 
 template<>
-inline int64_t na_type<int64_t>(const int64_t x){
+inline int64_t na_value<int64_t>(const int64_t x){
   return NA_INTEGER64;
 }
 
 template<>
-inline Rcomplex na_type<Rcomplex>(const Rcomplex x){
+inline Rcomplex na_value<Rcomplex>(const Rcomplex x){
   return NA_COMPLEX;
 }
 
 template<>
-inline Rbyte na_type<Rbyte>(const Rbyte x){
+inline Rbyte na_value<Rbyte>(const Rbyte x){
   return 0;
 }
 
 template<>
-inline cpp11::r_string na_type<cpp11::r_string>(const cpp11::r_string x){
+inline cpp11::r_string na_value<cpp11::r_string>(const cpp11::r_string x){
   return cpp11::na<cpp11::r_string>();
 }
 
 template<>
-inline SEXP na_type<SEXP>(const SEXP x){
+inline SEXP na_value<SEXP>(const SEXP x){
   switch (TYPEOF(x)){
   case CHARSXP: {
     return NA_STRING;
@@ -287,7 +287,7 @@ inline SEXP na_type<SEXP>(const SEXP x){
     return r_null;
   }
   default: {
-   Rf_error("No `na_type` specialisation for R type %s", Rf_type2char(TYPEOF(x)));
+   Rf_error("No `na_value` specialisation for R type %s", Rf_type2char(TYPEOF(x)));
   }
   }
 }
@@ -528,7 +528,7 @@ inline bool has_names(SEXP x){
 }
 
 inline double r_round(double x){
-  return is_r_na(x) ? na_type(x) : x - std::remainder(x, 1.0);
+  return is_r_na(x) ? na_value(x) : x - std::remainder(x, 1.0);
 }
 
 inline bool is_r_whole_number(const double x, const double tolerance){

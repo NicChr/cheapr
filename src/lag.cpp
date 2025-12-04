@@ -38,7 +38,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     int* RESTRICT p_out = INTEGER(out);
     int *p_x = INTEGER(xvec);
     SHIELD(fill = cast<r_integer_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? INTEGER(fill)[0] : na_type(p_x[0]);
+    auto fill_value = fill_size > 0 ? INTEGER(fill)[0] : na_value(p_x[0]);
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
       OMP_FOR_SIMD
@@ -56,7 +56,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     int64_t* RESTRICT p_out = INTEGER64_PTR(out);
     int64_t *p_x = INTEGER64_PTR(xvec);
     SHIELD(fill = cast<r_integer64_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? INTEGER64_PTR(fill)[0] : na_type(p_x[0]);
+    auto fill_value = fill_size > 0 ? INTEGER64_PTR(fill)[0] : na_value(p_x[0]);
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int64_t));
@@ -75,7 +75,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     double* RESTRICT p_out = REAL(out);
     double *p_x = REAL(xvec);
     SHIELD(fill = cast<r_double_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? REAL(fill)[0] : na_type(p_x[0]);
+    auto fill_value = fill_size > 0 ? REAL(fill)[0] : na_value(p_x[0]);
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
@@ -94,7 +94,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     Rcomplex *p_out = COMPLEX(out);
     Rcomplex *p_x = COMPLEX(xvec);
     SHIELD(fill = cast<r_complex_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? COMPLEX(fill)[0] : na_type(p_x[0]);
+    auto fill_value = fill_size > 0 ? COMPLEX(fill)[0] : na_value(p_x[0]);
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(Rcomplex));
@@ -113,7 +113,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     const SEXP *p_x = STRING_PTR_RO(xvec);
 
     SHIELD(fill = cast<r_character_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? STRING_ELT(fill, 0) : na_type(p_x[0]);
+    auto fill_value = fill_size > 0 ? STRING_ELT(fill, 0) : na_value(p_x[0]);
 
     if (set){
       R_xlen_t tempi;
@@ -166,7 +166,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     const Rbyte *p_x = RAW_RO(xvec);
 
     SHIELD(fill = cast<r_raw_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? RAW(fill)[0] : na_type(p_x[0]);
+    auto fill_value = fill_size > 0 ? RAW(fill)[0] : na_value(p_x[0]);
 
     if (set){
       R_xlen_t tempi;
