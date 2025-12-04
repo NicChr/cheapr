@@ -87,7 +87,9 @@ na_replace <- function(x, replace, recursive = TRUE){
 }
 #' @rdname scalars
 #' @export
-val_rm <- cpp_val_remove
+val_rm <- function(x, value) {
+  .Call(`_cheapr_cpp_val_remove`, x, value, FALSE)
+}
 #' @rdname scalars
 #' @export
 na_count <- num_na

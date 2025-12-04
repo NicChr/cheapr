@@ -27,7 +27,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add);
 SEXP cpp_set_rm_attributes(SEXP x);
 bool implicit_na_coercion(SEXP x, SEXP target);
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
-SEXP cpp_val_remove(SEXP x, SEXP value);
+SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive);
 SEXP cpp_seq_len(R_xlen_t n);
 SEXP create_df_row_names(int n);
 SEXP cpp_shallow_copy(SEXP x);

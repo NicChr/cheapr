@@ -47,7 +47,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     const int val = INTEGER(value)[0];
     const int *p_x = INTEGER(x);
     CHEAPR_VAL_COUNT(val)
-    break;
+      break;
   }
   case REALSXP: {
     if (implicit_na_coercion(value, x)) break;
@@ -55,7 +55,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     const double val = REAL(value)[0];
     const double *p_x = REAL(x);
     CHEAPR_VAL_COUNT(val)
-    break;
+      break;
   }
   case CHEAPR_INT64SXP: {
     if (implicit_na_coercion(value, x)) break;
@@ -63,7 +63,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     const int64_t val = INTEGER64_PTR(value)[0];
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     CHEAPR_VAL_COUNT(val)
-    break;
+      break;
   }
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
@@ -71,7 +71,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     const SEXP val = STRING_ELT(value, 0);
     const SEXP *p_x = STRING_PTR_RO(x);
     CHEAPR_VAL_COUNT(val)
-    break;
+      break;
   }
   case CPLXSXP: {
     if (implicit_na_coercion(value, x)) break;
@@ -97,7 +97,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     SEXP is_equal = SHIELD(eval_pkg_fun("==", "base", R_GetCurrentEnv(), x, value)); ++NP;
     count = cpp_sum(is_equal);
   }
-    break;
+  break;
   }
   }
   YIELD(NP);
@@ -277,8 +277,7 @@ SEXP cpp_loc_set_replace(SEXP x, SEXP where, SEXP what){
 // Remove elements from a vector very efficiently
 
 [[cpp11::register]]
-SEXP cpp_val_remove(SEXP x, SEXP value){
-  check_atomic(x);
+SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
   int32_t NP = 0;
   R_xlen_t n_vals = scalar_count(x, value, true);
   if (n_vals == 0){
@@ -291,30 +290,26 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
   } else {
     R_xlen_t n = Rf_xlength(x);
     R_xlen_t n_keep = n - n_vals;
-    bool eq;
     R_xlen_t k = 0;
 
-    SEXP out;
+    SEXP out = x;
     switch ( CHEAPR_TYPEOF(x) ){
     case NILSXP: {
-      out = SHIELD(R_NilValue); ++NP;
       break;
     }
     case LGLSXP:
     case INTSXP: {
       if (implicit_na_coercion(value, x)){
-      out = x;
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = cast<r_integer_t>(value, R_NilValue)); ++NP;
-      int val = Rf_asInteger(value);
+      int val = INTEGER(value)[0];
       int *p_x = INTEGER(x);
       int *p_out = INTEGER(out);
 
       for (R_xlen_t i = 0; i < n; ++i){
-        eq = p_x[i] == val;
-        if (!eq){
+        if (p_x[i] != val){
           p_out[k++] = p_x[i];
         }
       }
@@ -323,26 +318,23 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     }
     case REALSXP: {
       if (implicit_na_coercion(value, x)){
-      out = x;
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
-      double val = Rf_asReal(value);
+      double val = REAL(value)[0];
       double *p_x = REAL(x);
       double *p_out = REAL(out);
 
       if (cpp_any_na(value, true)){
         for (R_xlen_t i = 0; i < n; ++i){
-          eq = is_r_na(p_x[i]);
-          if (!eq){
+          if (!is_r_na(p_x[i])){
             p_out[k++] = p_x[i];
           }
         }
       } else {
         for (R_xlen_t i = 0; i < n; ++i){
-          eq = p_x[i] == val;
-          if (!eq){
+          if (p_x[i] != val){
             p_out[k++] = p_x[i];
           }
         }
@@ -352,18 +344,16 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     }
     case CHEAPR_INT64SXP: {
       if (implicit_na_coercion(value, x)){
-      out = x;
       break;
     }
-      out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
+      out = SHIELD(new_vec(REALSXP, n_keep)); ++NP;
       SHIELD(value = cast<r_integer64_t>(value, R_NilValue)); ++NP;
       int64_t val = INTEGER64_PTR(value)[0];
       int64_t *p_x = INTEGER64_PTR(x);
       int64_t *p_out = INTEGER64_PTR(out);
 
       for (R_xlen_t i = 0; i < n; ++i){
-        eq = p_x[i] == val;
-        if (!eq){
+        if (p_x[i] != val){
           p_out[k++] = p_x[i];
         }
       }
@@ -372,22 +362,47 @@ SEXP cpp_val_remove(SEXP x, SEXP value){
     }
     case STRSXP: {
       if (implicit_na_coercion(value, x)){
-      out = x;
       break;
     }
-      out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
+      out = SHIELD(new_vec(STRSXP, n_keep)); ++NP;
       SHIELD(value = cast<r_character_t>(value, R_NilValue)); ++NP;
-      SEXP val = SHIELD(Rf_asChar(value)); ++NP;
+      SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
       const SEXP *p_x = STRING_PTR_RO(x);
 
       for (R_xlen_t i = 0; i < n; ++i){
-        eq = p_x[i] == val;
-        if (!eq){
+        if (p_x[i] != val){
           SET_STRING_ELT(out, k++, p_x[i]);
         }
       }
       cpp_set_add_attributes(out, ATTRIB(x), false);
       break;
+    }
+    case CPLXSXP: {
+      if (implicit_na_coercion(value, x)){
+      break;
+    }
+      out = SHIELD(new_vec(CPLXSXP, n_keep)); ++NP;
+      SHIELD(value = cast<r_complex_t>(value, R_NilValue)); ++NP;
+      Rcomplex val = COMPLEX_ELT(value, 0);
+      const Rcomplex *p_x = COMPLEX_RO(x);
+
+      for (R_xlen_t i = 0; i < n; ++i){
+        if ( !(is_r_na(val) ? is_r_na(p_x[i]) : eq(p_x[i], val)) ){
+          SET_COMPLEX_ELT(out, k++, p_x[i]);
+        }
+      }
+      cpp_set_add_attributes(out, ATTRIB(x), false);
+      break;
+    }
+    case VECSXP: {
+      if (recursive){
+      SHIELD(out = shallow_copy(out)); ++NP;
+      clear_attributes(out);
+      for (R_xlen_t i = 0; i < n; ++i){
+        SET_VECTOR_ELT(out, i, cpp_val_remove(VECTOR_ELT(out, i), value, true));
+      }
+      break;
+    }
     }
     default: {
       SEXP sexp_n_vals = SHIELD(as_r_scalar<double>(n_vals)); ++NP;

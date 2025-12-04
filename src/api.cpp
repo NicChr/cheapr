@@ -116,7 +116,7 @@ api_val_find(SEXP x, SEXP value, bool invert){
 SEXP
 api_val_remove(SEXP x, SEXP value){
   try {
-    return cpp_val_remove(x, value);
+    return cpp_val_remove(x, value, false);
   } catch (...) {
     return R_NilValue;
   }
