@@ -24,7 +24,7 @@ r_type r_common_type(SEXP x){
   const SEXP *p_x = LIST_PTR_RO(x);
 
   // Initialise to null
-  r_type common = r_null;
+  r_type common = R_null;
 
   for (R_xlen_t i = 0; i < n; ++i){
     common = common_type(common, get_r_type(p_x[i]));
@@ -45,7 +45,7 @@ SEXP cpp_common_template(SEXP x){
 
   const SEXP *p_x = LIST_PTR_RO(x);
 
-  if (common == r_unk){
+  if (common == R_unk){
 
     SEXP vec_template;
     PROTECT_INDEX vec_template_idx;
@@ -65,7 +65,7 @@ SEXP cpp_common_template(SEXP x){
     switch (common){
 
     // Combine levels
-    case r_fct: {
+    case R_fct: {
 
       SEXP all_lvls, new_lvls;
 
@@ -92,7 +92,7 @@ SEXP cpp_common_template(SEXP x){
       break;
     }
     // Figure out if date is integer or double
-    case r_date: {
+    case R_date: {
 
       if (Rf_xlength(x) > 0){
       int date_type = INTSXP;
@@ -108,7 +108,7 @@ SEXP cpp_common_template(SEXP x){
 
       break;
     }
-    case r_pxct: {
+    case R_pxt: {
       // Initialised date-time gets timezone of first date-time
       if (Rf_xlength(x) > 0){
       SHIELD(out = cast<r_posixt_t>(out, p_x[0])); ++NP;
@@ -141,88 +141,88 @@ SEXP cpp_cast_common(SEXP x){
   r_type common = get_r_type(vec_template);
 
   switch (common){
-  case r_null: {
+  case R_null: {
     break;
   }
-  case r_lgl: {
+  case R_lgl: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_logical_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_int: {
+  case R_int: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_integer_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_int64: {
+  case R_int64: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_integer64_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_dbl: {
+  case R_dbl: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_numeric_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_double_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_chr: {
+  case R_chr: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_character_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_cplx: {
+  case R_cplx: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_complex_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_raw: {
+  case R_raw: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_raw_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_list: {
+  case R_list: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_list_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_fct: {
+  case R_fct: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_factor_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_date: {
+  case R_date: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_date_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_pxct: {
+  case R_pxt: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_posixt_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_df: {
+  case R_df: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_data_frame_t>(p_x[i], vec_template));
   }
     break;
   }
-  case r_unk: {
+  case R_unk: {
     for (R_xlen_t i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, cast<r_unknown_t>(p_x[i], vec_template));
   }
     break;
   }
-    // This should never be reached because of the r_unk (unknown) case above
+    // This should never be reached because of the R_unk (unknown) case above
   default: {
     YIELD(NP);
     Rf_error("Unimplemented cast type");

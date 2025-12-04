@@ -109,7 +109,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     YIELD(NP);
     Rf_error("Value has been implicitly converted to NA, please check");
   }
-  SHIELD(n_values = cast<r_numeric_t>(n_values, R_NilValue)); ++NP;
+  SHIELD(n_values = cast<r_double_t>(n_values, R_NilValue)); ++NP;
   R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : REAL(n_values)[0];
   R_xlen_t out_size = invert ? n - n_vals : n_vals;
   R_xlen_t whichi = 0;
@@ -142,7 +142,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   }
   case REALSXP: {
     SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
-    SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_double_t>(value, R_NilValue)); ++NP;
     double val = REAL(value)[0];
     const double *p_x = REAL(x);
     if (is_long){

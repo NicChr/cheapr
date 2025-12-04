@@ -37,12 +37,12 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   switch (get_r_type(x)){
 
-  case r_null: {
+  case R_null: {
     break;
   }
-  case r_lgl:
-  case r_int:
-  case r_fct: {
+  case R_lgl:
+  case R_int:
+  case R_fct: {
 
     int* RESTRICT p_x = INTEGER(x);
     const int* RESTRICT p_with = INTEGER_RO(with);
@@ -52,7 +52,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     }
     break;
   }
-  case r_dbl: {
+  case R_dbl: {
 
     double* RESTRICT p_x = REAL(x);
     const double* RESTRICT p_with = REAL_RO(with);
@@ -63,7 +63,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_int64: {
+  case R_int64: {
 
     int64_t* RESTRICT p_x = INTEGER64_PTR(x);
     const int64_t* RESTRICT p_with = INTEGER64_PTR_RO(with);
@@ -74,7 +74,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_chr: {
+  case R_chr: {
 
     const SEXP *p_with = STRING_PTR_RO(with);
 
@@ -90,7 +90,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_cplx: {
+  case R_cplx: {
 
     Rcomplex* p_x = COMPLEX(x);
     const Rcomplex *p_with = COMPLEX_RO(with);
@@ -103,7 +103,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_raw: {
+  case R_raw: {
 
     const Rbyte *p_with = RAW_RO(with);
 
@@ -113,8 +113,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_date:
-  case r_pxct: {
+  case R_date:
+  case R_pxt: {
     SEXP x_cls = SHIELD(Rf_getAttrib(x, R_ClassSymbol)); ++NP;
     Rf_classgets(x, R_NilValue);
     replace_in_place(x, where, with, false);
@@ -122,7 +122,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_list: {
+  case R_list: {
     const SEXP *p_with = LIST_PTR_RO(with);
 
     if (!internal_in_place){
@@ -137,7 +137,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_df: {
+  case R_df: {
 
     const SEXP *p_x = LIST_PTR_RO(x);
     const SEXP *p_with = LIST_PTR_RO(with);
@@ -164,7 +164,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     break;
   }
 
-  case r_unk: {
+  case R_unk: {
     SHIELD(x = eval_pkg_fun("base_assign_at", "cheapr", R_GetCurrentEnv(), x, where, with)); ++NP;
     break;
   }

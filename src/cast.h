@@ -26,7 +26,7 @@ struct r_null_t {};
 struct r_logical_t {};
 struct r_integer_t {};
 struct r_integer64_t {};
-struct r_numeric_t {};
+struct r_double_t {};
 struct r_complex_t {};
 struct r_raw_t {};
 struct r_date_t {};
@@ -39,20 +39,20 @@ struct r_unknown_t {};
 
 // r type constants
 enum : cheapr::r_type {
-  r_null = 0,
-    r_lgl = 1,
-    r_int = 2,
-    r_int64 = 3,
-    r_dbl = 4,
-    r_cplx = 5,
-    r_raw = 6,
-    r_date = 7,
-    r_pxct = 8,
-    r_chr = 9,
-    r_fct = 10,
-    r_list = 11,
-    r_df = 12,
-    r_unk = 13
+  R_null = 0,
+    R_lgl = 1,
+    R_int = 2,
+    R_int64 = 3,
+    R_dbl = 4,
+    R_cplx = 5,
+    R_raw = 6,
+    R_date = 7,
+    R_pxt = 8,
+    R_chr = 9,
+    R_fct = 10,
+    R_list = 11,
+    R_df = 12,
+    R_unk = 13
 };
 
 inline constexpr int n_types = 14;
@@ -79,20 +79,20 @@ inline constexpr const char* r_type_names[14] = {
 
 inline constexpr cheapr::r_type r_type_pairs[14][14] = {
   /*                0-NULL  1-LGL   2-INT   3-I64   4-DBL    5-CPLX  6-RAW   7-DATE  8-PXCT  9-CHR   10-FCT  11-LIST 12-DF 13-UNK */
-  /* 0 - NULL */  { r_null, r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 1 - LGL  */  { r_lgl,  r_lgl,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 2 - INT  */  { r_int,  r_int,  r_int,  r_int64, r_dbl,  r_cplx, r_raw,  r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 3 - I64  */  { r_int64,r_int64, r_int64, r_int64, r_dbl, r_cplx, r_raw, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 4 - DBL  */  { r_dbl,  r_dbl,  r_dbl,  r_dbl,   r_dbl,  r_cplx, r_raw, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 5 - CPLX */  { r_cplx, r_cplx, r_cplx, r_cplx,  r_cplx, r_cplx, r_raw, r_date,  r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 6 - RAW  */  { r_raw,  r_raw,  r_raw,  r_raw, r_raw,  r_raw,  r_raw, r_unk, r_unk, r_chr,  r_fct, r_list, r_df, r_unk },
-  /* 7 - DATE */  { r_date, r_date, r_date, r_date,  r_date, r_date,  r_unk, r_date, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 8 - PXCT */  { r_pxct, r_pxct, r_pxct, r_pxct,  r_pxct, r_pxct, r_unk, r_pxct, r_pxct, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 9 - CHR  */  { r_chr,  r_chr,  r_chr,  r_chr, r_chr,  r_chr,  r_chr,  r_chr,  r_chr, r_chr,  r_fct,  r_list, r_df, r_unk },
-  /* 10 - FCT  */  { r_fct,  r_fct,  r_fct,  r_fct, r_fct,  r_fct,  r_fct, r_fct,  r_fct, r_fct,  r_fct,  r_list, r_df, r_unk },
-  /* 11 - LIST */  { r_list, r_list, r_list, r_list,  r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_list, r_df, r_unk },
-  /* 12 - DF */    { r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_df, r_unk },
-  /* 13 - Unknown */ { r_unk,  r_unk,  r_unk,  r_unk, r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk,  r_unk }
+  /* 0 - NULL */  { R_null, R_lgl,  R_int,  R_int64, R_dbl,  R_cplx, R_raw,  R_date, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 1 - LGL  */  { R_lgl,  R_lgl,  R_int,  R_int64, R_dbl,  R_cplx, R_raw,  R_date, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 2 - INT  */  { R_int,  R_int,  R_int,  R_int64, R_dbl,  R_cplx, R_raw,  R_date, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 3 - I64  */  { R_int64,R_int64, R_int64, R_int64, R_dbl, R_cplx, R_raw, R_date, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 4 - DBL  */  { R_dbl,  R_dbl,  R_dbl,  R_dbl,   R_dbl,  R_cplx, R_raw, R_date, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 5 - CPLX */  { R_cplx, R_cplx, R_cplx, R_cplx,  R_cplx, R_cplx, R_raw, R_date,  R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 6 - RAW  */  { R_raw,  R_raw,  R_raw,  R_raw, R_raw,  R_raw,  R_raw, R_unk, R_unk, R_chr,  R_fct, R_list, R_df, R_unk },
+  /* 7 - DATE */  { R_date, R_date, R_date, R_date,  R_date, R_date,  R_unk, R_date, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 8 - PXCT */  { R_pxt, R_pxt, R_pxt, R_pxt,  R_pxt, R_pxt, R_unk, R_pxt, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 9 - CHR  */  { R_chr,  R_chr,  R_chr,  R_chr, R_chr,  R_chr,  R_chr,  R_chr,  R_chr, R_chr,  R_fct,  R_list, R_df, R_unk },
+  /* 10 - FCT  */  { R_fct,  R_fct,  R_fct,  R_fct, R_fct,  R_fct,  R_fct, R_fct,  R_fct, R_fct,  R_fct,  R_list, R_df, R_unk },
+  /* 11 - LIST */  { R_list, R_list, R_list, R_list,  R_list, R_list, R_list, R_list, R_list, R_list, R_list, R_list, R_df, R_unk },
+  /* 12 - DF */    { R_df, R_df, R_df, R_df, R_df, R_df, R_df, R_df, R_df, R_df, R_df, R_df, R_df, R_unk },
+  /* 13 - Unknown */ { R_unk,  R_unk,  R_unk,  R_unk, R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk }
 };
 
 inline cheapr::r_type common_type(const cheapr::r_type &a, const cheapr::r_type &b) {
@@ -104,24 +104,24 @@ inline cheapr::r_type get_r_type(SEXP x) {
 
   if (!Rf_isObject(x)){
     switch (TYPEOF(x)) {
-    case NILSXP:  return r_null;
-    case LGLSXP:  return r_lgl;
-    case INTSXP:  return r_int;
-    case REALSXP: return r_dbl;
-    case STRSXP:  return r_chr;
-    case CPLXSXP: return r_cplx;
-    case RAWSXP:  return r_raw;
-    case VECSXP:  return r_list;
-    default: return r_unk;
+    case NILSXP:  return R_null;
+    case LGLSXP:  return R_lgl;
+    case INTSXP:  return R_int;
+    case REALSXP: return R_dbl;
+    case STRSXP:  return R_chr;
+    case CPLXSXP: return R_cplx;
+    case RAWSXP:  return R_raw;
+    case VECSXP:  return R_list;
+    default: return R_unk;
     }
   } else {
 
-    if (Rf_inherits(x, "factor"))     return r_fct;
-    if (Rf_inherits(x, "Date"))       return r_date;
-    if (Rf_inherits(x, "POSIXct"))    return r_pxct;
-    if (Rf_inherits(x, "data.frame")) return r_df;
-    if (Rf_inherits(x, "integer64"))  return r_int64;
-    return r_unk;
+    if (Rf_inherits(x, "factor"))     return R_fct;
+    if (Rf_inherits(x, "Date"))       return R_date;
+    if (Rf_inherits(x, "POSIXct"))    return R_pxt;
+    if (Rf_inherits(x, "data.frame")) return R_df;
+    if (Rf_inherits(x, "integer64"))  return R_int64;
+    return R_unk;
   }
 }
 
@@ -174,7 +174,7 @@ inline const char *r_type_char(SEXP x){
   cheapr::r_type type = get_r_type(x);
 
   // If unknown type
-  if (type == r_unk){
+  if (type == R_unk){
     return r_class(x);
   } else {
     return r_type_names[type];
@@ -234,7 +234,7 @@ inline SEXP init<r_integer64_t>(R_xlen_t n, bool with_na) {
 }
 
 template<>
-inline SEXP init<r_numeric_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_double_t>(R_xlen_t n, bool with_na) {
   if (with_na){
     SEXP out = SHIELD(cheapr::new_vec(REALSXP, n));
     double* RESTRICT p_out = REAL(out);
@@ -295,7 +295,7 @@ inline SEXP init<r_factor_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_date_t>(R_xlen_t n, bool with_na){
-  SEXP out = SHIELD(init<r_numeric_t>(n, with_na));
+  SEXP out = SHIELD(init<r_double_t>(n, with_na));
   SEXP cls = SHIELD(cheapr::make_utf8_str("Date"));
   Rf_classgets(out, cls);
   YIELD(2);
@@ -304,7 +304,7 @@ inline SEXP init<r_date_t>(R_xlen_t n, bool with_na){
 
 template<>
 inline SEXP init<r_posixt_t>(R_xlen_t n, bool with_na) {
-  SEXP out = SHIELD(init<r_numeric_t>(n, with_na));
+  SEXP out = SHIELD(init<r_double_t>(n, with_na));
   SEXP tz = SHIELD(cheapr::new_vec(STRSXP, 1));
   SEXP cls = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
   Rf_classgets(out, cls);
@@ -393,7 +393,7 @@ inline SEXP cast<r_integer_t>(SEXP x, SEXP y) {
 }
 
 template<>
-inline SEXP cast<r_numeric_t>(SEXP x, SEXP y) {
+inline SEXP cast<r_double_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "numeric")){
     return x;
   } else if (Rf_isObject(x)){
@@ -413,7 +413,7 @@ inline SEXP cast<r_integer64_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "integer64")){
     return x;
   } else {
-    SEXP out = SHIELD(cast<r_numeric_t>(x, R_NilValue));
+    SEXP out = SHIELD(cast<r_double_t>(x, R_NilValue));
     SHIELD(out = cpp_numeric_to_int64(x));
     YIELD(2);
     return out;
@@ -650,7 +650,7 @@ inline SEXP cast_null(SEXP x, SEXP y) { return cast<r_null_t>(x, y); }
 inline SEXP cast_logical(SEXP x, SEXP y) { return cast<r_logical_t>(x, y); }
 inline SEXP cast_integer(SEXP x, SEXP y) { return cast<r_integer_t>(x, y); }
 inline SEXP cast_integer64(SEXP x, SEXP y) { return cast<r_integer64_t>(x, y); }
-inline SEXP cast_numeric(SEXP x, SEXP y) { return cast<r_numeric_t>(x, y); }
+inline SEXP cast_numeric(SEXP x, SEXP y) { return cast<r_double_t>(x, y); }
 inline SEXP cast_character(SEXP x, SEXP y) { return cast<r_character_t>(x, y); }
 inline SEXP cast_complex(SEXP x, SEXP y) { return cast<r_complex_t>(x, y); }
 inline SEXP cast_raw(SEXP x, SEXP y) { return cast<r_raw_t>(x, y); }
@@ -667,7 +667,7 @@ inline SEXP init_null(R_xlen_t n, bool with_na) { return init<r_null_t>(n, with_
 inline SEXP init_logical(R_xlen_t n, bool with_na) { return init<r_logical_t>(n, with_na); }
 inline SEXP init_integer(R_xlen_t n, bool with_na) { return init<r_integer_t>(n, with_na); }
 inline SEXP init_integer64(R_xlen_t n, bool with_na) { return init<r_integer64_t>(n, with_na); }
-inline SEXP init_numeric(R_xlen_t n, bool with_na) { return init<r_numeric_t>(n, with_na); }
+inline SEXP init_numeric(R_xlen_t n, bool with_na) { return init<r_double_t>(n, with_na); }
 inline SEXP init_character(R_xlen_t n, bool with_na) { return init<r_character_t>(n, with_na); }
 inline SEXP init_complex(R_xlen_t n, bool with_na) { return init<r_complex_t>(n, with_na); }
 inline SEXP init_raw(R_xlen_t n, bool with_na) { return init<r_raw_t>(n, with_na); }

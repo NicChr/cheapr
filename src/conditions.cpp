@@ -52,7 +52,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   na = VECTOR_ELT(args, 2);
   r_type common = get_r_type(yes);
 
-  if (common != r_unk){
+  if (common != R_unk){
     SEXP out = R_NilValue;
 
     R_xlen_t n = vector_length(condition);
@@ -82,10 +82,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     const r_boolean* RESTRICT p_x = BOOLEAN_RO(condition);
 
     switch (common){
-    case r_null: {
+    case R_null: {
       break;
     }
-    case r_lgl: {
+    case R_lgl: {
       SHIELD(out = init<r_logical_t>(n, false)); ++NP;
       r_boolean* RESTRICT p_out = BOOLEAN(out);
       const r_boolean *p_yes = BOOLEAN_RO(yes);
@@ -103,7 +103,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_int: {
+    case R_int: {
       SHIELD(out = init<r_integer_t>(n, false)); ++NP;
       int* RESTRICT p_out = INTEGER(out);
       const int *p_yes = INTEGER_RO(yes);
@@ -121,7 +121,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_int64: {
+    case R_int64: {
       SHIELD(out = init<r_integer64_t>(n, false)); ++NP;
       int64_t* RESTRICT p_out = INTEGER64_PTR(out);
       const int64_t *p_yes = INTEGER64_PTR_RO(yes);
@@ -139,8 +139,8 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_dbl: {
-      SHIELD(out = init<r_numeric_t>(n, false)); ++NP;
+    case R_dbl: {
+      SHIELD(out = init<r_double_t>(n, false)); ++NP;
       double* RESTRICT p_out = REAL(out);
       const double *p_yes = REAL_RO(yes);
       const double *p_no = REAL_RO(no);
@@ -157,7 +157,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_chr: {
+    case R_chr: {
 
       SHIELD(out = init<r_character_t>(n, false)); ++NP;
 
@@ -203,7 +203,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_cplx: {
+    case R_cplx: {
 
       SHIELD(out = init<r_complex_t>(n, false)); ++NP;
       Rcomplex *p_out = COMPLEX(out);
@@ -257,7 +257,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_raw: {
+    case R_raw: {
 
       SHIELD(out = init<r_raw_t>(n, false)); ++NP;
 
@@ -283,7 +283,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_fct: {
+    case R_fct: {
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
       int* RESTRICT p_out = INTEGER(out);
 
@@ -302,7 +302,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_date: {
+    case R_date: {
 
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
 
@@ -340,7 +340,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
 
       break;
     }
-    case r_pxct: {
+    case R_pxt: {
 
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
       double* RESTRICT p_out = REAL(out);
@@ -360,7 +360,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       }
       break;
     }
-    case r_list: {
+    case R_list: {
 
       SHIELD(out = init<r_list_t>(n, false)); ++NP;
 

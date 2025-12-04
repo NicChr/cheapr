@@ -355,7 +355,7 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
 
   R_xlen_t n = Rf_xlength(locs);
 
-  if (get_r_type(locs) == r_chr){
+  if (get_r_type(locs) == R_chr){
     SEXP names = SHIELD(get_names(x)); ++NP;
     if (is_null(names)){
       YIELD(NP);
@@ -370,7 +370,7 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
     return locs;
   }
 
-  if (get_r_type(locs) == r_lgl){
+  if (get_r_type(locs) == R_lgl){
 
     if (Rf_length(locs) != xn){
       YIELD(NP);

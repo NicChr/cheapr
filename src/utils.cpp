@@ -723,14 +723,14 @@ SEXP get_vec_names(SEXP x){
     return get_names(x);
   } else {
     switch(get_r_type(x)){
-    case r_null:
-    case r_df: {
+    case R_null:
+    case R_df: {
       return R_NilValue;
     }
-    case r_list: {
+    case R_list: {
       return get_names(x);
     }
-    case r_unk: {
+    case R_unk: {
       return eval_pkg_fun("names", "base", R_GetCurrentEnv(), x);
     }
     }
@@ -748,17 +748,17 @@ SEXP set_vec_names(SEXP x, SEXP names){
     return out;
   } else {
     switch(get_r_type(x)){
-    case r_null:
-    case r_df: {
+    case R_null:
+    case R_df: {
       return x;
     }
-    case r_list: {
+    case R_list: {
       SEXP out = SHIELD(shallow_copy(x));
       Rf_namesgets(out, names);
       YIELD(1);
       return out;
     }
-    case r_unk: {
+    case R_unk: {
       return eval_pkg_fun("names<-", "base", R_GetCurrentEnv(), x, names);
     }
     }

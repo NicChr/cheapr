@@ -51,7 +51,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   case REALSXP: {
     if (implicit_na_coercion(value, x)) break;
-    SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_double_t>(value, R_NilValue)); ++NP;
     const double val = REAL(value)[0];
     const double *p_x = REAL(x);
     CHEAPR_VAL_COUNT(val)
@@ -158,8 +158,8 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)){
     break;
   }
-    SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
-    SHIELD(replace = cast<r_numeric_t>(replace, R_NilValue)); ++NP;
+    SHIELD(value = cast<r_double_t>(value, R_NilValue)); ++NP;
+    SHIELD(replace = cast<r_double_t>(replace, R_NilValue)); ++NP;
     double *p_out = REAL(out);
     double val = REAL(value)[0];
     double repl = REAL(replace)[0];
@@ -321,7 +321,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       break;
     }
       out = SHIELD(new_vec(TYPEOF(x), n_keep)); ++NP;
-      SHIELD(value = cast<r_numeric_t>(value, R_NilValue)); ++NP;
+      SHIELD(value = cast<r_double_t>(value, R_NilValue)); ++NP;
       double val = REAL(value)[0];
       double *p_x = REAL(x);
       double *p_out = REAL(out);

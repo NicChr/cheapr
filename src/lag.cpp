@@ -74,7 +74,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     double* RESTRICT p_out = REAL(out);
     double *p_x = REAL(xvec);
-    SHIELD(fill = cast<r_numeric_t>(fill, R_NilValue)); ++NP;
+    SHIELD(fill = cast<r_double_t>(fill, R_NilValue)); ++NP;
     auto fill_value = fill_size > 0 ? REAL(fill)[0] : na_type(p_x[0]);
 
     if (k >= 0){
@@ -463,7 +463,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const double *p_x = REAL(x);
     double fill_value = NA_REAL;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(cast<r_numeric_t>(fill, R_NilValue)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_double_t>(fill, R_NilValue)); ++NP;
       fill_value = REAL(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
