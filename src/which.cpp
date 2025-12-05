@@ -56,7 +56,7 @@ SEXP cpp_which_(SEXP x, bool invert){
     if (is_long){
       R_xlen_t size = count_true(p_x, n);
       R_xlen_t out_size = n - size;
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(REALSXP, out_size));
       double* RESTRICT p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
@@ -66,7 +66,7 @@ SEXP cpp_which_(SEXP x, bool invert){
     } else {
       int size = count_true(p_x, n);
       int out_size = n - size;
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(INTSXP, out_size));
       int* RESTRICT p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
@@ -77,7 +77,7 @@ SEXP cpp_which_(SEXP x, bool invert){
   } else {
     if (is_long){
       R_xlen_t out_size = count_true(p_x, n);
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(REALSXP, out_size));
       double* RESTRICT p_out = REAL(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
@@ -86,7 +86,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       return out;
     } else {
       int out_size = count_true(p_x, n);
-      SEXP out = SHIELD(new_vec(INTSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(INTSXP, out_size));
       int* RESTRICT p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
@@ -99,9 +99,9 @@ SEXP cpp_which_(SEXP x, bool invert){
 
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   int32_t NP = 0;
-  R_xlen_t n = vector_length(x);
+  R_xlen_t n = vec::length(x);
   bool is_long = (n > INTEGER_MAX);
-  if (vector_length(value) != 1){
+  if (vec::length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }
 
@@ -118,7 +118,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   switch ( CHEAPR_TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
     int val = INTEGER(value)[0];
     const int *p_x = INTEGER(x);
@@ -141,7 +141,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     return out;
   }
   case REALSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
     double val = REAL(value)[0];
     const double *p_x = REAL(x);
@@ -164,7 +164,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     return out;
   }
   case CHEAPR_INT64SXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
     int64_t val = INTEGER64_PTR(value)[0];
     const int64_t *p_x = INTEGER64_PTR_RO(x);
@@ -187,7 +187,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     return out;
   }
   case STRSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
     SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
     const SEXP *p_x = STRING_PTR_RO(x);
@@ -210,7 +210,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     return out;
   }
   case CPLXSXP: {
-    SEXP out = SHIELD(new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(is_long ? REALSXP : INTSXP, out_size)); ++NP;
     SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
     Rcomplex val = as_complex(COMPLEX(value)[0]);
     const Rcomplex *p_x = COMPLEX_RO(x);
@@ -258,7 +258,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
 
 [[cpp11::register]]
 SEXP cpp_which_na(SEXP x){
-  SEXP na = SHIELD(as_r_vec(NA_INTEGER));
+  SEXP na = SHIELD(as_r_vec(na::integer));
   SEXP out = SHIELD(cpp_which_val(x, na, false));
   YIELD(2);
   return out;
@@ -266,7 +266,7 @@ SEXP cpp_which_na(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_which_not_na(SEXP x){
-  SEXP na = SHIELD(as_r_vec(NA_INTEGER));
+  SEXP na = SHIELD(as_r_vec(na::integer));
   SEXP out = SHIELD(cpp_which_val(x, na, true));
   YIELD(2);
   return out;
@@ -282,9 +282,9 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
   const int *p_x = INTEGER_RO(x);
 
   if (n > INTEGER_MAX){
-    SEXP true_locs = SHIELD(new_vec(REALSXP, include_true ? n_true : 0));
-    SEXP false_locs = SHIELD(new_vec(REALSXP, include_false ? n_false : 0));
-    SEXP na_locs = SHIELD(new_vec(REALSXP, include_na ? (n - n_true - n_false) : 0));
+    SEXP true_locs = SHIELD(vec::new_vec(REALSXP, include_true ? n_true : 0));
+    SEXP false_locs = SHIELD(vec::new_vec(REALSXP, include_false ? n_false : 0));
+    SEXP na_locs = SHIELD(vec::new_vec(REALSXP, include_na ? (n - n_true - n_false) : 0));
 
     double* RESTRICT p_true = REAL(true_locs);
     double* RESTRICT p_false = REAL(false_locs);
@@ -312,9 +312,9 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
     YIELD(4);
     return out;
   } else {
-    SEXP true_locs = SHIELD(new_vec(INTSXP, include_true ? n_true : 0));
-    SEXP false_locs = SHIELD(new_vec(INTSXP, include_false ? n_false : 0));
-    SEXP na_locs = SHIELD(new_vec(INTSXP, include_na ? (n - n_true - n_false) : 0));
+    SEXP true_locs = SHIELD(vec::new_vec(INTSXP, include_true ? n_true : 0));
+    SEXP false_locs = SHIELD(vec::new_vec(INTSXP, include_false ? n_false : 0));
+    SEXP na_locs = SHIELD(vec::new_vec(INTSXP, include_na ? (n - n_true - n_false) : 0));
 
     int* RESTRICT p_true = INTEGER(true_locs);
     int* RESTRICT p_false = INTEGER(false_locs);

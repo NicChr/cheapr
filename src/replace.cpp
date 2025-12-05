@@ -20,8 +20,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   // Cast replacement to type of x
   SHIELD(with = cast_(get_r_type(x), with, x)); ++NP;
 
-  R_xlen_t where_size = vector_length(where);
-  R_xlen_t with_size = vector_length(with);
+  R_xlen_t where_size = vec::length(where);
+  R_xlen_t with_size = vec::length(with);
 
   R_xlen_t xi;
   R_xlen_t withi = 0;
@@ -29,7 +29,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   // Shallow copy lists and deep copy data of vectors
   if (!internal_in_place){
     if (Rf_isVectorList(x)){
-      SHIELD(x = cpp_shallow_copy(x)); ++NP;
+      SHIELD(x = vec::shallow_copy(x)); ++NP;
     } else {
       SHIELD(x = cpp_semi_copy(x)); ++NP;
     }
@@ -149,8 +149,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
       Rf_error("`ncol(x)` must equal `ncol(with)`");
     }
 
-    SEXP x_names = SHIELD(get_names(x)); ++NP;
-    SEXP with_names = SHIELD(get_names(with)); ++NP;
+    SEXP x_names = SHIELD(get_r_names(x)); ++NP;
+    SEXP with_names = SHIELD(get_r_names(with)); ++NP;
 
     if (!R_compute_identical(x_names, with_names, 0)){
       YIELD(NP);

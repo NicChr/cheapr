@@ -70,8 +70,8 @@ SEXP cpp_common_template(SEXP x){
       SEXP all_lvls, new_lvls;
 
       PROTECT_INDEX all_lvls_idx, new_lvls_idx;
-      R_ProtectWithIndex(all_lvls = new_vec(STRSXP, 0), &all_lvls_idx); ++NP;
-      R_ProtectWithIndex(new_lvls = new_vec(STRSXP, 0), &new_lvls_idx); ++NP;
+      R_ProtectWithIndex(all_lvls = vec::new_vec(STRSXP, 0), &all_lvls_idx); ++NP;
+      R_ProtectWithIndex(new_lvls = vec::new_vec(STRSXP, 0), &new_lvls_idx); ++NP;
 
       int n = Rf_length(x);
 
@@ -103,7 +103,7 @@ SEXP cpp_common_template(SEXP x){
           break;
         }
       }
-      SHIELD(out = coerce_vec(out, date_type)); ++NP;
+      SHIELD(out = vec::coerce_vec(out, date_type)); ++NP;
     }
 
       break;
@@ -136,7 +136,7 @@ SEXP cpp_cast_common(SEXP x){
     return x;
   }
 
-  SEXP out = SHIELD(new_vec(VECSXP, n)); ++NP;
+  SEXP out = SHIELD(vec::new_vec(VECSXP, n)); ++NP;
   SEXP vec_template = SHIELD(cpp_common_template(x)); ++NP;
   r_type common = get_r_type(vec_template);
 
@@ -228,8 +228,8 @@ SEXP cpp_cast_common(SEXP x){
     Rf_error("Unimplemented cast type");
   }
   }
-  SEXP names = SHIELD(get_names(x)); ++NP;
-  set_names(out, names);
+  SEXP names = SHIELD(get_r_names(x)); ++NP;
+  set_r_names(out, names);
 
   YIELD(NP);
   return out;

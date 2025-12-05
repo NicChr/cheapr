@@ -10,5 +10,6 @@
 #include <vector>
 
 using namespace cheapr;
+using namespace internal;
 
 #endif

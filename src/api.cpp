@@ -398,7 +398,7 @@ api_clean_indices(SEXP locs, SEXP x){
 R_xlen_t
 api_vec_length(SEXP x) {
   try {
-    return cheapr::vector_length(x);
+    return cheapr::vec::length(x);
   } catch (...) {
     return (R_xlen_t) 0;
   }
@@ -407,7 +407,7 @@ api_vec_length(SEXP x) {
 SEXP
 api_r_address(SEXP x) {
   try {
-    return cheapr::address(x);
+    return cheapr::vec::address(x);
   } catch (...) {
     return cheapr::r_null;
   }
@@ -416,7 +416,7 @@ api_r_address(SEXP x) {
 bool
 api_is_simple_atomic_vec(SEXP x) {
   try {
-    return cheapr::cheapr_is_simple_atomic_vec(x);
+    return cheapr::internal::cheapr_is_simple_atomic_vec(x);
   } catch (...) {
     return false;
   }

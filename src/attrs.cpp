@@ -46,7 +46,7 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
     Rf_error("`which` must be a character vector of length 1 in %s", __func__);
   }
   SEXP attr_char = SHIELD(install_utf8(CHAR(STRING_ELT(which, 0))));
-  SEXP value2 = SHIELD(address_equal(x, value) ? deep_copy(value) : value);
+  SEXP value2 = SHIELD(address_equal(x, value) ? vec::deep_copy(value) : value);
   set_attrib(x, attr_char, value2);
   YIELD(2);
   return x;
@@ -77,7 +77,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
     return x;
   } else if (TYPEOF(attributes) == VECSXP){
     if (Rf_length(attributes) == 0) return x;
-    SEXP names = SHIELD(get_names(attributes)); ++NP;
+    SEXP names = SHIELD(get_r_names(attributes)); ++NP;
     if (is_null(names)){
       YIELD(NP);
       Rf_error("attributes must be a named list");
@@ -91,7 +91,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
       if (p_names[i] != R_BlankString){
         attr_nm = Rf_install(utf8_char(p_names[i]));
         if (address_equal(x, p_attributes[i])){
-          SEXP dup_attr = SHIELD(deep_copy(p_attributes[i])); ++NP;
+          SEXP dup_attr = SHIELD(vec::deep_copy(p_attributes[i])); ++NP;
           set_attrib(x, attr_nm, dup_attr);
         } else {
           set_attrib(x, attr_nm, p_attributes[i]);
@@ -105,7 +105,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
     while (!is_null(current)){
       if (address_equal(x, CAR(current))){
-        SEXP dup_attr = SHIELD(deep_copy(CAR(current))); ++NP;
+        SEXP dup_attr = SHIELD(vec::deep_copy(CAR(current))); ++NP;
         set_attrib(x, TAG(current), dup_attr);
       } else {
         set_attrib(x, TAG(current), CAR(current));

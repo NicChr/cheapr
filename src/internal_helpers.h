@@ -5,6 +5,8 @@
 
 namespace cheapr {
 
+namespace internal {
+
 // Math helpers
 
 template <typename T>
@@ -49,7 +51,7 @@ inline R_xlen_t r_length(SEXP x){
 }
 
 inline bool address_equal(SEXP x, SEXP y){
-  return address(x) == address(y);
+  return vec::address(x) == vec::address(y);
 }
 
 template<typename T>
@@ -125,6 +127,8 @@ inline void str_paste(std::string &x, const std::string &sep, const std::string 
   x += sep;
   x += y;
 }
+
+} // end of internal namespace
 
 } // end of cheapr namespace
 

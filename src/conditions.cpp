@@ -55,10 +55,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   if (common != R_unk){
     SEXP out = r_null;
 
-    R_xlen_t n = vector_length(condition);
-    R_xlen_t yes_size = vector_length(yes);
-    R_xlen_t no_size = vector_length(no);
-    R_xlen_t na_size = vector_length(na);
+    R_xlen_t n = vec::length(condition);
+    R_xlen_t yes_size = vec::length(yes);
+    R_xlen_t no_size = vec::length(no);
+    R_xlen_t na_size = vec::length(na);
 
     if (yes_size != 1 && yes_size != n){
       YIELD(NP);

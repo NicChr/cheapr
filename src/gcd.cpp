@@ -10,7 +10,7 @@
 int gcd2_int(int x, int y, bool na_rm){
   bool has_na = is_r_na(x) || is_r_na(y);
   if (!na_rm && has_na){
-    return NA_INTEGER;
+    return na::integer;
   }
   if (na_rm && has_na){
     if (is_r_na(x)){
@@ -45,7 +45,7 @@ int64_t gcd2_int64(int64_t x, int64_t y, bool na_rm){
   int64_t zero = 0;
   bool has_na = is_r_na(x) || is_r_na(y);
   if (!na_rm && has_na){
-    return NA_INTEGER64;
+    return na::integer64;
   }
   if (na_rm && has_na){
     if (is_r_na(x)){
@@ -92,7 +92,7 @@ int64_t lcm2_int64(int64_t x, int64_t y, bool na_rm){
     if (na_rm && num_nas == 1){
       return (is_r_na(x) ? y : x);
     } else {
-      return NA_INTEGER64;
+      return na::integer64;
     }
   }
   if (x == 0 && y == 0){
@@ -119,7 +119,7 @@ double lcm2_int(int x, int y, bool na_rm){
     if (na_rm && num_nas == 1){
       return (is_r_na(x) ? y : x);
     } else {
-      return NA_REAL;
+      return na::numeric;
     }
   }
   if (x == 0 && y == 0){
@@ -143,7 +143,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   case INTSXP: {
     const int *p_x = INTEGER(x);
 
-    out = SHIELD(new_vec(INTSXP, (n == 0) ? 0 : 1));
+    out = SHIELD(vec::new_vec(INTSXP, (n == 0) ? 0 : 1));
 
     if (n > 0){
       int gcd = p_x[0];
@@ -162,7 +162,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   case CHEAPR_INT64SXP: {
     const int64_t *p_x = INTEGER64_PTR_RO(x);
 
-    out = SHIELD(new_vec(REALSXP, (n == 0) ? 0 : 1));
+    out = SHIELD(vec::new_vec(REALSXP, (n == 0) ? 0 : 1));
 
     if (n > 0){
       int64_t gcd = p_x[0];
@@ -180,7 +180,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   }
   default: {
     const double *p_x = REAL(x);
-    out = SHIELD(new_vec(REALSXP, (n == 0) ? 0 : 1));
+    out = SHIELD(vec::new_vec(REALSXP, (n == 0) ? 0 : 1));
     if (n > 0){
       double gcd = p_x[0];
       double agcd;
@@ -235,7 +235,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       }
       return as_r_vec(lcm);
     } else {
-      return new_vec(INTSXP, (n == 0) ? 0 : 1);
+      return vec::new_vec(INTSXP, (n == 0) ? 0 : 1);
     }
   }
   case CHEAPR_INT64SXP: {
@@ -253,7 +253,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       }
       return as_r_vec(lcm);
     } else {
-      return new_vec(INTSXP, (n == 0) ? 0 : 1);
+      return vec::new_vec(INTSXP, (n == 0) ? 0 : 1);
     }
   }
   default: {
@@ -263,7 +263,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       double lcm = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
         if (!na_rm && is_r_na(lcm)){
-          lcm = NA_REAL;
+          lcm = na::numeric;
           break;
         }
         lcm = lcm2(lcm, p_x[i], tol, na_rm);
@@ -271,7 +271,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       }
       return as_r_vec(lcm);
     } else {
-      return new_vec(REALSXP, (n == 0) ? 0 : 1);
+      return vec::new_vec(REALSXP, (n == 0) ? 0 : 1);
     }
   }
   }
@@ -302,9 +302,9 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   }
   switch(TYPEOF(x)){
   case INTSXP: {
-    SHIELD(x = coerce_vec(x, INTSXP)); ++NP;
-    SHIELD(y = coerce_vec(y, INTSXP)); ++NP;
-    SEXP out = SHIELD(new_vec(INTSXP, n)); ++NP;
+    SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
+    SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(INTSXP, n)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
@@ -318,9 +318,9 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     return out;
   }
   default: {
-    SHIELD(x = coerce_vec(x, REALSXP)); ++NP;
-    SHIELD(y = coerce_vec(y, REALSXP)); ++NP;
-    SEXP out = SHIELD(new_vec(REALSXP, n)); ++NP;
+    SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
+    SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(REALSXP, n)); ++NP;
     double* RESTRICT p_out = REAL(out);
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);
@@ -361,9 +361,9 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     double dbl_lcm;
     int int_lcm;
     double int_max = INTEGER_MAX;
-    SHIELD(x = coerce_vec(x, INTSXP)); ++NP;
-    SHIELD(y = coerce_vec(y, INTSXP)); ++NP;
-    SEXP out = SHIELD(new_vec(INTSXP, n)); ++NP;
+    SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
+    SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(INTSXP, n)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
@@ -373,7 +373,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     ++i){
       dbl_lcm = lcm2_int(p_x[xi], p_y[yi], na_rm);
       if (is_r_na(dbl_lcm)|| std::fabs(dbl_lcm) > int_max){
-        p_out[i] = NA_INTEGER;
+        p_out[i] = na::integer;
       } else {
         int_lcm = dbl_lcm;
         p_out[i] = int_lcm;
@@ -383,9 +383,9 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     return out;
   }
   default: {
-    SHIELD(x = coerce_vec(x, REALSXP)); ++NP;
-    SHIELD(y = coerce_vec(y, REALSXP)); ++NP;
-    SEXP out = SHIELD(new_vec(REALSXP, n)); ++NP;
+    SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
+    SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(REALSXP, n)); ++NP;
     double* RESTRICT p_out = REAL(out);
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);

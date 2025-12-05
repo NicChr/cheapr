@@ -12,7 +12,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
       if (!shallow_copy && is_bare_df(x)){
         return x;
       } else {
-        SEXP out = SHIELD(shallow_copy ? cheapr::shallow_copy(x) : x);
+        SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
         set_class(out, get_attrib(source, R_ClassSymbol));
         YIELD(1);
         return out;
@@ -24,7 +24,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
       if (!shallow_copy && is_bare_tbl(x)){
         return x;
       } else {
-        SEXP out = SHIELD(shallow_copy ? cheapr::shallow_copy(x) : x);
+        SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
         set_class(out, get_attrib(source, R_ClassSymbol));
         YIELD(1);
         return out;
@@ -49,13 +49,13 @@ SEXP cpp_rep_len(SEXP x, int length){
   } else if (is_df(x)){
     if (out_size == df_nrow(x)) return x;
     int n_cols = Rf_length(x);
-    SEXP out = SHIELD(new_vec(VECSXP, n_cols));
+    SEXP out = SHIELD(vec::new_vec(VECSXP, n_cols));
     const SEXP *p_x = LIST_PTR_RO(x);
     for (int i = 0; i < n_cols; ++i){
       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
     }
-    SEXP names = SHIELD(get_names(x));
-    set_names(out, names);
+    SEXP names = SHIELD(get_r_names(x));
+    set_r_names(out, names);
     set_list_as_df(out);
     set_attrib(out, R_RowNamesSymbol, new_row_names(length));
     SHIELD(out = rebuild(out, x, false));
@@ -73,7 +73,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     case LGLSXP:
     case INTSXP: {
       const int *p_x = INTEGER_RO(x);
-      SEXP out = SHIELD(new_vec(TYPEOF(x), out_size));
+      SEXP out = SHIELD(vec::new_vec(TYPEOF(x), out_size));
       int* RESTRICT p_out = INTEGER(out);
 
       if (size == 1){
@@ -87,7 +87,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, NA_INTEGER);
+        std::fill(p_out, p_out + out_size, na::integer);
       }
       Rf_copyMostAttrib(x, out);
       YIELD(1);
@@ -95,7 +95,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case CHEAPR_INT64SXP: {
       const int64_t *p_x = INTEGER64_PTR_RO(x);
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(REALSXP, out_size));
       int64_t* RESTRICT p_out = INTEGER64_PTR(out);
 
       if (size == 1){
@@ -109,7 +109,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, NA_INTEGER64);
+        std::fill(p_out, p_out + out_size, na::integer64);
       }
       Rf_copyMostAttrib(x, out);
       YIELD(1);
@@ -117,7 +117,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case REALSXP: {
       const double *p_x = REAL_RO(x);
-      SEXP out = SHIELD(new_vec(REALSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(REALSXP, out_size));
       double* RESTRICT p_out = REAL(out);
 
       if (size == 1){
@@ -131,7 +131,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, NA_REAL);
+        std::fill(p_out, p_out + out_size, na::numeric);
       }
       Rf_copyMostAttrib(x, out);
       YIELD(1);
@@ -139,7 +139,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case STRSXP: {
       const SEXP *p_x = STRING_PTR_RO(x);
-      SEXP out = SHIELD(new_vec(STRSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(STRSXP, out_size));
 
       if (size == 1){
         SEXP val = p_x[0];
@@ -153,7 +153,7 @@ SEXP cpp_rep_len(SEXP x, int length){
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
         for (int i = 0; i < out_size; ++i){
-          SET_STRING_ELT(out, i, NA_STRING);
+          SET_STRING_ELT(out, i, na::string);
         }
       }
       Rf_copyMostAttrib(x, out);
@@ -162,7 +162,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case CPLXSXP: {
       Rcomplex *p_x = COMPLEX(x);
-      SEXP out = SHIELD(new_vec(CPLXSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(CPLXSXP, out_size));
       Rcomplex *p_out = COMPLEX(out);
 
       if (size == 1){
@@ -174,8 +174,8 @@ SEXP cpp_rep_len(SEXP x, int length){
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
         for (int i = 0; i < out_size; ++i){
-          p_out[i].r = NA_REAL;
-          p_out[i].i = NA_REAL;
+          p_out[i].r = na::numeric;
+          p_out[i].i = na::numeric;
         }
       }
       Rf_copyMostAttrib(x, out);
@@ -184,7 +184,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case VECSXP: {
       const SEXP *p_x = LIST_PTR_RO(x);
-      SEXP out = SHIELD(new_vec(VECSXP, out_size));
+      SEXP out = SHIELD(vec::new_vec(VECSXP, out_size));
 
       if (size == 1){
         SEXP val = p_x[0];
@@ -225,7 +225,7 @@ SEXP cpp_rep_len(SEXP x, int length){
 [[cpp11::register]]
 SEXP cpp_rep(SEXP x, SEXP times){
 
-  R_xlen_t n = vector_length(x);
+  R_xlen_t n = vec::length(x);
 
   R_xlen_t out_size;
   R_xlen_t n_times = Rf_xlength(times);
@@ -240,7 +240,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
     int *p_times = INTEGER(times);
     if (n_times != n){
       YIELD(1);
-      Rf_error("`times` must be length 1 or `vector_length(x)` in %s", __func__);
+      Rf_error("`times` must be length 1 or `vec::length(x)` in %s", __func__);
     }
 
     if (is_null(x)){
@@ -248,7 +248,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
       return r_null;
     } else if (is_df(x)){
       if (Rf_length(x) == 0){
-        SEXP out = SHIELD(shallow_copy(x));
+        SEXP out = SHIELD(vec::shallow_copy(x));
         set_attrib(out, R_RowNamesSymbol, new_row_names(cpp_sum(times)));
         SHIELD(out = rebuild(out, x, false));
         YIELD(3);
@@ -262,7 +262,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
       }
 
     } else if (cheapr_is_simple_vec2(x)){
-      SEXP out = SHIELD(new_vec(TYPEOF(x), cpp_sum(times)));
+      SEXP out = SHIELD(vec::new_vec(TYPEOF(x), cpp_sum(times)));
       switch (TYPEOF(x)){
       case LGLSXP:
       case INTSXP: {
@@ -340,7 +340,7 @@ SEXP cpp_rep_each(SEXP x, SEXP each){
       YIELD(NP);
       return x;
     }
-    SHIELD(each = cpp_rep_len(each, vector_length(x))); ++NP;
+    SHIELD(each = cpp_rep_len(each, vec::length(x))); ++NP;
   }
   SEXP out = SHIELD(cpp_rep(x, each)); ++NP;
   YIELD(NP);
@@ -361,11 +361,11 @@ R_xlen_t length_common(SEXP x){
   for (R_xlen_t i = 0; i < n; ++i){
     if (is_null(p_x[i])) continue;
 
-    if (vector_length(p_x[i]) == 0){
+    if (vec::length(p_x[i]) == 0){
       out = 0;
       break;
     }
-    out = std::max(out, vector_length(p_x[i]));
+    out = std::max(out, vec::length(p_x[i]));
   }
   return out;
 }
@@ -435,9 +435,9 @@ SEXP cpp_unique(SEXP x, bool names){
       SEXP out = SHIELD(sset_vec(x, unique_locs, false)); ++NP;
       Rf_copyMostAttrib(x, out);
       if (names){
-        SEXP names = SHIELD(get_names(x)); ++NP;
+        SEXP names = SHIELD(get_r_names(x)); ++NP;
         SHIELD(names = sset_vec(names, unique_locs, false)); ++NP;
-        set_names(out, names);
+        set_r_names(out, names);
       }
       YIELD(NP);
       return out;
@@ -460,7 +460,7 @@ SEXP cpp_setdiff(SEXP x, SEXP y, bool unique){
   } else {
     SHIELD(x);
   }
-  SEXP matches = SHIELD(match(y, x, NA_INTEGER));
+  SEXP matches = SHIELD(match(y, x, na::integer));
   SEXP locs = SHIELD(cpp_which_na(matches));
   if (Rf_xlength(locs) == Rf_xlength(x)){
     YIELD(3);
@@ -480,7 +480,7 @@ SEXP cpp_intersect(SEXP x, SEXP y, bool unique){
   } else {
     SHIELD(x);
   }
-  SEXP matches = SHIELD(match(y, x, NA_INTEGER));
+  SEXP matches = SHIELD(match(y, x, na::integer));
   SEXP locs = SHIELD(cpp_which_not_na(matches));
   if (Rf_xlength(locs) == Rf_xlength(x)){
     YIELD(3);
@@ -509,14 +509,14 @@ SEXP get_ptype(SEXP x){
 
 SEXP get_ptypes(SEXP x){
   int n = Rf_length(x);
-  SEXP out = SHIELD(new_vec(VECSXP, n));
+  SEXP out = SHIELD(vec::new_vec(VECSXP, n));
 
   for (int i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, get_ptype(VECTOR_ELT(x, i)));
   }
 
-  SEXP names = SHIELD(get_names(x));
-  set_names(out, names);
+  SEXP names = SHIELD(get_r_names(x));
+  set_r_names(out, names);
 
   YIELD(2);
   return out;
@@ -536,7 +536,7 @@ SEXP character_as_factor(SEXP x, SEXP levels){
 
   int32_t NP = 0;
 
-  SEXP out = SHIELD(match(levels, x, NA_INTEGER)); ++NP;
+  SEXP out = SHIELD(match(levels, x, na::integer)); ++NP;
   SEXP cls = SHIELD(make_utf8_str("factor")); ++NP;
   set_attrib(out, R_LevelsSymbol, levels);
   set_class(out, cls);
@@ -558,19 +558,19 @@ SEXP cpp_list_c(SEXP x){
     out_size += (TYPEOF(p_x[i]) == VECSXP ? Rf_xlength(p_x[i]) : 1);
   }
 
-  SEXP x_names = SHIELD(get_names(x)); ++NP;
+  SEXP x_names = SHIELD(get_r_names(x)); ++NP;
   bool x_has_names = !is_null(x_names);
 
   R_xlen_t k = 0;
-  SEXP out = SHIELD(new_vec(VECSXP, out_size)); ++NP;
-  SEXP container_list = SHIELD(new_vec(VECSXP, 1)); ++NP;
-  set_names(container_list, R_BlankScalarString);
+  SEXP out = SHIELD(vec::new_vec(VECSXP, out_size)); ++NP;
+  SEXP container_list = SHIELD(vec::new_vec(VECSXP, 1)); ++NP;
+  set_r_names(container_list, R_BlankScalarString);
 
   SEXP names;
   PROTECT_INDEX nm_idx;
   R_ProtectWithIndex(names = r_null, &nm_idx); ++NP;
 
-  SEXP out_names = SHIELD(new_vec(STRSXP, out_size)); ++NP;
+  SEXP out_names = SHIELD(vec::new_vec(STRSXP, out_size)); ++NP;
   bool any_names = false;
 
   R_xlen_t m;
@@ -580,7 +580,7 @@ SEXP cpp_list_c(SEXP x){
 
     if (TYPEOF(p_x[i]) == VECSXP){
       p_temp = LIST_PTR_RO(p_x[i]);
-      R_Reprotect(names = get_names(p_x[i]), nm_idx);
+      R_Reprotect(names = get_r_names(p_x[i]), nm_idx);
       m = Rf_xlength(p_x[i]);
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
@@ -606,7 +606,7 @@ SEXP cpp_list_c(SEXP x){
     }
   }
   if (any_names){
-    set_names(out, out_names);
+    set_r_names(out, out_names);
   }
   YIELD(NP);
   return out;
@@ -642,7 +642,7 @@ SEXP cpp_df_c(SEXP x){
 
   R_ProtectWithIndex(new_names = r_null, &new_names_idx); ++NP;
   R_ProtectWithIndex(df_names = r_null, &df_names_idx); ++NP;
-  R_ProtectWithIndex(ptype_names = get_names(df), &ptype_names_idx); ++NP;
+  R_ProtectWithIndex(ptype_names = get_r_names(df), &ptype_names_idx); ++NP;
 
   int n_cols = Rf_length(ptype_names);
 
@@ -656,7 +656,7 @@ SEXP cpp_df_c(SEXP x){
 
   for (int i = 1; i < n_frames; ++i){
     R_Reprotect(df = cast<r_data_frame_t>(p_x[i], r_null), df_idx);
-    R_Reprotect(df_names = get_names(df), df_names_idx);
+    R_Reprotect(df_names = get_r_names(df), df_names_idx);
 
     R_Reprotect(new_names = cpp_setdiff(
       df_names, ptype_names, false
@@ -678,14 +678,14 @@ SEXP cpp_df_c(SEXP x){
   PROTECT_INDEX vec_idx;
   R_ProtectWithIndex(vec = r_null, &vec_idx); ++NP;
 
-  SEXP out = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
-  SEXP vectors = SHIELD(new_vec(VECSXP, n_frames)); ++NP;
+  SEXP out = SHIELD(vec::new_vec(VECSXP, n_cols)); ++NP;
+  SEXP vectors = SHIELD(vec::new_vec(VECSXP, n_frames)); ++NP;
 
   const SEXP *p_ptype_names = STRING_PTR_RO(ptype_names);
 
   if (na_padding){
     // Get archetype of each col
-    SEXP vec_archetypes = SHIELD(new_vec(VECSXP, n_cols)); ++NP;
+    SEXP vec_archetypes = SHIELD(vec::new_vec(VECSXP, n_cols)); ++NP;
     const SEXP *p_vec_archetypes = LIST_PTR_RO(vec_archetypes);
     for (int j = 0; j < n_cols; ++j){
       for (int i = 0; i < n_frames; ++i){
@@ -716,7 +716,7 @@ SEXP cpp_df_c(SEXP x){
 
   set_list_as_df(out);
   set_attrib(out, R_RowNamesSymbol, new_row_names(out_size));
-  set_names(out, ptype_names);
+  set_r_names(out, ptype_names);
   SHIELD(out = rebuild(out, VECTOR_ELT(frames, 0), false)); ++NP;
   YIELD(NP);
   return out;
@@ -748,7 +748,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
 // This allows us to eliminate a few loops
 SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
-  if (vector_length(vec_template) != 0){
+  if (vec::length(vec_template) != 0){
     Rf_error("`vec_template` must be of length 0");
   }
 
@@ -910,7 +910,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_date_t>(p_x[i], vec_template), vec_idx);
-      R_Reprotect(vec = coerce_vec(vec, INTSXP), vec_idx);
+      R_Reprotect(vec = vec::coerce_vec(vec, INTSXP), vec_idx);
       m = Rf_xlength(vec);
       std::copy_n(INTEGER_RO(vec), m, &p_out[k]);
     }
@@ -923,7 +923,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_date_t>(p_x[i], vec_template), vec_idx);
-      R_Reprotect(vec = coerce_vec(vec, REALSXP), vec_idx);
+      R_Reprotect(vec = vec::coerce_vec(vec, REALSXP), vec_idx);
       m = Rf_xlength(vec);
       std::copy_n(REAL_RO(vec), m, &p_out[k]);
     }
@@ -950,7 +950,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     break;
   }
   case R_unk: {
-    SEXP call = SHIELD(coerce_vec(x, LISTSXP)); ++NP;
+    SEXP call = SHIELD(vec::coerce_vec(x, LISTSXP)); ++NP;
     SHIELD(call = Rf_lcons(install_utf8("c"), call)); ++NP;
     SHIELD(out = eval(call, R_GetCurrentEnv())); ++NP;
     break;
@@ -987,7 +987,7 @@ SEXP cpp_c(SEXP x){
 
   // Figure out final size
   R_xlen_t out_size = 0;
-  for (int i = 0; i < n; ++i) out_size += vector_length(p_x[i]);
+  for (int i = 0; i < n; ++i) out_size += vec::length(p_x[i]);
 
   // 'vec_template' here acts as a template for the final result
   SEXP vec_template = SHIELD(cpp_common_template(x));

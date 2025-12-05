@@ -14,13 +14,13 @@ SEXP cpp_str_coalesce(SEXP x){
 
   SEXP chars = SHIELD(cpp_recycle(x, r_null)); ++NP;
   if (MAYBE_REFERENCED(chars)){
-    SHIELD(chars = shallow_copy(chars)); ++NP;
+    SHIELD(chars = vec::shallow_copy(chars)); ++NP;
   }
 
   R_xlen_t n_chars = Rf_xlength(chars);
 
   if (n_chars == 0){
-    SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(STRSXP, 0)); ++NP;
     YIELD(NP);
     return out;
   }
@@ -46,7 +46,7 @@ SEXP cpp_str_coalesce(SEXP x){
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
 
   if (n_strings == 0){
-    SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(STRSXP, 0)); ++NP;
     R_Free(char_ptrs);
     YIELD(NP);
     return out;
@@ -68,7 +68,7 @@ SEXP cpp_str_coalesce(SEXP x){
       }
       // If all ith elements are NA, then return NA
       if (n_nas == n_chars){
-        SET_STRING_ELT(out, i, NA_STRING);
+        SET_STRING_ELT(out, i, na::string);
       }
     }
   }
@@ -95,13 +95,13 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
 
   SEXP chars = SHIELD(cpp_recycle(x, r_null)); ++NP;
   if (MAYBE_REFERENCED(chars)){
-    SHIELD(chars = shallow_copy(chars)); ++NP;
+    SHIELD(chars = vec::shallow_copy(chars)); ++NP;
   }
 
   R_xlen_t n_chars = Rf_xlength(chars);
 
   if (n_chars == 0){
-    SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(STRSXP, 0)); ++NP;
     YIELD(NP);
     return out;
   }
@@ -131,7 +131,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
 
   if (n_strings == 0){
-    SEXP out = SHIELD(new_vec(STRSXP, 0)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(STRSXP, 0)); ++NP;
     R_Free(char_ptrs);
     YIELD(NP);
     return out;
@@ -160,7 +160,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
 
   } else {
 
-    SEXP out = SHIELD(new_vec(STRSXP, n_strings)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(STRSXP, n_strings)); ++NP;
 
     // Along the length of each char vec
 

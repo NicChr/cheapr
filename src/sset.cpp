@@ -89,7 +89,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
   }
 
   if (xn > INTEGER_MAX){
-    SHIELD(exclude = coerce_vec(exclude, REALSXP)); ++NP;
+    SHIELD(exclude = vec::coerce_vec(exclude, REALSXP)); ++NP;
     double *p_excl = REAL(exclude);
 
     for (int j = 0; j < m; ++j) {
@@ -107,7 +107,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       }
     }
     out_size = n - exclude_count;
-    SEXP out = SHIELD(new_vec(REALSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(REALSXP, out_size)); ++NP;
     double* RESTRICT p_out = REAL(out);
     while(k != out_size){
       if (keep[i] == 1){
@@ -136,7 +136,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       }
     }
     out_size = n - exclude_count;
-    SEXP out = SHIELD(new_vec(INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(INTSXP, out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     while(k != out_size){
       if (keep[i++] == 1){
@@ -154,7 +154,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
 // checked (internal flag)
 
 SEXP clean_indices(SEXP indices, SEXP x, bool count){
-  R_xlen_t xn = vector_length(x);
+  R_xlen_t xn = vec::length(x);
   int32_t NP = 0;
   R_xlen_t zero_count = 0,
     pos_count = 0,
@@ -169,12 +169,12 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   R_xlen_t n = Rf_xlength(indices);
   int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
-  int_fast64_t out_size = NA_INTEGER64;
+  int_fast64_t out_size = na::integer64;
   bool check_indices = true;
   SEXP clean_indices = r_null;
 
   if (TYPEOF(indices) == STRSXP){
-    SEXP names = SHIELD(get_names(x)); ++NP;
+    SEXP names = SHIELD(get_r_names(x)); ++NP;
     if (is_null(names)){
       YIELD(NP);
       Rf_error("Cannot subset on the names of an unnamed vector");
@@ -183,7 +183,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
       YIELD(NP);
       Rf_error("Cannot subset rows of a data frame using a character vector");
     }
-    SHIELD(indices = match(names, indices, NA_INTEGER)); ++NP;
+    SHIELD(indices = match(names, indices, na::integer)); ++NP;
   }
 
   if (is_compact_seq(indices)){
@@ -207,7 +207,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     check_indices = false;
   } else if (xn > INTEGER_MAX){
 
-    SHIELD(clean_indices = coerce_vec(indices, REALSXP)); ++NP;
+    SHIELD(clean_indices = vec::coerce_vec(indices, REALSXP)); ++NP;
 
     if (count){
 
@@ -258,7 +258,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     }
   } else {
 
-    SHIELD(clean_indices = coerce_vec(indices, INTSXP)); ++NP;
+    SHIELD(clean_indices = vec::coerce_vec(indices, INTSXP)); ++NP;
 
 
     if (count){
@@ -279,7 +279,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
           pos_count += (pi[j] > 0);
           // oob_count counts NA as true so adjust after the fact
           oob_count += (std::llabs(pi[j]) > xn);
-          na_count += (pi[j] == NA_INTEGER);
+          na_count += (pi[j] == na::integer);
         }
       } else {
         OMP_FOR_SIMD
@@ -288,7 +288,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
           pos_count += (pi[j] > 0);
           // oob_count counts NA as true so adjust after the fact
           oob_count += (std::llabs(pi[j]) > xn);
-          na_count += (pi[j] == NA_INTEGER);
+          na_count += (pi[j] == na::integer);
         }
       }
       // adjust oob_count
@@ -334,18 +334,18 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
 
 SEXP cpp_clean_locs(SEXP locs, SEXP x){
 
-  R_xlen_t xn = vector_length(x);
+  R_xlen_t xn = vec::length(x);
 
   int32_t NP = 0;
 
   if (is_null(locs)){
-    SHIELD(locs = new_vec(INTSXP, 0)); ++NP;
+    SHIELD(locs = vec::new_vec(INTSXP, 0)); ++NP;
   }
 
   R_xlen_t n = Rf_xlength(locs);
 
   if (get_r_type(locs) == R_chr){
-    SEXP names = SHIELD(get_names(x)); ++NP;
+    SEXP names = SHIELD(get_r_names(x)); ++NP;
     if (is_null(names)){
       YIELD(NP);
       Rf_error("Cannot subset on the names of an unnamed vector");
@@ -354,7 +354,7 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
       YIELD(NP);
       Rf_error("Cannot subset rows of a data frame using a character vector");
     }
-    SHIELD(locs = match(names, locs, NA_INTEGER)); ++NP;
+    SHIELD(locs = match(names, locs, na::integer)); ++NP;
     YIELD(NP);
     return locs;
   }
@@ -405,7 +405,7 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
   }
   if (zero_count > 0 || oob_count > 0 || na_count > 0){
     int out_size = pos_count - oob_count;
-    SEXP out = SHIELD(new_vec(INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vec(INTSXP, out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
 
     int k = 0;
@@ -547,7 +547,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   case LGLSXP:
   case INTSXP: {
     const int *p_x = INTEGER_RO(x);
-    out = SHIELD(new_vec(TYPEOF(x), out_size)); ++NP;
+    out = SHIELD(vec::new_vec(TYPEOF(x), out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     if (double_loop){
       safe_memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(int));
@@ -556,10 +556,10 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
       if (by > 0){
         safe_memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(int));
         OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = NA_INTEGER;
+        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = na::integer;
       } else {
         OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[i] = NA_INTEGER;
+        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[i] = na::integer;
         OMP_FOR_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
@@ -568,7 +568,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case REALSXP: {
     const double *p_x = REAL_RO(x);
-    out = SHIELD(new_vec(REALSXP, out_size)); ++NP;
+    out = SHIELD(vec::new_vec(REALSXP, out_size)); ++NP;
     double* RESTRICT p_out = REAL(out);
     if (double_loop){
       safe_memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(double));
@@ -579,10 +579,10 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
           safe_memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(double));
         }
         OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = NA_REAL;
+        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = na::numeric;
       } else {
         OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[i] = NA_REAL;
+        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[i] = na::numeric;
         OMP_FOR_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
@@ -591,7 +591,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case STRSXP: {
     const SEXP *p_x = STRING_PTR_RO(x);
-    out = SHIELD(new_vec(STRSXP, out_size)); ++NP;
+    out = SHIELD(vec::new_vec(STRSXP, out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
         SET_STRING_ELT(out, k, p_x[i]);
@@ -605,11 +605,11 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
           SET_STRING_ELT(out, k, p_x[i]);
         }
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          SET_STRING_ELT(out, in_bounds_size + i, NA_STRING);
+          SET_STRING_ELT(out, in_bounds_size + i, na::string);
         }
       } else {
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          SET_STRING_ELT(out, i, NA_STRING);
+          SET_STRING_ELT(out, i, na::string);
         }
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i){
           SET_STRING_ELT(out, istart - i - 1, p_x[i]);
@@ -620,7 +620,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case CPLXSXP: {
     Rcomplex *p_x = COMPLEX(x);
-    out = SHIELD(new_vec(CPLXSXP, out_size)); ++NP;
+    out = SHIELD(vec::new_vec(CPLXSXP, out_size)); ++NP;
     Rcomplex* RESTRICT p_out = COMPLEX(out);
     if (double_loop){
       safe_memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(Rcomplex));
@@ -632,13 +632,13 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
         }
         for (R_xlen_t i = 0; i < n_oob; ++i){
           R_xlen_t tempi = in_bounds_size + i;
-          p_out[tempi].r = NA_REAL;
-          p_out[tempi].i = NA_REAL;
+          p_out[tempi].r = na::numeric;
+          p_out[tempi].i = na::numeric;
         }
       } else {
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          p_out[i].r = NA_REAL;
-          p_out[i].i = NA_REAL;
+          p_out[i].r = na::numeric;
+          p_out[i].i = na::numeric;
         }
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i){
           R_xlen_t tempi = istart - i - 1;
@@ -651,7 +651,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case RAWSXP: {
     Rbyte *p_x = RAW(x);
-    out = SHIELD(new_vec(RAWSXP, out_size)); ++NP;
+    out = SHIELD(vec::new_vec(RAWSXP, out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
         SET_RAW_ELT(out, k, p_x[i]);
@@ -674,7 +674,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case VECSXP: {
     const SEXP *p_x = LIST_PTR_RO(x);
-    out = SHIELD(new_vec(VECSXP, out_size)); ++NP;
+    out = SHIELD(vec::new_vec(VECSXP, out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
         SET_VECTOR_ELT(out, k, p_x[i]);
@@ -735,7 +735,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case LGLSXP:
       case INTSXP: {
         const int* p_x = INTEGER_RO(x);
-        out = SHIELD(new_vec(xtype, n));
+        out = SHIELD(vec::new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
 
           for (int_fast64_t i = 0; i < n; ++i){
@@ -746,14 +746,14 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              p_out[k++] = (pind[i] != pind[i] || j > xn) ? NA_INTEGER : p_x[j - 1];
+              p_out[k++] = (pind[i] != pind[i] || j > xn) ? na::integer : p_x[j - 1];
             }
           }
         break;
       }
       case REALSXP: {
         const double* p_x = REAL_RO(x);
-        out = SHIELD(new_vec(REALSXP, n));
+        out = SHIELD(vec::new_vec(REALSXP, n));
         double* RESTRICT p_out = REAL(out);
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
@@ -763,14 +763,14 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              p_out[k++] = (pind[i] != pind[i] || j > xn) ? NA_REAL : p_x[j - 1];
+              p_out[k++] = (pind[i] != pind[i] || j > xn) ? na::numeric : p_x[j - 1];
             }
           }
         break;
       }
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
-        out = SHIELD(new_vec(STRSXP, n));
+        out = SHIELD(vec::new_vec(STRSXP, n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -779,14 +779,14 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              SET_STRING_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? NA_STRING : p_x[j - 1]);
+              SET_STRING_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? na::string : p_x[j - 1]);
             }
           }
         break;
       }
       case CPLXSXP: {
         const Rcomplex* p_x = COMPLEX_RO(x);
-        out = SHIELD(new_vec(CPLXSXP, n));
+        out = SHIELD(vec::new_vec(CPLXSXP, n));
         Rcomplex* RESTRICT p_out = COMPLEX(out);
           for (int_fast64_t i = 0; i < n; ++i){
 
@@ -799,8 +799,8 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               return out2;
             } else if (j != 0){
               if (pind[i] != pind[i] || j > xn){
-                p_out[k].r = NA_REAL;
-                p_out[k].i = NA_REAL;
+                p_out[k].r = na::numeric;
+                p_out[k].i = na::numeric;
               } else {
                 p_out[k].r = p_x[j - 1].r;
                 p_out[k].i = p_x[j - 1].i;
@@ -813,7 +813,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case RAWSXP: {
         const Rbyte *p_x = RAW_RO(x);
-        out = SHIELD(new_vec(RAWSXP, n));
+        out = SHIELD(vec::new_vec(RAWSXP, n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -829,7 +829,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case VECSXP: {
         const SEXP *p_x = LIST_PTR_RO(x);
-        out = SHIELD(new_vec(VECSXP, n));
+        out = SHIELD(vec::new_vec(VECSXP, n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -862,7 +862,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       xn = Rf_length(x),
         n = Rf_xlength(indices),
         k = 0,
-        na_val = NA_INTEGER,
+        na_val = na::integer,
         j;
 
       const int *pind = INTEGER_RO(indices);
@@ -875,7 +875,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case LGLSXP:
       case INTSXP: {
         const int* p_x = INTEGER_RO(x);
-        out = SHIELD(new_vec(xtype, n));
+        out = SHIELD(vec::new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -888,14 +888,14 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            p_out[k++] = NA_INTEGER;
+            p_out[k++] = na::integer;
           }
         }
         break;
       }
       case REALSXP: {
         const double* p_x = REAL_RO(x);
-        out = SHIELD(new_vec(REALSXP, n));
+        out = SHIELD(vec::new_vec(REALSXP, n));
         double* RESTRICT p_out = REAL(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -908,14 +908,14 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            p_out[k++] = NA_REAL;
+            p_out[k++] = na::numeric;
           }
         }
         break;
       }
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
-        out = SHIELD(new_vec(STRSXP, n));
+        out = SHIELD(vec::new_vec(STRSXP, n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -927,14 +927,14 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            SET_STRING_ELT(out, k++, NA_STRING);
+            SET_STRING_ELT(out, k++, na::string);
           }
         }
         break;
       }
       case CPLXSXP: {
         const Rcomplex* p_x = COMPLEX_RO(x);
-        out = SHIELD(new_vec(CPLXSXP, n));
+        out = SHIELD(vec::new_vec(CPLXSXP, n));
         Rcomplex* RESTRICT p_out = COMPLEX(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -947,15 +947,15 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            p_out[k].r = NA_REAL;
-            p_out[k++].i = NA_REAL;
+            p_out[k].r = na::numeric;
+            p_out[k++].i = na::numeric;
           }
         }
         break;
       }
       case RAWSXP: {
         const Rbyte *p_x = RAW_RO(x);
-        out = SHIELD(new_vec(RAWSXP, n));
+        out = SHIELD(vec::new_vec(RAWSXP, n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -974,7 +974,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case VECSXP: {
         const SEXP *p_x = LIST_PTR_RO(x);
-        out = SHIELD(new_vec(VECSXP, n));
+        out = SHIELD(vec::new_vec(VECSXP, n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -1022,7 +1022,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case LGLSXP:
       case INTSXP: {
         const int *p_x = INTEGER_RO(x);
-        out = SHIELD(new_vec(xtype, n));
+        out = SHIELD(vec::new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
         OMP_FOR_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
@@ -1032,7 +1032,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case REALSXP: {
         const double *p_x = REAL_RO(x);
-        out = SHIELD(new_vec(REALSXP, n));
+        out = SHIELD(vec::new_vec(REALSXP, n));
         double* RESTRICT p_out = REAL(out);
         OMP_FOR_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
@@ -1042,7 +1042,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
-        out = SHIELD(new_vec(STRSXP, n));
+        out = SHIELD(vec::new_vec(STRSXP, n));
         for (int_fast64_t i = 0; i < n; ++i){
           SET_STRING_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         }
@@ -1050,7 +1050,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case CPLXSXP: {
         const Rcomplex *p_x = COMPLEX_RO(x);
-        out = SHIELD(new_vec(CPLXSXP, n));
+        out = SHIELD(vec::new_vec(CPLXSXP, n));
         Rcomplex* RESTRICT p_out = COMPLEX(out);
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i].r = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].r;
@@ -1060,13 +1060,13 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case RAWSXP: {
         const Rbyte *p_x = RAW_RO(x);
-        out = SHIELD(new_vec(RAWSXP, n));
+        out = SHIELD(vec::new_vec(RAWSXP, n));
         for (int_fast64_t i = 0; i < n; ++i) SET_RAW_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         break;
       }
       case VECSXP: {
         const SEXP *p_x = LIST_PTR_RO(x);
-        out = SHIELD(new_vec(VECSXP, n));
+        out = SHIELD(vec::new_vec(VECSXP, n));
         for (int_fast64_t i = 0; i < n; ++i){
           SET_VECTOR_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         }
@@ -1093,7 +1093,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case LGLSXP:
       case INTSXP: {
         const int *p_x = INTEGER_RO(x);
-        out = SHIELD(new_vec(xtype, n));
+        out = SHIELD(vec::new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
         OMP_FOR_SIMD
         for (int i = 0; i != n; ++i){
@@ -1103,7 +1103,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case REALSXP: {
         const double *p_x = REAL_RO(x);
-        out = SHIELD(new_vec(REALSXP, n));
+        out = SHIELD(vec::new_vec(REALSXP, n));
         double* RESTRICT p_out = REAL(out);
         OMP_FOR_SIMD
         for (int i = 0; i != n; ++i){
@@ -1113,7 +1113,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case STRSXP: {
         const SEXP *p_x = STRING_PTR_RO(x);
-        out = SHIELD(new_vec(STRSXP, n));
+        out = SHIELD(vec::new_vec(STRSXP, n));
         for (int i = 0; i != n; ++i){
           SET_STRING_ELT(out, i, p_x[pind[i] - 1]);
         }
@@ -1121,7 +1121,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case CPLXSXP: {
         const Rcomplex *p_x = COMPLEX_RO(x);
-        out = SHIELD(new_vec(CPLXSXP, n));
+        out = SHIELD(vec::new_vec(CPLXSXP, n));
         Rcomplex* RESTRICT p_out = COMPLEX(out);
         for (int i = 0; i != n; ++i){
           p_out[i].r = p_x[pind[i] - 1].r;
@@ -1131,13 +1131,13 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case RAWSXP: {
         const Rbyte *p_x = RAW_RO(x);
-        out = SHIELD(new_vec(RAWSXP, n));
+        out = SHIELD(vec::new_vec(RAWSXP, n));
         for (int i = 0; i != n; ++i) SET_RAW_ELT(out, i, p_x[pind[i] - 1]);
         break;
       }
       case VECSXP: {
         const SEXP *p_x = LIST_PTR_RO(x);
-        out = SHIELD(new_vec(VECSXP, n));
+        out = SHIELD(vec::new_vec(VECSXP, n));
         for (int i = 0; i != n; ++i){
           SET_VECTOR_ELT(out, i, p_x[pind[i] - 1]);
         }
@@ -1256,9 +1256,9 @@ SEXP rev(SEXP x, bool set){
 [[cpp11::register]]
 SEXP cpp_rev(SEXP x, bool set){
   SEXP out = SHIELD(rev(x, set));
-  SEXP names = SHIELD(get_names(x));
+  SEXP names = SHIELD(get_r_names(x));
   SHIELD(names = rev(names, set && !ALTREP(x)));
-  set_names(out, names);
+  set_r_names(out, names);
   YIELD(3);
   return out;
 }
@@ -1283,7 +1283,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Flag to check indices
   bool check = true;
 
-  SEXP names = SHIELD(get_names(x)); ++NP;
+  SEXP names = SHIELD(get_r_names(x)); ++NP;
 
   SEXP cols;
   int loc_type = TYPEOF(locs);
@@ -1297,7 +1297,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     break;
   }
   case STRSXP: {
-    cols = SHIELD(match(names, locs, NA_INTEGER)); ++NP;
+    cols = SHIELD(match(names, locs, na::integer)); ++NP;
     int *match_locs = INTEGER(cols);
     if (cpp_any_na(cols, false)){
       for (int i = 0; i < Rf_length(cols); ++i){
@@ -1330,7 +1330,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
 
   // Negative subscripting
-  if (n_locs > 0 && INTEGER(cols)[0] != NA_INTEGER && INTEGER(cols)[0] < 0){
+  if (n_locs > 0 && INTEGER(cols)[0] != na::integer && INTEGER(cols)[0] < 0){
     SHIELD(cols = exclude_locs(cols, n_cols)); ++NP;
     n_locs = Rf_length(cols);
     check = false;
@@ -1338,8 +1338,8 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   const int *p_cols = INTEGER_RO(cols);
 
-  SEXP out = SHIELD(new_vec(VECSXP, n_locs)); ++NP;
-  SEXP out_names = SHIELD(new_vec(STRSXP, n_locs)); ++NP;
+  SEXP out = SHIELD(vec::new_vec(VECSXP, n_locs)); ++NP;
+  SEXP out_names = SHIELD(vec::new_vec(STRSXP, n_locs)); ++NP;
 
   const SEXP *p_x = LIST_PTR_RO(x);
   const SEXP *p_names = STRING_PTR_RO(names);
@@ -1349,7 +1349,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   if (check){
     for (int i = 0; i < n_locs; ++i) {
       col = p_cols[i];
-      if (col == NA_INTEGER){
+      if (col == na::integer){
         YIELD(NP);
         Rf_error("Cannot select `NA` column locations in %s", __func__);
       } else if (col >= 1 && col <= n_cols){
@@ -1385,7 +1385,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   set_attrib(out, R_RowNamesSymbol, new_row_names(n_rows));
   SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
   set_class(out, df_cls);
-  set_names(out, out_names);
+  set_r_names(out, out_names);
   YIELD(NP);
   return out;
 }
@@ -1399,7 +1399,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   int ncols = Rf_length(x);
   int32_t NP = 0;
   const SEXP *p_x = LIST_PTR_RO(x);
-  SEXP out = SHIELD(new_vec(VECSXP, ncols)); ++NP;
+  SEXP out = SHIELD(vec::new_vec(VECSXP, ncols)); ++NP;
 
   // Clean indices and get metadata
 
@@ -1422,8 +1422,8 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
     SET_VECTOR_ELT(out, j, cpp_sset(p_x[j], indices, check_indices));
   }
 
-  SEXP names = SHIELD(get_names(x)); ++NP;
-  set_names(out, names);
+  SEXP names = SHIELD(get_r_names(x)); ++NP;
+  set_r_names(out, names);
 
   // list to data frame object
   set_attrib(out, R_RowNamesSymbol, new_row_names(out_size));
@@ -1486,18 +1486,18 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       SHIELD(out = cpp_sset_range(x, p_data[0], p_data[1], p_data[2])); ++NP;
 
       // Subset names
-      SHIELD(names = get_names(x)); ++NP;
+      SHIELD(names = get_r_names(x)); ++NP;
       SHIELD(names = cpp_sset_range(names, p_data[0], p_data[1], p_data[2])); ++NP;
     } else {
 
       SHIELD(out = sset_vec(x, i, check)); ++NP;
 
       // Subset names
-      SHIELD(names = get_names(x)); ++NP;
+      SHIELD(names = get_r_names(x)); ++NP;
       SHIELD(names = sset_vec(names, i, check)); ++NP;
     }
     Rf_copyMostAttrib(x, out);
-    set_names(out, names);
+    set_r_names(out, names);
   } else if (is_df(x)){
     if (is_bare_df(x) || is_bare_tbl(x)){
       SHIELD(out = cpp_df_subset(x, i, j, check)); ++NP;
@@ -1560,7 +1560,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
   }
 
   if (i == 0){
-    return new_vec(TYPEOF(x), 0);
+    return vec::new_vec(TYPEOF(x), 0);
   }
 
   if (i > Rf_xlength(x)){

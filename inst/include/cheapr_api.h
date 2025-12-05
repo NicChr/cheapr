@@ -316,13 +316,13 @@ is_simple_atomic_vec(SEXP x) {
 // Deprecated, use cheapr::vector_length
 inline R_xlen_t
 vec_length(SEXP x){
-  return cheapr::vector_length(x);
+  return cheapr::vec::length(x);
 }
 
 // Deprecated, use cheapr::address
 inline SEXP
 r_address(SEXP x){
-  return cheapr::address(x);
+  return cheapr::vec::address(x);
 }
 
 // Deprecated, use cheapr::replace
