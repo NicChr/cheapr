@@ -50,19 +50,13 @@
 
 namespace cheapr {
 
-// type-safe bool type, similar to Rboolean
-// I would use cpp11::r_bool but it doesn't seem to work in
-// many cases, throwing ambiguous conversion errors
+// bool type, similar to Rboolean
 
-enum class r_boolean : int {
+enum r_boolean : int {
   r_true = 1,
   r_false = 0,
   r_na = INT_MIN
 };
-
-inline constexpr r_boolean r_true = r_boolean::r_true;
-inline constexpr r_boolean r_false = r_boolean::r_false;
-inline constexpr r_boolean r_na = r_boolean::r_na;
 
 // Constants
 
