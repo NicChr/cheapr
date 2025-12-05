@@ -28,7 +28,7 @@ inline double trunc(T x){
 inline SEXP CHEAPR_CORES = r_null;
 
 inline int num_cores(){
-  if (is_null(CHEAPR_CORES)){
+  if (vec::is_null(CHEAPR_CORES)){
     CHEAPR_CORES = install_utf8("cheapr.cores");
   }
   int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
@@ -77,13 +77,13 @@ inline bool is_df(SEXP x){
 //
 
 inline bool is_bare_atomic(SEXP x){
-  return !is_object(x) && Rf_isVectorAtomic(x);
+  return !vec::is_object(x) && Rf_isVectorAtomic(x);
 }
 
 inline bool cheapr_is_simple_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (
-          !is_object(x) || (
+          !vec::is_object(x) || (
               Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
               Rf_inherits(x, "POSIXct")
           )
@@ -92,7 +92,7 @@ inline bool cheapr_is_simple_atomic_vec(SEXP x){
 }
 
 inline bool is_bare_list(SEXP x){
-  return (!is_object(x) && TYPEOF(x) == VECSXP);
+  return (!vec::is_object(x) && TYPEOF(x) == VECSXP);
 }
 
 inline bool cheapr_is_simple_vec(SEXP x){

@@ -10,6 +10,7 @@
 #include <vector>
 
 using namespace cheapr;
+using namespace vec;
 using namespace internal;
 
 #endif

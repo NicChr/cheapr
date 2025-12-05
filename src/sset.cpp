@@ -1552,7 +1552,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
     Rf_error("`i` must be >= 0");
   }
 
-  if (is_object(x)){
+  if (vec::is_object(x)){
     SEXP loc = SHIELD(as_r_vec(i));
     SEXP out = SHIELD(cpp_sset(x, loc, true));
     YIELD(2);

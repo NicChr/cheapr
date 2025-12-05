@@ -317,7 +317,7 @@ SEXP cpp_is_na(SEXP x){
     break;
   }
   case VECSXP: {
-    if (!is_object(x)){
+    if (!vec::is_object(x)){
     out = SHIELD(vec::new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = LIST_PTR_RO(x);
@@ -392,7 +392,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       break;
     }
     case VECSXP: {
-      if (is_object(p_x[j])){
+      if (vec::is_object(p_x[j])){
 
       SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_length(is_missing) != num_row){
@@ -440,7 +440,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
-      if (is_object(p_x[j])){
+      if (vec::is_object(p_x[j])){
       SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_length(is_missing) != num_row){
         int int_nrows = num_row;
@@ -488,7 +488,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
-      if (is_object(p_x[j])){
+      if (vec::is_object(p_x[j])){
       SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
@@ -545,7 +545,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
-      if (is_object(p_x[j])){
+      if (vec::is_object(p_x[j])){
       SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;

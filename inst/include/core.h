@@ -148,6 +148,7 @@ inline const char* char_as_utf8(const char *x){
   return CHAR(make_utf8_char(x));
 }
 
+namespace vec {
 inline bool is_null(SEXP x){
   return x == r_null;
 }
@@ -158,6 +159,7 @@ inline bool is_altrep(SEXP x){
 
 inline bool is_object(SEXP x){
   return Rf_isObject(x);
+}
 }
 
 inline SEXP get_attrib(SEXP x, SEXP which){
@@ -253,7 +255,7 @@ inline bool is_r_na<cpp11::r_string>(const cpp11::r_string x){
 // Works for CHARSXP and NULL
 template<>
 inline bool is_r_na<SEXP>(const SEXP x){
-  return is_null(x) || x == na::string;
+  return vec::is_null(x) || x == na::string;
 }
 
 // NA type
@@ -497,14 +499,14 @@ inline SEXP r_length_sym = r_null;
 
 namespace internal {
 inline void set_r_names(SEXP x, SEXP names){
-  is_null(names) ? set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
+  vec::is_null(names) ? set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
 }
 inline SEXP get_r_names(SEXP x){
   return get_attrib(x, R_NamesSymbol);
 }
 inline bool has_r_names(SEXP x){
   SEXP names = SHIELD(get_r_names(x));
-  bool out = !is_null(names);
+  bool out = !vec::is_null(names);
   YIELD(1);
   return out;
 }
@@ -730,7 +732,7 @@ inline SEXP compact_seq_len(R_xlen_t n){
 namespace vec {
 
 inline R_xlen_t length(SEXP x){
-  if (!is_object(x) || Rf_isVectorAtomic(x)){
+  if (!vec::is_object(x) || Rf_isVectorAtomic(x)){
     return Rf_xlength(x);
   } else if (Rf_inherits(x, "data.frame")){
     return df_nrow(x);
@@ -746,7 +748,7 @@ inline R_xlen_t length(SEXP x){
       }
       return out;
     } else {
-      if (is_null(r_length_sym)){
+      if (vec::is_null(r_length_sym)){
         SHIELD(r_length_sym = install_utf8("length"));
       } else {
         SHIELD(r_length_sym);
@@ -759,7 +761,7 @@ inline R_xlen_t length(SEXP x){
     }
     // Catch-all
   } else {
-    if (is_null(r_length_sym)){
+    if (vec::is_null(r_length_sym)){
       SHIELD(r_length_sym = install_utf8("length"));
     } else {
       SHIELD(r_length_sym);
@@ -799,7 +801,7 @@ inline SEXP attributes(SEXP x){
   for (int i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, CAR(current));
     SEXP nm = PRINTNAME(TAG(current));
-    if (!is_null(nm)){
+    if (!vec::is_null(nm)){
       SET_STRING_ELT(names, i, nm);
     }
     current = CDR(current);
