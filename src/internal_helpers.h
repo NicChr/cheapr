@@ -108,13 +108,13 @@ inline bool cheapr_is_simple_vec2(SEXP x){
 }
 
 inline bool is_bare_df(SEXP x){
-  SEXP cls = get_attrib(x, R_ClassSymbol);
+  SEXP cls = cheapr::vec::get_attrib(x, R_ClassSymbol);
   return Rf_length(cls) == 1 &&
     std::strcmp(CHAR(STRING_ELT(cls, 0)), "data.frame") == 0;
 }
 
 inline bool is_bare_tbl(SEXP x){
-  SEXP xclass = get_attrib(x, R_ClassSymbol);
+  SEXP xclass = cheapr::vec::get_attrib(x, R_ClassSymbol);
 
   return Rf_length(xclass) == 3 &&
     std::strcmp(CHAR(STRING_ELT(xclass, 0)), "tbl_df") == 0 &&

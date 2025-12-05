@@ -337,7 +337,7 @@ loc_set_replace(SEXP x, SEXP where, SEXP what){
 // This is also defined in variadic.h but difficult to export with one definition
 template<typename... Args>
 SEXP new_r_vec(Args... args) {
-  SEXP out = SHIELD(cheapr::new_r_list(args...));
+  SEXP out = SHIELD(cheapr::vec::new_r_list(args...));
   SHIELD(out = cheapr::c(out));
   YIELD(2);
   return out;
@@ -345,7 +345,7 @@ SEXP new_r_vec(Args... args) {
 
 template<typename... Args>
 SEXP new_r_df(Args... args) {
-  SEXP out = SHIELD(cheapr::new_r_list(args...));
+  SEXP out = SHIELD(cheapr::vec::new_r_list(args...));
   SHIELD(out = new_df(out, r_null, true, true));
   YIELD(2);
   return out;
@@ -353,7 +353,7 @@ SEXP new_r_df(Args... args) {
 
 template<typename... Args>
 inline SEXP r_paste(SEXP sep, SEXP collapse, Args... args){
-  SEXP objs = SHIELD(cheapr::new_r_list(args...));
+  SEXP objs = SHIELD(cheapr::vec::new_r_list(args...));
   SEXP out = SHIELD(cheapr::paste(objs, sep, collapse));
   YIELD(2);
   return out;

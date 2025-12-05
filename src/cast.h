@@ -127,7 +127,7 @@ inline cheapr::r_type get_r_type(SEXP x) {
 
 inline const char* r_class(SEXP obj){
   if (cheapr::vec::is_object(obj)){
-    return CHAR(STRING_ELT(cheapr::get_attrib(obj, R_ClassSymbol), 0));
+    return CHAR(STRING_ELT(cheapr::vec::get_attrib(obj, R_ClassSymbol), 0));
   } else {
     switch(TYPEOF(obj)) {
     case CLOSXP:
@@ -228,7 +228,7 @@ inline SEXP init<r_integer64_t>(R_xlen_t n, bool with_na) {
     std::fill(p_out, p_out + n, cheapr::na::integer64);
   }
   SEXP int64_cls = SHIELD(cheapr::make_utf8_str("integer64"));
-  cheapr::set_class(out, int64_cls);
+  cheapr::vec::set_class(out, int64_cls);
   YIELD(2);
   return out;
 }
@@ -287,8 +287,8 @@ inline SEXP init<r_factor_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(init<r_integer_t>(n, with_na));
   SEXP lvls = SHIELD(cheapr::vec::new_vec(STRSXP, 0));
   SEXP cls = SHIELD(cheapr::make_utf8_str("factor"));
-  cheapr::set_attrib(out, R_LevelsSymbol, lvls);
-  cheapr::set_class(out, cls);
+  cheapr::vec::set_attrib(out, R_LevelsSymbol, lvls);
+  cheapr::vec::set_class(out, cls);
   YIELD(3);
   return out;
 }
@@ -297,7 +297,7 @@ template<>
 inline SEXP init<r_date_t>(R_xlen_t n, bool with_na){
   SEXP out = SHIELD(init<r_double_t>(n, with_na));
   SEXP cls = SHIELD(cheapr::make_utf8_str("Date"));
-  cheapr::set_class(out, cls);
+  cheapr::vec::set_class(out, cls);
   YIELD(2);
   return out;
 }
@@ -307,8 +307,8 @@ inline SEXP init<r_posixt_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(init<r_double_t>(n, with_na));
   SEXP tz = SHIELD(cheapr::vec::new_vec(STRSXP, 1));
   SEXP cls = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
-  cheapr::set_class(out, cls);
-  cheapr::set_attrib(out, cheapr::install_utf8("tzone"), tz);
+  cheapr::vec::set_class(out, cls);
+  cheapr::vec::set_attrib(out, cheapr::install_utf8("tzone"), tz);
   YIELD(3);
   return out;
 }
@@ -491,8 +491,8 @@ inline SEXP cast<r_factor_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "factor") && !Rf_inherits(y, "factor")){
     return x;
   } else if (Rf_inherits(y, "factor")){
-    SEXP x_lvls = SHIELD(cheapr::get_attrib(x, R_LevelsSymbol));
-    SEXP out_lvls = SHIELD(cheapr::get_attrib(y, R_LevelsSymbol));
+    SEXP x_lvls = SHIELD(cheapr::vec::get_attrib(x, R_LevelsSymbol));
+    SEXP out_lvls = SHIELD(cheapr::vec::get_attrib(y, R_LevelsSymbol));
     if (R_compute_identical(x_lvls, out_lvls, 0)){
       YIELD(2);
       return x;
@@ -541,7 +541,7 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
       SHIELD(out = cheapr::vec::coerce_vec(x, REALSXP)); ++NP;
     }
     SEXP date_cls = SHIELD(cheapr::make_utf8_str("Date")); ++NP;
-    cheapr::set_class(out, date_cls);
+    cheapr::vec::set_class(out, date_cls);
     YIELD(NP);
     return out;
   }
@@ -553,15 +553,15 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     return x;
     // Copy timezone information
   } else if (Rf_inherits(x, "POSIXct") && Rf_inherits(y, "POSIXct")){
-    SEXP x_tzone = SHIELD(cheapr::get_attrib(x, cheapr::install_utf8("tzone")));
-    SEXP out_tzone = SHIELD(cheapr::get_attrib(y, cheapr::install_utf8("tzone")));
+    SEXP x_tzone = SHIELD(cheapr::vec::get_attrib(x, cheapr::install_utf8("tzone")));
+    SEXP out_tzone = SHIELD(cheapr::vec::get_attrib(y, cheapr::install_utf8("tzone")));
 
     if (R_compute_identical(x_tzone, out_tzone, 0)){
       YIELD(2);
       return x;
     }
     SEXP out = SHIELD(cheapr::vec::shallow_copy(x));
-    cheapr::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
+    cheapr::vec::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
     YIELD(3);
     return out;
   } else if (cheapr::vec::is_null(x) && cheapr::vec::is_null(y)){
@@ -571,9 +571,9 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(cheapr::vec::new_vec(REALSXP, n));
     SEXP out_class = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
-    SEXP out_tzone = SHIELD(cheapr::get_attrib(y, cheapr::install_utf8("tzone")));
-    cheapr::set_class(out, out_class);
-    cheapr::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
+    SEXP out_tzone = SHIELD(cheapr::vec::get_attrib(y, cheapr::install_utf8("tzone")));
+    cheapr::vec::set_class(out, out_class);
+    cheapr::vec::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
 
     double* RESTRICT p_out = REAL(out);
 
@@ -594,8 +594,8 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     SEXP out = SHIELD(cheapr::vec::coerce_vec(x, REALSXP));
     SEXP out_class = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
     SEXP out_tzone = SHIELD(cheapr::vec::new_vec(STRSXP, 1));
-    cheapr::set_class(out, out_class);
-    cheapr::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
+    cheapr::vec::set_class(out, out_class);
+    cheapr::vec::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
     SHIELD(out = cast<r_posixt_t>(out, y)); // To set the correct attributes
     YIELD(4);
     return out;

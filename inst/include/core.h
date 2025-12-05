@@ -160,7 +160,6 @@ inline bool is_altrep(SEXP x){
 inline bool is_object(SEXP x){
   return Rf_isObject(x);
 }
-}
 
 inline SEXP get_attrib(SEXP x, SEXP which){
   return Rf_getAttrib(x, which);
@@ -174,7 +173,6 @@ inline void set_class(SEXP x, SEXP cls){
   Rf_classgets(x, cls);
 }
 
-namespace vec {
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
 }
@@ -184,15 +182,9 @@ inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
 }
 }
 
-// inline SEXP new_immutable_vec(SEXPTYPE type, R_xlen_t n){
-//   SEXP out = SHIELD(new_vec(type, n));
-//   MARK_NOT_MUTABLE(out);
-//   YIELD(1);
-//   return out;
-// }
 
 inline int df_nrow(SEXP x){
-  return Rf_length(get_attrib(x, R_RowNamesSymbol));
+  return Rf_length(vec::get_attrib(x, R_RowNamesSymbol));
 }
 
 inline bool is_r_inf(const double x){
@@ -473,45 +465,6 @@ inline SEXP as_char(T x){
 
 // R fns
 
-inline SEXP eval(SEXP expr, SEXP env){
-  return Rf_eval(expr, env);
-}
-
-// Return R function from a specified package
-inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
-
-  SEXP expr = r_null;
-
-  if (all_fns){
-    expr = SHIELD(Rf_lang3(R_TripleColonSymbol, Rf_install(pkg), Rf_install(name)));
-  } else {
-    expr = SHIELD(Rf_lang3(R_DoubleColonSymbol, Rf_install(pkg), Rf_install(name)));
-  }
-  SEXP out = SHIELD(eval(expr, base_env));
-  YIELD(2);
-  return out;
-}
-
-inline SEXP r_length_sym = r_null;
-
-// Can't use `Rf_namesgets(x, r_null)`
-// as it adds empty names instead of NULL
-
-namespace internal {
-inline void set_r_names(SEXP x, SEXP names){
-  vec::is_null(names) ? set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
-}
-inline SEXP get_r_names(SEXP x){
-  return get_attrib(x, R_NamesSymbol);
-}
-inline bool has_r_names(SEXP x){
-  SEXP names = SHIELD(get_r_names(x));
-  bool out = !vec::is_null(names);
-  YIELD(1);
-  return out;
-}
-}
-
 inline double r_round(double x){
   return is_r_na(x) ? na_value(x) : x - std::remainder(x, 1.0);
 }
@@ -546,6 +499,62 @@ inline double gcd2(double x, double y, double tol, bool na_rm){
   }
   return x;
 }
+
+inline SEXP eval(SEXP expr, SEXP env){
+  return Rf_eval(expr, env);
+}
+
+// Return R function from a specified package
+inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
+
+  SEXP expr = r_null;
+
+  if (all_fns){
+    expr = SHIELD(Rf_lang3(R_TripleColonSymbol, Rf_install(pkg), Rf_install(name)));
+  } else {
+    expr = SHIELD(Rf_lang3(R_DoubleColonSymbol, Rf_install(pkg), Rf_install(name)));
+  }
+  SEXP out = SHIELD(eval(expr, base_env));
+  YIELD(2);
+  return out;
+}
+
+inline SEXP r_length_sym = r_null;
+
+// Can't use `Rf_namesgets(x, r_null)`
+// as it adds empty names instead of NULL
+
+namespace internal {
+inline void set_r_names(SEXP x, SEXP names){
+  vec::is_null(names) ? vec::set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
+}
+inline SEXP get_r_names(SEXP x){
+  return vec::get_attrib(x, R_NamesSymbol);
+}
+inline bool has_r_names(SEXP x){
+  SEXP names = SHIELD(get_r_names(x));
+  bool out = !vec::is_null(names);
+  YIELD(1);
+  return out;
+}
+}
+
+// Named argument
+
+struct arg {
+  const char* name;
+  SEXP value;
+
+  explicit arg(const char* n) : name(n), value(r_null) {}
+  explicit arg(const char* n, SEXP v) : name(n), value(v) {}
+
+  template<typename T>
+  arg operator=(T v) const {
+    return arg(name, as_r_vec(v));
+  }
+};
+
+namespace vec {
 
 template<typename T>
 inline void set_val(SEXP x, const R_xlen_t i, T val, T* p_x = nullptr){
@@ -624,21 +633,6 @@ inline void set_val(SEXP x, const R_xlen_t i, SEXP val, const SEXP *p_x = nullpt
   }
 }
 
-// Named argument
-
-struct arg {
-  const char* name;
-  SEXP value;
-
-  explicit arg(const char* n) : name(n), value(r_null) {}
-  explicit arg(const char* n, SEXP v) : name(n), value(v) {}
-
-  template<typename T>
-  arg operator=(T v) const {
-    return arg(name, as_r_vec(v));
-  }
-};
-
 // Variadic list constructor
 template<typename... Args>
 inline SEXP new_r_list(Args... args) {
@@ -703,10 +697,12 @@ inline SEXP new_r_pairlist(Args... args) {
   }
 }
 
+}
+
 template<typename... Args>
 inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
   // Expression
-  SEXP call = SHIELD(Rf_lcons(r_fn, new_r_pairlist(args...)));
+  SEXP call = SHIELD(Rf_lcons(r_fn, vec::new_r_pairlist(args...)));
   // Evaluate expression
   SEXP out = SHIELD(eval(call, envir));
 
