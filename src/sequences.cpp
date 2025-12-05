@@ -526,7 +526,7 @@ double pretty_ceiling(double x){
 }
 
 bool can_be_int(double x, double tolerance){
-  return is_r_whole_number(x, tolerance) && is_r_integerable(x);
+  return static_cast<bool>(is_whole_number(x, tolerance)) && is_r_integerable(x);
 }
 
 double seq_end(double size, double from, double by){
@@ -664,7 +664,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       // Not sure if adj_start needs rounding here
       adj_start *= scale_adj;
 
-      if (is_r_whole_number(adj_start, tol)){
+      if (static_cast<bool>(is_whole_number(adj_start, tol))){
         adj_start = r_round(adj_start);
       }
       start *= scale_adj;

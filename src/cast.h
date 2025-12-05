@@ -367,7 +367,7 @@ inline SEXP cast<r_logical_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_object(x)){
     r_as_lgl = !cheapr::is_null(r_as_lgl) ? r_as_lgl : cheapr::install_utf8("as.logical");
     SEXP expr = SHIELD(Rf_lang2(r_as_lgl, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -383,7 +383,7 @@ inline SEXP cast<r_integer_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_object(x)){
     r_as_int = !cheapr::is_null(r_as_int) ? r_as_int : cheapr::install_utf8("as.integer");
     SEXP expr = SHIELD(Rf_lang2(r_as_int, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -399,7 +399,7 @@ inline SEXP cast<r_double_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_object(x)){
     r_as_dbl = !cheapr::is_null(r_as_dbl) ? r_as_dbl : cheapr::install_utf8("as.double");
     SEXP expr = SHIELD(Rf_lang2(r_as_dbl, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -429,7 +429,7 @@ inline SEXP cast<r_character_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_object(x)){
     r_as_char = !cheapr::is_null(r_as_char) ? r_as_char : cheapr::install_utf8("as.character");
     SEXP expr = SHIELD(Rf_lang2(r_as_char, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -445,7 +445,7 @@ inline SEXP cast<r_complex_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_object(x)){
     r_as_cplx = !cheapr::is_null(r_as_cplx) ? r_as_cplx : cheapr::install_utf8("as.complex");
     SEXP expr = SHIELD(Rf_lang2(r_as_cplx, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -461,7 +461,7 @@ inline SEXP cast<r_raw_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_object(x)){
     r_as_raw = !cheapr::is_null(r_as_raw) ? r_as_raw : cheapr::install_utf8("as.raw");
     SEXP expr = SHIELD(Rf_lang2(r_as_raw, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -477,7 +477,7 @@ inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_object(x)){
     r_as_list = !cheapr::is_null(r_as_list) ? r_as_list : cheapr::install_utf8("as.list");
     SEXP expr = SHIELD(Rf_lang2(r_as_list, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -506,7 +506,7 @@ inline SEXP cast<r_factor_t>(SEXP x, SEXP y) {
   } else {
     SEXP cheapr_factor = SHIELD(cheapr::find_pkg_fun("factor_", "cheapr", true));
     SEXP expr = SHIELD(Rf_lang2(cheapr_factor, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(3);
     return out;
@@ -528,7 +528,7 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
   } else if (cheapr::is_object(x)){
     r_as_date = !cheapr::is_null(r_as_date) ? r_as_date : cheapr::install_utf8("as.Date");
     SEXP expr = SHIELD(Rf_lang2(r_as_date, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -602,7 +602,7 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
   } else {
     r_as_posixct = !cheapr::is_null(r_as_posixct) ? r_as_posixct : cheapr::install_utf8("as.POSIXct");
     SEXP expr = SHIELD(Rf_lang2(r_as_posixct, x));
-    SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
     SHIELD(out = cast<r_posixt_t>(out, y)); // To set the correct attributes
     YIELD(3);

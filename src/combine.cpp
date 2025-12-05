@@ -57,7 +57,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     SEXP names = SHIELD(get_names(x));
     set_names(out, names);
     set_list_as_df(out);
-    set_attrib(out, R_RowNamesSymbol, create_df_row_names(length));
+    set_attrib(out, R_RowNamesSymbol, new_row_names(length));
     SHIELD(out = rebuild(out, x, false));
     YIELD(3);
     return out;
@@ -249,7 +249,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
     } else if (is_df(x)){
       if (Rf_length(x) == 0){
         SEXP out = SHIELD(shallow_copy(x));
-        set_attrib(out, R_RowNamesSymbol, create_df_row_names(cpp_sum(times)));
+        set_attrib(out, R_RowNamesSymbol, new_row_names(cpp_sum(times)));
         SHIELD(out = rebuild(out, x, false));
         YIELD(3);
         return out;
@@ -715,7 +715,7 @@ SEXP cpp_df_c(SEXP x){
   }
 
   set_list_as_df(out);
-  set_attrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
+  set_attrib(out, R_RowNamesSymbol, new_row_names(out_size));
   set_names(out, ptype_names);
   SHIELD(out = rebuild(out, VECTOR_ELT(frames, 0), false)); ++NP;
   YIELD(NP);
@@ -952,7 +952,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case R_unk: {
     SEXP call = SHIELD(coerce_vec(x, LISTSXP)); ++NP;
     SHIELD(call = Rf_lcons(install_utf8("c"), call)); ++NP;
-    SHIELD(out = Rf_eval(call, R_GetCurrentEnv())); ++NP;
+    SHIELD(out = eval(call, R_GetCurrentEnv())); ++NP;
     break;
   }
   default: {

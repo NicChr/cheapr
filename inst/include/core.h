@@ -80,6 +80,20 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 inline const SEXP r_null = R_NilValue;
 inline const Rcomplex NA_COMPLEX = {{NA_REAL, NA_REAL}};
 
+inline const SEXP empty_env = R_EmptyEnv;
+inline const SEXP base_env = R_BaseEnv;
+
+// NAs
+
+namespace na {
+  inline const r_boolean logical = r_na;
+  inline const int integer = NA_INTEGER;
+  inline const double numeric = NA_REAL;
+  inline const Rcomplex complex = NA_COMPLEX;
+  inline const SEXP string = NA_STRING;
+  inline const SEXP list = r_null;
+}
+
 // Functions
 
 inline const SEXP* LIST_PTR_RO(SEXP x) {
@@ -129,15 +143,15 @@ inline SEXP make_utf8_char(const char *x){
 }
 
 inline SEXP make_utf8_str(const char *x){
-  return Rf_ScalarString(Rf_mkCharCE(x, CE_UTF8));
+  return Rf_ScalarString(make_utf8_char(x));
 }
 
 inline SEXP install_utf8(const char *x){
-  return Rf_installChar(Rf_mkCharCE(x, CE_UTF8));
+  return Rf_installChar(make_utf8_char(x));
 }
 
 inline const char* char_as_utf8(const char *x){
-  return CHAR(Rf_mkCharCE(x, CE_UTF8));
+  return CHAR(make_utf8_char(x));
 }
 
 inline bool is_null(SEXP x){
@@ -163,6 +177,7 @@ inline void set_attrib(SEXP x, SEXP which, SEXP value){
 inline void set_class(SEXP x, SEXP cls){
   Rf_classgets(x, cls);
 }
+
 
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
@@ -468,6 +483,10 @@ inline SEXP address(SEXP x) {
   return make_utf8_char(buf);
 }
 
+inline SEXP eval(SEXP expr, SEXP env){
+  return Rf_eval(expr, env);
+}
+
 // Return R function from a specified package
 inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
 
@@ -478,7 +497,7 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   } else {
     expr = SHIELD(Rf_lang3(R_DoubleColonSymbol, Rf_install(pkg), Rf_install(name)));
   }
-  SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
+  SEXP out = SHIELD(eval(expr, base_env));
   YIELD(2);
   return out;
 }
@@ -508,7 +527,7 @@ inline R_xlen_t vector_length(SEXP x){
         SHIELD(r_length_sym);
       }
       SEXP expr = SHIELD(Rf_lang2(r_length_sym, x));
-      SEXP r_len = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+      SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
       R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
       YIELD(3);
       return out;
@@ -521,7 +540,7 @@ inline R_xlen_t vector_length(SEXP x){
       SHIELD(r_length_sym);
     }
     SEXP expr = SHIELD(Rf_lang2(r_length_sym, x));
-    SEXP r_len = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
+    SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
     R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
     YIELD(3);
     return out;
@@ -543,12 +562,34 @@ inline bool has_names(SEXP x){
   return out;
 }
 
+// Attributes of x as a list
+inline SEXP attributes(SEXP x){
+  SEXP a = ATTRIB(x);
+  int n = Rf_length(a);
+
+  SEXP out = SHIELD(new_vec(VECSXP, n));
+  SEXP names = SHIELD(new_vec(STRSXP, n));
+  SEXP current = a;
+
+  for (int i = 0; i < n; ++i){
+    SET_VECTOR_ELT(out, i, CAR(current));
+    SEXP nm = PRINTNAME(TAG(current));
+    if (!is_null(nm)){
+      SET_STRING_ELT(names, i, nm);
+    }
+    current = CDR(current);
+  }
+  set_names(out, names);
+  YIELD(2);
+  return out;
+}
+
 inline double r_round(double x){
   return is_r_na(x) ? na_value(x) : x - std::remainder(x, 1.0);
 }
 
-inline bool is_r_whole_number(const double x, const double tolerance){
-  return std::fabs(x - std::round(x)) < tolerance;
+inline r_boolean is_whole_number(const double x, const double tolerance){
+  return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_boolean>(std::fabs(x - std::round(x)) < tolerance);
 }
 
 inline SEXP deep_copy(SEXP x){
@@ -557,46 +598,6 @@ inline SEXP deep_copy(SEXP x){
 
 inline SEXP shallow_copy(SEXP x){
   return Rf_shallow_duplicate(x);
-}
-
-// int not bool because bool can't be NA
-inline r_boolean vec_is_whole_number(SEXP x, double tol_, bool na_rm_){
-
-  R_xlen_t n = Rf_xlength(x);
-
-  // Use int instead of bool as int can hold NA
-  r_boolean out = r_true;
-  bool any_na = false;
-
-  switch ( CHEAPR_TYPEOF(x) ){
-  case LGLSXP:
-  case INTSXP:
-  case CHEAPR_INT64SXP: {
-    break;
-  }
-  case REALSXP: {
-    const double *p_x = REAL_RO(x);
-    for (R_xlen_t i = 0; i < n; ++i) {
-      if (is_r_na(p_x[i])){
-        any_na = true;
-        continue;
-      }
-      out = static_cast<r_boolean>(is_r_whole_number(p_x[i], tol_));
-      if (out == r_false){
-        break;
-      }
-    }
-    if (!na_rm_ && any_na){
-      out = r_na;
-    }
-    break;
-  }
-  default: {
-    out = r_false;
-    break;
-  }
-  }
-  return out;
 }
 
 inline double gcd2(double x, double y, double tol, bool na_rm){
@@ -787,7 +788,7 @@ inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
   // Expression
   SEXP call = SHIELD(Rf_lcons(r_fn, new_r_pairlist(args...)));
   // Evaluate expression
-  SEXP out = SHIELD(Rf_eval(call, envir));
+  SEXP out = SHIELD(eval(call, envir));
 
   YIELD(2);
   return out;
@@ -801,10 +802,52 @@ inline SEXP compact_seq_len(R_xlen_t n){
   if (n == 0){
     return new_vec(INTSXP, 0);
   }
-  SEXP colon_fn = SHIELD(find_pkg_fun(":", "base", R_BaseEnv));
-  SEXP out = SHIELD(eval_fun(colon_fn, R_BaseEnv, 1, n));
+  SEXP colon_fn = SHIELD(find_pkg_fun(":", "base", base_env));
+  SEXP out = SHIELD(eval_fun(colon_fn, base_env, 1, n));
   YIELD(2);
   return out;
+}
+
+namespace vec {
+// int not bool because bool can't be NA
+inline r_boolean is_whole_number(SEXP x, double tol_, bool na_rm_){
+
+  R_xlen_t n = Rf_xlength(x);
+
+  // Use int instead of bool as int can hold NA
+  r_boolean out = r_true;
+  bool any_na = false;
+
+  switch ( CHEAPR_TYPEOF(x) ){
+  case LGLSXP:
+  case INTSXP:
+  case CHEAPR_INT64SXP: {
+    break;
+  }
+  case REALSXP: {
+    const double *p_x = REAL_RO(x);
+    for (R_xlen_t i = 0; i < n; ++i) {
+      if (is_r_na(p_x[i])){
+        any_na = true;
+        continue;
+      }
+      out = static_cast<r_boolean>(cheapr::is_whole_number(p_x[i], tol_));
+      if (out == r_false){
+        break;
+      }
+    }
+    if (!na_rm_ && any_na){
+      out = r_na;
+    }
+    break;
+  }
+  default: {
+    out = r_false;
+    break;
+  }
+  }
+  return out;
+}
 }
 
 // Wrap any callable f, and return a new callable that:

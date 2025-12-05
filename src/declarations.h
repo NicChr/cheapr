@@ -28,7 +28,7 @@ bool implicit_na_coercion(SEXP x, SEXP target);
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values);
 SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive);
 SEXP cpp_seq_len(R_xlen_t n);
-SEXP create_df_row_names(int n);
+SEXP new_row_names(int n);
 SEXP cpp_shallow_copy(SEXP x);
 SEXP exclude_locs(SEXP exclude, R_xlen_t xn);
 R_xlen_t unnested_length(SEXP x);

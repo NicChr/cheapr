@@ -541,7 +541,7 @@ SEXP cpp_growth_rate(SEXP x){
   return as_r_vec(growth_rate(a, b, n));
 }
 
-SEXP create_df_row_names(int n){
+SEXP new_row_names(int n){
   if (n > 0){
     return new_r_vec(NA_INTEGER, -n);
   } else {
@@ -707,7 +707,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
 [[cpp11::register]]
 SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_){
-  return as_r_vec(static_cast<int>(vec_is_whole_number(x, tol_, na_rm_)));
+  return as_r_vec(vec::is_whole_number(x, tol_, na_rm_));
 }
 
 SEXP match(SEXP y, SEXP x, int no_match){

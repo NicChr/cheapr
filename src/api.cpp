@@ -251,9 +251,9 @@ api_get_ptype(SEXP x){
 // Data frame functions
 
 SEXP
-api_create_df_row_names(int n) {
+api_new_row_names(int n) {
   try {
-    return create_df_row_names(n);
+    return new_row_names(n);
   } catch (...) {
     return cheapr::r_null;
   }
@@ -427,7 +427,7 @@ api_is_simple_atomic_vec(SEXP x) {
 [[cpp11::init]]
 void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_is_compact_seq",    (DL_FUNC)api_is_compact_seq);
-  R_RegisterCCallable("cheapr", "api_create_df_row_names",    (DL_FUNC)api_create_df_row_names);
+  R_RegisterCCallable("cheapr", "api_new_row_names",    (DL_FUNC)api_new_row_names);
   R_RegisterCCallable("cheapr", "api_set_add_attrs",    (DL_FUNC)api_set_add_attrs);
   R_RegisterCCallable("cheapr", "api_set_rm_attrs",    (DL_FUNC)api_set_rm_attrs);
   R_RegisterCCallable("cheapr", "api_exclude_locs",    (DL_FUNC)api_exclude_locs);

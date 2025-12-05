@@ -1382,7 +1382,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
 
   // Make a plain data frame
-  set_attrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
+  set_attrib(out, R_RowNamesSymbol, new_row_names(n_rows));
   SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
   set_class(out, df_cls);
   set_names(out, out_names);
@@ -1426,7 +1426,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   set_names(out, names);
 
   // list to data frame object
-  set_attrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
+  set_attrib(out, R_RowNamesSymbol, new_row_names(out_size));
   SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
   set_class(out, df_cls);
   YIELD(NP);

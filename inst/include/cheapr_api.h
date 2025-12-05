@@ -195,9 +195,9 @@ get_ptype(SEXP x){
 // Data frame functions
 
 inline SEXP
-create_df_row_names(int x) {
+new_row_names(int x) {
   typedef SEXP fn_t(int);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_create_df_row_names");
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_new_row_names");
   return fn(x);
 }
 
