@@ -102,7 +102,7 @@ inline cheapr::r_type common_type(const cheapr::r_type a, const cheapr::r_type b
 // Convert single SEXP into r_* code.
 inline cheapr::r_type get_r_type(SEXP x) {
 
-  if (!Rf_isObject(x)){
+  if (!cheapr::is_object(x)){
     switch (TYPEOF(x)) {
     case NILSXP:  return R_null;
     case LGLSXP:  return R_lgl;
@@ -126,8 +126,8 @@ inline cheapr::r_type get_r_type(SEXP x) {
 }
 
 inline const char* r_class(SEXP obj){
-  if (Rf_isObject(obj)){
-    return CHAR(STRING_ELT(Rf_getAttrib(obj, R_ClassSymbol), 0));
+  if (cheapr::is_object(obj)){
+    return CHAR(STRING_ELT(cheapr::get_attrib(obj, R_ClassSymbol), 0));
   } else {
     switch(TYPEOF(obj)) {
     case CLOSXP:
@@ -228,7 +228,7 @@ inline SEXP init<r_integer64_t>(R_xlen_t n, bool with_na) {
     std::fill(p_out, p_out + n, cheapr::NA_INTEGER64);
   }
   SEXP int64_cls = SHIELD(cheapr::make_utf8_str("integer64"));
-  Rf_classgets(out, int64_cls);
+  cheapr::set_class(out, int64_cls);
   YIELD(2);
   return out;
 }
@@ -287,8 +287,8 @@ inline SEXP init<r_factor_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(init<r_integer_t>(n, with_na));
   SEXP lvls = SHIELD(cheapr::new_vec(STRSXP, 0));
   SEXP cls = SHIELD(cheapr::make_utf8_str("factor"));
-  Rf_setAttrib(out, R_LevelsSymbol, lvls);
-  Rf_classgets(out, cls);
+  cheapr::set_attrib(out, R_LevelsSymbol, lvls);
+  cheapr::set_class(out, cls);
   YIELD(3);
   return out;
 }
@@ -297,7 +297,7 @@ template<>
 inline SEXP init<r_date_t>(R_xlen_t n, bool with_na){
   SEXP out = SHIELD(init<r_double_t>(n, with_na));
   SEXP cls = SHIELD(cheapr::make_utf8_str("Date"));
-  Rf_classgets(out, cls);
+  cheapr::set_class(out, cls);
   YIELD(2);
   return out;
 }
@@ -307,8 +307,8 @@ inline SEXP init<r_posixt_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(init<r_double_t>(n, with_na));
   SEXP tz = SHIELD(cheapr::new_vec(STRSXP, 1));
   SEXP cls = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
-  Rf_classgets(out, cls);
-  Rf_setAttrib(out, cheapr::install_utf8("tzone"), tz);
+  cheapr::set_class(out, cls);
+  cheapr::set_attrib(out, cheapr::install_utf8("tzone"), tz);
   YIELD(3);
   return out;
 }
@@ -364,8 +364,8 @@ template<>
 inline SEXP cast<r_logical_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "logical")){
     return x;
-  } else if (Rf_isObject(x)){
-    r_as_lgl = !cheapr::is_null(r_as_lgl) ? r_as_lgl : Rf_install("as.logical");
+  } else if (cheapr::is_object(x)){
+    r_as_lgl = !cheapr::is_null(r_as_lgl) ? r_as_lgl : cheapr::install_utf8("as.logical");
     SEXP expr = SHIELD(Rf_lang2(r_as_lgl, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -380,8 +380,8 @@ template<>
 inline SEXP cast<r_integer_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "integer")){
     return x;
-  } else if (Rf_isObject(x)){
-    r_as_int = !cheapr::is_null(r_as_int) ? r_as_int : Rf_install("as.integer");
+  } else if (cheapr::is_object(x)){
+    r_as_int = !cheapr::is_null(r_as_int) ? r_as_int : cheapr::install_utf8("as.integer");
     SEXP expr = SHIELD(Rf_lang2(r_as_int, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -396,8 +396,8 @@ template<>
 inline SEXP cast<r_double_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "numeric")){
     return x;
-  } else if (Rf_isObject(x)){
-    r_as_dbl = !cheapr::is_null(r_as_dbl) ? r_as_dbl : Rf_install("as.double");
+  } else if (cheapr::is_object(x)){
+    r_as_dbl = !cheapr::is_null(r_as_dbl) ? r_as_dbl : cheapr::install_utf8("as.double");
     SEXP expr = SHIELD(Rf_lang2(r_as_dbl, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -426,8 +426,8 @@ inline SEXP cast<r_character_t>(SEXP x, SEXP y) {
     return x;
   } else if (Rf_inherits(x, "factor")){
     return factor_as_character(x);
-  } else if (Rf_isObject(x)){
-    r_as_char = !cheapr::is_null(r_as_char) ? r_as_char : Rf_install("as.character");
+  } else if (cheapr::is_object(x)){
+    r_as_char = !cheapr::is_null(r_as_char) ? r_as_char : cheapr::install_utf8("as.character");
     SEXP expr = SHIELD(Rf_lang2(r_as_char, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -442,8 +442,8 @@ template<>
 inline SEXP cast<r_complex_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "complex")){
     return x;
-  } else if (Rf_isObject(x)){
-    r_as_cplx = !cheapr::is_null(r_as_cplx) ? r_as_cplx : Rf_install("as.complex");
+  } else if (cheapr::is_object(x)){
+    r_as_cplx = !cheapr::is_null(r_as_cplx) ? r_as_cplx : cheapr::install_utf8("as.complex");
     SEXP expr = SHIELD(Rf_lang2(r_as_cplx, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -458,8 +458,8 @@ template<>
 inline SEXP cast<r_raw_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "raw")){
     return x;
-  } else if (Rf_isObject(x)){
-    r_as_raw = !cheapr::is_null(r_as_raw) ? r_as_raw : Rf_install("as.raw");
+  } else if (cheapr::is_object(x)){
+    r_as_raw = !cheapr::is_null(r_as_raw) ? r_as_raw : cheapr::install_utf8("as.raw");
     SEXP expr = SHIELD(Rf_lang2(r_as_raw, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -474,8 +474,8 @@ template<>
 inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "list")){
     return x;
-  } else if (Rf_isObject(x)){
-    r_as_list = !cheapr::is_null(r_as_list) ? r_as_list : Rf_install("as.list");
+  } else if (cheapr::is_object(x)){
+    r_as_list = !cheapr::is_null(r_as_list) ? r_as_list : cheapr::install_utf8("as.list");
     SEXP expr = SHIELD(Rf_lang2(r_as_list, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -491,8 +491,8 @@ inline SEXP cast<r_factor_t>(SEXP x, SEXP y) {
   if (Rf_inherits(x, "factor") && !Rf_inherits(y, "factor")){
     return x;
   } else if (Rf_inherits(y, "factor")){
-    SEXP x_lvls = SHIELD(Rf_getAttrib(x, R_LevelsSymbol));
-    SEXP out_lvls = SHIELD(Rf_getAttrib(y, R_LevelsSymbol));
+    SEXP x_lvls = SHIELD(cheapr::get_attrib(x, R_LevelsSymbol));
+    SEXP out_lvls = SHIELD(cheapr::get_attrib(y, R_LevelsSymbol));
     if (R_compute_identical(x_lvls, out_lvls, 0)){
       YIELD(2);
       return x;
@@ -525,8 +525,8 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
     }
   } else if (cheapr::is_null(x) && cheapr::is_null(y)){
     return init<r_date_t>(cheapr::vector_length(x), true);
-  } else if (Rf_isObject(x)){
-    r_as_date = !cheapr::is_null(r_as_date) ? r_as_date : Rf_install("as.Date");
+  } else if (cheapr::is_object(x)){
+    r_as_date = !cheapr::is_null(r_as_date) ? r_as_date : cheapr::install_utf8("as.Date");
     SEXP expr = SHIELD(Rf_lang2(r_as_date, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);
@@ -536,12 +536,12 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
 
     int32_t NP = 0;
 
-    SEXP out = SHIELD(Rf_shallow_duplicate(x)); ++NP;
+    SEXP out = SHIELD(cheapr::shallow_copy(x)); ++NP;
     if (TYPEOF(x) != INTSXP){
       SHIELD(out = cheapr::coerce_vec(x, REALSXP)); ++NP;
     }
     SEXP date_cls = SHIELD(cheapr::make_utf8_str("Date")); ++NP;
-    Rf_classgets(out, date_cls);
+    cheapr::set_class(out, date_cls);
     YIELD(NP);
     return out;
   }
@@ -553,15 +553,15 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     return x;
     // Copy timezone information
   } else if (Rf_inherits(x, "POSIXct") && Rf_inherits(y, "POSIXct")){
-    SEXP x_tzone = SHIELD(Rf_getAttrib(x, cheapr::install_utf8("tzone")));
-    SEXP out_tzone = SHIELD(Rf_getAttrib(y, cheapr::install_utf8("tzone")));
+    SEXP x_tzone = SHIELD(cheapr::get_attrib(x, cheapr::install_utf8("tzone")));
+    SEXP out_tzone = SHIELD(cheapr::get_attrib(y, cheapr::install_utf8("tzone")));
 
     if (R_compute_identical(x_tzone, out_tzone, 0)){
       YIELD(2);
       return x;
     }
-    SEXP out = SHIELD(Rf_shallow_duplicate(x));
-    Rf_setAttrib(out, cheapr::install_utf8("tzone"), out_tzone);
+    SEXP out = SHIELD(cheapr::shallow_copy(x));
+    cheapr::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
     YIELD(3);
     return out;
   } else if (cheapr::is_null(x) && cheapr::is_null(y)){
@@ -571,9 +571,9 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(cheapr::new_vec(REALSXP, n));
     SEXP out_class = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
-    SEXP out_tzone = SHIELD(Rf_getAttrib(y, cheapr::install_utf8("tzone")));
-    Rf_classgets(out, out_class);
-    Rf_setAttrib(out, cheapr::install_utf8("tzone"), out_tzone);
+    SEXP out_tzone = SHIELD(cheapr::get_attrib(y, cheapr::install_utf8("tzone")));
+    cheapr::set_class(out, out_class);
+    cheapr::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
 
     double* RESTRICT p_out = REAL(out);
 
@@ -590,17 +590,17 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
 
     YIELD(3);
     return out;
-  } else if (!Rf_isObject(x)){
+  } else if (!cheapr::is_object(x)){
     SEXP out = SHIELD(cheapr::coerce_vec(x, REALSXP));
     SEXP out_class = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
     SEXP out_tzone = SHIELD(cheapr::new_vec(STRSXP, 1));
-    Rf_classgets(out, out_class);
-    Rf_setAttrib(out, cheapr::install_utf8("tzone"), out_tzone);
+    cheapr::set_class(out, out_class);
+    cheapr::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
     SHIELD(out = cast<r_posixt_t>(out, y)); // To set the correct attributes
     YIELD(4);
     return out;
   } else {
-    r_as_posixct = !cheapr::is_null(r_as_posixct) ? r_as_posixct : Rf_install("as.POSIXct");
+    r_as_posixct = !cheapr::is_null(r_as_posixct) ? r_as_posixct : cheapr::install_utf8("as.POSIXct");
     SEXP expr = SHIELD(Rf_lang2(r_as_posixct, x));
     SEXP out = SHIELD(Rf_eval(expr, R_GetCurrentEnv()));
     check_casted_length(x, out);

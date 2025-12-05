@@ -115,10 +115,10 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_date:
   case R_pxt: {
-    SEXP x_cls = SHIELD(Rf_getAttrib(x, R_ClassSymbol)); ++NP;
-    Rf_classgets(x, r_null);
+    SEXP x_cls = SHIELD(get_attrib(x, R_ClassSymbol)); ++NP;
+    set_class(x, r_null);
     replace_in_place(x, where, with, false);
-    Rf_classgets(x, x_cls);
+    set_class(x, x_cls);
     break;
   }
 

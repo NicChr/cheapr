@@ -317,7 +317,7 @@ SEXP cpp_is_na(SEXP x){
     break;
   }
   case VECSXP: {
-    if (!Rf_isObject(x)){
+    if (!is_object(x)){
     out = SHIELD(new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = LIST_PTR_RO(x);
@@ -392,7 +392,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       break;
     }
     case VECSXP: {
-      if (Rf_isObject(p_x[j])){
+      if (is_object(p_x[j])){
 
       SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_length(is_missing) != num_row){
@@ -440,7 +440,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
-      if (Rf_isObject(p_x[j])){
+      if (is_object(p_x[j])){
       SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_length(is_missing) != num_row){
         int int_nrows = num_row;
@@ -488,7 +488,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
-      if (Rf_isObject(p_x[j])){
+      if (is_object(p_x[j])){
       SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
@@ -545,7 +545,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
-      if (Rf_isObject(p_x[j])){
+      if (is_object(p_x[j])){
       SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), p_x[j])); ++NP;
       if (Rf_xlength(is_missing) != num_row){
         int int_nrows = num_row;
@@ -769,7 +769,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
 // Helpers to get matrix row and col names
 
 SEXP matrix_rownames(SEXP x) {
-  SEXP dimnames = SHIELD(Rf_getAttrib(x, R_DimNamesSymbol));
+  SEXP dimnames = SHIELD(get_attrib(x, R_DimNamesSymbol));
 
   if (is_null(dimnames) ||
       TYPEOF(dimnames) != VECSXP ||
@@ -781,7 +781,7 @@ SEXP matrix_rownames(SEXP x) {
   return VECTOR_ELT(dimnames, 0);
 }
 SEXP matrix_colnames(SEXP x) {
-  SEXP dimnames = SHIELD(Rf_getAttrib(x, R_DimNamesSymbol));
+  SEXP dimnames = SHIELD(get_attrib(x, R_DimNamesSymbol));
 
   if (is_null(dimnames) ||
       TYPEOF(dimnames) != VECSXP ||
@@ -808,13 +808,13 @@ SEXP cpp_row_na_counts(SEXP x, bool names){
   if (is_matrix){
     out = SHIELD(cpp_matrix_row_na_counts(x)); ++NP;
     if (names){
-      SEXP row_names = SHIELD(Rf_duplicate(matrix_rownames(x))); ++NP;
+      SEXP row_names = SHIELD(deep_copy(matrix_rownames(x))); ++NP;
       set_names(out, row_names);
     }
   } else {
     out = SHIELD(cpp_df_row_na_counts(x)); ++NP;
     if (names){
-      SEXP row_names = SHIELD(Rf_duplicate(Rf_getAttrib(x, R_RowNamesSymbol))); ++NP;
+      SEXP row_names = SHIELD(deep_copy(get_attrib(x, R_RowNamesSymbol))); ++NP;
       set_names(out, row_names);
     }
   }
@@ -837,7 +837,7 @@ SEXP cpp_col_na_counts(SEXP x, bool names){
   if (is_matrix){
     out = SHIELD(cpp_matrix_col_na_counts(x)); ++NP;
     if (names){
-      SEXP col_names = SHIELD(Rf_duplicate(matrix_colnames(x))); ++NP;
+      SEXP col_names = SHIELD(deep_copy(matrix_colnames(x))); ++NP;
       set_names(out, col_names);
     }
   } else {

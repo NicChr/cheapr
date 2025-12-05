@@ -4,7 +4,7 @@
 // All NA and NaN values are ignored
 
 void check_numeric(SEXP x){
-  if (!(Rf_isNumeric(x) && !Rf_isObject(x))){
+  if (!(Rf_isNumeric(x) && !is_object(x))){
     Rf_error("x must be a numeric vector");
   }
 }

@@ -68,7 +68,6 @@ void set_list_as_df(SEXP x);
 SEXP cpp_semi_copy(SEXP x);
 void clear_attributes(SEXP x);
 uint_fast64_t null_count(SEXP x);
-SEXP compact_seq_len(R_xlen_t n);
 SEXP clean_indices(SEXP indices, SEXP x, bool count);
 SEXP cpp_lgl_count(SEXP x);
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,

@@ -23,7 +23,7 @@
 SEXP cpp_set_rm_attributes(SEXP x){
   SEXP current = ATTRIB(x);
   while (!is_null(current)){
-    Rf_setAttrib(x, TAG(current), r_null);
+    set_attrib(x, TAG(current), r_null);
     current = CDR(current);
   }
   return x;
@@ -33,7 +33,7 @@ SEXP cpp_set_rm_attributes(SEXP x){
 void clear_attributes(SEXP x){
   SEXP current = ATTRIB(x);
   while (!is_null(current)){
-    Rf_setAttrib(x, TAG(current), r_null);
+    set_attrib(x, TAG(current), r_null);
     current = CDR(current);
   }
 }
@@ -45,16 +45,22 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
   if (Rf_length(which) != 1){
     Rf_error("`which` must be a character vector of length 1 in %s", __func__);
   }
-  SEXP attr_char = SHIELD(Rf_install(utf8_char(STRING_ELT(which, 0))));
-  SEXP value2 = SHIELD(address_equal(x, value) ? Rf_duplicate(value) : value);
-  Rf_setAttrib(x, attr_char, value2);
+  SEXP attr_char = SHIELD(install_utf8(CHAR(STRING_ELT(which, 0))));
+  SEXP value2 = SHIELD(address_equal(x, value) ? deep_copy(value) : value);
+  set_attrib(x, attr_char, value2);
   YIELD(2);
   return x;
 }
 
 [[cpp11::register]]
 SEXP cpp_set_rm_attr(SEXP x, SEXP which){
-  Rf_setAttrib(x, Rf_installChar(STRING_ELT(which, 0)), r_null);
+  if (Rf_length(which) != 1){
+    Rf_error("`which` must be a length 1 character vector");
+  }
+  if (TYPEOF(which) != STRSXP){
+    Rf_error("`which` must be a length 1 character vector");
+  }
+  set_attrib(x, install_utf8(CHAR(STRING_ELT(which, 0))), r_null);
   return x;
 }
 
@@ -85,10 +91,10 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
       if (p_names[i] != R_BlankString){
         attr_nm = Rf_install(utf8_char(p_names[i]));
         if (address_equal(x, p_attributes[i])){
-          SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
-          Rf_setAttrib(x, attr_nm, dup_attr);
+          SEXP dup_attr = SHIELD(deep_copy(p_attributes[i])); ++NP;
+          set_attrib(x, attr_nm, dup_attr);
         } else {
-          Rf_setAttrib(x, attr_nm, p_attributes[i]);
+          set_attrib(x, attr_nm, p_attributes[i]);
         }
       }
     }
@@ -99,10 +105,10 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
     while (!is_null(current)){
       if (address_equal(x, CAR(current))){
-        SEXP dup_attr = SHIELD(Rf_duplicate(CAR(current))); ++NP;
-        Rf_setAttrib(x, TAG(current), dup_attr);
+        SEXP dup_attr = SHIELD(deep_copy(CAR(current))); ++NP;
+        set_attrib(x, TAG(current), dup_attr);
       } else {
-        Rf_setAttrib(x, TAG(current), CAR(current));
+        set_attrib(x, TAG(current), CAR(current));
       }
      current = CDR(current);
     }

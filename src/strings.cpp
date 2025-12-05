@@ -14,7 +14,7 @@ SEXP cpp_str_coalesce(SEXP x){
 
   SEXP chars = SHIELD(cpp_recycle(x, r_null)); ++NP;
   if (MAYBE_REFERENCED(chars)){
-    SHIELD(chars = Rf_shallow_duplicate(chars)); ++NP;
+    SHIELD(chars = shallow_copy(chars)); ++NP;
   }
 
   R_xlen_t n_chars = Rf_xlength(chars);
@@ -95,7 +95,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
 
   SEXP chars = SHIELD(cpp_recycle(x, r_null)); ++NP;
   if (MAYBE_REFERENCED(chars)){
-    SHIELD(chars = Rf_shallow_duplicate(chars)); ++NP;
+    SHIELD(chars = shallow_copy(chars)); ++NP;
   }
 
   R_xlen_t n_chars = Rf_xlength(chars);

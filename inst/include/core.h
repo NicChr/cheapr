@@ -148,6 +148,22 @@ inline bool is_altrep(SEXP x){
   return ALTREP(x);
 }
 
+inline bool is_object(SEXP x){
+  return Rf_isObject(x);
+}
+
+inline SEXP get_attrib(SEXP x, SEXP which){
+  return Rf_getAttrib(x, which);
+}
+
+inline void set_attrib(SEXP x, SEXP which, SEXP value){
+  Rf_setAttrib(x, which, value);
+}
+
+inline void set_class(SEXP x, SEXP cls){
+  Rf_classgets(x, cls);
+}
+
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
 }
@@ -164,7 +180,7 @@ inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
 }
 
 inline int df_nrow(SEXP x){
-  return Rf_length(Rf_getAttrib(x, R_RowNamesSymbol));
+  return Rf_length(get_attrib(x, R_RowNamesSymbol));
 }
 
 inline bool is_r_inf(const double x){
@@ -447,8 +463,8 @@ inline SEXP as_char(T x){
 
 // Memory address of R obj
 inline SEXP address(SEXP x) {
-  static char buf[1000];
-  snprintf(buf, 1000, "%p", (void*) x);
+  char buf[1000];
+  snprintf(buf, 1000, "%p", static_cast<void*>(x));
   return make_utf8_char(buf);
 }
 
@@ -470,7 +486,7 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
 inline SEXP r_length_sym = r_null;
 
 inline R_xlen_t vector_length(SEXP x){
-  if (!Rf_isObject(x) || Rf_isVectorAtomic(x)){
+  if (!is_object(x) || Rf_isVectorAtomic(x)){
     return Rf_xlength(x);
   } else if (Rf_inherits(x, "data.frame")){
     return df_nrow(x);
@@ -515,10 +531,10 @@ inline R_xlen_t vector_length(SEXP x){
 // Can't use `Rf_namesgets(x, r_null)`
 // as it adds empty names instead of NULL
 inline void set_names(SEXP x, SEXP names){
-  is_null(names) ? Rf_setAttrib(x, R_NamesSymbol, r_null) : Rf_namesgets(x, names);
+  is_null(names) ? set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
 }
 inline SEXP get_names(SEXP x){
-  return Rf_getAttrib(x, R_NamesSymbol);
+  return get_attrib(x, R_NamesSymbol);
 }
 inline bool has_names(SEXP x){
   SEXP names = SHIELD(get_names(x));
@@ -717,13 +733,13 @@ inline SEXP new_r_list(Args... args) {
 
     SEXP nms;
 
-    int i = 0;
     if (any_named){
       nms = SHIELD(new_vec(STRSXP, n));
     } else {
       nms = SHIELD(r_null);
     }
 
+    int i = 0;
     (([&]() {
       if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
         SET_VECTOR_ELT(out, i, args.value);
@@ -769,10 +785,24 @@ inline SEXP new_r_pairlist(Args... args) {
 template<typename... Args>
 inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
   // Expression
-  SEXP call = SHIELD(LCONS(r_fn, new_r_pairlist(args...)));
+  SEXP call = SHIELD(Rf_lcons(r_fn, new_r_pairlist(args...)));
   // Evaluate expression
   SEXP out = SHIELD(Rf_eval(call, envir));
 
+  YIELD(2);
+  return out;
+}
+
+// Compact seq generator as ALTREP, same as `seq_len()`
+inline SEXP compact_seq_len(R_xlen_t n){
+  if (n < 0){
+    Rf_error("`n` must be >= 0");
+  }
+  if (n == 0){
+    return new_vec(INTSXP, 0);
+  }
+  SEXP colon_fn = SHIELD(find_pkg_fun(":", "base", R_BaseEnv));
+  SEXP out = SHIELD(eval_fun(colon_fn, R_BaseEnv, 1, n));
   YIELD(2);
   return out;
 }

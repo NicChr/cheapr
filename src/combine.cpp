@@ -12,8 +12,8 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
       if (!shallow_copy && is_bare_df(x)){
         return x;
       } else {
-        SEXP out = SHIELD(shallow_copy ? Rf_shallow_duplicate(x) : x);
-        Rf_classgets(out, Rf_getAttrib(source, R_ClassSymbol));
+        SEXP out = SHIELD(shallow_copy ? cheapr::shallow_copy(x) : x);
+        set_class(out, get_attrib(source, R_ClassSymbol));
         YIELD(1);
         return out;
       }
@@ -24,8 +24,8 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
       if (!shallow_copy && is_bare_tbl(x)){
         return x;
       } else {
-        SEXP out = SHIELD(shallow_copy ? Rf_shallow_duplicate(x) : x);
-        Rf_classgets(out, Rf_getAttrib(source, R_ClassSymbol));
+        SEXP out = SHIELD(shallow_copy ? cheapr::shallow_copy(x) : x);
+        set_class(out, get_attrib(source, R_ClassSymbol));
         YIELD(1);
         return out;
       }
@@ -57,7 +57,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     SEXP names = SHIELD(get_names(x));
     set_names(out, names);
     set_list_as_df(out);
-    Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(length));
+    set_attrib(out, R_RowNamesSymbol, create_df_row_names(length));
     SHIELD(out = rebuild(out, x, false));
     YIELD(3);
     return out;
@@ -248,8 +248,8 @@ SEXP cpp_rep(SEXP x, SEXP times){
       return r_null;
     } else if (is_df(x)){
       if (Rf_length(x) == 0){
-        SEXP out = SHIELD(Rf_shallow_duplicate(x));
-        Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(cpp_sum(times)));
+        SEXP out = SHIELD(shallow_copy(x));
+        set_attrib(out, R_RowNamesSymbol, create_df_row_names(cpp_sum(times)));
         SHIELD(out = rebuild(out, x, false));
         YIELD(3);
         return out;
@@ -524,7 +524,7 @@ SEXP get_ptypes(SEXP x){
 
 // Helper to turn a factor into a character vec
 SEXP factor_as_character(SEXP x){
-  return sset_vec(Rf_getAttrib(x, R_LevelsSymbol), x, true);
+  return sset_vec(get_attrib(x, R_LevelsSymbol), x, true);
 }
 
 // Helper to turn a character vec into a factor, given levels
@@ -538,8 +538,8 @@ SEXP character_as_factor(SEXP x, SEXP levels){
 
   SEXP out = SHIELD(match(levels, x, NA_INTEGER)); ++NP;
   SEXP cls = SHIELD(make_utf8_str("factor")); ++NP;
-  Rf_setAttrib(out, R_LevelsSymbol, levels);
-  Rf_classgets(out, cls);
+  set_attrib(out, R_LevelsSymbol, levels);
+  set_class(out, cls);
   YIELD(NP);
   return out;
 }
@@ -715,7 +715,7 @@ SEXP cpp_df_c(SEXP x){
   }
 
   set_list_as_df(out);
-  Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
+  set_attrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   set_names(out, ptype_names);
   SHIELD(out = rebuild(out, VECTOR_ELT(frames, 0), false)); ++NP;
   YIELD(NP);
@@ -904,7 +904,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     if (TYPEOF(vec_template) == INTSXP){
     SHIELD(out = init<r_integer_t>(out_size, false)); ++NP;
     SEXP date_cls = SHIELD(make_utf8_str("Date")); ++NP;
-    Rf_classgets(out, date_cls);
+    set_class(out, date_cls);
 
     int* RESTRICT p_out = INTEGER(out);
 
@@ -917,7 +917,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   } else {
     SHIELD(out = init<r_double_t>(out_size, false)); ++NP;
     SEXP date_cls = SHIELD(make_utf8_str("Date")); ++NP;
-    Rf_classgets(out, date_cls);
+    set_class(out, date_cls);
 
     double* RESTRICT p_out = REAL(out);
 
@@ -933,8 +933,8 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case R_pxt: {
 
     SHIELD(out = init<r_posixt_t>(out_size, false)); ++NP;
-    SEXP out_tzone = SHIELD(Rf_getAttrib(vec_template, install_utf8("tzone"))); ++NP;
-    Rf_setAttrib(out, install_utf8("tzone"), out_tzone);
+    SEXP out_tzone = SHIELD(get_attrib(vec_template, install_utf8("tzone"))); ++NP;
+    set_attrib(out, install_utf8("tzone"), out_tzone);
 
     double* RESTRICT p_out = REAL(out);
 

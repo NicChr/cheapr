@@ -289,7 +289,7 @@ SEXP maybe_cast_array(SEXP x){
     return x;
   } else {
     Rprintf("cheapr pkg cannot handle arrays. Array will be converted to a vector\n");
-    SEXP out = SHIELD(Rf_shallow_duplicate(x));
+    SEXP out = SHIELD(shallow_copy(x));
     clear_attributes(out);
     YIELD(1);
     return out;
@@ -321,8 +321,8 @@ void set_list_as_df(SEXP x) {
     SHIELD(names = new_vec(STRSXP, n_items)); ++NP;
     set_names(x, names);
   }
-  Rf_setAttrib(x, R_RowNamesSymbol, row_names);
-  Rf_classgets(x, df_str);
+  set_attrib(x, R_RowNamesSymbol, row_names);
+  set_class(x, df_str);
   YIELD(NP);
 }
 
@@ -373,9 +373,9 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
     SHIELD(out_names = cpp_name_repair(out_names, dup_sep, empty_sep)); ++NP;
   }
   set_names(out, out_names);
-  Rf_setAttrib(out, R_RowNamesSymbol, row_names);
+  set_attrib(out, R_RowNamesSymbol, row_names);
   SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
-  Rf_classgets(out, df_cls);
+  set_class(out, df_cls);
   YIELD(NP);
   return out;
 }
@@ -452,9 +452,9 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
     SHIELD(out_names = sset_vec(out_names, keep, false)); ++NP;
   }
   set_names(out, out_names);
-  Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
+  set_attrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
   SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
-  Rf_classgets(out, df_cls);
+  set_class(out, df_cls);
   SHIELD(out = rebuild(out, x, false)); ++NP;
   YIELD(NP);
   return out;

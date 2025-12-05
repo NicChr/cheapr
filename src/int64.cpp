@@ -125,7 +125,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
       p_out[i] = as_int64(p_x[i]);
     }
     SEXP int64_cls = SHIELD(make_utf8_str("integer64")); ++NP;
-    Rf_classgets(out, int64_cls);
+    set_class(out, int64_cls);
     break;
   }
   case CHEAPR_INT64SXP: {
@@ -147,7 +147,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
       p_out[i] = repl;
     }
     SEXP int64_cls = SHIELD(make_utf8_str("integer64")); ++NP;
-    Rf_classgets(out, int64_cls);
+    set_class(out, int64_cls);
     break;
   }
   default: {

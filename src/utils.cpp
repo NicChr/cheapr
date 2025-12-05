@@ -83,7 +83,7 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
 
 [[cpp11::register]]
 SEXP r_copy(SEXP x){
-  return Rf_duplicate(x);
+  return deep_copy(x);
 }
 
 
@@ -91,7 +91,7 @@ SEXP r_copy(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_shallow_copy(SEXP x){
-  return Rf_shallow_duplicate(x);
+  return shallow_copy(x);
 }
 
 
@@ -103,7 +103,7 @@ SEXP cpp_semi_copy(SEXP x){
   // If no attributes then we can just full-copy immediately
 
   if (is_null(ATTRIB(x))){
-    return Rf_duplicate(x);
+    return deep_copy(x);
   }
 
   bool altrep = ALTREP(x);
@@ -116,7 +116,7 @@ SEXP cpp_semi_copy(SEXP x){
     SEXP out = SHIELD(new_vec(VECSXP, n));
     const SEXP *p_x = LIST_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
-      SET_VECTOR_ELT(out, i, Rf_duplicate(p_x[i]));
+      SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
     }
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     YIELD(1);
@@ -136,9 +136,9 @@ SEXP cpp_semi_copy(SEXP x){
     // This method sometimes full copies twice
     // So I don't use it for non-ALTREP atomic vectors
 
-    SEXP out = SHIELD(Rf_shallow_duplicate(x));
+    SEXP out = SHIELD(shallow_copy(x));
     clear_attributes(out);
-    SHIELD(out = Rf_duplicate(out));
+    SHIELD(out = deep_copy(out));
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     YIELD(2);
     return out;
@@ -616,7 +616,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
   int32_t NP = 0;
 
   if (shallow_copy){
-    SHIELD(target = Rf_shallow_duplicate(target)); ++NP;
+    SHIELD(target = cheapr::shallow_copy(target)); ++NP;
   }
 
   if (address_equal(target, source)){
@@ -646,7 +646,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
       tag = TAG(current);
 
       if (PRINTNAME(tag) == p_ta[i]){
-        Rf_setAttrib(target, tag, CAR(current));
+        set_attrib(target, tag, CAR(current));
         break;
       }
       current = CDR(current);
@@ -660,7 +660,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
       tag = TAG(current);
 
       if (PRINTNAME(tag) == p_sa[i]){
-        Rf_setAttrib(target, tag, CAR(current));
+        set_attrib(target, tag, CAR(current));
         break;
       }
       current = CDR(current);

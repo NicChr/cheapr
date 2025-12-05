@@ -75,13 +75,13 @@ inline bool is_df(SEXP x){
 //
 
 inline bool is_bare_atomic(SEXP x){
-  return !Rf_isObject(x) && Rf_isVectorAtomic(x);
+  return !is_object(x) && Rf_isVectorAtomic(x);
 }
 
 inline bool cheapr_is_simple_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (
-          !Rf_isObject(x) || (
+          !is_object(x) || (
               Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
               Rf_inherits(x, "POSIXct")
           )
@@ -90,7 +90,7 @@ inline bool cheapr_is_simple_atomic_vec(SEXP x){
 }
 
 inline bool is_bare_list(SEXP x){
-  return (!Rf_isObject(x) && TYPEOF(x) == VECSXP);
+  return (!is_object(x) && TYPEOF(x) == VECSXP);
 }
 
 inline bool cheapr_is_simple_vec(SEXP x){
@@ -106,13 +106,13 @@ inline bool cheapr_is_simple_vec2(SEXP x){
 }
 
 inline bool is_bare_df(SEXP x){
-  SEXP cls = Rf_getAttrib(x, R_ClassSymbol);
+  SEXP cls = get_attrib(x, R_ClassSymbol);
   return Rf_length(cls) == 1 &&
     std::strcmp(CHAR(STRING_ELT(cls, 0)), "data.frame") == 0;
 }
 
 inline bool is_bare_tbl(SEXP x){
-  SEXP xclass = Rf_getAttrib(x, R_ClassSymbol);
+  SEXP xclass = get_attrib(x, R_ClassSymbol);
 
   return Rf_length(xclass) == 3 &&
     std::strcmp(CHAR(STRING_ELT(xclass, 0)), "tbl_df") == 0 &&

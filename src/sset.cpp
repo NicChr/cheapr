@@ -6,17 +6,6 @@
 
 // Author: Nick Christofides
 
-// Compact seq generator as ALTREP, same as `seq_len()`
-SEXP compact_seq_len(R_xlen_t n){
-  if (n == NA_INTEGER || n < 0){
-    Rf_error("`n` must be >= 0");
-  }
-  if (n == 0){
-    return new_vec(INTSXP, 0);
-  }
-  return eval_pkg_fun(":", "base", R_BaseEnv, 1, n);
-}
-
 // Helper to convert altrep sequences into the final subsetted length
 
 R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_t by){
@@ -1393,9 +1382,9 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
 
   // Make a plain data frame
-  Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
+  set_attrib(out, R_RowNamesSymbol, create_df_row_names(n_rows));
   SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
-  Rf_classgets(out, df_cls);
+  set_class(out, df_cls);
   set_names(out, out_names);
   YIELD(NP);
   return out;
@@ -1437,9 +1426,9 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   set_names(out, names);
 
   // list to data frame object
-  Rf_setAttrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
+  set_attrib(out, R_RowNamesSymbol, create_df_row_names(out_size));
   SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
-  Rf_classgets(out, df_cls);
+  set_class(out, df_cls);
   YIELD(NP);
   return out;
 }
@@ -1563,7 +1552,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
     Rf_error("`i` must be >= 0");
   }
 
-  if (Rf_isObject(x)){
+  if (is_object(x)){
     SEXP loc = SHIELD(as_r_vec(i));
     SEXP out = SHIELD(cpp_sset(x, loc, true));
     YIELD(2);
