@@ -95,7 +95,7 @@ inline constexpr cheapr::r_type r_type_pairs[14][14] = {
   /* 13 - Unknown */ { R_unk,  R_unk,  R_unk,  R_unk, R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk }
 };
 
-inline cheapr::r_type common_type(const cheapr::r_type &a, const cheapr::r_type &b) {
+inline cheapr::r_type common_type(const cheapr::r_type a, const cheapr::r_type b) {
   return r_type_pairs[a][b];
 }
 
