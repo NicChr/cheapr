@@ -1277,7 +1277,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   int32_t NP = 0,
     n_cols = Rf_length(x),
-    n_rows = df_nrow(x),
+    n_rows = df::nrow(x),
     n_locs = Rf_length(locs);
 
   // Flag to check indices

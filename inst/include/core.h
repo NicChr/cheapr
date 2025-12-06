@@ -52,7 +52,7 @@ namespace cheapr {
 
 // bool type, similar to Rboolean
 
-enum r_boolean : int {
+enum r_bool_t : int {
   r_true = 1,
   r_false = 0,
   r_na = INT_MIN
@@ -60,6 +60,7 @@ enum r_boolean : int {
 
 // Constants
 
+namespace internal {
 inline constexpr int INTEGER_MIN = std::numeric_limits<int>::min() + 1;
 inline constexpr int INTEGER_MAX = std::numeric_limits<int>::max();
 
@@ -67,9 +68,16 @@ inline constexpr int64_t INTEGER64_MIN = std::numeric_limits<int64_t>::min() + 1
 inline constexpr int64_t INTEGER64_MAX = std::numeric_limits<int64_t>::max();
 inline constexpr int64_t NA_INTEGER64 = std::numeric_limits<int64_t>::min();
 
-
 inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
+}
+
+namespace limits {
+inline constexpr int r_int_min = std::numeric_limits<int>::min() + 1;
+inline constexpr int r_int_max = std::numeric_limits<int>::max();
+inline const double r_neg_inf = R_NegInf;
+inline const double r_pos_inf = R_PosInf;
+}
 
 inline const SEXP r_null = R_NilValue;
 
@@ -79,9 +87,9 @@ inline const SEXP base_env = R_BaseEnv;
 // NAs
 
 namespace na {
-  inline const r_boolean logical = r_na;
+  inline const r_bool_t logical = r_na;
   inline const int integer = NA_INTEGER;
-  inline const int64_t integer64 = NA_INTEGER64;
+  inline const int64_t integer64 = internal::NA_INTEGER64;
   inline const double numeric = NA_REAL;
   inline const Rcomplex complex = {{NA_REAL, NA_REAL}};
   inline const SEXP string = NA_STRING;
@@ -89,6 +97,11 @@ namespace na {
 }
 
 // Functions
+
+namespace internal {
+inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
+  return Rf_inherits(x, "integer64") ? internal::CHEAPR_INT64SXP : TYPEOF(x);
+}
 
 inline const SEXP* LIST_PTR_RO(SEXP x) {
   return static_cast<const SEXP*>(DATAPTR_RO(x));
@@ -99,20 +112,13 @@ inline int64_t* INTEGER64_PTR(SEXP x) {
 inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
   return reinterpret_cast<const int64_t*>(REAL_RO(x));
 }
-inline r_boolean* BOOLEAN(SEXP x) {
-  return reinterpret_cast<r_boolean*>(INTEGER(x));
-}
-inline const r_boolean* BOOLEAN_RO(SEXP x) {
-  return reinterpret_cast<const r_boolean*>(INTEGER_RO(x));
 }
 
-inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
-  return Rf_inherits(x, "integer64") ? CHEAPR_INT64SXP : TYPEOF(x);
+inline r_bool_t* BOOLEAN(SEXP x) {
+  return reinterpret_cast<r_bool_t*>(INTEGER(x));
 }
-
-// Check that n = 0 to avoid R CMD warnings
-inline void *safe_memmove(void *dst, const void *src, size_t n){
-  return n ? memmove(dst, src, n) : dst;
+inline const r_bool_t* BOOLEAN_RO(SEXP x) {
+  return reinterpret_cast<const r_bool_t*>(INTEGER_RO(x));
 }
 
 template<typename T>
@@ -182,9 +188,10 @@ inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
 }
 }
 
-
-inline int df_nrow(SEXP x){
+namespace df {
+inline int nrow(SEXP x){
   return Rf_length(vec::get_attrib(x, R_RowNamesSymbol));
+}
 }
 
 inline bool is_r_inf(const double x){
@@ -200,13 +207,13 @@ inline bool is_r_na(const T x) {
 }
 
 template<>
-inline bool is_r_na<r_boolean>(const r_boolean x){
+inline bool is_r_na<r_bool_t>(const r_bool_t x){
   return x == r_na;
 }
 
 template<>
 inline bool is_r_na<Rboolean>(const Rboolean x){
-  return static_cast<r_boolean>(x) == na::logical;
+  return static_cast<r_bool_t>(x) == na::logical;
 }
 
 template<>
@@ -216,7 +223,7 @@ inline bool is_r_na<cpp11::r_bool>(const cpp11::r_bool x){
 
 template<>
 inline bool is_r_na<int>(const int x){
-  return x == NA_INTEGER;
+  return x == na::integer;
 }
 
 template<>
@@ -226,7 +233,7 @@ inline bool is_r_na<double>(const double x){
 
 template<>
 inline bool is_r_na<int64_t>(const int64_t x){
-  return x == NA_INTEGER64;
+  return x == na::integer64;
 }
 
 template<>
@@ -258,7 +265,7 @@ inline T na_value(const T x) {
 }
 
 template<>
-inline r_boolean na_value<r_boolean>(const r_boolean x){
+inline r_bool_t na_value<r_bool_t>(const r_bool_t x){
   return r_na;
 }
 
@@ -269,7 +276,7 @@ inline cpp11::r_bool na_value<cpp11::r_bool>(const cpp11::r_bool x){
 
 template<>
 inline int na_value<int>(const int x){
-  return NA_INTEGER;
+  return na::integer;
 }
 
 template<>
@@ -279,7 +286,7 @@ inline double na_value<double>(const double x){
 
 template<>
 inline int64_t na_value<int64_t>(const int64_t x){
-  return NA_INTEGER64;
+  return na::integer64;
 }
 
 template<>
@@ -338,7 +345,7 @@ inline SEXP as_r_scalar<bool>(const bool x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_r_scalar<r_boolean>(const r_boolean x){
+inline SEXP as_r_scalar<r_bool_t>(const r_bool_t x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
@@ -352,8 +359,8 @@ inline SEXP as_r_scalar<int>(const int x){
 template<>
 inline SEXP as_r_scalar<int64_t>(const int64_t x){
   if (is_r_na(x)){
-    return Rf_ScalarInteger(NA_INTEGER);
-  } else if (between<int64_t>(x, INTEGER_MIN, INTEGER_MAX)){
+    return Rf_ScalarInteger(na::integer);
+  } else if (between<int64_t>(x, limits::r_int_min, limits::r_int_max)){
     return Rf_ScalarInteger(static_cast<int>(x));
   } else {
     return Rf_ScalarReal(static_cast<double>(x));
@@ -420,22 +427,22 @@ inline SEXP as_r_vec<SEXP>(const SEXP x){
   }
 }
 
-// inline cpp11::sexp as_sexp<r_boolean>(SEXP x){
+// inline cpp11::sexp as_sexp<r_bool_t>(SEXP x){
 //   cpp11::as_
 // }
 
 // Coerce functions that account for NA
 template<typename T>
-inline r_boolean as_r_boolean(T x){
-  return is_r_na(x) ? r_na : static_cast<r_boolean>(x);
+inline r_bool_t as_r_boolean(T x){
+  return is_r_na(x) ? r_na : static_cast<r_bool_t>(x);
 }
 template<typename T>
 inline int as_int(T x){
-  return is_r_na(x) ? NA_INTEGER : static_cast<int>(x);
+  return is_r_na(x) ? na::integer : static_cast<int>(x);
 }
 template<typename T>
 inline int64_t as_int64(T x){
-  return is_r_na(x) ? NA_INTEGER64 : static_cast<int64_t>(x);
+  return is_r_na(x) ? na::integer64 : static_cast<int64_t>(x);
 }
 template<typename T>
 inline double as_double(T x){
@@ -469,8 +476,8 @@ inline double r_round(double x){
   return is_r_na(x) ? na_value(x) : x - std::remainder(x, 1.0);
 }
 
-inline r_boolean is_whole_number(const double x, const double tolerance){
-  return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_boolean>(std::fabs(x - std::round(x)) < tolerance);
+inline r_bool_t is_whole_number(const double x, const double tolerance){
+  return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_bool_t>(std::fabs(x - std::round(x)) < tolerance);
 }
 
 inline double gcd2(double x, double y, double tol, bool na_rm){
@@ -568,7 +575,7 @@ inline void set_val(SEXP x, const R_xlen_t i, bool val, int* p_x = nullptr){
     SET_LOGICAL_ELT(x, i, static_cast<int>(val));
   }
 }
-inline void set_val(SEXP x, const R_xlen_t i, r_boolean val, r_boolean* p_x = nullptr){
+inline void set_val(SEXP x, const R_xlen_t i, r_bool_t val, r_bool_t* p_x = nullptr){
   if (p_x != nullptr){
     p_x[i] = val;
   } else {
@@ -731,13 +738,13 @@ inline R_xlen_t length(SEXP x){
   if (!vec::is_object(x) || Rf_isVectorAtomic(x)){
     return Rf_xlength(x);
   } else if (Rf_inherits(x, "data.frame")){
-    return df_nrow(x);
+    return df::nrow(x);
     // Is x a list?
   } else if (TYPEOF(x) == VECSXP){
     if (Rf_inherits(x, "vctrs_rcrd")){
       return Rf_length(x) > 0 ? vec::length(VECTOR_ELT(x, 0)) : 0;
     } else if (Rf_inherits(x, "POSIXlt")){
-      const SEXP *p_x = LIST_PTR_RO(x);
+      const SEXP *p_x = internal::LIST_PTR_RO(x);
       R_xlen_t out = 0;
       for (int i = 0; i != 10; ++i){
         out = std::max(out, Rf_xlength(p_x[i]));
@@ -807,19 +814,19 @@ inline SEXP attributes(SEXP x){
   return out;
 }
 
-// r_boolean not bool because bool can't be NA
-inline r_boolean all_whole_numbers(SEXP x, double tol_, bool na_rm_){
+// r_bool_t not bool because bool can't be NA
+inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
 
   R_xlen_t n = Rf_xlength(x);
 
   // Use int instead of bool as int can hold NA
-  r_boolean out = r_true;
+  r_bool_t out = r_true;
   bool any_na = false;
 
-  switch ( CHEAPR_TYPEOF(x) ){
+  switch ( internal::CHEAPR_TYPEOF(x) ){
   case LGLSXP:
   case INTSXP:
-  case CHEAPR_INT64SXP: {
+  case internal::CHEAPR_INT64SXP: {
     break;
   }
   case REALSXP: {
@@ -829,7 +836,7 @@ inline r_boolean all_whole_numbers(SEXP x, double tol_, bool na_rm_){
         any_na = true;
         continue;
       }
-      out = static_cast<r_boolean>(cheapr::is_whole_number(p_x[i], tol_));
+      out = static_cast<r_bool_t>(cheapr::is_whole_number(p_x[i], tol_));
       if (out == r_false){
         break;
       }
@@ -881,16 +888,11 @@ r_safe_impl(                                                                 \
     }                                                                        \
 )
 
-// For backwards compatibility reasons, make these visible
-// To be removed in future versions
-using vec::new_vec;
-using vec::coerce_vec;
-
-inline SEXP get_names(SEXP x){
-  return internal::get_r_names(x);
+// Check that n = 0 to avoid R CMD warnings
+namespace internal {
+inline void *safe_memmove(void *dst, const void *src, size_t n){
+  return n ? memmove(dst, src, n) : dst;
 }
-inline void set_names(SEXP x, SEXP names){
-  return internal::set_r_names(x, names);
 }
 
 } // End of cheapr namespace

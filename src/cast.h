@@ -20,6 +20,8 @@ inline SEXP r_as_date = cheapr::r_null;
 inline SEXP r_as_posixct = cheapr::r_null;
 inline SEXP r_as_list = cheapr::r_null;
 
+using cheapr::internal::r_type;
+
 // Custom r types
 
 struct r_null_t {};
@@ -38,7 +40,7 @@ struct r_data_frame_t {};
 struct r_unknown_t {};
 
 // r type constants
-enum : cheapr::r_type {
+enum : r_type {
   R_null = 0,
     R_lgl = 1,
     R_int = 2,
@@ -77,7 +79,7 @@ inline constexpr const char* r_type_names[14] = {
 
 // An n x n matrix of r types and their common cast type
 
-inline constexpr cheapr::r_type r_type_pairs[14][14] = {
+inline constexpr r_type r_type_pairs[14][14] = {
   /*                0-NULL  1-LGL   2-INT   3-I64   4-DBL    5-CPLX  6-RAW   7-DATE  8-PXCT  9-CHR   10-FCT  11-LIST 12-DF 13-UNK */
   /* 0 - NULL */  { R_null, R_lgl,  R_int,  R_int64, R_dbl,  R_cplx, R_raw,  R_date, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
   /* 1 - LGL  */  { R_lgl,  R_lgl,  R_int,  R_int64, R_dbl,  R_cplx, R_raw,  R_date, R_pxt, R_chr,  R_fct,  R_list, R_df, R_unk },
@@ -95,12 +97,12 @@ inline constexpr cheapr::r_type r_type_pairs[14][14] = {
   /* 13 - Unknown */ { R_unk,  R_unk,  R_unk,  R_unk, R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk,  R_unk }
 };
 
-inline cheapr::r_type common_type(const cheapr::r_type a, const cheapr::r_type b) {
+inline r_type common_type(const r_type a, const r_type b) {
   return r_type_pairs[a][b];
 }
 
 // Convert single SEXP into r_* code.
-inline cheapr::r_type get_r_type(SEXP x) {
+inline r_type get_r_type(SEXP x) {
 
   if (!cheapr::vec::is_object(x)){
     switch (TYPEOF(x)) {
@@ -171,7 +173,7 @@ inline const char* r_class(SEXP obj){
 
 inline const char *r_type_char(SEXP x){
 
-  cheapr::r_type type = get_r_type(x);
+  r_type type = get_r_type(x);
 
   // If unknown type
   if (type == R_unk){
@@ -224,7 +226,7 @@ template<>
 inline SEXP init<r_integer64_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(cheapr::vec::new_vec(REALSXP, n));
   if (with_na){
-    int64_t* RESTRICT p_out = cheapr::INTEGER64_PTR(out);
+    int64_t* RESTRICT p_out = cheapr::internal::INTEGER64_PTR(out);
     std::fill(p_out, p_out + n, cheapr::na::integer64);
   }
   SEXP int64_cls = SHIELD(cheapr::make_utf8_str("integer64"));
@@ -306,7 +308,7 @@ template<>
 inline SEXP init<r_posixt_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(init<r_double_t>(n, with_na));
   SEXP tz = SHIELD(cheapr::vec::new_vec(STRSXP, 1));
-  SEXP cls = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
+  SEXP cls = SHIELD(cheapr::vec::new_r_vec("POSIXct", "POSIXt"));
   cheapr::vec::set_class(out, cls);
   cheapr::vec::set_attrib(out, cheapr::install_utf8("tzone"), tz);
   YIELD(3);
@@ -570,7 +572,7 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
   } else if (Rf_inherits(x, "Date") && Rf_inherits(y, "POSIXct")){
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(cheapr::vec::new_vec(REALSXP, n));
-    SEXP out_class = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
+    SEXP out_class = SHIELD(cheapr::vec::new_r_vec("POSIXct", "POSIXt"));
     SEXP out_tzone = SHIELD(cheapr::vec::get_attrib(y, cheapr::install_utf8("tzone")));
     cheapr::vec::set_class(out, out_class);
     cheapr::vec::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
@@ -592,7 +594,7 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     return out;
   } else if (!cheapr::vec::is_object(x)){
     SEXP out = SHIELD(cheapr::vec::coerce_vec(x, REALSXP));
-    SEXP out_class = SHIELD(cheapr::new_r_vec("POSIXct", "POSIXt"));
+    SEXP out_class = SHIELD(cheapr::vec::new_r_vec("POSIXct", "POSIXt"));
     SEXP out_tzone = SHIELD(cheapr::vec::new_vec(STRSXP, 1));
     cheapr::vec::set_class(out, out_class);
     cheapr::vec::set_attrib(out, cheapr::install_utf8("tzone"), out_tzone);
@@ -694,10 +696,10 @@ inline const init_fn INIT_FNS[14] = {
 };
 
 // Dispatcher functions
-inline SEXP cast_(cheapr::r_type cast_type, SEXP x, SEXP y) {
+inline SEXP cast_(r_type cast_type, SEXP x, SEXP y) {
   return CAST_FNS[cast_type](x, y);
 }
-inline SEXP init_(cheapr::r_type cast_type, R_xlen_t n, bool with_na) {
+inline SEXP init_(r_type cast_type, R_xlen_t n, bool with_na) {
   return INIT_FNS[cast_type](n, with_na);
 }
 

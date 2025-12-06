@@ -3,9 +3,10 @@
 
 
 namespace cheapr {
+namespace internal {
 // Custom internal R type
 using r_type = uint8_t;
-
+}
 }
 
 #endif

@@ -305,7 +305,7 @@ void set_list_as_df(SEXP x) {
   int32_t NP = 0; // Number of protects
   int n_items = Rf_length(x);
   if (is_df(x)){
-    N = df_nrow(x);
+    N = df::nrow(x);
   } else if (n_items == 0){
     N = 0;
   } else {
@@ -409,7 +409,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
 
   int n = Rf_length(x);
   int n_cols = Rf_length(cols);
-  int n_rows = df_nrow(x);
+  int n_rows = df::nrow(x);
 
   // We create an int vec to keep track of locations where to add col vecs
 
@@ -463,7 +463,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
 [[cpp11::register]]
 SEXP cpp_as_df(SEXP x){
   if (Rf_inherits(x, "data.frame")){
-    SEXP n_rows = SHIELD(as_r_vec(df_nrow(x)));
+    SEXP n_rows = SHIELD(as_r_vec(df::nrow(x)));
     SEXP out = SHIELD(cpp_new_df(x, n_rows, false, false));
     YIELD(2);
     return out;

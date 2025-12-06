@@ -6,6 +6,8 @@
 
 namespace cheapr {
 
+namespace vec {
+
 template<typename... Args>
 inline SEXP r_paste(SEXP sep, SEXP collapse, Args... args){
   SEXP objs = SHIELD(cheapr::vec::new_r_list(args...));
@@ -23,6 +25,7 @@ SEXP new_r_vec(Args... args) {
   return out;
 }
 
+}
 }
 
 #endif

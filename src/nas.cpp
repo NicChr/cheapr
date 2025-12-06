@@ -44,7 +44,7 @@ if (do_parallel){                                                         \
 
 bool vec_any(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  const r_boolean *p_x = BOOLEAN_RO(x);
+  const r_bool_t *p_x = BOOLEAN_RO(x);
 
   bool out = false;
   for (R_xlen_t i = 0; i < n; ++i){
@@ -58,7 +58,7 @@ bool vec_any(SEXP x){
 
 bool vec_all(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  const r_boolean *p_x = BOOLEAN_RO(x);
+  const r_bool_t *p_x = BOOLEAN_RO(x);
 
   bool out = true;
 
@@ -341,7 +341,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
   const SEXP *p_x = LIST_PTR_RO(x);
   int32_t NP = 0;
   int num_col = Rf_length(x);
-  int num_row = df_nrow(x);
+  int num_row = df::nrow(x);
   SEXP out = SHIELD(vec::new_vec(INTSXP, num_row)); ++NP;
   int* RESTRICT p_out = INTEGER(out);
   std::fill(p_out, p_out + num_row, 0);
@@ -433,7 +433,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   const SEXP *p_x = LIST_PTR_RO(x);
   int num_col = Rf_length(x);
   int32_t NP = 0;
-  int num_row = df_nrow(x);
+  int num_row = df::nrow(x);
   SEXP out = SHIELD(vec::new_vec(INTSXP, num_col)); ++NP;
   int *p_out = INTEGER(out);
   std::fill(p_out, p_out + num_col, 0);
@@ -479,7 +479,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
   const SEXP *p_x = LIST_PTR_RO(x);
 
   int32_t NP = 0;
-  int num_row = df_nrow(x);
+  int num_row = df::nrow(x);
   int num_col = Rf_length(x);
 
   SEXP out = SHIELD(vec::new_vec(LGLSXP, num_col)); ++NP;
@@ -536,7 +536,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
   const SEXP *p_x = LIST_PTR_RO(x);
 
   int32_t NP = 0;
-  int num_row = df_nrow(x);
+  int num_row = df::nrow(x);
   int num_col = Rf_length(x);
 
   SEXP out = SHIELD(vec::new_vec(LGLSXP, num_col)); ++NP;

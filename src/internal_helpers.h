@@ -56,7 +56,7 @@ inline bool address_equal(SEXP x, SEXP y){
 
 template<typename T>
 inline constexpr bool is_r_integerable(T x){
-  return between<T>(x, INTEGER_MIN, INTEGER_MAX);
+  return between<T>(x, limits::r_int_min, limits::r_int_max);
 }
 
 inline bool is_int64(SEXP x){

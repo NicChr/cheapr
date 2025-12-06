@@ -77,9 +77,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     bool no_scalar = no_size == 1;
     bool na_scalar = na_size == 1;
     bool all_scalar = yes_scalar && no_scalar && na_scalar;
-    r_boolean lgl;
+    r_bool_t lgl;
 
-    const r_boolean* RESTRICT p_x = BOOLEAN_RO(condition);
+    const r_bool_t* RESTRICT p_x = BOOLEAN_RO(condition);
 
     switch (common){
     case R_null: {
@@ -87,15 +87,15 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_lgl: {
       SHIELD(out = init<r_logical_t>(n, false)); ++NP;
-      r_boolean* RESTRICT p_out = BOOLEAN(out);
-      const r_boolean *p_yes = BOOLEAN_RO(yes);
-      const r_boolean *p_no = BOOLEAN_RO(no);
-      const r_boolean *p_na = BOOLEAN_RO(na);
+      r_bool_t* RESTRICT p_out = BOOLEAN(out);
+      const r_bool_t *p_yes = BOOLEAN_RO(yes);
+      const r_bool_t *p_no = BOOLEAN_RO(no);
+      const r_bool_t *p_na = BOOLEAN_RO(na);
 
       if (all_scalar){
-        const r_boolean yes_value = p_yes[0];
-        const r_boolean no_value = p_no[0];
-        const r_boolean na_value = p_na[0];
+        const r_bool_t yes_value = p_yes[0];
+        const r_bool_t no_value = p_no[0];
+        const r_bool_t na_value = p_na[0];
         OMP_FOR_SIMD
         CHEAPR_SCALAR_IF_ELSE
       } else {

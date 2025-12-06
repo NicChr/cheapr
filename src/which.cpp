@@ -6,7 +6,7 @@
 
 // Count the number of true values
 
-R_xlen_t count_true(const r_boolean* RESTRICT px, const uint_fast64_t n){
+R_xlen_t count_true(const r_bool_t* RESTRICT px, const uint_fast64_t n){
   uint_fast64_t size = 0;
   if (n >= CHEAPR_OMP_THRESHOLD){
 #pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
@@ -50,7 +50,7 @@ if (is_r_na(VAL)){                                                 \
 [[cpp11::register]]
 SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
-  const r_boolean *p_x = BOOLEAN_RO(x);
+  const r_bool_t *p_x = BOOLEAN_RO(x);
   bool is_long = (n > INTEGER_MAX);
   if (invert){
     if (is_long){

@@ -10,6 +10,24 @@
 
 namespace cheapr {
 
+// For backwards compatibility reasons, make these visible
+// To be removed in future versions
+using internal::safe_memmove;
+using internal::INTEGER64_PTR;
+using internal::INTEGER64_PTR_RO;
+using vec::new_vec;
+using vec::coerce_vec;
+inline int df_nrow(SEXP x){
+  return df::nrow(x);
+}
+
+inline SEXP get_names(SEXP x){
+  return internal::get_r_names(x);
+}
+inline void set_names(SEXP x, SEXP names){
+  return internal::set_r_names(x, names);
+}
+
 inline bool
 is_compact_seq(SEXP x) {
   typedef bool fn_t(SEXP);

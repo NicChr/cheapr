@@ -47,7 +47,7 @@ SEXP cpp_rep_len(SEXP x, int length){
   if (is_null(x)){
     return r_null;
   } else if (is_df(x)){
-    if (out_size == df_nrow(x)) return x;
+    if (out_size == df::nrow(x)) return x;
     int n_cols = Rf_length(x);
     SEXP out = SHIELD(vec::new_vec(VECSXP, n_cols));
     const SEXP *p_x = LIST_PTR_RO(x);
@@ -254,7 +254,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
         YIELD(3);
         return out;
       } else {
-        SEXP row_names = SHIELD(cpp_seq_len(df_nrow(x)));
+        SEXP row_names = SHIELD(cpp_seq_len(df::nrow(x)));
         SHIELD(row_names = cpp_rep(row_names, times));
         SEXP out = SHIELD(cpp_sset(x, row_names, true));
         YIELD(4);
@@ -650,7 +650,7 @@ SEXP cpp_df_c(SEXP x){
   // 1st pass: Cast inputs to dfs and construct prototypes
   // 2nd pass: initialise data frame vecs (if need be) and combine simultaneously
 
-  int out_size = df_nrow(df);
+  int out_size = df::nrow(df);
 
   bool na_padding = false;
 
@@ -668,7 +668,7 @@ SEXP cpp_df_c(SEXP x){
       R_Reprotect(ptype_names = new_r_vec(ptype_names, new_names), ptype_names_idx);
     }
     na_padding = na_padding || Rf_length(df) != n_cols;
-    out_size += df_nrow(df);
+    out_size += df::nrow(df);
     SET_VECTOR_ELT(frames, i, df);
   }
 
@@ -698,7 +698,7 @@ SEXP cpp_df_c(SEXP x){
       for (int i = 0; i < n_frames; ++i){
         vec = get_list_element(p_frames[i], p_ptype_names[j]);
         if (is_null(vec)){
-          R_Reprotect(vec = cpp_na_init(p_vec_archetypes[j], df_nrow(p_frames[i])), vec_idx);
+          R_Reprotect(vec = cpp_na_init(p_vec_archetypes[j], df::nrow(p_frames[i])), vec_idx);
         }
         SET_VECTOR_ELT(vectors, i, vec);
       }
