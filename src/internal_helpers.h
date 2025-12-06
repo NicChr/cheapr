@@ -44,7 +44,7 @@ inline SEXP eval_pkg_fun(const char* fn, const char* pkg, SEXP envir, Args... ar
 }
 
 inline R_xlen_t r_length(SEXP x){
-  SEXP r_length = SHIELD(eval_pkg_fun("length", "base", base_env, x));
+  SEXP r_length = SHIELD(eval_pkg_fun("length", "base", env::base_env, x));
   R_xlen_t out = TYPEOF(r_length) == INTSXP ? INTEGER(r_length)[0] : REAL(r_length)[0];
   YIELD(1);
   return out;
@@ -60,11 +60,11 @@ inline constexpr bool is_r_integerable(T x){
 }
 
 inline bool is_int64(SEXP x){
-  return Rf_isReal(x) && Rf_inherits(x, "integer64");
+  return Rf_isReal(x) && inherits1(x, "integer64");
 }
 
 inline bool is_df(SEXP x){
-  return Rf_inherits(x, "data.frame");
+  return inherits1(x, "data.frame");
 }
 
 // Definition of simple vector is one in which
@@ -84,8 +84,8 @@ inline bool cheapr_is_simple_atomic_vec(SEXP x){
   return (
       Rf_isVectorAtomic(x) && (
           !vec::is_object(x) || (
-              Rf_inherits(x, "Date") || Rf_inherits(x, "factor") ||
-              Rf_inherits(x, "POSIXct")
+              inherits1(x, "Date") || inherits1(x, "factor") ||
+              inherits1(x, "POSIXct")
           )
       )
   );

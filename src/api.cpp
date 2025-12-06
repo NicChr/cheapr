@@ -68,14 +68,6 @@ api_lengths(SEXP x, bool names){
     return cheapr::r_null;
   }
 }
-SEXP
-api_new_list(R_xlen_t length, SEXP default_value){
-  try {
-    return new_list(length, default_value);
-  } catch (...) {
-    return cheapr::r_null;
-  }
-}
 
 SEXP
 api_list_assign(SEXP x, SEXP values){
@@ -436,7 +428,6 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_list_as_df",    (DL_FUNC)api_list_as_df);
   R_RegisterCCallable("cheapr", "api_new_df",    (DL_FUNC)api_new_df);
   R_RegisterCCallable("cheapr", "api_lengths",    (DL_FUNC)api_lengths);
-  R_RegisterCCallable("cheapr", "api_new_list",    (DL_FUNC)api_new_list);
   R_RegisterCCallable("cheapr", "api_list_assign",    (DL_FUNC)api_list_assign);
   R_RegisterCCallable("cheapr", "api_df_slice",    (DL_FUNC)api_df_slice);
   R_RegisterCCallable("cheapr", "api_df_select",    (DL_FUNC)api_df_select);

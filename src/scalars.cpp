@@ -106,7 +106,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
 
 [[cpp11::register]]
 SEXP cpp_count_val(SEXP x, SEXP value, bool recursive){
-  return as_r_vec(scalar_count(x, value, recursive));
+  return as_vec(scalar_count(x, value, recursive));
 }
 
 [[cpp11::register]]
@@ -283,7 +283,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
   if (n_vals == 0){
     return x;
   } else if (n_vals == Rf_xlength(x)){
-    SEXP out = SHIELD(vec::new_vec(TYPEOF(x), 0)); ++NP;
+    SEXP out = SHIELD(internal::new_vec(TYPEOF(x), 0)); ++NP;
     cpp_set_add_attributes(out, ATTRIB(x), false);
     YIELD(NP);
     return out;
@@ -302,7 +302,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       if (implicit_na_coercion(value, x)){
       break;
     }
-      out = SHIELD(vec::new_vec(TYPEOF(x), n_keep)); ++NP;
+      out = SHIELD(internal::new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
       int val = INTEGER(value)[0];
       int *p_x = INTEGER(x);
@@ -320,7 +320,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       if (implicit_na_coercion(value, x)){
       break;
     }
-      out = SHIELD(vec::new_vec(TYPEOF(x), n_keep)); ++NP;
+      out = SHIELD(internal::new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
       double val = REAL(value)[0];
       double *p_x = REAL(x);
@@ -346,7 +346,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       if (implicit_na_coercion(value, x)){
       break;
     }
-      out = SHIELD(vec::new_vec(REALSXP, n_keep)); ++NP;
+      out = SHIELD(internal::new_vec(REALSXP, n_keep)); ++NP;
       SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
       int64_t val = INTEGER64_PTR(value)[0];
       int64_t *p_x = INTEGER64_PTR(x);
@@ -364,7 +364,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       if (implicit_na_coercion(value, x)){
       break;
     }
-      out = SHIELD(vec::new_vec(STRSXP, n_keep)); ++NP;
+      out = SHIELD(internal::new_vec(STRSXP, n_keep)); ++NP;
       SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
       SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
       const SEXP *p_x = STRING_PTR_RO(x);
@@ -381,7 +381,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       if (implicit_na_coercion(value, x)){
       break;
     }
-      out = SHIELD(vec::new_vec(CPLXSXP, n_keep)); ++NP;
+      out = SHIELD(internal::new_vec(CPLXSXP, n_keep)); ++NP;
       SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
       Rcomplex val = COMPLEX_ELT(value, 0);
       const Rcomplex *p_x = COMPLEX_RO(x);
@@ -405,7 +405,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     }
     }
     default: {
-      SEXP sexp_n_vals = SHIELD(as_r_scalar<double>(n_vals)); ++NP;
+      SEXP sexp_n_vals = SHIELD(as_vec<double>(n_vals)); ++NP;
       SEXP val_locs = SHIELD(cpp_val_find(x, value, true, sexp_n_vals)); ++NP;
       out = SHIELD(eval_pkg_fun("cheapr_sset", "cheapr", R_GetCurrentEnv(), x, val_locs)); ++NP;
       break;

@@ -62,7 +62,6 @@ double cpp_sum(SEXP x);
 double cpp_min(SEXP x);
 SEXP cpp_str_coalesce(SEXP x);
 SEXP cpp_na_init(SEXP x, int n);
-SEXP new_list(R_xlen_t length, SEXP default_value);
 void set_list_as_df(SEXP x);
 SEXP cpp_semi_copy(SEXP x);
 void clear_attributes(SEXP x);

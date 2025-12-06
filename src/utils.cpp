@@ -16,12 +16,12 @@ bool cpp_is_simple_vec(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_vector_length(SEXP x){
-  return as_r_vec(vec::length(x));
+  return as_vec(vec::length(x));
 }
 
 [[cpp11::register]]
 SEXP cpp_address(SEXP x){
-  return as_r_vec(vec::address(x));
+  return as_vec(vec::address(x));
 }
 
 // Copy atomic elements from source to target
@@ -113,7 +113,7 @@ SEXP cpp_semi_copy(SEXP x){
     // Lists
 
     R_xlen_t n = Rf_xlength(x);
-    SEXP out = SHIELD(vec::new_vec(VECSXP, n));
+    SEXP out = SHIELD(internal::new_vec(VECSXP, n));
     const SEXP *p_x = LIST_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, vec::deep_copy(p_x[i]));
@@ -125,7 +125,7 @@ SEXP cpp_semi_copy(SEXP x){
 
     // Atomic vectors
 
-    SEXP out = SHIELD(vec::new_vec(TYPEOF(x), Rf_xlength(x)));
+    SEXP out = SHIELD(internal::new_vec(TYPEOF(x), Rf_xlength(x)));
     cpp_set_copy_elements(x, out);
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     YIELD(1);
@@ -251,7 +251,7 @@ SEXP cpp_range(SEXP x){
     }
     }
   }
-  return new_r_vec(lo, hi);
+  return make_vec(lo, hi);
 }
 
 double cpp_min(SEXP x){
@@ -365,7 +365,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   switch(TYPEOF(x)){
   case INTSXP: {
     if (codes){
-    SEXP out = SHIELD(vec::new_vec(INTSXP, n));
+    SEXP out = SHIELD(internal::new_vec(INTSXP, n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
     const int *p_x = INTEGER(x);
     const double *p_b = REAL(breaks);
@@ -386,7 +386,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   }
   default: {
     if (codes){
-    SEXP out = SHIELD(vec::new_vec(INTSXP, n));
+    SEXP out = SHIELD(internal::new_vec(INTSXP, n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
     const double *p_x = REAL(x);
     const double *p_b = REAL(breaks);
@@ -436,7 +436,7 @@ SEXP cpp_lgl_count(SEXP x){
 
   R_xlen_t nna = n - ntrue - nfalse;
 
-  SEXP out = SHIELD(new_r_vec(
+  SEXP out = SHIELD(make_vec(
     arg("true") = ntrue,
     arg("false") = nfalse,
     arg("na") = nna
@@ -507,10 +507,10 @@ double growth_rate(double a, double b, double n){
 SEXP cpp_growth_rate(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   if (n == 0){
-    return vec::new_vec(REALSXP, 0);
+    return internal::new_vec(REALSXP, 0);
   }
   if (n == 1){
-    return as_r_vec(na::numeric);
+    return as_vec(na::numeric);
   }
   double a, b;
   switch(CHEAPR_TYPEOF(x)){
@@ -538,14 +538,14 @@ SEXP cpp_growth_rate(SEXP x){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  return as_r_vec(growth_rate(a, b, n));
+  return as_vec(growth_rate(a, b, n));
 }
 
 SEXP new_row_names(int n){
   if (n > 0){
-    return new_r_vec(na::integer, -n);
+    return make_vec(na::integer, -n);
   } else {
-    return vec::new_vec(INTSXP, 0);
+    return internal::new_vec(INTSXP, 0);
   }
 }
 
@@ -568,12 +568,12 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP is_dup_from_last = SHIELD(Rf_duplicated(names, TRUE)); ++NP;
   cpp_set_or(is_dup, is_dup_from_last);
 
-  SEXP r_true = SHIELD(as_r_vec(true)); ++NP;
+  SEXP r_true = SHIELD(as_vec(true)); ++NP;
   SEXP dup_locs = SHIELD(cpp_which_val(is_dup, r_true, false)); ++NP;
 
   int n_dups = Rf_length(dup_locs);
 
-  SEXP out = SHIELD(vec::new_vec(STRSXP, n)); ++NP;
+  SEXP out = SHIELD(internal::new_vec(STRSXP, n)); ++NP;
   cpp_set_copy_elements(names, out);
 
   SEXP temp = r_null;
@@ -585,7 +585,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
     replace_in_place(out, dup_locs, replace, false);
   }
 
-  SEXP is_empty = SHIELD(vec::new_vec(LGLSXP, n)); ++NP;
+  SEXP is_empty = SHIELD(internal::new_vec(LGLSXP, n)); ++NP;
   int *p_is_empty = LOGICAL(is_empty);
   bool empty;
   int n_empty = 0;
@@ -596,7 +596,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
     p_is_empty[i] = empty;
   }
 
-  SEXP r_n_empty = SHIELD(as_r_vec(n_empty)); ++NP;
+  SEXP r_n_empty = SHIELD(as_vec(n_empty)); ++NP;
 
   if (n_empty > 0){
     SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
@@ -681,7 +681,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   }
   R_xlen_t n = Rf_xlength(x);
 
-  SEXP out = SHIELD(vec::new_vec(INTSXP, n_bins));
+  SEXP out = SHIELD(internal::new_vec(INTSXP, n_bins));
   const int *p_x = INTEGER_RO(x);
   int* RESTRICT p_out = INTEGER(out);
 
@@ -707,7 +707,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
 [[cpp11::register]]
 SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_){
-  return as_r_vec(vec::all_whole_numbers(x, tol_, na_rm_));
+  return as_vec(vec::all_whole_numbers(x, tol_, na_rm_));
 }
 
 SEXP match(SEXP y, SEXP x, int no_match){
@@ -778,9 +778,9 @@ SEXP cheapr_do_memory_leak_test(){
   // Check that 4000 bytes are not lost
 
   std::vector<int32_t> ints(1000);
-  SEXP r_ints = r_safe(SHIELD)(r_safe(vec::new_vec)(INTSXP, ints.size()));
+  SEXP r_ints = r_safe(SHIELD)(r_safe(internal::new_vec)(INTSXP, ints.size()));
   SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
-  SEXP repl = r_safe(SHIELD)(r_safe(new_r_vec)(-1));
+  SEXP repl = r_safe(SHIELD)(r_safe(make_vec)(-1));
   r_safe(replace_in_place)(r_ints, seq, repl, true);
   r_safe(YIELD)(3);
   r_safe(Rf_error)("%s", "Expected error! This should not cause a C++ memory leak");
@@ -792,7 +792,7 @@ SEXP cheapr_do_memory_leak_test(){
 //   std::vector<int> ints(1000);
 //   SEXP r_ints = r_safe(SHIELD)(r_safe(new_vec)(INTSXP, ints.size()));
 //   SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
-//   SEXP repl = r_safe(SHIELD)(r_safe(new_r_vec)(-1));
+//   SEXP repl = r_safe(SHIELD)(r_safe(make_vec)(-1));
 //   r_safe(replace_in_place)(r_ints, seq, repl, true);
 //   r_safe(YIELD)(3);
 //   Rf_error("%s", "Expected error! This will cause a C++ memory leak");

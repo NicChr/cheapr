@@ -59,7 +59,7 @@ SEXP compact_seq_data(SEXP x){
   double from = p_alt_data[1];
   double by = p_alt_data[2];
   double to = (std::fmax(size - 1.0, 0.0) * by) + from;
-  SEXP out = SHIELD(new_r_vec(from, to, by, size));
+  SEXP out = SHIELD(make_vec(from, to, by, size));
   YIELD(2);
   return out;
 }

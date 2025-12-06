@@ -6,6 +6,7 @@
 // License: MIT
 
 #include <cpp11.hpp>
+#include <optional>
 
 #ifdef _MSC_VER
 #define RESTRICT __restrict
@@ -81,8 +82,10 @@ inline const double r_pos_inf = R_PosInf;
 
 inline const SEXP r_null = R_NilValue;
 
+namespace env {
 inline const SEXP empty_env = R_EmptyEnv;
 inline const SEXP base_env = R_BaseEnv;
+}
 
 // NAs
 
@@ -99,8 +102,13 @@ namespace na {
 // Functions
 
 namespace internal {
+
+inline bool inherits1(SEXP x, const char *r_cls){
+  return Rf_inherits(x, r_cls);
+}
+
 inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
-  return Rf_inherits(x, "integer64") ? internal::CHEAPR_INT64SXP : TYPEOF(x);
+  return inherits1(x, "integer64") ? internal::CHEAPR_INT64SXP : TYPEOF(x);
 }
 
 inline const SEXP* LIST_PTR_RO(SEXP x) {
@@ -111,6 +119,14 @@ inline int64_t* INTEGER64_PTR(SEXP x) {
 }
 inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
   return reinterpret_cast<const int64_t*>(REAL_RO(x));
+}
+// Check that n = 0 to avoid R CMD warnings
+inline void *safe_memmove(void *dst, const void *src, size_t n){
+  return n ? memmove(dst, src, n) : dst;
+}
+
+inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
+  return Rf_allocVector(type, n);
 }
 }
 
@@ -179,12 +195,111 @@ inline void set_class(SEXP x, SEXP cls){
   Rf_classgets(x, cls);
 }
 
-inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
-  return Rf_allocVector(type, n);
-}
-
 inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
   return Rf_coerceVector(x, type);
+}
+
+inline SEXP new_logical(R_xlen_t n, std::optional<r_bool_t> default_value = std::nullopt) {
+  if (default_value.has_value()) {
+    r_bool_t val = *default_value;
+    SEXP out = SHIELD(internal::new_vec(LGLSXP, n));
+    r_bool_t *p_out = BOOLEAN(out);
+    std::fill(p_out, p_out + n, val);
+    YIELD(1);
+    return out;
+  } else {
+    return internal::new_vec(LGLSXP, n);
+  }
+}
+inline SEXP new_integer(R_xlen_t n, std::optional<int> default_value = std::nullopt){
+  if (default_value.has_value()) {
+    int val = *default_value;
+    SEXP out = SHIELD(internal::new_vec(INTSXP, n));
+    int *p_out = INTEGER(out);
+    std::fill(p_out, p_out + n, val);
+    YIELD(1);
+    return out;
+  } else {
+    return internal::new_vec(INTSXP, n);
+  }
+}
+inline SEXP new_integer64(R_xlen_t n, std::optional<int64_t> default_value = std::nullopt){
+  SEXP out = SHIELD(internal::new_vec(REALSXP, n));
+  if (default_value.has_value()) {
+    int64_t val = *default_value;
+    int64_t *p_out = internal::INTEGER64_PTR(out);
+    std::fill(p_out, p_out + n, val);
+  }
+  set_class(out, SHIELD(make_utf8_str("integer64")));
+  YIELD(2);
+  return out;
+}
+inline SEXP new_double(R_xlen_t n, std::optional<double> default_value = std::nullopt){
+  if (default_value.has_value()){
+    double val = *default_value;
+    SEXP out = SHIELD(internal::new_vec(REALSXP, n));
+    double *p_out = REAL(out);
+    std::fill(p_out, p_out + n, val);
+    YIELD(1);
+    return out;
+  } else {
+    return internal::new_vec(REALSXP, n);
+  }
+}
+inline SEXP new_character(R_xlen_t n, std::optional<const char *> default_value = std::nullopt){
+  if (default_value.has_value()){
+    const char *char_val = *default_value;
+    SEXP val = SHIELD(make_utf8_char(char_val));
+    SEXP out = SHIELD(internal::new_vec(STRSXP, n));
+    if (val != R_BlankString){
+      for (R_xlen_t i = 0; i < n; ++i){
+        SET_STRING_ELT(out, i, val);
+      }
+    }
+    YIELD(2);
+    return out;
+  } else {
+    return internal::new_vec(STRSXP, n);
+  }
+}
+inline SEXP new_complex(R_xlen_t n, std::optional<Rcomplex> default_value = std::nullopt){
+  if (default_value.has_value()){
+    Rcomplex val = *default_value;
+    SEXP out = SHIELD(internal::new_vec(CPLXSXP, n));
+    Rcomplex *p_out = COMPLEX(out);
+    std::fill(p_out, p_out + n, val);
+    YIELD(1);
+    return out;
+  } else {
+    return internal::new_vec(CPLXSXP, n);
+  }
+}
+inline SEXP new_raw(R_xlen_t n, std::optional<Rbyte> default_value = std::nullopt){
+  if (default_value.has_value()){
+    Rbyte val = *default_value;
+    SEXP out = SHIELD(internal::new_vec(RAWSXP, n));
+    Rbyte *p_out = RAW(out);
+    std::fill(p_out, p_out + n, val);
+    YIELD(1);
+    return out;
+  } else {
+    return internal::new_vec(RAWSXP, n);
+  }
+}
+inline SEXP new_list(R_xlen_t n, std::optional<SEXP> default_value = std::nullopt){
+  if (default_value.has_value()){
+    SEXP val = *default_value;
+    SEXP out = SHIELD(internal::new_vec(VECSXP, n));
+    if (!is_null(val)){
+      for (R_xlen_t i = 0; i < n; ++i){
+        SET_VECTOR_ELT(out, i, val);
+      }
+    }
+    YIELD(1);
+    return out;
+  } else {
+    return internal::new_vec(VECSXP, n);
+  }
 }
 }
 
@@ -330,34 +445,37 @@ inline bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
   return eq(x.r, y.r) && eq(x.i, y.i);
 }
 
+
+namespace vec {
+
 template<typename T>
-inline SEXP as_r_scalar(const T x){
+inline SEXP as_scalar_vec(const T x){
   if constexpr (std::is_integral<T>::value){
-    return as_r_scalar<int64_t>(x);
+    return as_scalar_vec<int64_t>(x);
   } else if constexpr (std::is_convertible_v<T, SEXP>){
-    return as_r_scalar<SEXP>(x);
+    return as_scalar_vec<SEXP>(x);
   } else {
     Rf_error("Unimplemented scalar constructor");
   }
 }
 template<>
-inline SEXP as_r_scalar<bool>(const bool x){
+inline SEXP as_scalar_vec<bool>(const bool x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_r_scalar<r_bool_t>(const r_bool_t x){
+inline SEXP as_scalar_vec<r_bool_t>(const r_bool_t x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_r_scalar<Rboolean>(const Rboolean x){
+inline SEXP as_scalar_vec<Rboolean>(const Rboolean x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_r_scalar<int>(const int x){
+inline SEXP as_scalar_vec<int>(const int x){
   return Rf_ScalarInteger(x);
 }
 template<>
-inline SEXP as_r_scalar<int64_t>(const int64_t x){
+inline SEXP as_scalar_vec<int64_t>(const int64_t x){
   if (is_r_na(x)){
     return Rf_ScalarInteger(na::integer);
   } else if (between<int64_t>(x, limits::r_int_min, limits::r_int_max)){
@@ -367,39 +485,39 @@ inline SEXP as_r_scalar<int64_t>(const int64_t x){
   }
 }
 template<>
-inline SEXP as_r_scalar<double>(const double x){
+inline SEXP as_scalar_vec<double>(const double x){
   return Rf_ScalarReal(x);
 }
 template<>
-inline SEXP as_r_scalar<Rcomplex>(const Rcomplex x){
+inline SEXP as_scalar_vec<Rcomplex>(const Rcomplex x){
   return Rf_ScalarComplex(x);
 }
 template<>
-inline SEXP as_r_scalar<Rbyte>(const Rbyte x){
+inline SEXP as_scalar_vec<Rbyte>(const Rbyte x){
   return Rf_ScalarRaw(x);
 }
 template<>
-inline SEXP as_r_scalar<const char *>(const char * const x){
+inline SEXP as_scalar_vec<const char *>(const char * const x){
   return make_utf8_str(x);
 }
 template<>
-inline SEXP as_r_scalar<std::string>(const std::string x){
-  return as_r_scalar<const char *>(x.c_str());
+inline SEXP as_scalar_vec<std::string>(const std::string x){
+  return as_scalar_vec<const char *>(x.c_str());
 }
 template<>
-inline SEXP as_r_scalar<cpp11::r_string>(const cpp11::r_string x){
+inline SEXP as_scalar_vec<cpp11::r_string>(const cpp11::r_string x){
   return Rf_ScalarString(x);
 }
 
 // Scalar string
 template<>
-inline SEXP as_r_scalar<SEXP>(const SEXP x){
+inline SEXP as_scalar_vec<SEXP>(const SEXP x){
   switch (TYPEOF(x)){
   case CHARSXP: {
     return Rf_ScalarString(x);
   }
   default: {
-    SEXP out = SHIELD(vec::new_vec(VECSXP, 1));
+    SEXP out = SHIELD(internal::new_vec(VECSXP, 1));
     SET_VECTOR_ELT(out, 0, x);
     YIELD(1);
     return out;
@@ -408,15 +526,15 @@ inline SEXP as_r_scalar<SEXP>(const SEXP x){
 }
 
 template<typename T>
-inline SEXP as_r_vec(const T x){
+inline SEXP as_vec(const T x){
   if constexpr (std::is_convertible_v<T, SEXP>){
-    return as_r_vec<SEXP>(x);
+    return as_vec<SEXP>(x);
   } else {
-    return as_r_scalar(x);
+    return as_scalar_vec(x);
   }
 }
 template<>
-inline SEXP as_r_vec<SEXP>(const SEXP x){
+inline SEXP as_vec<SEXP>(const SEXP x){
   switch (TYPEOF(x)){
   case CHARSXP: {
     return Rf_ScalarString(x);
@@ -426,10 +544,7 @@ inline SEXP as_r_vec<SEXP>(const SEXP x){
   }
   }
 }
-
-// inline cpp11::sexp as_sexp<r_bool_t>(SEXP x){
-//   cpp11::as_
-// }
+}
 
 // Coerce functions that account for NA
 template<typename T>
@@ -462,7 +577,7 @@ inline SEXP as_char(T x){
   if (is_r_na(x)){
    return na::string;
   } else {
-    SEXP scalar = SHIELD(as_r_vec(x));
+    SEXP scalar = SHIELD(as_vec(x));
     SEXP str = SHIELD(vec::coerce_vec(scalar, STRSXP));
     SEXP out = STRING_ELT(str, 0);
     YIELD(2);
@@ -521,7 +636,7 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   } else {
     expr = SHIELD(Rf_lang3(R_DoubleColonSymbol, Rf_install(pkg), Rf_install(name)));
   }
-  SEXP out = SHIELD(eval(expr, base_env));
+  SEXP out = SHIELD(eval(expr, env::base_env));
   YIELD(2);
   return out;
 }
@@ -544,6 +659,7 @@ inline bool has_r_names(SEXP x){
   YIELD(1);
   return out;
 }
+
 }
 
 // Named argument
@@ -557,7 +673,7 @@ struct arg {
 
   template<typename T>
   arg operator=(T v) const {
-    return arg(name, as_r_vec(v));
+    return arg(name, vec::as_vec(v));
   }
 };
 
@@ -642,13 +758,13 @@ inline void set_val(SEXP x, const R_xlen_t i, SEXP val, const SEXP *p_x = nullpt
 
 // Variadic list constructor
 template<typename... Args>
-inline SEXP new_r_list(Args... args) {
+inline SEXP make_list(Args... args) {
   constexpr int n = sizeof...(args);
 
   if (n == 0){
-    return vec::new_vec(VECSXP, 0);
+    return internal::new_vec(VECSXP, 0);
   } else {
-    SEXP out = SHIELD(vec::new_vec(VECSXP, n));
+    SEXP out = SHIELD(internal::new_vec(VECSXP, n));
 
     // Are any args named?
     constexpr bool any_named = (std::is_same_v<std::decay_t<Args>, arg> || ...);
@@ -656,7 +772,7 @@ inline SEXP new_r_list(Args... args) {
     SEXP nms;
 
     if (any_named){
-      nms = SHIELD(vec::new_vec(STRSXP, n));
+      nms = SHIELD(internal::new_vec(STRSXP, n));
     } else {
       nms = SHIELD(r_null);
     }
@@ -667,7 +783,7 @@ inline SEXP new_r_list(Args... args) {
         SET_VECTOR_ELT(out, i, args.value);
         SET_STRING_ELT(nms, i, make_utf8_char(args.name));
       } else {
-        SET_VECTOR_ELT(out, i, as_r_vec(args));
+        SET_VECTOR_ELT(out, i, as_vec(args));
       }
       ++i;
     }()), ...);
@@ -679,7 +795,7 @@ inline SEXP new_r_list(Args... args) {
 }
 
 template<typename... Args>
-inline SEXP new_r_pairlist(Args... args) {
+inline SEXP make_pairlist(Args... args) {
   constexpr int n = sizeof...(args);
 
   if (n == 0){
@@ -694,7 +810,7 @@ inline SEXP new_r_pairlist(Args... args) {
         SETCAR(current, args.value);
         SET_TAG(current, install_utf8(args.name));
       } else {
-        SETCAR(current, as_r_vec(args));
+        SETCAR(current, as_vec(args));
       }
       current = CDR(current);
     }()), ...);
@@ -709,24 +825,10 @@ inline SEXP new_r_pairlist(Args... args) {
 template<typename... Args>
 inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
   // Expression
-  SEXP call = SHIELD(Rf_lcons(r_fn, vec::new_r_pairlist(args...)));
+  SEXP call = SHIELD(Rf_lcons(r_fn, vec::make_pairlist(args...)));
   // Evaluate expression
   SEXP out = SHIELD(eval(call, envir));
 
-  YIELD(2);
-  return out;
-}
-
-// Compact seq generator as ALTREP, same as `seq_len()`
-inline SEXP compact_seq_len(R_xlen_t n){
-  if (n < 0){
-    Rf_error("`n` must be >= 0");
-  }
-  if (n == 0){
-    return vec::new_vec(INTSXP, 0);
-  }
-  SEXP colon_fn = SHIELD(find_pkg_fun(":", "base", base_env));
-  SEXP out = SHIELD(eval_fun(colon_fn, base_env, 1, n));
   YIELD(2);
   return out;
 }
@@ -737,13 +839,13 @@ namespace vec {
 inline R_xlen_t length(SEXP x){
   if (!vec::is_object(x) || Rf_isVectorAtomic(x)){
     return Rf_xlength(x);
-  } else if (Rf_inherits(x, "data.frame")){
+  } else if (internal::inherits1(x, "data.frame")){
     return df::nrow(x);
     // Is x a list?
   } else if (TYPEOF(x) == VECSXP){
-    if (Rf_inherits(x, "vctrs_rcrd")){
+    if (internal::inherits1(x, "vctrs_rcrd")){
       return Rf_length(x) > 0 ? vec::length(VECTOR_ELT(x, 0)) : 0;
-    } else if (Rf_inherits(x, "POSIXlt")){
+    } else if (internal::inherits1(x, "POSIXlt")){
       const SEXP *p_x = internal::LIST_PTR_RO(x);
       R_xlen_t out = 0;
       for (int i = 0; i != 10; ++i){
@@ -797,8 +899,8 @@ inline SEXP attributes(SEXP x){
   SEXP a = ATTRIB(x);
   int n = Rf_length(a);
 
-  SEXP out = SHIELD(vec::new_vec(VECSXP, n));
-  SEXP names = SHIELD(vec::new_vec(STRSXP, n));
+  SEXP out = SHIELD(internal::new_vec(VECSXP, n));
+  SEXP names = SHIELD(internal::new_vec(STRSXP, n));
   SEXP current = a;
 
   for (int i = 0; i < n; ++i){
@@ -810,6 +912,30 @@ inline SEXP attributes(SEXP x){
     current = CDR(current);
   }
   internal::set_r_names(out, names);
+  YIELD(2);
+  return out;
+}
+
+inline bool inherits(SEXP x, SEXP classes){
+  R_xlen_t n = Rf_xlength(classes);
+  for (R_xlen_t i = 0; i < n; ++i) {
+    if (internal::inherits1(x, CHAR(STRING_ELT(classes, i)))){
+      return true;
+    }
+  }
+  return false;
+}
+
+// Compact seq generator as ALTREP, same as `seq_len()`
+inline SEXP compact_seq_len(R_xlen_t n){
+  if (n < 0){
+    Rf_error("`n` must be >= 0");
+  }
+  if (n == 0){
+    return internal::new_vec(INTSXP, 0);
+  }
+  SEXP colon_fn = SHIELD(find_pkg_fun(":", "base", env::base_env));
+  SEXP out = SHIELD(eval_fun(colon_fn, env::base_env, 1, n));
   YIELD(2);
   return out;
 }
@@ -855,6 +981,7 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
 }
 }
 
+namespace internal {
 // Wrap any callable f, and return a new callable that:
 //   - takes (auto&&... args)
 //   - calls f(args...) inside cpp11::unwind_protect
@@ -879,21 +1006,15 @@ auto r_safe_impl(F f) {
       }
     };
 }
+}
 
-#define r_safe(F)                                                            \
-r_safe_impl(                                                                 \
-  [&](auto&&... args)                                                        \
-    -> decltype(F(std::forward<decltype(args)>(args)...)) {                  \
-      return F(std::forward<decltype(args)>(args)...);                       \
-    }                                                                        \
+#define r_safe(F)                                                                      \
+internal::r_safe_impl(                                                                 \
+  [&](auto&&... args)                                                                  \
+    -> decltype(F(std::forward<decltype(args)>(args)...)) {                            \
+      return F(std::forward<decltype(args)>(args)...);                                 \
+    }                                                                                  \
 )
-
-// Check that n = 0 to avoid R CMD warnings
-namespace internal {
-inline void *safe_memmove(void *dst, const void *src, size_t n){
-  return n ? memmove(dst, src, n) : dst;
-}
-}
 
 } // End of cheapr namespace
 

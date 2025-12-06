@@ -143,7 +143,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   case INTSXP: {
     const int *p_x = INTEGER(x);
 
-    out = SHIELD(vec::new_vec(INTSXP, (n == 0) ? 0 : 1));
+    out = SHIELD(internal::new_vec(INTSXP, (n == 0) ? 0 : 1));
 
     if (n > 0){
       int gcd = p_x[0];
@@ -162,7 +162,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   case CHEAPR_INT64SXP: {
     const int64_t *p_x = INTEGER64_PTR_RO(x);
 
-    out = SHIELD(vec::new_vec(REALSXP, (n == 0) ? 0 : 1));
+    out = SHIELD(internal::new_vec(REALSXP, (n == 0) ? 0 : 1));
 
     if (n > 0){
       int64_t gcd = p_x[0];
@@ -180,7 +180,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   }
   default: {
     const double *p_x = REAL(x);
-    out = SHIELD(vec::new_vec(REALSXP, (n == 0) ? 0 : 1));
+    out = SHIELD(internal::new_vec(REALSXP, (n == 0) ? 0 : 1));
     if (n > 0){
       double gcd = p_x[0];
       double agcd;
@@ -233,9 +233,9 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, as_int64(p_x[i]), na_rm);
       }
-      return as_r_vec(lcm);
+      return as_vec(lcm);
     } else {
-      return vec::new_vec(INTSXP, (n == 0) ? 0 : 1);
+      return internal::new_vec(INTSXP, (n == 0) ? 0 : 1);
     }
   }
   case CHEAPR_INT64SXP: {
@@ -251,9 +251,9 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         }
         lcm = lcm2_int64(lcm, p_x[i], na_rm);
       }
-      return as_r_vec(lcm);
+      return as_vec(lcm);
     } else {
-      return vec::new_vec(INTSXP, (n == 0) ? 0 : 1);
+      return internal::new_vec(INTSXP, (n == 0) ? 0 : 1);
     }
   }
   default: {
@@ -269,9 +269,9 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         lcm = lcm2(lcm, p_x[i], tol, na_rm);
         if (is_r_inf(lcm)) break;
       }
-      return as_r_vec(lcm);
+      return as_vec(lcm);
     } else {
-      return vec::new_vec(REALSXP, (n == 0) ? 0 : 1);
+      return internal::new_vec(REALSXP, (n == 0) ? 0 : 1);
     }
   }
   }
@@ -304,7 +304,7 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   case INTSXP: {
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
-    SEXP out = SHIELD(vec::new_vec(INTSXP, n)); ++NP;
+    SEXP out = SHIELD(internal::new_vec(INTSXP, n)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
@@ -320,7 +320,7 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   default: {
     SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
-    SEXP out = SHIELD(vec::new_vec(REALSXP, n)); ++NP;
+    SEXP out = SHIELD(internal::new_vec(REALSXP, n)); ++NP;
     double* RESTRICT p_out = REAL(out);
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);
@@ -363,7 +363,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     double int_max = INTEGER_MAX;
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
-    SEXP out = SHIELD(vec::new_vec(INTSXP, n)); ++NP;
+    SEXP out = SHIELD(internal::new_vec(INTSXP, n)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
@@ -385,7 +385,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   default: {
     SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
-    SEXP out = SHIELD(vec::new_vec(REALSXP, n)); ++NP;
+    SEXP out = SHIELD(internal::new_vec(REALSXP, n)); ++NP;
     double* RESTRICT p_out = REAL(out);
     const double *p_x = REAL(x);
     const double *p_y = REAL(y);

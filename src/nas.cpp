@@ -127,7 +127,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   default: {
     SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), x)); ++NP;
-    SEXP r_true = SHIELD(as_r_vec(true)); ++NP;
+    SEXP r_true = SHIELD(as_vec(true)); ++NP;
     count = scalar_count(is_missing, r_true, true);
     break;
   }
@@ -138,7 +138,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
 
 [[cpp11::register]]
 SEXP cpp_num_na(SEXP x, bool recursive){
-  return as_r_vec(na_count(x, recursive));
+  return as_vec(na_count(x, recursive));
 }
 
 
@@ -271,46 +271,46 @@ SEXP cpp_is_na(SEXP x){
   SEXP out;
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
-    out = SHIELD(vec::new_vec(LGLSXP, 0));
+    out = SHIELD(internal::new_vec(LGLSXP, 0));
     break;
   }
   case LGLSXP:
   case INTSXP: {
-    out = SHIELD(vec::new_vec(LGLSXP, n));
+    out = SHIELD(internal::new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const int *p_x = INTEGER(x);
     CHEAPR_IS_NA
     break;
   }
   case CHEAPR_INT64SXP: {
-    out = SHIELD(vec::new_vec(LGLSXP, n));
+    out = SHIELD(internal::new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     CHEAPR_IS_NA
     break;
   }
   case REALSXP: {
-    out = SHIELD(vec::new_vec(LGLSXP, n));
+    out = SHIELD(internal::new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const double *p_x = REAL(x);
     CHEAPR_IS_NA
     break;
   }
   case STRSXP: {
-    out = SHIELD(vec::new_vec(LGLSXP, n));
+    out = SHIELD(internal::new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = STRING_PTR_RO(x);
     CHEAPR_IS_NA
     break;
   }
   case RAWSXP: {
-    out = SHIELD(vec::new_vec(LGLSXP, n));
+    out = SHIELD(internal::new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     std::fill(p_out, p_out + n, 0);
     break;
   }
   case CPLXSXP: {
-    out = SHIELD(vec::new_vec(LGLSXP, n));
+    out = SHIELD(internal::new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const Rcomplex *p_x = COMPLEX(x);
     CHEAPR_IS_NA
@@ -318,7 +318,7 @@ SEXP cpp_is_na(SEXP x){
   }
   case VECSXP: {
     if (!vec::is_object(x)){
-    out = SHIELD(vec::new_vec(LGLSXP, n));
+    out = SHIELD(internal::new_vec(LGLSXP, n));
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = LIST_PTR_RO(x);
     CHEAPR_IS_NA
@@ -342,7 +342,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
   int32_t NP = 0;
   int num_col = Rf_length(x);
   int num_row = df::nrow(x);
-  SEXP out = SHIELD(vec::new_vec(INTSXP, num_row)); ++NP;
+  SEXP out = SHIELD(internal::new_vec(INTSXP, num_row)); ++NP;
   int* RESTRICT p_out = INTEGER(out);
   std::fill(p_out, p_out + num_row, 0);
   for (int j = 0; j < num_col; ++j){
@@ -434,7 +434,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   int num_col = Rf_length(x);
   int32_t NP = 0;
   int num_row = df::nrow(x);
-  SEXP out = SHIELD(vec::new_vec(INTSXP, num_col)); ++NP;
+  SEXP out = SHIELD(internal::new_vec(INTSXP, num_col)); ++NP;
   int *p_out = INTEGER(out);
   std::fill(p_out, p_out + num_col, 0);
   for (int j = 0; j < num_col; ++j){
@@ -482,7 +482,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
   int num_row = df::nrow(x);
   int num_col = Rf_length(x);
 
-  SEXP out = SHIELD(vec::new_vec(LGLSXP, num_col)); ++NP;
+  SEXP out = SHIELD(internal::new_vec(LGLSXP, num_col)); ++NP;
   int *p_out = INTEGER(out);
 
   for (int j = 0; j < num_col; ++j){
@@ -539,7 +539,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
   int num_row = df::nrow(x);
   int num_col = Rf_length(x);
 
-  SEXP out = SHIELD(vec::new_vec(LGLSXP, num_col)); ++NP;
+  SEXP out = SHIELD(internal::new_vec(LGLSXP, num_col)); ++NP;
   int *p_out = INTEGER(out);
 
   for (int j = 0; j < num_col; ++j){
@@ -620,7 +620,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
   R_xlen_t num_row = Rf_nrows(x);
   R_xlen_t num_col = Rf_ncols(x);
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = SHIELD(vec::new_vec(INTSXP, num_row));
+  SEXP out = SHIELD(internal::new_vec(INTSXP, num_row));
   int *p_out = INTEGER(out);
   std::fill(p_out, p_out + num_row, 0);
   if (num_row > 0 && num_col > 0){
@@ -687,7 +687,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   R_xlen_t num_col = Rf_ncols(x);
   R_xlen_t n = Rf_xlength(x);
   bool new_col;
-  SEXP out = SHIELD(vec::new_vec(INTSXP, num_col));
+  SEXP out = SHIELD(internal::new_vec(INTSXP, num_col));
   int *p_out = INTEGER(out);
   std::fill(p_out, p_out + num_col, 0);
   if (num_row > 0 && num_col > 0){

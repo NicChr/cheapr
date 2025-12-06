@@ -5,7 +5,7 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
 
   int n = Rf_length(group_id);
 
-  SEXP out = SHIELD(vec::new_vec(INTSXP, n_groups));
+  SEXP out = SHIELD(internal::new_vec(INTSXP, n_groups));
   const int* p_group_id = INTEGER_RO(group_id);
   int* RESTRICT p_out = INTEGER(out);
 
@@ -48,7 +48,7 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
     }
   }
 
-  SEXP r_sorted = SHIELD(as_r_vec(sorted));
+  SEXP r_sorted = SHIELD(as_vec(sorted));
   set_attrib(out, install_utf8("sorted"), r_sorted);
   YIELD(2);
   return out;
@@ -58,7 +58,7 @@ SEXP cpp_group_counts(SEXP group_id, int n_groups){
 
   int n = Rf_length(group_id);
 
-  SEXP out = SHIELD(vec::new_vec(INTSXP, n_groups));
+  SEXP out = SHIELD(internal::new_vec(INTSXP, n_groups));
   const int* RESTRICT p_group_id = INTEGER_RO(group_id);
   int* RESTRICT p_out = INTEGER(out);
 

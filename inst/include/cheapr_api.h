@@ -15,7 +15,7 @@ namespace cheapr {
 using internal::safe_memmove;
 using internal::INTEGER64_PTR;
 using internal::INTEGER64_PTR_RO;
-using vec::new_vec;
+using internal::new_vec;
 using vec::coerce_vec;
 inline int df_nrow(SEXP x){
   return df::nrow(x);
@@ -75,13 +75,6 @@ lengths(SEXP list_of_vecs, bool names){
   typedef SEXP fn_t(SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_lengths");
   return fn(list_of_vecs, names);
-}
-
-inline SEXP
-new_list(R_xlen_t length, SEXP default_value){
-  typedef SEXP fn_t(R_xlen_t, SEXP);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_new_list");
-  return fn(length, default_value);
 }
 
 inline SEXP
@@ -354,16 +347,16 @@ loc_set_replace(SEXP x, SEXP where, SEXP what){
 // R vector constructor from C++ types and SEXP
 // This is also defined in variadic.h but difficult to export with one definition
 template<typename... Args>
-SEXP new_r_vec(Args... args) {
-  SEXP out = SHIELD(cheapr::vec::new_r_list(args...));
+SEXP make_vec(Args... args) {
+  SEXP out = SHIELD(cheapr::vec::make_list(args...));
   SHIELD(out = cheapr::c(out));
   YIELD(2);
   return out;
 }
 
 template<typename... Args>
-SEXP new_r_df(Args... args) {
-  SEXP out = SHIELD(cheapr::vec::new_r_list(args...));
+SEXP make_df(Args... args) {
+  SEXP out = SHIELD(cheapr::vec::make_list(args...));
   SHIELD(out = new_df(out, r_null, true, true));
   YIELD(2);
   return out;
@@ -371,7 +364,7 @@ SEXP new_r_df(Args... args) {
 
 template<typename... Args>
 inline SEXP r_paste(SEXP sep, SEXP collapse, Args... args){
-  SEXP objs = SHIELD(cheapr::vec::new_r_list(args...));
+  SEXP objs = SHIELD(cheapr::vec::make_list(args...));
   SEXP out = SHIELD(cheapr::paste(objs, sep, collapse));
   YIELD(2);
   return out;
