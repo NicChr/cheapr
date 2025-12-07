@@ -548,23 +548,7 @@ inline SEXP as_vec<SEXP>(const SEXP x){
 }
 }
 
-// template<typename T>
-// inline constexpr bool can_be_int(T x){
-//   if constexpr (std::is_arithmetic_v<T>){
-//     return between<T>(x, limits::r_int_min, limits::r_int_max);
-//   } else {
-//     return false;
-//   }
-// }
-// template<typename T>
-// inline constexpr bool can_be_int64(T x){
-//   if constexpr (std::is_arithmetic_v<T>){
-//     return between<T>(x, limits::r_int64_min, limits::r_int64_max);
-//   } else {
-//     return false;
-//   }
-// }
-
+namespace internal {
 // Assumes no NAs at all
 template<typename T>
 inline constexpr bool can_be_int(T x){
@@ -590,6 +574,7 @@ inline constexpr bool can_be_int64(T x){
     return false;
   }
 }
+}
 
 // Coerce functions that account for NA
 template<typename T>
@@ -603,7 +588,7 @@ inline constexpr r_bool_t as_bool(T x){
 template<typename T>
 inline constexpr int as_int(T x){
   if constexpr (std::is_arithmetic_v<T>){
-    return is_r_na(x) || !can_be_int(x) ? na::integer : static_cast<int>(x);
+    return is_r_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<int>(x);
   } else {
     return na::integer;
   }
@@ -611,7 +596,7 @@ inline constexpr int as_int(T x){
 template<typename T>
 inline constexpr int64_t as_int64(T x){
   if constexpr (std::is_arithmetic_v<T>){
-    return is_r_na(x) || !can_be_int64(x) ? na::integer64 : static_cast<int64_t>(x);
+    return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<int64_t>(x);
   } else {
     return na::integer64;
   }
