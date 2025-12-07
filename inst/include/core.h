@@ -41,6 +41,8 @@
 #define VECTOR_PTR_RO(x) ((const SEXP *) DATAPTR_RO(x))
 #endif
 
+// These should be functions in cheapr namespace but
+// rchk produces errors with that method
 #ifndef SHIELD
 #define SHIELD(x) (Rf_protect(x))
 #endif
@@ -62,12 +64,6 @@ enum r_bool_t : int {
 // Constants
 
 namespace internal {
-inline constexpr int INTEGER_MIN = std::numeric_limits<int>::min() + 1;
-inline constexpr int INTEGER_MAX = std::numeric_limits<int>::max();
-
-inline constexpr int64_t INTEGER64_MIN = std::numeric_limits<int64_t>::min() + 1;
-inline constexpr int64_t INTEGER64_MAX = std::numeric_limits<int64_t>::max();
-inline constexpr int64_t NA_INTEGER64 = std::numeric_limits<int64_t>::min();
 
 inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
@@ -76,6 +72,8 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 namespace limits {
 inline constexpr int r_int_min = std::numeric_limits<int>::min() + 1;
 inline constexpr int r_int_max = std::numeric_limits<int>::max();
+inline constexpr int64_t r_int64_min = std::numeric_limits<int64_t>::min() + 1;
+inline constexpr int64_t r_int64_max = std::numeric_limits<int64_t>::max();
 inline constexpr double r_pos_inf = std::numeric_limits<double>::infinity();
 inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
 }
@@ -92,9 +90,10 @@ inline const SEXP base_env = R_BaseEnv;
 namespace na {
   inline constexpr r_bool_t logical = r_na;
   inline constexpr int integer = std::numeric_limits<int>::min();
-  inline constexpr int64_t integer64 = internal::NA_INTEGER64;
+  inline constexpr int64_t integer64 = std::numeric_limits<int64_t>::min();
   inline const double numeric = NA_REAL;
   inline const Rcomplex complex = {{NA_REAL, NA_REAL}};
+  inline constexpr Rbyte raw = static_cast<Rbyte>(0);
   inline const SEXP string = NA_STRING;
   inline const SEXP list = r_null;
 }
@@ -324,7 +323,6 @@ inline constexpr bool is_r_inf(const double x){
 
 template<typename T>
 inline bool is_r_na(const T x) {
-  Rf_error("Unimplemented `is_r_na` specialisation");
   return false;
 }
 
@@ -550,30 +548,99 @@ inline SEXP as_vec<SEXP>(const SEXP x){
 }
 }
 
+// template<typename T>
+// inline constexpr bool can_be_int(T x){
+//   if constexpr (std::is_arithmetic_v<T>){
+//     return between<T>(x, limits::r_int_min, limits::r_int_max);
+//   } else {
+//     return false;
+//   }
+// }
+// template<typename T>
+// inline constexpr bool can_be_int64(T x){
+//   if constexpr (std::is_arithmetic_v<T>){
+//     return between<T>(x, limits::r_int64_min, limits::r_int64_max);
+//   } else {
+//     return false;
+//   }
+// }
+
+// Assumes no NAs at all
+template<typename T>
+inline constexpr bool can_be_int(T x){
+  // If x is an int type whose size is <= int OR
+  // an arithmetic type (e.g. double)
+  if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int)){
+    return true;
+  } else if constexpr (std::is_arithmetic_v<T>){
+    return between<T>(x, limits::r_int_min, limits::r_int_max);
+  } else {
+    return false;
+  }
+}
+template<typename T>
+inline constexpr bool can_be_int64(T x){
+  // If x is an int64 type whose size is <= int64 OR
+  // an arithmetic type (e.g. double)
+  if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int64_t)){
+    return true;
+  } else if constexpr (std::is_arithmetic_v<T>){
+    return between<T>(x, limits::r_int64_min, limits::r_int64_max);
+  } else {
+    return false;
+  }
+}
+
 // Coerce functions that account for NA
 template<typename T>
 inline constexpr r_bool_t as_bool(T x){
-  return is_r_na(x) ? na::logical : static_cast<r_bool_t>(x);
+  if constexpr (std::is_arithmetic_v<T>){
+    return is_r_na(x) ? na::logical : static_cast<r_bool_t>(static_cast<bool>(x));
+  } else {
+    return na::logical;
+  }
 }
 template<typename T>
 inline constexpr int as_int(T x){
-  return is_r_na(x) ? na::integer : static_cast<int>(x);
+  if constexpr (std::is_arithmetic_v<T>){
+    return is_r_na(x) || !can_be_int(x) ? na::integer : static_cast<int>(x);
+  } else {
+    return na::integer;
+  }
 }
 template<typename T>
 inline constexpr int64_t as_int64(T x){
-  return is_r_na(x) ? na::integer64 : static_cast<int64_t>(x);
+  if constexpr (std::is_arithmetic_v<T>){
+    return is_r_na(x) || !can_be_int64(x) ? na::integer64 : static_cast<int64_t>(x);
+  } else {
+    return na::integer64;
+  }
 }
 template<typename T>
 inline double as_double(T x){
-  return is_r_na(x) ? na::numeric : static_cast<double>(x);
+  if constexpr (std::is_arithmetic_v<T>){
+    return is_r_na(x) ? na::numeric : static_cast<double>(x);
+  } else {
+    return na::numeric;
+  }
 }
 template<typename T>
 inline Rcomplex as_complex(T x){
-  return is_r_na(x) ? na::complex : static_cast<Rcomplex>(x);
+  if constexpr (std::is_convertible_v<T, Rcomplex>){
+    return is_r_na(x) ? na::complex : static_cast<Rcomplex>(x);
+  } else {
+    return na::complex;
+  }
 }
 template<typename T>
 inline constexpr Rbyte as_raw(T x){
-  return is_r_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
+  if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int8_t)){
+    return is_r_na(x) || x < 0 ? na::raw : static_cast<Rbyte>(x);
+  } else if constexpr (std::is_convertible_v<T, Rbyte>){
+    return is_r_na(x) || !between(x, 0, 255) ? na::raw : static_cast<Rbyte>(x);
+  } else {
+    return na::raw;
+  }
 }
 // As CHARSXP
 template<typename T>

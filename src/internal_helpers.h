@@ -54,11 +54,6 @@ inline bool address_equal(SEXP x, SEXP y){
   return address(x) == address(y);
 }
 
-template<typename T>
-inline constexpr bool is_r_integerable(T x){
-  return between<T>(x, limits::r_int_min, limits::r_int_max);
-}
-
 inline bool is_int64(SEXP x){
   return Rf_isReal(x) && inherits1(x, "integer64");
 }

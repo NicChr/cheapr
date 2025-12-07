@@ -255,7 +255,7 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list, bool add_id) {
     switch (TYPEOF(by)){
   case INTSXP: {
     int_fast64_t start, increment, seq_size, seq_end;
-    int_fast64_t int_max = INTEGER_MAX;
+    int_fast64_t int_max = limits::r_int_max;
     int_fast64_t zero = 0;
     bool out_is_integer = true;
     const int *p_size = INTEGER_RO(size);
@@ -494,7 +494,7 @@ SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
 }
 
 SEXP cpp_seq_len(R_xlen_t n){
-  if (n > INTEGER_MAX){
+  if (n > limits::r_int_max){
     SEXP out = SHIELD(internal::new_vec(REALSXP, n));
     double* RESTRICT p_out = REAL(out);
     OMP_FOR_SIMD
@@ -526,7 +526,7 @@ double pretty_ceiling(double x){
 }
 
 bool can_be_int(double x, double tolerance){
-  return static_cast<bool>(is_whole_number(x, tolerance)) && is_r_integerable(x);
+  return static_cast<bool>(is_whole_number(x, tolerance)) && can_be_int(x);
 }
 
 double seq_end(double size, double from, double by){
@@ -730,7 +730,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
     seq_from = r_null, seq_width = r_null;
 
     if (!scale_up && can_be_int(adj_width, tol) && can_be_int(adj_start, tol) &&
-       is_r_integerable(adj_end)){
+       can_be_int(adj_end)){
       adj_width = r_round(adj_width);
       adj_start = r_round(adj_start);
 
