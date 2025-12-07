@@ -29,7 +29,7 @@ inline SEXP CHEAPR_CORES = r_null;
 
 inline int num_cores(){
   if (vec::is_null(CHEAPR_CORES)){
-    CHEAPR_CORES = install_utf8("cheapr.cores");
+    CHEAPR_CORES = make_symbol("cheapr.cores");
   }
   int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
   return n_cores >= 1 ? n_cores : 1;
@@ -51,7 +51,7 @@ inline R_xlen_t r_length(SEXP x){
 }
 
 inline bool address_equal(SEXP x, SEXP y){
-  return vec::address(x) == vec::address(y);
+  return address(x) == address(y);
 }
 
 template<typename T>

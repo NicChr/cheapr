@@ -399,7 +399,7 @@ api_vec_length(SEXP x) {
 SEXP
 api_r_address(SEXP x) {
   try {
-    return cheapr::vec::address(x);
+    return cheapr::address(x);
   } catch (...) {
     return cheapr::r_null;
   }

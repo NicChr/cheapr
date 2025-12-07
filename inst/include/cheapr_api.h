@@ -333,7 +333,7 @@ vec_length(SEXP x){
 // Deprecated, use cheapr::address
 inline SEXP
 r_address(SEXP x){
-  return cheapr::vec::address(x);
+  return cheapr::address(x);
 }
 
 // Deprecated, use cheapr::replace

@@ -21,7 +21,7 @@ SEXP cpp_vector_length(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_address(SEXP x){
-  return as_vec(vec::address(x));
+  return as_vec(address(x));
 }
 
 // Copy atomic elements from source to target

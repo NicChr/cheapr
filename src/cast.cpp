@@ -242,5 +242,5 @@ SEXP cpp_cast(SEXP x, SEXP y){
 
 [[cpp11::register]]
 SEXP cpp_type(SEXP x){
-  return make_utf8_str(r_type_char(x));
+  return as_vec(r_type_char(x));
 }

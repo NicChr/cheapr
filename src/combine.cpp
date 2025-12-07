@@ -537,7 +537,7 @@ SEXP character_as_factor(SEXP x, SEXP levels){
   int32_t NP = 0;
 
   SEXP out = SHIELD(match(levels, x, na::integer)); ++NP;
-  SEXP cls = SHIELD(make_utf8_str("factor")); ++NP;
+  SEXP cls = SHIELD(as_vec("factor")); ++NP;
   set_attrib(out, R_LevelsSymbol, levels);
   set_class(out, cls);
   YIELD(NP);
@@ -903,7 +903,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     if (TYPEOF(vec_template) == INTSXP){
     SHIELD(out = init<r_integer_t>(out_size, false)); ++NP;
-    SEXP date_cls = SHIELD(make_utf8_str("Date")); ++NP;
+    SEXP date_cls = SHIELD(as_vec("Date")); ++NP;
     set_class(out, date_cls);
 
     int* RESTRICT p_out = INTEGER(out);
@@ -916,7 +916,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     }
   } else {
     SHIELD(out = init<r_double_t>(out_size, false)); ++NP;
-    SEXP date_cls = SHIELD(make_utf8_str("Date")); ++NP;
+    SEXP date_cls = SHIELD(as_vec("Date")); ++NP;
     set_class(out, date_cls);
 
     double* RESTRICT p_out = REAL(out);
@@ -933,8 +933,8 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case R_pxt: {
 
     SHIELD(out = init<r_posixt_t>(out_size, false)); ++NP;
-    SEXP out_tzone = SHIELD(get_attrib(vec_template, install_utf8("tzone"))); ++NP;
-    set_attrib(out, install_utf8("tzone"), out_tzone);
+    SEXP out_tzone = SHIELD(get_attrib(vec_template, make_symbol("tzone"))); ++NP;
+    set_attrib(out, make_symbol("tzone"), out_tzone);
 
     double* RESTRICT p_out = REAL(out);
 
@@ -951,7 +951,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case R_unk: {
     SEXP call = SHIELD(vec::coerce_vec(x, LISTSXP)); ++NP;
-    SHIELD(call = Rf_lcons(install_utf8("c"), call)); ++NP;
+    SHIELD(call = Rf_lcons(make_symbol("c"), call)); ++NP;
     SHIELD(out = eval(call, R_GetCurrentEnv())); ++NP;
     break;
   }

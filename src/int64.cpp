@@ -124,7 +124,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     for (R_xlen_t i = 0; i < n; ++i){
       p_out[i] = as_int64(p_x[i]);
     }
-    SEXP int64_cls = SHIELD(make_utf8_str("integer64")); ++NP;
+    SEXP int64_cls = SHIELD(as_vec("integer64")); ++NP;
     set_class(out, int64_cls);
     break;
   }
@@ -146,7 +146,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
       }
       p_out[i] = repl;
     }
-    SEXP int64_cls = SHIELD(make_utf8_str("integer64")); ++NP;
+    SEXP int64_cls = SHIELD(as_vec("integer64")); ++NP;
     set_class(out, int64_cls);
     break;
   }
@@ -193,7 +193,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, make_utf8_char(s.c_str()));
+        SET_STRING_ELT(out, i, as_r_string(s.c_str()));
       }
     }
     break;
@@ -209,7 +209,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, make_utf8_char(s.c_str()));
+        SET_STRING_ELT(out, i, as_r_string(s.c_str()));
       }
     }
     break;
@@ -224,7 +224,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, make_utf8_char(s.c_str()));
+        SET_STRING_ELT(out, i, as_r_string(s.c_str()));
       }
     }
     break;

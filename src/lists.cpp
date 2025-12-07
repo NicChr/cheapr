@@ -299,7 +299,7 @@ void set_list_as_df(SEXP x) {
     N = vec::length(VECTOR_ELT(x, 0));
   }
 
-  SEXP df_str = SHIELD(make_utf8_str("data.frame")); ++NP;
+  SEXP df_str = SHIELD(as_vec("data.frame")); ++NP;
   SEXP row_names = SHIELD(new_row_names(N)); ++NP;
 
   // If no names then add names
@@ -355,13 +355,13 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
   }
 
   if (name_repair){
-    SEXP dup_sep = SHIELD(make_utf8_str("_")); ++NP;
-    SEXP empty_sep = SHIELD(make_utf8_str("col_")); ++NP;
+    SEXP dup_sep = SHIELD(as_vec("_")); ++NP;
+    SEXP empty_sep = SHIELD(as_vec("col_")); ++NP;
     SHIELD(out_names = cpp_name_repair(out_names, dup_sep, empty_sep)); ++NP;
   }
   set_r_names(out, out_names);
   set_attrib(out, R_RowNamesSymbol, row_names);
-  SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
+  SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   set_class(out, df_cls);
   YIELD(NP);
   return out;
@@ -440,7 +440,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   }
   set_r_names(out, out_names);
   set_attrib(out, R_RowNamesSymbol, new_row_names(n_rows));
-  SEXP df_cls = SHIELD(make_utf8_str("data.frame")); ++NP;
+  SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   set_class(out, df_cls);
   SHIELD(out = rebuild(out, x, false)); ++NP;
   YIELD(NP);
@@ -475,7 +475,7 @@ SEXP cpp_as_df(SEXP x){
   } else {
     SEXP out = SHIELD(eval_pkg_fun("as.data.frame", "base", R_GetCurrentEnv(), x));
     SEXP col_seq = SHIELD(cpp_seq_len(Rf_length(out)));
-    SEXP col_str = SHIELD(make_utf8_str("col_"));
+    SEXP col_str = SHIELD(as_vec("col_"));
     SEXP new_names = SHIELD(r_paste(R_BlankScalarString, r_null, col_str, col_seq));
     set_r_names(out, new_names);
     YIELD(4);

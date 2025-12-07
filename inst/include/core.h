@@ -76,8 +76,8 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 namespace limits {
 inline constexpr int r_int_min = std::numeric_limits<int>::min() + 1;
 inline constexpr int r_int_max = std::numeric_limits<int>::max();
-inline const double r_neg_inf = R_NegInf;
-inline const double r_pos_inf = R_PosInf;
+inline constexpr double r_pos_inf = std::numeric_limits<double>::infinity();
+inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
 }
 
 inline const SEXP r_null = R_NilValue;
@@ -90,9 +90,9 @@ inline const SEXP base_env = R_BaseEnv;
 // NAs
 
 namespace na {
-  inline const r_bool_t logical = r_na;
-  inline const int integer = NA_INTEGER;
-  inline const int64_t integer64 = internal::NA_INTEGER64;
+  inline constexpr r_bool_t logical = r_na;
+  inline constexpr int integer = std::numeric_limits<int>::min();
+  inline constexpr int64_t integer64 = internal::NA_INTEGER64;
   inline const double numeric = NA_REAL;
   inline const Rcomplex complex = {{NA_REAL, NA_REAL}};
   inline const SEXP string = NA_STRING;
@@ -128,6 +128,35 @@ inline void *safe_memmove(void *dst, const void *src, size_t n){
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
 }
+
+// UTF-8 helpers
+
+inline const char* utf8_char(SEXP x){
+  return Rf_translateCharUTF8(x);
+}
+
+inline SEXP make_utf8_charsxp(const char *x){
+  return Rf_mkCharCE(x, CE_UTF8);
+}
+
+inline SEXP make_utf8_strsxp(const char *x){
+  return Rf_ScalarString(make_utf8_charsxp(x));
+}
+
+inline SEXP make_symbol(const char *x){
+  return Rf_installChar(make_utf8_charsxp(x));
+}
+
+inline const char* char_as_utf8(const char *x){
+  return CHAR(make_utf8_charsxp(x));
+}
+}
+
+// Memory address
+inline SEXP address(SEXP x) {
+  char buf[1000];
+  snprintf(buf, 1000, "%p", static_cast<void*>(x));
+  return internal::make_utf8_charsxp(buf);
 }
 
 inline r_bool_t* BOOLEAN(SEXP x) {
@@ -146,28 +175,6 @@ inline constexpr bool between(const T x, const T lo, const T hi) {
 template<typename T>
 inline constexpr void recycle_index(T& v, const T size) {
   v = (++v == size) ? static_cast<T>(0) : v;
-}
-
-// UTF-8 helpers
-
-inline const char* utf8_char(SEXP x){
-  return Rf_translateCharUTF8(x);
-}
-
-inline SEXP make_utf8_char(const char *x){
-  return Rf_mkCharCE(x, CE_UTF8);
-}
-
-inline SEXP make_utf8_str(const char *x){
-  return Rf_ScalarString(make_utf8_char(x));
-}
-
-inline SEXP install_utf8(const char *x){
-  return Rf_installChar(make_utf8_char(x));
-}
-
-inline const char* char_as_utf8(const char *x){
-  return CHAR(make_utf8_char(x));
 }
 
 namespace vec {
@@ -230,7 +237,7 @@ inline SEXP new_integer64(R_xlen_t n, std::optional<int64_t> default_value = std
     int64_t *p_out = internal::INTEGER64_PTR(out);
     std::fill(p_out, p_out + n, val);
   }
-  set_class(out, SHIELD(make_utf8_str("integer64")));
+  set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
   YIELD(2);
   return out;
 }
@@ -249,7 +256,7 @@ inline SEXP new_double(R_xlen_t n, std::optional<double> default_value = std::nu
 inline SEXP new_character(R_xlen_t n, std::optional<const char *> default_value = std::nullopt){
   if (default_value.has_value()){
     const char *char_val = *default_value;
-    SEXP val = SHIELD(make_utf8_char(char_val));
+    SEXP val = SHIELD(internal::make_utf8_charsxp(char_val));
     SEXP out = SHIELD(internal::new_vec(STRSXP, n));
     if (val != R_BlankString){
       for (R_xlen_t i = 0; i < n; ++i){
@@ -309,8 +316,8 @@ inline int nrow(SEXP x){
 }
 }
 
-inline bool is_r_inf(const double x){
-  return x == R_PosInf || x == R_NegInf;
+inline constexpr bool is_r_inf(const double x){
+  return x == limits::r_pos_inf || x == limits::r_neg_inf;
 }
 
 // C++ templates
@@ -322,42 +329,42 @@ inline bool is_r_na(const T x) {
 }
 
 template<>
-inline bool is_r_na<r_bool_t>(const r_bool_t x){
-  return x == r_na;
+inline constexpr bool is_r_na<r_bool_t>(const r_bool_t x){
+  return x == na::logical;
 }
 
 template<>
-inline bool is_r_na<Rboolean>(const Rboolean x){
+inline constexpr bool is_r_na<Rboolean>(const Rboolean x){
   return static_cast<r_bool_t>(x) == na::logical;
 }
 
 template<>
 inline bool is_r_na<cpp11::r_bool>(const cpp11::r_bool x){
-  return x == cpp11::na<cpp11::r_bool>();
+  return x == na::string;
 }
 
 template<>
-inline bool is_r_na<int>(const int x){
+inline constexpr bool is_r_na<int>(const int x){
   return x == na::integer;
 }
 
 template<>
-inline bool is_r_na<double>(const double x){
+inline constexpr bool is_r_na<double>(const double x){
   return x != x;
 }
 
 template<>
-inline bool is_r_na<int64_t>(const int64_t x){
+inline constexpr bool is_r_na<int64_t>(const int64_t x){
   return x == na::integer64;
 }
 
 template<>
-inline bool is_r_na<Rcomplex>(const Rcomplex x){
+inline constexpr bool is_r_na<Rcomplex>(const Rcomplex x){
   return is_r_na<double>(x.r) || is_r_na<double>(x.i);
 }
 
 template<>
-inline bool is_r_na<Rbyte>(const Rbyte x){
+inline constexpr bool is_r_na<Rbyte>(const Rbyte x){
   return false;
 }
 
@@ -380,8 +387,8 @@ inline T na_value(const T x) {
 }
 
 template<>
-inline r_bool_t na_value<r_bool_t>(const r_bool_t x){
-  return r_na;
+inline constexpr r_bool_t na_value<r_bool_t>(const r_bool_t x){
+  return na::logical;
 }
 
 template<>
@@ -390,7 +397,7 @@ inline cpp11::r_bool na_value<cpp11::r_bool>(const cpp11::r_bool x){
 }
 
 template<>
-inline int na_value<int>(const int x){
+inline constexpr int na_value<int>(const int x){
   return na::integer;
 }
 
@@ -400,7 +407,7 @@ inline double na_value<double>(const double x){
 }
 
 template<>
-inline int64_t na_value<int64_t>(const int64_t x){
+inline constexpr int64_t na_value<int64_t>(const int64_t x){
   return na::integer64;
 }
 
@@ -410,7 +417,7 @@ inline Rcomplex na_value<Rcomplex>(const Rcomplex x){
 }
 
 template<>
-inline Rbyte na_value<Rbyte>(const Rbyte x){
+inline constexpr Rbyte na_value<Rbyte>(const Rbyte x){
   return 0;
 }
 
@@ -437,11 +444,11 @@ inline SEXP na_value<SEXP>(const SEXP x){
 // equals template that doesn't support NA values
 // use is_r_na template functions
 template<typename T>
-inline bool eq(const T x, const T y) {
+inline constexpr bool eq(const T x, const T y) {
   return x == y;
 }
 template<>
-inline bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
+inline constexpr bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
   return eq(x.r, y.r) && eq(x.i, y.i);
 }
 
@@ -498,7 +505,7 @@ inline SEXP as_scalar_vec<Rbyte>(const Rbyte x){
 }
 template<>
 inline SEXP as_scalar_vec<const char *>(const char * const x){
-  return make_utf8_str(x);
+  return internal::make_utf8_strsxp(x);
 }
 template<>
 inline SEXP as_scalar_vec<std::string>(const std::string x){
@@ -517,10 +524,7 @@ inline SEXP as_scalar_vec<SEXP>(const SEXP x){
     return Rf_ScalarString(x);
   }
   default: {
-    SEXP out = SHIELD(internal::new_vec(VECSXP, 1));
-    SET_VECTOR_ELT(out, 0, x);
-    YIELD(1);
-    return out;
+    return vec::new_list(1, x);
   }
   }
 }
@@ -548,15 +552,15 @@ inline SEXP as_vec<SEXP>(const SEXP x){
 
 // Coerce functions that account for NA
 template<typename T>
-inline r_bool_t as_r_boolean(T x){
-  return is_r_na(x) ? r_na : static_cast<r_bool_t>(x);
+inline constexpr r_bool_t as_bool(T x){
+  return is_r_na(x) ? na::logical : static_cast<r_bool_t>(x);
 }
 template<typename T>
-inline int as_int(T x){
+inline constexpr int as_int(T x){
   return is_r_na(x) ? na::integer : static_cast<int>(x);
 }
 template<typename T>
-inline int64_t as_int64(T x){
+inline constexpr int64_t as_int64(T x){
   return is_r_na(x) ? na::integer64 : static_cast<int64_t>(x);
 }
 template<typename T>
@@ -568,20 +572,24 @@ inline Rcomplex as_complex(T x){
   return is_r_na(x) ? na::complex : static_cast<Rcomplex>(x);
 }
 template<typename T>
-inline Rbyte as_raw(T x){
+inline constexpr Rbyte as_raw(T x){
   return is_r_na(x) ? static_cast<Rbyte>(0) : static_cast<Rbyte>(x);
 }
 // As CHARSXP
 template<typename T>
-inline SEXP as_char(T x){
-  if (is_r_na(x)){
-   return na::string;
+inline SEXP as_r_string(T x){
+  if constexpr (std::is_same_v<std::decay_t<T>, const char *>){
+    return internal::make_utf8_charsxp(x);
   } else {
-    SEXP scalar = SHIELD(as_vec(x));
-    SEXP str = SHIELD(vec::coerce_vec(scalar, STRSXP));
-    SEXP out = STRING_ELT(str, 0);
-    YIELD(2);
-    return out;
+    if (is_r_na(x)){
+      return na::string;
+    } else {
+      SEXP scalar = SHIELD(as_vec(x));
+      SEXP str = SHIELD(vec::coerce_vec(scalar, STRSXP));
+      SEXP out = STRING_ELT(str, 0);
+      YIELD(2);
+      return out;
+    }
   }
 }
 
@@ -641,12 +649,13 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   return out;
 }
 
-inline SEXP r_length_sym = r_null;
-
 // Can't use `Rf_namesgets(x, r_null)`
 // as it adds empty names instead of NULL
 
 namespace internal {
+
+inline SEXP r_length_sym = r_null;
+
 inline void set_r_names(SEXP x, SEXP names){
   vec::is_null(names) ? vec::set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
 }
@@ -734,10 +743,10 @@ inline void set_val(SEXP x, const R_xlen_t i, Rbyte val, Rbyte* p_x = nullptr){
   }
 }
 inline void set_val(SEXP x, const R_xlen_t i, const char* val, const SEXP* p_x = nullptr){
-  SET_STRING_ELT(x, i, make_utf8_char(val));
+  SET_STRING_ELT(x, i, internal::make_utf8_charsxp(val));
 }
 inline void set_val(SEXP x, const R_xlen_t i, std::string val, const SEXP* p_x = nullptr){
-  SET_STRING_ELT(x, i, make_utf8_char(val.c_str()));
+  SET_STRING_ELT(x, i, internal::make_utf8_charsxp(val.c_str()));
 }
 inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_string val, const SEXP* p_x = nullptr){
   SET_STRING_ELT(x, i, val);
@@ -781,7 +790,7 @@ inline SEXP make_list(Args... args) {
     (([&]() {
       if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
         SET_VECTOR_ELT(out, i, args.value);
-        SET_STRING_ELT(nms, i, make_utf8_char(args.name));
+        SET_STRING_ELT(nms, i, internal::make_utf8_charsxp(args.name));
       } else {
         SET_VECTOR_ELT(out, i, as_vec(args));
       }
@@ -808,7 +817,7 @@ inline SEXP make_pairlist(Args... args) {
     (([&]() {
       if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
         SETCAR(current, args.value);
-        SET_TAG(current, install_utf8(args.name));
+        SET_TAG(current, internal::make_symbol(args.name));
       } else {
         SETCAR(current, as_vec(args));
       }
@@ -853,37 +862,34 @@ inline R_xlen_t length(SEXP x){
       }
       return out;
     } else {
-      if (vec::is_null(r_length_sym)){
-        SHIELD(r_length_sym = install_utf8("length"));
+      int32_t NP;
+      if (vec::is_null(internal::r_length_sym)){
+        SHIELD(internal::r_length_sym = internal::make_symbol("length"));
+        NP = 3;
       } else {
-        SHIELD(r_length_sym);
+        NP = 2;
       }
-      SEXP expr = SHIELD(Rf_lang2(r_length_sym, x));
+      SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
       SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
       R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
-      YIELD(3);
+      YIELD(NP);
       return out;
     }
     // Catch-all
   } else {
-    if (vec::is_null(r_length_sym)){
-      SHIELD(r_length_sym = install_utf8("length"));
+    int32_t NP = 0;
+    if (vec::is_null(internal::r_length_sym)){
+      SHIELD(internal::r_length_sym = internal::make_symbol("length"));
+      NP = 3;
     } else {
-      SHIELD(r_length_sym);
+      NP = 2;
     }
-    SEXP expr = SHIELD(Rf_lang2(r_length_sym, x));
+    SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
     SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
     R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
-    YIELD(3);
+    YIELD(NP);
     return out;
   }
-}
-
-// Memory address of R obj
-inline SEXP address(SEXP x) {
-  char buf[1000];
-  snprintf(buf, 1000, "%p", static_cast<void*>(x));
-  return make_utf8_char(buf);
 }
 
 inline SEXP deep_copy(SEXP x){
@@ -968,7 +974,7 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
       }
     }
     if (!na_rm_ && any_na){
-      out = r_na;
+      out = na::logical;
     }
     break;
   }
