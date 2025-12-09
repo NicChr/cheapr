@@ -8,14 +8,14 @@ static SEXP CHEAPR_COMPACT_REALSEQ = r_null;
 static SEXP CHEAPR_BASE = r_null;
 
 SEXP alt_class(SEXP x){
-  if (is_altrep(x)){
+  if (altrep::is_altrep(x)){
     return CAR(ATTRIB(ALTREP_CLASS(x)));
   } else {
     return r_null;
   }
 }
 SEXP alt_pkg(SEXP x){
-  if (is_altrep(x)){
+  if (altrep::is_altrep(x)){
     return CADR(ATTRIB(ALTREP_CLASS(x)));
   } else {
     return r_null;
@@ -23,7 +23,7 @@ SEXP alt_pkg(SEXP x){
 }
 
 SEXP alt_data1(SEXP x){
-  if (is_altrep(x)){
+  if (altrep::is_altrep(x)){
     return R_altrep_data1(x);
   } else {
     return r_null;
@@ -31,7 +31,7 @@ SEXP alt_data1(SEXP x){
 }
 
 bool is_compact_seq(SEXP x){
-  if (!is_altrep(x)) return false;
+  if (!altrep::is_altrep(x)) return false;
   SEXP alt_class_sym = alt_class(x);
   SEXP alt_pkg_sym = alt_pkg(x);
 
@@ -65,5 +65,5 @@ SEXP compact_seq_data(SEXP x){
 }
 
 SEXP altrep_materialise(SEXP x) {
-  return is_altrep(x) ? cpp_semi_copy(x) : x;
+  return altrep::is_altrep(x) ? cpp_semi_copy(x) : x;
 }

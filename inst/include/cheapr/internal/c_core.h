@@ -1,5 +1,5 @@
-#ifndef CHEAPR_CORE_H
-#define CHEAPR_CORE_H
+#ifndef CHEAPR_C_CORE_H
+#define CHEAPR_C_CORE_H
 
 // cheapr Core definitions and templates
 // Author: Nick Christofides
@@ -70,9 +70,9 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 }
 
 namespace limits {
-inline constexpr int r_int_min = std::numeric_limits<int>::min() + 1;
+inline constexpr int r_int_min = -std::numeric_limits<int>::max();
 inline constexpr int r_int_max = std::numeric_limits<int>::max();
-inline constexpr int64_t r_int64_min = std::numeric_limits<int64_t>::min() + 1;
+inline constexpr int64_t r_int64_min = -std::numeric_limits<int64_t>::max();
 inline constexpr int64_t r_int64_max = std::numeric_limits<int64_t>::max();
 inline constexpr double r_pos_inf = std::numeric_limits<double>::infinity();
 inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
@@ -142,13 +142,13 @@ inline SEXP make_utf8_strsxp(const char *x){
   return Rf_ScalarString(make_utf8_charsxp(x));
 }
 
-inline SEXP make_symbol(const char *x){
-  return Rf_installChar(make_utf8_charsxp(x));
-}
-
 inline const char* char_as_utf8(const char *x){
   return CHAR(make_utf8_charsxp(x));
 }
+}
+
+inline SEXP make_symbol(const char *x){
+  return Rf_installChar(internal::make_utf8_charsxp(x));
 }
 
 // Memory address
@@ -176,17 +176,69 @@ inline constexpr void recycle_index(T& v, const T size) {
   v = (++v == size) ? static_cast<T>(0) : v;
 }
 
+namespace altrep {
+inline bool is_altrep(SEXP x){
+  return ALTREP(x);
+}
+}
+
 namespace vec {
+
 inline bool is_null(SEXP x){
   return x == r_null;
 }
 
-inline bool is_altrep(SEXP x){
-  return ALTREP(x);
-}
-
 inline bool is_object(SEXP x){
   return Rf_isObject(x);
+}
+
+inline bool is_atomic(SEXP x){
+  return Rf_isVectorAtomic(x);
+}
+
+inline bool is_vec(SEXP x){
+  return Rf_isVector(x);
+}
+
+inline bool is_bare(SEXP x){
+  return Rf_length(ATTRIB(x)) == 0;
+}
+
+inline bool is_logical(SEXP x){
+  return TYPEOF(x) == LGLSXP;
+}
+inline bool is_integer(SEXP x){
+  return TYPEOF(x) == INTSXP;
+}
+inline bool is_integer64(SEXP x){
+  return internal::inherits1(x, "integer64");
+}
+inline bool is_double(SEXP x){
+  return TYPEOF(x) == REALSXP;
+}
+inline bool is_character(SEXP x){
+  return TYPEOF(x) == STRSXP;
+}
+inline bool is_list(SEXP x){
+  return TYPEOF(x) == VECSXP;
+}
+inline bool is_complex(SEXP x){
+  return TYPEOF(x) == CPLXSXP;
+}
+inline bool is_raw(SEXP x){
+  return TYPEOF(x) == RAWSXP;
+}
+inline bool is_date(SEXP x){
+  return internal::inherits1(x, "Date");
+}
+inline bool is_datetime(SEXP x){
+  return internal::inherits1(x, "POSIXt");
+}
+inline bool is_factor(SEXP x){
+  return is_integer(x) && internal::inherits1(x, "factor");
+}
+inline bool is_df(SEXP x){
+  return internal::inherits1(x, "data.frame");
 }
 
 inline SEXP get_attrib(SEXP x, SEXP which){
@@ -310,8 +362,32 @@ inline SEXP new_list(R_xlen_t n, std::optional<SEXP> default_value = std::nullop
 }
 
 namespace df {
+
+inline bool is_df(SEXP x){
+  return vec::is_df(x);
+}
+
 inline int nrow(SEXP x){
   return Rf_length(vec::get_attrib(x, R_RowNamesSymbol));
+}
+inline int ncol(SEXP x){
+  return Rf_length(x);
+}
+inline SEXP new_row_names(int n){
+  if (n > 0){
+    SEXP out = SHIELD(vec::new_integer(2));
+    SET_INTEGER_ELT(out, 0, na::integer);
+    SET_INTEGER_ELT(out, 1, -n);
+    YIELD(1);
+    return out;
+  } else {
+    return vec::new_integer(0);
+  }
+}
+inline void set_row_names(SEXP x, int n){
+  SEXP row_names = SHIELD(new_row_names(n));
+  vec::set_attrib(x, R_RowNamesSymbol, row_names);
+  YIELD(1);
 }
 }
 
@@ -686,6 +762,7 @@ inline SEXP eval(SEXP expr, SEXP env){
   return Rf_eval(expr, env);
 }
 
+namespace fn {
 // Return R function from a specified package
 inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
 
@@ -699,6 +776,7 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   SEXP out = SHIELD(eval(expr, env::base_env));
   YIELD(2);
   return out;
+}
 }
 
 // Can't use `Rf_namesgets(x, r_null)`
@@ -822,10 +900,10 @@ template<typename... Args>
 inline SEXP make_list(Args... args) {
   constexpr int n = sizeof...(args);
 
-  if (n == 0){
-    return internal::new_vec(VECSXP, 0);
+  if constexpr (n == 0){
+    return new_list(0);
   } else {
-    SEXP out = SHIELD(internal::new_vec(VECSXP, n));
+    SEXP out = SHIELD(new_list(n));
 
     // Are any args named?
     constexpr bool any_named = (std::is_same_v<std::decay_t<Args>, arg> || ...);
@@ -859,7 +937,7 @@ template<typename... Args>
 inline SEXP make_pairlist(Args... args) {
   constexpr int n = sizeof...(args);
 
-  if (n == 0){
+  if constexpr (n == 0){
     return Rf_allocList(0);
   } else {
     SEXP out = SHIELD(Rf_allocList(n));
@@ -869,7 +947,7 @@ inline SEXP make_pairlist(Args... args) {
     (([&]() {
       if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
         SETCAR(current, args.value);
-        SET_TAG(current, internal::make_symbol(args.name));
+        SET_TAG(current, make_symbol(args.name));
       } else {
         SETCAR(current, as_vec(args));
       }
@@ -883,8 +961,9 @@ inline SEXP make_pairlist(Args... args) {
 
 }
 
+namespace fn {
 template<typename... Args>
-inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
+inline SEXP eval_fn(SEXP r_fn, SEXP envir, Args... args){
   // Expression
   SEXP call = SHIELD(Rf_lcons(r_fn, vec::make_pairlist(args...)));
   // Evaluate expression
@@ -893,12 +972,13 @@ inline SEXP eval_fun(SEXP r_fn, SEXP envir, Args... args){
   YIELD(2);
   return out;
 }
+}
 
 
 namespace vec {
 
 inline R_xlen_t length(SEXP x){
-  if (!vec::is_object(x) || Rf_isVectorAtomic(x)){
+  if (!vec::is_object(x) || vec::is_atomic(x)){
     return Rf_xlength(x);
   } else if (internal::inherits1(x, "data.frame")){
     return df::nrow(x);
@@ -916,7 +996,7 @@ inline R_xlen_t length(SEXP x){
     } else {
       int32_t NP;
       if (vec::is_null(internal::r_length_sym)){
-        SHIELD(internal::r_length_sym = internal::make_symbol("length"));
+        SHIELD(internal::r_length_sym = make_symbol("length"));
         NP = 3;
       } else {
         NP = 2;
@@ -931,7 +1011,7 @@ inline R_xlen_t length(SEXP x){
   } else {
     int32_t NP = 0;
     if (vec::is_null(internal::r_length_sym)){
-      SHIELD(internal::r_length_sym = internal::make_symbol("length"));
+      SHIELD(internal::r_length_sym = make_symbol("length"));
       NP = 3;
     } else {
       NP = 2;
@@ -992,8 +1072,8 @@ inline SEXP compact_seq_len(R_xlen_t n){
   if (n == 0){
     return internal::new_vec(INTSXP, 0);
   }
-  SEXP colon_fn = SHIELD(find_pkg_fun(":", "base", env::base_env));
-  SEXP out = SHIELD(eval_fun(colon_fn, env::base_env, 1, n));
+  SEXP colon_fn = SHIELD(fn::find_pkg_fun(":", "base", env::base_env));
+  SEXP out = SHIELD(fn::eval_fn(colon_fn, env::base_env, 1, n));
   YIELD(2);
   return out;
 }
@@ -1036,6 +1116,16 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
   }
   }
   return out;
+}
+}
+
+namespace attr {
+inline void clear_attrs(SEXP x){
+  SEXP current = ATTRIB(x);
+  while (!vec::is_null(current)){
+    vec::set_attrib(x, TAG(current), r_null);
+    current = CDR(current);
+  }
 }
 }
 

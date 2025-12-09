@@ -4,7 +4,7 @@
 // Author: Nick Christofides
 
 void check_atomic(SEXP x){
-  if (!Rf_isVectorAtomic(x)){
+  if (!vec::is_atomic(x)){
     Rf_error("'cheapr' scalar functions can only accept atomic vectors");
   }
 }
@@ -397,7 +397,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     case VECSXP: {
       if (recursive){
       SHIELD(out = vec::shallow_copy(out)); ++NP;
-      clear_attributes(out);
+      attr::clear_attrs(out);
       for (R_xlen_t i = 0; i < n; ++i){
         SET_VECTOR_ELT(out, i, cpp_val_remove(VECTOR_ELT(out, i), value, true));
       }

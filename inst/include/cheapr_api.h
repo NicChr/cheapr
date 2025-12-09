@@ -1,8 +1,16 @@
 #ifndef CHEAPR_API_H
 #define CHEAPR_API_H
 
+#if defined(CHEAPR_API_SELECTED)
+#if CHEAPR_API_SELECTED != 3
+#error "Only one cheapr API header may be included"
+#endif
+#else
+#define CHEAPR_API_SELECTED 3 // Legacy API
+#endif
+
 // Core constants and small functions
-#include <core.h>
+#include <cheapr/internal/core.h>
 // R tools for exporting C fns
 #include <R_ext/Rdynload.h>
 
@@ -17,6 +25,7 @@ using internal::INTEGER64_PTR;
 using internal::INTEGER64_PTR_RO;
 using internal::new_vec;
 using vec::coerce_vec;
+using fn::find_pkg_fun;
 inline int df_nrow(SEXP x){
   return df::nrow(x);
 }
@@ -342,24 +351,6 @@ loc_set_replace(SEXP x, SEXP where, SEXP what){
   typedef SEXP fn_t(SEXP, SEXP, SEXP);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_loc_set_replace");
   return fn(x, where, what);
-}
-
-// R vector constructor from C++ types and SEXP
-// This is also defined in variadic.h but difficult to export with one definition
-template<typename... Args>
-SEXP make_vec(Args... args) {
-  SEXP out = SHIELD(cheapr::vec::make_list(args...));
-  SHIELD(out = cheapr::c(out));
-  YIELD(2);
-  return out;
-}
-
-template<typename... Args>
-SEXP make_df(Args... args) {
-  SEXP out = SHIELD(cheapr::vec::make_list(args...));
-  SHIELD(out = new_df(out, r_null, true, true));
-  YIELD(2);
-  return out;
 }
 
 template<typename... Args>

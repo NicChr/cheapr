@@ -1,7 +1,7 @@
 #ifndef CHEAPR_H
 #define CHEAPR_H
 
-#include <core.h>
+#include <cheapr/internal/c_core.h>
 #include "internal_helpers.h"
 #include "types.h"
 #include "declarations.h"

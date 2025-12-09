@@ -56,7 +56,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
         fi = (++fi == from_n) ? 0 : fi,
         ++i){
         seq_size = p_size[i];
-        R_Reprotect(curr_seq = internal::new_vec(INTSXP, seq_size), curr_seq_idx);
+        R_Reprotect(curr_seq = vec::new_integer(seq_size), curr_seq_idx);
         int* RESTRICT p_curr_seq = INTEGER(curr_seq);
         start = p_from[fi];
         increment = p_by[bi];
@@ -82,7 +82,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
   } else {
 
     R_xlen_t index = 0;
-    out = SHIELD(internal::new_vec(INTSXP, out_size)); ++NP;
+    out = SHIELD(vec::new_integer(out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
 
     if (size_n > 0){
@@ -347,7 +347,7 @@ SEXP cpp_window_sequence(SEXP size,
   }
   k = std::fmax(k, 0);
   R_xlen_t N = cpp_sum(size_sexp);
-  SEXP out = SHIELD(internal::new_vec(INTSXP, N));
+  SEXP out = SHIELD(vec::new_integer(N));
   int *p_out = INTEGER(out);
   int *p_size = INTEGER(size_sexp);
   R_xlen_t index = 0;
@@ -419,7 +419,7 @@ SEXP cpp_lag_sequence(SEXP size, double k, bool partial = false) {
   }
   int size_n = Rf_length(size);
   k = std::fmax(k, 0);
-  SEXP out = SHIELD(internal::new_vec(INTSXP, cpp_sum(size)));
+  SEXP out = SHIELD(vec::new_integer(cpp_sum(size)));
   int *p_out = INTEGER(out);
   int *p_size = INTEGER(size);
   R_xlen_t index = 0;
@@ -459,7 +459,7 @@ SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
   }
   int size_n = Rf_length(size);
   k = std::fmax(k, 0);
-  SEXP out = SHIELD(internal::new_vec(INTSXP, cpp_sum(size)));
+  SEXP out = SHIELD(vec::new_integer(cpp_sum(size)));
   int *p_out = INTEGER(out);
   int *p_size = INTEGER(size);
   R_xlen_t index = 0;
@@ -502,7 +502,7 @@ SEXP cpp_seq_len(R_xlen_t n){
     YIELD(1);
     return out;
   } else {
-    SEXP out = SHIELD(internal::new_vec(INTSXP, n));
+    SEXP out = SHIELD(vec::new_integer(n));
     int* RESTRICT p_out = INTEGER(out);
     OMP_FOR_SIMD
     for (int i = 0; i < n; ++i) p_out[i] = i + 1;

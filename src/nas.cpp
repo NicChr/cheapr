@@ -342,7 +342,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
   int32_t NP = 0;
   int num_col = Rf_length(x);
   int num_row = df::nrow(x);
-  SEXP out = SHIELD(internal::new_vec(INTSXP, num_row)); ++NP;
+  SEXP out = SHIELD(vec::new_integer(num_row)); ++NP;
   int* RESTRICT p_out = INTEGER(out);
   std::fill(p_out, p_out + num_row, 0);
   for (int j = 0; j < num_col; ++j){
@@ -434,7 +434,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   int num_col = Rf_length(x);
   int32_t NP = 0;
   int num_row = df::nrow(x);
-  SEXP out = SHIELD(internal::new_vec(INTSXP, num_col)); ++NP;
+  SEXP out = SHIELD(vec::new_integer(num_col)); ++NP;
   int *p_out = INTEGER(out);
   std::fill(p_out, p_out + num_col, 0);
   for (int j = 0; j < num_col; ++j){
@@ -620,7 +620,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
   R_xlen_t num_row = Rf_nrows(x);
   R_xlen_t num_col = Rf_ncols(x);
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = SHIELD(internal::new_vec(INTSXP, num_row));
+  SEXP out = SHIELD(vec::new_integer(num_row));
   int *p_out = INTEGER(out);
   std::fill(p_out, p_out + num_row, 0);
   if (num_row > 0 && num_col > 0){
@@ -687,7 +687,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   R_xlen_t num_col = Rf_ncols(x);
   R_xlen_t n = Rf_xlength(x);
   bool new_col;
-  SEXP out = SHIELD(internal::new_vec(INTSXP, num_col));
+  SEXP out = SHIELD(vec::new_integer(num_col));
   int *p_out = INTEGER(out);
   std::fill(p_out, p_out + num_col, 0);
   if (num_row > 0 && num_col > 0){

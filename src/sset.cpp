@@ -136,7 +136,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       }
     }
     out_size = n - exclude_count;
-    SEXP out = SHIELD(internal::new_vec(INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_integer(out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     while(k != out_size){
       if (keep[i++] == 1){
@@ -339,7 +339,7 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
   int32_t NP = 0;
 
   if (is_null(locs)){
-    SHIELD(locs = internal::new_vec(INTSXP, 0)); ++NP;
+    SHIELD(locs = vec::new_integer(0)); ++NP;
   }
 
   R_xlen_t n = Rf_xlength(locs);
@@ -405,7 +405,7 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
   }
   if (zero_count > 0 || oob_count > 0 || na_count > 0){
     int out_size = pos_count - oob_count;
-    SEXP out = SHIELD(internal::new_vec(INTSXP, out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_integer(out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
 
     int k = 0;
@@ -1382,7 +1382,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
 
   // Make a plain data frame
-  set_attrib(out, R_RowNamesSymbol, new_row_names(n_rows));
+  set_attrib(out, R_RowNamesSymbol, df::new_row_names(n_rows));
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   set_class(out, df_cls);
   set_r_names(out, out_names);
@@ -1426,7 +1426,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   set_r_names(out, names);
 
   // list to data frame object
-  set_attrib(out, R_RowNamesSymbol, new_row_names(out_size));
+  set_attrib(out, R_RowNamesSymbol, df::new_row_names(out_size));
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   set_class(out, df_cls);
   YIELD(NP);
@@ -1513,7 +1513,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 
         // Combine all args into one list
         SEXP all_args = SHIELD(make_vec(usual_args, args)); ++NP;
-        SEXP cheapr_sset_fn = SHIELD(find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
+        SEXP cheapr_sset_fn = SHIELD(fn::find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
         SHIELD(out = eval_pkg_fun("do.call", "base", R_GetCurrentEnv(), cheapr_sset_fn, all_args)); ++NP;
       }
     }
@@ -1530,7 +1530,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
 
       // Combine all args into one list
       SEXP all_args = SHIELD(make_vec(usual_args, args)); ++NP;
-      SEXP cheapr_sset_fn = SHIELD(find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
+      SEXP cheapr_sset_fn = SHIELD(fn::find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
       SHIELD(out = eval_pkg_fun("do.call", "base", R_GetCurrentEnv(), cheapr_sset_fn, all_args)); ++NP;
     }
   }

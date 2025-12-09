@@ -137,7 +137,7 @@ SEXP cpp_semi_copy(SEXP x){
     // So I don't use it for non-ALTREP atomic vectors
 
     SEXP out = SHIELD(vec::shallow_copy(x));
-    clear_attributes(out);
+    attr::clear_attrs(out);
     SHIELD(out = vec::deep_copy(out));
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     YIELD(2);
@@ -365,7 +365,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   switch(TYPEOF(x)){
   case INTSXP: {
     if (codes){
-    SEXP out = SHIELD(internal::new_vec(INTSXP, n));
+    SEXP out = SHIELD(vec::new_integer(n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
     const int *p_x = INTEGER(x);
     const double *p_b = REAL(breaks);
@@ -386,7 +386,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   }
   default: {
     if (codes){
-    SEXP out = SHIELD(internal::new_vec(INTSXP, n));
+    SEXP out = SHIELD(vec::new_integer(n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
     const double *p_x = REAL(x);
     const double *p_b = REAL(breaks);
@@ -541,14 +541,6 @@ SEXP cpp_growth_rate(SEXP x){
   return as_vec(growth_rate(a, b, n));
 }
 
-SEXP new_row_names(int n){
-  if (n > 0){
-    return make_vec(na::integer, -n);
-  } else {
-    return internal::new_vec(INTSXP, 0);
-  }
-}
-
 [[cpp11::register]]
 SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   int32_t NP = 0;
@@ -628,7 +620,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
   SEXP source_attrs = ATTRIB(source);
 
   // Start from clean slate - no attributes
-  clear_attributes(target);
+  attr::clear_attrs(target);
 
   SEXP tag = r_null;
   SEXP current = r_null;
@@ -681,7 +673,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   }
   R_xlen_t n = Rf_xlength(x);
 
-  SEXP out = SHIELD(internal::new_vec(INTSXP, n_bins));
+  SEXP out = SHIELD(vec::new_integer(n_bins));
   const int *p_x = INTEGER_RO(x);
   int* RESTRICT p_out = INTEGER(out);
 
@@ -719,7 +711,7 @@ SEXP match(SEXP y, SEXP x, int no_match){
 }
 
 SEXP get_vec_names(SEXP x){
-  if (Rf_isVectorAtomic(x)){
+  if (vec::is_atomic(x)){
     return get_r_names(x);
   } else {
     switch(get_r_type(x)){
@@ -738,31 +730,29 @@ SEXP get_vec_names(SEXP x){
   }
 }
 
-SEXP set_vec_names(SEXP x, SEXP names){
+void set_vec_names(SEXP x, SEXP names){
   if (is_null(names)){
-    return x;
-  } else if (Rf_isVectorAtomic(x)){
-    SEXP out = SHIELD(vec::shallow_copy(x));
-    Rf_namesgets(out, names);
-    YIELD(1);
-    return out;
+    return;
+  } else if (vec::is_atomic(x)){
+    internal::set_r_names(x, names);
+    return;
   } else {
     switch(get_r_type(x)){
     case R_null:
     case R_df: {
-      return x;
+      return;
     }
     case R_list: {
-      SEXP out = SHIELD(vec::shallow_copy(x));
-      Rf_namesgets(out, names);
+      internal::set_r_names(x, names);
+      return;
+    }
+    default: {
+      SEXP vec_with_names = SHIELD(eval_pkg_fun("names<-", "base", R_GetCurrentEnv(), x, names));
+      cpp_set_add_attributes(x, ATTRIB(vec_with_names), false);
       YIELD(1);
-      return out;
-    }
-    case R_unk: {
-      return eval_pkg_fun("names<-", "base", R_GetCurrentEnv(), x, names);
+      return;
     }
     }
-    return r_null;
   }
 }
 
@@ -798,3 +788,11 @@ SEXP cheapr_do_memory_leak_test(){
 //   Rf_error("%s", "Expected error! This will cause a C++ memory leak");
 //   return r_ints; // Never reached
 // }
+
+template<typename... Args>
+SEXP make_df(Args... args) {
+  SEXP out = SHIELD(cheapr::vec::make_list(args...));
+  SHIELD(out = cpp_new_df(out, r_null, true, true));
+  YIELD(2);
+  return out;
+}

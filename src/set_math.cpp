@@ -14,7 +14,7 @@ void copy_warning(){
 }
 
 SEXP check_transform_altrep(SEXP x){
-  if (is_altrep(x)){
+  if (altrep::is_altrep(x)){
     Rf_warning("Cannot update an ALTREP by reference, a copy has been made. \n\tEnsure the result is assigned to an object if used in further calculations\n\te.g. `x <- set_abs(x)`");
     return altrep_materialise(x);
   } else {
@@ -624,7 +624,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
 SEXP cpp_int_sign(SEXP x){
   check_numeric(x);
   uint_fast64_t n = Rf_xlength(x);
-  SEXP out = SHIELD(internal::new_vec(INTSXP, n));
+  SEXP out = SHIELD(vec::new_integer(n));
   int* RESTRICT p_out = INTEGER(out);
   switch (TYPEOF(x)){
   case LGLSXP: {

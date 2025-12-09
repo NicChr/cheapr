@@ -29,15 +29,6 @@ SEXP cpp_set_rm_attributes(SEXP x){
   return x;
 }
 
-// Same as above but no return
-void clear_attributes(SEXP x){
-  SEXP current = ATTRIB(x);
-  while (!is_null(current)){
-    set_attrib(x, TAG(current), r_null);
-    current = CDR(current);
-  }
-}
-
 // Add attribute onto existing attributes
 
 [[cpp11::register]]
@@ -69,7 +60,7 @@ SEXP cpp_set_rm_attr(SEXP x, SEXP which){
 [[cpp11::register]]
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
-  if (!add) clear_attributes(x);
+  if (!add) attr::clear_attrs(x);
 
   int32_t NP = 0;
 

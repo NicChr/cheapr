@@ -38,7 +38,7 @@ SEXP cpp_unnested_length(SEXP x){
 [[cpp11::register]]
 SEXP cpp_lengths(SEXP x, bool names){
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = SHIELD(internal::new_vec(INTSXP, n));
+  SEXP out = SHIELD(vec::new_integer(n));
   int* RESTRICT p_out = INTEGER(out);
   if (TYPEOF(x) != VECSXP){
     for (R_xlen_t i = 0; i < n; ++i) {
@@ -134,7 +134,7 @@ SEXP which_not_null(SEXP x){
 
   // Which list elements should we keep?
 
-  SEXP keep = SHIELD(internal::new_vec(INTSXP, n_keep));
+  SEXP keep = SHIELD(vec::new_integer(n_keep));
   int* RESTRICT p_keep = INTEGER(keep);
   while (whichj < n_keep){
     p_keep[whichj] = j + 1;
@@ -196,7 +196,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 
   // If values is an unnamed list then we can simply append the values
   if (empty_value_names){
-    add_locs = SHIELD(internal::new_vec(INTSXP, 0)); ++NP;
+    add_locs = SHIELD(vec::new_integer(0)); ++NP;
     SHIELD(add_locs = cpp_rep_len(add_locs, n_cols)); ++NP;
     n_cols_to_add = n_cols;
   } else {
@@ -231,7 +231,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     }
   }
 
-  SEXP null_locs = SHIELD(internal::new_vec(INTSXP, null_count)); ++NP;
+  SEXP null_locs = SHIELD(vec::new_integer(null_count)); ++NP;
   int *p_null_locs = INTEGER(null_locs);
   int nulli = 0;
 
@@ -277,7 +277,7 @@ SEXP maybe_cast_array(SEXP x){
   } else {
     Rprintf("cheapr pkg cannot handle arrays. Array will be converted to a vector\n");
     SEXP out = SHIELD(vec::shallow_copy(x));
-    clear_attributes(out);
+    attr::clear_attrs(out);
     YIELD(1);
     return out;
   }
@@ -300,7 +300,7 @@ void set_list_as_df(SEXP x) {
   }
 
   SEXP df_str = SHIELD(as_vec("data.frame")); ++NP;
-  SEXP row_names = SHIELD(new_row_names(N)); ++NP;
+  SEXP row_names = SHIELD(df::new_row_names(N)); ++NP;
 
   // If no names then add names
   SEXP names = SHIELD(get_r_names(x)); ++NP;
@@ -339,12 +339,12 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
 
   if (is_null(nrows)){
     if (Rf_length(out) == 0){
-      row_names = SHIELD(internal::new_vec(INTSXP, 0)); ++NP;
+      row_names = SHIELD(vec::new_integer(0)); ++NP;
     } else {
-      row_names = SHIELD(new_row_names(vec::length(VECTOR_ELT(out, 0)))); ++NP;
+      row_names = SHIELD(df::new_row_names(vec::length(VECTOR_ELT(out, 0)))); ++NP;
     }
   } else {
-    row_names = SHIELD(new_row_names(Rf_asInteger(nrows))); ++NP;
+    row_names = SHIELD(df::new_row_names(Rf_asInteger(nrows))); ++NP;
   }
 
   SEXP out_names = SHIELD(get_r_names(out)); ++NP;
@@ -439,7 +439,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
     SHIELD(out_names = sset_vec(out_names, keep, false)); ++NP;
   }
   set_r_names(out, out_names);
-  set_attrib(out, R_RowNamesSymbol, new_row_names(n_rows));
+  set_attrib(out, R_RowNamesSymbol, df::new_row_names(n_rows));
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   set_class(out, df_cls);
   SHIELD(out = rebuild(out, x, false)); ++NP;

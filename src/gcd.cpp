@@ -143,7 +143,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   case INTSXP: {
     const int *p_x = INTEGER(x);
 
-    out = SHIELD(internal::new_vec(INTSXP, (n == 0) ? 0 : 1));
+    out = SHIELD(vec::new_integer((n == 0) ? 0 : 1));
 
     if (n > 0){
       int gcd = p_x[0];
@@ -235,7 +235,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       }
       return as_vec(lcm);
     } else {
-      return internal::new_vec(INTSXP, (n == 0) ? 0 : 1);
+      return vec::new_integer((n == 0) ? 0 : 1);
     }
   }
   case CHEAPR_INT64SXP: {
@@ -253,7 +253,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       }
       return as_vec(lcm);
     } else {
-      return internal::new_vec(INTSXP, (n == 0) ? 0 : 1);
+      return vec::new_integer((n == 0) ? 0 : 1);
     }
   }
   default: {
@@ -304,7 +304,7 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   case INTSXP: {
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
-    SEXP out = SHIELD(internal::new_vec(INTSXP, n)); ++NP;
+    SEXP out = SHIELD(vec::new_integer(n)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);
@@ -363,7 +363,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     double int_max = limits::r_int_max;
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
-    SEXP out = SHIELD(internal::new_vec(INTSXP, n)); ++NP;
+    SEXP out = SHIELD(vec::new_integer(n)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     const int *p_x = INTEGER(x);
     const int *p_y = INTEGER(y);

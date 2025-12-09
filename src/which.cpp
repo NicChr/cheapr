@@ -66,7 +66,7 @@ SEXP cpp_which_(SEXP x, bool invert){
     } else {
       int size = count_true(p_x, n);
       int out_size = n - size;
-      SEXP out = SHIELD(internal::new_vec(INTSXP, out_size));
+      SEXP out = SHIELD(vec::new_integer(out_size));
       int* RESTRICT p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
@@ -86,7 +86,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       return out;
     } else {
       int out_size = count_true(p_x, n);
-      SEXP out = SHIELD(internal::new_vec(INTSXP, out_size));
+      SEXP out = SHIELD(vec::new_integer(out_size));
       int* RESTRICT p_out = INTEGER(out);
       int whichi = 0;
       int i = 0;
@@ -312,9 +312,9 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
     YIELD(4);
     return out;
   } else {
-    SEXP true_locs = SHIELD(internal::new_vec(INTSXP, include_true ? n_true : 0));
-    SEXP false_locs = SHIELD(internal::new_vec(INTSXP, include_false ? n_false : 0));
-    SEXP na_locs = SHIELD(internal::new_vec(INTSXP, include_na ? (n - n_true - n_false) : 0));
+    SEXP true_locs = SHIELD(vec::new_integer(include_true ? n_true : 0));
+    SEXP false_locs = SHIELD(vec::new_integer(include_false ? n_false : 0));
+    SEXP na_locs = SHIELD(vec::new_integer(include_na ? (n - n_true - n_false) : 0));
 
     int* RESTRICT p_true = INTEGER(true_locs);
     int* RESTRICT p_false = INTEGER(false_locs);

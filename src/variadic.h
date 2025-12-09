@@ -1,7 +1,7 @@
 #ifndef CHEAPR_VARIADIC_H
 #define CHEAPR_VARIADIC_H
 
-#include <core.h>
+#include <cheapr/internal/c_core.h>
 #include "declarations.h"
 
 namespace cheapr {

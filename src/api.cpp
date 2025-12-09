@@ -1,4 +1,4 @@
-#include <core.h>
+#include <cheapr/internal/c_core.h>
 #include "internal_helpers.h"
 #include "declarations.h"
 #include <R_ext/Rdynload.h> // For DllInfo on R 3.3
@@ -243,15 +243,6 @@ api_get_ptype(SEXP x){
 // Data frame functions
 
 SEXP
-api_new_row_names(int n) {
-  try {
-    return new_row_names(n);
-  } catch (...) {
-    return cheapr::r_null;
-  }
-}
-
-SEXP
 api_list_as_df(SEXP x){
   try {
     return cpp_list_as_df(x);
@@ -342,9 +333,9 @@ api_semi_copy(SEXP x){
 }
 
 SEXP
-api_paste(SEXP x, SEXP sep, SEXP collapse){
+api_paste(SEXP list_of_chars, SEXP sep, SEXP collapse){
   try {
-    return cpp_paste(x, sep, collapse);
+    return cpp_paste(list_of_chars, sep, collapse);
   } catch (...) {
     return cheapr::r_null;
   }
@@ -385,6 +376,23 @@ api_clean_indices(SEXP locs, SEXP x){
   }
 }
 
+SEXP
+api_get_names(SEXP x){
+  try {
+    return get_vec_names(x);
+  } catch (...) {
+    return cheapr::r_null;
+  }
+}
+
+void
+api_set_names(SEXP x, SEXP names){
+  try {
+    set_vec_names(x, names);
+  } catch (...) {
+  }
+}
+
 // Deprecated fns
 
 R_xlen_t
@@ -419,7 +427,6 @@ api_is_simple_atomic_vec(SEXP x) {
 [[cpp11::init]]
 void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_is_compact_seq",    (DL_FUNC)api_is_compact_seq);
-  R_RegisterCCallable("cheapr", "api_new_row_names",    (DL_FUNC)api_new_row_names);
   R_RegisterCCallable("cheapr", "api_set_add_attrs",    (DL_FUNC)api_set_add_attrs);
   R_RegisterCCallable("cheapr", "api_set_rm_attrs",    (DL_FUNC)api_set_rm_attrs);
   R_RegisterCCallable("cheapr", "api_exclude_locs",    (DL_FUNC)api_exclude_locs);
@@ -463,4 +470,6 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_r_address",    (DL_FUNC)api_r_address);
   R_RegisterCCallable("cheapr", "api_clean_indices",    (DL_FUNC)api_clean_indices);
   R_RegisterCCallable("cheapr", "api_is_simple_atomic_vec",    (DL_FUNC)api_is_simple_atomic_vec);
+  R_RegisterCCallable("cheapr", "api_get_names",    (DL_FUNC)api_get_names);
+  R_RegisterCCallable("cheapr", "api_set_names",    (DL_FUNC)api_set_names);
 }
