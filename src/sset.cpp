@@ -547,7 +547,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   case LGLSXP:
   case INTSXP: {
     const int *p_x = INTEGER_RO(x);
-    out = SHIELD(new_integer(out_size)); ++NP;
+    out = SHIELD(internal::new_vec(TYPEOF(x), out_size)); ++NP;
     int* RESTRICT p_out = INTEGER(out);
     if (double_loop){
       safe_memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(int));
@@ -735,7 +735,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case LGLSXP:
       case INTSXP: {
         const int* p_x = INTEGER_RO(x);
-        out = SHIELD(new_integer(n));
+        out = SHIELD(internal::new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
 
           for (int_fast64_t i = 0; i < n; ++i){
@@ -875,7 +875,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case LGLSXP:
       case INTSXP: {
         const int* p_x = INTEGER_RO(x);
-        out = SHIELD(new_integer(n));
+        out = SHIELD(new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -1022,7 +1022,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case LGLSXP:
       case INTSXP: {
         const int *p_x = INTEGER_RO(x);
-        out = SHIELD(new_integer(n));
+        out = SHIELD(internal::new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
         OMP_FOR_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
@@ -1093,7 +1093,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case LGLSXP:
       case INTSXP: {
         const int *p_x = INTEGER_RO(x);
-        out = SHIELD(new_integer(n));
+        out = SHIELD(internal::new_vec(xtype, n));
         int* RESTRICT p_out = INTEGER(out);
         OMP_FOR_SIMD
         for (int i = 0; i != n; ++i){
@@ -1382,7 +1382,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
 
   // Make a plain data frame
-  set_attrib(out, R_RowNamesSymbol, df::new_row_names(n_rows));
+  df::set_row_names(out, n_rows);
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   set_class(out, df_cls);
   set_r_names(out, out_names);
@@ -1426,7 +1426,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   set_r_names(out, names);
 
   // list to data frame object
-  set_attrib(out, R_RowNamesSymbol, df::new_row_names(out_size));
+  df::set_row_names(out, out_size);
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   set_class(out, df_cls);
   YIELD(NP);

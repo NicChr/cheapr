@@ -57,7 +57,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     SEXP names = SHIELD(get_r_names(x));
     set_r_names(out, names);
     set_list_as_df(out);
-    set_attrib(out, R_RowNamesSymbol, df::new_row_names(length));
+    df::set_row_names(out, length);
     SHIELD(out = rebuild(out, x, false));
     YIELD(3);
     return out;
@@ -73,7 +73,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     case LGLSXP:
     case INTSXP: {
       const int *p_x = INTEGER_RO(x);
-      SEXP out = SHIELD(vec::new_integer(out_size));
+      SEXP out = SHIELD(internal::new_vec(TYPEOF(x), out_size));
       int* RESTRICT p_out = INTEGER(out);
 
       if (size == 1){
@@ -249,7 +249,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
     } else if (is_df(x)){
       if (Rf_length(x) == 0){
         SEXP out = SHIELD(vec::shallow_copy(x));
-        set_attrib(out, R_RowNamesSymbol, df::new_row_names(cpp_sum(times)));
+        df::set_row_names(out, cpp_sum(times));
         SHIELD(out = rebuild(out, x, false));
         YIELD(3);
         return out;
@@ -715,7 +715,7 @@ SEXP cpp_df_c(SEXP x){
   }
 
   set_list_as_df(out);
-  set_attrib(out, R_RowNamesSymbol, df::new_row_names(out_size));
+  df::set_row_names(out, out_size);
   set_r_names(out, ptype_names);
   SHIELD(out = rebuild(out, VECTOR_ELT(frames, 0), false)); ++NP;
   YIELD(NP);

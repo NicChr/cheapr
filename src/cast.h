@@ -198,11 +198,7 @@ inline SEXP init<r_null_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_logical_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    SEXP out = SHIELD(cheapr::vec::new_logical(n));
-    int* RESTRICT p_out = INTEGER(out);
-    std::fill(p_out, p_out + n, cheapr::na::logical);
-    YIELD(1);
-    return out;
+    return cheapr::vec::new_logical(n, cheapr::na::logical);
   } else {
     return cheapr::vec::new_logical(n);
   }
@@ -212,11 +208,7 @@ inline SEXP init<r_logical_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_integer_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    SEXP out = SHIELD(cheapr::vec::new_integer(n));
-    int* RESTRICT p_out = INTEGER(out);
-    std::fill(p_out, p_out + n, cheapr::na::integer);
-    YIELD(1);
-    return out;
+    return cheapr::vec::new_integer(n, cheapr::na::integer);
   } else {
     return cheapr::vec::new_integer(n);
   }
@@ -224,38 +216,26 @@ inline SEXP init<r_integer_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_integer64_t>(R_xlen_t n, bool with_na) {
-  SEXP out = SHIELD(cheapr::vec::new_double(n));
   if (with_na){
-    int64_t* RESTRICT p_out = cheapr::internal::INTEGER64_PTR(out);
-    std::fill(p_out, p_out + n, cheapr::na::integer64);
+    return cheapr::vec::new_integer64(n, cheapr::na::integer64);
+  } else {
+    return cheapr::vec::new_integer64(n);
   }
-  SEXP int64_cls = SHIELD(cheapr::vec::as_vec("integer64"));
-  cheapr::vec::set_class(out, int64_cls);
-  YIELD(2);
-  return out;
 }
 
 template<>
 inline SEXP init<r_double_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    SEXP out = SHIELD(cheapr::vec::new_double(n));
-    double* RESTRICT p_out = REAL(out);
-    std::fill(p_out, p_out + n, cheapr::na::numeric);
-    YIELD(1);
-    return out;
+    return cheapr::vec::new_double(n, cheapr::na::numeric);
   } else {
     return cheapr::vec::new_double(n);
   }
-
 }
 
 template<>
 inline SEXP init<r_character_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    SEXP out = SHIELD(cheapr::vec::new_character(0));
-    SHIELD(out = cpp_na_init(out, n));
-    YIELD(2);
-    return out;
+    return cheapr::vec::new_character(n, cheapr::na::string);
   } else {
     return cheapr::vec::new_character(n);
   }

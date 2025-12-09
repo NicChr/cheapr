@@ -304,22 +304,22 @@ inline SEXP new_double(R_xlen_t n, std::optional<double> default_value = std::nu
     return internal::new_vec(REALSXP, n);
   }
 }
-inline SEXP new_character(R_xlen_t n, std::optional<const char *> default_value = std::nullopt){
+inline SEXP new_character(R_xlen_t n, std::optional<SEXP> default_value = std::nullopt){
   if (default_value.has_value()){
-    const char *char_val = *default_value;
-    SEXP val = SHIELD(internal::make_utf8_charsxp(char_val));
+    SEXP val = *default_value;
     SEXP out = SHIELD(internal::new_vec(STRSXP, n));
     if (val != R_BlankString){
       for (R_xlen_t i = 0; i < n; ++i){
         SET_STRING_ELT(out, i, val);
       }
     }
-    YIELD(2);
+    YIELD(1);
     return out;
   } else {
     return internal::new_vec(STRSXP, n);
   }
 }
+
 inline SEXP new_complex(R_xlen_t n, std::optional<Rcomplex> default_value = std::nullopt){
   if (default_value.has_value()){
     Rcomplex val = *default_value;

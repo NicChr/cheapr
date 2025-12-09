@@ -439,7 +439,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
     SHIELD(out_names = sset_vec(out_names, keep, false)); ++NP;
   }
   set_r_names(out, out_names);
-  set_attrib(out, R_RowNamesSymbol, df::new_row_names(n_rows));
+  df::set_row_names(out, n_rows);
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   set_class(out, df_cls);
   SHIELD(out = rebuild(out, x, false)); ++NP;
