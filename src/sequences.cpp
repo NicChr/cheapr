@@ -41,7 +41,7 @@ SEXP cpp_int_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
 
   if (as_list){
 
-    out = SHIELD(internal::new_vec(VECSXP, size_n)); ++NP;
+    out = SHIELD(new_list(size_n)); ++NP;
     SEXP curr_seq;
 
     PROTECT_INDEX curr_seq_idx;
@@ -145,7 +145,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
 
   if (as_list){
 
-    out = SHIELD(internal::new_vec(VECSXP, size_n)); ++NP;
+    out = SHIELD(new_list(size_n)); ++NP;
     SEXP curr_seq;
 
     PROTECT_INDEX curr_seq_idx;
@@ -163,7 +163,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
         ++i){
 
         seq_size = p_size[i];
-        R_Reprotect(curr_seq = internal::new_vec(REALSXP, seq_size), curr_seq_idx);
+        R_Reprotect(curr_seq = new_double(seq_size), curr_seq_idx);
         double* RESTRICT p_curr_seq = REAL(curr_seq);
         start = p_from[fi];
         increment = p_by[bi];
@@ -189,7 +189,7 @@ SEXP cpp_dbl_sequence(SEXP size, SEXP from, SEXP by, bool as_list) {
 
     R_xlen_t index = 0;
 
-    out = SHIELD(internal::new_vec(REALSXP, out_size)); ++NP;
+    out = SHIELD(new_double(out_size)); ++NP;
     double* RESTRICT p_out = REAL(out);
     if (size_n > 0){
 
@@ -495,7 +495,7 @@ SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
 
 SEXP cpp_seq_len(R_xlen_t n){
   if (n > limits::r_int_max){
-    SEXP out = SHIELD(internal::new_vec(REALSXP, n));
+    SEXP out = SHIELD(new_double(n));
     double* RESTRICT p_out = REAL(out);
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) p_out[i] = 1.0 + static_cast<double>(i);

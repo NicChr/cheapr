@@ -41,7 +41,7 @@ if (n_cores > 1){                                              \
 SEXP convert_int_to_real(SEXP x){
   int *p_x = INTEGER(x);
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = SHIELD(internal::new_vec(REALSXP, n));
+  SEXP out = SHIELD(new_double(n));
   double* RESTRICT p_out = REAL(out);
   for (int i = 0; i < n; ++i){
     p_out[i] = as_double(p_x[i]);

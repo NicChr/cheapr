@@ -111,19 +111,16 @@ SEXP cpp_numeric_to_int64(SEXP x){
   int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
 
-  SEXP out;
-  int64_t repl;
+  SEXP out = r_null;
 
   switch (CHEAPR_TYPEOF(x)){
   case INTSXP: {
     int *p_x = INTEGER(x);
-    out = SHIELD(internal::new_vec(REALSXP, n)); ++NP;
+    out = SHIELD(new_integer64(n)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
       p_out[i] = as_int64(p_x[i]);
     }
-    SEXP int64_cls = SHIELD(as_vec("integer64")); ++NP;
-    set_class(out, int64_cls);
     break;
   }
   case CHEAPR_INT64SXP: {
@@ -132,20 +129,11 @@ SEXP cpp_numeric_to_int64(SEXP x){
   }
   case REALSXP: {
     double *p_x = REAL(x);
-    out = SHIELD(internal::new_vec(REALSXP, n)); ++NP;
+    out = SHIELD(new_integer64(n)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
-    double temp;
     for (R_xlen_t i = 0; i < n; ++i){
-      temp = p_x[i];
-      if (is_r_na(temp) || temp == R_PosInf || temp == R_NegInf){
-        repl = na::integer64;
-      } else {
-        repl = temp;
-      }
-      p_out[i] = repl;
+      p_out[i] = as_int64(p_x[i]);
     }
-    SEXP int64_cls = SHIELD(as_vec("integer64")); ++NP;
-    set_class(out, int64_cls);
     break;
   }
   default: {
@@ -182,7 +170,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
   switch (CHEAPR_TYPEOF(x)){
   case INTSXP: {
     std::string s;
-    out = SHIELD(internal::new_vec(STRSXP, n));
+    out = SHIELD(new_character(n));
     int *p_x = INTEGER(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -198,7 +186,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
   }
   case CHEAPR_INT64SXP: {
     std::string s;
-    out = SHIELD(internal::new_vec(STRSXP, n));
+    out = SHIELD(new_character(n));
     int64_t *p_x = INTEGER64_PTR(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
@@ -214,7 +202,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
   }
   case REALSXP: {
     std::string s;
-    out = SHIELD(internal::new_vec(STRSXP, n));
+    out = SHIELD(new_character(n));
     double *p_x = REAL(x);
     for (R_xlen_t i = 0; i < n; ++i){
       if (is_r_na(p_x[i])){
@@ -246,7 +234,7 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
   SEXP clean_locs = SHIELD(clean_indices(locs, x, false)); ++NP;
   SHIELD(locs = VECTOR_ELT(clean_locs, 0)); ++NP;
 
-  SEXP out = SHIELD(internal::new_vec(REALSXP, Rf_xlength(locs))); ++NP;
+  SEXP out = SHIELD(new_double(Rf_xlength(locs))); ++NP;
   int64_t* RESTRICT p_out = INTEGER64_PTR(out);
 
   SEXP names = SHIELD(get_r_names(x)); ++NP;

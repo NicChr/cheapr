@@ -271,46 +271,46 @@ SEXP cpp_is_na(SEXP x){
   SEXP out;
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
-    out = SHIELD(internal::new_vec(LGLSXP, 0));
+    out = SHIELD(new_logical(0));
     break;
   }
   case LGLSXP:
   case INTSXP: {
-    out = SHIELD(internal::new_vec(LGLSXP, n));
+    out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
     const int *p_x = INTEGER(x);
     CHEAPR_IS_NA
     break;
   }
   case CHEAPR_INT64SXP: {
-    out = SHIELD(internal::new_vec(LGLSXP, n));
+    out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     CHEAPR_IS_NA
     break;
   }
   case REALSXP: {
-    out = SHIELD(internal::new_vec(LGLSXP, n));
+    out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
     const double *p_x = REAL(x);
     CHEAPR_IS_NA
     break;
   }
   case STRSXP: {
-    out = SHIELD(internal::new_vec(LGLSXP, n));
+    out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = STRING_PTR_RO(x);
     CHEAPR_IS_NA
     break;
   }
   case RAWSXP: {
-    out = SHIELD(internal::new_vec(LGLSXP, n));
+    out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
     std::fill(p_out, p_out + n, 0);
     break;
   }
   case CPLXSXP: {
-    out = SHIELD(internal::new_vec(LGLSXP, n));
+    out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
     const Rcomplex *p_x = COMPLEX(x);
     CHEAPR_IS_NA
@@ -318,7 +318,7 @@ SEXP cpp_is_na(SEXP x){
   }
   case VECSXP: {
     if (!vec::is_object(x)){
-    out = SHIELD(internal::new_vec(LGLSXP, n));
+    out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
     const SEXP *p_x = LIST_PTR_RO(x);
     CHEAPR_IS_NA
@@ -482,7 +482,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
   int num_row = df::nrow(x);
   int num_col = Rf_length(x);
 
-  SEXP out = SHIELD(internal::new_vec(LGLSXP, num_col)); ++NP;
+  SEXP out = SHIELD(new_logical(num_col)); ++NP;
   int *p_out = INTEGER(out);
 
   for (int j = 0; j < num_col; ++j){
@@ -539,7 +539,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
   int num_row = df::nrow(x);
   int num_col = Rf_length(x);
 
-  SEXP out = SHIELD(internal::new_vec(LGLSXP, num_col)); ++NP;
+  SEXP out = SHIELD(new_logical(num_col)); ++NP;
   int *p_out = INTEGER(out);
 
   for (int j = 0; j < num_col; ++j){

@@ -20,7 +20,7 @@ SEXP cpp_str_coalesce(SEXP x){
   R_xlen_t n_chars = Rf_xlength(chars);
 
   if (n_chars == 0){
-    SEXP out = SHIELD(internal::new_vec(STRSXP, 0)); ++NP;
+    SEXP out = SHIELD(new_character(0)); ++NP;
     YIELD(NP);
     return out;
   }
@@ -46,7 +46,7 @@ SEXP cpp_str_coalesce(SEXP x){
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
 
   if (n_strings == 0){
-    SEXP out = SHIELD(internal::new_vec(STRSXP, 0)); ++NP;
+    SEXP out = SHIELD(new_character(0)); ++NP;
     R_Free(char_ptrs);
     YIELD(NP);
     return out;
@@ -101,7 +101,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   R_xlen_t n_chars = Rf_xlength(chars);
 
   if (n_chars == 0){
-    SEXP out = SHIELD(internal::new_vec(STRSXP, 0)); ++NP;
+    SEXP out = SHIELD(new_character(0)); ++NP;
     YIELD(NP);
     return out;
   }
@@ -131,7 +131,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
 
   if (n_strings == 0){
-    SEXP out = SHIELD(internal::new_vec(STRSXP, 0)); ++NP;
+    SEXP out = SHIELD(new_character(0)); ++NP;
     R_Free(char_ptrs);
     YIELD(NP);
     return out;
@@ -160,7 +160,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
 
   } else {
 
-    SEXP out = SHIELD(internal::new_vec(STRSXP, n_strings)); ++NP;
+    SEXP out = SHIELD(new_character(n_strings)); ++NP;
 
     // Along the length of each char vec
 

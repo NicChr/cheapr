@@ -113,7 +113,7 @@ SEXP cpp_semi_copy(SEXP x){
     // Lists
 
     R_xlen_t n = Rf_xlength(x);
-    SEXP out = SHIELD(internal::new_vec(VECSXP, n));
+    SEXP out = SHIELD(new_list(n));
     const SEXP *p_x = LIST_PTR_RO(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, vec::deep_copy(p_x[i]));
@@ -251,7 +251,7 @@ SEXP cpp_range(SEXP x){
     }
     }
   }
-  return make_vec(lo, hi);
+  return combine(lo, hi);
 }
 
 double cpp_min(SEXP x){
@@ -436,7 +436,7 @@ SEXP cpp_lgl_count(SEXP x){
 
   R_xlen_t nna = n - ntrue - nfalse;
 
-  SEXP out = SHIELD(make_vec(
+  SEXP out = SHIELD(combine(
     arg("true") = ntrue,
     arg("false") = nfalse,
     arg("na") = nna
@@ -507,7 +507,7 @@ double growth_rate(double a, double b, double n){
 SEXP cpp_growth_rate(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   if (n == 0){
-    return internal::new_vec(REALSXP, 0);
+    return new_double(0);
   }
   if (n == 1){
     return as_vec(na::numeric);
@@ -565,7 +565,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 
   int n_dups = Rf_length(dup_locs);
 
-  SEXP out = SHIELD(internal::new_vec(STRSXP, n)); ++NP;
+  SEXP out = SHIELD(new_character(n)); ++NP;
   cpp_set_copy_elements(names, out);
 
   SEXP temp = r_null;
@@ -577,7 +577,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
     replace_in_place(out, dup_locs, replace, false);
   }
 
-  SEXP is_empty = SHIELD(internal::new_vec(LGLSXP, n)); ++NP;
+  SEXP is_empty = SHIELD(new_logical(n)); ++NP;
   int *p_is_empty = LOGICAL(is_empty);
   bool empty;
   int n_empty = 0;
@@ -768,9 +768,9 @@ SEXP cheapr_do_memory_leak_test(){
   // Check that 4000 bytes are not lost
 
   std::vector<int32_t> ints(1000);
-  SEXP r_ints = r_safe(SHIELD)(r_safe(internal::new_vec)(INTSXP, ints.size()));
+  SEXP r_ints = r_safe(SHIELD)(r_safe(new_integer)(ints.size()));
   SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
-  SEXP repl = r_safe(SHIELD)(r_safe(make_vec)(-1));
+  SEXP repl = r_safe(SHIELD)(r_safe(as_vec)(-1));
   r_safe(replace_in_place)(r_ints, seq, repl, true);
   r_safe(YIELD)(3);
   r_safe(Rf_error)("%s", "Expected error! This should not cause a C++ memory leak");

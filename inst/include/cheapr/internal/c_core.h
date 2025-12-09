@@ -1070,7 +1070,7 @@ inline SEXP compact_seq_len(R_xlen_t n){
     Rf_error("`n` must be >= 0");
   }
   if (n == 0){
-    return internal::new_vec(INTSXP, 0);
+    return vec::new_integer(0);
   }
   SEXP colon_fn = SHIELD(fn::find_pkg_fun(":", "base", env::base_env));
   SEXP out = SHIELD(fn::eval_fn(colon_fn, env::base_env, 1, n));

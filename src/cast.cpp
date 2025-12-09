@@ -70,8 +70,8 @@ SEXP cpp_common_template(SEXP x){
       SEXP all_lvls, new_lvls;
 
       PROTECT_INDEX all_lvls_idx, new_lvls_idx;
-      R_ProtectWithIndex(all_lvls = internal::new_vec(STRSXP, 0), &all_lvls_idx); ++NP;
-      R_ProtectWithIndex(new_lvls = internal::new_vec(STRSXP, 0), &new_lvls_idx); ++NP;
+      R_ProtectWithIndex(all_lvls = new_character(0), &all_lvls_idx); ++NP;
+      R_ProtectWithIndex(new_lvls = new_character(0), &new_lvls_idx); ++NP;
 
       int n = Rf_length(x);
 
@@ -84,7 +84,7 @@ SEXP cpp_common_template(SEXP x){
         if (!R_compute_identical(all_lvls, new_lvls, 0)){
           R_Reprotect(new_lvls = cpp_setdiff(new_lvls, all_lvls, false), new_lvls_idx);
           if (Rf_length(new_lvls) != 0){
-            R_Reprotect(all_lvls = make_vec(all_lvls, new_lvls), all_lvls_idx);
+            R_Reprotect(all_lvls = combine(all_lvls, new_lvls), all_lvls_idx);
           }
         }
       }
@@ -136,7 +136,7 @@ SEXP cpp_cast_common(SEXP x){
     return x;
   }
 
-  SEXP out = SHIELD(internal::new_vec(VECSXP, n)); ++NP;
+  SEXP out = SHIELD(new_list(n)); ++NP;
   SEXP vec_template = SHIELD(cpp_common_template(x)); ++NP;
   r_type common = get_r_type(vec_template);
 

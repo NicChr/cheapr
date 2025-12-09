@@ -18,16 +18,11 @@ inline SEXP r_paste(SEXP sep, SEXP collapse, Args... args){
 
 // Powerful R vector constructor from C++ types and SEXP
 template<typename... Args>
-SEXP make_vec(Args... args) {
+SEXP combine(Args... args) {
   SEXP out = SHIELD(cheapr::vec::make_list(args...));
   SHIELD(out = cpp_c(out));
   YIELD(2);
   return out;
-}
-
-template<typename... Args>
-SEXP combine(Args... args) {
-  return make_vec(args...);
 }
 
 }

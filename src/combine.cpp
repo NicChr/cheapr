@@ -49,7 +49,7 @@ SEXP cpp_rep_len(SEXP x, int length){
   } else if (is_df(x)){
     if (out_size == df::nrow(x)) return x;
     int n_cols = Rf_length(x);
-    SEXP out = SHIELD(internal::new_vec(VECSXP, n_cols));
+    SEXP out = SHIELD(new_list(n_cols));
     const SEXP *p_x = LIST_PTR_RO(x);
     for (int i = 0; i < n_cols; ++i){
       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
@@ -73,7 +73,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     case LGLSXP:
     case INTSXP: {
       const int *p_x = INTEGER_RO(x);
-      SEXP out = SHIELD(internal::new_vec(TYPEOF(x), out_size));
+      SEXP out = SHIELD(vec::new_integer(out_size));
       int* RESTRICT p_out = INTEGER(out);
 
       if (size == 1){
@@ -95,7 +95,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case CHEAPR_INT64SXP: {
       const int64_t *p_x = INTEGER64_PTR_RO(x);
-      SEXP out = SHIELD(internal::new_vec(REALSXP, out_size));
+      SEXP out = SHIELD(new_double(out_size));
       int64_t* RESTRICT p_out = INTEGER64_PTR(out);
 
       if (size == 1){
@@ -117,7 +117,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case REALSXP: {
       const double *p_x = REAL_RO(x);
-      SEXP out = SHIELD(internal::new_vec(REALSXP, out_size));
+      SEXP out = SHIELD(new_double(out_size));
       double* RESTRICT p_out = REAL(out);
 
       if (size == 1){
@@ -139,7 +139,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case STRSXP: {
       const SEXP *p_x = STRING_PTR_RO(x);
-      SEXP out = SHIELD(internal::new_vec(STRSXP, out_size));
+      SEXP out = SHIELD(new_character(out_size));
 
       if (size == 1){
         SEXP val = p_x[0];
@@ -162,7 +162,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case CPLXSXP: {
       Rcomplex *p_x = COMPLEX(x);
-      SEXP out = SHIELD(internal::new_vec(CPLXSXP, out_size));
+      SEXP out = SHIELD(new_complex(out_size));
       Rcomplex *p_out = COMPLEX(out);
 
       if (size == 1){
@@ -184,7 +184,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     }
     case VECSXP: {
       const SEXP *p_x = LIST_PTR_RO(x);
-      SEXP out = SHIELD(internal::new_vec(VECSXP, out_size));
+      SEXP out = SHIELD(new_list(out_size));
 
       if (size == 1){
         SEXP val = p_x[0];
@@ -509,7 +509,7 @@ SEXP get_ptype(SEXP x){
 
 SEXP get_ptypes(SEXP x){
   int n = Rf_length(x);
-  SEXP out = SHIELD(internal::new_vec(VECSXP, n));
+  SEXP out = SHIELD(new_list(n));
 
   for (int i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, get_ptype(VECTOR_ELT(x, i)));
@@ -562,15 +562,15 @@ SEXP cpp_list_c(SEXP x){
   bool x_has_names = !is_null(x_names);
 
   R_xlen_t k = 0;
-  SEXP out = SHIELD(internal::new_vec(VECSXP, out_size)); ++NP;
-  SEXP container_list = SHIELD(internal::new_vec(VECSXP, 1)); ++NP;
+  SEXP out = SHIELD(new_list(out_size)); ++NP;
+  SEXP container_list = SHIELD(new_list(1)); ++NP;
   set_r_names(container_list, R_BlankScalarString);
 
   SEXP names;
   PROTECT_INDEX nm_idx;
   R_ProtectWithIndex(names = r_null, &nm_idx); ++NP;
 
-  SEXP out_names = SHIELD(internal::new_vec(STRSXP, out_size)); ++NP;
+  SEXP out_names = SHIELD(new_character(out_size)); ++NP;
   bool any_names = false;
 
   R_xlen_t m;
@@ -665,7 +665,7 @@ SEXP cpp_df_c(SEXP x){
     // Adjust prototype names
     if (Rf_length(new_names) > 0){
       na_padding = true;
-      R_Reprotect(ptype_names = make_vec(ptype_names, new_names), ptype_names_idx);
+      R_Reprotect(ptype_names = combine(ptype_names, new_names), ptype_names_idx);
     }
     na_padding = na_padding || Rf_length(df) != n_cols;
     out_size += df::nrow(df);
@@ -678,14 +678,14 @@ SEXP cpp_df_c(SEXP x){
   PROTECT_INDEX vec_idx;
   R_ProtectWithIndex(vec = r_null, &vec_idx); ++NP;
 
-  SEXP out = SHIELD(internal::new_vec(VECSXP, n_cols)); ++NP;
-  SEXP vectors = SHIELD(internal::new_vec(VECSXP, n_frames)); ++NP;
+  SEXP out = SHIELD(new_list(n_cols)); ++NP;
+  SEXP vectors = SHIELD(new_list(n_frames)); ++NP;
 
   const SEXP *p_ptype_names = STRING_PTR_RO(ptype_names);
 
   if (na_padding){
     // Get archetype of each col
-    SEXP vec_archetypes = SHIELD(internal::new_vec(VECSXP, n_cols)); ++NP;
+    SEXP vec_archetypes = SHIELD(new_list(n_cols)); ++NP;
     const SEXP *p_vec_archetypes = LIST_PTR_RO(vec_archetypes);
     for (int j = 0; j < n_cols; ++j){
       for (int i = 0; i < n_frames; ++i){
