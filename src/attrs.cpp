@@ -80,7 +80,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
     for (int i = 0; i < Rf_length(names); ++i){
       if (p_names[i] != R_BlankString){
-        attr_nm = Rf_install(utf8_char(p_names[i]));
+        attr_nm = make_symbol(CHAR(p_names[i]));
         if (address_equal(x, p_attributes[i])){
           SEXP dup_attr = SHIELD(vec::deep_copy(p_attributes[i])); ++NP;
           set_attrib(x, attr_nm, dup_attr);
