@@ -121,7 +121,7 @@ inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
 }
 // Check that n = 0 to avoid R CMD warnings
 inline void *safe_memmove(void *dst, const void *src, size_t n){
-  return n ? memmove(dst, src, n) : dst;
+  return n ? std::memmove(dst, src, n) : dst;
 }
 
 inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
@@ -154,7 +154,7 @@ inline SEXP make_symbol(const char *x){
 // Memory address
 inline SEXP address(SEXP x) {
   char buf[1000];
-  snprintf(buf, 1000, "%p", static_cast<void*>(x));
+  std::snprintf(buf, 1000, "%p", static_cast<void*>(x));
   return internal::make_utf8_charsxp(buf);
 }
 
@@ -702,8 +702,10 @@ inline double as_double(T x){
 }
 template<typename T>
 inline Rcomplex as_complex(T x){
-  if constexpr (std::is_convertible_v<T, Rcomplex>){
-    return is_r_na(x) ? na::complex : static_cast<Rcomplex>(x);
+  if constexpr (std::is_same_v<T, Rcomplex>){
+    return x;
+  } else if constexpr (std::is_arithmetic_v<T>){
+    return {{as_double(x), 0.0}};
   } else {
     return na::complex;
   }
@@ -713,7 +715,7 @@ inline constexpr Rbyte as_raw(T x){
   if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int8_t)){
     return is_r_na(x) || x < 0 ? na::raw : static_cast<Rbyte>(x);
   } else if constexpr (std::is_convertible_v<T, Rbyte>){
-    return is_r_na(x) || !between(x, 0, 255) ? na::raw : static_cast<Rbyte>(x);
+    return is_r_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<Rbyte>(x);
   } else {
     return na::raw;
   }
@@ -727,7 +729,7 @@ inline SEXP as_r_string(T x){
     if (is_r_na(x)){
       return na::string;
     } else {
-      SEXP scalar = SHIELD(as_vec(x));
+      SEXP scalar = SHIELD(vec::as_vec(x));
       SEXP str = SHIELD(vec::coerce_vec(scalar, STRSXP));
       SEXP out = STRING_ELT(str, 0);
       YIELD(2);
@@ -735,6 +737,71 @@ inline SEXP as_r_string(T x){
     }
   }
 }
+namespace internal {
+// R version of static_cast
+template<typename T, typename U>
+struct r_cast_impl {
+  static T cast(U x) {
+    Rf_error("Can't `r_cast` this type, use `static_cast`");
+  }
+};
+
+// Specializations for each target type
+template<typename U>
+struct r_cast_impl<r_bool_t, U> {
+  static r_bool_t cast(U x) {
+    return as_bool(x);
+  }
+};
+
+template<typename U>
+struct r_cast_impl<int, U> {
+  static int cast(U x) {
+    return as_int(x);
+  }
+};
+
+template<typename U>
+struct r_cast_impl<int64_t, U> {
+  static int64_t cast(U x) {
+    return as_int64(x);
+  }
+};
+
+template<typename U>
+struct r_cast_impl<double, U> {
+  static double cast(U x) {
+    return as_double(x);
+  }
+};
+
+template<typename U>
+struct r_cast_impl<Rcomplex, U> {
+  static Rcomplex cast(U x) {
+    return as_complex(x);
+  }
+};
+
+template<typename U>
+struct r_cast_impl<Rbyte, U> {
+  static Rbyte cast(U x) {
+    return as_raw(x);
+  }
+};
+
+template<typename U>
+struct r_cast_impl<SEXP, U> {
+  static SEXP cast(U x) {
+    return as_r_string(x);
+  }
+};
+}
+
+template<typename T, typename U>
+inline T r_cast(U x) {
+  return internal::r_cast_impl<T, U>::cast(x);
+}
+
 
 // R fns
 
