@@ -429,7 +429,7 @@ inline constexpr bool is_r_na<Rboolean>(const Rboolean x){
 
 template<>
 inline bool is_r_na<cpp11::r_bool>(const cpp11::r_bool x){
-  return x == na::string;
+  return x == na::logical;
 }
 
 template<>
@@ -1154,7 +1154,7 @@ inline SEXP compact_seq_len(R_xlen_t n){
   if (n == 0){
     return vec::new_integer(0);
   }
-  SEXP colon_fn = SHIELD(fn::find_pkg_fun(":", "base", env::base_env));
+  SEXP colon_fn = SHIELD(fn::find_pkg_fun(":", "base", false));
   SEXP out = SHIELD(fn::eval_fn(colon_fn, env::base_env, 1, n));
   YIELD(2);
   return out;
