@@ -309,7 +309,7 @@ void set_list_as_df(SEXP x) {
     set_r_names(x, names);
   }
   set_attrib(x, R_RowNamesSymbol, row_names);
-  set_class(x, df_str);
+  attr::set_class(x, df_str);
   YIELD(NP);
 }
 
@@ -362,7 +362,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
   set_r_names(out, out_names);
   set_attrib(out, R_RowNamesSymbol, row_names);
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
-  set_class(out, df_cls);
+  attr::set_class(out, df_cls);
   YIELD(NP);
   return out;
 }
@@ -441,7 +441,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   set_r_names(out, out_names);
   df::set_row_names(out, n_rows);
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
-  set_class(out, df_cls);
+  attr::set_class(out, df_cls);
   SHIELD(out = rebuild(out, x, false)); ++NP;
   YIELD(NP);
   return out;

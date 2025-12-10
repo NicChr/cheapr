@@ -789,10 +789,3 @@ SEXP cheapr_do_memory_leak_test(){
 //   return r_ints; // Never reached
 // }
 
-template<typename... Args>
-SEXP make_df(Args... args) {
-  SEXP out = SHIELD(cheapr::vec::make_list(args...));
-  SHIELD(out = cpp_new_df(out, r_null, true, true));
-  YIELD(2);
-  return out;
-}

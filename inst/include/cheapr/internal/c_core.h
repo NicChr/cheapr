@@ -240,6 +240,9 @@ inline bool is_factor(SEXP x){
 inline bool is_df(SEXP x){
   return internal::inherits1(x, "data.frame");
 }
+}
+
+namespace attr {
 
 inline SEXP get_attrib(SEXP x, SEXP which){
   return Rf_getAttrib(x, which);
@@ -252,6 +255,18 @@ inline void set_attrib(SEXP x, SEXP which, SEXP value){
 inline void set_class(SEXP x, SEXP cls){
   Rf_classgets(x, cls);
 }
+
+inline void clear_attrs(SEXP x){
+  SEXP current = ATTRIB(x);
+  while (!vec::is_null(current)){
+    set_attrib(x, TAG(current), r_null);
+    current = CDR(current);
+  }
+}
+
+}
+
+namespace vec {
 
 inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
   return Rf_coerceVector(x, type);
@@ -288,7 +303,7 @@ inline SEXP new_integer64(R_xlen_t n, std::optional<int64_t> default_value = std
     int64_t *p_out = internal::INTEGER64_PTR(out);
     std::fill(p_out, p_out + n, val);
   }
-  set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
+  attr::set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
   YIELD(2);
   return out;
 }
@@ -368,7 +383,7 @@ inline bool is_df(SEXP x){
 }
 
 inline int nrow(SEXP x){
-  return Rf_length(vec::get_attrib(x, R_RowNamesSymbol));
+  return Rf_length(attr::get_attrib(x, R_RowNamesSymbol));
 }
 inline int ncol(SEXP x){
   return Rf_length(x);
@@ -386,7 +401,7 @@ inline SEXP new_row_names(int n){
 }
 inline void set_row_names(SEXP x, int n){
   SEXP row_names = SHIELD(new_row_names(n));
-  vec::set_attrib(x, R_RowNamesSymbol, row_names);
+  attr::set_attrib(x, R_RowNamesSymbol, row_names);
   YIELD(1);
 }
 }
@@ -787,10 +802,10 @@ namespace internal {
 inline SEXP r_length_sym = r_null;
 
 inline void set_r_names(SEXP x, SEXP names){
-  vec::is_null(names) ? vec::set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
+  vec::is_null(names) ? attr::set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
 }
 inline SEXP get_r_names(SEXP x){
-  return vec::get_attrib(x, R_NamesSymbol);
+  return attr::get_attrib(x, R_NamesSymbol);
 }
 inline bool has_r_names(SEXP x){
   SEXP names = SHIELD(get_r_names(x));
@@ -1116,16 +1131,6 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
   }
   }
   return out;
-}
-}
-
-namespace attr {
-inline void clear_attrs(SEXP x){
-  SEXP current = ATTRIB(x);
-  while (!vec::is_null(current)){
-    vec::set_attrib(x, TAG(current), r_null);
-    current = CDR(current);
-  }
 }
 }
 

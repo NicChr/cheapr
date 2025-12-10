@@ -13,7 +13,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
-        set_class(out, get_attrib(source, R_ClassSymbol));
+        attr::set_class(out, get_attrib(source, R_ClassSymbol));
         YIELD(1);
         return out;
       }
@@ -25,7 +25,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
-        set_class(out, get_attrib(source, R_ClassSymbol));
+        attr::set_class(out, get_attrib(source, R_ClassSymbol));
         YIELD(1);
         return out;
       }
@@ -539,7 +539,7 @@ SEXP character_as_factor(SEXP x, SEXP levels){
   SEXP out = SHIELD(match(levels, x, na::integer)); ++NP;
   SEXP cls = SHIELD(as_vec("factor")); ++NP;
   set_attrib(out, R_LevelsSymbol, levels);
-  set_class(out, cls);
+  attr::set_class(out, cls);
   YIELD(NP);
   return out;
 }
@@ -904,7 +904,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     if (TYPEOF(vec_template) == INTSXP){
     SHIELD(out = init<r_integer_t>(out_size, false)); ++NP;
     SEXP date_cls = SHIELD(as_vec("Date")); ++NP;
-    set_class(out, date_cls);
+    attr::set_class(out, date_cls);
 
     int* RESTRICT p_out = INTEGER(out);
 
@@ -917,7 +917,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   } else {
     SHIELD(out = init<r_double_t>(out_size, false)); ++NP;
     SEXP date_cls = SHIELD(as_vec("Date")); ++NP;
-    set_class(out, date_cls);
+    attr::set_class(out, date_cls);
 
     double* RESTRICT p_out = REAL(out);
 

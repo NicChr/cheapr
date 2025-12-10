@@ -12,5 +12,6 @@
 using namespace cheapr;
 using namespace vec;
 using namespace internal;
+using namespace attr;
 
 #endif
