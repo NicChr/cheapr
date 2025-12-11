@@ -51,7 +51,7 @@ if (is_r_na(VAL)){                                                 \
 SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
   const r_bool_t *p_x = BOOLEAN_RO(x);
-  bool is_long = (n > limits::r_int_max);
+  bool is_long = (n > r_limits::r_int_max);
   if (invert){
     if (is_long){
       R_xlen_t size = count_true(p_x, n);
@@ -100,7 +100,7 @@ SEXP cpp_which_(SEXP x, bool invert){
 SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   int32_t NP = 0;
   R_xlen_t n = vec::length(x);
-  bool is_long = (n > limits::r_int_max);
+  bool is_long = (n > r_limits::r_int_max);
   if (vec::length(value) != 1){
     Rf_error("value must be a vector of length 1");
   }
@@ -281,7 +281,7 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
   R_xlen_t n = Rf_xlength(x);
   const int *p_x = INTEGER_RO(x);
 
-  if (n > limits::r_int_max){
+  if (n > r_limits::r_int_max){
     SEXP true_locs = SHIELD(new_double(include_true ? n_true : 0));
     SEXP false_locs = SHIELD(new_double(include_false ? n_false : 0));
     SEXP na_locs = SHIELD(new_double(include_na ? (n - n_true - n_false) : 0));

@@ -88,7 +88,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     std::memset(keep, 1, n);
   }
 
-  if (xn > limits::r_int_max){
+  if (xn > r_limits::r_int_max){
     SHIELD(exclude = vec::coerce_vec(exclude, REALSXP)); ++NP;
     double *p_excl = REAL(exclude);
 
@@ -205,7 +205,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     n = Rf_xlength(clean_indices);
     out_size = n;
     check_indices = false;
-  } else if (xn > limits::r_int_max){
+  } else if (xn > r_limits::r_int_max){
 
     SHIELD(clean_indices = vec::coerce_vec(indices, REALSXP)); ++NP;
 
@@ -717,7 +717,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
 
   if (check){
 
-    if (Rf_xlength(x) > limits::r_int_max){
+    if (Rf_xlength(x) > r_limits::r_int_max){
 
       int_fast64_t xn = Rf_xlength(x);
 
@@ -1007,7 +1007,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
     }
   } else {
 
-    if (Rf_xlength(x) > limits::r_int_max){
+    if (Rf_xlength(x) > r_limits::r_int_max){
 
       int_fast64_t n = Rf_xlength(indices);
 

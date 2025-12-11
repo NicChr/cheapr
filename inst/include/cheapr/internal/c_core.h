@@ -73,7 +73,7 @@ inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 }
 
-namespace limits {
+namespace r_limits {
 inline constexpr int r_int_min = -std::numeric_limits<int>::max();
 inline constexpr int r_int_max = std::numeric_limits<int>::max();
 inline constexpr int64_t r_int64_min = -std::numeric_limits<int64_t>::max();
@@ -444,7 +444,7 @@ inline void set_row_names(SEXP x, int n){
 }
 
 inline constexpr bool is_r_inf(const double x){
-  return x == limits::r_pos_inf || x == limits::r_neg_inf;
+  return x == r_limits::r_pos_inf || x == r_limits::r_neg_inf;
 }
 
 // C++ templates
@@ -611,7 +611,7 @@ template<>
 inline SEXP as_vec<int64_t>(const int64_t x){
   if (is_r_na(x)){
     return Rf_ScalarInteger(na::integer);
-  } else if (between<int64_t>(x, limits::r_int_min, limits::r_int_max)){
+  } else if (between<int64_t>(x, r_limits::r_int_min, r_limits::r_int_max)){
     return Rf_ScalarInteger(static_cast<int>(x));
   } else {
     return Rf_ScalarReal(static_cast<double>(x));
@@ -691,7 +691,7 @@ inline constexpr bool can_be_int(T x){
   if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int)){
     return true;
   } else if constexpr (std::is_arithmetic_v<T>){
-    return between<T>(x, limits::r_int_min, limits::r_int_max);
+    return between<T>(x, r_limits::r_int_min, r_limits::r_int_max);
   } else {
     return false;
   }
@@ -703,7 +703,7 @@ inline constexpr bool can_be_int64(T x){
   if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int64_t)){
     return true;
   } else if constexpr (std::is_arithmetic_v<T>){
-    return between<T>(x, limits::r_int64_min, limits::r_int64_max);
+    return between<T>(x, r_limits::r_int64_min, r_limits::r_int64_max);
   } else {
     return false;
   }
@@ -1100,32 +1100,24 @@ inline R_xlen_t length(SEXP x){
       }
       return out;
     } else {
-      int32_t NP;
       if (is_null(internal::r_length_sym)){
-        SHIELD(internal::r_length_sym = make_symbol("length"));
-        NP = 3;
-      } else {
-        NP = 2;
+        internal::r_length_sym = make_symbol("length");
       }
       SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
       SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
       R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
-      YIELD(NP);
+      YIELD(2);
       return out;
     }
     // Catch-all
   } else {
-    int32_t NP = 0;
     if (is_null(internal::r_length_sym)){
-      SHIELD(internal::r_length_sym = make_symbol("length"));
-      NP = 3;
-    } else {
-      NP = 2;
+      internal::r_length_sym = make_symbol("length");
     }
     SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
     SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
     R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
-    YIELD(NP);
+    YIELD(2);
     return out;
   }
 }

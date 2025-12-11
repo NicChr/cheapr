@@ -14,7 +14,7 @@ SEXP cpp_int64_to_int(SEXP x){
 
   const int64_t *p_x = INTEGER64_PTR_RO(x);
 
-  int64_t int_max = limits::r_int_max;
+  int64_t int_max = r_limits::r_int_max;
 
   for (R_xlen_t i = 0; i < n; ++i){
     p_out[i] = is_r_na(p_x[i]) || std::llabs(p_x[i]) > int_max ? na::integer : p_x[i];
@@ -58,8 +58,8 @@ bool cpp_all_integerable(SEXP x){
   case CHEAPR_INT64SXP: {
     const int64_t *p_x = INTEGER64_PTR_RO(x);
 
-    int64_t int_min = limits::r_int_min;
-    int64_t int_max = limits::r_int_max;
+    int64_t int_min = r_limits::r_int_min;
+    int64_t int_max = r_limits::r_int_max;
 
     for (R_xlen_t i = 0; i < n; ++i){
       if (!(is_r_na(p_x[i]) || between(p_x[i], int_min, int_max))){
@@ -72,8 +72,8 @@ bool cpp_all_integerable(SEXP x){
   case REALSXP: {
     const double *p_x = REAL_RO(x);
 
-    double int_min = limits::r_int_min;
-    double int_max = limits::r_int_max;
+    double int_min = r_limits::r_int_min;
+    double int_max = r_limits::r_int_max;
 
     for (R_xlen_t i = 0; i < n; ++i){
       if (!(is_r_na(p_x[i]) || between(p_x[i], int_min, int_max))){
@@ -240,7 +240,7 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
   SEXP names = SHIELD(get_r_names(x)); ++NP;
   SEXP out_names = SHIELD(sset_vec(names, locs, true)); ++NP;
 
-  if (Rf_xlength(x) > limits::r_int_max){
+  if (Rf_xlength(x) > r_limits::r_int_max){
 
     int_fast64_t xn = Rf_xlength(x);
 

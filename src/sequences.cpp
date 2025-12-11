@@ -255,7 +255,7 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list, bool add_id) {
     switch (TYPEOF(by)){
   case INTSXP: {
     int_fast64_t start, increment, seq_size, seq_end;
-    int_fast64_t int_max = limits::r_int_max;
+    int_fast64_t int_max = r_limits::r_int_max;
     int_fast64_t zero = 0;
     bool out_is_integer = true;
     const int *p_size = INTEGER_RO(size);
@@ -494,7 +494,7 @@ SEXP cpp_lead_sequence(SEXP size, double k, bool partial = false) {
 }
 
 SEXP cpp_seq_len(R_xlen_t n){
-  if (n > limits::r_int_max){
+  if (n > r_limits::r_int_max){
     SEXP out = SHIELD(new_double(n));
     double* RESTRICT p_out = REAL(out);
     OMP_FOR_SIMD

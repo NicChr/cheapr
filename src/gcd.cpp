@@ -105,7 +105,7 @@ int64_t lcm2_int64(int64_t x, int64_t y, bool na_rm){
   // divides x by a whole number
 
   int64_t res = std::llabs(x) / gcd2_int64(x, y, false);
-  if (y != 0 && (std::llabs(res) > (limits::r_int64_max / std::llabs(y)))){
+  if (y != 0 && (std::llabs(res) > (r_limits::r_int64_max / std::llabs(y)))){
     Rf_error("64-bit integer overflow, please use doubles");
   } else {
     return (res * std::llabs(y));
@@ -360,7 +360,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   case INTSXP: {
     double dbl_lcm;
     int int_lcm;
-    double int_max = limits::r_int_max;
+    double int_max = r_limits::r_int_max;
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
     SEXP out = SHIELD(vec::new_integer(n)); ++NP;

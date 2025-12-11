@@ -668,7 +668,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
 [[cpp11::register]]
 SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
-  if (n_bins > limits::r_int_max){
+  if (n_bins > r_limits::r_int_max){
     Rf_error("`n_bins` must be < 2^31 in %s", __func__);
   }
   R_xlen_t n = Rf_xlength(x);
