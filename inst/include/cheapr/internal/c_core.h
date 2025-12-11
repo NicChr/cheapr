@@ -669,7 +669,14 @@ inline SEXP as_vec<SEXP>(const SEXP x){
 template<typename T>
 inline SEXP as_r_obj(const T x){
   if constexpr (std::is_convertible_v<T, SEXP>){
-    return x;
+    switch (TYPEOF(x)){
+    case CHARSXP: {
+      return Rf_ScalarString(x);
+    }
+    default: {
+      return x;
+    }
+    }
   } else {
     return vec::as_vec(x);
   }
