@@ -18,6 +18,10 @@
 #define R_NO_REMAP
 #endif
 
+#if !defined(OBJSXP) && defined(S4SXP)
+#define OBJSXP S4SXP
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #define OMP_NUM_PROCS omp_get_num_procs()
