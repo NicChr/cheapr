@@ -1287,6 +1287,36 @@ inline void set_attrs(SEXP x, SEXP attrs){
 
 }
 
+namespace env {
+inline SEXP get(SEXP sym, SEXP env, bool inherits = true){
+
+  int32_t NP = 0;
+
+  if (TYPEOF(sym) != SYMSXP){
+    SHIELD(sym = vec::coerce_vec(sym, SYMSXP)); ++NP;
+  }
+
+  if (TYPEOF(env) != ENVSXP){
+    Rf_error("second argument to '%s' must be an environment", __func__);
+  }
+
+  SEXP val = inherits ? Rf_findVar(sym, env) : Rf_findVarInFrame(env, sym);
+
+  if (val == R_MissingArg){
+    YIELD(NP);
+    Rf_error("arg `sym` cannot be missing");
+  } else if (val == R_UnboundValue){
+    YIELD(NP);
+    return r_null;
+  } else if (TYPEOF(val) == PROMSXP){
+    SHIELD(val);
+    val = eval(val, env);
+    YIELD(1);
+  }
+  YIELD(NP);
+  return val;
+}
+}
 
 
 namespace internal {
