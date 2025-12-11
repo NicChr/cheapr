@@ -638,7 +638,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
       tag = TAG(current);
 
       if (PRINTNAME(tag) == p_ta[i]){
-        set_attrib(target, tag, CAR(current));
+        set_attr(target, tag, CAR(current));
         break;
       }
       current = CDR(current);
@@ -652,7 +652,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
       tag = TAG(current);
 
       if (PRINTNAME(tag) == p_sa[i]){
-        set_attrib(target, tag, CAR(current));
+        set_attr(target, tag, CAR(current));
         break;
       }
       current = CDR(current);
@@ -748,7 +748,7 @@ void set_vec_names(SEXP x, SEXP names){
     }
     default: {
       SEXP vec_with_names = SHIELD(eval_pkg_fun("names<-", "base", R_GetCurrentEnv(), x, names));
-      cpp_set_add_attributes(x, ATTRIB(vec_with_names), false);
+      attr::set_attrs(x, ATTRIB(vec_with_names));
       YIELD(1);
       return;
     }
@@ -788,4 +788,3 @@ SEXP cheapr_do_memory_leak_test(){
 //   Rf_error("%s", "Expected error! This will cause a C++ memory leak");
 //   return r_ints; // Never reached
 // }
-

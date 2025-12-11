@@ -28,7 +28,7 @@ inline double trunc(T x){
 inline SEXP CHEAPR_CORES = r_null;
 
 inline int num_cores(){
-  if (vec::is_null(CHEAPR_CORES)){
+  if (is_null(CHEAPR_CORES)){
     CHEAPR_CORES = make_symbol("cheapr.cores");
   }
   int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
@@ -99,13 +99,13 @@ inline bool cheapr_is_simple_vec2(SEXP x){
 }
 
 inline bool is_bare_df(SEXP x){
-  SEXP cls = cheapr::attr::get_attrib(x, R_ClassSymbol);
+  SEXP cls = cheapr::attr::get_attr(x, R_ClassSymbol);
   return Rf_length(cls) == 1 &&
     std::strcmp(CHAR(STRING_ELT(cls, 0)), "data.frame") == 0;
 }
 
 inline bool is_bare_tbl(SEXP x){
-  SEXP xclass = cheapr::attr::get_attrib(x, R_ClassSymbol);
+  SEXP xclass = cheapr::attr::get_attr(x, R_ClassSymbol);
 
   return Rf_length(xclass) == 3 &&
     std::strcmp(CHAR(STRING_ELT(xclass, 0)), "tbl_df") == 0 &&

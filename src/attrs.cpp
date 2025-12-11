@@ -21,11 +21,7 @@
 
 [[cpp11::register]]
 SEXP cpp_set_rm_attributes(SEXP x){
-  SEXP current = ATTRIB(x);
-  while (!is_null(current)){
-    set_attrib(x, TAG(current), r_null);
-    current = CDR(current);
-  }
+  cheapr::attr::clear_attrs(x);
   return x;
 }
 
@@ -38,7 +34,7 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
   }
   SEXP attr_char = SHIELD(make_symbol(CHAR(STRING_ELT(which, 0))));
   SEXP value2 = SHIELD(address_equal(x, value) ? vec::deep_copy(value) : value);
-  set_attrib(x, attr_char, value2);
+  set_attr(x, attr_char, value2);
   YIELD(2);
   return x;
 }
@@ -51,7 +47,7 @@ SEXP cpp_set_rm_attr(SEXP x, SEXP which){
   if (TYPEOF(which) != STRSXP){
     Rf_error("`which` must be a length 1 character vector");
   }
-  set_attrib(x, make_symbol(CHAR(STRING_ELT(which, 0))), r_null);
+  set_attr(x, make_symbol(CHAR(STRING_ELT(which, 0))), r_null);
   return x;
 }
 
@@ -61,51 +57,6 @@ SEXP cpp_set_rm_attr(SEXP x, SEXP which){
 SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
   if (!add) attr::clear_attrs(x);
-
-  int32_t NP = 0;
-
-  if (is_null(attributes)){
-    return x;
-  } else if (TYPEOF(attributes) == VECSXP){
-    if (Rf_length(attributes) == 0) return x;
-    SEXP names = SHIELD(get_r_names(attributes)); ++NP;
-    if (is_null(names)){
-      YIELD(NP);
-      Rf_error("attributes must be a named list");
-    }
-    const SEXP *p_attributes = LIST_PTR_RO(attributes);
-    const SEXP *p_names = STRING_PTR_RO(names);
-
-    SEXP attr_nm = r_null;
-
-    for (int i = 0; i < Rf_length(names); ++i){
-      if (p_names[i] != R_BlankString){
-        attr_nm = make_symbol(CHAR(p_names[i]));
-        if (address_equal(x, p_attributes[i])){
-          SEXP dup_attr = SHIELD(vec::deep_copy(p_attributes[i])); ++NP;
-          set_attrib(x, attr_nm, dup_attr);
-        } else {
-          set_attrib(x, attr_nm, p_attributes[i]);
-        }
-      }
-    }
-    YIELD(NP);
-    return x;
-  } else if (TYPEOF(attributes) == LISTSXP){
-    SEXP current = attributes;
-
-    while (!is_null(current)){
-      if (address_equal(x, CAR(current))){
-        SEXP dup_attr = SHIELD(vec::deep_copy(CAR(current))); ++NP;
-        set_attrib(x, TAG(current), dup_attr);
-      } else {
-        set_attrib(x, TAG(current), CAR(current));
-      }
-     current = CDR(current);
-    }
-    YIELD(NP);
-    return x;
-  } else {
-    Rf_error("`attributes` must be a named list");
-  }
+  internal::add_attrs(x, attributes);
+  return x;
 }

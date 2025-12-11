@@ -176,17 +176,29 @@ inline constexpr void recycle_index(T& v, const T size) {
   v = (++v == size) ? static_cast<T>(0) : v;
 }
 
+inline bool is_null(SEXP x){
+  return x == r_null;
+}
+
 namespace altrep {
 inline bool is_altrep(SEXP x){
   return ALTREP(x);
 }
 }
 
-namespace vec {
+namespace attr {
 
-inline bool is_null(SEXP x){
-  return x == r_null;
+inline SEXP get_attr(SEXP x, SEXP sym){
+  return Rf_getAttrib(x, sym);
 }
+
+inline void set_attr(SEXP x, SEXP sym, SEXP value){
+  Rf_setAttrib(x, sym, value);
+}
+
+}
+
+namespace vec {
 
 inline bool is_object(SEXP x){
   return Rf_isObject(x);
@@ -240,17 +252,29 @@ inline bool is_factor(SEXP x){
 inline bool is_df(SEXP x){
   return internal::inherits1(x, "data.frame");
 }
+
+}
+
+namespace internal {
+
+inline SEXP r_length_sym = r_null;
+
+inline void set_r_names(SEXP x, SEXP names){
+  is_null(names) ? attr::set_attr(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
+}
+inline SEXP get_r_names(SEXP x){
+  return attr::get_attr(x, R_NamesSymbol);
+}
+inline bool has_r_names(SEXP x){
+  SEXP names = SHIELD(get_r_names(x));
+  bool out = !is_null(names);
+  YIELD(1);
+  return out;
+}
+
 }
 
 namespace attr {
-
-inline SEXP get_attrib(SEXP x, SEXP which){
-  return Rf_getAttrib(x, which);
-}
-
-inline void set_attrib(SEXP x, SEXP which, SEXP value){
-  Rf_setAttrib(x, which, value);
-}
 
 inline void set_class(SEXP x, SEXP cls){
   Rf_classgets(x, cls);
@@ -258,12 +282,21 @@ inline void set_class(SEXP x, SEXP cls){
 
 inline void clear_attrs(SEXP x){
   SEXP current = ATTRIB(x);
-  while (!vec::is_null(current)){
-    set_attrib(x, TAG(current), r_null);
+  while (!is_null(current)){
+    set_attr(x, TAG(current), r_null);
     current = CDR(current);
   }
 }
 
+inline bool inherits(SEXP x, SEXP classes){
+  R_xlen_t n = Rf_xlength(classes);
+  for (R_xlen_t i = 0; i < n; ++i) {
+    if (internal::inherits1(x, CHAR(STRING_ELT(classes, i)))){
+      return true;
+    }
+  }
+  return false;
+}
 }
 
 namespace vec {
@@ -383,7 +416,7 @@ inline bool is_df(SEXP x){
 }
 
 inline int nrow(SEXP x){
-  return Rf_length(attr::get_attrib(x, R_RowNamesSymbol));
+  return Rf_length(attr::get_attr(x, R_RowNamesSymbol));
 }
 inline int ncol(SEXP x){
   return Rf_length(x);
@@ -401,7 +434,7 @@ inline SEXP new_row_names(int n){
 }
 inline void set_row_names(SEXP x, int n){
   SEXP row_names = SHIELD(new_row_names(n));
-  attr::set_attrib(x, R_RowNamesSymbol, row_names);
+  attr::set_attr(x, R_RowNamesSymbol, row_names);
   YIELD(1);
 }
 }
@@ -465,7 +498,7 @@ inline bool is_r_na<cpp11::r_string>(const cpp11::r_string x){
 // Works for CHARSXP and NULL
 template<>
 inline bool is_r_na<SEXP>(const SEXP x){
-  return vec::is_null(x) || x == na::string;
+  return is_null(x) || x == na::string;
 }
 
 // NA type
@@ -545,33 +578,33 @@ inline constexpr bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
 namespace vec {
 
 template<typename T>
-inline SEXP as_scalar_vec(const T x){
+inline SEXP as_vec(const T x){
   if constexpr (std::is_integral<T>::value){
-    return as_scalar_vec<int64_t>(x);
+    return as_vec<int64_t>(x);
   } else if constexpr (std::is_convertible_v<T, SEXP>){
-    return as_scalar_vec<SEXP>(x);
+    return as_vec<SEXP>(x);
   } else {
     Rf_error("Unimplemented scalar constructor");
   }
 }
 template<>
-inline SEXP as_scalar_vec<bool>(const bool x){
+inline SEXP as_vec<bool>(const bool x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_scalar_vec<r_bool_t>(const r_bool_t x){
+inline SEXP as_vec<r_bool_t>(const r_bool_t x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_scalar_vec<Rboolean>(const Rboolean x){
+inline SEXP as_vec<Rboolean>(const Rboolean x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_scalar_vec<int>(const int x){
+inline SEXP as_vec<int>(const int x){
   return Rf_ScalarInteger(x);
 }
 template<>
-inline SEXP as_scalar_vec<int64_t>(const int64_t x){
+inline SEXP as_vec<int64_t>(const int64_t x){
   if (is_r_na(x)){
     return Rf_ScalarInteger(na::integer);
   } else if (between<int64_t>(x, limits::r_int_min, limits::r_int_max)){
@@ -581,62 +614,61 @@ inline SEXP as_scalar_vec<int64_t>(const int64_t x){
   }
 }
 template<>
-inline SEXP as_scalar_vec<double>(const double x){
+inline SEXP as_vec<double>(const double x){
   return Rf_ScalarReal(x);
 }
 template<>
-inline SEXP as_scalar_vec<Rcomplex>(const Rcomplex x){
+inline SEXP as_vec<Rcomplex>(const Rcomplex x){
   return Rf_ScalarComplex(x);
 }
 template<>
-inline SEXP as_scalar_vec<Rbyte>(const Rbyte x){
+inline SEXP as_vec<Rbyte>(const Rbyte x){
   return Rf_ScalarRaw(x);
 }
 template<>
-inline SEXP as_scalar_vec<const char *>(const char * const x){
+inline SEXP as_vec<const char *>(const char * const x){
   return internal::make_utf8_strsxp(x);
 }
 template<>
-inline SEXP as_scalar_vec<std::string>(const std::string x){
-  return as_scalar_vec<const char *>(x.c_str());
+inline SEXP as_vec<std::string>(const std::string x){
+  return as_vec<const char *>(x.c_str());
 }
 template<>
-inline SEXP as_scalar_vec<cpp11::r_string>(const cpp11::r_string x){
+inline SEXP as_vec<cpp11::r_string>(const cpp11::r_string x){
   return Rf_ScalarString(x);
 }
 
 // Scalar string
-template<>
-inline SEXP as_scalar_vec<SEXP>(const SEXP x){
-  switch (TYPEOF(x)){
-  case CHARSXP: {
-    return Rf_ScalarString(x);
-  }
-  default: {
-    return vec::new_list(1, x);
-  }
-  }
-}
-
-template<typename T>
-inline SEXP as_vec(const T x){
-  if constexpr (std::is_convertible_v<T, SEXP>){
-    return as_vec<SEXP>(x);
-  } else {
-    return as_scalar_vec(x);
-  }
-}
 template<>
 inline SEXP as_vec<SEXP>(const SEXP x){
   switch (TYPEOF(x)){
   case CHARSXP: {
     return Rf_ScalarString(x);
   }
-  default: {
+  case LGLSXP:
+  case INTSXP:
+  case REALSXP:
+  case STRSXP:
+  case VECSXP:
+  case CPLXSXP:
+  case RAWSXP: {
     return x;
+  }
+  default: {
+    return new_list(1, x);
   }
   }
 }
+
+}
+
+template<typename T>
+inline SEXP as_r_obj(const T x){
+  if constexpr (std::is_convertible_v<T, SEXP>){
+    return x;
+  } else {
+    return vec::as_vec(x);
+  }
 }
 
 namespace internal {
@@ -792,7 +824,7 @@ struct r_cast_impl<Rbyte, U> {
 template<typename U>
 struct r_cast_impl<SEXP, U> {
   static SEXP cast(U x) {
-    return as_r_string(x);
+    return as_r_obj(x);
   }
 };
 }
@@ -861,28 +893,6 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
 }
 }
 
-// Can't use `Rf_namesgets(x, r_null)`
-// as it adds empty names instead of NULL
-
-namespace internal {
-
-inline SEXP r_length_sym = r_null;
-
-inline void set_r_names(SEXP x, SEXP names){
-  vec::is_null(names) ? attr::set_attrib(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
-}
-inline SEXP get_r_names(SEXP x){
-  return attr::get_attrib(x, R_NamesSymbol);
-}
-inline bool has_r_names(SEXP x){
-  SEXP names = SHIELD(get_r_names(x));
-  bool out = !vec::is_null(names);
-  YIELD(1);
-  return out;
-}
-
-}
-
 // Named argument
 
 struct arg {
@@ -894,7 +904,7 @@ struct arg {
 
   template<typename T>
   arg operator=(T v) const {
-    return arg(name, vec::as_vec(v));
+    return arg(name, as_r_obj(v));
   }
 };
 
@@ -985,18 +995,17 @@ inline SEXP make_list(Args... args) {
   if constexpr (n == 0){
     return new_list(0);
   } else {
-    SEXP out = SHIELD(new_list(n));
+    SEXP out = SHIELD(vec::new_list(n));
 
     // Are any args named?
     constexpr bool any_named = (std::is_same_v<std::decay_t<Args>, arg> || ...);
 
-    SEXP nms;
+    SEXP nms = r_null;
 
     if (any_named){
-      nms = SHIELD(internal::new_vec(STRSXP, n));
-    } else {
-      nms = SHIELD(r_null);
+      nms = vec::new_character(n);
     }
+    SHIELD(nms);
 
     int i = 0;
     (([&]() {
@@ -1004,7 +1013,7 @@ inline SEXP make_list(Args... args) {
         SET_VECTOR_ELT(out, i, args.value);
         SET_STRING_ELT(nms, i, internal::make_utf8_charsxp(args.name));
       } else {
-        SET_VECTOR_ELT(out, i, as_vec(args));
+        SET_VECTOR_ELT(out, i, as_r_obj(args));
       }
       ++i;
     }()), ...);
@@ -1014,6 +1023,10 @@ inline SEXP make_list(Args... args) {
     return out;
   }
 }
+
+}
+
+namespace internal {
 
 template<typename... Args>
 inline SEXP make_pairlist(Args... args) {
@@ -1031,7 +1044,7 @@ inline SEXP make_pairlist(Args... args) {
         SETCAR(current, args.value);
         SET_TAG(current, make_symbol(args.name));
       } else {
-        SETCAR(current, as_vec(args));
+        SETCAR(current, as_r_obj(args));
       }
       current = CDR(current);
     }()), ...);
@@ -1047,7 +1060,7 @@ namespace fn {
 template<typename... Args>
 inline SEXP eval_fn(SEXP r_fn, SEXP envir, Args... args){
   // Expression
-  SEXP call = SHIELD(Rf_lcons(r_fn, vec::make_pairlist(args...)));
+  SEXP call = SHIELD(Rf_lcons(r_fn, internal::make_pairlist(args...)));
   // Evaluate expression
   SEXP out = SHIELD(eval(call, envir));
 
@@ -1077,7 +1090,7 @@ inline R_xlen_t length(SEXP x){
       return out;
     } else {
       int32_t NP;
-      if (vec::is_null(internal::r_length_sym)){
+      if (is_null(internal::r_length_sym)){
         SHIELD(internal::r_length_sym = make_symbol("length"));
         NP = 3;
       } else {
@@ -1092,7 +1105,7 @@ inline R_xlen_t length(SEXP x){
     // Catch-all
   } else {
     int32_t NP = 0;
-    if (vec::is_null(internal::r_length_sym)){
+    if (is_null(internal::r_length_sym)){
       SHIELD(internal::r_length_sym = make_symbol("length"));
       NP = 3;
     } else {
@@ -1112,38 +1125,6 @@ inline SEXP deep_copy(SEXP x){
 
 inline SEXP shallow_copy(SEXP x){
   return Rf_shallow_duplicate(x);
-}
-
-// Attributes of x as a list
-inline SEXP attributes(SEXP x){
-  SEXP a = ATTRIB(x);
-  int n = Rf_length(a);
-
-  SEXP out = SHIELD(internal::new_vec(VECSXP, n));
-  SEXP names = SHIELD(internal::new_vec(STRSXP, n));
-  SEXP current = a;
-
-  for (int i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, CAR(current));
-    SEXP nm = PRINTNAME(TAG(current));
-    if (!vec::is_null(nm)){
-      SET_STRING_ELT(names, i, nm);
-    }
-    current = CDR(current);
-  }
-  internal::set_r_names(out, names);
-  YIELD(2);
-  return out;
-}
-
-inline bool inherits(SEXP x, SEXP classes){
-  R_xlen_t n = Rf_xlength(classes);
-  for (R_xlen_t i = 0; i < n; ++i) {
-    if (internal::inherits1(x, CHAR(STRING_ELT(classes, i)))){
-      return true;
-    }
-  }
-  return false;
 }
 
 // Compact seq generator as ALTREP, same as `seq_len()`
@@ -1200,6 +1181,109 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
   return out;
 }
 }
+
+namespace internal {
+// template<typename... Args>
+inline void add_attrs(SEXP x, SEXP attrs) {
+
+  int32_t NP = 0;
+
+  switch (TYPEOF(attrs)){
+  case NILSXP: {
+    break;
+  }
+  case VECSXP: {
+    SEXP names = SHIELD(internal::get_r_names(attrs)); ++NP;
+    if (is_null(names)){
+      YIELD(NP);
+      Rf_error("attributes must be a named list");
+    }
+    const SEXP *p_attributes = internal::LIST_PTR_RO(attrs);
+    const SEXP *p_names = STRING_PTR_RO(names);
+
+    SEXP attr_nm = r_null;
+
+    for (int i = 0; i < Rf_length(names); ++i){
+      if (p_names[i] != R_BlankString){
+        attr_nm = make_symbol(CHAR(p_names[i]));
+        if (address(x) == address(p_attributes[i])){
+          SEXP dup_attr = SHIELD(vec::deep_copy(p_attributes[i])); ++NP;
+          attr::set_attr(x, attr_nm, dup_attr);
+        } else {
+          attr::set_attr(x, attr_nm, p_attributes[i]);
+        }
+      }
+    }
+    break;
+  }
+  case LISTSXP: {
+    SEXP addr_x = SHIELD(address(x)); ++NP;
+
+    SEXP current = attrs;
+
+    while (!is_null(current)){
+      if (is_null(TAG(current)) || PRINTNAME(TAG(current)) == R_BlankString){
+        YIELD(NP);
+        Rf_error("Please only supply named attributes in %s", __func__);
+      }
+      if (addr_x == address(CAR(current))){
+        SEXP dup_attr = SHIELD(vec::deep_copy(CAR(current))); ++NP;
+        attr::set_attr(x, TAG(current), dup_attr);
+      } else {
+        attr::set_attr(x, TAG(current), CAR(current));
+      }
+      // Next node
+      current = CDR(current);
+    }
+    break;
+  }
+  default: {
+    Rf_error("`attrs` must be a named list");
+  }
+  }
+    YIELD(NP);
+  }
+
+}
+
+namespace attr {
+
+// Attributes of x as a list
+inline SEXP get_attrs(SEXP x){
+  SEXP a = ATTRIB(x);
+  int n = Rf_length(a);
+
+  SEXP out = SHIELD(internal::new_vec(VECSXP, n));
+  SEXP names = SHIELD(internal::new_vec(STRSXP, n));
+  SEXP current = a;
+
+  for (int i = 0; i < n; ++i){
+    SET_VECTOR_ELT(out, i, CAR(current));
+    if (!is_null(TAG(current))){
+      SET_STRING_ELT(names, i, PRINTNAME(TAG(current)));
+    }
+    current = CDR(current);
+  }
+  internal::set_r_names(out, names);
+  YIELD(2);
+  return out;
+}
+
+template<typename... Args>
+inline void modify_attrs(SEXP x, Args... args) {
+  SEXP attrs = SHIELD(internal::make_pairlist(args...));;
+  internal::add_attrs(x, attrs);
+  YIELD(1);
+}
+
+inline void set_attrs(SEXP x, SEXP attrs){
+  clear_attrs(x);
+  internal::add_attrs(x, attrs);
+}
+
+}
+
+
 
 namespace internal {
 // Wrap any callable f, and return a new callable that:

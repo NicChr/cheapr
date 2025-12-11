@@ -77,7 +77,7 @@ SEXP cpp_common_template(SEXP x){
 
       for (int i = 0; i < n; ++i){
         if (Rf_isFactor(p_x[i])){
-          R_Reprotect(new_lvls = get_attrib(p_x[i], R_LevelsSymbol), new_lvls_idx);
+          R_Reprotect(new_lvls = get_attr(p_x[i], R_LevelsSymbol), new_lvls_idx);
         } else {
           R_Reprotect(new_lvls = cast<r_character_t>(p_x[i], r_null), new_lvls_idx);
         }
@@ -88,7 +88,7 @@ SEXP cpp_common_template(SEXP x){
           }
         }
       }
-      set_attrib(out, R_LevelsSymbol, all_lvls);
+      set_attr(out, R_LevelsSymbol, all_lvls);
       break;
     }
     // Figure out if date is integer or double

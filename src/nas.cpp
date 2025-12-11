@@ -769,7 +769,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
 // Helpers to get matrix row and col names
 
 SEXP matrix_rownames(SEXP x) {
-  SEXP dimnames = SHIELD(get_attrib(x, R_DimNamesSymbol));
+  SEXP dimnames = SHIELD(get_attr(x, R_DimNamesSymbol));
 
   if (is_null(dimnames) ||
       TYPEOF(dimnames) != VECSXP ||
@@ -781,7 +781,7 @@ SEXP matrix_rownames(SEXP x) {
   return VECTOR_ELT(dimnames, 0);
 }
 SEXP matrix_colnames(SEXP x) {
-  SEXP dimnames = SHIELD(get_attrib(x, R_DimNamesSymbol));
+  SEXP dimnames = SHIELD(get_attr(x, R_DimNamesSymbol));
 
   if (is_null(dimnames) ||
       TYPEOF(dimnames) != VECSXP ||
@@ -814,7 +814,7 @@ SEXP cpp_row_na_counts(SEXP x, bool names){
   } else {
     out = SHIELD(cpp_df_row_na_counts(x)); ++NP;
     if (names){
-      SEXP row_names = SHIELD(vec::deep_copy(get_attrib(x, R_RowNamesSymbol))); ++NP;
+      SEXP row_names = SHIELD(vec::deep_copy(get_attr(x, R_RowNamesSymbol))); ++NP;
       set_r_names(out, row_names);
     }
   }
