@@ -79,11 +79,23 @@ inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
 
 enum r_bool_t : int {
   r_true = 1,
-    r_false = 0,
-    r_na = r_limits::r_int_min
+  r_false = 0,
+  r_na = std::numeric_limits<int>::min()
 };
 
 inline const SEXP r_null = R_NilValue;
+
+template <typename T>
+inline constexpr bool is_r_integral_v =
+std::is_integral_v<T> ||
+std::is_same_v<T, r_bool_t> ||
+std::is_same_v<T, Rboolean> ||
+std::is_same_v<T, cpp11::r_bool>;
+
+template <typename T>
+inline constexpr bool is_r_arithmetic_v =
+std::is_arithmetic_v<T> ||
+is_r_integral_v<T>;
 
 namespace env {
 inline const SEXP empty_env = R_EmptyEnv;
@@ -104,17 +116,6 @@ namespace na {
 }
 
 // Functions
-
-template <typename T>
-inline constexpr bool is_r_integral_v =
-  std::is_integral_v<T> ||
-    std::is_same_v<T, r_bool_t> ||
-    std::is_same_v<T, Rboolean> ||
-    std::is_same_v<T, cpp11::r_bool>;
-
-template <typename T>
-inline constexpr bool is_r_arithmetic_v =
-  std::is_arithmetic_v<T> || is_r_integral_v<T>;
 
 namespace internal {
 
@@ -595,7 +596,7 @@ namespace vec {
 
 template<typename T>
 inline SEXP as_vec(const T x){
-  if constexpr (std::is_integral<T>::value){
+  if constexpr (is_r_integral_v<T>){
     return as_vec<int64_t>(x);
   } else if constexpr (std::is_convertible_v<T, SEXP>){
     return as_vec<SEXP>(x);
@@ -706,7 +707,7 @@ inline constexpr bool can_be_int(T x){
   // an arithmetic type (e.g. double)
   if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int)){
     return true;
-  } else if constexpr (std::is_arithmetic_v<T>){
+  } else if constexpr (is_r_arithmetic_v<T>){
     return between<T>(x, r_limits::r_int_min, r_limits::r_int_max);
   } else {
     return false;
@@ -716,9 +717,9 @@ template<typename T>
 inline constexpr bool can_be_int64(T x){
   // If x is an int64 type whose size is <= int64 OR
   // an arithmetic type (e.g. double)
-  if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int64_t)){
+  if constexpr (is_r_integral_v<T> && sizeof(T) <= sizeof(int64_t)){
     return true;
-  } else if constexpr (std::is_arithmetic_v<T>){
+  } else if constexpr (is_r_arithmetic_v<T>){
     return between<T>(x, r_limits::r_int64_min, r_limits::r_int64_max);
   } else {
     return false;
@@ -731,7 +732,7 @@ template<typename T>
 inline constexpr r_bool_t as_bool(T x){
   if constexpr (std::is_same_v<T, int>){
     return static_cast<r_bool_t>(x);
-  } else if constexpr (std::is_arithmetic_v<T>){
+  } else if constexpr (is_r_arithmetic_v<T>){
     return is_r_na(x) ? na::logical : static_cast<r_bool_t>(static_cast<bool>(x));
   } else {
     return na::logical;
@@ -741,7 +742,7 @@ template<typename T>
 inline constexpr int as_int(T x){
   if constexpr (std::is_same_v<T, int>){
     return x;
-  } else if constexpr (std::is_arithmetic_v<T>){
+  } else if constexpr (is_r_arithmetic_v<T>){
     return is_r_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<int>(x);
   } else {
     return na::integer;
@@ -751,7 +752,7 @@ template<typename T>
 inline constexpr int64_t as_int64(T x){
   if constexpr (std::is_same_v<T, int64_t>){
     return x;
-  } else if constexpr (std::is_arithmetic_v<T>){
+  } else if constexpr (is_r_arithmetic_v<T>){
     return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<int64_t>(x);
   } else {
     return na::integer64;
@@ -761,7 +762,7 @@ template<typename T>
 inline constexpr double as_double(T x){
   if constexpr (std::is_same_v<T, double>){
     return x;
-  } else if constexpr (std::is_arithmetic_v<T>){
+  } else if constexpr (is_r_arithmetic_v<T>){
     return is_r_na(x) ? na::numeric : static_cast<double>(x);
   } else {
     return na::numeric;
@@ -771,7 +772,7 @@ template<typename T>
 inline constexpr Rcomplex as_complex(T x){
   if constexpr (std::is_same_v<T, Rcomplex>){
     return x;
-  } else if constexpr (std::is_arithmetic_v<T>){
+  } else if constexpr (is_r_arithmetic_v<T>){
     return {{as_double(x), 0.0}};
   } else {
     return na::complex;
@@ -781,7 +782,7 @@ template<typename T>
 inline constexpr Rbyte as_raw(T x){
   if constexpr (std::is_same_v<T, Rbyte>){
     return x;
-  } else if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int8_t)){
+  } else if constexpr (is_r_integral_v<T> && sizeof(T) <= sizeof(int8_t)){
     return is_r_na(x) || x < 0 ? na::raw : static_cast<Rbyte>(x);
   } else if constexpr (std::is_convertible_v<T, Rbyte>){
     return is_r_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<Rbyte>(x);
@@ -791,7 +792,7 @@ inline constexpr Rbyte as_raw(T x){
 }
 // As CHARSXP
 template<typename T>
-inline constexpr SEXP as_r_string(T x){
+inline SEXP as_r_string(T x){
   if constexpr (std::is_same_v<std::decay_t<T>, const char *>){
     return internal::make_utf8_charsxp(x);
   } else {
@@ -906,7 +907,7 @@ inline r_bool_t is_whole_number(const double x, const double tolerance){
 
 template<
   typename T,
-  typename = typename std::enable_if<std::is_arithmetic_v<T>>::type
+  typename = typename std::enable_if<is_r_arithmetic_v<T>>::type
 >
 inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
 
@@ -925,7 +926,7 @@ inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits
   T ax = std::abs(x);
   T ay = std::abs(y);
 
-  if constexpr (std::is_integral_v<T>){
+  if constexpr (is_r_integral_v<T>){
 
     // Taken from number theory lecture notes
 
@@ -964,7 +965,7 @@ inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits
       return ax;
     }
 
-    double r;
+    T r;
     while(ay > tol){
       r = std::fmod(ax, ay);
       ax = ay;
@@ -977,7 +978,7 @@ inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits
 
 // Overloaded lowest-common-multiple fn
 template<typename T,
-         typename = typename std::enable_if<std::is_arithmetic_v<T>>::type>
+         typename = typename std::enable_if<is_r_arithmetic_v<T>>::type>
 inline T lcm2(
     T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
 ){
@@ -993,7 +994,7 @@ inline T lcm2(
     }
   }
 
-  if constexpr (std::is_integral_v<T>){
+  if constexpr (is_r_integral_v<T>){
     if (x == 0 && y == 0){
       return 0;
     }
