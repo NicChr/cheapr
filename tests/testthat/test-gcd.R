@@ -73,8 +73,8 @@ test_that("Small vectors (integers)", {
 
   expect_identical(gcd(c(0, Inf)), Inf)
   expect_identical(gcd(c(Inf, 0)), Inf)
-  expect_identical(gcd(c(0, -Inf)), -Inf)
-  expect_identical(gcd(c(-Inf, 0)), -Inf)
+  expect_identical(gcd(c(0, -Inf)), Inf)
+  expect_identical(gcd(c(-Inf, 0)), Inf)
   expect_identical(scm(c(0, Inf)), NaN)
   expect_identical(scm(c(Inf, 0)), NaN)
   expect_identical(scm(c(0, -Inf)), NaN)
@@ -146,17 +146,17 @@ test_that("signs", {
   d <- -b
   expect_identical(gcd(a), 5L)
   expect_identical(gcd(b), 5)
-  expect_identical(gcd(c), -5L)
-  expect_identical(gcd(d), -5)
+  expect_identical(gcd(c), 5L)
+  expect_identical(gcd(d), 5)
 })
 
 test_that("Overflow", {
   expect_equal(scm(1:30), 2329089562800)
-  expect_equal(scm(-(1:30)), -2329089562800)
+  expect_equal(scm(-(1:30)), 2329089562800)
   expect_equal(scm(1:50), 1.85233763824414e+28)
-  expect_equal(scm(-(1:50)), -1.85233763824414e+28)
+  expect_equal(scm(-(1:50)), 1.85233763824414e+28)
   expect_equal(scm(as.double(1:50)), 18523376382441352270484866200)
-  expect_equal(scm(-as.double(1:50)), -18523376382441352270484866200)
+  expect_equal(scm(-as.double(1:50)), 18523376382441352270484866200)
 })
 
 test_that("Binary gcd and scm", {

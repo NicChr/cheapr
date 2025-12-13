@@ -86,126 +86,6 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   YIELD(1);
   return out;
 }
-// SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
-//
-//   if (tol < 0 || tol >= 1){
-//     Rf_error("tol must be >= 0 and < 1");
-//   }
-//   R_xlen_t n = Rf_xlength(x);
-//
-//   SEXP out;
-//
-//   switch(CHEAPR_TYPEOF(x)){
-//   case LGLSXP:
-//   case INTSXP: {
-//     const int *p_x = INTEGER(x);
-//
-//     out = SHIELD(vec::new_integer((n == 0) ? 0 : 1));
-//
-//     if (n > 0){
-//       int gcd = p_x[0];
-//       if (is_r_na(gcd)){
-//         if (na_rm){
-//           gcd = 0;
-//         } else {
-//           set_val(out, 0, gcd);
-//           YIELD(1);
-//           return out;
-//         }
-//       }
-//       for (R_xlen_t i = 1; i < n; ++i) {
-//         if (is_r_na(p_x[i])){
-//           if (na_rm){
-//             continue;
-//           } else {
-//             break;
-//           }
-//         }
-//         gcd = gcd2(gcd, p_x[i]);
-//
-//         if (std::abs(gcd) == 1){
-//           break;
-//         }
-//       }
-//       set_val(out, 0, gcd);
-//     }
-//     break;
-//   }
-//   case CHEAPR_INT64SXP: {
-//     const int64_t *p_x = INTEGER64_PTR_RO(x);
-//
-//     out = SHIELD(new_double((n == 0) ? 0 : 1));
-//
-//     if (n > 0){
-//       int64_t gcd = p_x[0];
-//       if (is_r_na(gcd)){
-//         if (na_rm){
-//           gcd = 0;
-//         } else {
-//           set_val(out, 0, as_double(gcd));
-//           YIELD(1);
-//           return out;
-//         }
-//       }
-//       for (R_xlen_t i = 1; i < n; ++i) {
-//         if (is_r_na(p_x[i])){
-//           if (na_rm){
-//             continue;
-//           } else {
-//             break;
-//           }
-//         }
-//         gcd = gcd2(gcd, p_x[i]);
-//         if (std::abs(gcd) == 1){
-//           break;
-//         }
-//       }
-//       set_val(out, 0, as_double(gcd));
-//     }
-//     break;
-//   }
-//   default: {
-//     const double *p_x = REAL(x);
-//     out = SHIELD(new_double((n == 0) ? 0 : 1));
-//     if (n > 0){
-//       double gcd = p_x[0];
-//       if (is_r_na(gcd)){
-//         if (na_rm){
-//           gcd = 0;
-//         } else {
-//           set_val(out, 0, gcd);
-//           YIELD(1);
-//           return out;
-//         }
-//       }
-//       double agcd;
-//       for (R_xlen_t i = 1; i < n; ++i) {
-//         if (is_r_na(p_x[i])){
-//           if (na_rm){
-//             continue;
-//           } else {
-//             break;
-//           }
-//         }
-//         gcd = gcd2(gcd, p_x[i], tol);
-//         agcd = std::fabs(gcd);
-//         if (break_early && agcd > 0.0 && agcd < (tol + tol)){
-//           gcd = tol * static_cast<double>(sign(gcd));
-//           break;
-//         }
-//       }
-//       if (round && tol > 0){
-//         double factor = std::pow(10, std::ceil(std::fabs(std::log10(tol))) + 1);
-//         gcd = std::round(gcd * factor) / factor;
-//       }
-//       set_val(out, 0, gcd);
-//     }
-//     break;
-//   }
-//   }
-//   YIELD(1);
-//   return out;
-// }
 
 // Lowest common multiple using GCD Euclidean algorithm
 
@@ -236,7 +116,11 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       if (!na_rm && is_r_na(lcm)){
         break;
       }
-      auto res = lcm2(lcm, p_x[i], na_rm, 0, overflowed);
+      auto res = lcm2(lcm, p_x[i], na_rm);
+
+      // Only overflowed if result is NA and inputs aren't NA
+      overflowed = is_r_na(res) && !is_r_na(lcm) && !is_r_na(p_x[i]);
+
       if (overflowed){
         i = n; // Terminate the loop
         double lcm_dbl = r_cast<double>(p_x[0]);
@@ -244,7 +128,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
           if (!na_rm && is_r_na(lcm)){
             break;
           }
-          lcm_dbl = lcm2<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, 0, overflowed);
+          lcm_dbl = lcm2<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
         }
         return as_vec(lcm_dbl);
       } else {
@@ -252,11 +136,6 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       }
     }
     return as_vec(lcm);
-    // if (is_r_na(lcm) || can_be_int(lcm)){
-    //   return as_vec(r_cast<int>(lcm));
-    // } else {
-    //   return as_vec(r_cast<double>(lcm));
-    // }
   }
   case CHEAPR_INT64SXP: {
 
@@ -273,7 +152,11 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       if (!na_rm && is_r_na(lcm)){
         break;
       }
-      auto res = lcm2(lcm, p_x[i], na_rm, 0, overflowed);
+      auto res = lcm2(lcm, p_x[i], na_rm);
+
+      // Only overflowed if result is NA and inputs aren't NA
+      overflowed = is_r_na(res) && !is_r_na(lcm) && !is_r_na(p_x[i]);
+
       if (overflowed){
         i = n; // Terminate the loop
         double lcm_dbl = r_cast<double>(p_x[0]);
@@ -281,7 +164,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
           if (!na_rm && is_r_na(lcm)){
             break;
           }
-          lcm_dbl = lcm2<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, 0, overflowed);
+          lcm_dbl = lcm2<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
         }
         return as_vec(lcm_dbl);
       } else {
@@ -348,21 +231,6 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(yi, yn),
     ++i){
       p_out[i] = gcd2(p_x[xi], p_y[yi], na_rm);
-      // if (na_rm){
-      //   if (is_r_na(p_x[xi])){
-      //     p_out[i] = p_y[yi];
-      //   } else if (is_r_na(p_y[yi])){
-      //     p_out[i] = p_x[xi];
-      //   } else {
-      //     p_out[i] = gcd2(p_x[xi], p_y[yi]);
-      //   }
-      // } else {
-      //   if (is_r_na(p_x[xi]) || is_r_na(p_y[yi])){
-      //     p_out[i] = na::integer;
-      //   } else {
-      //     p_out[i] = gcd2(p_x[xi], p_y[yi]);
-      //   }
-      // }
     }
     YIELD(NP);
     return out;
@@ -379,21 +247,6 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(yi, yn),
     ++i){
       p_out[i] = gcd2(p_x[xi], p_y[yi], na_rm, tol);
-      // if (na_rm){
-      //   if (is_r_na(p_x[xi])){
-      //     p_out[i] = p_y[yi];
-      //   } else if (is_r_na(p_y[yi])){
-      //     p_out[i] = p_x[xi];
-      //   } else {
-      //     p_out[i] = gcd2(p_x[xi], p_y[yi], tol);
-      //   }
-      // } else {
-      //   if (is_r_na(p_x[xi]) || is_r_na(p_y[yi])){
-      //     p_out[i] = na::numeric;
-      //   } else {
-      //     p_out[i] = gcd2(p_x[xi], p_y[yi], tol);
-      //   }
-      // }
     }
     YIELD(NP);
     return out;
@@ -434,13 +287,6 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(yi, yn),
     ++i){
       p_out[i] = r_cast<int>(lcm2(p_x[xi], p_y[yi], na_rm));
-      // dbl_lcm = lcm2(p_x[xi], p_y[yi], 0, na_rm);
-      // if (is_r_na(dbl_lcm)|| std::fabs(dbl_lcm) > int_max){
-      //   p_out[i] = na::integer;
-      // } else {
-      //   int_lcm = dbl_lcm;
-      //   p_out[i] = int_lcm;
-      // }
     }
     YIELD(NP);
     return out;

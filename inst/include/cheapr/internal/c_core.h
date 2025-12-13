@@ -58,14 +58,6 @@
 
 namespace cheapr {
 
-// bool type, similar to Rboolean
-
-enum r_bool_t : int {
-  r_true = 1,
-  r_false = 0,
-  r_na = INT_MIN
-};
-
 // Constants
 
 namespace internal {
@@ -82,6 +74,14 @@ inline constexpr int64_t r_int64_max = std::numeric_limits<int64_t>::max();
 inline constexpr double r_pos_inf = std::numeric_limits<double>::infinity();
 inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
 }
+
+// bool type, similar to Rboolean
+
+enum r_bool_t : int {
+  r_true = 1,
+    r_false = 0,
+    r_na = r_limits::r_int_min
+};
 
 inline const SEXP r_null = R_NilValue;
 
@@ -104,6 +104,17 @@ namespace na {
 }
 
 // Functions
+
+template <typename T>
+inline constexpr bool is_r_integral_v =
+  std::is_integral_v<T> ||
+    std::is_same_v<T, r_bool_t> ||
+    std::is_same_v<T, Rboolean> ||
+    std::is_same_v<T, cpp11::r_bool>;
+
+template <typename T>
+inline constexpr bool is_r_arithmetic_v =
+  std::is_arithmetic_v<T> || is_r_integral_v<T>;
 
 namespace internal {
 
@@ -642,6 +653,10 @@ template<>
 inline SEXP as_vec<cpp11::r_string>(const cpp11::r_string x){
   return Rf_ScalarString(x);
 }
+template<>
+inline SEXP as_vec<cpp11::r_bool>(const cpp11::r_bool x){
+  return Rf_ScalarLogical(static_cast<int>(x));
+}
 
 // Scalar string
 template<>
@@ -859,6 +874,24 @@ inline T r_cast(U x) {
 
 // R fns
 
+template<typename T>
+inline T r_abs(T x){
+  if constexpr (is_r_integral_v<T>){
+    return is_r_na(x) ? x : static_cast<T>(std::abs(x));
+  } else {
+    return static_cast<T>(std::abs(x));
+  }
+}
+
+inline double r_abs(Rcomplex x){
+  if (is_r_na(x)){
+    return na::numeric;
+  } else {
+    return std::sqrt(x.r * x.r + x.i * x.i);
+  }
+}
+
+
 inline double r_round(double x){
   return is_r_na(x) ? na_value(x) : x - std::remainder(x, 1.0);
 }
@@ -880,44 +913,43 @@ inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits
   if (is_r_na(x) || is_r_na(y)){
    if (na_rm){
      if (is_r_na(x)){
-       return y;
+       return r_abs(y);
      } else {
-       return x;
+       return r_abs(x);
      }
    } else {
      return na_value(x);
    }
   }
 
+  T ax = std::abs(x);
+  T ay = std::abs(y);
+
   if constexpr (std::is_integral_v<T>){
 
     // Taken from number theory lecture notes
 
     // GCD(0,0)=0
-    if (x == 0 && y == 0){
+    if (ax == 0 && ay == 0){
       return 0;
     }
     // GCD(a,0)=a
-    if (x == 0){
-      return y;
+    if (ax == 0){
+      return ay;
     }
     // GCD(a,0)=a
-    if (y == 0){
-      return x;
+    if (ay == 0){
+      return ax;
     }
 
     T r;
-    while(y != 0){
-      r = x % y;
-      x = y;
-      y = r;
+    while(ay != 0){
+      r = ax % ay;
+      ax = ay;
+      ay = r;
     }
-    return x;
+    return ax;
   } else {
-
-    double x_sign = (T(0) < x) - (x < T(0));
-    double ax = std::fabs(x);
-    double ay = std::fabs(y);
 
     // GCD(0,0)=0
     if (ax <= tol && ay <= tol){
@@ -925,11 +957,11 @@ inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits
     }
     // GCD(a,0)=a
     if (ax <= tol){
-      return y;
+      return ay;
     }
     // GCD(a,0)=a
     if (ay <= tol){
-      return x;
+      return ax;
     }
 
     double r;
@@ -938,16 +970,16 @@ inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits
       ax = ay;
       ay = r;
     }
-    return ax * x_sign;
+    return ax;
   }
 }
 
 
 // Overloaded lowest-common-multiple fn
 template<typename T,
-         std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+         typename = typename std::enable_if<std::is_arithmetic_v<T>>::type>
 inline T lcm2(
-    T x, T y, bool na_rm, double tol, bool& overflowed
+    T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
 ){
   if (is_r_na(x) || is_r_na(y)){
     if (na_rm){
@@ -967,8 +999,6 @@ inline T lcm2(
     }
     T res = std::abs(x) / gcd2(x, y, na_rm);
     if (y != 0 && (std::abs(res) > (std::numeric_limits<T>::max() / std::abs(y)))){
-      // Update overflowed flag
-      overflowed = true;
       return na_value(x);
     }
     return res * std::abs(y);
@@ -978,38 +1008,7 @@ inline T lcm2(
     }
     return ( std::fabs(x) / gcd2(x, y, na_rm, tol) ) * std::fabs(y);
   }
-
 }
-template<typename T,
-         std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
-  inline T lcm2(
-      T x, T y, bool na_rm = true, double tol = std::sqrt(std::numeric_limits<double>::epsilon())
-  ){
-    bool dummy = false;
-    return lcm2(x, y, na_rm, tol, dummy);
-  }
-// inline double lcm2(
-//     double x, double y, bool na_rm = true,
-//     double tol = std::sqrt(std::numeric_limits<double>::epsilon())
-// ){
-//
-//   if (is_r_na(x) || is_r_na(y)){
-//     if (na_rm){
-//       if (is_r_na(x)){
-//         return y;
-//       } else {
-//         return x;
-//       }
-//     } else {
-//       return na::numeric;
-//     }
-//   }
-//
-//   if (std::fabs(x) <= tol && std::fabs(y) <= tol){
-//     return 0.0;
-//   }
-//   return ( std::fabs(x) / gcd2(x, y, na_rm, tol) ) * std::fabs(y);
-// }
 
 inline SEXP eval(SEXP expr, SEXP env){
   return Rf_eval(expr, env);
