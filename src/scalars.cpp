@@ -76,7 +76,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case CPLXSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
-    const Rcomplex val = as_complex(COMPLEX(value)[0]);
+    const Rcomplex val = COMPLEX(value)[0];
     const Rcomplex *p_x = COMPLEX_RO(x);
     CHEAPR_VAL_COUNT(val);
     break;

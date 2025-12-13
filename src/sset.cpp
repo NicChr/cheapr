@@ -314,7 +314,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     }
   }
 
-  SEXP r_out_size = SHIELD(as_vec(as_double(out_size))); ++NP;
+  SEXP r_out_size = SHIELD(as_vec(r_cast<double>(out_size))); ++NP;
   SEXP r_check_indices = SHIELD(as_vec(check_indices)); ++NP;
 
   SEXP out = SHIELD(make_list(

@@ -38,7 +38,7 @@ SEXP cpp_int64_to_double(SEXP x){
   const int64_t *p_x = INTEGER64_PTR_RO(x);
 
   for (R_xlen_t i = 0; i < n; ++i){
-    p_out[i] = as_double(p_x[i]);
+    p_out[i] = r_cast<double>(p_x[i]);
   }
   YIELD(1);
   return out;
@@ -119,7 +119,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     out = SHIELD(new_integer64(n)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = as_int64(p_x[i]);
+      p_out[i] = r_cast<int64_t>(p_x[i]);
     }
     break;
   }
@@ -132,7 +132,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     out = SHIELD(new_integer64(n)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = as_int64(p_x[i]);
+      p_out[i] = r_cast<int64_t>(p_x[i]);
     }
     break;
   }

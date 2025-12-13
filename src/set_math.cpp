@@ -44,7 +44,7 @@ SEXP convert_int_to_real(SEXP x){
   SEXP out = SHIELD(new_double(n));
   double* RESTRICT p_out = REAL(out);
   for (int i = 0; i < n; ++i){
-    p_out[i] = as_double(p_x[i]);
+    p_out[i] = r_cast<double>(p_x[i]);
   }
   YIELD(1);
   return out;

@@ -518,15 +518,15 @@ SEXP cpp_growth_rate(SEXP x){
   case INTSXP: {
     int x_n = INTEGER(x)[n - 1];
     int x_1 = INTEGER(x)[0];
-    a = as_double(x_1);
-    b = as_double(x_n);
+    a = r_cast<double>(x_1);
+    b = r_cast<double>(x_n);
     break;
   }
   case CHEAPR_INT64SXP: {
     int64_t x_n = INTEGER64_PTR(x)[n - 1];
     int64_t x_1 = INTEGER64_PTR(x)[0];
-    a = as_double(x_1);
-    b = as_double(x_n);
+    a = r_cast<double>(x_1);
+    b = r_cast<double>(x_n);
     break;
   }
   case REALSXP: {

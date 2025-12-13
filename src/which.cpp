@@ -212,7 +212,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case CPLXSXP: {
     SEXP out = SHIELD(is_long ? new_double(out_size) : new_integer(out_size)); ++NP;
     SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
-    Rcomplex val = as_complex(COMPLEX(value)[0]);
+    Rcomplex val = COMPLEX(value)[0];
     const Rcomplex *p_x = COMPLEX_RO(x);
     if (is_long){
       double* RESTRICT p_out = REAL(out);

@@ -53,7 +53,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
       }
-      set_val(out, 0, as_double(gcd));
+      set_val(out, 0, r_cast<double>(gcd));
     }
     break;
   }
@@ -125,7 +125,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         i = n; // Terminate the loop
         double lcm_dbl = r_cast<double>(p_x[0]);
         for (R_xlen_t j = 1; j < n; ++j) {
-          if (!na_rm && is_r_na(lcm)){
+          if (!na_rm && is_r_na(lcm_dbl)){
             break;
           }
           lcm_dbl = lcm2<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
@@ -161,7 +161,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         i = n; // Terminate the loop
         double lcm_dbl = r_cast<double>(p_x[0]);
         for (R_xlen_t j = 1; j < n; ++j) {
-          if (!na_rm && is_r_na(lcm)){
+          if (!na_rm && is_r_na(lcm_dbl)){
             break;
           }
           lcm_dbl = lcm2<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
