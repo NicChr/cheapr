@@ -7,6 +7,7 @@
 
 #include <cpp11.hpp>
 #include <optional>
+#include <type_traits>
 
 #ifdef _MSC_VER
 #define RESTRICT __restrict
@@ -713,7 +714,9 @@ inline constexpr bool can_be_int64(T x){
 // Coerce functions that account for NA
 template<typename T>
 inline constexpr r_bool_t as_bool(T x){
-  if constexpr (std::is_arithmetic_v<T>){
+  if constexpr (std::is_same_v<T, int>){
+    return static_cast<r_bool_t>(x);
+  } else if constexpr (std::is_arithmetic_v<T>){
     return is_r_na(x) ? na::logical : static_cast<r_bool_t>(static_cast<bool>(x));
   } else {
     return na::logical;
@@ -721,7 +724,9 @@ inline constexpr r_bool_t as_bool(T x){
 }
 template<typename T>
 inline constexpr int as_int(T x){
-  if constexpr (std::is_arithmetic_v<T>){
+  if constexpr (std::is_same_v<T, int>){
+    return x;
+  } else if constexpr (std::is_arithmetic_v<T>){
     return is_r_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<int>(x);
   } else {
     return na::integer;
@@ -729,22 +734,26 @@ inline constexpr int as_int(T x){
 }
 template<typename T>
 inline constexpr int64_t as_int64(T x){
-  if constexpr (std::is_arithmetic_v<T>){
+  if constexpr (std::is_same_v<T, int64_t>){
+    return x;
+  } else if constexpr (std::is_arithmetic_v<T>){
     return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<int64_t>(x);
   } else {
     return na::integer64;
   }
 }
 template<typename T>
-inline double as_double(T x){
-  if constexpr (std::is_arithmetic_v<T>){
+inline constexpr double as_double(T x){
+  if constexpr (std::is_same_v<T, double>){
+    return x;
+  } else if constexpr (std::is_arithmetic_v<T>){
     return is_r_na(x) ? na::numeric : static_cast<double>(x);
   } else {
     return na::numeric;
   }
 }
 template<typename T>
-inline Rcomplex as_complex(T x){
+inline constexpr Rcomplex as_complex(T x){
   if constexpr (std::is_same_v<T, Rcomplex>){
     return x;
   } else if constexpr (std::is_arithmetic_v<T>){
@@ -755,7 +764,9 @@ inline Rcomplex as_complex(T x){
 }
 template<typename T>
 inline constexpr Rbyte as_raw(T x){
-  if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int8_t)){
+  if constexpr (std::is_same_v<T, Rbyte>){
+    return x;
+  } else if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int8_t)){
     return is_r_na(x) || x < 0 ? na::raw : static_cast<Rbyte>(x);
   } else if constexpr (std::is_convertible_v<T, Rbyte>){
     return is_r_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<Rbyte>(x);
@@ -765,7 +776,7 @@ inline constexpr Rbyte as_raw(T x){
 }
 // As CHARSXP
 template<typename T>
-inline SEXP as_r_string(T x){
+inline constexpr SEXP as_r_string(T x){
   if constexpr (std::is_same_v<std::decay_t<T>, const char *>){
     return internal::make_utf8_charsxp(x);
   } else {
@@ -852,36 +863,153 @@ inline double r_round(double x){
   return is_r_na(x) ? na_value(x) : x - std::remainder(x, 1.0);
 }
 
+inline double abs_diff(const double x, const double y){
+  return std::fabs(x - y);
+}
+
 inline r_bool_t is_whole_number(const double x, const double tolerance){
-  return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_bool_t>(std::fabs(x - std::round(x)) < tolerance);
+  return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_bool_t>(abs_diff(x, std::round(x)) < tolerance);
 }
 
-inline double gcd2(double x, double y, double tol, bool na_rm){
+template<
+  typename T,
+  typename = typename std::enable_if<std::is_arithmetic_v<T>>::type
+>
+inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
 
-  if (!na_rm && ( is_r_na(x) || is_r_na(y))){
-    return na::numeric;
+  if (is_r_na(x) || is_r_na(y)){
+   if (na_rm){
+     if (is_r_na(x)){
+       return y;
+     } else {
+       return x;
+     }
+   } else {
+     return na_value(x);
+   }
   }
-  // GCD(0,0)=0
-  if (x == 0.0 && y == 0.0){
-    return 0.0;
-  }
-  // GCD(a,0)=a
-  if (x == 0.0){
-    return y;
-  }
-  // GCD(a,0)=a
-  if (y == 0.0){
+
+  if constexpr (std::is_integral_v<T>){
+
+    // Taken from number theory lecture notes
+
+    // GCD(0,0)=0
+    if (x == 0 && y == 0){
+      return 0;
+    }
+    // GCD(a,0)=a
+    if (x == 0){
+      return y;
+    }
+    // GCD(a,0)=a
+    if (y == 0){
+      return x;
+    }
+
+    T r;
+    while(y != 0){
+      r = x % y;
+      x = y;
+      y = r;
+    }
     return x;
+  } else {
+
+    double x_sign = (T(0) < x) - (x < T(0));
+    double ax = std::fabs(x);
+    double ay = std::fabs(y);
+
+    // GCD(0,0)=0
+    if (ax <= tol && ay <= tol){
+      return 0.0;
+    }
+    // GCD(a,0)=a
+    if (ax <= tol){
+      return y;
+    }
+    // GCD(a,0)=a
+    if (ay <= tol){
+      return x;
+    }
+
+    double r;
+    while(ay > tol){
+      r = std::fmod(ax, ay);
+      ax = ay;
+      ay = r;
+    }
+    return ax * x_sign;
   }
-  double r;
-  // Taken from number theory lecture notes
-  while(std::fabs(y) > tol){
-    r = std::fmod(x, y);
-    x = y;
-    y = r;
-  }
-  return x;
 }
+
+
+// Overloaded lowest-common-multiple fn
+template<typename T,
+         std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+inline T lcm2(
+    T x, T y, bool na_rm, double tol, bool& overflowed
+){
+  if (is_r_na(x) || is_r_na(y)){
+    if (na_rm){
+      if (is_r_na(x)){
+        return y;
+      } else {
+        return x;
+      }
+    } else {
+      return na_value(x);
+    }
+  }
+
+  if constexpr (std::is_integral_v<T>){
+    if (x == 0 && y == 0){
+      return 0;
+    }
+    T res = std::abs(x) / gcd2(x, y, na_rm);
+    if (y != 0 && (std::abs(res) > (std::numeric_limits<T>::max() / std::abs(y)))){
+      // Update overflowed flag
+      overflowed = true;
+      return na_value(x);
+    }
+    return res * std::abs(y);
+  } else {
+    if (std::fabs(x) <= tol && std::fabs(y) <= tol){
+      return 0.0;
+    }
+    return ( std::fabs(x) / gcd2(x, y, na_rm, tol) ) * std::fabs(y);
+  }
+
+}
+template<typename T,
+         std::enable_if_t<std::is_arithmetic_v<T>, bool> = true>
+  inline T lcm2(
+      T x, T y, bool na_rm = true, double tol = std::sqrt(std::numeric_limits<double>::epsilon())
+  ){
+    bool dummy = false;
+    return lcm2(x, y, na_rm, tol, dummy);
+  }
+// inline double lcm2(
+//     double x, double y, bool na_rm = true,
+//     double tol = std::sqrt(std::numeric_limits<double>::epsilon())
+// ){
+//
+//   if (is_r_na(x) || is_r_na(y)){
+//     if (na_rm){
+//       if (is_r_na(x)){
+//         return y;
+//       } else {
+//         return x;
+//       }
+//     } else {
+//       return na::numeric;
+//     }
+//   }
+//
+//   if (std::fabs(x) <= tol && std::fabs(y) <= tol){
+//     return 0.0;
+//   }
+//   return ( std::fabs(x) / gcd2(x, y, na_rm, tol) ) * std::fabs(y);
+// }
 
 inline SEXP eval(SEXP expr, SEXP env){
   return Rf_eval(expr, env);
