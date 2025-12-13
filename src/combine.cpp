@@ -730,7 +730,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   int32_t NP = 0;
   R_xlen_t common_size = length_common(x);
   SEXP out = SHIELD(cpp_list_c(x)); ++NP;
-  SEXP df_nrows = SHIELD(as_vec<int>(common_size)); ++NP;
+  SEXP df_nrows = SHIELD(as_vec(r_cast<int>(common_size))); ++NP;
   SHIELD(out = cpp_new_df(out, df_nrows, recycle, name_repair)); ++NP;
 
   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){

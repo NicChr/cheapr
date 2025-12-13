@@ -405,7 +405,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     }
     }
     default: {
-      SEXP sexp_n_vals = SHIELD(as_vec<double>(n_vals)); ++NP;
+      SEXP sexp_n_vals = SHIELD(as_vec(r_cast<double>(n_vals))); ++NP;
       SEXP val_locs = SHIELD(cpp_val_find(x, value, true, sexp_n_vals)); ++NP;
       out = SHIELD(eval_pkg_fun("cheapr_sset", "cheapr", R_GetCurrentEnv(), x, val_locs)); ++NP;
       break;
