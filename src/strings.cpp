@@ -25,7 +25,7 @@ SEXP cpp_str_coalesce(SEXP x){
     return out;
   }
 
-  const SEXP *p_chars = LIST_PTR_RO(chars);
+  const SEXP *p_chars = list_ptr_ro(chars);
 
   // First cast all to character vectors
 
@@ -40,7 +40,7 @@ SEXP cpp_str_coalesce(SEXP x){
   const r_string_t **char_ptrs = (const r_string_t **) R_Calloc(n_chars, const r_string_t *);
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
-    char_ptrs[i] = R_STRING_RO(p_chars[i]);
+    char_ptrs[i] = string_ptr_ro(p_chars[i]);
   }
 
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
@@ -106,7 +106,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
     return out;
   }
 
-  const SEXP *p_chars = LIST_PTR_RO(chars);
+  const SEXP *p_chars = list_ptr_ro(chars);
 
   // First cast all to character vectors
 
@@ -125,7 +125,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   const r_string_t **char_ptrs = (const r_string_t **) R_Calloc(n_chars, const r_string_t *);
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
-    char_ptrs[i] = R_STRING_RO(p_chars[i]);
+    char_ptrs[i] = string_ptr_ro(p_chars[i]);
   }
 
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));

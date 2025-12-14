@@ -39,7 +39,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int64_t *p_x = INTEGER64_PTR_RO(x);
+    const int64_t *p_x = integer64_ptr_ro(x);
 
     out = SHIELD(new_double((n == 0) ? 0 : 1));
 
@@ -143,7 +143,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     return new_double(0);
   }
 
-    int64_t *p_x = INTEGER64_PTR(x);
+    int64_t *p_x = integer64_ptr(x);
 
     // Initialise first value as lcm
     int64_t lcm = p_x[0];

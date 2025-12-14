@@ -628,7 +628,7 @@ SEXP cpp_int_sign(SEXP x){
   int* RESTRICT p_out = integer_ptr(out);
   switch (TYPEOF(x)){
   case LGLSXP: {
-    const int *p_x = LOGICAL(x);
+    const int *p_x = integer_ptr(x);
     safe_memmove(&p_out[0], &p_x[0], n * sizeof(int));
     break;
   }

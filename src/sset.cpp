@@ -592,7 +592,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case STRSXP: {
-    const r_string_t *p_x = R_STRING_RO(x);
+    const r_string_t *p_x = string_ptr_ro(x);
     out = SHIELD(new_character(out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
@@ -621,9 +621,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_x = COMPLEX(x);
+    Rcomplex *p_x = complex_ptr(x);
     out = SHIELD(new_complex(out_size)); ++NP;
-    Rcomplex* RESTRICT p_out = COMPLEX(out);
+    Rcomplex* RESTRICT p_out = complex_ptr(out);
     if (double_loop){
       safe_memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(Rcomplex));
       safe_memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(Rcomplex));
@@ -652,7 +652,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case RAWSXP: {
-    Rbyte *p_x = RAW(x);
+    Rbyte *p_x = raw_ptr(x);
     out = SHIELD(new_raw(out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
@@ -675,7 +675,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case VECSXP: {
-    const SEXP *p_x = LIST_PTR_RO(x);
+    const SEXP *p_x = list_ptr_ro(x);
     out = SHIELD(new_list(out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
@@ -771,7 +771,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case STRSXP: {
-        const r_string_t *p_x = R_STRING_RO(x);
+        const r_string_t *p_x = string_ptr_ro(x);
         out = SHIELD(new_character(n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
@@ -787,9 +787,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex* p_x = COMPLEX_RO(x);
+        const Rcomplex* p_x = complex_ptr_ro(x);
         out = SHIELD(new_complex(n));
-        Rcomplex* RESTRICT p_out = COMPLEX(out);
+        Rcomplex* RESTRICT p_out = complex_ptr(out);
           for (int_fast64_t i = 0; i < n; ++i){
 
             j = pind[i];
@@ -814,7 +814,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case RAWSXP: {
-        const Rbyte *p_x = RAW_RO(x);
+        const Rbyte *p_x = raw_ptr_ro(x);
         out = SHIELD(new_raw(n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
@@ -830,7 +830,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case VECSXP: {
-        const SEXP *p_x = LIST_PTR_RO(x);
+        const SEXP *p_x = list_ptr_ro(x);
         out = SHIELD(new_list(n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
@@ -916,7 +916,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case STRSXP: {
-        const r_string_t *p_x = R_STRING_RO(x);
+        const r_string_t *p_x = string_ptr_ro(x);
         out = SHIELD(new_character(n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -935,9 +935,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex* p_x = COMPLEX_RO(x);
+        const Rcomplex* p_x = complex_ptr_ro(x);
         out = SHIELD(new_complex(n));
-        Rcomplex* RESTRICT p_out = COMPLEX(out);
+        Rcomplex* RESTRICT p_out = complex_ptr(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -956,7 +956,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case RAWSXP: {
-        const Rbyte *p_x = RAW_RO(x);
+        const Rbyte *p_x = raw_ptr_ro(x);
         out = SHIELD(new_raw(n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -975,7 +975,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case VECSXP: {
-        const SEXP *p_x = LIST_PTR_RO(x);
+        const SEXP *p_x = list_ptr_ro(x);
         out = SHIELD(new_list(n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -1043,7 +1043,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case STRSXP: {
-        const r_string_t *p_x = R_STRING_RO(x);
+        const r_string_t *p_x = string_ptr_ro(x);
         out = SHIELD(new_character(n));
         for (int_fast64_t i = 0; i < n; ++i){
           set_val(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
@@ -1051,9 +1051,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex *p_x = COMPLEX_RO(x);
+        const Rcomplex *p_x = complex_ptr_ro(x);
         out = SHIELD(new_complex(n));
-        Rcomplex* RESTRICT p_out = COMPLEX(out);
+        Rcomplex* RESTRICT p_out = complex_ptr(out);
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i].r = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].r;
           p_out[i].i = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].i;
@@ -1061,13 +1061,13 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case RAWSXP: {
-        const Rbyte *p_x = RAW_RO(x);
+        const Rbyte *p_x = raw_ptr_ro(x);
         out = SHIELD(new_raw(n));
         for (int_fast64_t i = 0; i < n; ++i) SET_RAW_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         break;
       }
       case VECSXP: {
-        const SEXP *p_x = LIST_PTR_RO(x);
+        const SEXP *p_x = list_ptr_ro(x);
         out = SHIELD(new_list(n));
         for (int_fast64_t i = 0; i < n; ++i){
           SET_VECTOR_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
@@ -1114,7 +1114,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case STRSXP: {
-        const r_string_t *p_x = R_STRING_RO(x);
+        const r_string_t *p_x = string_ptr_ro(x);
         out = SHIELD(new_character(n));
         for (int i = 0; i != n; ++i){
           set_val(out, i, p_x[pind[i] - 1]);
@@ -1122,9 +1122,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex *p_x = COMPLEX_RO(x);
+        const Rcomplex *p_x = complex_ptr_ro(x);
         out = SHIELD(new_complex(n));
-        Rcomplex* RESTRICT p_out = COMPLEX(out);
+        Rcomplex* RESTRICT p_out = complex_ptr(out);
         for (int i = 0; i != n; ++i){
           p_out[i].r = p_x[pind[i] - 1].r;
           p_out[i].i = p_x[pind[i] - 1].i;
@@ -1132,13 +1132,13 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case RAWSXP: {
-        const Rbyte *p_x = RAW_RO(x);
+        const Rbyte *p_x = raw_ptr_ro(x);
         out = SHIELD(new_raw(n));
         for (int i = 0; i != n; ++i) SET_RAW_ELT(out, i, p_x[pind[i] - 1]);
         break;
       }
       case VECSXP: {
-        const SEXP *p_x = LIST_PTR_RO(x);
+        const SEXP *p_x = list_ptr_ro(x);
         out = SHIELD(new_list(n));
         for (int i = 0; i != n; ++i){
           SET_VECTOR_ELT(out, i, p_x[pind[i] - 1]);
@@ -1215,7 +1215,7 @@ SEXP rev(SEXP x, bool set){
   }
   case STRSXP: {
     out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
-    const r_string_t *p_out = R_STRING_RO(out);
+    const r_string_t *p_out = string_ptr_ro(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
       SEXP left = p_out[i];
@@ -1226,7 +1226,7 @@ SEXP rev(SEXP x, bool set){
   }
   case CPLXSXP: {
     out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
-    Rcomplex *p_out = COMPLEX(out);
+    Rcomplex *p_out = complex_ptr(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
       Rcomplex left = p_out[i];
@@ -1237,7 +1237,7 @@ SEXP rev(SEXP x, bool set){
   }
   case RAWSXP: {
     out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
-    Rbyte *p_out = RAW(out);
+    Rbyte *p_out = raw_ptr(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
       Rbyte left = p_out[i];
@@ -1343,8 +1343,8 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   SEXP out = SHIELD(new_list(n_locs)); ++NP;
   SEXP out_names = SHIELD(new_character(n_locs)); ++NP;
 
-  const SEXP *p_x = LIST_PTR_RO(x);
-  const r_string_t *p_names = R_STRING_RO(names);
+  const SEXP *p_x = list_ptr_ro(x);
+  const r_string_t *p_names = string_ptr_ro(names);
   int k = 0;
   int col;
 
@@ -1400,7 +1400,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   }
   int ncols = Rf_length(x);
   int32_t NP = 0;
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
   SEXP out = SHIELD(new_list(ncols)); ++NP;
 
   // Clean indices and get metadata
@@ -1412,7 +1412,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
     SEXP clean_indices_info = SHIELD(clean_indices(indices, x, true)); ++NP;
     SHIELD(indices = VECTOR_ELT(clean_indices_info, 0)); ++NP;
     out_size = real_ptr(VECTOR_ELT(clean_indices_info, 1))[0];
-    check_indices = LOGICAL(VECTOR_ELT(clean_indices_info, 2))[0];
+    check_indices = logical_ptr(VECTOR_ELT(clean_indices_info, 2))[0];
   } else {
     out_size = Rf_length(indices);
     check_indices = false;
@@ -1477,7 +1477,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
     if (check){
       SEXP indices_metadata = SHIELD(clean_indices(i, x, false)); ++NP;
       SHIELD(i = VECTOR_ELT(indices_metadata, 0)); ++NP;
-      check = LOGICAL(VECTOR_ELT(indices_metadata, 2))[0];
+      check = logical_ptr(VECTOR_ELT(indices_metadata, 2))[0];
     }
 
     SEXP names = r_null;
@@ -1577,7 +1577,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
     return r_null;
   }
   case LGLSXP: {
-    return as_vec(LOGICAL(x)[i]);
+    return as_vec(logical_ptr(x)[i]);
   }
   case INTSXP: {
     return as_vec(integer_ptr(x)[i]);
@@ -1589,10 +1589,10 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
     return as_vec(STRING_ELT(x, i));
   }
   case CPLXSXP: {
-    return as_vec(COMPLEX(x)[i]);
+    return as_vec(complex_ptr(x)[i]);
   }
   case RAWSXP: {
-    return as_vec(RAW(x)[i]);
+    return as_vec(raw_ptr(x)[i]);
   }
   case VECSXP: {
     return VECTOR_ELT(x, i);

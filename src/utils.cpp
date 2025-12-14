@@ -62,14 +62,14 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_source = COMPLEX(source);
-    Rcomplex *p_target = COMPLEX(target);
+    Rcomplex *p_source = complex_ptr(source);
+    Rcomplex *p_target = complex_ptr(target);
     safe_memmove(&p_target[0], &p_source[0], n * sizeof(Rcomplex));
     break;
   }
   case RAWSXP: {
-    Rbyte *p_source = RAW(source);
-    Rbyte *p_target = RAW(target);
+    Rbyte *p_source = raw_ptr(source);
+    Rbyte *p_target = raw_ptr(target);
     safe_memmove(&p_target[0], &p_source[0], n * sizeof(Rbyte));
     break;
   }
@@ -114,7 +114,7 @@ SEXP cpp_semi_copy(SEXP x){
 
     R_xlen_t n = Rf_xlength(x);
     SEXP out = SHIELD(new_list(n));
-    const SEXP *p_x = LIST_PTR_RO(x);
+    const SEXP *p_x = list_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, vec::deep_copy(p_x[i]));
     }
@@ -166,7 +166,7 @@ double cpp_sum(SEXP x){
   }
   case CHEAPR_INT64SXP: {
 
-    const int64_t *p_x = INTEGER64_PTR_RO(x);
+    const int64_t *p_x = integer64_ptr_ro(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
@@ -215,7 +215,7 @@ SEXP cpp_range(SEXP x){
     }
     case CHEAPR_INT64SXP: {
 
-      const int64_t *p_x = INTEGER64_PTR_RO(x);
+      const int64_t *p_x = integer64_ptr_ro(x);
 
       int64_t min = std::numeric_limits<int64_t>::max();
       int64_t max = std::numeric_limits<int64_t>::min();
@@ -458,18 +458,18 @@ SEXP cpp_set_or(SEXP x, SEXP y){
 
   R_xlen_t i, yi;
 
-  int *p_x = LOGICAL(x);
-  const int *p_y = LOGICAL(y);
+  r_bool_t *p_x = logical_ptr(x);
+  const r_bool_t *p_y = logical_ptr_ro(y);
 
   for (i = yi = 0; i < n; yi = (++yi == yn) ? 0 : yi, ++i){
 
-    if (p_x[i] != 1){
-      if (p_y[yi] == 1){
-        p_x[i] = 1;
+    if (p_x[i] != r_true){
+      if (p_y[yi] == r_true){
+        p_x[i] = r_true;
       } else if (is_r_na(p_x[i]) || is_r_na(p_y[yi])){
         p_x[i] = na::logical;
-      } else if (p_x[i] == 1 || p_y[yi] == 1){
-        p_x[i] = 1;
+      } else if (p_x[i] == r_true || p_y[yi] == r_true){
+        p_x[i] = r_true;
       }
     }
   }
@@ -523,8 +523,8 @@ SEXP cpp_growth_rate(SEXP x){
     break;
   }
   case CHEAPR_INT64SXP: {
-    int64_t x_n = INTEGER64_PTR(x)[n - 1];
-    int64_t x_1 = INTEGER64_PTR(x)[0];
+    int64_t x_n = integer64_ptr(x)[n - 1];
+    int64_t x_1 = integer64_ptr(x)[0];
     a = r_cast<double>(x_1);
     b = r_cast<double>(x_n);
     break;
@@ -578,12 +578,12 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   }
 
   SEXP is_empty = SHIELD(new_logical(n)); ++NP;
-  int *p_is_empty = LOGICAL(is_empty);
+  int *p_is_empty = integer_ptr(is_empty);
   bool empty;
   int n_empty = 0;
 
   for (int i = 0; i < n; ++i){
-    empty = (STRING_ELT(names, i) == R_BlankString);
+    empty = (STRING_ELT(names, i) == blank_r_string);
     n_empty += empty;
     p_is_empty[i] = empty;
   }
@@ -622,7 +622,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
   // Start from clean slate - no attributes
   attr::clear_attrs(target);
 
-  r_sym_t curr_tag;
+  r_symbol_t curr_tag;
   SEXP current = r_null;
 
   const r_string_t *p_ta = string_ptr_ro(target_attr_names);
@@ -637,7 +637,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
 
       curr_tag = symbol::tag(current);
 
-      if (symbol_as_string(curr_tag) == p_ta[i]){
+      if (r_cast<r_string_t>(curr_tag) == p_ta[i]){
         set_attr(target, curr_tag, CAR(current));
         break;
       }
@@ -651,7 +651,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
 
       curr_tag = symbol::tag(current);
 
-      if (symbol_as_string(curr_tag) == p_sa[i]){
+      if (r_cast<r_string_t>(curr_tag) == p_sa[i]){
         set_attr(target, curr_tag, CAR(current));
         break;
       }

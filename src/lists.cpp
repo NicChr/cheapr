@@ -21,7 +21,7 @@ R_xlen_t unnested_length(SEXP x){
   if (TYPEOF(x) != VECSXP){
     return Rf_xlength(x);
   }
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t out = 0;
   for (R_xlen_t i = 0; i < n; ++i){
@@ -45,7 +45,7 @@ SEXP cpp_lengths(SEXP x, bool names){
       p_out[i] = 1;
     }
   } else {
-    const SEXP *p_x = LIST_PTR_RO(x);
+    const SEXP *p_x = list_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i) {
       p_out[i] = vec::length(p_x[i]);
     }
@@ -72,7 +72,7 @@ SEXP cpp_new_list(SEXP size, SEXP default_value){
 
 uint_fast64_t null_count(SEXP x){
   uint_fast64_t n = Rf_xlength(x);
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
   uint_fast64_t n_null = 0;
   for (uint_fast64_t i = 0; i < n; ++i) n_null += is_null(p_x[i]);
   return n_null;
@@ -82,7 +82,7 @@ uint_fast64_t null_count(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_drop_null(SEXP x){
-  const SEXP *p_l = LIST_PTR_RO(x);
+  const SEXP *p_l = list_ptr_ro(x);
   uint_fast64_t n = Rf_xlength(x);
   uint_fast64_t n_null = null_count(x);
   SEXP names = SHIELD(get_r_names(x));
@@ -125,7 +125,7 @@ SEXP cpp_drop_null(SEXP x){
 }
 
 SEXP which_not_null(SEXP x){
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t n_null = null_count(x);
   R_xlen_t n_keep = n - n_null;
@@ -184,9 +184,9 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     SHIELD(col_names = new_character(n_cols)); ++NP;
   }
 
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
   const SEXP *p_names = STRING_PTR_RO(names);
-  const SEXP *p_y = LIST_PTR_RO(values);
+  const SEXP *p_y = list_ptr_ro(values);
   const SEXP *p_col_names = STRING_PTR_RO(col_names);
 
   // We create an int vec to keep track of locations where to add col vecs
@@ -389,9 +389,9 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
     Rf_error("`cols` must be a named list in %s", __func__);
   }
 
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
   const SEXP *p_names = STRING_PTR_RO(names);
-  const SEXP *p_cols = LIST_PTR_RO(cols);
+  const SEXP *p_cols = list_ptr_ro(cols);
   const SEXP *p_col_names = STRING_PTR_RO(col_names);
 
   int n = Rf_length(x);

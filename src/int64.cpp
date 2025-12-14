@@ -12,7 +12,7 @@ SEXP cpp_int64_to_int(SEXP x){
   SEXP out = SHIELD(new_integer(n));
   int* RESTRICT p_out = integer_ptr(out);
 
-  const int64_t *p_x = INTEGER64_PTR_RO(x);
+  const int64_t *p_x = integer64_ptr_ro(x);
 
   int64_t int_max = r_limits::r_int_max;
 
@@ -35,7 +35,7 @@ SEXP cpp_int64_to_double(SEXP x){
   SEXP out = SHIELD(new_double(n));
   double* RESTRICT p_out = real_ptr(out);
 
-  const int64_t *p_x = INTEGER64_PTR_RO(x);
+  const int64_t *p_x = integer64_ptr_ro(x);
 
   for (R_xlen_t i = 0; i < n; ++i){
     p_out[i] = r_cast<double>(p_x[i]);
@@ -56,7 +56,7 @@ bool cpp_all_integerable(SEXP x){
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int64_t *p_x = INTEGER64_PTR_RO(x);
+    const int64_t *p_x = integer64_ptr_ro(x);
 
     int64_t int_min = r_limits::r_int_min;
     int64_t int_max = r_limits::r_int_max;
@@ -117,7 +117,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
   case INTSXP: {
     int *p_x = integer_ptr(x);
     out = SHIELD(new_integer64(n)); ++NP;
-    int64_t *p_out = INTEGER64_PTR(out);
+    int64_t *p_out = integer64_ptr(out);
     for (R_xlen_t i = 0; i < n; ++i){
       p_out[i] = r_cast<int64_t>(p_x[i]);
     }
@@ -130,7 +130,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
   case REALSXP: {
     double *p_x = real_ptr(x);
     out = SHIELD(new_integer64(n)); ++NP;
-    int64_t *p_out = INTEGER64_PTR(out);
+    int64_t *p_out = integer64_ptr(out);
     for (R_xlen_t i = 0; i < n; ++i){
       p_out[i] = r_cast<int64_t>(p_x[i]);
     }
@@ -187,7 +187,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
   case CHEAPR_INT64SXP: {
     std::string s;
     out = SHIELD(new_character(n));
-    int64_t *p_x = INTEGER64_PTR(x);
+    int64_t *p_x = integer64_ptr(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
       if (is_r_na(p_x[i])){
@@ -229,13 +229,13 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
 
   int32_t NP = 0;
 
-  const int64_t* p_x = INTEGER64_PTR_RO(x);
+  const int64_t* p_x = integer64_ptr_ro(x);
 
   SEXP clean_locs = SHIELD(clean_indices(locs, x, false)); ++NP;
   SHIELD(locs = VECTOR_ELT(clean_locs, 0)); ++NP;
 
   SEXP out = SHIELD(new_double(Rf_xlength(locs))); ++NP;
-  int64_t* RESTRICT p_out = INTEGER64_PTR(out);
+  int64_t* RESTRICT p_out = integer64_ptr(out);
 
   SEXP names = SHIELD(get_r_names(x)); ++NP;
   SEXP out_names = SHIELD(sset_vec(names, locs, true)); ++NP;

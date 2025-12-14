@@ -60,8 +60,8 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case CHEAPR_INT64SXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
-    const int64_t val = INTEGER64_PTR(value)[0];
-    const int64_t *p_x = INTEGER64_PTR_RO(x);
+    const int64_t val = integer64_ptr(value)[0];
+    const int64_t *p_x = integer64_ptr_ro(x);
     CHEAPR_VAL_COUNT(val)
       break;
   }
@@ -69,21 +69,21 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
     const r_string_t val = get_r_string(value, 0);
-    const r_string_t *p_x = R_STRING_RO(x);
+    const r_string_t *p_x = string_ptr_ro(x);
     CHEAPR_VAL_COUNT(val)
       break;
   }
   case CPLXSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
-    const Rcomplex val = COMPLEX(value)[0];
-    const Rcomplex *p_x = COMPLEX_RO(x);
+    const Rcomplex val = complex_ptr(value)[0];
+    const Rcomplex *p_x = complex_ptr_ro(x);
     CHEAPR_VAL_COUNT(val);
     break;
   }
   case VECSXP: {
     if (recursive){
-    const SEXP *p_x = LIST_PTR_RO(x);
+    const SEXP *p_x = list_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i){
       count += scalar_count(p_x[i], value, true);
     }
@@ -195,17 +195,17 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
     SHIELD(replace = cast<r_integer64_t>(replace, r_null)); ++NP;
-    int64_t *p_out = INTEGER64_PTR(out);
-    int64_t val = INTEGER64_PTR(value)[0];
-    int64_t repl = INTEGER64_PTR(replace)[0];
-    int64_t *p_x = INTEGER64_PTR(x);
+    int64_t *p_out = integer64_ptr(out);
+    int64_t val = integer64_ptr(value)[0];
+    int64_t repl = integer64_ptr(replace)[0];
+    int64_t *p_x = integer64_ptr(x);
     for (R_xlen_t i = 0; i < n; ++i){
       eql = p_x[i] == val;
       if (!any_eq && eql){
         any_eq = true;
         out = SHIELD(cpp_semi_copy(x)); ++NP;
         // Change where pointer is pointing to
-        p_out = INTEGER64_PTR(out);
+        p_out = integer64_ptr(out);
       }
       if (eql) p_out[i] = repl;
     }
@@ -239,7 +239,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     SHIELD(replace = cast<r_complex_t>(replace, r_null)); ++NP;
     Rcomplex val = COMPLEX_ELT(value, 0);
     Rcomplex repl = COMPLEX_ELT(replace, 0);
-    const Rcomplex *p_x = COMPLEX_RO(x);
+    const Rcomplex *p_x = complex_ptr_ro(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
       eql = val_is_na ? is_r_na(p_x[i]) : eq(p_x[i], val);
@@ -348,9 +348,9 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     }
       out = SHIELD(new_double(n_keep)); ++NP;
       SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
-      int64_t val = INTEGER64_PTR(value)[0];
-      int64_t *p_x = INTEGER64_PTR(x);
-      int64_t *p_out = INTEGER64_PTR(out);
+      int64_t val = integer64_ptr(value)[0];
+      int64_t *p_x = integer64_ptr(x);
+      int64_t *p_out = integer64_ptr(out);
 
       for (R_xlen_t i = 0; i < n; ++i){
         if (p_x[i] != val){
@@ -384,7 +384,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       out = SHIELD(new_complex(n_keep)); ++NP;
       SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
       Rcomplex val = COMPLEX_ELT(value, 0);
-      const Rcomplex *p_x = COMPLEX_RO(x);
+      const Rcomplex *p_x = complex_ptr_ro(x);
 
       for (R_xlen_t i = 0; i < n; ++i){
         if ( !(is_r_na(val) ? is_r_na(p_x[i]) : eq(p_x[i], val)) ){

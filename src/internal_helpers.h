@@ -29,7 +29,7 @@ inline SEXP CHEAPR_CORES = r_null;
 
 inline int num_cores(){
   if (is_null(CHEAPR_CORES)){
-    CHEAPR_CORES = symbol::make_symbol("cheapr.cores");
+    CHEAPR_CORES = r_cast<r_symbol_t>("cheapr.cores");
   }
   int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
   return n_cores >= 1 ? n_cores : 1;

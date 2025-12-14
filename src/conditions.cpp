@@ -206,11 +206,11 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     case R_cplx: {
 
       SHIELD(out = init<r_complex_t>(n, false)); ++NP;
-      Rcomplex *p_out = COMPLEX(out);
+      Rcomplex *p_out = complex_ptr(out);
 
-      const Rcomplex *p_yes = COMPLEX(yes);
-      const Rcomplex *p_no = COMPLEX(no);
-      const Rcomplex *p_na = COMPLEX(na);
+      const Rcomplex *p_yes = complex_ptr(yes);
+      const Rcomplex *p_no = complex_ptr(no);
+      const Rcomplex *p_na = complex_ptr(na);
 
       if (all_scalar){
 
@@ -261,9 +261,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
 
       SHIELD(out = init<r_raw_t>(n, false)); ++NP;
 
-      const Rbyte *p_yes = RAW(yes);
-      const Rbyte *p_no = RAW(no);
-      const Rbyte *p_na = RAW(na);
+      const Rbyte *p_yes = raw_ptr(yes);
+      const Rbyte *p_no = raw_ptr(no);
+      const Rbyte *p_na = raw_ptr(na);
 
       for (R_xlen_t i = 0; i < n; ++i){
         switch(p_x[i]){

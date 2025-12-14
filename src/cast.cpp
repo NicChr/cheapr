@@ -21,7 +21,7 @@ r_type r_common_type(SEXP x){
   }
 
   R_xlen_t n = Rf_xlength(x);
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
 
   // Initialise to null
   r_type common = R_null;
@@ -43,7 +43,7 @@ SEXP cpp_common_template(SEXP x){
 
   r_type common = r_common_type(x);
 
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
 
   if (common == R_unk){
 
@@ -130,7 +130,7 @@ SEXP cpp_cast_common(SEXP x){
   int32_t NP = 0;
 
   R_xlen_t n = Rf_xlength(x);
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
 
   if (n <= 1){
     return x;

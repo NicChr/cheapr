@@ -65,8 +65,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_int64: {
 
-    int64_t* RESTRICT p_x = INTEGER64_PTR(x);
-    const int64_t* RESTRICT p_with = INTEGER64_PTR_RO(with);
+    int64_t* RESTRICT p_x = integer64_ptr(x);
+    const int64_t* RESTRICT p_with = integer64_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       p_x[p_where[i] - 1] = p_with[withi];
@@ -76,7 +76,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_chr: {
 
-    const r_string_t *p_with = R_STRING_RO(with);
+    const r_string_t *p_with = string_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       set_val(x, p_where[i] - 1, p_with[withi]);
@@ -86,8 +86,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_cplx: {
 
-    Rcomplex* p_x = COMPLEX(x);
-    const Rcomplex *p_with = COMPLEX_RO(with);
+    Rcomplex* p_x = complex_ptr(x);
+    const Rcomplex *p_with = complex_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       xi = p_where[i] - 1;
@@ -99,7 +99,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_raw: {
 
-    const Rbyte *p_with = RAW_RO(with);
+    const Rbyte *p_with = raw_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       SET_RAW_ELT(x, p_where[i] - 1, p_with[withi]);
@@ -117,7 +117,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   }
 
   case R_list: {
-    const SEXP *p_with = LIST_PTR_RO(with);
+    const SEXP *p_with = list_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       SET_VECTOR_ELT(x, p_where[i] - 1, p_with[withi]);
@@ -127,8 +127,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_df: {
 
-    const SEXP *p_x = LIST_PTR_RO(x);
-    const SEXP *p_with = LIST_PTR_RO(with);
+    const SEXP *p_x = list_ptr_ro(x);
+    const SEXP *p_with = list_ptr_ro(with);
 
     int ncol = Rf_length(x);
 

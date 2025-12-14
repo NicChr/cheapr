@@ -50,7 +50,7 @@ SEXP cpp_rep_len(SEXP x, int length){
     if (out_size == df::nrow(x)) return x;
     int n_cols = Rf_length(x);
     SEXP out = SHIELD(new_list(n_cols));
-    const SEXP *p_x = LIST_PTR_RO(x);
+    const SEXP *p_x = list_ptr_ro(x);
     for (int i = 0; i < n_cols; ++i){
       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
     }
@@ -94,9 +94,9 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     case CHEAPR_INT64SXP: {
-      const int64_t *p_x = INTEGER64_PTR_RO(x);
+      const int64_t *p_x = integer64_ptr_ro(x);
       SEXP out = SHIELD(new_double(out_size));
-      int64_t* RESTRICT p_out = INTEGER64_PTR(out);
+      int64_t* RESTRICT p_out = integer64_ptr(out);
 
       if (size == 1){
         std::fill(p_out, p_out + out_size, p_x[0]);
@@ -161,9 +161,9 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     case CPLXSXP: {
-      Rcomplex *p_x = COMPLEX(x);
+      Rcomplex *p_x = complex_ptr(x);
       SEXP out = SHIELD(new_complex(out_size));
-      Rcomplex *p_out = COMPLEX(out);
+      Rcomplex *p_out = complex_ptr(out);
 
       if (size == 1){
         std::fill(p_out, p_out + out_size, p_x[0]);
@@ -183,7 +183,7 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     case VECSXP: {
-      const SEXP *p_x = LIST_PTR_RO(x);
+      const SEXP *p_x = list_ptr_ro(x);
       SEXP out = SHIELD(new_list(out_size));
 
       if (size == 1){
@@ -298,7 +298,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
         return out;
       }
       case CPLXSXP: {
-        const Rcomplex *p_x = COMPLEX(x);
+        const Rcomplex *p_x = complex_ptr(x);
         R_xlen_t k = 0;
         for (R_xlen_t i = 0; i < n; ++i){
           for (int j = 0; j < p_times[i]; ++j, ++k) SET_COMPLEX_ELT(out, k, p_x[i]);
@@ -308,7 +308,7 @@ SEXP cpp_rep(SEXP x, SEXP times){
         return out;
       }
       case VECSXP: {
-        const SEXP *p_x = LIST_PTR_RO(x);
+        const SEXP *p_x = list_ptr_ro(x);
         R_xlen_t k = 0;
         for (R_xlen_t i = 0; i < n; ++i){
           for (int j = 0; j < p_times[i]; ++j, ++k) SET_VECTOR_ELT(out, k, p_x[i]);
@@ -355,7 +355,7 @@ R_xlen_t length_common(SEXP x){
 
   R_xlen_t n = Rf_xlength(x);
 
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
   R_xlen_t out = 0;
 
   for (R_xlen_t i = 0; i < n; ++i){
@@ -375,7 +375,7 @@ R_xlen_t length_common(SEXP x){
 void recycle_in_place(SEXP x, R_xlen_t n){
 
   int xn = Rf_length(x);
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
 
   for (int i = 0; i < xn; ++i){
     if (!is_null(p_x[i])){
@@ -551,7 +551,7 @@ SEXP character_as_factor(SEXP x, SEXP levels){
 SEXP cpp_list_c(SEXP x){
   int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
 
   R_xlen_t out_size = 0;
   for (R_xlen_t i = 0; i < n; ++i){
@@ -579,7 +579,7 @@ SEXP cpp_list_c(SEXP x){
     const SEXP *p_temp;
 
     if (TYPEOF(p_x[i]) == VECSXP){
-      p_temp = LIST_PTR_RO(p_x[i]);
+      p_temp = list_ptr_ro(p_x[i]);
       R_Reprotect(names = get_r_names(p_x[i]), nm_idx);
       m = Rf_xlength(p_x[i]);
     } else {
@@ -589,7 +589,7 @@ SEXP cpp_list_c(SEXP x){
       } else {
         names = r_null;
       }
-      p_temp = LIST_PTR_RO(container_list);
+      p_temp = list_ptr_ro(container_list);
       m = 1;
     }
 
@@ -629,8 +629,8 @@ SEXP cpp_df_c(SEXP x){
   // Since we are casting potential non-dfs to dfs we need a new list
   SEXP frames = SHIELD(init<r_list_t>(n_frames, false)); ++NP;
 
-  const SEXP *p_x = LIST_PTR_RO(x);
-  const SEXP *p_frames = LIST_PTR_RO(frames);
+  const SEXP *p_x = list_ptr_ro(x);
+  const SEXP *p_frames = list_ptr_ro(frames);
 
   SEXP df;
   PROTECT_INDEX df_idx;
@@ -686,7 +686,7 @@ SEXP cpp_df_c(SEXP x){
   if (na_padding){
     // Get archetype of each col
     SEXP vec_archetypes = SHIELD(new_list(n_cols)); ++NP;
-    const SEXP *p_vec_archetypes = LIST_PTR_RO(vec_archetypes);
+    const SEXP *p_vec_archetypes = list_ptr_ro(vec_archetypes);
     for (int j = 0; j < n_cols; ++j){
       for (int i = 0; i < n_frames; ++i){
         SET_VECTOR_ELT(vectors, i, get_list_element(p_frames[i], p_ptype_names[j]));
@@ -753,7 +753,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
 
   int n = Rf_length(x);
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
 
   int32_t NP = 0;
 
@@ -808,12 +808,12 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     SHIELD(out = init<r_integer64_t>(out_size, false)); ++NP;
 
-    int64_t* RESTRICT p_out = INTEGER64_PTR(out);
+    int64_t* RESTRICT p_out = integer64_ptr(out);
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_integer64_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(INTEGER64_PTR_RO(vec), m, &p_out[k]);
+      std::copy_n(integer64_ptr_ro(vec), m, &p_out[k]);
     }
     break;
   }
@@ -849,12 +849,12 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     SHIELD(out = init<r_complex_t>(out_size, false)); ++NP;
 
-    Rcomplex *p_out = COMPLEX(out);
+    Rcomplex *p_out = complex_ptr(out);
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_complex_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(COMPLEX_RO(vec), m, &p_out[k]);
+      std::copy_n(complex_ptr_ro(vec), m, &p_out[k]);
     }
     break;
   }
@@ -862,12 +862,12 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     SHIELD(out = init<r_raw_t>(out_size, false)); ++NP;
 
-    Rbyte *p_out = RAW(out);
+    Rbyte *p_out = raw_ptr(out);
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_raw_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(RAW_RO(vec), m, &p_out[k]);
+      std::copy_n(raw_ptr_ro(vec), m, &p_out[k]);
     }
     break;
   }
@@ -879,7 +879,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
       R_Reprotect(vec = cast<r_list_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
 
-      const SEXP *p_vec = LIST_PTR_RO(vec);
+      const SEXP *p_vec = list_ptr_ro(vec);
       for (R_xlen_t j = 0; j < m; ++k, ++j){
         SET_VECTOR_ELT(out, k, p_vec[j]);
       }
@@ -933,8 +933,8 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case R_pxt: {
 
     SHIELD(out = init<r_posixt_t>(out_size, false)); ++NP;
-    SEXP out_tzone = SHIELD(get_attr(vec_template, symbol::make_symbol("tzone"))); ++NP;
-    set_attr(out, symbol::make_symbol("tzone"), out_tzone);
+    SEXP out_tzone = SHIELD(get_attr(vec_template, r_cast<r_symbol_t>("tzone"))); ++NP;
+    set_attr(out, r_cast<r_symbol_t>("tzone"), out_tzone);
 
     double* RESTRICT p_out = real_ptr(out);
 
@@ -951,7 +951,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case R_unk: {
     SEXP call = SHIELD(vec::coerce_vec(x, LISTSXP)); ++NP;
-    SHIELD(call = Rf_lcons(symbol::make_symbol("c"), call)); ++NP;
+    SHIELD(call = Rf_lcons(r_cast<r_symbol_t>("c"), call)); ++NP;
     SHIELD(out = eval(call, R_GetCurrentEnv())); ++NP;
     break;
   }
@@ -983,7 +983,7 @@ SEXP cpp_c(SEXP x){
   int n = Rf_length(x);
 
   // Cast all objects to common type
-  const SEXP *p_x = LIST_PTR_RO(x);
+  const SEXP *p_x = list_ptr_ro(x);
 
   // Figure out final size
   R_xlen_t out_size = 0;
