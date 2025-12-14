@@ -35,10 +35,10 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   case INTSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    int* RESTRICT p_out = INTEGER(out);
-    int *p_x = INTEGER(xvec);
+    int* RESTRICT p_out = integer_ptr(out);
+    int *p_x = integer_ptr(xvec);
     SHIELD(fill = cast<r_integer_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? INTEGER(fill)[0] : na_value(p_x[0]);
+    auto fill_value = fill_size > 0 ? integer_ptr(fill)[0] : na_value(p_x[0]);
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
       OMP_FOR_SIMD
@@ -72,10 +72,10 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   case REALSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    double* RESTRICT p_out = REAL(out);
-    double *p_x = REAL(xvec);
+    double* RESTRICT p_out = real_ptr(out);
+    double *p_x = real_ptr(xvec);
     SHIELD(fill = cast<r_double_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? REAL(fill)[0] : na_value(p_x[0]);
+    auto fill_value = fill_size > 0 ? real_ptr(fill)[0] : na_value(p_x[0]);
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
@@ -329,9 +329,9 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
   int foo = 42;
   const int *p_o = &foo;
   const int *p_rl = &foo;
-  if (has_order) p_o = INTEGER(order);
-  if (has_rl) p_rl = INTEGER(run_lengths);
-  const int *p_lag = INTEGER(lag);
+  if (has_order) p_o = integer_ptr(order);
+  if (has_rl) p_rl = integer_ptr(run_lengths);
+  const int *p_lag = integer_ptr(lag);
   int rl; // Run-length
   int run_start = 0; // Start index of current run
   int run_end = 0; // End index of current run
@@ -351,14 +351,14 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    const int *p_x = INTEGER(x);
+    const int *p_x = integer_ptr(x);
     int fill_value = na::integer;
     if (fill_size >= 1){
       SEXP temp_fill = SHIELD(cast<r_integer_t>(fill, r_null)); ++NP;
-      fill_value = INTEGER(temp_fill)[0];
+      fill_value = integer_ptr(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
-    int* RESTRICT p_out = INTEGER(out);
+    int* RESTRICT p_out = integer_ptr(out);
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
       // Manually set run rl if order = NULL
@@ -460,14 +460,14 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    const double *p_x = REAL(x);
-    double fill_value = na::numeric;
+    const double *p_x = real_ptr(x);
+    double fill_value = na::real;
     if (fill_size >= 1){
       SEXP temp_fill = SHIELD(cast<r_double_t>(fill, r_null)); ++NP;
-      fill_value = REAL(temp_fill)[0];
+      fill_value = real_ptr(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
-    double* RESTRICT p_out = REAL(out);
+    double* RESTRICT p_out = real_ptr(out);
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
       rl = has_rl ? p_rl[i] : size; // Current run-length
@@ -567,8 +567,8 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     Rcomplex *p_x = COMPLEX(x);
     SEXP fill_sexp = SHIELD(new_complex(1)); ++NP;
     Rcomplex *p_fill = COMPLEX(fill_sexp);
-    p_fill[0].i = na::numeric;
-    p_fill[0].r = na::numeric;
+    p_fill[0].i = na::real;
+    p_fill[0].r = na::real;
     Rcomplex fill_value = fill_size >= 1 ? Rf_asComplex(fill) : COMPLEX(fill_sexp)[0];
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
@@ -619,7 +619,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     }
     Rbyte *p_x = RAW(x);
     SEXP raw_sexp = SHIELD(vec::coerce_vec(fill, RAWSXP));
-    Rbyte fill_value = fill_size == 0 ? RAW(Rf_ScalarRaw(0))[0] : RAW(raw_sexp)[0]; ++NP;
+    Rbyte fill_value = fill_size == 0 ? 0 : RAW(raw_sexp)[0]; ++NP;
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run

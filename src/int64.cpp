@@ -10,7 +10,7 @@ SEXP cpp_int64_to_int(SEXP x){
   R_xlen_t n = Rf_xlength(x);
 
   SEXP out = SHIELD(new_integer(n));
-  int* RESTRICT p_out = INTEGER(out);
+  int* RESTRICT p_out = integer_ptr(out);
 
   const int64_t *p_x = INTEGER64_PTR_RO(x);
 
@@ -33,7 +33,7 @@ SEXP cpp_int64_to_double(SEXP x){
   R_xlen_t n = Rf_xlength(x);
 
   SEXP out = SHIELD(new_double(n));
-  double* RESTRICT p_out = REAL(out);
+  double* RESTRICT p_out = real_ptr(out);
 
   const int64_t *p_x = INTEGER64_PTR_RO(x);
 
@@ -70,7 +70,7 @@ bool cpp_all_integerable(SEXP x){
     break;
   }
   case REALSXP: {
-    const double *p_x = REAL_RO(x);
+    const double *p_x = real_ptr_ro(x);
 
     double int_min = r_limits::r_int_min;
     double int_max = r_limits::r_int_max;
@@ -115,7 +115,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
 
   switch (CHEAPR_TYPEOF(x)){
   case INTSXP: {
-    int *p_x = INTEGER(x);
+    int *p_x = integer_ptr(x);
     out = SHIELD(new_integer64(n)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
@@ -128,7 +128,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     break;
   }
   case REALSXP: {
-    double *p_x = REAL(x);
+    double *p_x = real_ptr(x);
     out = SHIELD(new_integer64(n)); ++NP;
     int64_t *p_out = INTEGER64_PTR(out);
     for (R_xlen_t i = 0; i < n; ++i){
@@ -171,7 +171,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
   case INTSXP: {
     std::string s;
     out = SHIELD(new_character(n));
-    int *p_x = INTEGER(x);
+    int *p_x = integer_ptr(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
       if (is_r_na(p_x[i])){
@@ -203,7 +203,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
   case REALSXP: {
     std::string s;
     out = SHIELD(new_character(n));
-    double *p_x = REAL(x);
+    double *p_x = real_ptr(x);
     for (R_xlen_t i = 0; i < n; ++i){
       if (is_r_na(p_x[i])){
         SET_STRING_ELT(out, i, na::string);
@@ -247,7 +247,7 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
     int_fast64_t
     n = Rf_xlength(locs), k = 0, j;
 
-    const double* pind = REAL_RO(locs);
+    const double* pind = real_ptr_ro(locs);
 
     for (int_fast64_t i = 0; i < n; ++i){
       j = pind[i];
@@ -281,7 +281,7 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
       na_val = na::integer,
       j;
 
-    const int *pind = INTEGER_RO(locs);
+    const int *pind = integer_ptr_ro(locs);
 
     for (unsigned int i = 0; i < n; ++i){
       j = pind[i];

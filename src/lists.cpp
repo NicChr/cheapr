@@ -39,7 +39,7 @@ SEXP cpp_unnested_length(SEXP x){
 SEXP cpp_lengths(SEXP x, bool names){
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(vec::new_integer(n));
-  int* RESTRICT p_out = INTEGER(out);
+  int* RESTRICT p_out = integer_ptr(out);
   if (TYPEOF(x) != VECSXP){
     for (R_xlen_t i = 0; i < n; ++i) {
       p_out[i] = 1;
@@ -64,7 +64,7 @@ SEXP cpp_new_list(SEXP size, SEXP default_value){
   if (Rf_length(size) != 1){
     Rf_error("`size` must be a vector of length 1");
   }
-  R_xlen_t out_size = REAL(size)[0];
+  R_xlen_t out_size = real_ptr(size)[0];
   SEXP out = SHIELD(new_list(out_size, default_value));
   YIELD(2);
   return out;
@@ -135,7 +135,7 @@ SEXP which_not_null(SEXP x){
   // Which list elements should we keep?
 
   SEXP keep = SHIELD(vec::new_integer(n_keep));
-  int* RESTRICT p_keep = INTEGER(keep);
+  int* RESTRICT p_keep = integer_ptr(keep);
   while (whichj < n_keep){
     p_keep[whichj] = j + 1;
     whichj += !is_null(p_x[j++]);
@@ -203,7 +203,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     add_locs = SHIELD(match(names, col_names, na::integer)); ++NP;
     n_cols_to_add = na_count(add_locs, false);
   }
-  int* RESTRICT p_add_locs = INTEGER(add_locs);
+  int* RESTRICT p_add_locs = integer_ptr(add_locs);
   int out_size = n + n_cols_to_add;
 
   int loc;
@@ -232,7 +232,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   }
 
   SEXP null_locs = SHIELD(vec::new_integer(null_count)); ++NP;
-  int *p_null_locs = INTEGER(null_locs);
+  int *p_null_locs = integer_ptr(null_locs);
   int nulli = 0;
 
   for (int j = 0; j < n_cols; ++j){
@@ -401,7 +401,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   // We create an int vec to keep track of locations where to add col vecs
 
   SEXP add_locs = SHIELD(match(names, col_names, na::integer)); ++NP;
-  int* RESTRICT p_add_locs = INTEGER(add_locs);
+  int* RESTRICT p_add_locs = integer_ptr(add_locs);
   int n_cols_to_add = na_count(add_locs, false);
   int out_size = n + n_cols_to_add;
 

@@ -57,7 +57,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       R_xlen_t size = count_true(p_x, n);
       R_xlen_t out_size = n - size;
       SEXP out = SHIELD(new_double(out_size));
-      double* RESTRICT p_out = REAL(out);
+      double* RESTRICT p_out = real_ptr(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
       CHEAPR_WHICH_VAL_INVERTED(r_true);
@@ -67,7 +67,7 @@ SEXP cpp_which_(SEXP x, bool invert){
       int size = count_true(p_x, n);
       int out_size = n - size;
       SEXP out = SHIELD(vec::new_integer(out_size));
-      int* RESTRICT p_out = INTEGER(out);
+      int* RESTRICT p_out = integer_ptr(out);
       int whichi = 0;
       int i = 0;
       CHEAPR_WHICH_VAL_INVERTED(r_true);
@@ -78,7 +78,7 @@ SEXP cpp_which_(SEXP x, bool invert){
     if (is_long){
       R_xlen_t out_size = count_true(p_x, n);
       SEXP out = SHIELD(new_double(out_size));
-      double* RESTRICT p_out = REAL(out);
+      double* RESTRICT p_out = real_ptr(out);
       R_xlen_t whichi = 0;
       R_xlen_t i = 0;
       CHEAPR_WHICH_VAL(r_true);
@@ -87,7 +87,7 @@ SEXP cpp_which_(SEXP x, bool invert){
     } else {
       int out_size = count_true(p_x, n);
       SEXP out = SHIELD(vec::new_integer(out_size));
-      int* RESTRICT p_out = INTEGER(out);
+      int* RESTRICT p_out = integer_ptr(out);
       int whichi = 0;
       int i = 0;
       CHEAPR_WHICH_VAL(r_true);
@@ -110,7 +110,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     Rf_error("Value has been implicitly converted to NA, please check");
   }
   SHIELD(n_values = cast<r_double_t>(n_values, r_null)); ++NP;
-  R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : REAL(n_values)[0];
+  R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : real_ptr(n_values)[0];
   R_xlen_t out_size = invert ? n - n_vals : n_vals;
   R_xlen_t whichi = 0;
   R_xlen_t i = 0;
@@ -120,17 +120,17 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case INTSXP: {
     SEXP out = SHIELD(is_long ? new_double(out_size) : new_integer(out_size)); ++NP;
     SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
-    int val = INTEGER(value)[0];
-    const int *p_x = INTEGER(x);
+    int val = integer_ptr(value)[0];
+    const int *p_x = integer_ptr(x);
     if (is_long){
-      double* RESTRICT p_out = REAL(out);
+      double* RESTRICT p_out = real_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
         CHEAPR_WHICH_VAL(val);
       }
     } else {
-      int* RESTRICT p_out = INTEGER(out);
+      int* RESTRICT p_out = integer_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
@@ -143,17 +143,17 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case REALSXP: {
     SEXP out = SHIELD(is_long ? new_double(out_size) : new_integer(out_size)); ++NP;
     SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
-    double val = REAL(value)[0];
-    const double *p_x = REAL(x);
+    double val = real_ptr(value)[0];
+    const double *p_x = real_ptr(x);
     if (is_long){
-      double* RESTRICT p_out = REAL(out);
+      double* RESTRICT p_out = real_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
         CHEAPR_WHICH_VAL(val);
       }
     } else {
-      int* RESTRICT p_out = INTEGER(out);
+      int* RESTRICT p_out = integer_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
@@ -169,14 +169,14 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     int64_t val = INTEGER64_PTR(value)[0];
     const int64_t *p_x = INTEGER64_PTR_RO(x);
     if (is_long){
-      double* RESTRICT p_out = REAL(out);
+      double* RESTRICT p_out = real_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
         CHEAPR_WHICH_VAL(val);
       }
     } else {
-      int* RESTRICT p_out = INTEGER(out);
+      int* RESTRICT p_out = integer_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
@@ -192,14 +192,14 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     r_string_t val = get_r_string(value, 0);
     const r_string_t *p_x = R_STRING_RO(x);
     if (is_long){
-      double *p_out = REAL(out);
+      double *p_out = real_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
         CHEAPR_WHICH_VAL(val);
       }
     } else {
-      int *p_out = INTEGER(out);
+      int *p_out = integer_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
@@ -215,14 +215,14 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     Rcomplex val = COMPLEX(value)[0];
     const Rcomplex *p_x = COMPLEX_RO(x);
     if (is_long){
-      double* RESTRICT p_out = REAL(out);
+      double* RESTRICT p_out = real_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
         CHEAPR_WHICH_VAL(val);
       }
     } else {
-      int* RESTRICT p_out = INTEGER(out);
+      int* RESTRICT p_out = integer_ptr(out);
       if (invert){
         CHEAPR_WHICH_VAL_INVERTED(val);
       } else {
@@ -279,16 +279,16 @@ SEXP cpp_which_not_na(SEXP x){
 SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
                   bool include_true, bool include_false, bool include_na){
   R_xlen_t n = Rf_xlength(x);
-  const int *p_x = INTEGER_RO(x);
+  const int *p_x = integer_ptr_ro(x);
 
   if (n > r_limits::r_int_max){
     SEXP true_locs = SHIELD(new_double(include_true ? n_true : 0));
     SEXP false_locs = SHIELD(new_double(include_false ? n_false : 0));
     SEXP na_locs = SHIELD(new_double(include_na ? (n - n_true - n_false) : 0));
 
-    double* RESTRICT p_true = REAL(true_locs);
-    double* RESTRICT p_false = REAL(false_locs);
-    double* RESTRICT p_na = REAL(na_locs);
+    double* RESTRICT p_true = real_ptr(true_locs);
+    double* RESTRICT p_false = real_ptr(false_locs);
+    double* RESTRICT p_na = real_ptr(na_locs);
 
     R_xlen_t k1 = 0;
     R_xlen_t k2 = 0;
@@ -316,9 +316,9 @@ SEXP cpp_lgl_locs(SEXP x, R_xlen_t n_true, R_xlen_t n_false,
     SEXP false_locs = SHIELD(vec::new_integer(include_false ? n_false : 0));
     SEXP na_locs = SHIELD(vec::new_integer(include_na ? (n - n_true - n_false) : 0));
 
-    int* RESTRICT p_true = INTEGER(true_locs);
-    int* RESTRICT p_false = INTEGER(false_locs);
-    int* RESTRICT p_na = INTEGER(na_locs);
+    int* RESTRICT p_true = integer_ptr(true_locs);
+    int* RESTRICT p_false = integer_ptr(false_locs);
+    int* RESTRICT p_na = integer_ptr(na_locs);
 
     int k1 = 0;
     int k2 = 0;

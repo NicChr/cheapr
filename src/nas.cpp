@@ -83,7 +83,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   }
   case LGLSXP:
   case INTSXP: {
-    const int *p_x = INTEGER_RO(x);
+    const int *p_x = integer_ptr_ro(x);
     CHEAPR_NA_COUNT
     break;
   }
@@ -93,7 +93,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case REALSXP: {
-    const double *p_x = REAL_RO(x);
+    const double *p_x = real_ptr_ro(x);
     CHEAPR_NA_COUNT
     break;
   }
@@ -153,7 +153,7 @@ bool cpp_any_na(SEXP x, bool recursive){
   }
   case LGLSXP:
   case INTSXP: {
-    int *p_x = INTEGER(x);
+    int *p_x = integer_ptr(x);
     CHEAPR_ANY_NA;
     break;
   }
@@ -163,7 +163,7 @@ bool cpp_any_na(SEXP x, bool recursive){
     break;
   }
   case REALSXP: {
-    double *p_x = REAL(x);
+    double *p_x = real_ptr(x);
     CHEAPR_ANY_NA;
     break;
   }
@@ -214,7 +214,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   switch ( CHEAPR_TYPEOF(x) ){
   case LGLSXP:
   case INTSXP: {
-    int *p_x = INTEGER(x);
+    int *p_x = integer_ptr(x);
     CHEAPR_ALL_NA;
     break;
   }
@@ -224,7 +224,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
     break;
   }
   case REALSXP: {
-    double *p_x = REAL(x);
+    double *p_x = real_ptr(x);
     CHEAPR_ALL_NA;
     break;
   }
@@ -278,7 +278,7 @@ SEXP cpp_is_na(SEXP x){
   case INTSXP: {
     out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
-    const int *p_x = INTEGER(x);
+    const int *p_x = integer_ptr(x);
     CHEAPR_IS_NA
     break;
   }
@@ -292,7 +292,7 @@ SEXP cpp_is_na(SEXP x){
   case REALSXP: {
     out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
-    const double *p_x = REAL(x);
+    const double *p_x = real_ptr(x);
     CHEAPR_IS_NA
     break;
   }
@@ -343,13 +343,13 @@ SEXP cpp_df_row_na_counts(SEXP x){
   int num_col = Rf_length(x);
   int num_row = df::nrow(x);
   SEXP out = SHIELD(vec::new_integer(num_row)); ++NP;
-  int* RESTRICT p_out = INTEGER(out);
+  int* RESTRICT p_out = integer_ptr(out);
   std::fill(p_out, p_out + num_row, 0);
   for (int j = 0; j < num_col; ++j){
     switch ( CHEAPR_TYPEOF(p_x[j]) ){
     case LGLSXP:
     case INTSXP: {
-      const int *p_xj = INTEGER_RO(p_x[j]);
+      const int *p_xj = integer_ptr_ro(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
@@ -365,7 +365,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
      break;
     }
     case REALSXP: {
-      const double *p_xj = REAL_RO(p_x[j]);
+      const double *p_xj = real_ptr_ro(p_x[j]);
       OMP_FOR_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
@@ -435,7 +435,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   int32_t NP = 0;
   int num_row = df::nrow(x);
   SEXP out = SHIELD(vec::new_integer(num_col)); ++NP;
-  int *p_out = INTEGER(out);
+  int *p_out = integer_ptr(out);
   std::fill(p_out, p_out + num_col, 0);
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
@@ -483,7 +483,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
   int num_col = Rf_length(x);
 
   SEXP out = SHIELD(new_logical(num_col)); ++NP;
-  int *p_out = INTEGER(out);
+  int *p_out = integer_ptr(out);
 
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
@@ -540,7 +540,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
   int num_col = Rf_length(x);
 
   SEXP out = SHIELD(new_logical(num_col)); ++NP;
-  int *p_out = INTEGER(out);
+  int *p_out = integer_ptr(out);
 
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
@@ -621,13 +621,13 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
   R_xlen_t num_col = Rf_ncols(x);
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(vec::new_integer(num_row));
-  int *p_out = INTEGER(out);
+  int *p_out = integer_ptr(out);
   std::fill(p_out, p_out + num_row, 0);
   if (num_row > 0 && num_col > 0){
     switch ( CHEAPR_TYPEOF(x) ){
     case LGLSXP:
     case INTSXP: {
-      int *p_x = INTEGER(x);
+      int *p_x = integer_ptr(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
         p_out[rowi] += is_r_na(p_x[i]);
@@ -635,7 +635,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       break;
     }
     case REALSXP: {
-      double *p_x = REAL(x);
+      double *p_x = real_ptr(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
         p_out[rowi] += is_r_na(p_x[i]);
@@ -688,13 +688,13 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   bool new_col;
   SEXP out = SHIELD(vec::new_integer(num_col));
-  int *p_out = INTEGER(out);
+  int *p_out = integer_ptr(out);
   std::fill(p_out, p_out + num_col, 0);
   if (num_row > 0 && num_col > 0){
     switch ( CHEAPR_TYPEOF(x) ){
     case LGLSXP:
     case INTSXP: {
-      int *p_x = INTEGER(x);
+      int *p_x = integer_ptr(x);
       for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
         new_col = rowi == num_row;
         if (new_col){
@@ -706,7 +706,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
       break;
     }
     case REALSXP: {
-      double *p_x = REAL(x);
+      double *p_x = real_ptr(x);
       for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
         new_col = rowi == num_row;
         if (new_col){

@@ -226,7 +226,7 @@ inline SEXP init<r_integer64_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_double_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    return cheapr::vec::new_double(n, cheapr::na::numeric);
+    return cheapr::vec::new_double(n, cheapr::na::real);
   } else {
     return cheapr::vec::new_double(n);
   }
@@ -557,15 +557,15 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
     cheapr::attr::set_class(out, out_class);
     cheapr::attr::set_attr(out, cheapr::make_symbol("tzone"), out_tzone);
 
-    double* RESTRICT p_out = REAL(out);
+    double* RESTRICT p_out = cheapr::r_ptr::real_ptr(out);
 
     if (TYPEOF(x) == INTSXP){
-      const int *p_x = INTEGER_RO(x);
+      const int *p_x = cheapr::r_ptr::integer_ptr_ro(x);
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) p_out[i] = cheapr::r_cast<double>(p_x[i]) * 86400.0;
 
     } else {
-      const double *p_x = REAL_RO(x);
+      const double *p_x = cheapr::r_ptr::real_ptr_ro(x);
       OMP_FOR_SIMD
       for (R_xlen_t i = 0; i < n; ++i) p_out[i] = p_x[i] * 86400;
     }

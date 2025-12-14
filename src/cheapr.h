@@ -13,5 +13,6 @@ using namespace cheapr;
 using namespace vec;
 using namespace internal;
 using namespace attr;
+using namespace r_ptr;
 
 #endif

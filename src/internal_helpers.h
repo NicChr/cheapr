@@ -45,7 +45,7 @@ inline SEXP eval_pkg_fun(const char* fn, const char* pkg, SEXP envir, Args... ar
 
 inline R_xlen_t r_length(SEXP x){
   SEXP r_length = SHIELD(eval_pkg_fun("length", "base", env::base_env, x));
-  R_xlen_t out = TYPEOF(r_length) == INTSXP ? INTEGER(r_length)[0] : REAL(r_length)[0];
+  R_xlen_t out = TYPEOF(r_length) == INTSXP ? r_ptr::integer_ptr(r_length)[0] : r_ptr::real_ptr(r_length)[0];
   YIELD(1);
   return out;
 }

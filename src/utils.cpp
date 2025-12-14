@@ -43,14 +43,14 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
   }
   case LGLSXP:
   case INTSXP: {
-    int *p_source = INTEGER(source);
-    int *p_target = INTEGER(target);
+    int *p_source = integer_ptr(source);
+    int *p_target = integer_ptr(target);
     safe_memmove(&p_target[0], &p_source[0], n * sizeof(int));
     break;
   }
   case REALSXP: {
-    double *p_source = REAL(source);
-    double *p_target = REAL(target);
+    double *p_source = real_ptr(source);
+    double *p_target = real_ptr(target);
     safe_memmove(&p_target[0], &p_source[0], n * sizeof(double));
     break;
   }
@@ -156,11 +156,11 @@ double cpp_sum(SEXP x){
   case LGLSXP:
   case INTSXP: {
 
-    const int *p_x = INTEGER(x);
+    const int *p_x = integer_ptr(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_r_na(sum) || is_r_na(p_x[i]) ? na::numeric : sum + p_x[i];
+      sum = is_r_na(sum) || is_r_na(p_x[i]) ? na::real : sum + p_x[i];
     }
     break;
   }
@@ -170,13 +170,13 @@ double cpp_sum(SEXP x){
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
-      sum = is_r_na(sum) || is_r_na(p_x[i]) ? na::numeric : sum + p_x[i];
+      sum = is_r_na(sum) || is_r_na(p_x[i]) ? na::real : sum + p_x[i];
     }
     break;
   }
   default: {
 
-    const double *p_x = REAL(x);
+    const double *p_x = real_ptr(x);
 
     OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i) sum += p_x[i];
@@ -200,7 +200,7 @@ SEXP cpp_range(SEXP x){
     case LGLSXP:
     case INTSXP: {
 
-      const int *p_x = INTEGER_RO(x);
+      const int *p_x = integer_ptr_ro(x);
       int min = std::numeric_limits<int>::max();
       int max = std::numeric_limits<int>::min();
 
@@ -209,8 +209,8 @@ SEXP cpp_range(SEXP x){
         min = std::min(min, p_x[i]);
         max = std::max(max, p_x[i]);
       }
-      lo = is_r_na(min) ? na::numeric : min;
-      hi = is_r_na(min) ? na::numeric : max;
+      lo = is_r_na(min) ? na::real : min;
+      hi = is_r_na(min) ? na::real : max;
       break;
     }
     case CHEAPR_INT64SXP: {
@@ -225,21 +225,21 @@ SEXP cpp_range(SEXP x){
         min = std::min(min, p_x[i]);
         max = std::max(max, p_x[i]);
       }
-      lo = is_r_na(min) ? na::numeric : min;
-      hi = is_r_na(min) ? na::numeric : max;
+      lo = is_r_na(min) ? na::real : min;
+      hi = is_r_na(min) ? na::real : max;
       break;
     }
     default: {
 
-      const double *p_x = REAL_RO(x);
+      const double *p_x = real_ptr_ro(x);
 
       double min = r_limits::r_pos_inf;
       double max = r_limits::r_neg_inf;
 
       for (R_xlen_t i = 0; i < n; ++i){
         if (is_r_na(p_x[i])){
-          min = na::numeric;
-          max = na::numeric;
+          min = na::real;
+          max = na::real;
           break;
         }
         min = std::min(min, p_x[i]);
@@ -255,10 +255,10 @@ SEXP cpp_range(SEXP x){
 }
 
 double cpp_min(SEXP x){
-  return REAL_RO(cpp_range(x))[0];
+  return real_ptr_ro(cpp_range(x))[0];
 }
 double cpp_max(SEXP x){
-  return REAL_RO(cpp_range(x))[1];
+  return real_ptr_ro(cpp_range(x))[1];
 }
 
 // Internal-only function
@@ -277,7 +277,7 @@ double var_sum_squared_diff(SEXP x, double mu){
     switch (TYPEOF(x)){
 
     case INTSXP: {
-      const int *p_x = INTEGER(x);
+      const int *p_x = integer_ptr(x);
       for (R_xlen_t i = 0; i < n; ++i){
         if (is_r_na(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
@@ -285,7 +285,7 @@ double var_sum_squared_diff(SEXP x, double mu){
       break;
     }
     default: {
-      const double *p_x = REAL(x);
+      const double *p_x = real_ptr(x);
       for (R_xlen_t i = 0; i < n; ++i){
         if (is_r_na(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
@@ -294,7 +294,7 @@ double var_sum_squared_diff(SEXP x, double mu){
     }
     }
   } else {
-    out = na::numeric;
+    out = na::real;
   }
   return out;
 }
@@ -367,18 +367,18 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     if (codes){
     SEXP out = SHIELD(vec::new_integer(n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
-    const int *p_x = INTEGER(x);
-    const double *p_b = REAL(breaks);
-    int* RESTRICT p_out = INTEGER(out);
+    const int *p_x = integer_ptr(x);
+    const double *p_b = real_ptr(breaks);
+    int* RESTRICT p_out = integer_ptr(out);
     CHEAPR_BIN_CODES;
     YIELD(2);
     return out;
   } else {
     SEXP out = SHIELD(cpp_semi_copy(x));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
-    const int *p_x = INTEGER(x);
-    const double *p_b = REAL(breaks);
-    int* RESTRICT p_out = INTEGER(out);
+    const int *p_x = integer_ptr(x);
+    const double *p_b = real_ptr(breaks);
+    int* RESTRICT p_out = integer_ptr(out);
     CHEAPR_BIN_NCODES
     YIELD(2);
     return out;
@@ -388,18 +388,18 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     if (codes){
     SEXP out = SHIELD(vec::new_integer(n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
-    const double *p_x = REAL(x);
-    const double *p_b = REAL(breaks);
-    int* RESTRICT p_out = INTEGER(out);
+    const double *p_x = real_ptr(x);
+    const double *p_b = real_ptr(breaks);
+    int* RESTRICT p_out = integer_ptr(out);
     CHEAPR_BIN_CODES;
     YIELD(2);
     return out;
   } else {
     SEXP out = SHIELD(cpp_semi_copy(x));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
-    const double *p_x = REAL(x);
-    const double *p_b = REAL(breaks);
-    double* RESTRICT p_out = REAL(out);
+    const double *p_x = real_ptr(x);
+    const double *p_b = real_ptr(breaks);
+    double* RESTRICT p_out = real_ptr(out);
     CHEAPR_BIN_NCODES
     YIELD(2);
     return out;
@@ -494,7 +494,7 @@ double growth_rate(double a, double b, double n){
     Rf_error("n must be finite positive");
   }
   if (n == 1.0){
-    return na::numeric;
+    return na::real;
   }
   if (a == 0.0 && b == 0.0){
     return 1.0;
@@ -510,14 +510,14 @@ SEXP cpp_growth_rate(SEXP x){
     return new_double(0);
   }
   if (n == 1){
-    return as_vec(na::numeric);
+    return as_vec(na::real);
   }
   double a, b;
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
-    int x_n = INTEGER(x)[n - 1];
-    int x_1 = INTEGER(x)[0];
+    int x_n = integer_ptr(x)[n - 1];
+    int x_1 = integer_ptr(x)[0];
     a = r_cast<double>(x_1);
     b = r_cast<double>(x_n);
     break;
@@ -530,8 +530,8 @@ SEXP cpp_growth_rate(SEXP x){
     break;
   }
   case REALSXP: {
-    b = REAL(x)[n - 1];
-    a = REAL(x)[0];
+    b = real_ptr(x)[n - 1];
+    a = real_ptr(x)[0];
     break;
   }
   default: {
@@ -674,8 +674,8 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   R_xlen_t n = Rf_xlength(x);
 
   SEXP out = SHIELD(vec::new_integer(n_bins));
-  const int *p_x = INTEGER_RO(x);
-  int* RESTRICT p_out = INTEGER(out);
+  const int *p_x = integer_ptr_ro(x);
+  int* RESTRICT p_out = integer_ptr(out);
 
   // Initialise counts to 0
   std::fill(p_out, p_out + n_bins, 0);

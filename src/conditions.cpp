@@ -105,10 +105,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_int: {
       SHIELD(out = init<r_integer_t>(n, false)); ++NP;
-      int* RESTRICT p_out = INTEGER(out);
-      const int *p_yes = INTEGER_RO(yes);
-      const int *p_no = INTEGER_RO(no);
-      const int *p_na = INTEGER_RO(na);
+      int* RESTRICT p_out = integer_ptr(out);
+      const int *p_yes = integer_ptr_ro(yes);
+      const int *p_no = integer_ptr_ro(no);
+      const int *p_na = integer_ptr_ro(na);
 
       if (all_scalar){
         const int yes_value = p_yes[0];
@@ -141,10 +141,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_dbl: {
       SHIELD(out = init<r_double_t>(n, false)); ++NP;
-      double* RESTRICT p_out = REAL(out);
-      const double *p_yes = REAL_RO(yes);
-      const double *p_no = REAL_RO(no);
-      const double *p_na = REAL_RO(na);
+      double* RESTRICT p_out = real_ptr(out);
+      const double *p_yes = real_ptr_ro(yes);
+      const double *p_no = real_ptr_ro(no);
+      const double *p_na = real_ptr_ro(na);
 
       if (all_scalar){
         const double yes_value = p_yes[0];
@@ -285,11 +285,11 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_fct: {
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
-      int* RESTRICT p_out = INTEGER(out);
+      int* RESTRICT p_out = integer_ptr(out);
 
-      const int *p_yes = INTEGER_RO(yes);
-      const int *p_no = INTEGER_RO(no);
-      const int *p_na = INTEGER_RO(na);
+      const int *p_yes = integer_ptr_ro(yes);
+      const int *p_no = integer_ptr_ro(no);
+      const int *p_na = integer_ptr_ro(na);
 
       if (all_scalar){
         const int yes_value = p_yes[0];
@@ -307,10 +307,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
 
       if (TYPEOF(out) == INTSXP){
-        int* RESTRICT p_out = INTEGER(out);
-        const int *p_yes = INTEGER_RO(yes);
-        const int *p_no = INTEGER_RO(no);
-        const int *p_na = INTEGER_RO(na);
+        int* RESTRICT p_out = integer_ptr(out);
+        const int *p_yes = integer_ptr_ro(yes);
+        const int *p_no = integer_ptr_ro(no);
+        const int *p_na = integer_ptr_ro(na);
 
         if (all_scalar){
           const int yes_value = p_yes[0];
@@ -322,10 +322,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
           CHEAPR_VECTORISED_IF_ELSE
         }
       } else {
-        double* RESTRICT p_out = REAL(out);
-        const double *p_yes = REAL_RO(yes);
-        const double *p_no = REAL_RO(no);
-        const double *p_na = REAL_RO(na);
+        double* RESTRICT p_out = real_ptr(out);
+        const double *p_yes = real_ptr_ro(yes);
+        const double *p_no = real_ptr_ro(no);
+        const double *p_na = real_ptr_ro(na);
 
         if (all_scalar){
           const double yes_value = p_yes[0];
@@ -343,11 +343,11 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     case R_pxt: {
 
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
-      double* RESTRICT p_out = REAL(out);
+      double* RESTRICT p_out = real_ptr(out);
 
-      const double *p_yes = REAL_RO(yes);
-      const double *p_no = REAL_RO(no);
-      const double *p_na = REAL_RO(na);
+      const double *p_yes = real_ptr_ro(yes);
+      const double *p_no = real_ptr_ro(no);
+      const double *p_na = real_ptr_ro(na);
 
       if (all_scalar){
         const double yes_value = p_yes[0];

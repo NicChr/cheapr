@@ -44,16 +44,16 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case INTSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
-    const int val = INTEGER(value)[0];
-    const int *p_x = INTEGER(x);
+    const int val = integer_ptr(value)[0];
+    const int *p_x = integer_ptr(x);
     CHEAPR_VAL_COUNT(val)
       break;
   }
   case REALSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
-    const double val = REAL(value)[0];
-    const double *p_x = REAL(x);
+    const double val = real_ptr(value)[0];
+    const double *p_x = real_ptr(x);
     CHEAPR_VAL_COUNT(val)
       break;
   }
@@ -135,12 +135,12 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)){
     break;
   }
-    int *p_out = INTEGER(out);
+    int *p_out = integer_ptr(out);
     SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
     SHIELD(replace = cast<r_integer_t>(replace, r_null)); ++NP;
-    int val = INTEGER(value)[0];
-    int repl = INTEGER(replace)[0];
-    int *p_x = INTEGER(x);
+    int val = integer_ptr(value)[0];
+    int repl = integer_ptr(replace)[0];
+    int *p_x = integer_ptr(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
       eql = p_x[i] == val;
@@ -148,7 +148,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
         any_eq = true;
         out = SHIELD(cpp_semi_copy(out)); ++NP;
         // Change where pointer is pointing to
-        p_out = INTEGER(out);
+        p_out = integer_ptr(out);
       }
       if (eql) p_out[i] = repl;
     }
@@ -160,10 +160,10 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
     SHIELD(replace = cast<r_double_t>(replace, r_null)); ++NP;
-    double *p_out = REAL(out);
-    double val = REAL(value)[0];
-    double repl = REAL(replace)[0];
-    double *p_x = REAL(x);
+    double *p_out = real_ptr(out);
+    double val = real_ptr(value)[0];
+    double repl = real_ptr(replace)[0];
+    double *p_x = real_ptr(x);
     if (val_is_na){
       for (R_xlen_t i = 0; i < n; ++i){
         eql = is_r_na(p_x[i]);
@@ -171,7 +171,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
           any_eq = true;
           out = SHIELD(cpp_semi_copy(out)); ++NP;
           // Change where pointer is pointing to
-          p_out = REAL(out);
+          p_out = real_ptr(out);
         }
         if (eql) p_out[i] = repl;
       }
@@ -182,7 +182,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
           any_eq = true;
           out = SHIELD(cpp_semi_copy(out)); ++NP;
           // Change where pointer is pointing to
-          p_out = REAL(out);
+          p_out = real_ptr(out);
         }
         if (eql) p_out[i] = repl;
       }
@@ -304,9 +304,9 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     }
       out = SHIELD(internal::new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
-      int val = INTEGER(value)[0];
-      int *p_x = INTEGER(x);
-      int *p_out = INTEGER(out);
+      int val = integer_ptr(value)[0];
+      int *p_x = integer_ptr(x);
+      int *p_out = integer_ptr(out);
 
       for (R_xlen_t i = 0; i < n; ++i){
         if (p_x[i] != val){
@@ -322,9 +322,9 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     }
       out = SHIELD(internal::new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
-      double val = REAL(value)[0];
-      double *p_x = REAL(x);
-      double *p_out = REAL(out);
+      double val = real_ptr(value)[0];
+      double *p_x = real_ptr(x);
+      double *p_out = real_ptr(out);
 
       if (cpp_any_na(value, true)){
         for (R_xlen_t i = 0; i < n; ++i){

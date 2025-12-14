@@ -6,8 +6,8 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
   int n = Rf_length(group_id);
 
   SEXP out = SHIELD(vec::new_integer(n_groups));
-  const int* p_group_id = INTEGER_RO(group_id);
-  int* RESTRICT p_out = INTEGER(out);
+  const int* p_group_id = integer_ptr_ro(group_id);
+  int* RESTRICT p_out = integer_ptr(out);
 
   int fill_value = std::numeric_limits<int>::max();
 
@@ -59,8 +59,8 @@ SEXP cpp_group_counts(SEXP group_id, int n_groups){
   int n = Rf_length(group_id);
 
   SEXP out = SHIELD(vec::new_integer(n_groups));
-  const int* RESTRICT p_group_id = INTEGER_RO(group_id);
-  int* RESTRICT p_out = INTEGER(out);
+  const int* RESTRICT p_group_id = integer_ptr_ro(group_id);
+  int* RESTRICT p_out = integer_ptr(out);
 
   // Initialise counts
   std::fill(p_out, p_out + n_groups, 0);

@@ -20,7 +20,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
-    const int *p_x = INTEGER(x);
+    const int *p_x = integer_ptr(x);
 
     out = SHIELD(vec::new_integer((n == 0) ? 0 : 1));
 
@@ -58,7 +58,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     break;
   }
   default: {
-    const double *p_x = REAL(x);
+    const double *p_x = real_ptr(x);
     out = SHIELD(new_double((n == 0) ? 0 : 1));
     if (n > 0){
       double gcd = p_x[0];
@@ -107,7 +107,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     return new_integer(0);
   }
 
-    int *p_x = INTEGER(x);
+    int *p_x = integer_ptr(x);
 
     // Initialise first value as lcm
     int lcm = p_x[0];
@@ -179,12 +179,12 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
     return new_double(0);
   }
 
-    double *p_x = REAL(x);
+    double *p_x = real_ptr(x);
 
     double lcm = p_x[0];
     for (R_xlen_t i = 1; i < n; ++i) {
       if (!na_rm && is_r_na(lcm)){
-        lcm = na::numeric;
+        lcm = na::real;
         break;
       }
       lcm = lcm2(lcm, p_x[i], na_rm, tol);
@@ -223,9 +223,9 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
     SEXP out = SHIELD(vec::new_integer(n)); ++NP;
-    int* RESTRICT p_out = INTEGER(out);
-    const int *p_x = INTEGER(x);
-    const int *p_y = INTEGER(y);
+    int* RESTRICT p_out = integer_ptr(out);
+    const int *p_x = integer_ptr(x);
+    const int *p_y = integer_ptr(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
     recycle_index(xi, xn),
     recycle_index(yi, yn),
@@ -239,9 +239,9 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
     SEXP out = SHIELD(new_double(n)); ++NP;
-    double* RESTRICT p_out = REAL(out);
-    const double *p_x = REAL(x);
-    const double *p_y = REAL(y);
+    double* RESTRICT p_out = real_ptr(out);
+    const double *p_x = real_ptr(x);
+    const double *p_y = real_ptr(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
     recycle_index(xi, xn),
     recycle_index(yi, yn),
@@ -279,9 +279,9 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
     SEXP out = SHIELD(vec::new_integer(n)); ++NP;
-    int* RESTRICT p_out = INTEGER(out);
-    const int *p_x = INTEGER(x);
-    const int *p_y = INTEGER(y);
+    int* RESTRICT p_out = integer_ptr(out);
+    const int *p_x = integer_ptr(x);
+    const int *p_y = integer_ptr(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
     recycle_index(xi, xn),
     recycle_index(yi, yn),
@@ -295,9 +295,9 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
     SEXP out = SHIELD(new_double(n)); ++NP;
-    double* RESTRICT p_out = REAL(out);
-    const double *p_x = REAL(x);
-    const double *p_y = REAL(y);
+    double* RESTRICT p_out = real_ptr(out);
+    const double *p_x = real_ptr(x);
+    const double *p_y = real_ptr(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
     recycle_index(xi, xn),
     recycle_index(yi, yn),
