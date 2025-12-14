@@ -13,7 +13,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
-        attr::set_class(out, get_attr(source, R_ClassSymbol));
+        attr::set_class(out, get_attr(source, symbol::class_sym));
         YIELD(1);
         return out;
       }
@@ -25,7 +25,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
-        attr::set_class(out, get_attr(source, R_ClassSymbol));
+        attr::set_class(out, get_attr(source, symbol::class_sym));
         YIELD(1);
         return out;
       }
@@ -524,7 +524,7 @@ SEXP get_ptypes(SEXP x){
 
 // Helper to turn a factor into a character vec
 SEXP factor_as_character(SEXP x){
-  return sset_vec(get_attr(x, R_LevelsSymbol), x, true);
+  return sset_vec(get_attr(x, symbol::levels_sym), x, true);
 }
 
 // Helper to turn a character vec into a factor, given levels
@@ -538,7 +538,7 @@ SEXP character_as_factor(SEXP x, SEXP levels){
 
   SEXP out = SHIELD(match(levels, x, na::integer)); ++NP;
   SEXP cls = SHIELD(as_vec("factor")); ++NP;
-  set_attr(out, R_LevelsSymbol, levels);
+  set_attr(out, symbol::levels_sym, levels);
   attr::set_class(out, cls);
   YIELD(NP);
   return out;
@@ -933,8 +933,8 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case R_pxt: {
 
     SHIELD(out = init<r_posixt_t>(out_size, false)); ++NP;
-    SEXP out_tzone = SHIELD(get_attr(vec_template, make_symbol("tzone"))); ++NP;
-    set_attr(out, make_symbol("tzone"), out_tzone);
+    SEXP out_tzone = SHIELD(get_attr(vec_template, symbol::make_symbol("tzone"))); ++NP;
+    set_attr(out, symbol::make_symbol("tzone"), out_tzone);
 
     double* RESTRICT p_out = real_ptr(out);
 
@@ -951,7 +951,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case R_unk: {
     SEXP call = SHIELD(vec::coerce_vec(x, LISTSXP)); ++NP;
-    SHIELD(call = Rf_lcons(make_symbol("c"), call)); ++NP;
+    SHIELD(call = Rf_lcons(symbol::make_symbol("c"), call)); ++NP;
     SHIELD(out = eval(call, R_GetCurrentEnv())); ++NP;
     break;
   }

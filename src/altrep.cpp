@@ -36,13 +36,13 @@ bool is_compact_seq(SEXP x){
   SEXP alt_pkg_sym = alt_pkg(x);
 
   if (is_null(CHEAPR_COMPACT_INTSEQ)){
-    CHEAPR_COMPACT_INTSEQ = make_symbol("compact_intseq");
+    CHEAPR_COMPACT_INTSEQ = symbol::make_symbol("compact_intseq");
   }
   if (is_null(CHEAPR_COMPACT_REALSEQ)){
-    CHEAPR_COMPACT_REALSEQ = make_symbol("compact_realseq");
+    CHEAPR_COMPACT_REALSEQ = symbol::make_symbol("compact_realseq");
   }
   if (is_null(CHEAPR_BASE)){
-    CHEAPR_BASE = make_symbol("base");
+    CHEAPR_BASE = symbol::make_symbol("base");
   }
   return (alt_class_sym == CHEAPR_COMPACT_INTSEQ ||
           alt_class_sym == CHEAPR_COMPACT_REALSEQ) &&
@@ -66,5 +66,4 @@ SEXP compact_seq_data(SEXP x){
 
 SEXP altrep_materialise(SEXP x) {
   return altrep::is_altrep(x) ? cpp_semi_copy(x) : x;
-
 }

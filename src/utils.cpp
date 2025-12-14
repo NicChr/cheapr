@@ -622,11 +622,11 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
   // Start from clean slate - no attributes
   attr::clear_attrs(target);
 
-  SEXP tag = r_null;
+  r_sym_t curr_tag;
   SEXP current = r_null;
 
-  const SEXP *p_ta = STRING_PTR_RO(target_attr_names);
-  const SEXP *p_sa = STRING_PTR_RO(source_attr_names);
+  const r_string_t *p_ta = string_ptr_ro(target_attr_names);
+  const r_string_t *p_sa = string_ptr_ro(source_attr_names);
 
   const int n_target = Rf_length(target_attr_names);
   const int n_source = Rf_length(source_attr_names);
@@ -635,10 +635,10 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
     current = target_attrs;
     while (!is_null(current)){
 
-      tag = TAG(current);
+      curr_tag = symbol::tag(current);
 
-      if (PRINTNAME(tag) == p_ta[i]){
-        set_attr(target, tag, CAR(current));
+      if (symbol_as_string(curr_tag) == p_ta[i]){
+        set_attr(target, curr_tag, CAR(current));
         break;
       }
       current = CDR(current);
@@ -649,10 +649,10 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
     current = source_attrs;
     while (!is_null(current)){
 
-      tag = TAG(current);
+      curr_tag = symbol::tag(current);
 
-      if (PRINTNAME(tag) == p_sa[i]){
-        set_attr(target, tag, CAR(current));
+      if (symbol_as_string(curr_tag) == p_sa[i]){
+        set_attr(target, curr_tag, CAR(current));
         break;
       }
       current = CDR(current);

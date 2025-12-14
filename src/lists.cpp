@@ -300,7 +300,6 @@ void set_list_as_df(SEXP x) {
   }
 
   SEXP df_str = SHIELD(as_vec("data.frame")); ++NP;
-  SEXP row_names = SHIELD(df::new_row_names(N)); ++NP;
 
   // If no names then add names
   SEXP names = SHIELD(get_r_names(x)); ++NP;
@@ -308,7 +307,7 @@ void set_list_as_df(SEXP x) {
     SHIELD(names = new_character(n_items)); ++NP;
     set_r_names(x, names);
   }
-  set_attr(x, R_RowNamesSymbol, row_names);
+  df::set_row_names(x, N);
   attr::set_class(x, df_str);
   YIELD(NP);
 }
@@ -335,16 +334,17 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
     }
   }
 
-  SEXP row_names;
+  int num_row;
 
   if (is_null(nrows)){
     if (Rf_length(out) == 0){
-      row_names = SHIELD(vec::new_integer(0)); ++NP;
+      num_row = 0;
     } else {
-      row_names = SHIELD(df::new_row_names(vec::length(VECTOR_ELT(out, 0)))); ++NP;
+      num_row = vec::length(VECTOR_ELT(out, 0));
     }
   } else {
-    row_names = SHIELD(df::new_row_names(Rf_asInteger(nrows))); ++NP;
+    SHIELD(nrows = cast<r_integer_t>(nrows, r_null)); ++NP;
+    num_row = get_int(nrows, 0);
   }
 
   SEXP out_names = SHIELD(get_r_names(out)); ++NP;
@@ -360,7 +360,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
     SHIELD(out_names = cpp_name_repair(out_names, dup_sep, empty_sep)); ++NP;
   }
   set_r_names(out, out_names);
-  set_attr(out, R_RowNamesSymbol, row_names);
+  df::set_row_names(out, num_row);
   SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
   attr::set_class(out, df_cls);
   YIELD(NP);

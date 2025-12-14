@@ -83,28 +83,67 @@ enum r_bool_t : int {
   r_na = std::numeric_limits<int>::min()
 };
 
+
+inline const SEXP r_null = R_NilValue;
+
+// Alias type for CHARSXP
 struct r_string_t {
   SEXP value;
-
+  r_string_t() : value(R_BlankString) {}
   explicit constexpr r_string_t(SEXP x) : value(x) {}
   constexpr operator SEXP() const { return value; }
 };
 
-inline const r_string_t blank_r_string = static_cast<r_string_t>(R_BlankString);
+inline const r_string_t blank_r_string = r_string_t();
 
-struct r_null_t {
+// Alias type for SYMSXP
+struct r_sym_t {
   SEXP value;
-
-  explicit constexpr r_null_t(SEXP x) : value(x) {}
+  r_sym_t() : value(R_MissingArg) {}
+  explicit constexpr r_sym_t(SEXP x) : value(x) {}
   constexpr operator SEXP() const { return value; }
 };
 
-inline const r_null_t r_null = static_cast<r_null_t>(R_NilValue);
+namespace symbol {
+inline r_sym_t class_sym = static_cast<r_sym_t>(R_ClassSymbol);
+inline r_sym_t names_sym = static_cast<r_sym_t>(R_NamesSymbol);
+inline r_sym_t dim_sym = static_cast<r_sym_t>(R_DimSymbol);
+inline r_sym_t dim_names_sym = static_cast<r_sym_t>(R_DimNamesSymbol);
+inline r_sym_t row_names_sym = static_cast<r_sym_t>(R_RowNamesSymbol);
+inline r_sym_t levels_sym = static_cast<r_sym_t>(R_LevelsSymbol);
+inline r_sym_t double_colon_sym = static_cast<r_sym_t>(R_DoubleColonSymbol);
+inline r_sym_t triple_colon_sym = static_cast<r_sym_t>(R_TripleColonSymbol);
+inline r_sym_t dollar_sym = static_cast<r_sym_t>(R_DollarSymbol);
+inline r_sym_t bracket_sym = static_cast<r_sym_t>(R_BracketSymbol);
+inline r_sym_t double_brackets_sym = static_cast<r_sym_t>(R_Bracket2Symbol);
+inline r_sym_t brace_sym = static_cast<r_sym_t>(R_BraceSymbol);
+inline r_sym_t dots_sym = static_cast<r_sym_t>(R_DotsSymbol);
+inline r_sym_t tsp_sym = static_cast<r_sym_t>(R_TspSymbol);
+inline r_sym_t name_sym = static_cast<r_sym_t>(R_NameSymbol);
+inline r_sym_t base_sym = static_cast<r_sym_t>(R_BaseSymbol);
+inline r_sym_t quote_sym = static_cast<r_sym_t>(R_QuoteSymbol);
+inline r_sym_t function_sym = static_cast<r_sym_t>(R_FunctionSymbol);
+inline r_sym_t namespace_env_sym = static_cast<r_sym_t>(R_NamespaceEnvSymbol);
+inline r_sym_t package_sym = static_cast<r_sym_t>(R_PackageSymbol);
+inline r_sym_t seeds_sym = static_cast<r_sym_t>(R_SeedsSymbol);
+inline r_sym_t na_rm_sym = static_cast<r_sym_t>(R_NaRmSymbol);
+inline r_sym_t source_sym = static_cast<r_sym_t>(R_SourceSymbol);
+inline r_sym_t mode_sym = static_cast<r_sym_t>(R_ModeSymbol);
+inline r_sym_t device_sym = static_cast<r_sym_t>(R_DeviceSymbol);
+inline r_sym_t last_value_sym = static_cast<r_sym_t>(R_LastvalueSymbol);
+inline r_sym_t spec_sym = static_cast<r_sym_t>(R_SpecSymbol);
+inline r_sym_t previous_sym = static_cast<r_sym_t>(R_PreviousSymbol);
+inline r_sym_t sort_list_sym = static_cast<r_sym_t>(R_SortListSymbol);
+inline r_sym_t eval_sym = static_cast<r_sym_t>(R_EvalSymbol);
+inline r_sym_t drop_sym = static_cast<r_sym_t>(R_DropSymbol);
+inline r_sym_t missing_arg = static_cast<r_sym_t>(R_MissingArg);
+
+}
 
 template <typename T>
 inline constexpr bool is_r_integral_v =
 std::is_integral_v<T> ||
-std::is_same_v<T, r_bool_t> ||
+std::is_same_v<std::decay_t<T>, r_bool_t> ||
 std::is_same_v<std::decay_t<T>, Rboolean> ||
 std::is_same_v<std::decay_t<T>, cpp11::r_bool>;
 
@@ -128,7 +167,7 @@ namespace na {
   inline const Rcomplex complex = {{NA_REAL, NA_REAL}};
   inline constexpr Rbyte raw = static_cast<Rbyte>(0);
   inline const r_string_t string = static_cast<r_string_t>(NA_STRING);
-  inline const r_null_t list = r_null;
+  inline const SEXP list = r_null;
 }
 
 // Pointers
@@ -230,18 +269,28 @@ inline const char* char_as_utf8(const char *x){
 }
 }
 
-inline SEXP make_symbol(const char *x){
-  return Rf_installChar(internal::make_utf8_charsxp(x));
+namespace symbol {
+
+inline r_sym_t tag(SEXP x){
+  return static_cast<r_sym_t>(TAG(x));
 }
-inline r_string_t symbol_as_string(SEXP x){
-  return static_cast<r_string_t>(PRINTNAME(x));
+inline r_sym_t make_symbol(const char *x){
+  return static_cast<r_sym_t>(Rf_installChar(internal::make_utf8_charsxp(x)));
+}
+inline r_sym_t string_as_symbol(const r_string_t x){
+  return static_cast<r_sym_t>(make_symbol(CHAR(static_cast<SEXP>(x))));
+}
+inline r_string_t symbol_as_string(r_sym_t x){
+  return static_cast<r_string_t>(PRINTNAME(static_cast<SEXP>(x)));
+}
+
 }
 
 // Memory address
-inline SEXP address(SEXP x) {
+inline r_string_t address(SEXP x) {
   char buf[1000];
   std::snprintf(buf, 1000, "%p", static_cast<void*>(x));
-  return internal::make_utf8_charsxp(buf);
+  return static_cast<r_string_t>(internal::make_utf8_charsxp(buf));
 }
 
 inline r_bool_t* BOOLEAN(SEXP x) {
@@ -274,12 +323,12 @@ inline bool is_altrep(SEXP x){
 
 namespace attr {
 
-inline SEXP get_attr(SEXP x, SEXP sym){
-  return Rf_getAttrib(x, sym);
+inline SEXP get_attr(SEXP x, r_sym_t sym){
+  return Rf_getAttrib(x, static_cast<SEXP>(sym));
 }
 
-inline void set_attr(SEXP x, SEXP sym, SEXP value){
-  Rf_setAttrib(x, sym, value);
+inline void set_attr(SEXP x, r_sym_t sym, SEXP value){
+  Rf_setAttrib(x, static_cast<SEXP>(sym), value);
 }
 
 }
@@ -383,6 +432,12 @@ inline r_string_t get_r_string(const r_string_t* p_x, const R_xlen_t i){
 inline r_string_t get_r_string(SEXP x, const R_xlen_t i){
   return static_cast<r_string_t>(STRING_ELT(x, i));
 }
+inline r_sym_t get_r_string(const r_sym_t* p_x, const R_xlen_t i){
+  return static_cast<r_sym_t>(p_x[i]);
+}
+inline r_sym_t get_r_sym(SEXP x, const R_xlen_t i){
+  return static_cast<r_sym_t>(VECTOR_ELT(x, i));
+}
 inline SEXP get_r_obj(const SEXP* p_x, const R_xlen_t i){
   return p_x[i];
 }
@@ -455,6 +510,9 @@ inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_string val){
 inline void set_val(SEXP x, const R_xlen_t i, r_string_t val){
   SET_STRING_ELT(x, i, static_cast<SEXP>(val));
 }
+inline void set_val(SEXP x, const R_xlen_t i, r_sym_t val){
+  SET_VECTOR_ELT(x, i, static_cast<SEXP>(val));
+}
 // Never use the pointer here to assign
 inline void set_val(SEXP x, const R_xlen_t i, SEXP val){
   switch (TYPEOF(val)){
@@ -476,10 +534,10 @@ namespace internal {
 inline SEXP r_length_sym = r_null;
 
 inline void set_r_names(SEXP x, SEXP names){
-  is_null(names) ? attr::set_attr(x, R_NamesSymbol, r_null) : static_cast<void>(Rf_namesgets(x, names));
+  is_null(names) ? attr::set_attr(x, symbol::names_sym, r_null) : static_cast<void>(Rf_namesgets(x, names));
 }
 inline SEXP get_r_names(SEXP x){
-  return attr::get_attr(x, R_NamesSymbol);
+  return attr::get_attr(x, symbol::names_sym);
 }
 inline bool has_r_names(SEXP x){
   SEXP names = SHIELD(get_r_names(x));
@@ -499,7 +557,7 @@ inline void set_class(SEXP x, SEXP cls){
 inline void clear_attrs(SEXP x){
   SEXP current = ATTRIB(x);
   while (!is_null(current)){
-    set_attr(x, TAG(current), r_null);
+    set_attr(x, symbol::tag(current), r_null);
     current = CDR(current);
   }
 }
@@ -632,7 +690,7 @@ inline bool is_df(SEXP x){
 }
 
 inline int nrow(SEXP x){
-  return Rf_length(attr::get_attr(x, R_RowNamesSymbol));
+  return Rf_length(attr::get_attr(x, symbol::row_names_sym));
 }
 inline int ncol(SEXP x){
   return Rf_length(x);
@@ -650,7 +708,7 @@ inline SEXP new_row_names(int n){
 }
 inline void set_row_names(SEXP x, int n){
   SEXP row_names = SHIELD(new_row_names(n));
-  attr::set_attr(x, R_RowNamesSymbol, row_names);
+  attr::set_attr(x, symbol::row_names_sym, row_names);
   YIELD(1);
 }
 }
@@ -709,6 +767,11 @@ inline constexpr bool is_r_na<Rbyte>(const Rbyte x){
 template<>
 inline bool is_r_na<cpp11::r_string>(const cpp11::r_string x){
   return x == na::string;
+}
+
+template<>
+inline constexpr bool is_r_na<r_sym_t>(const r_sym_t x){
+  return false;
 }
 
 // Works for CHARSXP and NULL
@@ -875,6 +938,10 @@ template<>
 inline SEXP as_vec<cpp11::r_bool>(const cpp11::r_bool x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
+template<>
+inline SEXP as_vec<r_sym_t>(const r_sym_t x){
+  return new_list(1, x);
+}
 
 // Scalar string
 template<>
@@ -923,6 +990,10 @@ inline SEXP as_r_obj(const T x){
 template<>
 inline SEXP as_r_obj<r_string_t>(const r_string_t x){
   return vec::as_vec<r_string_t>(x);
+}
+template<>
+inline SEXP as_r_obj<r_sym_t>(const r_sym_t x){
+  return static_cast<SEXP>(x);
 }
 
 namespace internal {
@@ -1018,23 +1089,66 @@ inline constexpr Rbyte as_raw(T x){
 }
 // As CHARSXP
 template<typename T>
-inline constexpr r_string_t as_r_string(T x){
+inline r_string_t as_r_string(T x){
   if constexpr (std::is_same_v<std::decay_t<T>, r_string_t>){
     return x;
   } else if constexpr (std::is_same_v<std::decay_t<T>, const char *>){
     return static_cast<r_string_t>(internal::make_utf8_charsxp(x));
   } else {
-    if (is_r_na(x)){
-      return na::string;
-    } else {
-      SEXP scalar = SHIELD(vec::as_vec(x));
+    SEXP scalar = SHIELD(as_r_obj(x));
+    switch (TYPEOF(scalar)){
+    case CHARSXP: {
+      YIELD(1);
+      return static_cast<r_string_t>(scalar);
+    }
+    default: {
+      if (Rf_length(scalar) != 1){
+      YIELD(1);
+      Rf_error("`x` is a non-scalar vector and cannot be convered to an `r_string_t` in %s", __func__);
+    }
+      if (is_r_na(x)){
+        YIELD(1);
+        return na::string;
+      }
       SEXP str = SHIELD(vec::coerce_vec(scalar, STRSXP));
-      r_string_t out = static_cast<r_string_t>(STRING_ELT(str, 0));
+      r_string_t out = vec::get_r_string(str, 0);
       YIELD(2);
       return out;
     }
+    }
+
   }
 }
+
+// As SYMSXP
+template<typename T>
+inline r_sym_t as_r_sym(T x){
+  if constexpr (std::is_same_v<std::decay_t<T>, r_sym_t>){
+    return x;
+  } else if constexpr (std::is_same_v<std::decay_t<T>, const char *>){
+    return symbol::make_symbol(x);
+  } else {
+    SEXP scalar = SHIELD(as_r_obj(x));
+    switch (TYPEOF(scalar)){
+    case SYMSXP: {
+      YIELD(1);
+      return static_cast<r_sym_t>(scalar);
+    }
+    default: {
+      if (Rf_length(scalar) != 1){
+      YIELD(1);
+      Rf_error("`x` is a non-scalar vector and cannot be convered to an `r_sym_t` in %s", __func__);
+    }
+      SEXP str = SHIELD(vec::coerce_vec(scalar, STRSXP));
+      r_sym_t out = symbol::string_as_symbol(vec::get_r_string(str, 0));
+      YIELD(2);
+      return out;
+    }
+    }
+
+  }
+}
+
 namespace internal {
 // R version of static_cast
 template<typename T, typename U>
@@ -1093,8 +1207,15 @@ struct r_cast_impl<Rbyte, U> {
 
 template<typename U>
 struct r_cast_impl<r_string_t, U> {
-  static constexpr r_string_t cast(U x) {
+  static r_string_t cast(U x) {
     return as_r_string(x);
+  }
+};
+
+template<typename U>
+struct r_cast_impl<r_sym_t, U> {
+  static r_sym_t cast(U x) {
+    return as_r_sym(x);
   }
 };
 
@@ -1261,9 +1382,9 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   SEXP expr = r_null;
 
   if (all_fns){
-    expr = SHIELD(Rf_lang3(R_TripleColonSymbol, Rf_install(pkg), Rf_install(name)));
+    expr = SHIELD(Rf_lang3(symbol::triple_colon_sym, symbol::make_symbol(pkg), symbol::make_symbol(name)));
   } else {
-    expr = SHIELD(Rf_lang3(R_DoubleColonSymbol, Rf_install(pkg), Rf_install(name)));
+    expr = SHIELD(Rf_lang3(symbol::double_colon_sym, symbol::make_symbol(pkg), symbol::make_symbol(name)));
   }
   SEXP out = SHIELD(eval(expr, env::base_env));
   YIELD(2);
@@ -1344,7 +1465,7 @@ inline SEXP make_pairlist(Args... args) {
     (([&]() {
       if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
         SETCAR(current, args.value);
-        SET_TAG(current, make_symbol(args.name));
+        SET_TAG(current, symbol::make_symbol(args.name));
       } else {
         SETCAR(current, as_r_obj(args));
       }
@@ -1392,7 +1513,7 @@ inline R_xlen_t length(SEXP x){
       return out;
     } else {
       if (is_null(internal::r_length_sym)){
-        internal::r_length_sym = make_symbol("length");
+        internal::r_length_sym = symbol::make_symbol("length");
       }
       SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
       SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
@@ -1403,7 +1524,7 @@ inline R_xlen_t length(SEXP x){
     // Catch-all
   } else {
     if (is_null(internal::r_length_sym)){
-      internal::r_length_sym = make_symbol("length");
+      internal::r_length_sym = symbol::make_symbol("length");
     }
     SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
     SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
@@ -1495,11 +1616,11 @@ inline void add_attrs(SEXP x, SEXP attrs) {
     const SEXP *p_attributes = internal::LIST_PTR_RO(attrs);
     const SEXP *p_names = STRING_PTR_RO(names);
 
-    SEXP attr_nm = r_null;
+    r_sym_t attr_nm;
 
     for (int i = 0; i < Rf_length(names); ++i){
       if (p_names[i] != blank_r_string){
-        attr_nm = make_symbol(CHAR(p_names[i]));
+        attr_nm = symbol::make_symbol(CHAR(p_names[i]));
         if (address(x) == address(p_attributes[i])){
           SEXP dup_attr = SHIELD(vec::deep_copy(p_attributes[i])); ++NP;
           attr::set_attr(x, attr_nm, dup_attr);
@@ -1516,15 +1637,15 @@ inline void add_attrs(SEXP x, SEXP attrs) {
     SEXP current = attrs;
 
     while (!is_null(current)){
-      if (is_null(TAG(current)) || symbol_as_string(TAG(current)) == blank_r_string){
+      if (is_null(symbol::tag(current)) || symbol::symbol_as_string(static_cast<r_sym_t>(symbol::tag(current))) == blank_r_string){
         YIELD(NP);
         Rf_error("Please only supply named attributes in %s", __func__);
       }
       if (addr_x == address(CAR(current))){
         SEXP dup_attr = SHIELD(vec::deep_copy(CAR(current))); ++NP;
-        attr::set_attr(x, TAG(current), dup_attr);
+        attr::set_attr(x, symbol::tag(current), dup_attr);
       } else {
-        attr::set_attr(x, TAG(current), CAR(current));
+        attr::set_attr(x, symbol::tag(current), CAR(current));
       }
       // Next node
       current = CDR(current);
@@ -1553,8 +1674,8 @@ inline SEXP get_attrs(SEXP x){
 
   for (int i = 0; i < n; ++i){
     vec::set_val(out, i, CAR(current));
-    if (!is_null(TAG(current))){
-      vec::set_val(names, i, symbol_as_string(TAG(current)));
+    if (!is_null(symbol::tag(current))){
+      vec::set_val(names, i, symbol::symbol_as_string(symbol::tag(current)));
     }
     current = CDR(current);
   }
