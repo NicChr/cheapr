@@ -213,8 +213,8 @@ inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
 
 // UTF-8 helpers
 
-inline const char* utf8_char(SEXP x){
-  return Rf_translateCharUTF8(x);
+inline const char* utf8_char(r_string_t x){
+  return Rf_translateCharUTF8(static_cast<SEXP>(x));
 }
 
 inline SEXP make_utf8_charsxp(const char *x){

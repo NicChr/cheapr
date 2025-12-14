@@ -1304,7 +1304,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     if (cpp_any_na(cols, false)){
       for (int i = 0; i < Rf_length(cols); ++i){
         if (is_r_na(match_locs[i])){
-          const char *bad_loc = utf8_char(STRING_ELT(locs, i));
+          const char *bad_loc = utf8_char(get_r_string(locs, i));
           YIELD(NP);
           Rf_error("Column %s does not exist", bad_loc);
         }

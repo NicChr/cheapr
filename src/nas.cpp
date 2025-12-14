@@ -401,7 +401,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
         SEXP names = SHIELD(get_r_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
+                 utf8_char(get_r_string(names, j)), element_length, int_nrows);
       }
       const int* RESTRICT p_is_missing = LOGICAL_RO(is_missing);
       for (int k = 0; k < num_row; ++k){
@@ -448,7 +448,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
         SEXP names = SHIELD(get_r_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
+                 utf8_char(get_r_string(names, j)), element_length, int_nrows);
       }
       int *p_is_missing = LOGICAL(is_missing);
       for (int k = 0; k < num_row; ++k){
@@ -496,7 +496,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
         SEXP names = SHIELD(get_r_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
+                 utf8_char(get_r_string(names, j)), element_length, int_nrows);
       }
       p_out[j] = static_cast<int>(vec_any(is_missing));
     } else {
@@ -553,7 +553,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
         SEXP names = SHIELD(get_r_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 utf8_char(STRING_ELT(names, j)), element_length, int_nrows);
+                 utf8_char(get_r_string(names, j)), element_length, int_nrows);
       }
       p_out[j] = static_cast<int>(vec_all(is_missing));
     } else {
