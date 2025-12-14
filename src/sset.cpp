@@ -12,6 +12,8 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
   R_xlen_t istart = from;
   R_xlen_t iend = to;
   R_xlen_t out;
+  R_xlen_t istart1 = 0, istart2 = 0;
+  R_xlen_t iend1 = 0, iend2 = 0;
   if (istart == 0 && iend == 0){
     out = 0;
   } else if (istart < 0 || iend < 0){
@@ -52,10 +54,10 @@ R_xlen_t get_alt_final_sset_size(R_xlen_t n, R_xlen_t from, R_xlen_t to, R_xlen_
       out = (iend - istart) + 1;
     } else {
       // Scenario 6
-      R_xlen_t istart1 = 1;
-      R_xlen_t iend1 = std::abs(istart) - 1;
-      R_xlen_t istart2 = std::abs(iend) + 1;
-      R_xlen_t iend2 = n;
+      istart1 = 1;
+      iend1 = std::abs(istart) - 1;
+      istart2 = std::abs(iend) + 1;
+      iend2 = n;
       out = (iend1 - istart1) + (iend2 - istart2) + 2;
     }
   } else {
@@ -441,7 +443,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   R_xlen_t istart = from;
   R_xlen_t iend = to;
-  R_xlen_t out_size, istart1, istart2;
+  R_xlen_t out_size, istart1 = 0, istart2 = 0;
   R_xlen_t iend1 = 0, iend2 = 0;
   bool double_loop = false;
 
