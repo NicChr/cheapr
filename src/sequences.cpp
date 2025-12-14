@@ -548,7 +548,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
   if (n < 1){
     Rf_error("n must be >= 1");
   }
-  if (n >= R_PosInf){
+  if (n >= r_limits::r_pos_inf){
     Rf_error("n must be finite");
   }
   if (is_r_na(start) || is_r_na(end) ||

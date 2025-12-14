@@ -23,12 +23,12 @@ for (R_xlen_t i = 0; i < n; ++i){                                \
 if (n_cores > 1){                                                  \
   OMP_PARALLEL_FOR_SIMD                                            \
   for (R_xlen_t i = 0; i < n; ++i){                                \
-    p_out[i] = is_r_na(p_x[i]);                                    \
+    set_val(p_out, i, is_r_na(p_x[i]));                            \
   }                                                                \
 } else {                                                           \
   OMP_FOR_SIMD                                                     \
   for (R_xlen_t i = 0; i < n; ++i){                                \
-    p_out[i] = is_r_na(p_x[i]);                                    \
+    set_val(p_out, i, is_r_na(p_x[i]));                            \
   }                                                                \
 }
 
@@ -98,7 +98,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
     break;
   }
   case STRSXP: {
-    const SEXP *p_x = STRING_PTR_RO(x);
+    const r_string_t *p_x = R_STRING_RO(x);
     CHEAPR_NA_COUNT
     break;
   }
@@ -168,7 +168,7 @@ bool cpp_any_na(SEXP x, bool recursive){
     break;
   }
   case STRSXP: {
-    const SEXP *p_x = STRING_PTR_RO(x);
+    const r_string_t *p_x = R_STRING_RO(x);
     CHEAPR_ANY_NA;
     break;
   }
@@ -299,7 +299,7 @@ SEXP cpp_is_na(SEXP x){
   case STRSXP: {
     out = SHIELD(new_logical(n));
     int* RESTRICT p_out = LOGICAL(out);
-    const SEXP *p_x = STRING_PTR_RO(x);
+    const r_string_t *p_x = R_STRING_RO(x);
     CHEAPR_IS_NA
     break;
   }
@@ -586,14 +586,14 @@ SEXP cpp_col_all_na(SEXP x, bool names){
 }
 
 R_xlen_t cpp_clean_threshold(double threshold, bool threshold_is_prop, R_xlen_t n){
-  if (threshold != threshold){
+  if (is_r_na(threshold)){
     Rf_error("threshold cannot be NA");
   }
   R_xlen_t out = threshold;
   if (threshold_is_prop){
     if (threshold < 0){
       out = 0;
-    } else if (threshold == R_PosInf){
+    } else if (threshold == r_limits::r_pos_inf){
       out = n + 1;
     } else {
       out = std::floor( (threshold * n) + 0.0000000001);
@@ -602,7 +602,7 @@ R_xlen_t cpp_clean_threshold(double threshold, bool threshold_is_prop, R_xlen_t 
     if (threshold < 0){
       out = 0;
     }
-    if (threshold == R_PosInf){
+    if (threshold == r_limits::r_pos_inf){
       out = n + 1;
     }
   }

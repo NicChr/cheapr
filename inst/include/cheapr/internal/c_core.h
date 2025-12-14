@@ -83,14 +83,30 @@ enum r_bool_t : int {
   r_na = std::numeric_limits<int>::min()
 };
 
-inline const SEXP r_null = R_NilValue;
+struct r_string_t {
+  SEXP value;
+
+  explicit constexpr r_string_t(SEXP x) : value(x) {}
+  constexpr operator SEXP() const { return value; }
+};
+
+inline const r_string_t blank_r_string = static_cast<r_string_t>(R_BlankString);
+
+struct r_null_t {
+  SEXP value;
+
+  explicit constexpr r_null_t(SEXP x) : value(x) {}
+  constexpr operator SEXP() const { return value; }
+};
+
+inline const r_null_t r_null = static_cast<r_null_t>(R_NilValue);
 
 template <typename T>
 inline constexpr bool is_r_integral_v =
 std::is_integral_v<T> ||
 std::is_same_v<T, r_bool_t> ||
-std::is_same_v<T, Rboolean> ||
-std::is_same_v<T, cpp11::r_bool>;
+std::is_same_v<std::decay_t<T>, Rboolean> ||
+std::is_same_v<std::decay_t<T>, cpp11::r_bool>;
 
 template <typename T>
 inline constexpr bool is_r_arithmetic_v =
@@ -111,8 +127,55 @@ namespace na {
   inline const double numeric = NA_REAL;
   inline const Rcomplex complex = {{NA_REAL, NA_REAL}};
   inline constexpr Rbyte raw = static_cast<Rbyte>(0);
-  inline const SEXP string = NA_STRING;
-  inline const SEXP list = r_null;
+  inline const r_string_t string = static_cast<r_string_t>(NA_STRING);
+  inline const r_null_t list = r_null;
+}
+
+// Pointers
+
+namespace r_ptr {
+inline r_bool_t* logical_ptr(SEXP x){
+  return reinterpret_cast<r_bool_t*>(INTEGER(x));
+}
+inline const r_bool_t* logical_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_bool_t*>(INTEGER_RO(x));
+}
+inline int* integer_ptr(SEXP x){
+  return INTEGER(x);
+}
+inline const int* integer_ptr_ro(SEXP x){
+  return INTEGER_RO(x);
+}
+inline int64_t* integer64_ptr(SEXP x){
+  return reinterpret_cast<int64_t*>(REAL(x));
+}
+inline const  int64_t* integer64_ptr_ro(SEXP x){
+  return reinterpret_cast<const int64_t*>(REAL_RO(x));
+}
+inline double* real_ptr(SEXP x){
+  return REAL(x);
+}
+inline const double* real_ptr_ro(SEXP x){
+  return REAL_RO(x);
+}
+inline Rcomplex* complex_ptr(SEXP x){
+  return COMPLEX(x);
+}
+inline const Rcomplex* complex_ptr_ro(SEXP x){
+  return COMPLEX_RO(x);
+}
+inline Rbyte* raw_ptr(SEXP x){
+  return RAW(x);
+}
+inline const Rbyte* raw_ptr_ro(SEXP x){
+  return RAW_RO(x);
+}
+inline const r_string_t* string_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_string_t*>(STRING_PTR_RO(x));
+}
+inline const SEXP* list_ptr_ro(SEXP x){
+  return VECTOR_PTR_RO(x);
+}
 }
 
 // Functions
@@ -135,6 +198,9 @@ inline int64_t* INTEGER64_PTR(SEXP x) {
 }
 inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
   return reinterpret_cast<const int64_t*>(REAL_RO(x));
+}
+inline const r_string_t* R_STRING_RO(SEXP x) {
+  return reinterpret_cast<const r_string_t*>(STRING_PTR_RO(x));
 }
 // Check that n = 0 to avoid R CMD warnings
 inline void *safe_memmove(void *dst, const void *src, size_t n){
@@ -369,13 +435,13 @@ inline SEXP new_double(R_xlen_t n, std::optional<double> default_value = std::nu
     return internal::new_vec(REALSXP, n);
   }
 }
-inline SEXP new_character(R_xlen_t n, std::optional<SEXP> default_value = std::nullopt){
+inline SEXP new_character(R_xlen_t n, std::optional<r_string_t> default_value = std::nullopt){
   if (default_value.has_value()){
-    SEXP val = *default_value;
+    r_string_t val = *default_value;
     SEXP out = SHIELD(internal::new_vec(STRSXP, n));
-    if (val != R_BlankString){
+    if (static_cast<SEXP>(val) != R_BlankString){
       for (R_xlen_t i = 0; i < n; ++i){
-        SET_STRING_ELT(out, i, val);
+        SET_STRING_ELT(out, i, static_cast<SEXP>(val));
       }
     }
     YIELD(1);
@@ -518,6 +584,11 @@ inline bool is_r_na<SEXP>(const SEXP x){
   return is_null(x) || x == na::string;
 }
 
+template<>
+inline bool is_r_na<r_string_t>(const r_string_t x){
+  return x == na::string;
+}
+
 // NA type
 
 template<typename T>
@@ -563,6 +634,11 @@ inline constexpr Rbyte na_value<Rbyte>(const Rbyte x){
 template<>
 inline cpp11::r_string na_value<cpp11::r_string>(const cpp11::r_string x){
   return cpp11::na<cpp11::r_string>();
+}
+
+template<>
+inline r_string_t na_value<r_string_t>(const r_string_t x){
+  return na::string;
 }
 
 template<>
@@ -661,10 +737,14 @@ inline SEXP as_vec<cpp11::r_bool>(const cpp11::r_bool x){
 
 // Scalar string
 template<>
+inline SEXP as_vec<r_string_t>(const r_string_t x){
+  return Rf_ScalarString(x);
+}
+template<>
 inline SEXP as_vec<SEXP>(const SEXP x){
   switch (TYPEOF(x)){
   case CHARSXP: {
-    return Rf_ScalarString(x);
+    return as_vec<r_string_t>(static_cast<r_string_t>(x));
   }
   case LGLSXP:
   case INTSXP:
@@ -730,7 +810,7 @@ inline constexpr bool can_be_int64(T x){
 // Coerce functions that account for NA
 template<typename T>
 inline constexpr r_bool_t as_bool(T x){
-  if constexpr (std::is_same_v<T, int>){
+  if constexpr (std::is_same_v<std::decay_t<T>, int>){
     return static_cast<r_bool_t>(x);
   } else if constexpr (is_r_arithmetic_v<T>){
     return is_r_na(x) ? na::logical : static_cast<r_bool_t>(static_cast<bool>(x));
@@ -740,7 +820,7 @@ inline constexpr r_bool_t as_bool(T x){
 }
 template<typename T>
 inline constexpr int as_int(T x){
-  if constexpr (std::is_same_v<T, int>){
+  if constexpr (std::is_same_v<std::decay_t<T>, int>){
     return x;
   } else if constexpr (is_r_arithmetic_v<T>){
     return is_r_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<int>(x);
@@ -750,7 +830,7 @@ inline constexpr int as_int(T x){
 }
 template<typename T>
 inline constexpr int64_t as_int64(T x){
-  if constexpr (std::is_same_v<T, int64_t>){
+  if constexpr (std::is_same_v<std::decay_t<T>, int64_t>){
     return x;
   } else if constexpr (is_r_arithmetic_v<T>){
     return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<int64_t>(x);
@@ -760,7 +840,7 @@ inline constexpr int64_t as_int64(T x){
 }
 template<typename T>
 inline constexpr double as_double(T x){
-  if constexpr (std::is_same_v<T, double>){
+  if constexpr (std::is_same_v<std::decay_t<T>, double>){
     return x;
   } else if constexpr (is_r_arithmetic_v<T>){
     return is_r_na(x) ? na::numeric : static_cast<double>(x);
@@ -770,7 +850,7 @@ inline constexpr double as_double(T x){
 }
 template<typename T>
 inline constexpr Rcomplex as_complex(T x){
-  if constexpr (std::is_same_v<T, Rcomplex>){
+  if constexpr (std::is_same_v<std::decay_t<T>, Rcomplex>){
     return x;
   } else if constexpr (is_r_arithmetic_v<T>){
     return {{as_double(x), 0.0}};
@@ -780,7 +860,7 @@ inline constexpr Rcomplex as_complex(T x){
 }
 template<typename T>
 inline constexpr Rbyte as_raw(T x){
-  if constexpr (std::is_same_v<T, Rbyte>){
+  if constexpr (std::is_same_v<std::decay_t<T>, Rbyte>){
     return x;
   } else if constexpr (is_r_integral_v<T> && sizeof(T) <= sizeof(int8_t)){
     return is_r_na(x) || x < 0 ? na::raw : static_cast<Rbyte>(x);
@@ -792,16 +872,18 @@ inline constexpr Rbyte as_raw(T x){
 }
 // As CHARSXP
 template<typename T>
-inline SEXP as_r_string(T x){
-  if constexpr (std::is_same_v<std::decay_t<T>, const char *>){
-    return internal::make_utf8_charsxp(x);
+inline constexpr r_string_t as_r_string(T x){
+  if constexpr (std::is_same_v<std::decay_t<T>, r_string_t>){
+    return x;
+  } else if constexpr (std::is_same_v<std::decay_t<T>, const char *>){
+    return static_cast<r_string_t>(internal::make_utf8_charsxp(x));
   } else {
     if (is_r_na(x)){
       return na::string;
     } else {
       SEXP scalar = SHIELD(vec::as_vec(x));
       SEXP str = SHIELD(vec::coerce_vec(scalar, STRSXP));
-      SEXP out = STRING_ELT(str, 0);
+      r_string_t out = static_cast<r_string_t>(STRING_ELT(str, 0));
       YIELD(2);
       return out;
     }
@@ -856,6 +938,13 @@ template<typename U>
 struct r_cast_impl<Rbyte, U> {
   static Rbyte cast(U x) {
     return as_raw(x);
+  }
+};
+
+template<typename U>
+struct r_cast_impl<r_string_t, U> {
+  static r_string_t cast(U x) {
+    return as_r_string(x);
   }
 };
 
@@ -1054,66 +1143,64 @@ inline void set_val(SEXP x, const R_xlen_t i, T val, T* p_x = nullptr){
   Rf_error("Unimplemented `set_val` specialisation");
 }
 
-inline void set_val(SEXP x, const R_xlen_t i, bool val, int* p_x = nullptr){
-  if (p_x != nullptr){
-    p_x[i] = static_cast<int>(val);
-  } else {
-    SET_LOGICAL_ELT(x, i, static_cast<int>(val));
-  }
+inline void set_val(int* p_x, const R_xlen_t i, bool val){
+  p_x[i] = static_cast<int>(val);
 }
-inline void set_val(SEXP x, const R_xlen_t i, r_bool_t val, r_bool_t* p_x = nullptr){
-  if (p_x != nullptr){
-    p_x[i] = val;
-  } else {
-    SET_LOGICAL_ELT(x, i, static_cast<int>(val));
-  }
+inline void set_val(SEXP x, const R_xlen_t i, bool val){
+  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
 }
-inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_bool val, int* p_x = nullptr){
-  if (p_x != nullptr){
-    p_x[i] = static_cast<int>(val);
-  } else {
-    SET_LOGICAL_ELT(x, i, static_cast<int>(val));
-  }
+inline void set_val(r_bool_t* p_x, const R_xlen_t i, r_bool_t val){
+  p_x[i] = val;
 }
-inline void set_val(SEXP x, const R_xlen_t i, int val, int* p_x = nullptr){
-  if (p_x != nullptr){
-    p_x[i] = val;
-  } else {
-    SET_INTEGER_ELT(x, i, val);
-  }
+inline void set_val(SEXP x, const R_xlen_t i, r_bool_t val){
+  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
 }
-inline void set_val(SEXP x, const R_xlen_t i, double val, double* p_x = nullptr){
-  if (p_x != nullptr){
-    p_x[i] = val;
-  } else {
-    SET_REAL_ELT(x, i, val);
-  }
+inline void set_val(int* p_x, const R_xlen_t i, cpp11::r_bool val){
+  p_x[i] = static_cast<int>(val);
 }
-inline void set_val(SEXP x, const R_xlen_t i, Rcomplex val, Rcomplex* p_x = nullptr){
-  if (p_x != nullptr){
-    p_x[i] = val;
-  } else {
-    SET_COMPLEX_ELT(x, i, val);
-  }
+inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_bool val){
+  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
 }
-inline void set_val(SEXP x, const R_xlen_t i, Rbyte val, Rbyte* p_x = nullptr){
-  if (p_x != nullptr){
-    p_x[i] = val;
-  } else {
-    SET_RAW_ELT(x, i, val);
-  }
+inline void set_val(int* p_x, const R_xlen_t i, int val){
+  p_x[i] = val;
 }
-inline void set_val(SEXP x, const R_xlen_t i, const char* val, const SEXP* p_x = nullptr){
+inline void set_val(SEXP x, const R_xlen_t i, int val){
+  SET_INTEGER_ELT(x, i, val);
+}
+inline void set_val(double* p_x, const R_xlen_t i, double val){
+  p_x[i] = val;
+}
+inline void set_val(SEXP x, const R_xlen_t i, double val){
+  SET_REAL_ELT(x, i, val);
+}
+
+inline void set_val(Rcomplex* p_x, const R_xlen_t i, Rcomplex val){
+  p_x[i].r = val.r;
+  p_x[i].i= val.i;
+}
+inline void set_val(SEXP x, const R_xlen_t i, Rcomplex val){
+  SET_COMPLEX_ELT(x, i, val);
+}
+inline void set_val(Rbyte* p_x, const R_xlen_t i, Rbyte val){
+  p_x[i] = val;
+}
+inline void set_val(SEXP x, const R_xlen_t i, Rbyte val){
+  SET_RAW_ELT(x, i, val);
+}
+inline void set_val(SEXP x, const R_xlen_t i, const char* val){
   SET_STRING_ELT(x, i, internal::make_utf8_charsxp(val));
 }
-inline void set_val(SEXP x, const R_xlen_t i, std::string val, const SEXP* p_x = nullptr){
+inline void set_val(SEXP x, const R_xlen_t i, std::string val){
   SET_STRING_ELT(x, i, internal::make_utf8_charsxp(val.c_str()));
 }
-inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_string val, const SEXP* p_x = nullptr){
+inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_string val){
   SET_STRING_ELT(x, i, val);
 }
+inline void set_val(SEXP x, const R_xlen_t i, r_string_t val){
+  SET_STRING_ELT(x, i, static_cast<SEXP>(val));
+}
 // Never use the pointer here to assign
-inline void set_val(SEXP x, const R_xlen_t i, SEXP val, const SEXP *p_x = nullptr){
+inline void set_val(SEXP x, const R_xlen_t i, SEXP val){
   switch (TYPEOF(val)){
   case CHARSXP: {
     SET_STRING_ELT(x, i, val);
@@ -1124,6 +1211,55 @@ inline void set_val(SEXP x, const R_xlen_t i, SEXP val, const SEXP *p_x = nullpt
     break;
   }
   }
+}
+
+inline r_bool_t get_r_bool(const r_bool_t* p_x, const R_xlen_t i){
+    return static_cast<r_bool_t>(p_x[i]);
+}
+inline r_bool_t get_r_bool(SEXP x, const R_xlen_t i){
+  return static_cast<r_bool_t>(LOGICAL_ELT(x, i));
+}
+inline int get_int(const int* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+inline int get_int(SEXP x, const R_xlen_t i){
+  return INTEGER_ELT(x, i);
+}
+inline double get_double(const double* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+inline double get_double(SEXP x, const R_xlen_t i){
+  return REAL_ELT(x, i);
+}
+inline double get_int64(const int64_t *p_x, const R_xlen_t i){
+  return static_cast<int64_t>(p_x[i]);
+}
+inline double get_int64(SEXP x, const R_xlen_t i){
+  return static_cast<int64_t>(REAL_ELT(x, i));
+}
+inline Rcomplex get_complex(const Rcomplex* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+inline Rcomplex get_complex(SEXP x, const R_xlen_t i){
+  return COMPLEX_ELT(x, i);
+}
+inline Rbyte get_raw(const Rbyte* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+inline Rbyte get_raw(SEXP x, const R_xlen_t i){
+  return RAW_ELT(x, i);
+}
+inline r_string_t get_r_string(const r_string_t* p_x, const R_xlen_t i){
+  return static_cast<r_string_t>(p_x[i]);
+}
+inline r_string_t get_r_string(SEXP x, const R_xlen_t i){
+  return static_cast<r_string_t>(STRING_ELT(x, i));
+}
+inline SEXP get_r_obj(const SEXP* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+inline SEXP get_r_obj(SEXP x, const R_xlen_t i){
+  return VECTOR_ELT(x, i);
 }
 
 // Variadic list constructor

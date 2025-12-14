@@ -189,8 +189,8 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case STRSXP: {
     SEXP out = SHIELD(is_long ? new_double(out_size) : new_integer(out_size)); ++NP;
     SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
-    SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
-    const SEXP *p_x = STRING_PTR_RO(x);
+    r_string_t val = get_r_string(value, 0);
+    const r_string_t *p_x = R_STRING_RO(x);
     if (is_long){
       double *p_out = REAL(out);
       if (invert){

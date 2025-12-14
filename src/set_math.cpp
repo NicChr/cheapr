@@ -358,7 +358,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
     int *p_y = INTEGER(y);
 
     for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (p_x[i] == na::integer || p_y[yi] == na::integer) ?
+      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
       na::integer : p_x[i] * p_y[yi];
     }
     break;
@@ -485,7 +485,7 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
       if (p_x[i] == 1.0 || p_y[yi] == 0){
         p_x[i] = 1.0;
       } else {
-        p_x[i] = (p_x[i] !=  p_x[i] || p_y[yi] == na::integer) ?
+        p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
         na::numeric : std::pow(p_x[i], p_y[yi]);
       }
     }
@@ -500,7 +500,7 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
       if (p_x[i] == 1.0 || p_y[yi] == 0.0){
         p_x[i] = 1.0;
       } else {
-        p_x[i] = (p_x[i] != p_x[i]  || p_y[yi] != p_y[yi]) ?
+        p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
         na::numeric : std::pow(p_x[i], p_y[yi]);
       }
     }

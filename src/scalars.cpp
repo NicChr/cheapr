@@ -68,8 +68,8 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
-    const SEXP val = STRING_ELT(value, 0);
-    const SEXP *p_x = STRING_PTR_RO(x);
+    const r_string_t val = get_r_string(value, 0);
+    const r_string_t *p_x = R_STRING_RO(x);
     CHEAPR_VAL_COUNT(val)
       break;
   }

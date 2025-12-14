@@ -226,7 +226,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
           zero_count += (pi[j] == 0);
           pos_count += (pi[j] > 0);
           oob_count += (std::fabs(pi[j]) > xn);
-          na_count += (pi[j] != pi[j]);
+          na_count += is_r_na(pi[j]);
         }
       } else {
         OMP_FOR_SIMD
@@ -234,7 +234,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
           zero_count += (pi[j] == 0);
           pos_count += (pi[j] > 0);
           oob_count += (std::fabs(pi[j]) > xn);
-          na_count += (pi[j] != pi[j]);
+          na_count += is_r_na(pi[j]);
         }
       }
       neg_count = n - pos_count - zero_count - na_count;
@@ -279,7 +279,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
           pos_count += (pi[j] > 0);
           // oob_count counts NA as true so adjust after the fact
           oob_count += (std::llabs(pi[j]) > xn);
-          na_count += (pi[j] == na::integer);
+          na_count += is_r_na(pi[j]);
         }
       } else {
         OMP_FOR_SIMD
@@ -288,7 +288,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
           pos_count += (pi[j] > 0);
           // oob_count counts NA as true so adjust after the fact
           oob_count += (std::llabs(pi[j]) > xn);
-          na_count += (pi[j] == na::integer);
+          na_count += is_r_na(pi[j]);
         }
       }
       // adjust oob_count
@@ -590,29 +590,29 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case STRSXP: {
-    const SEXP *p_x = STRING_PTR_RO(x);
+    const r_string_t *p_x = R_STRING_RO(x);
     out = SHIELD(new_character(out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
-        SET_STRING_ELT(out, k, p_x[i]);
+        set_val(out, k, p_x[i]);
       }
       for (R_xlen_t j = istart2 - 1, k = iend1; j < iend2; ++j, ++k){
-        SET_STRING_ELT(out, k, p_x[j]);
+        set_val(out, k, p_x[j]);
       }
     } else {
       if (by > 0){
         for (R_xlen_t i = istart - 1, k = 0; i < (iend - n_oob); ++i, ++k){
-          SET_STRING_ELT(out, k, p_x[i]);
+          set_val(out, k, p_x[i]);
         }
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          SET_STRING_ELT(out, in_bounds_size + i, na::string);
+          set_val(out, in_bounds_size + i, na::string);
         }
       } else {
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          SET_STRING_ELT(out, i, na::string);
+          set_val(out, i, na::string);
         }
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i){
-          SET_STRING_ELT(out, istart - i - 1, p_x[i]);
+          set_val(out, istart - i - 1, p_x[i]);
         }
       }
     }
@@ -746,7 +746,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              p_out[k++] = (pind[i] != pind[i] || j > xn) ? na::integer : p_x[j - 1];
+              p_out[k++] = (is_r_na(pind[i]) || j > xn) ? na::integer : p_x[j - 1];
             }
           }
         break;
@@ -763,13 +763,13 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              p_out[k++] = (pind[i] != pind[i] || j > xn) ? na::numeric : p_x[j - 1];
+              p_out[k++] = (is_r_na(pind[i]) || j > xn) ? na::numeric : p_x[j - 1];
             }
           }
         break;
       }
       case STRSXP: {
-        const SEXP *p_x = STRING_PTR_RO(x);
+        const r_string_t *p_x = R_STRING_RO(x);
         out = SHIELD(new_character(n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
@@ -779,7 +779,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              SET_STRING_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? na::string : p_x[j - 1]);
+              set_val(out, k++, (is_r_na(pind[i]) || j > xn) ? na::string : p_x[j - 1]);
             }
           }
         break;
@@ -798,7 +798,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              if (pind[i] != pind[i] || j > xn){
+              if (is_r_na(pind[i]) || j > xn){
                 p_out[k].r = na::numeric;
                 p_out[k].i = na::numeric;
               } else {
@@ -822,7 +822,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              SET_RAW_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? 0 : p_x[j - 1]);
+              SET_RAW_ELT(out, k++, (is_r_na(pind[i]) || j > xn) ? 0 : p_x[j - 1]);
             }
           }
         break;
@@ -838,7 +838,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              SET_VECTOR_ELT(out, k++, (pind[i] != pind[i] || j > xn) ? r_null : p_x[j - 1]);
+              SET_VECTOR_ELT(out, k++, (is_r_na(pind[i]) || j > xn) ? r_null : p_x[j - 1]);
             }
           }
         break;
@@ -914,12 +914,12 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case STRSXP: {
-        const SEXP *p_x = STRING_PTR_RO(x);
+        const r_string_t *p_x = R_STRING_RO(x);
         out = SHIELD(new_character(n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
-            SET_STRING_ELT(out, k++, p_x[--j]);
+            set_val(out, k++, p_x[--j]);
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
@@ -927,7 +927,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            SET_STRING_ELT(out, k++, na::string);
+            set_val(out, k++, na::string);
           }
         }
         break;
@@ -1041,10 +1041,10 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case STRSXP: {
-        const SEXP *p_x = STRING_PTR_RO(x);
+        const r_string_t *p_x = R_STRING_RO(x);
         out = SHIELD(new_character(n));
         for (int_fast64_t i = 0; i < n; ++i){
-          SET_STRING_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
+          set_val(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         }
         break;
       }
@@ -1112,10 +1112,10 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case STRSXP: {
-        const SEXP *p_x = STRING_PTR_RO(x);
+        const r_string_t *p_x = R_STRING_RO(x);
         out = SHIELD(new_character(n));
         for (int i = 0; i != n; ++i){
-          SET_STRING_ELT(out, i, p_x[pind[i] - 1]);
+          set_val(out, i, p_x[pind[i] - 1]);
         }
         break;
       }
@@ -1213,12 +1213,12 @@ SEXP rev(SEXP x, bool set){
   }
   case STRSXP: {
     out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
-    const SEXP *p_out = STRING_PTR_RO(out);
+    const r_string_t *p_out = R_STRING_RO(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
       SEXP left = p_out[i];
-      SET_STRING_ELT(out, i, p_out[k]);
-      SET_STRING_ELT(out, k, left);
+      set_val(out, i, p_out[k]);
+      set_val(out, k, left);
     }
     break;
   }
@@ -1330,7 +1330,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
 
   // Negative subscripting
-  if (n_locs > 0 && INTEGER(cols)[0] != na::integer && INTEGER(cols)[0] < 0){
+  if (n_locs > 0 && !is_r_na(INTEGER(cols)[0]) && INTEGER(cols)[0] < 0){
     SHIELD(cols = exclude_locs(cols, n_cols)); ++NP;
     n_locs = Rf_length(cols);
     check = false;
@@ -1342,20 +1342,20 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   SEXP out_names = SHIELD(new_character(n_locs)); ++NP;
 
   const SEXP *p_x = LIST_PTR_RO(x);
-  const SEXP *p_names = STRING_PTR_RO(names);
+  const r_string_t *p_names = R_STRING_RO(names);
   int k = 0;
   int col;
 
   if (check){
     for (int i = 0; i < n_locs; ++i) {
       col = p_cols[i];
-      if (col == na::integer){
+      if (is_r_na(col)){
         YIELD(NP);
         Rf_error("Cannot select `NA` column locations in %s", __func__);
       } else if (col >= 1 && col <= n_cols){
         --col;
         SET_VECTOR_ELT(out, k, p_x[col]);
-        SET_STRING_ELT(out_names, k, p_names[col]);
+        set_val(out_names, k, p_names[col]);
         ++k;
       } else if (col < 0){
         // This can only happen when there is a mix of pos & neg
@@ -1372,7 +1372,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     for (int i = 0; i < n_locs; ++i){
       col = p_cols[i];
       SET_VECTOR_ELT(out, i, p_x[col - 1]);
-      SET_STRING_ELT(out_names, i, p_names[col - 1]);
+      set_val(out_names, i, p_names[col - 1]);
     }
   }
 

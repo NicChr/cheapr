@@ -191,8 +191,8 @@ SEXP cpp_range(SEXP x){
 
   R_xlen_t n = Rf_xlength(x);
 
-  double lo = R_PosInf;
-  double hi = R_NegInf;
+  double lo = r_limits::r_pos_inf;
+  double hi = r_limits::r_neg_inf;
 
   if (n > 0){
     switch (CHEAPR_TYPEOF(x)){
@@ -233,8 +233,8 @@ SEXP cpp_range(SEXP x){
 
       const double *p_x = REAL_RO(x);
 
-      double min = R_PosInf;
-      double max = R_NegInf;
+      double min = r_limits::r_pos_inf;
+      double max = r_limits::r_neg_inf;
 
       for (R_xlen_t i = 0; i < n; ++i){
         if (is_r_na(p_x[i])){
@@ -466,7 +466,7 @@ SEXP cpp_set_or(SEXP x, SEXP y){
     if (p_x[i] != 1){
       if (p_y[yi] == 1){
         p_x[i] = 1;
-      } else if ((p_x[i] == na::logical) || (p_y[yi] == na::logical)){
+      } else if (is_r_na(p_x[i]) || is_r_na(p_y[yi])){
         p_x[i] = na::logical;
       } else if (p_x[i] == 1 || p_y[yi] == 1){
         p_x[i] = 1;
@@ -490,7 +490,7 @@ double growth_rate(double a, double b, double n){
   if (n < 1.0){
     Rf_error("n must be >= 1");
   }
-  if (n == R_PosInf){
+  if (n == r_limits::r_pos_inf){
     Rf_error("n must be finite positive");
   }
   if (n == 1.0){

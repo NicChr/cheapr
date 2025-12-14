@@ -76,16 +76,10 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_chr: {
 
-    const SEXP *p_with = STRING_PTR_RO(with);
+    const r_string_t *p_with = R_STRING_RO(with);
 
-    if (!internal_in_place){
-      for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
-        SET_STRING_ELT(x, p_where[i] - 1, p_with[withi]);
-      }
-    } else {
-      for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
-        SET_STRING_ELT(x, p_where[i] - 1, p_with[withi]);
-      }
+    for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
+      set_val(x, p_where[i] - 1, p_with[withi]);
     }
     break;
   }
@@ -125,14 +119,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   case R_list: {
     const SEXP *p_with = LIST_PTR_RO(with);
 
-    if (!internal_in_place){
-      for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
-        SET_VECTOR_ELT(x, p_where[i] - 1, p_with[withi]);
-      }
-    } else {
-      for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
-        SET_VECTOR_ELT(x, p_where[i] - 1, p_with[withi]);
-      }
+    for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
+      SET_VECTOR_ELT(x, p_where[i] - 1, p_with[withi]);
     }
     break;
   }

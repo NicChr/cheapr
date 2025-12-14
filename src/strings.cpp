@@ -37,10 +37,10 @@ SEXP cpp_str_coalesce(SEXP x){
   // cast<> may fail and the R_Calloc'd memory will leak if this happens
   // At this point onwards the code is assumed to be safe
 
-  const SEXP **char_ptrs = (const SEXP **) R_Calloc(n_chars, const SEXP *);
+  const r_string_t **char_ptrs = (const r_string_t **) R_Calloc(n_chars, const r_string_t *);
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
-    char_ptrs[i] = STRING_PTR_RO(p_chars[i]);
+    char_ptrs[i] = R_STRING_RO(p_chars[i]);
   }
 
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
@@ -53,7 +53,7 @@ SEXP cpp_str_coalesce(SEXP x){
   }
 
   SEXP out = SHIELD(Rf_allocVector(STRSXP, n_strings)); ++NP;
-  SEXP inner_char = R_BlankString;
+  r_string_t inner_char = blank_r_string;
 
   R_xlen_t n_nas;
 
@@ -62,13 +62,13 @@ SEXP cpp_str_coalesce(SEXP x){
     for (R_xlen_t j = 0; j < n_chars; ++j){
       inner_char = char_ptrs[j][i];
       n_nas += is_r_na(inner_char);
-      if (!(inner_char == R_BlankString || is_r_na(inner_char))){
-        SET_STRING_ELT(out, i, inner_char);
+      if (!(inner_char == blank_r_string || is_r_na(inner_char))){
+        set_val(out, i, inner_char);
         break;
       }
       // If all ith elements are NA, then return NA
       if (n_nas == n_chars){
-        SET_STRING_ELT(out, i, na::string);
+        set_val(out, i, na::string);
       }
     }
   }
@@ -122,10 +122,10 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
     }
   }
 
-  const SEXP **char_ptrs = (const SEXP **) R_Calloc(n_chars, const SEXP *);
+  const r_string_t **char_ptrs = (const r_string_t **) R_Calloc(n_chars, const r_string_t *);
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
-    char_ptrs[i] = STRING_PTR_RO(p_chars[i]);
+    char_ptrs[i] = R_STRING_RO(p_chars[i]);
   }
 
   R_xlen_t n_strings = Rf_xlength(VECTOR_ELT(chars, 0));
@@ -137,13 +137,13 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
     return out;
   }
 
-  std::string sep1 = utf8_char(STRING_ELT(sep, 0));
-  std::string sep2 = utf8_char(R_BlankString);
-  std::string strng = utf8_char(R_BlankString);
+  std::string sep1 = utf8_char(get_r_string(sep, 0));
+  std::string sep2 = utf8_char(blank_r_string);
+  std::string strng = utf8_char(blank_r_string);
 
   if (!is_null(collapse)){
 
-    sep2 = utf8_char(STRING_ELT(collapse, 0));
+    sep2 = utf8_char(get_r_string(collapse, 0));
 
     for (R_xlen_t j = 0; j < n_strings; ++j){
       if (j != 0) strng += sep2;
@@ -153,7 +153,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
       }
     }
 
-    SEXP out = SHIELD(Rf_mkString(strng.c_str())); ++NP;
+    SEXP out = SHIELD(as_vec(strng.c_str())); ++NP;
     R_Free(char_ptrs);
     YIELD(NP);
     return out;
@@ -171,7 +171,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
       for (R_xlen_t i = 1; i < n_chars; ++i){
         str_paste(strng, sep1, utf8_char(char_ptrs[i][j]));
       }
-      SET_STRING_ELT(out, j, Rf_mkChar(strng.c_str()));
+      set_val(out, j, as_r_string(strng.c_str()));
     }
 
     R_Free(char_ptrs);
