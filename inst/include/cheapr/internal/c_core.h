@@ -462,6 +462,12 @@ inline void set_val(int* p_x, const R_xlen_t i, int val){
 inline void set_val(SEXP x, const R_xlen_t i, int val){
   SET_INTEGER_ELT(x, i, val);
 }
+inline void set_val(int64_t* p_x, const R_xlen_t i, int64_t val){
+  p_x[i] = val;
+}
+inline void set_val(SEXP x, const R_xlen_t i, int64_t val){
+  r_ptr::integer64_ptr(x)[i] = val;
+}
 inline void set_val(double* p_x, const R_xlen_t i, double val){
   p_x[i] = val;
 }
@@ -471,7 +477,7 @@ inline void set_val(SEXP x, const R_xlen_t i, double val){
 
 inline void set_val(Rcomplex* p_x, const R_xlen_t i, Rcomplex val){
   p_x[i].r = val.r;
-  p_x[i].i= val.i;
+  p_x[i].i = val.i;
 }
 inline void set_val(SEXP x, const R_xlen_t i, Rcomplex val){
   SET_COMPLEX_ELT(x, i, val);

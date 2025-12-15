@@ -1,33 +1,34 @@
 #include "cheapr.h"
+#include <variant>
 
 #define CHEAPR_VECTORISED_IF_ELSE                                    \
 for (R_xlen_t i = 0; i < n; ++i){                                    \
   switch(p_x[i]){                                                    \
   case r_true: {                                                     \
-    p_out[i] = p_yes[yes_scalar ? 0 : i];                            \
+    set_val(p_out, i, p_yes[yes_scalar ? 0 : i]);                    \
     break;                                                           \
   }                                                                  \
   case r_false: {                                                    \
-    p_out[i] = p_no[no_scalar ? 0 : i];                              \
+    set_val(p_out, i, p_no[no_scalar ? 0 : i]);                      \
     break;                                                           \
   }                                                                  \
   default: {                                                         \
-    p_out[i] = p_na[na_scalar ? 0 : i];                              \
+    set_val(p_out, i, p_na[na_scalar ? 0 : i]);                      \
     break;                                                           \
   }                                                                  \
   }                                                                  \
 }
 
-#define CHEAPR_SCALAR_IF_ELSE                                              \
-for (R_xlen_t i = 0; i < n; ++i){                                          \
-  lgl = p_x[i];                                                            \
-  if (lgl == r_true){                                                      \
-    p_out[i] = yes_value;                                                  \
-  } else if (lgl == r_false){                                              \
-    p_out[i] = no_value;                                                   \
-  } else {                                                                 \
-    p_out[i] = na_value;                                                   \
-  }                                                                        \
+#define CHEAPR_SCALAR_IF_ELSE                                                      \
+for (R_xlen_t i = 0; i < n; ++i){                                                  \
+  lgl = p_x[i];                                                                    \
+  if (lgl == r_true){                                                              \
+    set_val(p_out, i, yes_value);                                                  \
+  } else if (lgl == r_false){                                                      \
+    set_val(p_out, i, no_value);                                                   \
+  } else {                                                                         \
+    set_val(p_out, i, na_value);                                                   \
+  }                                                                                \
 }
 
 // Fast SIMD vectorised if-else
@@ -124,9 +125,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     case R_int64: {
       SHIELD(out = init<r_integer64_t>(n, false)); ++NP;
       int64_t* RESTRICT p_out = INTEGER64_PTR(out);
-      const int64_t *p_yes = INTEGER64_PTR_RO(yes);
-      const int64_t *p_no = INTEGER64_PTR_RO(no);
-      const int64_t *p_na = INTEGER64_PTR_RO(na);
+      const int64_t *p_yes = integer64_ptr_ro(yes);
+      const int64_t *p_no = integer64_ptr_ro(no);
+      const int64_t *p_na = integer64_ptr_ro(na);
 
       if (all_scalar){
         const int64_t yes_value = p_yes[0];
@@ -160,46 +161,19 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     case R_chr: {
 
       SHIELD(out = init<r_character_t>(n, false)); ++NP;
+      SEXP p_out = out;
 
-      const SEXP *p_yes = STRING_PTR_RO(yes);
-      const SEXP *p_no = STRING_PTR_RO(no);
-      const SEXP *p_na = STRING_PTR_RO(na);
+      const r_string_t *p_yes = string_ptr_ro(yes);
+      const r_string_t *p_no = string_ptr_ro(no);
+      const r_string_t *p_na = string_ptr_ro(na);
 
       if (all_scalar){
-
-        const SEXP yes_value = p_yes[0];
-        const SEXP no_value = p_no[0];
-        const SEXP na_value = p_na[0];
-
-        for (R_xlen_t i = 0; i < n; ++i){
-          lgl = p_x[i];
-
-          if (lgl == r_true){
-            SET_STRING_ELT(out, i, yes_value);
-          } else if (lgl == r_false){
-            SET_STRING_ELT(out, i, no_value);
-          } else {
-            SET_STRING_ELT(out, i, na_value);
-          }
-        }
+        const r_string_t yes_value = p_yes[0];
+        const r_string_t no_value = p_no[0];
+        const r_string_t na_value = p_na[0];
+        CHEAPR_SCALAR_IF_ELSE
       } else {
-
-        for (R_xlen_t i = 0; i < n; ++i){
-          switch(p_x[i]){
-          case r_true: {
-            SET_STRING_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-            break;
-          }
-          case r_false: {
-            SET_STRING_ELT(out, i, p_no[no_scalar ? 0 : i]);
-            break;
-          }
-          default: {
-            SET_STRING_ELT(out, i, p_na[na_scalar ? 0 : i]);
-            break;
-          }
-          }
-        }
+        CHEAPR_VECTORISED_IF_ELSE
       }
       break;
     }
@@ -214,72 +188,36 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
 
       if (all_scalar){
 
-        const double yes_value_re = p_yes[0].r;
-        const double yes_value_im = p_yes[0].i;
-        const double no_value_re = p_no[0].r;
-        const double no_value_im = p_no[0].i;
-        const double na_value_re = p_na[0].r;
-        const double na_value_im = p_na[0].i;
+        const Rcomplex yes_value = p_yes[0];
+        const Rcomplex no_value = p_no[0];
+        const Rcomplex na_value = p_na[0];
 
         OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n; ++i){
-          lgl = p_x[i];
-
-          if (lgl == r_true){
-            p_out[i].r = yes_value_re;
-            p_out[i].i = yes_value_im;
-          } else if (lgl == r_false){
-            p_out[i].r = no_value_re;
-            p_out[i].i = no_value_im;
-          } else {
-            p_out[i].r = na_value_re;
-            p_out[i].i = na_value_im;
-          }
-        }
+        CHEAPR_SCALAR_IF_ELSE
       } else {
-
-        for (R_xlen_t i = 0; i < n; ++i){
-          switch(p_x[i]){
-          case r_true: {
-            SET_COMPLEX_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-            break;
-          }
-          case r_false: {
-            SET_COMPLEX_ELT(out, i, p_no[no_scalar ? 0 : i]);
-            break;
-          }
-          default: {
-            SET_COMPLEX_ELT(out, i, p_na[na_scalar ? 0 : i]);
-            break;
-          }
-          }
-        }
+        CHEAPR_VECTORISED_IF_ELSE
       }
       break;
     }
     case R_raw: {
 
       SHIELD(out = init<r_raw_t>(n, false)); ++NP;
+      Rbyte *p_out = raw_ptr(out);
 
       const Rbyte *p_yes = raw_ptr(yes);
       const Rbyte *p_no = raw_ptr(no);
       const Rbyte *p_na = raw_ptr(na);
 
-      for (R_xlen_t i = 0; i < n; ++i){
-        switch(p_x[i]){
-        case r_true: {
-          SET_RAW_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-          break;
-        }
-        case r_false: {
-          SET_RAW_ELT(out, i, p_no[no_scalar ? 0 : i]);
-          break;
-        }
-        default: {
-          SET_RAW_ELT(out, i, p_na[na_scalar ? 0 : i]);
-          break;
-        }
-        }
+      if (all_scalar){
+
+        const Rbyte yes_value = p_yes[0];
+        const Rbyte no_value = p_no[0];
+        const Rbyte na_value = p_na[0];
+
+        OMP_FOR_SIMD
+        CHEAPR_SCALAR_IF_ELSE
+      } else {
+        CHEAPR_VECTORISED_IF_ELSE
       }
       break;
     }
@@ -363,6 +301,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     case R_list: {
 
       SHIELD(out = init<r_list_t>(n, false)); ++NP;
+      SEXP p_out = out;
 
       const SEXP *p_yes = list_ptr_ro(yes);
       const SEXP *p_no = list_ptr_ro(no);
@@ -373,36 +312,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
         const SEXP yes_value = p_yes[0];
         const SEXP no_value = p_no[0];
         const SEXP na_value = p_na[0];
-
-        for (R_xlen_t i = 0; i < n; ++i){
-          lgl = p_x[i];
-
-          if (lgl == r_true){
-            SET_VECTOR_ELT(out, i, yes_value);
-          } else if (lgl == r_false){
-            SET_VECTOR_ELT(out, i, no_value);
-          } else {
-            SET_VECTOR_ELT(out, i, na_value);
-          }
-        }
+        CHEAPR_SCALAR_IF_ELSE
       } else {
-
-        for (R_xlen_t i = 0; i < n; ++i){
-          switch(p_x[i]){
-          case r_true: {
-            SET_VECTOR_ELT(out, i, p_yes[yes_scalar ? 0 : i]);
-            break;
-          }
-          case r_false: {
-            SET_VECTOR_ELT(out, i, p_no[no_scalar ? 0 : i]);
-            break;
-          }
-          default: {
-            SET_VECTOR_ELT(out, i, p_na[na_scalar ? 0 : i]);
-            break;
-          }
-          }
-        }
+        CHEAPR_VECTORISED_IF_ELSE
       }
       break;
     }
