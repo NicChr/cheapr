@@ -85,10 +85,8 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
   R_xlen_t i = 0, k = 0;
 
   // Which elements do we keep?
-  uint8_t *keep = (uint8_t *) R_Calloc(n, uint8_t);
-  if (n > 0){
-    std::memset(keep, 1, n);
-  }
+  bool *keep = (bool *) R_Calloc(n, bool);
+  fast_fill(keep, keep + n, true);
 
   if (xn > r_limits::r_int_max){
     SHIELD(exclude = vec::coerce_vec(exclude, REALSXP)); ++NP;
@@ -104,7 +102,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       idx = -p_excl[j];
       // Check keep array for already assigned FALSE to avoid double counting
       if (idx > 0 && idx <= n && keep[idx - 1] == 1){
-        keep[idx - 1] = 0;
+        keep[idx - 1] = false;
         ++exclude_count;
       }
     }
@@ -112,7 +110,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     SEXP out = SHIELD(new_double(out_size)); ++NP;
     double* RESTRICT p_out = real_ptr(out);
     while(k != out_size){
-      if (keep[i] == 1){
+      if (keep[i] == true){
         p_out[k++] = i + 1;
       }
       ++i;
@@ -133,7 +131,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       idx = -p_excl[j];
       // Check keep array for already assigned FALSE to avoid double counting
       if (idx > 0 && idx <= n && keep[idx - 1] == 1){
-        keep[idx - 1] = 0;
+        keep[idx - 1] = false;
         ++exclude_count;
       }
     }
@@ -141,7 +139,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
     SEXP out = SHIELD(vec::new_integer(out_size)); ++NP;
     int* RESTRICT p_out = integer_ptr(out);
     while(k != out_size){
-      if (keep[i++] == 1){
+      if (keep[i++] == true){
         p_out[k++] = i;
       }
     }

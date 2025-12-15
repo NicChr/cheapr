@@ -673,12 +673,10 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   }
   R_xlen_t n = Rf_xlength(x);
 
-  SEXP out = SHIELD(vec::new_integer(n_bins));
+  // Initialise counts to 0
+  SEXP out = SHIELD(vec::new_integer(n_bins, 0));
   const int *p_x = integer_ptr_ro(x);
   int* RESTRICT p_out = integer_ptr(out);
-
-  // Initialise counts to 0
-  fast_fill(p_out, p_out + n_bins, 0);
 
   uint32_t one = 1;
 

@@ -449,6 +449,9 @@ inline void set_val(SEXP x, const R_xlen_t i, T val){
   return T{};
 }
 
+inline void set_val(bool* p_x, const R_xlen_t i, bool val){
+  p_x[i] = val;
+}
 inline void set_val(int* p_x, const R_xlen_t i, bool val){
   p_x[i] = static_cast<int>(val);
 }
@@ -1159,7 +1162,9 @@ inline r_string_t as_r_string(T x){
       return static_cast<r_string_t>(scalar);
     }
     case SYMSXP: {
-      return static_cast<r_string_t>(PRINTNAME(x));
+      r_string_t out = static_cast<r_string_t>(SHIELD(PRINTNAME(scalar)));
+      YIELD(2);
+      return out;
     }
     default: {
       if (Rf_length(scalar) != 1){
