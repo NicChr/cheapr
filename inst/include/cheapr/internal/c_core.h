@@ -598,6 +598,26 @@ inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
     }
   }
 }
+template <typename T>
+inline void fast_copy_n(const T *source, R_xlen_t n, T *target){
+  if constexpr (std::is_same_v<std::decay_t<T>, SEXP> ||
+                std::is_same_v<std::decay_t<T>, r_string_t> ||
+                std::is_same_v<std::decay_t<T>, r_symbol_t>) {
+    for (R_xlen_t i = 0; i < n; ++i) {
+      vec::set_val(target, i, source[i]);
+    }
+  } else {
+    int n_cores = internal::get_cores(n);
+    if (n_cores > 1) {
+      OMP_PARALLEL_FOR_SIMD
+      for (R_xlen_t i = 0; i < n; ++i) {
+        vec::set_val(target, i, source[i]);
+      }
+    } else {
+      std::copy_n(source, n, target);
+    }
+  }
+}
 
 }
 
