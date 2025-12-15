@@ -120,8 +120,6 @@ R_xlen_t na_count(SEXP x, bool recursive){
     }
     break;
   } else {
-    const SEXP *p_x = list_ptr_ro(x);
-    CHEAPR_NA_COUNT
     break;
   }
   }
@@ -318,10 +316,7 @@ SEXP cpp_is_na(SEXP x){
   }
   case VECSXP: {
     if (!vec::is_object(x)){
-    out = SHIELD(new_logical(n));
-    int* RESTRICT p_out = integer_ptr(out);
-    const SEXP *p_x = list_ptr_ro(x);
-    CHEAPR_IS_NA
+    out = SHIELD(new_logical(n, r_false));
     break;
   }
   }

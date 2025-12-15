@@ -244,10 +244,7 @@ inline SEXP init<r_character_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_complex_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    SEXP out = SHIELD(cheapr::vec::new_complex(0));
-    SHIELD(out = cpp_na_init(out, n));
-    YIELD(2);
-    return out;
+    return cheapr::vec::new_complex(0, cheapr::na::complex);
   } else {
     return cheapr::vec::new_complex(n);
   }

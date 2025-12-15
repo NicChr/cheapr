@@ -169,7 +169,6 @@ namespace na {
   inline const Rcomplex complex = {{NA_REAL, NA_REAL}};
   inline constexpr Rbyte raw = static_cast<Rbyte>(0);
   inline const r_string_t string = static_cast<r_string_t>(NA_STRING);
-  inline const SEXP list = r_null;
 }
 
 // Pointers
@@ -844,10 +843,10 @@ inline constexpr bool is_r_na<r_symbol_t>(const r_symbol_t x){
   return false;
 }
 
-// Works for CHARSXP and NULL
+// Only CHARSXP has NA
 template<>
 inline bool is_r_na<SEXP>(const SEXP x){
-  return is_null(x) || x == na::string;
+  return x == na::string;
 }
 
 template<>
@@ -916,9 +915,6 @@ inline SEXP na_value<SEXP>(const SEXP x){
   switch (TYPEOF(x)){
   case CHARSXP: {
     return na::string;
-  }
-  case VECSXP: {
-    return r_null;
   }
   default: {
    Rf_error("No `na_value` specialisation for R type %s", Rf_type2char(TYPEOF(x)));
