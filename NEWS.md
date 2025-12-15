@@ -2,6 +2,14 @@
 
 cheapr 1.5.0 supersedes cheapr 1.4.0
 
+- Plain list vectors are now never regarded as `NA` even if they contain `NA`
+elements.
+
+- `scm` now better detects when integer (32-bit and 64-bit) overflow occurs and
+switches to using doubles internally, returning a double value.
+
+- `if_else_` can now handle data frames.
+
 ### New features 
 
 - The C/C++ API has been re-written to use pure R C API code internally.

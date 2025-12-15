@@ -174,7 +174,7 @@ mark(is.na(hours), is_na(hours))
 
 It differs in 2 regards:
 
--   List elements are regarded as `NA` only when that element is `NULL`
+-   List vectors are never regarded as `NA` even if they contain `NA` values.
 -   For data frames, `is_na` returns a logical vector where `TRUE`
     defines an empty row of only `NA` values.
 
