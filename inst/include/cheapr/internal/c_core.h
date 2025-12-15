@@ -336,11 +336,11 @@ inline bool is_logical(SEXP x){
 inline bool is_integer(SEXP x){
   return TYPEOF(x) == INTSXP;
 }
-inline bool is_integer64(SEXP x){
-  return internal::inherits1(x, "integer64");
-}
 inline bool is_double(SEXP x){
   return TYPEOF(x) == REALSXP;
+}
+inline bool is_integer64(SEXP x){
+  return is_double(x) && internal::inherits1(x, "integer64");
 }
 inline bool is_character(SEXP x){
   return TYPEOF(x) == STRSXP;
