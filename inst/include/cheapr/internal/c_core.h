@@ -277,13 +277,6 @@ inline r_string_t address(SEXP x) {
   return static_cast<r_string_t>(internal::make_utf8_charsxp(buf));
 }
 
-inline r_bool_t* BOOLEAN(SEXP x) {
-  return reinterpret_cast<r_bool_t*>(r_ptr::integer_ptr(x));
-}
-inline const r_bool_t* BOOLEAN_RO(SEXP x) {
-  return reinterpret_cast<const r_bool_t*>(r_ptr::integer_ptr_ro(x));
-}
-
 template<typename T>
 inline constexpr bool between(const T x, const T lo, const T hi) {
   return x >= lo && x <= hi;
@@ -573,7 +566,7 @@ inline SEXP new_logical(R_xlen_t n, std::optional<r_bool_t> default_value = std:
   if (default_value.has_value()) {
     r_bool_t val = *default_value;
     SEXP out = SHIELD(internal::new_vec(LGLSXP, n));
-    r_bool_t *p_out = BOOLEAN(out);
+    r_bool_t *p_out = r_ptr::logical_ptr(out);
     std::fill(p_out, p_out + n, val);
     YIELD(1);
     return out;

@@ -80,7 +80,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     bool all_scalar = yes_scalar && no_scalar && na_scalar;
     r_bool_t lgl;
 
-    const r_bool_t* RESTRICT p_x = BOOLEAN_RO(condition);
+    const r_bool_t* RESTRICT p_x = logical_ptr_ro(condition);
 
     switch (common){
     case R_null: {
@@ -88,10 +88,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_lgl: {
       SHIELD(out = init<r_logical_t>(n, false)); ++NP;
-      r_bool_t* RESTRICT p_out = BOOLEAN(out);
-      const r_bool_t *p_yes = BOOLEAN_RO(yes);
-      const r_bool_t *p_no = BOOLEAN_RO(no);
-      const r_bool_t *p_na = BOOLEAN_RO(na);
+      r_bool_t* RESTRICT p_out = logical_ptr(out);
+      const r_bool_t *p_yes = logical_ptr_ro(yes);
+      const r_bool_t *p_no = logical_ptr_ro(no);
+      const r_bool_t *p_na = logical_ptr_ro(na);
 
       if (all_scalar){
         const r_bool_t yes_value = p_yes[0];
@@ -315,6 +315,39 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
         CHEAPR_SCALAR_IF_ELSE
       } else {
         CHEAPR_VECTORISED_IF_ELSE
+      }
+      break;
+    }
+    case R_df: {
+
+      SHIELD(out = cpp_na_init(yes, n)); ++NP;
+
+      int ncol = df::ncol(yes);
+
+      if (ncol != df::ncol(no)){
+        YIELD(NP);
+        Rf_error("`ncol(yes)` must equal `ncol(no)`");
+      }
+      if (ncol != df::ncol(na)){
+        YIELD(NP);
+        Rf_error("`ncol(yes)` must equal `ncol(na)`");
+      }
+
+      SEXP col_names = SHIELD(internal::get_r_names(yes)); ++NP;
+      SEXP col_names2 = SHIELD(internal::get_r_names(no)); ++NP;
+      SEXP col_names3 = SHIELD(internal::get_r_names(na)); ++NP;
+
+      if (!R_compute_identical(col_names, col_names2, 0)){
+        YIELD(NP);
+        Rf_error("Column names must be identical between `yes` and `no`");
+      }
+      if (!R_compute_identical(col_names, col_names3, 0)){
+        YIELD(NP);
+        Rf_error("Column names must be identical between `yes` and `na`");
+      }
+
+      for (int j = 0; j < ncol; ++j){
+        SET_VECTOR_ELT(out, j, cpp_if_else(condition, VECTOR_ELT(yes, j), VECTOR_ELT(no, j), VECTOR_ELT(na, j)));
       }
       break;
     }

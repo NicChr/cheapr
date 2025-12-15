@@ -50,7 +50,7 @@ if (is_r_na(VAL)){                                                 \
 [[cpp11::register]]
 SEXP cpp_which_(SEXP x, bool invert){
   R_xlen_t n = Rf_xlength(x);
-  const r_bool_t *p_x = BOOLEAN_RO(x);
+  const r_bool_t *p_x = logical_ptr_ro(x);
   bool is_long = (n > r_limits::r_int_max);
   if (invert){
     if (is_long){

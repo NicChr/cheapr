@@ -44,7 +44,7 @@ if (do_parallel){                                                         \
 
 bool vec_any(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  const r_bool_t *p_x = BOOLEAN_RO(x);
+  const r_bool_t *p_x = logical_ptr_ro(x);
 
   bool out = false;
   for (R_xlen_t i = 0; i < n; ++i){
@@ -58,7 +58,7 @@ bool vec_any(SEXP x){
 
 bool vec_all(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  const r_bool_t *p_x = BOOLEAN_RO(x);
+  const r_bool_t *p_x = logical_ptr_ro(x);
 
   bool out = true;
 

@@ -370,7 +370,7 @@ api_gcd(SEXP x, double tol, bool na_rm){
 SEXP
 api_clean_indices(SEXP locs, SEXP x){
   try {
-    return cpp_clean_locs(locs, x);
+    return clean_locs(locs, x);
   } catch (...) {
     return cheapr::r_null;
   }

@@ -334,9 +334,9 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
 // Converts logical to integer locations
 // Converts character to integer locations
 
-SEXP cpp_clean_locs(SEXP locs, SEXP x){
+SEXP clean_locs(SEXP locs, SEXP x){
 
-  R_xlen_t xn = vec::length(x);
+  int_fast64_t xn = vec::length(x);
 
   int32_t NP = 0;
 
@@ -344,7 +344,7 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
     SHIELD(locs = vec::new_integer(0)); ++NP;
   }
 
-  R_xlen_t n = Rf_xlength(locs);
+  int_fast64_t n = Rf_xlength(locs);
 
   if (get_r_type(locs) == R_chr){
     SEXP names = SHIELD(get_r_names(x)); ++NP;
@@ -357,6 +357,8 @@ SEXP cpp_clean_locs(SEXP locs, SEXP x){
       Rf_error("Cannot subset rows of a data frame using a character vector");
     }
     SHIELD(locs = match(names, locs, na::integer)); ++NP;
+    SEXP na_int = SHIELD(as_vec(na::integer)); ++NP;
+    SHIELD(locs = cpp_val_remove(locs, na_int, false)); ++NP;
     YIELD(NP);
     return locs;
   }

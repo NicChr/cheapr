@@ -74,7 +74,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive);
 SEXP character_as_factor(SEXP x, SEXP levels);
 SEXP match(SEXP y, SEXP x, int no_match);
 SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet);
-SEXP cpp_clean_locs(SEXP locs, SEXP x);
+SEXP clean_locs(SEXP locs, SEXP x);
 SEXP cpp_common_template(SEXP x);
 SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template);
 SEXP cpp_as_df(SEXP x);
