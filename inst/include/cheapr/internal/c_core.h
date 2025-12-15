@@ -312,6 +312,23 @@ inline void set_attr(SEXP x, r_symbol_t sym, SEXP value){
 
 }
 
+namespace internal {
+inline SEXP CHEAPR_CORES = r_null;
+
+inline int num_cores(){
+  if (is_null(CHEAPR_CORES)){
+    CHEAPR_CORES = Rf_installChar(make_utf8_charsxp("cheapr.cores"));
+  }
+  int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
+  return n_cores >= 1 ? n_cores : 1;
+}
+
+inline int get_cores(R_xlen_t data_size){
+  return data_size >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+}
+
+}
+
 namespace vec {
 
 inline bool is_object(SEXP x){
@@ -514,6 +531,74 @@ inline void set_val(SEXP x, const R_xlen_t i, SEXP val){
 
 }
 
+// equals template that doesn't support NA values
+// use is_r_na template functions
+template<typename T>
+inline constexpr bool eq(const T x, const T y) {
+  return x == y;
+}
+template<>
+inline constexpr bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
+  return eq(x.r, y.r) && eq(x.i, y.i);
+}
+
+namespace internal {
+
+template <typename T>
+inline void fast_fill(T *first, T *last, const T val) {
+
+  R_xlen_t size = last - first;
+
+  if constexpr (std::is_same_v<std::decay_t<T>, SEXP> ||
+                std::is_same_v<std::decay_t<T>, r_string_t> ||
+                std::is_same_v<std::decay_t<T>, r_symbol_t>) {
+    for (T *it = first; it != last; ++it) {
+      vec::set_val(first, it - first, val);
+    }
+  } else {
+    int n_cores = internal::get_cores(size);
+    if (n_cores > 1) {
+      OMP_PARALLEL_FOR_SIMD
+      for (R_xlen_t i = 0; i < size; ++i) {
+        vec::set_val(first, i, val);
+      }
+    } else {
+      std::fill(first, last, val);
+    }
+  }
+}
+
+template <typename T>
+inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
+
+  R_xlen_t size = last - first;
+
+  if constexpr (std::is_same_v<std::decay_t<T>, SEXP> ||
+                std::is_same_v<std::decay_t<T>, r_string_t> ||
+                std::is_same_v<std::decay_t<T>, r_symbol_t>) {
+    for (T *it = first; it != last; ++it) {
+      R_xlen_t i = it - first;
+      if (eq(first[i], old_val)){
+        vec::set_val(first, i, new_val);
+      }
+    }
+  } else {
+    int n_cores = internal::get_cores(size);
+    if (n_cores > 1) {
+      OMP_PARALLEL_FOR_SIMD
+      for (R_xlen_t i = 0; i < size; ++i) {
+        if (eq(first[i], old_val)){
+          vec::set_val(first, i, new_val);
+        }
+      }
+    } else {
+      std::replace(first, last, old_val, new_val);
+    }
+  }
+}
+
+}
+
 namespace internal {
 
 inline SEXP r_length_sym = r_null;
@@ -564,108 +649,108 @@ inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
   return Rf_coerceVector(x, type);
 }
 
-inline SEXP new_logical(R_xlen_t n, std::optional<r_bool_t> default_value = std::nullopt) {
-  if (default_value.has_value()) {
-    r_bool_t val = *default_value;
-    SEXP out = SHIELD(internal::new_vec(LGLSXP, n));
-    r_bool_t *p_out = r_ptr::logical_ptr(out);
-    std::fill(p_out, p_out + n, val);
-    YIELD(1);
-    return out;
-  } else {
-    return internal::new_vec(LGLSXP, n);
-  }
+inline SEXP new_logical(R_xlen_t n, const r_bool_t default_value) {
+  SEXP out = SHIELD(internal::new_vec(LGLSXP, n));
+  r_bool_t* RESTRICT p_out = r_ptr::logical_ptr(out);
+  internal::fast_fill(p_out, p_out + n, default_value);
+  YIELD(1);
+  return out;
 }
-inline SEXP new_integer(R_xlen_t n, std::optional<int> default_value = std::nullopt){
-  if (default_value.has_value()) {
-    int val = *default_value;
-    SEXP out = SHIELD(internal::new_vec(INTSXP, n));
-    int *p_out = r_ptr::integer_ptr(out);
-    std::fill(p_out, p_out + n, val);
-    YIELD(1);
-    return out;
-  } else {
-    return internal::new_vec(INTSXP, n);
-  }
+inline SEXP new_logical(R_xlen_t n){
+  return internal::new_vec(LGLSXP, n);
 }
-inline SEXP new_integer64(R_xlen_t n, std::optional<int64_t> default_value = std::nullopt){
+inline SEXP new_integer(R_xlen_t n, const int default_value){
+  SEXP out = SHIELD(internal::new_vec(INTSXP, n));
+  int* RESTRICT p_out = r_ptr::integer_ptr(out);
+  internal::fast_fill(p_out, p_out + n, default_value);
+  YIELD(1);
+  return out;
+}
+inline SEXP new_integer(R_xlen_t n){
+  return internal::new_vec(INTSXP, n);
+}
+inline SEXP new_double(R_xlen_t n, const double default_value){
   SEXP out = SHIELD(internal::new_vec(REALSXP, n));
-  if (default_value.has_value()) {
-    int64_t val = *default_value;
-    int64_t *p_out = r_ptr::integer64_ptr(out);
-    std::fill(p_out, p_out + n, val);
+  double* RESTRICT p_out = r_ptr::real_ptr(out);
+
+  int n_cores = n >= internal::CHEAPR_OMP_THRESHOLD ? internal::num_cores() : 1;
+
+  if (n_cores > 1){
+    OMP_PARALLEL_FOR_SIMD
+    for (R_xlen_t i = 0; i < n; ++i){
+      p_out[i] = default_value;
+    }
+  } else {
+    internal::fast_fill(p_out, p_out + n, default_value);
   }
+  YIELD(1);
+  return out;
+}
+inline SEXP new_double(R_xlen_t n){
+  return internal::new_vec(REALSXP, n);
+}
+inline SEXP new_integer64(R_xlen_t n, const int64_t default_value){
+  SEXP out = SHIELD(new_double(n));
+  int64_t* RESTRICT p_out = r_ptr::integer64_ptr(out);
+  internal::fast_fill(p_out, p_out + n, default_value);
   attr::set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
   YIELD(2);
   return out;
 }
-inline SEXP new_double(R_xlen_t n, std::optional<double> default_value = std::nullopt){
-  if (default_value.has_value()){
-    double val = *default_value;
-    SEXP out = SHIELD(internal::new_vec(REALSXP, n));
-    double *p_out = r_ptr::real_ptr(out);
-    std::fill(p_out, p_out + n, val);
-    YIELD(1);
-    return out;
-  } else {
-    return internal::new_vec(REALSXP, n);
-  }
+inline SEXP new_integer64(R_xlen_t n){
+  SEXP out = SHIELD(new_double(n));
+  attr::set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
+  YIELD(2);
+  return out;
 }
-inline SEXP new_character(R_xlen_t n, std::optional<r_string_t> default_value = std::nullopt){
-  if (default_value.has_value()){
-    r_string_t val = *default_value;
-    SEXP out = SHIELD(internal::new_vec(STRSXP, n));
-    if (val != blank_r_string){
-      for (R_xlen_t i = 0; i < n; ++i){
-        set_val(out, i, val);
-      }
+inline SEXP new_character(R_xlen_t n, const r_string_t default_value){
+  SEXP out = SHIELD(internal::new_vec(STRSXP, n));
+  if (default_value != blank_r_string){
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_STRING_ELT(out, i, default_value);
     }
-    YIELD(1);
-    return out;
-  } else {
-    return internal::new_vec(STRSXP, n);
   }
+  YIELD(1);
+  return out;
+}
+inline SEXP new_character(R_xlen_t n){
+  return internal::new_vec(STRSXP, n);
 }
 
-inline SEXP new_complex(R_xlen_t n, std::optional<Rcomplex> default_value = std::nullopt){
-  if (default_value.has_value()){
-    Rcomplex val = *default_value;
-    SEXP out = SHIELD(internal::new_vec(CPLXSXP, n));
-    Rcomplex *p_out = r_ptr::complex_ptr(out);
-    std::fill(p_out, p_out + n, val);
-    YIELD(1);
-    return out;
-  } else {
-    return internal::new_vec(CPLXSXP, n);
-  }
+inline SEXP new_complex(R_xlen_t n, const Rcomplex default_value){
+  SEXP out = SHIELD(internal::new_vec(CPLXSXP, n));
+  Rcomplex* RESTRICT p_out = r_ptr::complex_ptr(out);
+  internal::fast_fill(p_out, p_out + n, default_value);
+  YIELD(1);
+  return out;
 }
-inline SEXP new_raw(R_xlen_t n, std::optional<Rbyte> default_value = std::nullopt){
-  if (default_value.has_value()){
-    Rbyte val = *default_value;
-    SEXP out = SHIELD(internal::new_vec(RAWSXP, n));
-    Rbyte *p_out = r_ptr::raw_ptr(out);
-    std::fill(p_out, p_out + n, val);
-    YIELD(1);
-    return out;
-  } else {
-    return internal::new_vec(RAWSXP, n);
-  }
+inline SEXP new_complex(R_xlen_t n){
+  return internal::new_vec(CPLXSXP, n);
 }
-inline SEXP new_list(R_xlen_t n, std::optional<SEXP> default_value = std::nullopt){
-  if (default_value.has_value()){
-    SEXP val = *default_value;
-    SEXP out = SHIELD(internal::new_vec(VECSXP, n));
-    if (!is_null(val)){
-      for (R_xlen_t i = 0; i < n; ++i){
-        set_val(out, i, val);
-      }
+inline SEXP new_raw(R_xlen_t n,const Rbyte default_value){
+  SEXP out = SHIELD(internal::new_vec(RAWSXP, n));
+  Rbyte *p_out = r_ptr::raw_ptr(out);
+  internal::fast_fill(p_out, p_out + n, default_value);
+  YIELD(1);
+  return out;
+}
+inline SEXP new_raw(R_xlen_t n){
+  return internal::new_vec(RAWSXP, n);
+}
+inline SEXP new_list(R_xlen_t n, const SEXP default_value){
+  SEXP out = SHIELD(internal::new_vec(VECSXP, n));
+  if (!is_null(default_value)){
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_VECTOR_ELT(out, i, default_value);
     }
-    YIELD(1);
-    return out;
-  } else {
-    return internal::new_vec(VECSXP, n);
   }
+  YIELD(1);
+  return out;
 }
+inline SEXP new_list(R_xlen_t n){
+  return internal::new_vec(VECSXP, n);
+}
+
 }
 
 namespace df {
@@ -839,17 +924,6 @@ inline SEXP na_value<SEXP>(const SEXP x){
    Rf_error("No `na_value` specialisation for R type %s", Rf_type2char(TYPEOF(x)));
   }
   }
-}
-
-// equals template that doesn't support NA values
-// use is_r_na template functions
-template<typename T>
-inline constexpr bool eq(const T x, const T y) {
-  return x == y;
-}
-template<>
-inline constexpr bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
-  return eq(x.r, y.r) && eq(x.i, y.i);
 }
 
 

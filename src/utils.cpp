@@ -678,7 +678,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   int* RESTRICT p_out = integer_ptr(out);
 
   // Initialise counts to 0
-  std::fill(p_out, p_out + n_bins, 0);
+  fast_fill(p_out, p_out + n_bins, 0);
 
   uint32_t one = 1;
 

@@ -306,7 +306,7 @@ SEXP cpp_is_na(SEXP x){
   case RAWSXP: {
     out = SHIELD(new_logical(n));
     int* RESTRICT p_out = integer_ptr(out);
-    std::fill(p_out, p_out + n, 0);
+    fast_fill(p_out, p_out + n, 0);
     break;
   }
   case CPLXSXP: {
@@ -344,7 +344,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
   int num_row = df::nrow(x);
   SEXP out = SHIELD(vec::new_integer(num_row)); ++NP;
   int* RESTRICT p_out = integer_ptr(out);
-  std::fill(p_out, p_out + num_row, 0);
+  fast_fill(p_out, p_out + num_row, 0);
   for (int j = 0; j < num_col; ++j){
     switch ( CHEAPR_TYPEOF(p_x[j]) ){
     case LGLSXP:
@@ -436,7 +436,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
   int num_row = df::nrow(x);
   SEXP out = SHIELD(vec::new_integer(num_col)); ++NP;
   int *p_out = integer_ptr(out);
-  std::fill(p_out, p_out + num_col, 0);
+  fast_fill(p_out, p_out + num_col, 0);
   for (int j = 0; j < num_col; ++j){
     switch ( TYPEOF(p_x[j]) ){
     case VECSXP: {
@@ -622,7 +622,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(vec::new_integer(num_row));
   int *p_out = integer_ptr(out);
-  std::fill(p_out, p_out + num_row, 0);
+  fast_fill(p_out, p_out + num_row, 0);
   if (num_row > 0 && num_col > 0){
     switch ( CHEAPR_TYPEOF(x) ){
     case LGLSXP:
@@ -689,7 +689,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
   bool new_col;
   SEXP out = SHIELD(vec::new_integer(num_col));
   int *p_out = integer_ptr(out);
-  std::fill(p_out, p_out + num_col, 0);
+  fast_fill(p_out, p_out + num_col, 0);
   if (num_row > 0 && num_col > 0){
     switch ( CHEAPR_TYPEOF(x) ){
     case LGLSXP:
