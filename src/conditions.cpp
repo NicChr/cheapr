@@ -1,23 +1,45 @@
 #include "cheapr.h"
-#include <variant>
 
-#define CHEAPR_VECTORISED_IF_ELSE                                    \
-for (R_xlen_t i = 0; i < n; ++i){                                    \
-  switch(p_x[i]){                                                    \
-  case r_true: {                                                     \
-    set_val(p_out, i, p_yes[yes_scalar ? 0 : i]);                    \
-    break;                                                           \
-  }                                                                  \
-  case r_false: {                                                    \
-    set_val(p_out, i, p_no[no_scalar ? 0 : i]);                      \
-    break;                                                           \
-  }                                                                  \
-  default: {                                                         \
-    set_val(p_out, i, p_na[na_scalar ? 0 : i]);                      \
-    break;                                                           \
-  }                                                                  \
-  }                                                                  \
+#define CHEAPR_VECTORISED_IF_ELSE                                \
+for (R_xlen_t i = 0; i < n; ++i){                                \
+  switch(p_x[i]){                                                \
+  case r_true: {                                                 \
+    set_val(p_out, i, p_yes[yes_scalar ? 0 : i]);                \
+    break;                                                       \
+  }                                                              \
+  case r_false: {                                                \
+    set_val(p_out, i, p_no[no_scalar ? 0 : i]);                  \
+    break;                                                       \
+  }                                                              \
+  default: {                                                     \
+    set_val(p_out, i, p_na[na_scalar ? 0 : i]);                  \
+    break;                                                       \
+  }                                                              \
+  }                                                              \
 }
+
+
+// if (all_not_scalar){
+//   for (R_xlen_t i = 0; i < n; ++i){
+//     if (p_x[i] == r_true){
+//       set_val(p_out, i, p_yes[yes_scalar ? 0 : i]);
+//     } else if (p_x[i] == r_false){
+//       set_val(p_out, i, p_no[no_scalar ? 0 : i]);
+//     } else {
+//       set_val(p_out, i, p_na[na_scalar ? 0 : i]);
+//     }
+//   }
+// } else {
+//   for (R_xlen_t i = 0; i < n; ++i){
+//     if (p_x[i] == r_true){
+//       set_val(p_out, i, p_yes[i]);
+//     } else if (p_x[i] == r_false){
+//       set_val(p_out, i, p_no[i]);
+//     } else {
+//       set_val(p_out, i, p_na[i]);
+//     }
+//   }
+// }
 
 #define CHEAPR_SCALAR_IF_ELSE                                                      \
 for (R_xlen_t i = 0; i < n; ++i){                                                  \
@@ -30,6 +52,27 @@ for (R_xlen_t i = 0; i < n; ++i){                                               
     set_val(p_out, i, na_value);                                                   \
   }                                                                                \
 }
+
+#define CHEAPR_DO_IF_ELSE                                      \
+if (all_scalar){                                               \
+  if (n_cores > 1){                                            \
+    OMP_PARALLEL_FOR_SIMD                                      \
+    CHEAPR_SCALAR_IF_ELSE                                      \
+  } else {                                                     \
+    OMP_FOR_SIMD                                               \
+    CHEAPR_SCALAR_IF_ELSE                                      \
+  }                                                            \
+} else {                                                       \
+  if (n_cores > 1){                                            \
+    OMP_PARALLEL_FOR_SIMD                                      \
+    CHEAPR_VECTORISED_IF_ELSE                                  \
+  } else {                                                     \
+    OMP_FOR_SIMD                                               \
+    CHEAPR_VECTORISED_IF_ELSE                                  \
+  }                                                            \
+}
+
+
 
 // Fast SIMD vectorised if-else
 
@@ -54,6 +97,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   r_type common = get_r_type(yes);
 
   if (common != R_unk){
+
     SEXP out = r_null;
 
     R_xlen_t n = vec::length(condition);
@@ -78,9 +122,12 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     bool no_scalar = no_size == 1;
     bool na_scalar = na_size == 1;
     bool all_scalar = yes_scalar && no_scalar && na_scalar;
+    // bool all_not_scalar = !yes_scalar && !no_scalar && !na_scalar;
     r_bool_t lgl;
 
     const r_bool_t* RESTRICT p_x = logical_ptr_ro(condition);
+
+    int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
 
     switch (common){
     case R_null: {
@@ -93,15 +140,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const r_bool_t *p_no = logical_ptr_ro(no);
       const r_bool_t *p_na = logical_ptr_ro(na);
 
-      if (all_scalar){
-        const r_bool_t yes_value = p_yes[0];
-        const r_bool_t no_value = p_no[0];
-        const r_bool_t na_value = p_na[0];
-        OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
-      } else {
-        CHEAPR_VECTORISED_IF_ELSE
-      }
+      const r_bool_t yes_value = p_yes[0];
+      const r_bool_t no_value = p_no[0];
+      const r_bool_t na_value = p_na[0];
+      CHEAPR_DO_IF_ELSE
       break;
     }
     case R_int: {
@@ -110,16 +152,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const int *p_yes = integer_ptr_ro(yes);
       const int *p_no = integer_ptr_ro(no);
       const int *p_na = integer_ptr_ro(na);
-
-      if (all_scalar){
-        const int yes_value = p_yes[0];
-        const int no_value = p_no[0];
-        const int na_value = p_na[0];
-        OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
-      } else {
-        CHEAPR_VECTORISED_IF_ELSE
-      }
+      const int yes_value = p_yes[0];
+      const int no_value = p_no[0];
+      const int na_value = p_na[0];
+      CHEAPR_DO_IF_ELSE
       break;
     }
     case R_int64: {
@@ -128,16 +164,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const int64_t *p_yes = integer64_ptr_ro(yes);
       const int64_t *p_no = integer64_ptr_ro(no);
       const int64_t *p_na = integer64_ptr_ro(na);
-
-      if (all_scalar){
-        const int64_t yes_value = p_yes[0];
-        const int64_t no_value = p_no[0];
-        const int64_t na_value = p_na[0];
-        OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
-      } else {
-        CHEAPR_VECTORISED_IF_ELSE
-      }
+      const int64_t yes_value = p_yes[0];
+      const int64_t no_value = p_no[0];
+      const int64_t na_value = p_na[0];
+      CHEAPR_DO_IF_ELSE
       break;
     }
     case R_dbl: {
@@ -146,16 +176,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const double *p_yes = real_ptr_ro(yes);
       const double *p_no = real_ptr_ro(no);
       const double *p_na = real_ptr_ro(na);
-
-      if (all_scalar){
-        const double yes_value = p_yes[0];
-        const double no_value = p_no[0];
-        const double na_value = p_na[0];
-        OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
-      } else {
-        CHEAPR_VECTORISED_IF_ELSE
-      }
+      const double yes_value = p_yes[0];
+      const double no_value = p_no[0];
+      const double na_value = p_na[0];
+      CHEAPR_DO_IF_ELSE
       break;
     }
     case R_chr: {
@@ -185,18 +209,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const Rcomplex *p_yes = complex_ptr(yes);
       const Rcomplex *p_no = complex_ptr(no);
       const Rcomplex *p_na = complex_ptr(na);
-
-      if (all_scalar){
-
-        const Rcomplex yes_value = p_yes[0];
-        const Rcomplex no_value = p_no[0];
-        const Rcomplex na_value = p_na[0];
-
-        OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
-      } else {
-        CHEAPR_VECTORISED_IF_ELSE
-      }
+      const Rcomplex yes_value = p_yes[0];
+      const Rcomplex no_value = p_no[0];
+      const Rcomplex na_value = p_na[0];
+      CHEAPR_DO_IF_ELSE
       break;
     }
     case R_raw: {
@@ -207,18 +223,11 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const Rbyte *p_yes = raw_ptr(yes);
       const Rbyte *p_no = raw_ptr(no);
       const Rbyte *p_na = raw_ptr(na);
+      const Rbyte yes_value = p_yes[0];
+      const Rbyte no_value = p_no[0];
+      const Rbyte na_value = p_na[0];
+      CHEAPR_DO_IF_ELSE
 
-      if (all_scalar){
-
-        const Rbyte yes_value = p_yes[0];
-        const Rbyte no_value = p_no[0];
-        const Rbyte na_value = p_na[0];
-
-        OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
-      } else {
-        CHEAPR_VECTORISED_IF_ELSE
-      }
       break;
     }
     case R_fct: {
@@ -228,16 +237,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const int *p_yes = integer_ptr_ro(yes);
       const int *p_no = integer_ptr_ro(no);
       const int *p_na = integer_ptr_ro(na);
-
-      if (all_scalar){
-        const int yes_value = p_yes[0];
-        const int no_value = p_no[0];
-        const int na_value = p_na[0];
-        OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
-      } else {
-        CHEAPR_VECTORISED_IF_ELSE
-      }
+      const int yes_value = p_yes[0];
+      const int no_value = p_no[0];
+      const int na_value = p_na[0];
+      CHEAPR_DO_IF_ELSE
       break;
     }
     case R_date: {
@@ -249,31 +252,19 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
         const int *p_yes = integer_ptr_ro(yes);
         const int *p_no = integer_ptr_ro(no);
         const int *p_na = integer_ptr_ro(na);
-
-        if (all_scalar){
-          const int yes_value = p_yes[0];
-          const int no_value = p_no[0];
-          const int na_value = p_na[0];
-          OMP_FOR_SIMD
-          CHEAPR_SCALAR_IF_ELSE
-        } else {
-          CHEAPR_VECTORISED_IF_ELSE
-        }
+        const int yes_value = p_yes[0];
+        const int no_value = p_no[0];
+        const int na_value = p_na[0];
+        CHEAPR_DO_IF_ELSE
       } else {
         double* RESTRICT p_out = real_ptr(out);
         const double *p_yes = real_ptr_ro(yes);
         const double *p_no = real_ptr_ro(no);
         const double *p_na = real_ptr_ro(na);
-
-        if (all_scalar){
-          const double yes_value = p_yes[0];
-          const double no_value = p_no[0];
-          const double na_value = p_na[0];
-          OMP_FOR_SIMD
-          CHEAPR_SCALAR_IF_ELSE
-        } else {
-          CHEAPR_VECTORISED_IF_ELSE
-        }
+        const double yes_value = p_yes[0];
+        const double no_value = p_no[0];
+        const double na_value = p_na[0];
+        CHEAPR_DO_IF_ELSE
       }
 
       break;
@@ -286,16 +277,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       const double *p_yes = real_ptr_ro(yes);
       const double *p_no = real_ptr_ro(no);
       const double *p_na = real_ptr_ro(na);
-
-      if (all_scalar){
-        const double yes_value = p_yes[0];
-        const double no_value = p_no[0];
-        const double na_value = p_na[0];
-        OMP_FOR_SIMD
-        CHEAPR_SCALAR_IF_ELSE
-      } else {
-        CHEAPR_VECTORISED_IF_ELSE
-      }
+      const double yes_value = p_yes[0];
+      const double no_value = p_no[0];
+      const double na_value = p_na[0];
+      CHEAPR_DO_IF_ELSE
       break;
     }
     case R_list: {

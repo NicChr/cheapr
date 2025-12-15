@@ -31,6 +31,7 @@
 #define OMP_PARALLEL _Pragma("omp parallel num_threads(n_cores) ")
 #define OMP_FOR_SIMD _Pragma("omp for simd ")
 #define OMP_PARALLEL_FOR_SIMD	_Pragma("omp parallel for simd num_threads(n_cores) ")
+#define OMP_DO_NOTHING
 #else
 #define OMP_NUM_PROCS 1
 #define OMP_THREAD_LIMIT 1
@@ -38,6 +39,7 @@
 #define OMP_PARALLEL
 #define OMP_FOR_SIMD
 #define OMP_PARALLEL_FOR_SIMD
+#define OMP_DO_NOTHING
 #endif
 
 // Kept for dependency reasons
@@ -423,7 +425,7 @@ inline SEXP get_r_obj(SEXP x, const R_xlen_t i){
 }
 
 template<typename T>
-inline void set_val(SEXP x, const R_xlen_t i, T val, T* p_x = nullptr){
+inline void set_val(SEXP x, const R_xlen_t i, T val){
   static_assert(
     sizeof(T) == 0,
     "Unimplemented `set_val` specialisation"
