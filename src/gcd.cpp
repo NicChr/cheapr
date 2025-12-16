@@ -70,7 +70,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
         if (break_early && agcd > 0.0 && agcd < (tol + tol)){
-          gcd = tol * static_cast<double>(sign(gcd));
+          gcd = tol * static_cast<double>(r_sign(gcd));
           break;
         }
       }

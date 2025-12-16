@@ -7,24 +7,6 @@ namespace cheapr {
 
 namespace internal {
 
-// Math helpers
-
-template <typename T>
-inline int sign(T x) {
-  return (T(0) < x) - (x < T(0));
-}
-
-template<typename T>
-inline T negate(T x){
-  return -x;
-}
-
-// trunc but eliminates negative zeroes
-template<typename T>
-inline double trunc(T x){
-  return std::trunc(x) + 0.0;
-}
-
 template<typename... Args>
 inline SEXP eval_pkg_fun(const char* fn, const char* pkg, SEXP envir, Args... args){
   SEXP r_fn = SHIELD(fn::find_pkg_fun(fn, pkg, true));

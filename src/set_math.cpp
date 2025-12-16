@@ -24,8 +24,8 @@ SEXP check_transform_altrep(SEXP x){
 
 #define CHEAPR_MATH_LOOP(FUN)                                               \
 for (R_xlen_t i = 0; i < n; ++i) {                                          \
-  p_out[i] = is_r_na(p_out[i]) ? p_out[i] : FUN(p_out[i]);                  \
-}                                                                           \
+  p_out[i] = FUN(p_out[i]);                                                 \
+}
 
 #define CHEAPR_PARALLEL_MATH_LOOP(FUN)                         \
 if (n_cores > 1){                                              \
@@ -55,17 +55,17 @@ SEXP cpp_set_abs(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = integer_ptr(out);
-    CHEAPR_PARALLEL_MATH_LOOP(std::abs)
-      break;
+    CHEAPR_PARALLEL_MATH_LOOP(r_abs)
+    break;
   }
   default: {
     double *p_out = real_ptr(out);
-    CHEAPR_PARALLEL_MATH_LOOP(std::abs)
-      break;
+    CHEAPR_PARALLEL_MATH_LOOP(r_abs)
+    break;
   }
   }
   YIELD(1);
@@ -77,10 +77,10 @@ SEXP cpp_set_floor(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
-    CHEAPR_PARALLEL_MATH_LOOP(std::floor)
+    CHEAPR_PARALLEL_MATH_LOOP(r_floor)
   }
   YIELD(1);
   return out;
@@ -91,10 +91,10 @@ SEXP cpp_set_ceiling(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
-    CHEAPR_PARALLEL_MATH_LOOP(std::ceil)
+    CHEAPR_PARALLEL_MATH_LOOP(r_ceiling)
   }
   YIELD(1);
   return out;
@@ -105,10 +105,10 @@ SEXP cpp_set_trunc(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
-    CHEAPR_PARALLEL_MATH_LOOP(internal::trunc)
+    CHEAPR_PARALLEL_MATH_LOOP(r_trunc)
   }
   YIELD(1);
   return out;
@@ -119,16 +119,16 @@ SEXP cpp_set_change_sign(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = integer_ptr(out);
-    CHEAPR_PARALLEL_MATH_LOOP(internal::negate)
+    CHEAPR_PARALLEL_MATH_LOOP(r_negate)
       break;
   }
   case REALSXP: {
     double *p_out = real_ptr(out);
-    CHEAPR_PARALLEL_MATH_LOOP(internal::negate)
+    CHEAPR_PARALLEL_MATH_LOOP(r_negate)
       break;
   }
   }
@@ -140,7 +140,7 @@ SEXP cpp_set_change_sign(SEXP x){
 SEXP cpp_set_exp(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
 
   SEXP out = r_null;
 
@@ -160,7 +160,7 @@ SEXP cpp_set_exp(SEXP x){
 SEXP cpp_set_sqrt(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
 
   SEXP out = r_null;
 
@@ -205,43 +205,40 @@ SEXP cpp_set_add(SEXP x, SEXP y){
   case INTSXP: {
     int *p_x = integer_ptr(out);
     int *p_y = integer_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-      na::integer : p_x[i] + p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_add(p_x[i], p_y[yi]);
     }
     break;
   }
-  case REALSXP: {
+  default: {
     copy_warning();
     SHIELD(out = vec::coerce_vec(out, REALSXP)); ++NP;
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi]))?
-      na::real : p_x[i] + p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_add(p_x[i], p_y[yi]);
     }
     break;
   }
   }
     break;
   }
-  case REALSXP: {
+  default: {
     switch (TYPEOF(y)){
   case LGLSXP:
   case INTSXP: {
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-      na::real : p_x[i] + p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_add(p_x[i], r_cast<double>(p_y[yi]));
     }
     break;
   }
-  case REALSXP: {
+  default: {
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ? na::real : p_x[i] + p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_add(p_x[i], p_y[yi]);
     }
     break;
   }
@@ -281,43 +278,40 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
   case INTSXP: {
     int *p_x = integer_ptr(out);
     int *p_y = integer_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-      na::integer : p_x[i] - p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_subtract(p_x[i], p_y[yi]);
     }
     break;
   }
-  case REALSXP: {
+  default: {
     copy_warning();
     SHIELD(out = vec::coerce_vec(out, REALSXP)); ++NP;
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi]))?
-      na::real : p_x[i] - p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_subtract(p_x[i], p_y[yi]);
     }
     break;
   }
   }
     break;
   }
-  case REALSXP: {
+  default: {
     switch (TYPEOF(y)){
   case LGLSXP:
   case INTSXP: {
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-      na::real : p_x[i] - p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_subtract(p_x[i], r_cast<double>(p_y[yi]));
     }
     break;
   }
-  case REALSXP: {
+  default: {
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ? na::real : p_x[i] - p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_subtract(p_x[i], p_y[yi]);
     }
     break;
   }
@@ -357,20 +351,18 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
     int *p_x = integer_ptr(out);
     int *p_y = integer_ptr(y);
 
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-      na::integer : p_x[i] * p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_multiply(p_x[i], p_y[yi]);
     }
     break;
   }
-  case REALSXP: {
+  default: {
     copy_warning();
     SHIELD(out = vec::coerce_vec(out, REALSXP)); ++NP;
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-      na::real : p_x[i] * p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_multiply(p_x[i], p_y[yi]);
     }
     break;
   }
@@ -383,18 +375,16 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
   case INTSXP: {
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-      na::real : p_x[i] * p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_multiply(p_x[i], r_cast<double>(p_y[yi]));
     }
     break;
   }
-  case REALSXP: {
+  default: {
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) ||is_r_na(p_y[yi])) ?
-      na::real : p_x[i] * p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_multiply(p_x[i], p_y[yi]);
     }
     break;
   }
@@ -435,16 +425,16 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
   case INTSXP: {
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ? na::real : p_x[i] / p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_divide(p_x[i], r_cast<double>(p_y[yi]));
     }
     break;
   }
-  case REALSXP: {
+  default: {
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
-    for (uint_fast64_t i = 0; i < xn; yi = (++yi == yn) ? 0 : yi, ++i){
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ? na::real : p_x[i] / p_y[yi];
+    for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
+      p_x[i] = r_divide(p_x[i], p_y[yi]);
     }
     break;
   }
@@ -459,7 +449,7 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
   check_numeric(y);
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t yn = Rf_xlength(y);
-  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  R_xlen_t yi = 0;
   if (xn > 0){
     if (yn > xn){
       Rf_error("length(y) must be <= length(x)");
@@ -476,33 +466,20 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
     out = SHIELD(check_transform_altrep(x));
   }
   switch (TYPEOF(y)){
+  case LGLSXP:
   case INTSXP: {
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
-#pragma omp parallel for simd num_threads(n_cores) if (n_cores > 1)
-    for (R_xlen_t i = 0; i < xn; ++i) {
-      R_xlen_t yi = i % yn;
-      if (p_x[i] == 1.0 || p_y[yi] == 0){
-        p_x[i] = 1.0;
-      } else {
-        p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-        na::real : std::pow(p_x[i], p_y[yi]);
-      }
+    for (R_xlen_t i = 0; i < xn; recycle_index(yi, yn), ++i) {
+      p_x[i] = std::pow(r_cast<double>(p_x[i]), r_cast<double>(p_y[yi]));
     }
     break;
   }
-  case REALSXP: {
+  default: {
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
-#pragma omp parallel for simd num_threads(n_cores) if (n_cores > 1)
-    for (R_xlen_t i = 0; i < xn; ++i) {
-      R_xlen_t yi = i % yn;
-      if (p_x[i] == 1.0 || p_y[yi] == 0.0){
-        p_x[i] = 1.0;
-      } else {
-        p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_y[yi])) ?
-        na::real : std::pow(p_x[i], p_y[yi]);
-      }
+    for (R_xlen_t i = 0; i < xn; recycle_index(yi, yn), ++i) {
+      p_x[i] = std::pow(p_x[i], p_y[yi]);
     }
     break;
   }
@@ -563,8 +540,6 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
   uint_fast64_t digitsn = Rf_xlength(digits);
   uint_fast64_t digitsi = 0;
 
-  double tempx, mfactor;
-
   if (xn > 0){
     if (digitsn > xn){
       YIELD(1);
@@ -583,34 +558,18 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
     case INTSXP: {
       double *p_x = real_ptr(out);
       const int *p_digits = integer_ptr(digits);
-      for (uint_fast64_t i = 0; i < xn; digitsi = (++digitsi == digitsn) ? 0 : digitsi, ++i) {
-        if ( (!is_r_na(p_x[i]) && !is_r_na(p_digits[digitsi])) ){
-          tempx = p_x[i];
-          mfactor = std::pow(10, p_digits[digitsi]);
-          tempx *= mfactor;
-          tempx = r_round(tempx);
-          tempx /= mfactor;
-          p_x[i] = tempx;
-        } else {
-          p_x[i] = na::real;
-        }
+      for (uint_fast64_t i = 0; i < xn;
+      recycle_index(digitsi, digitsn), ++i) {
+        p_x[i] = r_round(p_x[i], r_cast<double>(p_digits[digitsi]));
       }
       break;
     }
     default: {
       double *p_x = real_ptr(out);
       const double *p_digits = real_ptr(digits);
-      for (uint_fast64_t i = 0; i < xn; digitsi = (++digitsi == digitsn) ? 0 : digitsi, ++i) {
-        if ( (!is_r_na(p_x[i]) && !is_r_na(p_digits[digitsi])) ){
-          tempx = p_x[i];
-          mfactor = std::pow(10, p_digits[digitsi]);
-          tempx *= mfactor;
-          tempx = r_round(tempx);
-          tempx /= mfactor;
-          p_x[i] = tempx;
-        } else {
-          p_x[i] = na::real;
-        }
+      for (uint_fast64_t i = 0; i < xn;
+      recycle_index(digitsi, digitsn), ++i) {
+        p_x[i] = r_round(p_x[i], p_digits[digitsi]);
       }
       break;
     }
@@ -629,14 +588,14 @@ SEXP cpp_int_sign(SEXP x){
   switch (TYPEOF(x)){
   case LGLSXP: {
     const int *p_x = integer_ptr(x);
-    safe_memmove(&p_out[0], &p_x[0], n * sizeof(int));
+    fast_copy_n(p_x, n, p_out);
     break;
   }
   case INTSXP: {
     const int *p_x = integer_ptr(x);
     OMP_FOR_SIMD
     for (uint_fast64_t i = 0; i < n; ++i) {
-      p_out[i] = is_r_na(p_x[i]) ? na::integer : sign(p_x[i]);
+      p_out[i] = r_sign(p_x[i]);
     }
     break;
   }
@@ -644,7 +603,7 @@ SEXP cpp_int_sign(SEXP x){
     double *p_x = real_ptr(x);
     OMP_FOR_SIMD
     for (uint_fast64_t i = 0; i < n; ++i) {
-      p_out[i] = is_r_na(p_x[i]) ? na::integer : sign(p_x[i]);
+      p_out[i] = r_sign(p_x[i]);
     }
     break;
   }

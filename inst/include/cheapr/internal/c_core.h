@@ -152,8 +152,7 @@ std::is_same_v<std::decay_t<T>, cpp11::r_bool>;
 template <typename T>
 inline constexpr bool is_r_arithmetic_v =
 is_r_integral_v<T> ||
-std::is_arithmetic_v<T> ||
-std::is_same_v<std::decay_t<T>, Rcomplex>;
+std::is_arithmetic_v<T>;
 
 namespace env {
 inline const SEXP empty_env = R_EmptyEnv;
@@ -550,7 +549,7 @@ namespace internal {
 template <typename T>
 inline void fast_fill(T *first, T *last, const T val) {
 
-  if constexpr (is_r_arithmetic_v<T>){
+  if constexpr (is_r_arithmetic_v<T> || std::is_same_v<std::decay_t<T>, Rcomplex>){
     R_xlen_t size = last - first;
     int n_cores = internal::get_cores(size);
     if (n_cores > 1) {
@@ -571,7 +570,7 @@ inline void fast_fill(T *first, T *last, const T val) {
 template <typename T>
 inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
 
-  if constexpr (is_r_arithmetic_v<T>){
+  if constexpr (is_r_arithmetic_v<T> || std::is_same_v<std::decay_t<T>, Rcomplex>){
     R_xlen_t size = last - first;
     int n_cores = internal::get_cores(size);
     if (n_cores > 1) {
@@ -596,7 +595,7 @@ inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
 template <typename T>
 inline void fast_copy_n(const T *source, R_xlen_t n, T *target){
 
-  if constexpr (is_r_arithmetic_v<T>){
+  if constexpr (is_r_arithmetic_v<T> || std::is_same_v<std::decay_t<T>, Rcomplex>){
     int n_cores = internal::get_cores(n);
     if (n_cores > 1) {
       OMP_PARALLEL_FOR_SIMD
@@ -1315,6 +1314,13 @@ inline constexpr T r_cast(U x) {
 
 
 // R math fns
+namespace internal {
+
+inline double round_to_even(double x){
+  return x - std::remainder(x, 1.0);
+}
+
+}
 
 namespace math {
 
@@ -1335,9 +1341,72 @@ inline double r_abs(Rcomplex x){
   }
 }
 
+template<typename T>
+inline T r_floor(T x){
+  return is_r_na(x) ? x : static_cast<T>(std::floor(x));
+}
+template<>
+inline double r_floor(double x){
+  return std::floor(x);
+}
 
-inline double r_round(double x){
-  return is_r_na(x) ? na_value(x) : x - std::remainder(x, 1.0);
+template<typename T>
+inline T r_ceiling(T x){
+  return is_r_na(x) ? x : static_cast<T>(std::ceil(x));
+}
+template<>
+inline double r_ceiling(double x){
+  return std::ceil(x);
+}
+
+template<typename T>
+inline T r_trunc(T x){
+  return is_r_na(x) ? x : std::trunc(x);
+}
+
+template <>
+inline double r_trunc(double x){
+  return std::trunc(x) + 0.0;
+}
+
+template <typename T>
+inline int r_sign(T x) {
+  return is_r_na(x) ? na::integer : (T(0) < x) - (x < T(0));
+}
+
+template<typename T>
+inline T r_negate(T x){
+  return is_r_na(x) ? x : -x;
+}
+template<>
+inline double r_negate(double x){
+  return -x;
+}
+
+inline double r_round(double x, const int digits = 0){
+  if (is_r_na(x)){
+    return x;
+  } else if (is_r_na(digits)){
+    return na::real;
+  } else {
+    double scale = std::pow(10, digits);
+    return internal::round_to_even(x * scale) / scale;
+  }
+}
+
+inline double r_signif(double x, const int digits = 6){
+  if (is_r_na(x)){
+    return x;
+  } else if (is_r_na(digits)){
+    return na::real;
+  } else if (x == 0.0){
+    return 0.0;
+  } else {
+    // return r_round(x, digits - std::ceil(std::log10(std::abs(x))));
+    int new_digits = digits - std::ceil(std::log10(std::abs(x)));
+    double scale = std::pow(10, new_digits);
+    return internal::round_to_even(x * scale) / scale;
+  }
 }
 
 inline double abs_diff(const double x, const double y){
@@ -1346,6 +1415,39 @@ inline double abs_diff(const double x, const double y){
 
 inline r_bool_t is_whole_number(const double x, const double tolerance){
   return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_bool_t>(abs_diff(x, std::round(x)) < tolerance);
+}
+
+template<typename T>
+inline T r_add(T x, T y){
+  return is_r_na(x) || is_r_na(y) ? na_value(x) : x + y;
+}
+template<>
+inline double r_add(double x, double y){
+  return x + y;
+}
+template<typename T>
+inline T r_subtract(T x, T y){
+  return is_r_na(x) || is_r_na(y) ? na_value(x) : x - y;
+}
+template<>
+inline double r_subtract(double x, double y){
+  return x - y;
+}
+template<typename T>
+inline T r_multiply(T x, T y){
+  return is_r_na(x) || is_r_na(y) ? na_value(x) : x * y;
+}
+template<>
+inline double r_multiply(double x, double y){
+  return x * y;
+}
+template<typename T>
+inline T r_divide(T x, T y){
+  return is_r_na(x) || is_r_na(y) ? na_value(x) : x / y;
+}
+template<>
+inline double r_divide(double x, double y){
+  return x / y;
 }
 
 template<
