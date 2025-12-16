@@ -1,3 +1,5 @@
+options(cheapr.cores = 2)
+
 test_that("binning", {
   set.seed(42)
   x <- sample(-10:11, 100, TRUE)

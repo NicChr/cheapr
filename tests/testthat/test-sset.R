@@ -1,4 +1,4 @@
-options(cheapr.cores = 2)
+
 test_that("subsetting", {
   set.seed(37) # Totally random number :)
   a <- rnorm(10^3)

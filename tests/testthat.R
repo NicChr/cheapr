@@ -9,4 +9,6 @@
 library(testthat)
 library(cheapr)
 
+options(cheapr.cores = 2)
+
 test_check("cheapr", reporter = c("check", "location"))

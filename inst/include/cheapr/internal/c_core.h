@@ -151,8 +151,9 @@ std::is_same_v<std::decay_t<T>, cpp11::r_bool>;
 
 template <typename T>
 inline constexpr bool is_r_arithmetic_v =
+is_r_integral_v<T> ||
 std::is_arithmetic_v<T> ||
-is_r_integral_v<T>;
+std::is_same_v<std::decay_t<T>, Rcomplex>;
 
 namespace env {
 inline const SEXP empty_env = R_EmptyEnv;
@@ -549,15 +550,8 @@ namespace internal {
 template <typename T>
 inline void fast_fill(T *first, T *last, const T val) {
 
-  R_xlen_t size = last - first;
-
-  if constexpr (std::is_same_v<std::decay_t<T>, SEXP> ||
-                std::is_same_v<std::decay_t<T>, r_string_t> ||
-                std::is_same_v<std::decay_t<T>, r_symbol_t>) {
-    for (T *it = first; it != last; ++it) {
-      vec::set_val(first, it - first, val);
-    }
-  } else {
+  if constexpr (is_r_arithmetic_v<T>){
+    R_xlen_t size = last - first;
     int n_cores = internal::get_cores(size);
     if (n_cores > 1) {
       OMP_PARALLEL_FOR_SIMD
@@ -567,24 +561,18 @@ inline void fast_fill(T *first, T *last, const T val) {
     } else {
       std::fill(first, last, val);
     }
+  } else {
+    for (T *it = first; it != last; ++it) {
+      vec::set_val(first, it - first, val);
+    }
   }
 }
 
 template <typename T>
 inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
 
-  R_xlen_t size = last - first;
-
-  if constexpr (std::is_same_v<std::decay_t<T>, SEXP> ||
-                std::is_same_v<std::decay_t<T>, r_string_t> ||
-                std::is_same_v<std::decay_t<T>, r_symbol_t>) {
-    for (T *it = first; it != last; ++it) {
-      R_xlen_t i = it - first;
-      if (eq(first[i], old_val)){
-        vec::set_val(first, i, new_val);
-      }
-    }
-  } else {
+  if constexpr (is_r_arithmetic_v<T>){
+    R_xlen_t size = last - first;
     int n_cores = internal::get_cores(size);
     if (n_cores > 1) {
       OMP_PARALLEL_FOR_SIMD
@@ -596,17 +584,19 @@ inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
     } else {
       std::replace(first, last, old_val, new_val);
     }
+  } else {
+    for (T *it = first; it != last; ++it) {
+      R_xlen_t i = it - first;
+      if (eq(first[i], old_val)){
+        vec::set_val(first, i, new_val);
+      }
+    }
   }
 }
 template <typename T>
 inline void fast_copy_n(const T *source, R_xlen_t n, T *target){
-  if constexpr (std::is_same_v<std::decay_t<T>, SEXP> ||
-                std::is_same_v<std::decay_t<T>, r_string_t> ||
-                std::is_same_v<std::decay_t<T>, r_symbol_t>) {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      vec::set_val(target, i, source[i]);
-    }
-  } else {
+
+  if constexpr (is_r_arithmetic_v<T>){
     int n_cores = internal::get_cores(n);
     if (n_cores > 1) {
       OMP_PARALLEL_FOR_SIMD
@@ -615,6 +605,10 @@ inline void fast_copy_n(const T *source, R_xlen_t n, T *target){
       }
     } else {
       std::copy_n(source, n, target);
+    }
+  } else {
+    for (R_xlen_t i = 0; i < n; ++i) {
+      vec::set_val(target, i, source[i]);
     }
   }
 }
@@ -1320,7 +1314,9 @@ inline constexpr T r_cast(U x) {
 }
 
 
-// R fns
+// R math fns
+
+namespace math {
 
 template<typename T>
 inline T r_abs(T x){
@@ -1456,6 +1452,8 @@ inline T lcm2(
     }
     return ( std::fabs(x) / gcd2(x, y, na_rm, tol) ) * std::fabs(y);
   }
+}
+
 }
 
 inline SEXP eval(SEXP expr, SEXP env){
@@ -1665,7 +1663,7 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
         any_na = true;
         continue;
       }
-      out = static_cast<r_bool_t>(cheapr::is_whole_number(p_x[i], tol_));
+      out = static_cast<r_bool_t>(math::is_whole_number(p_x[i], tol_));
       if (out == r_false){
         break;
       }

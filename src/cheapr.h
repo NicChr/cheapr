@@ -10,10 +10,11 @@
 #include <vector>
 
 using namespace cheapr;
-using namespace vec;
-using namespace internal;
-using namespace attr;
-using namespace r_ptr;
-using namespace symbol;
+using namespace cheapr::vec;
+using namespace cheapr::internal;
+using namespace cheapr::attr;
+using namespace cheapr::r_ptr;
+using namespace cheapr::symbol;
+using namespace cheapr::math;
 
 #endif
