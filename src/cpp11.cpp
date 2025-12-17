@@ -412,6 +412,34 @@ extern "C" SEXP _cheapr_cpp_round(SEXP x, SEXP digits) {
   END_CPP11
 }
 // math.cpp
+SEXP cpp_add(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_add(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_add(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// math.cpp
+SEXP cpp_subtract(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_subtract(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_subtract(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// math.cpp
+SEXP cpp_multiply(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_multiply(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_multiply(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// math.cpp
+SEXP cpp_divide(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_divide(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_divide(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// math.cpp
 SEXP cpp_set_add(SEXP x, SEXP y);
 extern "C" SEXP _cheapr_cpp_set_add(SEXP x, SEXP y) {
   BEGIN_CPP11
@@ -851,6 +879,7 @@ extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cheapr_do_memory_leak_test",  (DL_FUNC) &_cheapr_cheapr_do_memory_leak_test,  0},
     {"_cheapr_cpp_abs",                     (DL_FUNC) &_cheapr_cpp_abs,                     1},
+    {"_cheapr_cpp_add",                     (DL_FUNC) &_cheapr_cpp_add,                     2},
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
     {"_cheapr_cpp_all_na",                  (DL_FUNC) &_cheapr_cpp_all_na,                  3},
     {"_cheapr_cpp_any_na",                  (DL_FUNC) &_cheapr_cpp_any_na,                  2},
@@ -872,6 +901,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_df_select",               (DL_FUNC) &_cheapr_cpp_df_select,               2},
     {"_cheapr_cpp_df_slice",                (DL_FUNC) &_cheapr_cpp_df_slice,                3},
     {"_cheapr_cpp_df_subset",               (DL_FUNC) &_cheapr_cpp_df_subset,               4},
+    {"_cheapr_cpp_divide",                  (DL_FUNC) &_cheapr_cpp_divide,                  2},
     {"_cheapr_cpp_drop_null",               (DL_FUNC) &_cheapr_cpp_drop_null,               1},
     {"_cheapr_cpp_exp",                     (DL_FUNC) &_cheapr_cpp_exp,                     1},
     {"_cheapr_cpp_fixed_width_breaks",      (DL_FUNC) &_cheapr_cpp_fixed_width_breaks,      6},
@@ -908,6 +938,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_matrix_col_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts,    1},
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},
     {"_cheapr_cpp_max_threads",             (DL_FUNC) &_cheapr_cpp_max_threads,             0},
+    {"_cheapr_cpp_multiply",                (DL_FUNC) &_cheapr_cpp_multiply,                2},
     {"_cheapr_cpp_na_init",                 (DL_FUNC) &_cheapr_cpp_na_init,                 2},
     {"_cheapr_cpp_name_repair",             (DL_FUNC) &_cheapr_cpp_name_repair,             3},
     {"_cheapr_cpp_negate",                  (DL_FUNC) &_cheapr_cpp_negate,                  1},
@@ -955,6 +986,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_sset2",                   (DL_FUNC) &_cheapr_cpp_sset2,                   5},
     {"_cheapr_cpp_sset_int64",              (DL_FUNC) &_cheapr_cpp_sset_int64,              2},
     {"_cheapr_cpp_str_coalesce",            (DL_FUNC) &_cheapr_cpp_str_coalesce,            1},
+    {"_cheapr_cpp_subtract",                (DL_FUNC) &_cheapr_cpp_subtract,                2},
     {"_cheapr_cpp_tabulate",                (DL_FUNC) &_cheapr_cpp_tabulate,                2},
     {"_cheapr_cpp_trunc",                   (DL_FUNC) &_cheapr_cpp_trunc,                   1},
     {"_cheapr_cpp_type",                    (DL_FUNC) &_cheapr_cpp_type,                    1},

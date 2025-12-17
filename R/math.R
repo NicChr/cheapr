@@ -49,3 +49,15 @@ log10_ <- function(x){
 round_ <- function(x, digits = 0){
   cpp_round(x, digits)
 }
+#' @rdname math
+#' @export
+add_ <- cpp_add
+#' @rdname math
+#' @export
+subtract_ <- cpp_subtract
+#' @rdname math
+#' @export
+multiply_ <- cpp_multiply
+#' @rdname math
+#' @export
+divide_ <- cpp_divide

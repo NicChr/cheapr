@@ -1,5 +1,5 @@
 .onAttach <- function(...){
-  set_threads(2)
+  cheapr::set_threads(2)
   options("cheapr.digits" = getOption("cheapr.digits", 2))
   fastplyr_pkg <- find.package("fastplyr", quiet = TRUE)
   if (length(fastplyr_pkg) > 0){

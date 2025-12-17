@@ -13,6 +13,10 @@
 \alias{log_}
 \alias{log10_}
 \alias{round_}
+\alias{add_}
+\alias{subtract_}
+\alias{multiply_}
+\alias{divide_}
 \title{Parallelised math operations}
 \usage{
 abs_(x)
@@ -36,6 +40,14 @@ log_(x, base = exp(1))
 log10_(x)
 
 round_(x, digits = 0)
+
+add_(x, y)
+
+subtract_(x, y)
+
+multiply_(x, y)
+
+divide_(x, y)
 }
 \arguments{
 \item{x}{\verb{[numeric(n)]} vector.}
