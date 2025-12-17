@@ -1502,13 +1502,9 @@ template<>
 inline double r_multiply(double x, double y){
   return x * y;
 }
-template<typename T>
-inline T r_divide(T x, T y){
-  return is_r_na(x) || is_r_na(y) ? na_value(x) : x / y;
-}
-template<>
-inline double r_divide(double x, double y){
-  return x / y;
+template<typename T, typename U>
+inline double r_divide(T x, U y){
+  return r_cast<double>(x) / r_cast<double>(y);
 }
 
 template<

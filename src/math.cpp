@@ -700,7 +700,6 @@ SEXP cpp_divide(SEXP x, SEXP y){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
-    int* RESTRICT p_out = integer_ptr(out);
     CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, n, n_cores)
       break;
   }
@@ -736,7 +735,6 @@ SEXP cpp_pow(SEXP x, SEXP y){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
-    int* RESTRICT p_out = integer_ptr(out);
     CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, n, n_cores)
       break;
   }
