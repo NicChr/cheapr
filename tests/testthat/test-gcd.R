@@ -5,7 +5,7 @@ test_that("GCD AND SCM scalars", {
   expect_identical(gcd(0L), 0L)
   expect_identical(gcd(NaN), NaN)
   expect_identical(gcd(Inf), Inf)
-  expect_identical(gcd(-Inf), -Inf)
+  expect_identical(gcd(-Inf), Inf)
   expect_identical(gcd(NA_integer_, na_rm = TRUE), NA_integer_)
   expect_identical(gcd(NA_integer_, na_rm = FALSE), NA_integer_)
   expect_identical(gcd(NA_real_, na_rm = TRUE), NA_real_)

@@ -641,11 +641,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     } else {
       if (by > 0){
         std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) set_val(p_out, in_bounds_size + i, na::raw);
+        std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::raw);
       } else {
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) set_val(p_out, i, na::raw);
+        std::fill(p_out, p_out + n_oob, na::raw);
         OMP_FOR_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) set_val(p_out, istart - i - 1, p_x[i]);
       }

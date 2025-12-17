@@ -784,7 +784,13 @@ inline void set_row_names(SEXP x, int n){
 }
 }
 
-inline constexpr bool is_r_inf(const double x){
+template <typename T>
+inline constexpr bool is_r_inf(const T x){
+  return false;
+}
+
+template <>
+inline constexpr bool is_r_inf<double>(const double x){
   return x == r_limits::r_pos_inf || x == r_limits::r_neg_inf;
 }
 
@@ -1419,8 +1425,10 @@ inline double r_round(T x, U digits){
     return r_cast<double>(x);
   } else if (is_r_na(digits)){
     return na::real;
+  } else if (is_r_inf(x)){
+    return x;
   } else {
-    double scale = std::pow(10, r_cast<double>(digits));
+    double scale = std::pow(10.0, r_cast<double>(digits));
     return internal::round_to_even(r_cast<double>(x) * scale) / scale;
   }
 }
@@ -1429,6 +1437,8 @@ template<typename T>
 inline double r_round(T x){
   if (is_r_na(x)){
     return r_cast<double>(x);
+  } else if (is_r_inf(x)){
+    return x;
   } else {
     return internal::round_to_even(r_cast<double>(x));
   }

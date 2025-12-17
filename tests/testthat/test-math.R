@@ -18,7 +18,9 @@ test_that("math operations", {
   }
   make_test_data4 <- function(){
     set.seed(3742)
-    assign("x", na_insert(sample.int(100, 10^5, TRUE), 10^3),
+    assign("x", val_insert(val_insert(na_insert(sample.int(100, 10^5, TRUE), 10^3),
+                                      NaN, n = 10^3),
+                           Inf, n = 10^3),
            envir = parent.frame())
   }
 

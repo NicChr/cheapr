@@ -25,35 +25,35 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     out = SHIELD(vec::new_integer((n == 0) ? 0 : 1));
 
     if (n > 0){
-      int gcd = p_x[0];
+      auto gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
         gcd = gcd2(gcd, p_x[i], na_rm);
-        if (is_r_na(gcd)){
-          if (!na_rm) break;
-        } else if (std::abs(gcd) == 1){
+        if (!na_rm && is_r_na(gcd)){
+          break;
+        } else if (gcd == 1){
           break;
         }
       }
-      set_val(out, 0, gcd);
+      set_val(out, 0, r_abs(gcd));
     }
     break;
   }
   case CHEAPR_INT64SXP: {
-    const int64_t *p_x = integer64_ptr_ro(x);
 
-    out = SHIELD(new_double((n == 0) ? 0 : 1));
+    const int64_t *p_x = integer64_ptr_ro(x);
+    out = SHIELD(new_integer64((n == 0) ? 0 : 1));
 
     if (n > 0){
-      int64_t gcd = p_x[0];
+      auto gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
         gcd = gcd2(gcd, p_x[i], na_rm);
-        if (is_r_na(gcd)){
-          if (!na_rm) break;
-        } else if (std::abs(gcd) == 1){
+        if (!na_rm && is_r_na(gcd)){
+          break;
+        } else if (gcd == 1){
           break;
         }
       }
-      set_val(out, 0, r_cast<double>(gcd));
+      set_val(out, 0, r_abs(gcd));
     }
     break;
   }
@@ -61,24 +61,22 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     const double *p_x = real_ptr(x);
     out = SHIELD(new_double((n == 0) ? 0 : 1));
     if (n > 0){
-      double gcd = p_x[0];
-      double agcd;
+      auto gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
         gcd = gcd2(gcd, p_x[i], na_rm, tol);
-        agcd = std::fabs(gcd);
         if (!na_rm && is_r_na(gcd)){
           break;
         }
-        if (break_early && agcd > 0.0 && agcd < (tol + tol)){
-          gcd = tol * static_cast<double>(r_sign(gcd));
+        if (break_early && gcd > 0.0 && gcd < (tol + tol)){
+          gcd = tol * r_sign(gcd);
           break;
         }
       }
       if (round && tol > 0){
         double factor = std::pow(10, std::ceil(std::fabs(std::log10(tol))) + 1);
-        gcd = std::round(gcd * factor) / factor;
+        gcd = r_round(gcd * factor) / factor;
       }
-      set_val(out, 0, gcd);
+      set_val(out, 0, r_abs(gcd));
     }
     break;
   }
