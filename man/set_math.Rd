@@ -86,11 +86,9 @@ library(cheapr)
 library(bench)
 
 x <- rnorm(2e05)
-options(cheapr.cores = 2)
 mark(
   base = exp(log(abs(x))),
   cheapr = set_exp(set_log(set_abs(x)))
 )
-options(cheapr.cores = 1)
 
 }

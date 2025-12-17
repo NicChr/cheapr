@@ -159,10 +159,11 @@ mark(col_na_counts(m),
 ```{r}
 x <- rnorm(10^6) |> 
   na_insert(10^5)
-options(cheapr.cores = 4)
+set_threads(4)
 mark(is.na(x), is_na(x))
-options(cheapr.cores = 1)
+set_threads(1)
 mark(is.na(x), is_na(x))
+set_threads(2)
 
 ### posixlt method is much faster
 hours <- as.POSIXlt(seq.int(0, length.out = 10^6, by = 3600),
@@ -354,7 +355,7 @@ lag_(1:10, -3) # Lead(3)
 
 # Using an example from data.table
 library(data.table)
-data.table::setDTthreads(1);
+data.table::setDTthreads(2);
 dt <- data.table(year=2010:2014, v1=runif(5), v2=1:5, v3=letters[1:5])
 
 # Similar to data.table::shift()

@@ -544,8 +544,6 @@ inline constexpr bool eq<Rcomplex>(const Rcomplex x, const Rcomplex y) {
   return eq(x.r, y.r) && eq(x.i, y.i);
 }
 
-namespace internal {
-
 template <typename T>
 inline void fast_fill(T *first, T *last, const T val) {
 
@@ -612,8 +610,6 @@ inline void fast_copy_n(const T *source, R_xlen_t n, T *target){
   }
 }
 
-}
-
 namespace internal {
 
 inline SEXP r_length_sym = r_null;
@@ -667,7 +663,7 @@ inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
 inline SEXP new_logical(R_xlen_t n, const r_bool_t default_value) {
   SEXP out = SHIELD(internal::new_vec(LGLSXP, n));
   r_bool_t* RESTRICT p_out = r_ptr::logical_ptr(out);
-  internal::fast_fill(p_out, p_out + n, default_value);
+  fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }
@@ -677,7 +673,7 @@ inline SEXP new_logical(R_xlen_t n){
 inline SEXP new_integer(R_xlen_t n, const int default_value){
   SEXP out = SHIELD(internal::new_vec(INTSXP, n));
   int* RESTRICT p_out = r_ptr::integer_ptr(out);
-  internal::fast_fill(p_out, p_out + n, default_value);
+  fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }
@@ -696,7 +692,7 @@ inline SEXP new_double(R_xlen_t n, const double default_value){
       p_out[i] = default_value;
     }
   } else {
-    internal::fast_fill(p_out, p_out + n, default_value);
+    fast_fill(p_out, p_out + n, default_value);
   }
   YIELD(1);
   return out;
@@ -707,7 +703,7 @@ inline SEXP new_double(R_xlen_t n){
 inline SEXP new_integer64(R_xlen_t n, const int64_t default_value){
   SEXP out = SHIELD(new_double(n));
   int64_t* RESTRICT p_out = r_ptr::integer64_ptr(out);
-  internal::fast_fill(p_out, p_out + n, default_value);
+  fast_fill(p_out, p_out + n, default_value);
   attr::set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
   YIELD(2);
   return out;
@@ -735,7 +731,7 @@ inline SEXP new_character(R_xlen_t n){
 inline SEXP new_complex(R_xlen_t n, const Rcomplex default_value){
   SEXP out = SHIELD(internal::new_vec(CPLXSXP, n));
   Rcomplex* RESTRICT p_out = r_ptr::complex_ptr(out);
-  internal::fast_fill(p_out, p_out + n, default_value);
+  fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }
@@ -745,7 +741,7 @@ inline SEXP new_complex(R_xlen_t n){
 inline SEXP new_raw(R_xlen_t n,const Rbyte default_value){
   SEXP out = SHIELD(internal::new_vec(RAWSXP, n));
   Rbyte *p_out = r_ptr::raw_ptr(out);
-  internal::fast_fill(p_out, p_out + n, default_value);
+  fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }

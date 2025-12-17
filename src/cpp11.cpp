@@ -678,6 +678,13 @@ extern "C" SEXP _cheapr_cpp_paste(SEXP x, SEXP sep, SEXP collapse) {
   END_CPP11
 }
 // utils.cpp
+int cpp_max_threads();
+extern "C" SEXP _cheapr_cpp_max_threads() {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_max_threads());
+  END_CPP11
+}
+// utils.cpp
 bool cpp_is_simple_atomic_vec(SEXP x);
 extern "C" SEXP _cheapr_cpp_is_simple_atomic_vec(SEXP x) {
   BEGIN_CPP11
@@ -900,6 +907,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_log",                     (DL_FUNC) &_cheapr_cpp_log,                     2},
     {"_cheapr_cpp_matrix_col_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_col_na_counts,    1},
     {"_cheapr_cpp_matrix_row_na_counts",    (DL_FUNC) &_cheapr_cpp_matrix_row_na_counts,    1},
+    {"_cheapr_cpp_max_threads",             (DL_FUNC) &_cheapr_cpp_max_threads,             0},
     {"_cheapr_cpp_na_init",                 (DL_FUNC) &_cheapr_cpp_na_init,                 2},
     {"_cheapr_cpp_name_repair",             (DL_FUNC) &_cheapr_cpp_name_repair,             3},
     {"_cheapr_cpp_negate",                  (DL_FUNC) &_cheapr_cpp_negate,                  1},

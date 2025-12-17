@@ -1,5 +1,4 @@
 test_that("math operations", {
-  options(cheapr.cores = 2)
 
   # The first 2 will not trigger multi-threaded calculations
   make_test_data1 <- function(){
@@ -126,11 +125,9 @@ test_that("math operations", {
   expect_equal(sqrt(abs(x)), suppressWarnings(set_sqrt(set_abs(deep_copy(x)))))
 
   expect_equal(-x, set_change_sign(deep_copy(x)))
-  options(cheapr.cores = 1)
 })
 
 test_that("more math operations", {
-  options(cheapr.cores = 2)
 
   # The first 2 will not trigger multi-threaded calculations
   make_test_data1 <- function(){
@@ -360,7 +357,6 @@ test_that("more math operations", {
     suppressWarnings(log(x, base = y)),
     suppressWarnings(set_log(deep_copy(x), y))
   )
-  options(cheapr.cores = 1)
 })
 
 test_that("zero-length vectors", {

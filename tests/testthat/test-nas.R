@@ -164,7 +164,6 @@ test_that("different classes", {
 })
 
 test_that("multiple cores", {
-  options(cheapr.cores = 2)
   set.seed(42)
   a1 <- na_insert(1:10^5, 10)
   a2 <- as.double(a1)
@@ -204,7 +203,6 @@ test_that("multiple cores", {
   expect_identical(all_na(a2), all_na2(a2))
   expect_identical(all_na(a3), all_na2(a3))
   expect_identical(all_na(a4), all_na2(a4))
-  options(cheapr.cores = 1)
 })
 
 test_that("lists", {
@@ -289,8 +287,6 @@ test_that("lists", {
     c(2L, 5L)
   )
 
-  ## Triggering parallel code
-  options(cheapr.cores = 2)
   set.seed(912389)
   df <- list(a = as.list(na_insert(sample(letters, 10^5 + 1, TRUE), n = 10^4)),
              b = na_insert(rnorm(10^5 + 1), 10^3),
@@ -315,5 +311,4 @@ test_that("lists", {
     col_na_counts(df),
     c(10000L, 1000L, 1000L, sum(is.na2(df$d)), 10000L)
   )
-  options(cheapr.cores = 1)
 })

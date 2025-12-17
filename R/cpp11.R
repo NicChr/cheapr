@@ -384,6 +384,10 @@ cpp_paste <- function(x, sep, collapse) {
   .Call(`_cheapr_cpp_paste`, x, sep, collapse)
 }
 
+cpp_max_threads <- function() {
+  .Call(`_cheapr_cpp_max_threads`)
+}
+
 cpp_is_simple_atomic_vec <- function(x) {
   .Call(`_cheapr_cpp_is_simple_atomic_vec`, x)
 }

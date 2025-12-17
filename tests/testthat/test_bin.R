@@ -1,4 +1,5 @@
-options(cheapr.cores = 2)
+
+set_threads(2)
 
 test_that("binning", {
   set.seed(42)

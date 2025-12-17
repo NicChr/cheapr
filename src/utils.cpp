@@ -5,6 +5,11 @@
 // Author: Nick Christofides
 
 [[cpp11::register]]
+int cpp_max_threads(){
+  return OMP_MAX_THREADS;
+}
+
+[[cpp11::register]]
 bool cpp_is_simple_atomic_vec(SEXP x){
   return cheapr_is_simple_atomic_vec(x);
 }
