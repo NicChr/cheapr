@@ -786,12 +786,12 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     SHIELD(out = init<r_logical_t>(out_size, false)); ++NP;
 
-    int* RESTRICT p_out = integer_ptr(out);
+    r_bool_t* RESTRICT p_out = logical_ptr(out);
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_logical_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(integer_ptr_ro(vec), m, &p_out[k]);
+      fast_copy_n(logical_ptr_ro(vec), m, &p_out[k]);
     }
     break;
   }

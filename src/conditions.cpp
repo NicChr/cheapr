@@ -111,7 +111,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     bool all_not_scalar = !yes_scalar && !no_scalar && !na_scalar;
     r_bool_t lgl;
 
-    int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+    int n_cores = get_cores(n);
 
     switch (common){
     case R_null: {

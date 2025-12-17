@@ -683,17 +683,7 @@ inline SEXP new_integer(R_xlen_t n){
 inline SEXP new_double(R_xlen_t n, const double default_value){
   SEXP out = SHIELD(internal::new_vec(REALSXP, n));
   double* RESTRICT p_out = r_ptr::real_ptr(out);
-
-  int n_cores = n >= internal::CHEAPR_OMP_THRESHOLD ? internal::num_cores() : 1;
-
-  if (n_cores > 1){
-    OMP_PARALLEL_FOR_SIMD
-    for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = default_value;
-    }
-  } else {
-    fast_fill(p_out, p_out + n, default_value);
-  }
+  fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }

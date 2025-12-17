@@ -167,7 +167,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   }
 
   R_xlen_t n = Rf_xlength(indices);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
 
   int_fast64_t out_size = na::integer64;
   bool check_indices = true;
@@ -529,8 +529,6 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out_size = ((iend - istart) / by) + 1;
   }
 
-  R_xlen_t k = 0;
-
   // Out-of-bounds
   R_xlen_t n_oob = std::max(( by > 0) ? iend - n : istart - n, (R_xlen_t) 0);
   // Adjustment for when all values are oob
@@ -552,16 +550,14 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out = SHIELD(internal::new_vec(TYPEOF(x), out_size)); ++NP;
     int* RESTRICT p_out = integer_ptr(out);
     if (double_loop){
-      safe_memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(int));
-      safe_memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(int));
+      std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
+      std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
     } else {
       if (by > 0){
-        safe_memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(int));
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = na::integer;
+        std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
+        std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::integer);
       } else {
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[i] = na::integer;
+        std::fill(p_out, p_out + n_oob, na::integer);
         OMP_FOR_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
@@ -573,18 +569,14 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out = SHIELD(new_double(out_size)); ++NP;
     double* RESTRICT p_out = real_ptr(out);
     if (double_loop){
-      safe_memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(double));
-      safe_memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(double));
+      std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
+      std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
     } else {
       if (by > 0){
-        if (in_bounds_size != 0){
-          safe_memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(double));
-        }
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[in_bounds_size + i] = na::real;
+        std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
+        std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::real);
       } else {
-        OMP_FOR_SIMD
-        for (R_xlen_t i = 0; i < n_oob; ++i) p_out[i] = na::real;
+        std::fill(p_out, p_out + n_oob, na::real);
         OMP_FOR_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
@@ -621,55 +613,41 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_x = complex_ptr(x);
+    const Rcomplex *p_x = complex_ptr_ro(x);
     out = SHIELD(new_complex(out_size)); ++NP;
     Rcomplex* RESTRICT p_out = complex_ptr(out);
     if (double_loop){
-      safe_memmove(&p_out[0], &p_x[istart1 - 1], (iend1 - istart1 + 1) * sizeof(Rcomplex));
-      safe_memmove(&p_out[iend1 - istart1 + 1], &p_x[istart2 - 1], (iend2 - istart2 + 1) * sizeof(Rcomplex));
+      std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
+      std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
     } else {
       if (by > 0){
-        if (in_bounds_size != 0){
-          safe_memmove(&p_out[0], &p_x[istart - 1], in_bounds_size * sizeof(Rcomplex));
-        }
-        for (R_xlen_t i = 0; i < n_oob; ++i){
-          R_xlen_t tempi = in_bounds_size + i;
-          p_out[tempi].r = na::real;
-          p_out[tempi].i = na::real;
-        }
+        std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
+        std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::complex);
       } else {
-        for (R_xlen_t i = 0; i < n_oob; ++i){
-          p_out[i].r = na::real;
-          p_out[i].i = na::real;
-        }
-        for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i){
-          R_xlen_t tempi = istart - i - 1;
-          p_out[tempi].r = p_x[i].r;
-          p_out[tempi].i = p_x[i].i;
-        }
+        std::fill(p_out, p_out + n_oob, na::complex);
+        OMP_FOR_SIMD
+        for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) set_val(p_out, istart - i - 1, p_x[i]);
       }
     }
     break;
   }
   case RAWSXP: {
-    Rbyte *p_x = raw_ptr(x);
+    const Rbyte *p_x = raw_ptr_ro(x);
     out = SHIELD(new_raw(out_size)); ++NP;
+    Rbyte* RESTRICT p_out = raw_ptr(out);
     if (double_loop){
-      for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
-        SET_RAW_ELT(out, k, p_x[i]);
-      }
-      for (R_xlen_t j = istart2 - 1, k = iend1; j < iend2; ++j, ++k){
-        SET_RAW_ELT(out, k, p_x[j]);
-      }
+      std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
+      std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
     } else {
       if (by > 0){
-        for (R_xlen_t i = istart - 1; i < iend; ++i){
-          SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
-        }
+        std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < n_oob; ++i) set_val(p_out, in_bounds_size + i, na::raw);
       } else {
-        for (R_xlen_t i = istart - 1; i >= iend - 1; --i){
-          SET_RAW_ELT(out, k++, i < n ? p_x[i] : 0);
-        }
+        OMP_FOR_SIMD
+        for (R_xlen_t i = 0; i < n_oob; ++i) set_val(p_out, i, na::raw);
+        OMP_FOR_SIMD
+        for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) set_val(p_out, istart - i - 1, p_x[i]);
       }
     }
     break;
@@ -801,13 +779,10 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               return out2;
             } else if (j != 0){
               if (is_r_na(pind[i]) || j > xn){
-                p_out[k].r = na::real;
-                p_out[k].i = na::real;
+                set_val(p_out, k++, na::complex);
               } else {
-                p_out[k].r = p_x[j - 1].r;
-                p_out[k].i = p_x[j - 1].i;
+                set_val(p_out, k++, p_x[j - 1]);
               }
-              ++k;
             }
 
           }
@@ -941,7 +916,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
-            p_out[k++] = p_x[--j];
+            set_val(p_out, k++, p_x[--j]);
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
@@ -949,8 +924,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            p_out[k].r = na::real;
-            p_out[k++].i = na::real;
+            set_val(p_out, k++, na::complex);
           }
         }
         break;
@@ -1097,7 +1071,6 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         const int *p_x = integer_ptr_ro(x);
         out = SHIELD(internal::new_vec(xtype, n));
         int* RESTRICT p_out = integer_ptr(out);
-        OMP_FOR_SIMD
         for (int i = 0; i != n; ++i){
           p_out[i] = p_x[pind[i] - 1];
         }
@@ -1107,7 +1080,6 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         const double *p_x = real_ptr_ro(x);
         out = SHIELD(new_double(n));
         double* RESTRICT p_out = real_ptr(out);
-        OMP_FOR_SIMD
         for (int i = 0; i != n; ++i){
           p_out[i] = p_x[pind[i] - 1];
         }
@@ -1126,15 +1098,17 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         out = SHIELD(new_complex(n));
         Rcomplex* RESTRICT p_out = complex_ptr(out);
         for (int i = 0; i != n; ++i){
-          p_out[i].r = p_x[pind[i] - 1].r;
-          p_out[i].i = p_x[pind[i] - 1].i;
+          set_val(p_out, i, p_x[pind[i] - 1]);
         }
         break;
       }
       case RAWSXP: {
         const Rbyte *p_x = raw_ptr_ro(x);
         out = SHIELD(new_raw(n));
-        for (int i = 0; i != n; ++i) SET_RAW_ELT(out, i, p_x[pind[i] - 1]);
+        Rbyte* RESTRICT p_out = raw_ptr(out);
+        for (int i = 0; i != n; ++i){
+          set_val(p_out, i, p_x[pind[i] - 1]);
+        }
         break;
       }
       case VECSXP: {

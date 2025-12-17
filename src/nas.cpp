@@ -75,7 +75,7 @@ R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
   int32_t NP = 0;
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
   bool do_parallel = n_cores > 1;
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
@@ -265,7 +265,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
 [[cpp11::register]]
 SEXP cpp_is_na(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
   SEXP out;
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {

@@ -418,7 +418,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
 [[cpp11::register]]
 SEXP cpp_lgl_count(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = n >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+  int n_cores = get_cores(n);
 
   const r_bool_t *p_x = logical_ptr_ro(x);
 
