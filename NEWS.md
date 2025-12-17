@@ -19,6 +19,9 @@ switches to using doubles internally, returning a double value.
 
 - `if_else_` can now handle data frames and is fully SIMD parallelised.
 
+- Fixed an issue where the package wasn't installing for older versions of R.
+Thanks @ChampLeeTX
+
 ### New features 
 
 - The C/C++ API has been re-written to use pure R C API code internally.
