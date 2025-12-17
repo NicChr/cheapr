@@ -228,6 +228,10 @@ cpp_log <- function(x, base) {
   .Call(`_cheapr_cpp_log`, x, base)
 }
 
+cpp_round <- function(x, digits) {
+  .Call(`_cheapr_cpp_round`, x, digits)
+}
+
 cpp_set_add <- function(x, y) {
   .Call(`_cheapr_cpp_set_add`, x, y)
 }

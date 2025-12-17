@@ -46,13 +46,13 @@ set_multiply(x, y)
 set_divide(x, y)
 }
 \arguments{
-\item{x}{A numeric vector.}
+\item{x}{\verb{[numeric(n)]} vector.}
 
-\item{digits}{Number of digits to round to.}
+\item{digits}{\verb{[numeric(n)]} - Number of digits to round to.}
 
-\item{base}{Logarithm base.}
+\item{base}{\verb{[numeric(n)]} - Logarithm base.}
 
-\item{y}{A numeric vector.}
+\item{y}{\verb{[numeric(n)]} vector.}
 }
 \value{
 The exact same object with no copy made, just transformed.

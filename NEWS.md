@@ -2,6 +2,8 @@
 
 cheapr 1.5.0 supersedes cheapr 1.4.0
 
+- A new rich set of parallelised math functions like `abs_`, `round_` and more.
+
 - Plain list vectors are now never regarded as `NA` even if they contain `NA`
 elements.
 

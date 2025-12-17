@@ -1,7 +1,15 @@
 #' Parallelised math operations
 #'
-#' @param x A numeric vector.
-
+#' @name math
+#'
+#' @param x `[numeric(n)]` vector.
+#' @param y `[numeric(n)]` vector.
+#' @param digits `[numeric(n)]` - Number of digits to round to.
+#' @param base `[numeric(n)]` - Logarithm base.
+#'
+#' @returns
+#' A transformed integer or double vector.
+#'
 #' @rdname math
 #' @export
 abs_ <- cpp_abs
@@ -25,6 +33,9 @@ exp_ <- cpp_exp
 sqrt_ <- cpp_sqrt
 #' @rdname math
 #' @export
+sign_ <- cpp_int_sign
+#' @rdname math
+#' @export
 log_ <- function(x, base = exp(1)){
   cpp_log(x, base)
 }
@@ -32,4 +43,9 @@ log_ <- function(x, base = exp(1)){
 #' @export
 log10_ <- function(x){
   cpp_log(x, base = 10)
+}
+#' @rdname math
+#' @export
+round_ <- function(x, digits = 0){
+  cpp_round(x, digits)
 }

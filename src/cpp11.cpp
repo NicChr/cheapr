@@ -405,6 +405,13 @@ extern "C" SEXP _cheapr_cpp_log(SEXP x, SEXP base) {
   END_CPP11
 }
 // math.cpp
+SEXP cpp_round(SEXP x, SEXP digits);
+extern "C" SEXP _cheapr_cpp_round(SEXP x, SEXP digits) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_round(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(digits)));
+  END_CPP11
+}
+// math.cpp
 SEXP cpp_set_add(SEXP x, SEXP y);
 extern "C" SEXP _cheapr_cpp_set_add(SEXP x, SEXP y) {
   BEGIN_CPP11
@@ -908,6 +915,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_rep_len",                 (DL_FUNC) &_cheapr_cpp_rep_len,                 2},
     {"_cheapr_cpp_replace",                 (DL_FUNC) &_cheapr_cpp_replace,                 5},
     {"_cheapr_cpp_rev",                     (DL_FUNC) &_cheapr_cpp_rev,                     2},
+    {"_cheapr_cpp_round",                   (DL_FUNC) &_cheapr_cpp_round,                   2},
     {"_cheapr_cpp_row_na_counts",           (DL_FUNC) &_cheapr_cpp_row_na_counts,           2},
     {"_cheapr_cpp_semi_copy",               (DL_FUNC) &_cheapr_cpp_semi_copy,               1},
     {"_cheapr_cpp_sequence",                (DL_FUNC) &_cheapr_cpp_sequence,                5},

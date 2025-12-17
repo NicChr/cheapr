@@ -36,6 +36,9 @@ if (n_cores > 1){                                              \
   CHEAPR_MATH_LOOP(FUN);                                       \
 }
 
+// For fns like log(x, base)
+// where length(base) == length(x)
+
 #define CHEAPR_MATH_LOOP2(FUN)                                                                     \
 for (R_xlen_t i = 0; i < n; ++i){                                                                  \
   p_out[i] = FUN(p_x[i], p_y[i]);                                                                  \
@@ -52,10 +55,11 @@ if (n_cores > 1){                                                        \
 
 
 // For fns like log(x, base) and round(x, digits)
+// where length(base) == 1
 
 #define CHEAPR_MATH_LOOP3(FUN)                                                                     \
 for (R_xlen_t i = 0; i < n; ++i){                                                                  \
-  p_out[i] = FUN(p_x[i], y);                                                                  \
+  p_out[i] = FUN(p_x[i], y);                                                                       \
 }
 
 #define CHEAPR_PARALLEL_MATH_LOOP3(FUN)                                  \
@@ -114,18 +118,17 @@ SEXP cpp_abs(SEXP x){
   switch (TYPEOF(x)){
   case INTSXP: {
     out = SHIELD(new_integer(n));
-
-  int *p_x = integer_ptr(x);
-  int* RESTRICT p_out = integer_ptr(out);
-  CHEAPR_PARALLEL_MATH_LOOP(r_abs)
-    break;
+    int *p_x = integer_ptr(x);
+    int* RESTRICT p_out = integer_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_abs)
+      break;
   }
   default: {
-  out = SHIELD(new_double(n));
-  const double *p_x = real_ptr_ro(x);
-  double* RESTRICT p_out = real_ptr(out);
-  CHEAPR_PARALLEL_MATH_LOOP(r_abs)
-    break;
+    out = SHIELD(new_double(n));
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_abs)
+      break;
   }
   }
   YIELD(1);
@@ -328,13 +331,13 @@ SEXP cpp_exp(SEXP x){
     const int *p_x = integer_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_exp)
-    break;
+      break;
   }
   default: {
     const double *p_x = real_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_exp)
-    break;
+      break;
   }
   }
   YIELD(1);
@@ -373,13 +376,13 @@ SEXP cpp_sqrt(SEXP x){
     const int *p_x = integer_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_sqrt)
-    break;
+      break;
   }
   default: {
     const double *p_x = real_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_sqrt)
-    break;
+      break;
   }
   }
   YIELD(1);
@@ -388,83 +391,119 @@ SEXP cpp_sqrt(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_log(SEXP x, SEXP base){
+  int32_t NP = 0;
   check_numeric(x);
   check_numeric(base);
-  SHIELD(base = coerce_vec(base, REALSXP));
+  SHIELD(base = coerce_vec(base, REALSXP)); ++NP;
+  R_xlen_t n = Rf_xlength(x);
   R_xlen_t basen = Rf_xlength(base);
-  bool use_natural_log = basen == 1 && real_ptr(base)[0] == std::exp(1);
-  bool use_base10 = basen == 1 && real_ptr(base)[0] == 10;
+  int n_cores = get_cores(n);
+  bool is_base_scalar = basen == 1;
+  double *p_y = real_ptr(base);
+  double y;
+  if (is_base_scalar){
+    y = p_y[0];
+  }
+  bool use_natural_log = is_base_scalar && y == std::exp(1);
+  bool use_base10 = is_base_scalar && y == 10;
+  bool recycle = !is_base_scalar;
 
-  if (use_natural_log){
-    R_xlen_t n = Rf_xlength(x);
-    int n_cores = get_cores(n);
-    SEXP out = SHIELD(new_double(n));
-    switch (TYPEOF(x)){
-    case INTSXP: {
-      const int *p_x = integer_ptr_ro(x);
-      double* RESTRICT p_out = real_ptr(out);
-      CHEAPR_PARALLEL_MATH_LOOP(r_log)
-        break;
-    }
-    default: {
-      const double *p_x = real_ptr_ro(x);
-      double* RESTRICT p_out = real_ptr(out);
-      CHEAPR_PARALLEL_MATH_LOOP(r_log)
-        break;
-    }
-    }
-    YIELD(2);
-    return out;
-  } else if (use_base10){
-    R_xlen_t n = Rf_xlength(x);
-    int n_cores = get_cores(n);
-    SEXP out = SHIELD(new_double(n));
-    switch (TYPEOF(x)){
-    case INTSXP: {
-      const int *p_x = integer_ptr_ro(x);
-      double* RESTRICT p_out = real_ptr(out);
-      CHEAPR_PARALLEL_MATH_LOOP(r_log10)
-        break;
-    }
-    default: {
-      const double *p_x = real_ptr_ro(x);
-      double* RESTRICT p_out = real_ptr(out);
-      CHEAPR_PARALLEL_MATH_LOOP(r_log10)
-        break;
-    }
-    }
-    YIELD(2);
-    return out;
-  } else {
-    SEXP recycled_objs = SHIELD(make_list(x, base));
-    SHIELD(recycled_objs = cpp_recycle(recycled_objs, r_null));
+  if (recycle){
+    SEXP recycled_objs = SHIELD(make_list(x, base)); ++NP;
+    n = length_common(recycled_objs);
+    recycle_in_place(recycled_objs, n);
     x = VECTOR_ELT(recycled_objs, 0);
     base = VECTOR_ELT(recycled_objs, 1);
-
-    R_xlen_t n = Rf_xlength(x);
-
-    double *p_y = real_ptr(base);
-
-    int n_cores = get_cores(n);
-    SEXP out = SHIELD(new_double(n));
-    switch (TYPEOF(x)){
-    case INTSXP: {
-      const int *p_x = integer_ptr_ro(x);
-      double* RESTRICT p_out = real_ptr(out);
-      CHEAPR_PARALLEL_MATH_LOOP2(r_log)
-        break;
-    }
-    default: {
-      const double *p_x = real_ptr_ro(x);
-      double* RESTRICT p_out = real_ptr(out);
-      CHEAPR_PARALLEL_MATH_LOOP2(r_log)
-        break;
-    }
-    }
-    YIELD(4);
-    return out;
+    p_y = real_ptr(base);
   }
 
+  SEXP out = SHIELD(new_double(n)); ++NP;
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    const int *p_x = integer_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    if (use_natural_log){
+      CHEAPR_PARALLEL_MATH_LOOP(r_log)
+    } else if (use_base10){
+      CHEAPR_PARALLEL_MATH_LOOP(r_log10)
+    } else if (is_base_scalar){
+      CHEAPR_PARALLEL_MATH_LOOP3(r_log)
+    } else {
+      CHEAPR_PARALLEL_MATH_LOOP2(r_log)
+    }
+    break;
+  }
+  default: {
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    if (use_natural_log){
+      CHEAPR_PARALLEL_MATH_LOOP(r_log)
+    } else if (use_base10){
+      CHEAPR_PARALLEL_MATH_LOOP(r_log10)
+    } else if (is_base_scalar){
+      CHEAPR_PARALLEL_MATH_LOOP3(r_log)
+    } else {
+      CHEAPR_PARALLEL_MATH_LOOP2(r_log)
+    }
+    break;
+  }
+  }
+  YIELD(NP);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_round(SEXP x, SEXP digits){
+  int32_t NP = 0;
+  check_numeric(x);
+  check_numeric(digits);
+  SHIELD(digits = coerce_vec(digits, INTSXP)); ++NP;
+  R_xlen_t n = Rf_xlength(x);
+  R_xlen_t digitsn = Rf_xlength(digits);
+  int n_cores = get_cores(n);
+  bool is_digits_scalar = digitsn == 1;
+  int *p_y = integer_ptr(digits);
+  int y;
+  if (is_digits_scalar){
+    y = p_y[0];
+  }
+  bool recycle = !is_digits_scalar;
+
+  if (recycle){
+    SEXP recycled_objs = SHIELD(make_list(x, digits)); ++NP;
+    n = length_common(recycled_objs);
+    recycle_in_place(recycled_objs, n);
+    x = VECTOR_ELT(recycled_objs, 0);
+    digits = VECTOR_ELT(recycled_objs, 1);
+    p_y = integer_ptr(digits);
+  }
+
+  SEXP out;
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    out = x;
+    break;
+  }
+  default: {
+    out = SHIELD(new_double(n)); ++NP;
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    if (is_digits_scalar){
+      // If digits == 0 we call r_round(x) instead of r_round(x, digits)
+      // Which has a more efficient method
+      if (y == 0){
+        CHEAPR_PARALLEL_MATH_LOOP(r_round)
+      } else {
+        CHEAPR_PARALLEL_MATH_LOOP3(r_round)
+      }
+    } else {
+      CHEAPR_PARALLEL_MATH_LOOP2(r_round)
+    }
+    break;
+  }
+  }
+  YIELD(NP);
+  return out;
 }
 
 [[cpp11::register]]
@@ -861,7 +900,8 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
 [[cpp11::register]]
 SEXP cpp_int_sign(SEXP x){
   check_numeric(x);
-  uint_fast64_t n = Rf_xlength(x);
+  R_xlen_t n = Rf_xlength(x);
+  int n_cores = get_cores(n);
   SEXP out = SHIELD(vec::new_integer(n));
   int* RESTRICT p_out = integer_ptr(out);
   switch (TYPEOF(x)){
@@ -872,18 +912,12 @@ SEXP cpp_int_sign(SEXP x){
   }
   case INTSXP: {
     const int *p_x = integer_ptr(x);
-    OMP_FOR_SIMD
-    for (uint_fast64_t i = 0; i < n; ++i) {
-      p_out[i] = r_sign(p_x[i]);
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(r_sign)
     break;
   }
-  case REALSXP: {
+  default: {
     double *p_x = real_ptr(x);
-    OMP_FOR_SIMD
-    for (uint_fast64_t i = 0; i < n; ++i) {
-      p_out[i] = r_sign(p_x[i]);
-    }
+    CHEAPR_PARALLEL_MATH_LOOP(r_sign)
     break;
   }
   }
