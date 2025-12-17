@@ -1343,7 +1343,7 @@ inline double r_abs(Rcomplex x){
 
 template<typename T>
 inline T r_floor(T x){
-  return is_r_na(x) ? x : static_cast<T>(std::floor(x));
+  return is_r_na(x) ? x : std::floor(x);
 }
 template<>
 inline double r_floor(double x){
@@ -1352,7 +1352,7 @@ inline double r_floor(double x){
 
 template<typename T>
 inline T r_ceiling(T x){
-  return is_r_na(x) ? x : static_cast<T>(std::ceil(x));
+  return is_r_na(x) ? x : std::ceil(x);
 }
 template<>
 inline double r_ceiling(double x){
@@ -1383,16 +1383,76 @@ inline double r_negate(double x){
   return -x;
 }
 
-inline double r_round(double x, const int digits = 0){
+template<typename T>
+inline double r_sqrt(T x){
+  return std::sqrt(r_cast<double>(x));
+}
+
+template<typename T>
+inline double r_pow(T x, T y){
+  return std::pow(r_cast<double>(x), r_cast<double>(y));
+}
+
+template<typename T>
+inline double r_log10(T x){
+  return std::log10(r_cast<double>(x));
+}
+
+template<typename T>
+inline double r_exp(T x){
+  return std::exp(r_cast<double>(x));
+}
+
+template<typename T, typename U>
+inline double r_log(T x, U base){
+  return std::log(r_cast<double>(x)) / std::log(r_cast<double>(base));
+}
+template<typename T>
+inline double r_log(T x){
+  return std::log(r_cast<double>(x));
+}
+inline Rcomplex r_log(Rcomplex x){
   if (is_r_na(x)){
     return x;
+  }
+  Rcomplex out;
+  out.r = 0.5 * (r_log(r_pow(x.r, 2.0) + r_pow(x.i, 2.0)));
+  out.i = std::atan2(r_cast<double>(x.i), r_cast<double>(x.r));
+  return out;
+}
+
+
+template<typename T, typename U>
+inline double r_round(T x, U digits){
+  if (is_r_na(x)){
+    return r_cast<double>(x);
   } else if (is_r_na(digits)){
     return na::real;
   } else {
-    double scale = std::pow(10, digits);
-    return internal::round_to_even(x * scale) / scale;
+    double scale = std::pow(10, r_cast<double>(digits));
+    return internal::round_to_even(r_cast<double>(x) * scale) / scale;
   }
 }
+
+template<typename T>
+inline double r_round(T x){
+  if (is_r_na(x)){
+    return r_cast<double>(x);
+  } else {
+    return internal::round_to_even(r_cast<double>(x));
+  }
+}
+
+// inline double r_round(double x, const int digits = 0){
+//   if (is_r_na(x)){
+//     return x;
+//   } else if (is_r_na(digits)){
+//     return na::real;
+//   } else {
+//     double scale = std::pow(10, digits);
+//     return internal::round_to_even(x * scale) / scale;
+//   }
+// }
 
 inline double r_signif(double x, const int digits = 6){
   if (is_r_na(x)){

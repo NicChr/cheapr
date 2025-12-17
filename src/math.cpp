@@ -23,8 +23,8 @@ SEXP check_transform_altrep(SEXP x){
 }
 
 #define CHEAPR_MATH_LOOP(FUN)                                               \
-for (R_xlen_t i = 0; i < n; ++i) {                                          \
-  p_out[i] = FUN(p_out[i]);                                                 \
+for (R_xlen_t i = 0; i < n; ++i){                                           \
+  p_out[i] = FUN(p_x[i]);                                                   \
 }
 
 #define CHEAPR_PARALLEL_MATH_LOOP(FUN)                         \
@@ -34,6 +34,37 @@ if (n_cores > 1){                                              \
 } else {                                                       \
   OMP_FOR_SIMD                                                 \
   CHEAPR_MATH_LOOP(FUN);                                       \
+}
+
+#define CHEAPR_MATH_LOOP2(FUN)                                                                     \
+for (R_xlen_t i = 0; i < n; ++i){                                                                  \
+  p_out[i] = FUN(p_x[i], p_y[i]);                                                                  \
+}
+
+#define CHEAPR_PARALLEL_MATH_LOOP2(FUN)                                  \
+if (n_cores > 1){                                                        \
+  OMP_PARALLEL_FOR_SIMD                                                  \
+  CHEAPR_MATH_LOOP2(FUN)                                                 \
+} else {                                                                 \
+  OMP_FOR_SIMD                                                           \
+  CHEAPR_MATH_LOOP2(FUN)                                                 \
+}
+
+
+// For fns like log(x, base) and round(x, digits)
+
+#define CHEAPR_MATH_LOOP3(FUN)                                                                     \
+for (R_xlen_t i = 0; i < n; ++i){                                                                  \
+  p_out[i] = FUN(p_x[i], y);                                                                  \
+}
+
+#define CHEAPR_PARALLEL_MATH_LOOP3(FUN)                                  \
+if (n_cores > 1){                                                        \
+  OMP_PARALLEL_FOR_SIMD                                                  \
+  CHEAPR_MATH_LOOP3(FUN)                                                 \
+} else {                                                                 \
+  OMP_FOR_SIMD                                                           \
+  CHEAPR_MATH_LOOP3(FUN)                                                 \
 }
 
 // Convert integer vector to plain double vector
@@ -59,12 +90,41 @@ SEXP cpp_set_abs(SEXP x){
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = integer_ptr(out);
+    int *p_x = p_out;
     CHEAPR_PARALLEL_MATH_LOOP(r_abs)
-    break;
+      break;
   }
   default: {
     double *p_out = real_ptr(out);
+    double *p_x = p_out;
     CHEAPR_PARALLEL_MATH_LOOP(r_abs)
+      break;
+  }
+  }
+  YIELD(1);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_abs(SEXP x){
+  check_numeric(x);
+  R_xlen_t n = Rf_xlength(x);
+  int n_cores = get_cores(n);
+  SEXP out;
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    out = SHIELD(new_integer(n));
+
+  int *p_x = integer_ptr(x);
+  int* RESTRICT p_out = integer_ptr(out);
+  CHEAPR_PARALLEL_MATH_LOOP(r_abs)
+    break;
+  }
+  default: {
+  out = SHIELD(new_double(n));
+  const double *p_x = real_ptr_ro(x);
+  double* RESTRICT p_out = real_ptr(out);
+  CHEAPR_PARALLEL_MATH_LOOP(r_abs)
     break;
   }
   }
@@ -80,7 +140,31 @@ SEXP cpp_set_floor(SEXP x){
   int n_cores = get_cores(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
+    double *p_x = p_out;
     CHEAPR_PARALLEL_MATH_LOOP(r_floor)
+  }
+  YIELD(1);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_floor(SEXP x){
+  check_numeric(x);
+  R_xlen_t n = Rf_xlength(x);
+  int n_cores = get_cores(n);
+  SEXP out;
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    out = SHIELD(x);
+    break;
+  }
+  default: {
+    out = SHIELD(new_double(n));
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_floor)
+      break;
+  }
   }
   YIELD(1);
   return out;
@@ -94,7 +178,31 @@ SEXP cpp_set_ceiling(SEXP x){
   int n_cores = get_cores(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
+    double *p_x = p_out;
     CHEAPR_PARALLEL_MATH_LOOP(r_ceiling)
+  }
+  YIELD(1);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_ceiling(SEXP x){
+  check_numeric(x);
+  R_xlen_t n = Rf_xlength(x);
+  int n_cores = get_cores(n);
+  SEXP out;
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    out = SHIELD(x);
+    break;
+  }
+  default: {
+    out = SHIELD(new_double(n));
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_ceiling)
+      break;
+  }
   }
   YIELD(1);
   return out;
@@ -108,7 +216,31 @@ SEXP cpp_set_trunc(SEXP x){
   int n_cores = get_cores(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
+    double *p_x = p_out;
     CHEAPR_PARALLEL_MATH_LOOP(r_trunc)
+  }
+  YIELD(1);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_trunc(SEXP x){
+  check_numeric(x);
+  R_xlen_t n = Rf_xlength(x);
+  int n_cores = get_cores(n);
+  SEXP out;
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    out = SHIELD(x);
+    break;
+  }
+  default: {
+    out = SHIELD(new_double(n));
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_trunc)
+      break;
+  }
   }
   YIELD(1);
   return out;
@@ -123,11 +255,39 @@ SEXP cpp_set_change_sign(SEXP x){
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = integer_ptr(out);
+    int *p_x = p_out;
     CHEAPR_PARALLEL_MATH_LOOP(r_negate)
       break;
   }
   case REALSXP: {
     double *p_out = real_ptr(out);
+    double *p_x = p_out;
+    CHEAPR_PARALLEL_MATH_LOOP(r_negate)
+      break;
+  }
+  }
+  YIELD(1);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_negate(SEXP x){
+  check_numeric(x);
+  R_xlen_t n = Rf_xlength(x);
+  int n_cores = get_cores(n);
+  SEXP out;
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    out = SHIELD(new_integer(n));
+    const int *p_x = integer_ptr_ro(x);
+    int* RESTRICT p_out = integer_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_negate)
+      break;
+  }
+  default: {
+    out = SHIELD(new_double(n));
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_negate)
       break;
   }
@@ -151,8 +311,33 @@ SEXP cpp_set_exp(SEXP x){
     out = SHIELD(check_transform_altrep(x));
   }
   double *p_out = real_ptr(out);
-  CHEAPR_PARALLEL_MATH_LOOP(std::exp)
+  double *p_x = p_out;
+  CHEAPR_PARALLEL_MATH_LOOP(r_exp)
     YIELD(1);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_exp(SEXP x){
+  check_numeric(x);
+  R_xlen_t n = Rf_xlength(x);
+  int n_cores = get_cores(n);
+  SEXP out = SHIELD(new_double(n));
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    const int *p_x = integer_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_exp)
+    break;
+  }
+  default: {
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_exp)
+    break;
+  }
+  }
+  YIELD(1);
   return out;
 }
 
@@ -171,9 +356,115 @@ SEXP cpp_set_sqrt(SEXP x){
     out = SHIELD(check_transform_altrep(x));
   }
   double *p_out = real_ptr(out);
-  CHEAPR_PARALLEL_MATH_LOOP(std::sqrt)
+  double *p_x = p_out;
+  CHEAPR_PARALLEL_MATH_LOOP(r_sqrt)
     YIELD(1);
   return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_sqrt(SEXP x){
+  check_numeric(x);
+  R_xlen_t n = Rf_xlength(x);
+  int n_cores = get_cores(n);
+  SEXP out = SHIELD(new_double(n));
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    const int *p_x = integer_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_sqrt)
+    break;
+  }
+  default: {
+    const double *p_x = real_ptr_ro(x);
+    double* RESTRICT p_out = real_ptr(out);
+    CHEAPR_PARALLEL_MATH_LOOP(r_sqrt)
+    break;
+  }
+  }
+  YIELD(1);
+  return out;
+}
+
+[[cpp11::register]]
+SEXP cpp_log(SEXP x, SEXP base){
+  check_numeric(x);
+  check_numeric(base);
+  SHIELD(base = coerce_vec(base, REALSXP));
+  R_xlen_t basen = Rf_xlength(base);
+  bool use_natural_log = basen == 1 && real_ptr(base)[0] == std::exp(1);
+  bool use_base10 = basen == 1 && real_ptr(base)[0] == 10;
+
+  if (use_natural_log){
+    R_xlen_t n = Rf_xlength(x);
+    int n_cores = get_cores(n);
+    SEXP out = SHIELD(new_double(n));
+    switch (TYPEOF(x)){
+    case INTSXP: {
+      const int *p_x = integer_ptr_ro(x);
+      double* RESTRICT p_out = real_ptr(out);
+      CHEAPR_PARALLEL_MATH_LOOP(r_log)
+        break;
+    }
+    default: {
+      const double *p_x = real_ptr_ro(x);
+      double* RESTRICT p_out = real_ptr(out);
+      CHEAPR_PARALLEL_MATH_LOOP(r_log)
+        break;
+    }
+    }
+    YIELD(2);
+    return out;
+  } else if (use_base10){
+    R_xlen_t n = Rf_xlength(x);
+    int n_cores = get_cores(n);
+    SEXP out = SHIELD(new_double(n));
+    switch (TYPEOF(x)){
+    case INTSXP: {
+      const int *p_x = integer_ptr_ro(x);
+      double* RESTRICT p_out = real_ptr(out);
+      CHEAPR_PARALLEL_MATH_LOOP(r_log10)
+        break;
+    }
+    default: {
+      const double *p_x = real_ptr_ro(x);
+      double* RESTRICT p_out = real_ptr(out);
+      CHEAPR_PARALLEL_MATH_LOOP(r_log10)
+        break;
+    }
+    }
+    YIELD(2);
+    return out;
+  } else {
+    SEXP recycled_objs = SHIELD(make_list(x, base));
+    SHIELD(recycled_objs = cpp_recycle(recycled_objs, r_null));
+    x = VECTOR_ELT(recycled_objs, 0);
+    base = VECTOR_ELT(recycled_objs, 1);
+
+    R_xlen_t n = Rf_xlength(x);
+
+    double *p_y = real_ptr(base);
+
+    int n_cores = get_cores(n);
+    SEXP out = SHIELD(new_double(n));
+    switch (TYPEOF(x)){
+    case INTSXP: {
+      const int *p_x = integer_ptr_ro(x);
+      double* RESTRICT p_out = real_ptr(out);
+      CHEAPR_PARALLEL_MATH_LOOP2(r_log)
+        break;
+    }
+    default: {
+      const double *p_x = real_ptr_ro(x);
+      double* RESTRICT p_out = real_ptr(out);
+      CHEAPR_PARALLEL_MATH_LOOP2(r_log)
+        break;
+    }
+    }
+    YIELD(4);
+    return out;
+  }
+
 }
 
 [[cpp11::register]]
@@ -471,7 +762,7 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
     for (R_xlen_t i = 0; i < xn; recycle_index(yi, yn), ++i) {
-      p_x[i] = std::pow(r_cast<double>(p_x[i]), r_cast<double>(p_y[yi]));
+      p_x[i] = r_pow(r_cast<double>(p_x[i]), r_cast<double>(p_y[yi]));
     }
     break;
   }
@@ -479,7 +770,7 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
     double *p_x = real_ptr(out);
     double *p_y = real_ptr(y);
     for (R_xlen_t i = 0; i < xn; recycle_index(yi, yn), ++i) {
-      p_x[i] = std::pow(p_x[i], p_y[yi]);
+      p_x[i] = r_pow(p_x[i], p_y[yi]);
     }
     break;
   }
@@ -494,6 +785,7 @@ SEXP cpp_set_log(SEXP x, SEXP base){
   check_numeric(base);
   R_xlen_t xn = Rf_xlength(x);
   R_xlen_t basen = Rf_xlength(base);
+  R_xlen_t basei = 0;
   if (xn > 0){
     if (basen > xn){
       Rf_error("length(base) must be <= length(x)");
@@ -502,7 +794,6 @@ SEXP cpp_set_log(SEXP x, SEXP base){
       Rf_error("length(base) must be be non-zero");
     }
   }
-  int n_cores = xn >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
   SEXP out;
   if (!Rf_isReal(x)){
     copy_warning();
@@ -512,20 +803,8 @@ SEXP cpp_set_log(SEXP x, SEXP base){
   }
   double *p_x = real_ptr(out);
   double *p_base = real_ptr(base);
-  if (n_cores > 1){
-    OMP_PARALLEL_FOR_SIMD
-    for (R_xlen_t i = 0; i < xn; ++i) {
-      R_xlen_t basei = i % basen;
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_base[basei])) ?
-      na::real : std::log(p_x[i]) / std::log(p_base[basei]);
-    }
-  } else {
-    OMP_FOR_SIMD
-    for (R_xlen_t i = 0; i < xn; ++i) {
-      R_xlen_t basei = i % basen;
-      p_x[i] = (is_r_na(p_x[i]) || is_r_na(p_base[basei])) ?
-      na::real : std::log(p_x[i]) / std::log(p_base[basei]);
-    }
+  for (R_xlen_t i = 0; i < xn; recycle_index(basei, basen), ++i) {
+    p_x[i] = r_log(p_x[i], p_base[basei]);
   }
   YIELD(1);
   return out;
@@ -560,7 +839,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
       const int *p_digits = integer_ptr(digits);
       for (uint_fast64_t i = 0; i < xn;
       recycle_index(digitsi, digitsn), ++i) {
-        p_x[i] = r_round(p_x[i], r_cast<double>(p_digits[digitsi]));
+        p_x[i] = r_round(p_x[i], p_digits[digitsi]);
       }
       break;
     }

@@ -5,10 +5,14 @@ cheapr 1.5.0 supersedes cheapr 1.4.0
 - Plain list vectors are now never regarded as `NA` even if they contain `NA`
 elements.
 
+- Parallelisation is internally used more frequently for operations like 
+creating new vectors, combining vectors, filling, copying and replacing data.
+To use more than 1 thread/core, use `options(cheapr.cores = )`.
+
 - `scm` now better detects when integer (32-bit and 64-bit) overflow occurs and
 switches to using doubles internally, returning a double value.
 
-- `if_else_` can now handle data frames.
+- `if_else_` can now handle data frames and is fully SIMD parallelised.
 
 ### New features 
 

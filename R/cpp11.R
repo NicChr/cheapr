@@ -168,6 +168,98 @@ cpp_as_df <- function(x) {
   .Call(`_cheapr_cpp_as_df`, x)
 }
 
+cpp_set_abs <- function(x) {
+  .Call(`_cheapr_cpp_set_abs`, x)
+}
+
+cpp_abs <- function(x) {
+  .Call(`_cheapr_cpp_abs`, x)
+}
+
+cpp_set_floor <- function(x) {
+  .Call(`_cheapr_cpp_set_floor`, x)
+}
+
+cpp_floor <- function(x) {
+  .Call(`_cheapr_cpp_floor`, x)
+}
+
+cpp_set_ceiling <- function(x) {
+  .Call(`_cheapr_cpp_set_ceiling`, x)
+}
+
+cpp_ceiling <- function(x) {
+  .Call(`_cheapr_cpp_ceiling`, x)
+}
+
+cpp_set_trunc <- function(x) {
+  .Call(`_cheapr_cpp_set_trunc`, x)
+}
+
+cpp_trunc <- function(x) {
+  .Call(`_cheapr_cpp_trunc`, x)
+}
+
+cpp_set_change_sign <- function(x) {
+  .Call(`_cheapr_cpp_set_change_sign`, x)
+}
+
+cpp_negate <- function(x) {
+  .Call(`_cheapr_cpp_negate`, x)
+}
+
+cpp_set_exp <- function(x) {
+  .Call(`_cheapr_cpp_set_exp`, x)
+}
+
+cpp_exp <- function(x) {
+  .Call(`_cheapr_cpp_exp`, x)
+}
+
+cpp_set_sqrt <- function(x) {
+  .Call(`_cheapr_cpp_set_sqrt`, x)
+}
+
+cpp_sqrt <- function(x) {
+  .Call(`_cheapr_cpp_sqrt`, x)
+}
+
+cpp_log <- function(x, base) {
+  .Call(`_cheapr_cpp_log`, x, base)
+}
+
+cpp_set_add <- function(x, y) {
+  .Call(`_cheapr_cpp_set_add`, x, y)
+}
+
+cpp_set_subtract <- function(x, y) {
+  .Call(`_cheapr_cpp_set_subtract`, x, y)
+}
+
+cpp_set_multiply <- function(x, y) {
+  .Call(`_cheapr_cpp_set_multiply`, x, y)
+}
+
+cpp_set_divide <- function(x, y) {
+  .Call(`_cheapr_cpp_set_divide`, x, y)
+}
+
+cpp_set_pow <- function(x, y) {
+  .Call(`_cheapr_cpp_set_pow`, x, y)
+}
+
+cpp_set_log <- function(x, base) {
+  .Call(`_cheapr_cpp_set_log`, x, base)
+}
+
+cpp_set_round <- function(x, digits) {
+  .Call(`_cheapr_cpp_set_round`, x, digits)
+}
+
+cpp_int_sign <- function(x) {
+  .Call(`_cheapr_cpp_int_sign`, x)
+}
+
 cpp_num_na <- function(x, recursive) {
   .Call(`_cheapr_cpp_num_na`, x, recursive)
 }
@@ -254,66 +346,6 @@ cpp_lead_sequence <- function(size, k, partial) {
 
 cpp_fixed_width_breaks <- function(start, end, n, pretty, expand_min, expand_max) {
   .Call(`_cheapr_cpp_fixed_width_breaks`, start, end, n, pretty, expand_min, expand_max)
-}
-
-cpp_set_abs <- function(x) {
-  .Call(`_cheapr_cpp_set_abs`, x)
-}
-
-cpp_set_floor <- function(x) {
-  .Call(`_cheapr_cpp_set_floor`, x)
-}
-
-cpp_set_ceiling <- function(x) {
-  .Call(`_cheapr_cpp_set_ceiling`, x)
-}
-
-cpp_set_trunc <- function(x) {
-  .Call(`_cheapr_cpp_set_trunc`, x)
-}
-
-cpp_set_change_sign <- function(x) {
-  .Call(`_cheapr_cpp_set_change_sign`, x)
-}
-
-cpp_set_exp <- function(x) {
-  .Call(`_cheapr_cpp_set_exp`, x)
-}
-
-cpp_set_sqrt <- function(x) {
-  .Call(`_cheapr_cpp_set_sqrt`, x)
-}
-
-cpp_set_add <- function(x, y) {
-  .Call(`_cheapr_cpp_set_add`, x, y)
-}
-
-cpp_set_subtract <- function(x, y) {
-  .Call(`_cheapr_cpp_set_subtract`, x, y)
-}
-
-cpp_set_multiply <- function(x, y) {
-  .Call(`_cheapr_cpp_set_multiply`, x, y)
-}
-
-cpp_set_divide <- function(x, y) {
-  .Call(`_cheapr_cpp_set_divide`, x, y)
-}
-
-cpp_set_pow <- function(x, y) {
-  .Call(`_cheapr_cpp_set_pow`, x, y)
-}
-
-cpp_set_log <- function(x, base) {
-  .Call(`_cheapr_cpp_set_log`, x, base)
-}
-
-cpp_set_round <- function(x, digits) {
-  .Call(`_cheapr_cpp_set_round`, x, digits)
-}
-
-cpp_int_sign <- function(x) {
-  .Call(`_cheapr_cpp_int_sign`, x)
 }
 
 cpp_rev <- function(x, set) {
