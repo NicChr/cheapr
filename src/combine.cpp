@@ -41,8 +41,8 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
 }
 
 [[cpp11::register]]
-SEXP cpp_rep_len(SEXP x, int length){
-  int out_size = length;
+SEXP cpp_rep_len(SEXP x, R_xlen_t length){
+  R_xlen_t out_size = length;
 
   if (is_null(x)){
     return r_null;
@@ -63,8 +63,9 @@ SEXP cpp_rep_len(SEXP x, int length){
     return out;
   } else if (cheapr_is_simple_vec2(x)){
 
-    int size = Rf_length(x);
-    int n_chunks, k, chunk_size;
+    R_xlen_t size = Rf_xlength(x);
+    int n_chunks;
+    R_xlen_t k, chunk_size;
 
     // Return x if length(x) == length
     if (out_size == size) return x;
@@ -143,16 +144,16 @@ SEXP cpp_rep_len(SEXP x, int length){
 
       if (size == 1){
         SEXP val = p_x[0];
-        for (int i = 0; i < out_size; ++i){
+        for (R_xlen_t i = 0; i < out_size; ++i){
           SET_STRING_ELT(out, i, val);
         }
       } else if (out_size > 0 && size > 0){
-        for (int i = 0, xi = 0; i < out_size; xi = (++xi == size) ? 0 : xi, ++i){
+        for (R_xlen_t i = 0, xi = 0; i < out_size; recycle_index(xi, size), ++i){
           SET_STRING_ELT(out, i, p_x[xi]);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        for (int i = 0; i < out_size; ++i){
+        for (R_xlen_t i = 0; i < out_size; ++i){
           SET_STRING_ELT(out, i, na::string);
         }
       }
@@ -161,15 +162,18 @@ SEXP cpp_rep_len(SEXP x, int length){
       return out;
     }
     case CPLXSXP: {
-      Rcomplex *p_x = complex_ptr(x);
+      const Rcomplex *p_x = complex_ptr_ro(x);
       SEXP out = SHIELD(new_complex(out_size));
-      Rcomplex *p_out = complex_ptr(out);
+      Rcomplex* RESTRICT p_out = complex_ptr(out);
 
       if (size == 1){
         fast_fill(p_out, p_out + out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
-        for (int i = 0, xi = 0; i < out_size; xi = (++xi == size) ? 0 : xi, ++i){
-          SET_COMPLEX_ELT(out, i, p_x[xi]);
+        n_chunks = std::ceil((static_cast<double>(out_size)) / size);
+        for (int i = 0; i < n_chunks; ++i){
+          k = i * size;
+          chunk_size = std::min(k + size, out_size) - k;
+          std::copy(p_x, p_x + chunk_size, p_out + k);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
@@ -189,12 +193,12 @@ SEXP cpp_rep_len(SEXP x, int length){
           SET_VECTOR_ELT(out, i, val);
         }
       } else if (out_size > 0 && size > 0){
-        for (int i = 0, xi = 0; i < out_size; xi = (++xi == size) ? 0 : xi, ++i){
+        for (R_xlen_t i = 0, xi = 0; i < out_size; recycle_index(xi, size), ++i){
           SET_VECTOR_ELT(out, i, p_x[xi]);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        for (int i = 0; i < out_size; ++i){
+        for (R_xlen_t i = 0; i < out_size; ++i){
           SET_VECTOR_ELT(out, i, r_null);
         }
       }

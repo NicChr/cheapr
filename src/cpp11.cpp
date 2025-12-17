@@ -62,10 +62,10 @@ extern "C" SEXP _cheapr_cpp_type(SEXP x) {
   END_CPP11
 }
 // combine.cpp
-SEXP cpp_rep_len(SEXP x, int length);
+SEXP cpp_rep_len(SEXP x, R_xlen_t length);
 extern "C" SEXP _cheapr_cpp_rep_len(SEXP x, SEXP length) {
   BEGIN_CPP11
-    return cpp11::as_sexp(cpp_rep_len(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(length)));
+    return cpp11::as_sexp(cpp_rep_len(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(length)));
   END_CPP11
 }
 // combine.cpp

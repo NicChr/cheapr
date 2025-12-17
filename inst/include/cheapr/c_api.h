@@ -122,9 +122,9 @@ seq_len(R_xlen_t n){
 }
 
 inline SEXP
-rep_len(SEXP x, int length){
-  typedef SEXP fn_t(SEXP, int);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_rep_len");
+rep_len(SEXP x, R_xlen_t length){
+  typedef SEXP fn_t(SEXP, R_xlen_t);
+  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_rep_len2");
   return fn(x, length);
 }
 

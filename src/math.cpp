@@ -135,11 +135,11 @@ if (_xn == _n && _yn == _n){                                                    
 // Convert integer vector to plain double vector
 
 SEXP convert_int_to_real(SEXP x){
-  int *p_x = integer_ptr(x);
+  const int *p_x = integer_ptr_ro(x);
   R_xlen_t n = Rf_xlength(x);
   SEXP out = SHIELD(new_double(n));
   double* RESTRICT p_out = real_ptr(out);
-  for (int i = 0; i < n; ++i){
+  for (R_xlen_t i = 0; i < n; ++i){
     p_out[i] = r_cast<double>(p_x[i]);
   }
   YIELD(1);

@@ -151,6 +151,15 @@ api_rep_len(SEXP x, int length){
 }
 
 SEXP
+api_rep_len2(SEXP x, R_xlen_t length){
+  try {
+    return cpp_rep_len(x, length);
+  } catch (...) {
+    return cheapr::r_null;
+  }
+}
+
+SEXP
 api_rep(SEXP x, SEXP times){
   try {
     return cpp_rep(x, times);
@@ -448,6 +457,7 @@ void api_init(DllInfo* dll){
   R_RegisterCCallable("cheapr", "api_seq_len",    (DL_FUNC)api_seq_len);
   R_RegisterCCallable("cheapr", "api_recycle",    (DL_FUNC)api_recycle);
   R_RegisterCCallable("cheapr", "api_rep_len",    (DL_FUNC)api_rep_len);
+  R_RegisterCCallable("cheapr", "api_rep_len2",    (DL_FUNC)api_rep_len2);
   R_RegisterCCallable("cheapr", "api_rep",    (DL_FUNC)api_rep);
   R_RegisterCCallable("cheapr", "api_rep_each",    (DL_FUNC)api_rep_each);
   R_RegisterCCallable("cheapr", "api_c",    (DL_FUNC)api_c);
