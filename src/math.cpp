@@ -73,62 +73,62 @@ if (n_cores > 1){                                                        \
 
 // General parallelised optimised macro for applying
 // cheapr::math binary fns across 2 vectors
-#define CHEAPR_VECTORISED_MATH_LOOP(FUN, x, y, p_x, p_y, _n, n_cores)                                   \
-R_xlen_t _xn = vec::length(x), _yn = vec::length(y);                                                    \
-if (_xn == 0 || _yn == 0){                                                                              \
-  _n = 0;                                                                                               \
-}                                                                                                       \
-R_xlen_t xi = 0, yi = 0;                                                                                \
-if (_xn == _n && _yn == _n){                                                                            \
-  if (n_cores > 1){                                                                                     \
-    OMP_PARALLEL_FOR_SIMD                                                                               \
+#define CHEAPR_VECTORISED_MATH_LOOP(FUN, x, y, p_x, p_y, _n, n_cores)                                    \
+R_xlen_t _xn = vec::length(x), _yn = vec::length(y);                                                     \
+if (_xn == 0 || _yn == 0){                                                                               \
+  _n = 0;                                                                                                \
+}                                                                                                        \
+R_xlen_t xi = 0, yi = 0;                                                                                 \
+if (_xn == _n && _yn == _n){                                                                             \
+  if (n_cores > 1){                                                                                      \
+    OMP_PARALLEL_FOR_SIMD                                                                                \
     for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(p_x[i], p_y[i]);                                                                   \
-    }                                                                                                   \
-  } else {                                                                                              \
-    OMP_FOR_SIMD                                                                                        \
+      p_out[i] = FUN(p_x[i], p_y[i]);                                                                    \
+    }                                                                                                    \
+  } else {                                                                                               \
+    OMP_FOR_SIMD                                                                                         \
     for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(p_x[i], p_y[i]);                                                                   \
-    }                                                                                                   \
-  }                                                                                                     \
-} else if (_xn == 1 && _yn == _n){                                                                      \
-  auto left = p_x[0];                                                                                   \
-  if (n_cores > 1){                                                                                     \
-    OMP_PARALLEL_FOR_SIMD                                                                               \
+      p_out[i] = FUN(p_x[i], p_y[i]);                                                                    \
+    }                                                                                                    \
+  }                                                                                                      \
+} else if (_xn == 1 && _yn == _n){                                                                       \
+  auto left = p_x[0];                                                                                    \
+  if (n_cores > 1){                                                                                      \
+    OMP_PARALLEL_FOR_SIMD                                                                                \
     for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(left, p_y[i]);                                                                     \
-    }                                                                                                   \
-  } else {                                                                                              \
-    OMP_FOR_SIMD                                                                                        \
+      p_out[i] = FUN(left, p_y[i]);                                                                      \
+    }                                                                                                    \
+  } else {                                                                                               \
+    OMP_FOR_SIMD                                                                                         \
     for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(left, p_y[i]);                                                                     \
-    }                                                                                                   \
-  }                                                                                                     \
-} else if (_yn == 1){                                                                                   \
-  auto right = p_y[0];                                                                                  \
-  if (n_cores > 1){                                                                                     \
-    OMP_PARALLEL_FOR_SIMD                                                                               \
+      p_out[i] = FUN(left, p_y[i]);                                                                      \
+    }                                                                                                    \
+  }                                                                                                      \
+} else if (_yn == 1){                                                                                    \
+  auto right = p_y[0];                                                                                   \
+  if (n_cores > 1){                                                                                      \
+    OMP_PARALLEL_FOR_SIMD                                                                                \
     for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(p_x[i], right);                                                                    \
-    }                                                                                                   \
-  } else {                                                                                              \
-    OMP_FOR_SIMD                                                                                        \
+      p_out[i] = FUN(p_x[i], right);                                                                     \
+    }                                                                                                    \
+  } else {                                                                                               \
+    OMP_FOR_SIMD                                                                                         \
     for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(p_x[i], right);                                                                    \
-    }                                                                                                   \
-  }                                                                                                     \
-} else if (_xn == _n){                                                                                  \
-  for (R_xlen_t i = 0; i < _n; recycle_index(yi, _yn), ++i){                                            \
-    p_out[i] = FUN(p_x[i], p_y[yi]);                                                                    \
-  }                                                                                                     \
-} else if (_yn == _n){                                                                                  \
-  for (R_xlen_t i = 0; i < _n; recycle_index(xi, _xn), ++i){                                            \
-    p_out[i] = FUN(p_x[xi], p_y[i]);                                                                    \
-  }                                                                                                     \
-} else {                                                                                                \
-  for (R_xlen_t i = 0; i < _n; recycle_index(xi, _xn), recycle_index(yi, _yn), ++i){                    \
-    p_out[i] = FUN(p_x[xi], p_y[yi]);                                                                   \
-  }                                                                                                     \
+      p_out[i] = FUN(p_x[i], right);                                                                     \
+    }                                                                                                    \
+  }                                                                                                      \
+} else if (_xn == _n){                                                                                   \
+  for (R_xlen_t i = 0; i < _n; recycle_index(yi, _yn), ++i){                                             \
+    p_out[i] = FUN(p_x[i], p_y[yi]);                                                                     \
+  }                                                                                                      \
+} else if (_yn == _n){                                                                                   \
+  for (R_xlen_t i = 0; i < _n; recycle_index(xi, _xn), ++i){                                             \
+    p_out[i] = FUN(p_x[xi], p_y[i]);                                                                     \
+  }                                                                                                      \
+} else {                                                                                                 \
+  for (R_xlen_t i = 0; i < _n; recycle_index(xi, _xn), recycle_index(yi, _yn), ++i){                     \
+    p_out[i] = FUN(p_x[xi], p_y[yi]);                                                                    \
+  }                                                                                                      \
 }
 
 

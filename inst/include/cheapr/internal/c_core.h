@@ -1444,17 +1444,6 @@ inline double r_round(T x){
   }
 }
 
-// inline double r_round(double x, const int digits = 0){
-//   if (is_r_na(x)){
-//     return x;
-//   } else if (is_r_na(digits)){
-//     return na::real;
-//   } else {
-//     double scale = std::pow(10, digits);
-//     return internal::round_to_even(x * scale) / scale;
-//   }
-// }
-
 inline double r_signif(double x, const int digits = 6){
   if (is_r_na(x)){
     return x;
@@ -1463,7 +1452,6 @@ inline double r_signif(double x, const int digits = 6){
   } else if (x == 0.0){
     return 0.0;
   } else {
-    // return r_round(x, digits - std::ceil(std::log10(std::abs(x))));
     int new_digits = digits - std::ceil(std::log10(std::abs(x)));
     double scale = std::pow(10, new_digits);
     return internal::round_to_even(x * scale) / scale;
