@@ -61,3 +61,6 @@ multiply_ <- cpp_multiply
 #' @rdname math
 #' @export
 divide_ <- cpp_divide
+#' @rdname math
+#' @export
+pow_ <- cpp_pow

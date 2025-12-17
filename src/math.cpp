@@ -714,6 +714,42 @@ SEXP cpp_divide(SEXP x, SEXP y){
   YIELD(NP);
   return out;
 }
+[[cpp11::register]]
+SEXP cpp_pow(SEXP x, SEXP y){
+  int32_t NP = 0;
+  check_numeric(x);
+  check_numeric(y);
+
+  SEXP objs = SHIELD(make_list(x, y)); ++NP;
+  SHIELD(objs = cpp_cast_common(objs)); ++NP;
+  x = VECTOR_ELT(objs, 0);
+  y = VECTOR_ELT(objs, 1);
+
+  R_xlen_t n = length_common(objs);
+
+  int n_cores = get_cores(n);
+
+  SEXP out = SHIELD(new_double(n)); ++NP;
+  double* RESTRICT p_out = real_ptr(out);
+
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    const int *p_x = integer_ptr_ro(x);
+    const int *p_y = integer_ptr_ro(y);
+    int* RESTRICT p_out = integer_ptr(out);
+    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, n, n_cores)
+      break;
+  }
+  default: {
+    const double *p_x = real_ptr_ro(x);
+    const double *p_y = real_ptr_ro(y);
+    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, n, n_cores)
+      break;
+  }
+  }
+  YIELD(NP);
+  return out;
+}
 
 [[cpp11::register]]
 SEXP cpp_set_add(SEXP x, SEXP y){

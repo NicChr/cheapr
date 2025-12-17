@@ -17,6 +17,7 @@
 \alias{subtract_}
 \alias{multiply_}
 \alias{divide_}
+\alias{pow_}
 \title{Parallelised math operations}
 \usage{
 abs_(x)
@@ -48,6 +49,8 @@ subtract_(x, y)
 multiply_(x, y)
 
 divide_(x, y)
+
+pow_(x, y)
 }
 \arguments{
 \item{x}{\verb{[numeric(n)]} vector.}

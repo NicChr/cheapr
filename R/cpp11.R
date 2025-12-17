@@ -248,6 +248,10 @@ cpp_divide <- function(x, y) {
   .Call(`_cheapr_cpp_divide`, x, y)
 }
 
+cpp_pow <- function(x, y) {
+  .Call(`_cheapr_cpp_pow`, x, y)
+}
+
 cpp_set_add <- function(x, y) {
   .Call(`_cheapr_cpp_set_add`, x, y)
 }

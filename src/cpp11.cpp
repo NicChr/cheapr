@@ -440,6 +440,13 @@ extern "C" SEXP _cheapr_cpp_divide(SEXP x, SEXP y) {
   END_CPP11
 }
 // math.cpp
+SEXP cpp_pow(SEXP x, SEXP y);
+extern "C" SEXP _cheapr_cpp_pow(SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_pow(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
+  END_CPP11
+}
+// math.cpp
 SEXP cpp_set_add(SEXP x, SEXP y);
 extern "C" SEXP _cheapr_cpp_set_add(SEXP x, SEXP y) {
   BEGIN_CPP11
@@ -947,6 +954,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_num_na",                  (DL_FUNC) &_cheapr_cpp_num_na,                  2},
     {"_cheapr_cpp_numeric_to_int64",        (DL_FUNC) &_cheapr_cpp_numeric_to_int64,        1},
     {"_cheapr_cpp_paste",                   (DL_FUNC) &_cheapr_cpp_paste,                   3},
+    {"_cheapr_cpp_pow",                     (DL_FUNC) &_cheapr_cpp_pow,                     2},
     {"_cheapr_cpp_rebuild",                 (DL_FUNC) &_cheapr_cpp_rebuild,                 5},
     {"_cheapr_cpp_recycle",                 (DL_FUNC) &_cheapr_cpp_recycle,                 2},
     {"_cheapr_cpp_rep",                     (DL_FUNC) &_cheapr_cpp_rep,                     2},
