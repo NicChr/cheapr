@@ -1835,7 +1835,7 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
 
   // Use int instead of bool as int can hold NA
   r_bool_t out = r_true;
-  bool any_na = false;
+  R_xlen_t na_count = 0;
 
   switch ( internal::CHEAPR_TYPEOF(x) ){
   case LGLSXP:
@@ -1846,17 +1846,16 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
   case REALSXP: {
     const double *p_x = r_ptr::real_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i) {
-      if (is_r_na(p_x[i])){
-        any_na = true;
-        continue;
-      }
       out = static_cast<r_bool_t>(math::is_whole_number(p_x[i], tol_));
+      na_count += is_r_na(out);
       if (out == r_false){
         break;
       }
     }
-    if (!na_rm_ && any_na){
-      out = na::logical;
+    if (out && !na_rm_ && na_count > 0){
+      out = r_na;
+    } else if (na_rm_ && na_count == n){
+      out = r_true;
     }
     break;
   }
