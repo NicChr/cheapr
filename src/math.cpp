@@ -137,7 +137,7 @@ if (_xn == _n && _yn == _n){                                                    
 SEXP convert_int_to_real(SEXP x){
   const int *p_x = integer_ptr_ro(x);
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = SHIELD(new_double(n));
+  SEXP out = SHIELD(new_vector<double>(n));
   double* RESTRICT p_out = real_ptr(out);
   for (R_xlen_t i = 0; i < n; ++i){
     p_out[i] = r_cast<double>(p_x[i]);
@@ -178,14 +178,14 @@ SEXP cpp_abs(SEXP x){
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
-    out = SHIELD(new_integer(n));
+    out = SHIELD(new_vector<int>(n));
     int *p_x = integer_ptr(x);
     int* RESTRICT p_out = integer_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_abs)
       break;
   }
   default: {
-    out = SHIELD(new_double(n));
+    out = SHIELD(new_vector<double>(n));
     const double *p_x = real_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_abs)
@@ -223,7 +223,7 @@ SEXP cpp_floor(SEXP x){
     break;
   }
   default: {
-    out = SHIELD(new_double(n));
+    out = SHIELD(new_vector<double>(n));
     const double *p_x = real_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_floor)
@@ -261,7 +261,7 @@ SEXP cpp_ceiling(SEXP x){
     break;
   }
   default: {
-    out = SHIELD(new_double(n));
+    out = SHIELD(new_vector<double>(n));
     const double *p_x = real_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_ceiling)
@@ -299,7 +299,7 @@ SEXP cpp_trunc(SEXP x){
     break;
   }
   default: {
-    out = SHIELD(new_double(n));
+    out = SHIELD(new_vector<double>(n));
     const double *p_x = real_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_trunc)
@@ -342,14 +342,14 @@ SEXP cpp_negate(SEXP x){
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
-    out = SHIELD(new_integer(n));
+    out = SHIELD(new_vector<int>(n));
     const int *p_x = integer_ptr_ro(x);
     int* RESTRICT p_out = integer_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_negate)
       break;
   }
   default: {
-    out = SHIELD(new_double(n));
+    out = SHIELD(new_vector<double>(n));
     const double *p_x = real_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     CHEAPR_PARALLEL_MATH_LOOP(r_negate)
@@ -386,7 +386,7 @@ SEXP cpp_exp(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
   int n_cores = get_cores(n);
-  SEXP out = SHIELD(new_double(n));
+  SEXP out = SHIELD(new_vector<double>(n));
   switch (TYPEOF(x)){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
@@ -431,7 +431,7 @@ SEXP cpp_sqrt(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
   int n_cores = get_cores(n);
-  SEXP out = SHIELD(new_double(n));
+  SEXP out = SHIELD(new_vector<double>(n));
   switch (TYPEOF(x)){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
@@ -478,7 +478,7 @@ SEXP cpp_log(SEXP x, SEXP base){
     p_y = real_ptr(base);
   }
 
-  SEXP out = SHIELD(new_double(n)); ++NP;
+  SEXP out = SHIELD(new_vector<double>(n)); ++NP;
   switch (TYPEOF(x)){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
@@ -546,7 +546,7 @@ SEXP cpp_round(SEXP x, SEXP digits){
     break;
   }
   default: {
-    out = SHIELD(new_double(n)); ++NP;
+    out = SHIELD(new_vector<double>(n)); ++NP;
     const double *p_x = real_ptr_ro(x);
     double* RESTRICT p_out = real_ptr(out);
     if (is_digits_scalar){
@@ -585,7 +585,7 @@ SEXP cpp_add(SEXP x, SEXP y){
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
-    out = SHIELD(new_integer(n)); ++NP;
+    out = SHIELD(new_vector<int>(n)); ++NP;
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
@@ -593,7 +593,7 @@ SEXP cpp_add(SEXP x, SEXP y){
     break;
   }
   default: {
-    out = SHIELD(new_double(n)); ++NP;
+    out = SHIELD(new_vector<double>(n)); ++NP;
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
@@ -622,7 +622,7 @@ SEXP cpp_subtract(SEXP x, SEXP y){
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
-    out = SHIELD(new_integer(n)); ++NP;
+    out = SHIELD(new_vector<int>(n)); ++NP;
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
@@ -630,7 +630,7 @@ SEXP cpp_subtract(SEXP x, SEXP y){
       break;
   }
   default: {
-    out = SHIELD(new_double(n)); ++NP;
+    out = SHIELD(new_vector<double>(n)); ++NP;
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
@@ -659,7 +659,7 @@ SEXP cpp_multiply(SEXP x, SEXP y){
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
-    out = SHIELD(new_integer(n)); ++NP;
+    out = SHIELD(new_vector<int>(n)); ++NP;
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
@@ -667,7 +667,7 @@ SEXP cpp_multiply(SEXP x, SEXP y){
       break;
   }
   default: {
-    out = SHIELD(new_double(n)); ++NP;
+    out = SHIELD(new_vector<double>(n)); ++NP;
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
@@ -693,7 +693,7 @@ SEXP cpp_divide(SEXP x, SEXP y){
 
   int n_cores = get_cores(n);
 
-  SEXP out = SHIELD(new_double(n)); ++NP;
+  SEXP out = SHIELD(new_vector<double>(n)); ++NP;
   double* RESTRICT p_out = real_ptr(out);
 
   switch (TYPEOF(x)){
@@ -728,7 +728,7 @@ SEXP cpp_pow(SEXP x, SEXP y){
 
   int n_cores = get_cores(n);
 
-  SEXP out = SHIELD(new_double(n)); ++NP;
+  SEXP out = SHIELD(new_vector<double>(n)); ++NP;
   double* RESTRICT p_out = real_ptr(out);
 
   switch (TYPEOF(x)){
@@ -1145,7 +1145,7 @@ SEXP cpp_int_sign(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
   int n_cores = get_cores(n);
-  SEXP out = SHIELD(vec::new_integer(n));
+  SEXP out = SHIELD(vec::new_vector<int>(n));
   int* RESTRICT p_out = integer_ptr(out);
   switch (TYPEOF(x)){
   case LGLSXP: {

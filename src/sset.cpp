@@ -107,7 +107,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       }
     }
     out_size = n - exclude_count;
-    SEXP out = SHIELD(new_double(out_size)); ++NP;
+    SEXP out = SHIELD(new_vector<double>(out_size)); ++NP;
     double* RESTRICT p_out = real_ptr(out);
     while(k != out_size){
       if (keep[i] == true){
@@ -136,7 +136,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
       }
     }
     out_size = n - exclude_count;
-    SEXP out = SHIELD(vec::new_integer(out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vector<int>(out_size)); ++NP;
     int* RESTRICT p_out = integer_ptr(out);
     while(k != out_size){
       if (keep[i++] == true){
@@ -339,7 +339,7 @@ SEXP clean_locs(SEXP locs, SEXP x){
   int32_t NP = 0;
 
   if (is_null(locs)){
-    SHIELD(locs = vec::new_integer(0)); ++NP;
+    SHIELD(locs = vec::new_vector<int>(0)); ++NP;
   }
 
   int_fast64_t n = Rf_xlength(locs);
@@ -407,7 +407,7 @@ SEXP clean_locs(SEXP locs, SEXP x){
   }
   if (zero_count > 0 || oob_count > 0 || na_count > 0){
     int out_size = pos_count - oob_count;
-    SEXP out = SHIELD(vec::new_integer(out_size)); ++NP;
+    SEXP out = SHIELD(vec::new_vector<int>(out_size)); ++NP;
     int* RESTRICT p_out = integer_ptr(out);
 
     int k = 0;
@@ -566,7 +566,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case REALSXP: {
     const double *p_x = real_ptr_ro(x);
-    out = SHIELD(new_double(out_size)); ++NP;
+    out = SHIELD(new_vector<double>(out_size)); ++NP;
     double* RESTRICT p_out = real_ptr(out);
     if (double_loop){
       std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
@@ -585,7 +585,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case STRSXP: {
     const r_string_t *p_x = string_ptr_ro(x);
-    out = SHIELD(new_character(out_size)); ++NP;
+    out = SHIELD(new_vector<r_string_t>(out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
         set_val(out, k, p_x[i]);
@@ -614,7 +614,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case CPLXSXP: {
     const Rcomplex *p_x = complex_ptr_ro(x);
-    out = SHIELD(new_complex(out_size)); ++NP;
+    out = SHIELD(new_vector<Rcomplex>(out_size)); ++NP;
     Rcomplex* RESTRICT p_out = complex_ptr(out);
     if (double_loop){
       std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
@@ -633,7 +633,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case RAWSXP: {
     const Rbyte *p_x = raw_ptr_ro(x);
-    out = SHIELD(new_raw(out_size)); ++NP;
+    out = SHIELD(new_vector<Rbyte>(out_size)); ++NP;
     Rbyte* RESTRICT p_out = raw_ptr(out);
     if (double_loop){
       std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
@@ -731,7 +731,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case REALSXP: {
         const double* p_x = real_ptr_ro(x);
-        out = SHIELD(new_double(n));
+        out = SHIELD(new_vector<double>(n));
         double* RESTRICT p_out = real_ptr(out);
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
@@ -748,7 +748,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case STRSXP: {
         const r_string_t *p_x = string_ptr_ro(x);
-        out = SHIELD(new_character(n));
+        out = SHIELD(new_vector<r_string_t>(n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -764,7 +764,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case CPLXSXP: {
         const Rcomplex* p_x = complex_ptr_ro(x);
-        out = SHIELD(new_complex(n));
+        out = SHIELD(new_vector<Rcomplex>(n));
         Rcomplex* RESTRICT p_out = complex_ptr(out);
           for (int_fast64_t i = 0; i < n; ++i){
 
@@ -788,7 +788,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case RAWSXP: {
         const Rbyte *p_x = raw_ptr_ro(x);
-        out = SHIELD(new_raw(n));
+        out = SHIELD(new_vector<Rbyte>(n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -870,7 +870,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case REALSXP: {
         const double* p_x = real_ptr_ro(x);
-        out = SHIELD(new_double(n));
+        out = SHIELD(new_vector<double>(n));
         double* RESTRICT p_out = real_ptr(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -890,7 +890,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case STRSXP: {
         const r_string_t *p_x = string_ptr_ro(x);
-        out = SHIELD(new_character(n));
+        out = SHIELD(new_vector<r_string_t>(n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -909,7 +909,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case CPLXSXP: {
         const Rcomplex* p_x = complex_ptr_ro(x);
-        out = SHIELD(new_complex(n));
+        out = SHIELD(new_vector<Rcomplex>(n));
         Rcomplex* RESTRICT p_out = complex_ptr(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
@@ -929,7 +929,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case RAWSXP: {
         const Rbyte *p_x = raw_ptr_ro(x);
-        out = SHIELD(new_raw(n));
+        out = SHIELD(new_vector<Rbyte>(n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -1006,7 +1006,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case REALSXP: {
         const double *p_x = real_ptr_ro(x);
-        out = SHIELD(new_double(n));
+        out = SHIELD(new_vector<double>(n));
         double* RESTRICT p_out = real_ptr(out);
         OMP_FOR_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
@@ -1016,7 +1016,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case STRSXP: {
         const r_string_t *p_x = string_ptr_ro(x);
-        out = SHIELD(new_character(n));
+        out = SHIELD(new_vector<r_string_t>(n));
         for (int_fast64_t i = 0; i < n; ++i){
           set_val(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         }
@@ -1024,7 +1024,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case CPLXSXP: {
         const Rcomplex *p_x = complex_ptr_ro(x);
-        out = SHIELD(new_complex(n));
+        out = SHIELD(new_vector<Rcomplex>(n));
         Rcomplex* RESTRICT p_out = complex_ptr(out);
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i].r = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].r;
@@ -1034,7 +1034,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case RAWSXP: {
         const Rbyte *p_x = raw_ptr_ro(x);
-        out = SHIELD(new_raw(n));
+        out = SHIELD(new_vector<Rbyte>(n));
         for (int_fast64_t i = 0; i < n; ++i) SET_RAW_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         break;
       }
@@ -1076,7 +1076,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case REALSXP: {
         const double *p_x = real_ptr_ro(x);
-        out = SHIELD(new_double(n));
+        out = SHIELD(new_vector<double>(n));
         double* RESTRICT p_out = real_ptr(out);
         for (int i = 0; i != n; ++i){
           p_out[i] = p_x[pind[i] - 1];
@@ -1085,7 +1085,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case STRSXP: {
         const r_string_t *p_x = string_ptr_ro(x);
-        out = SHIELD(new_character(n));
+        out = SHIELD(new_vector<r_string_t>(n));
         for (int i = 0; i != n; ++i){
           set_val(out, i, p_x[pind[i] - 1]);
         }
@@ -1093,7 +1093,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case CPLXSXP: {
         const Rcomplex *p_x = complex_ptr_ro(x);
-        out = SHIELD(new_complex(n));
+        out = SHIELD(new_vector<Rcomplex>(n));
         Rcomplex* RESTRICT p_out = complex_ptr(out);
         for (int i = 0; i != n; ++i){
           set_val(p_out, i, p_x[pind[i] - 1]);
@@ -1102,7 +1102,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case RAWSXP: {
         const Rbyte *p_x = raw_ptr_ro(x);
-        out = SHIELD(new_raw(n));
+        out = SHIELD(new_vector<Rbyte>(n));
         Rbyte* RESTRICT p_out = raw_ptr(out);
         for (int i = 0; i != n; ++i){
           set_val(p_out, i, p_x[pind[i] - 1]);
@@ -1313,7 +1313,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   const int *p_cols = integer_ptr_ro(cols);
 
   SEXP out = SHIELD(new_list(n_locs)); ++NP;
-  SEXP out_names = SHIELD(new_character(n_locs)); ++NP;
+  SEXP out_names = SHIELD(new_vector<r_string_t>(n_locs)); ++NP;
 
   const SEXP *p_x = list_ptr_ro(x);
   const r_string_t *p_names = string_ptr_ro(names);

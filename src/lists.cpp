@@ -38,7 +38,7 @@ SEXP cpp_unnested_length(SEXP x){
 [[cpp11::register]]
 SEXP cpp_lengths(SEXP x, bool names){
   R_xlen_t n = Rf_xlength(x);
-  SEXP out = SHIELD(vec::new_integer(n));
+  SEXP out = SHIELD(vec::new_vector<int>(n));
   int* RESTRICT p_out = integer_ptr(out);
   if (TYPEOF(x) != VECSXP){
     for (R_xlen_t i = 0; i < n; ++i) {
@@ -110,7 +110,7 @@ SEXP cpp_drop_null(SEXP x){
     YIELD(2);
     return out;
   } else {
-    SEXP out_names = SHIELD(new_character(n_keep));
+    SEXP out_names = SHIELD(new_vector<r_string_t>(n_keep));
     const SEXP *p_names = STRING_PTR_RO(names);
     for (uint_fast64_t i = 0; i < n; ++i){
       if (is_null(p_l[i])) continue;
@@ -134,7 +134,7 @@ SEXP which_not_null(SEXP x){
 
   // Which list elements should we keep?
 
-  SEXP keep = SHIELD(vec::new_integer(n_keep));
+  SEXP keep = SHIELD(vec::new_vector<int>(n_keep));
   int* RESTRICT p_keep = integer_ptr(keep);
   while (whichj < n_keep){
     p_keep[whichj] = j + 1;
@@ -175,13 +175,13 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   SEXP col_names = SHIELD(get_r_names(values)); ++NP;
 
   if (is_null(names)){
-    SHIELD(names = new_character(n)); ++NP;
+    SHIELD(names = new_vector<r_string_t>(n)); ++NP;
   }
 
   bool empty_value_names = is_null(col_names);
 
   if (empty_value_names){
-    SHIELD(col_names = new_character(n_cols)); ++NP;
+    SHIELD(col_names = new_vector<r_string_t>(n_cols)); ++NP;
   }
 
   const SEXP *p_x = list_ptr_ro(x);
@@ -196,7 +196,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 
   // If values is an unnamed list then we can simply append the values
   if (empty_value_names){
-    add_locs = SHIELD(vec::new_integer(0)); ++NP;
+    add_locs = SHIELD(vec::new_vector<int>(0)); ++NP;
     SHIELD(add_locs = cpp_rep_len(add_locs, n_cols)); ++NP;
     n_cols_to_add = n_cols;
   } else {
@@ -208,7 +208,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
 
   int loc;
   SEXP out = SHIELD(new_list(out_size)); ++NP;
-  SEXP out_names = SHIELD(new_character(out_size)); ++NP;
+  SEXP out_names = SHIELD(new_vector<r_string_t>(out_size)); ++NP;
 
   // Initialise out
   for (int i = 0; i < n; ++i){
@@ -231,7 +231,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
     }
   }
 
-  SEXP null_locs = SHIELD(vec::new_integer(null_count)); ++NP;
+  SEXP null_locs = SHIELD(vec::new_vector<int>(null_count)); ++NP;
   int *p_null_locs = integer_ptr(null_locs);
   int nulli = 0;
 
@@ -304,7 +304,7 @@ void set_list_as_df(SEXP x) {
   // If no names then add names
   SEXP names = SHIELD(get_r_names(x)); ++NP;
   if (is_null(names)){
-    SHIELD(names = new_character(n_items)); ++NP;
+    SHIELD(names = new_vector<r_string_t>(n_items)); ++NP;
     set_r_names(x, names);
   }
   df::set_row_names(x, N);
@@ -349,7 +349,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
 
   SEXP out_names = SHIELD(get_r_names(out)); ++NP;
   if (is_null(out_names)){
-    SHIELD(out_names = new_character(Rf_length(out))); ++NP;
+    SHIELD(out_names = new_vector<r_string_t>(Rf_length(out))); ++NP;
   } else {
     SHIELD(out_names = vec::coerce_vec(out_names, STRSXP)); ++NP;
   }
@@ -406,7 +406,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   int out_size = n + n_cols_to_add;
 
   SEXP out = SHIELD(new_list(out_size)); ++NP;
-  SEXP out_names = SHIELD(new_character(out_size)); ++NP;
+  SEXP out_names = SHIELD(new_vector<r_string_t>(out_size)); ++NP;
 
   // Initialise out
   for (int i = 0; i < n; ++i){

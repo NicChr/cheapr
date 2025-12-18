@@ -5,7 +5,7 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
 
   int n = Rf_length(group_id);
 
-  SEXP out = SHIELD(vec::new_integer(n_groups));
+  SEXP out = SHIELD(vec::new_vector<int>(n_groups));
   const int* p_group_id = integer_ptr_ro(group_id);
   int* RESTRICT p_out = integer_ptr(out);
 
@@ -59,7 +59,7 @@ SEXP cpp_group_counts(SEXP group_id, int n_groups){
   int n = Rf_length(group_id);
 
   // Counts initialised to zero
-  SEXP out = SHIELD(vec::new_integer(n_groups, 0));
+  SEXP out = SHIELD(vec::new_vector<int>(n_groups, 0));
   const int* RESTRICT p_group_id = integer_ptr_ro(group_id);
   int* RESTRICT p_out = integer_ptr(out);
 

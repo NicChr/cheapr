@@ -660,52 +660,82 @@ inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
   return Rf_coerceVector(x, type);
 }
 
-inline SEXP new_logical(R_xlen_t n, const r_bool_t default_value) {
-  SEXP out = SHIELD(internal::new_vec(LGLSXP, n));
+template <typename T>
+inline SEXP new_vector(R_xlen_t n, const T default_value) {
+  static_assert(
+    sizeof(T) == 0,
+    "Unimplemented `new_vector` specialisation"
+  );
+  return T{};
+}
+// One-parameter template version
+template <typename T>
+inline SEXP new_vector(R_xlen_t n) {
+  static_assert(
+    sizeof(T) == 0,
+    "Unimplemented `new_vector` specialisation"
+  );
+  return T{};
+}
+
+template <>
+inline SEXP new_vector<r_bool_t>(R_xlen_t n) {
+  return internal::new_vec(LGLSXP, n);
+}
+template <>
+inline SEXP new_vector<r_bool_t>(R_xlen_t n, const r_bool_t default_value) {
+  SEXP out = SHIELD(new_vector<r_bool_t>(n));
   r_bool_t* RESTRICT p_out = r_ptr::logical_ptr(out);
   fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }
-inline SEXP new_logical(R_xlen_t n){
-  return internal::new_vec(LGLSXP, n);
+template <>
+inline SEXP new_vector<int>(R_xlen_t n){
+  return internal::new_vec(INTSXP, n);
 }
-inline SEXP new_integer(R_xlen_t n, const int default_value){
-  SEXP out = SHIELD(internal::new_vec(INTSXP, n));
+template <>
+inline SEXP new_vector<int>(R_xlen_t n, const int default_value){
+  SEXP out = SHIELD(new_vector<int>(n));
   int* RESTRICT p_out = r_ptr::integer_ptr(out);
   fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }
-inline SEXP new_integer(R_xlen_t n){
-  return internal::new_vec(INTSXP, n);
+template <>
+inline SEXP new_vector<double>(R_xlen_t n){
+  return internal::new_vec(REALSXP, n);
 }
-inline SEXP new_double(R_xlen_t n, const double default_value){
-  SEXP out = SHIELD(internal::new_vec(REALSXP, n));
+template <>
+inline SEXP new_vector<double>(R_xlen_t n, const double default_value){
+  SEXP out = SHIELD(new_vector<double>(n));
   double* RESTRICT p_out = r_ptr::real_ptr(out);
   fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }
-inline SEXP new_double(R_xlen_t n){
-  return internal::new_vec(REALSXP, n);
+template <>
+inline SEXP new_vector<int64_t>(R_xlen_t n){
+  SEXP out = SHIELD(new_vector<double>(n));
+  attr::set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
+  YIELD(2);
+  return out;
 }
-inline SEXP new_integer64(R_xlen_t n, const int64_t default_value){
-  SEXP out = SHIELD(new_double(n));
+template <>
+inline SEXP new_vector<int64_t>(R_xlen_t n, const int64_t default_value){
+  SEXP out = SHIELD(new_vector<int64_t>(n));
   int64_t* RESTRICT p_out = r_ptr::integer64_ptr(out);
   fast_fill(p_out, p_out + n, default_value);
-  attr::set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
-  YIELD(2);
+  YIELD(1);
   return out;
 }
-inline SEXP new_integer64(R_xlen_t n){
-  SEXP out = SHIELD(new_double(n));
-  attr::set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
-  YIELD(2);
-  return out;
+template <>
+inline SEXP new_vector<r_string_t>(R_xlen_t n){
+  return internal::new_vec(STRSXP, n);
 }
-inline SEXP new_character(R_xlen_t n, const r_string_t default_value){
-  SEXP out = SHIELD(internal::new_vec(STRSXP, n));
+template <>
+inline SEXP new_vector<r_string_t>(R_xlen_t n, const r_string_t default_value){
+  SEXP out = SHIELD(new_vector<r_string_t>(n));
   if (default_value != blank_r_string){
     for (R_xlen_t i = 0; i < n; ++i){
       SET_STRING_ELT(out, i, default_value);
@@ -714,31 +744,36 @@ inline SEXP new_character(R_xlen_t n, const r_string_t default_value){
   YIELD(1);
   return out;
 }
-inline SEXP new_character(R_xlen_t n){
-  return internal::new_vec(STRSXP, n);
+template <>
+inline SEXP new_vector<Rcomplex>(R_xlen_t n){
+  return internal::new_vec(CPLXSXP, n);
 }
-
-inline SEXP new_complex(R_xlen_t n, const Rcomplex default_value){
-  SEXP out = SHIELD(internal::new_vec(CPLXSXP, n));
+template <>
+inline SEXP new_vector<Rcomplex>(R_xlen_t n, const Rcomplex default_value){
+  SEXP out = SHIELD(new_vector<Rcomplex>(n));
   Rcomplex* RESTRICT p_out = r_ptr::complex_ptr(out);
   fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }
-inline SEXP new_complex(R_xlen_t n){
-  return internal::new_vec(CPLXSXP, n);
+template <>
+inline SEXP new_vector<Rbyte>(R_xlen_t n){
+  return internal::new_vec(RAWSXP, n);
 }
-inline SEXP new_raw(R_xlen_t n,const Rbyte default_value){
-  SEXP out = SHIELD(internal::new_vec(RAWSXP, n));
+template <>
+inline SEXP new_vector<Rbyte>(R_xlen_t n,const Rbyte default_value){
+  SEXP out = SHIELD(new_vector<Rbyte>(n));
   Rbyte *p_out = r_ptr::raw_ptr(out);
   fast_fill(p_out, p_out + n, default_value);
   YIELD(1);
   return out;
 }
-inline SEXP new_raw(R_xlen_t n){
-  return internal::new_vec(RAWSXP, n);
+template <>
+inline SEXP new_vector<SEXP>(R_xlen_t n){
+  return internal::new_vec(VECSXP, n);
 }
-inline SEXP new_list(R_xlen_t n, const SEXP default_value){
+template <>
+inline SEXP new_vector<SEXP>(R_xlen_t n, const SEXP default_value){
   SEXP out = SHIELD(internal::new_vec(VECSXP, n));
   if (!is_null(default_value)){
     for (R_xlen_t i = 0; i < n; ++i){
@@ -748,8 +783,12 @@ inline SEXP new_list(R_xlen_t n, const SEXP default_value){
   YIELD(1);
   return out;
 }
+
 inline SEXP new_list(R_xlen_t n){
-  return internal::new_vec(VECSXP, n);
+  return new_vector<SEXP>(n);
+}
+inline SEXP new_list(R_xlen_t n, const SEXP default_value){
+  return new_vector<SEXP>(n, default_value);
 }
 
 }
@@ -768,13 +807,13 @@ inline int ncol(SEXP x){
 }
 inline SEXP new_row_names(int n){
   if (n > 0){
-    SEXP out = SHIELD(vec::new_integer(2));
+    SEXP out = SHIELD(vec::new_vector<int>(2));
     vec::set_val(out, 0, na::integer);
     vec::set_val(out, 1, -n);
     YIELD(1);
     return out;
   } else {
-    return vec::new_integer(0);
+    return vec::new_vector<int>(0);
   }
 }
 inline void set_row_names(SEXP x, int n){
@@ -1003,7 +1042,7 @@ inline SEXP as_vec<cpp11::r_bool>(const cpp11::r_bool x){
 }
 template<>
 inline SEXP as_vec<r_symbol_t>(const r_symbol_t x){
-  return new_list(1, x);
+  return new_vector<SEXP>(1, x);
 }
 
 // Scalar string
@@ -1027,7 +1066,7 @@ inline SEXP as_vec<SEXP>(const SEXP x){
     return x;
   }
   default: {
-    return new_list(1, x);
+    return new_vector<SEXP>(1, x);
   }
   }
 }
@@ -1648,9 +1687,9 @@ inline SEXP make_list(Args... args) {
   constexpr int n = sizeof...(args);
 
   if constexpr (n == 0){
-    return new_list(0);
+    return new_vector<SEXP>(0);
   } else {
-    SEXP out = SHIELD(vec::new_list(n));
+    SEXP out = SHIELD(vec::new_vector<SEXP>(n));
 
     // Are any args named?
     constexpr bool any_named = (std::is_same_v<std::decay_t<Args>, arg> || ...);
@@ -1658,7 +1697,7 @@ inline SEXP make_list(Args... args) {
     SEXP nms = r_null;
 
     if (any_named){
-      nms = vec::new_character(n);
+      nms = vec::new_vector<r_string_t>(n);
     }
     SHIELD(nms);
 
@@ -1780,7 +1819,7 @@ inline SEXP compact_seq_len(R_xlen_t n){
     Rf_error("`n` must be >= 0");
   }
   if (n == 0){
-    return vec::new_integer(0);
+    return vec::new_vector<int>(0);
   }
   SEXP colon_fn = SHIELD(fn::find_pkg_fun(":", "base", false));
   SEXP out = SHIELD(fn::eval_fn(colon_fn, env::base_env, 1, n));

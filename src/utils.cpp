@@ -370,7 +370,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   switch(TYPEOF(x)){
   case INTSXP: {
     if (codes){
-    SEXP out = SHIELD(vec::new_integer(n));
+    SEXP out = SHIELD(vec::new_vector<int>(n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
     const int *p_x = integer_ptr(x);
     const double *p_b = real_ptr(breaks);
@@ -391,7 +391,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   }
   default: {
     if (codes){
-    SEXP out = SHIELD(vec::new_integer(n));
+    SEXP out = SHIELD(vec::new_vector<int>(n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
     const double *p_x = real_ptr(x);
     const double *p_b = real_ptr(breaks);
@@ -512,7 +512,7 @@ double growth_rate(double a, double b, double n){
 SEXP cpp_growth_rate(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   if (n == 0){
-    return new_double(0);
+    return new_vector<double>(0);
   }
   if (n == 1){
     return as_vec(na::real);
@@ -570,7 +570,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
 
   int n_dups = Rf_length(dup_locs);
 
-  SEXP out = SHIELD(new_character(n)); ++NP;
+  SEXP out = SHIELD(new_vector<r_string_t>(n)); ++NP;
   cpp_set_copy_elements(names, out);
 
   SEXP temp = r_null;
@@ -582,7 +582,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
     replace_in_place(out, dup_locs, replace, false);
   }
 
-  SEXP is_empty = SHIELD(new_logical(n)); ++NP;
+  SEXP is_empty = SHIELD(new_vector<r_bool_t>(n)); ++NP;
   int *p_is_empty = integer_ptr(is_empty);
   bool empty;
   int n_empty = 0;
@@ -679,7 +679,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   R_xlen_t n = Rf_xlength(x);
 
   // Initialise counts to 0
-  SEXP out = SHIELD(vec::new_integer(n_bins, 0));
+  SEXP out = SHIELD(vec::new_vector<int>(n_bins, 0));
   const int *p_x = integer_ptr_ro(x);
   int* RESTRICT p_out = integer_ptr(out);
 
@@ -771,7 +771,7 @@ SEXP cheapr_do_memory_leak_test(){
   // Check that 4000 bytes are not lost
 
   std::vector<int32_t> ints(1000);
-  SEXP r_ints = r_safe(SHIELD)(r_safe(new_integer)(ints.size()));
+  SEXP r_ints = r_safe(SHIELD)(r_safe(new_vector<int>)(ints.size()));
   SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
   SEXP repl = r_safe(SHIELD)(r_safe(as_vec)(-1));
   r_safe(replace_in_place)(r_ints, seq, repl, true);
