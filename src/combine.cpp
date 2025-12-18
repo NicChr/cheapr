@@ -542,7 +542,7 @@ SEXP character_as_factor(SEXP x, SEXP levels){
   int32_t NP = 0;
 
   SEXP out = SHIELD(match(levels, x, na::integer)); ++NP;
-  SEXP cls = SHIELD(as_vec("factor")); ++NP;
+  SEXP cls = SHIELD(as_vector("factor")); ++NP;
   set_attr(out, symbol::levels_sym, levels);
   attr::set_class(out, cls);
   YIELD(NP);
@@ -589,7 +589,7 @@ SEXP cpp_list_c(SEXP x){
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
       if (x_has_names){
-        R_Reprotect(names = as_vec(get_r_string(x_names, i)), nm_idx);
+        R_Reprotect(names = as_vector(get_r_string(x_names, i)), nm_idx);
       } else {
         names = r_null;
       }
@@ -734,7 +734,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   int32_t NP = 0;
   R_xlen_t common_size = length_common(x);
   SEXP out = SHIELD(cpp_list_c(x)); ++NP;
-  SEXP df_nrows = SHIELD(as_vec(r_cast<int>(common_size))); ++NP;
+  SEXP df_nrows = SHIELD(as_vector(r_cast<int>(common_size))); ++NP;
   SHIELD(out = cpp_new_df(out, df_nrows, recycle, name_repair)); ++NP;
 
   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
@@ -907,7 +907,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     if (TYPEOF(vec_template) == INTSXP){
     SHIELD(out = init<r_integer_t>(out_size, false)); ++NP;
-    SEXP date_cls = SHIELD(as_vec("Date")); ++NP;
+    SEXP date_cls = SHIELD(as_vector("Date")); ++NP;
     attr::set_class(out, date_cls);
 
     int* RESTRICT p_out = integer_ptr(out);
@@ -920,7 +920,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     }
   } else {
     SHIELD(out = init<r_double_t>(out_size, false)); ++NP;
-    SEXP date_cls = SHIELD(as_vec("Date")); ++NP;
+    SEXP date_cls = SHIELD(as_vector("Date")); ++NP;
     attr::set_class(out, date_cls);
 
     double* RESTRICT p_out = real_ptr(out);

@@ -248,7 +248,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
 
 [[cpp11::register]]
 SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
-  SEXP n_vals = SHIELD(as_vec(scalar_count(x, value, false)));
+  SEXP n_vals = SHIELD(as_vector(scalar_count(x, value, false)));
   SEXP out = SHIELD(cpp_val_find(x, value, invert, n_vals));
   YIELD(2);
   return out;
@@ -258,7 +258,7 @@ SEXP cpp_which_val(SEXP x, SEXP value, bool invert){
 
 [[cpp11::register]]
 SEXP cpp_which_na(SEXP x){
-  SEXP na = SHIELD(as_vec(na::integer));
+  SEXP na = SHIELD(as_vector(na::integer));
   SEXP out = SHIELD(cpp_which_val(x, na, false));
   YIELD(2);
   return out;
@@ -266,7 +266,7 @@ SEXP cpp_which_na(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_which_not_na(SEXP x){
-  SEXP na = SHIELD(as_vec(na::integer));
+  SEXP na = SHIELD(as_vector(na::integer));
   SEXP out = SHIELD(cpp_which_val(x, na, true));
   YIELD(2);
   return out;

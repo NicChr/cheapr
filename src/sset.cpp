@@ -314,8 +314,8 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     }
   }
 
-  SEXP r_out_size = SHIELD(as_vec(r_cast<double>(out_size))); ++NP;
-  SEXP r_check_indices = SHIELD(as_vec(check_indices)); ++NP;
+  SEXP r_out_size = SHIELD(as_vector(r_cast<double>(out_size))); ++NP;
+  SEXP r_check_indices = SHIELD(as_vector(check_indices)); ++NP;
 
   SEXP out = SHIELD(make_list(
     clean_indices,
@@ -355,7 +355,7 @@ SEXP clean_locs(SEXP locs, SEXP x){
       Rf_error("Cannot subset rows of a data frame using a character vector");
     }
     SHIELD(locs = match(names, locs, na::integer)); ++NP;
-    SEXP na_int = SHIELD(as_vec(na::integer)); ++NP;
+    SEXP na_int = SHIELD(as_vector(na::integer)); ++NP;
     SHIELD(locs = cpp_val_remove(locs, na_int, false)); ++NP;
     YIELD(NP);
     return locs;
@@ -1357,7 +1357,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   // Make a plain data frame
   df::set_row_names(out, n_rows);
-  SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
+  SEXP df_cls = SHIELD(as_vector("data.frame")); ++NP;
   attr::set_class(out, df_cls);
   set_r_names(out, out_names);
   YIELD(NP);
@@ -1401,7 +1401,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
 
   // list to data frame object
   df::set_row_names(out, out_size);
-  SEXP df_cls = SHIELD(as_vec("data.frame")); ++NP;
+  SEXP df_cls = SHIELD(as_vector("data.frame")); ++NP;
   attr::set_class(out, df_cls);
   YIELD(NP);
   return out;
@@ -1527,7 +1527,7 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
   }
 
   if (vec::is_object(x)){
-    SEXP loc = SHIELD(as_vec(i));
+    SEXP loc = SHIELD(as_vector(i));
     SEXP out = SHIELD(cpp_sset(x, loc, true));
     YIELD(2);
     return out;
@@ -1549,22 +1549,22 @@ SEXP slice_loc(SEXP x, R_xlen_t i){
     return r_null;
   }
   case LGLSXP: {
-    return as_vec(logical_ptr(x)[i]);
+    return as_vector(logical_ptr(x)[i]);
   }
   case INTSXP: {
-    return as_vec(integer_ptr(x)[i]);
+    return as_vector(integer_ptr(x)[i]);
   }
   case REALSXP: {
-    return as_vec(real_ptr(x)[i]);
+    return as_vector(real_ptr(x)[i]);
   }
   case STRSXP: {
-    return as_vec(STRING_ELT(x, i));
+    return as_vector(STRING_ELT(x, i));
   }
   case CPLXSXP: {
-    return as_vec(complex_ptr(x)[i]);
+    return as_vector(complex_ptr(x)[i]);
   }
   case RAWSXP: {
-    return as_vec(raw_ptr(x)[i]);
+    return as_vector(raw_ptr(x)[i]);
   }
   case VECSXP: {
     return VECTOR_ELT(x, i);

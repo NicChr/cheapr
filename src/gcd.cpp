@@ -27,7 +27,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     if (n > 0){
       auto gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
-        gcd = gcd2(gcd, p_x[i], na_rm);
+        gcd = r_gcd(gcd, p_x[i], na_rm);
         if (!na_rm && is_r_na(gcd)){
           break;
         } else if (gcd == 1){
@@ -46,7 +46,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     if (n > 0){
       auto gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
-        gcd = gcd2(gcd, p_x[i], na_rm);
+        gcd = r_gcd(gcd, p_x[i], na_rm);
         if (!na_rm && is_r_na(gcd)){
           break;
         } else if (gcd == 1){
@@ -63,7 +63,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     if (n > 0){
       auto gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
-        gcd = gcd2(gcd, p_x[i], na_rm, tol);
+        gcd = r_gcd(gcd, p_x[i], na_rm, tol);
         if (!na_rm && is_r_na(gcd)){
           break;
         }
@@ -114,7 +114,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       if (!na_rm && is_r_na(lcm)){
         break;
       }
-      auto res = lcm2(lcm, p_x[i], na_rm);
+      auto res = r_lcm(lcm, p_x[i], na_rm);
 
       // Only overflowed if result is NA and inputs aren't NA
       overflowed = is_r_na(res) && !is_r_na(lcm) && !is_r_na(p_x[i]);
@@ -126,14 +126,14 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
           if (!na_rm && is_r_na(lcm_dbl)){
             break;
           }
-          lcm_dbl = lcm2<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
+          lcm_dbl = r_lcm<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
         }
-        return as_vec(lcm_dbl);
+        return as_vector(lcm_dbl);
       } else {
         lcm = res;
       }
     }
-    return as_vec(lcm);
+    return as_vector(lcm);
   }
   case CHEAPR_INT64SXP: {
 
@@ -150,7 +150,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
       if (!na_rm && is_r_na(lcm)){
         break;
       }
-      auto res = lcm2(lcm, p_x[i], na_rm);
+      auto res = r_lcm(lcm, p_x[i], na_rm);
 
       // Only overflowed if result is NA and inputs aren't NA
       overflowed = is_r_na(res) && !is_r_na(lcm) && !is_r_na(p_x[i]);
@@ -162,14 +162,14 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
           if (!na_rm && is_r_na(lcm_dbl)){
             break;
           }
-          lcm_dbl = lcm2<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
+          lcm_dbl = r_lcm<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
         }
-        return as_vec(lcm_dbl);
+        return as_vector(lcm_dbl);
       } else {
         lcm = res;
       }
     }
-    return as_vec(r_cast<double>(lcm));
+    return as_vector(r_cast<double>(lcm));
   }
   default: {
 
@@ -185,10 +185,10 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
         lcm = na::real;
         break;
       }
-      lcm = lcm2(lcm, p_x[i], na_rm, tol);
+      lcm = r_lcm(lcm, p_x[i], na_rm, tol);
       if (is_r_inf(lcm)) break;
     }
-    return as_vec(lcm);
+    return as_vector(lcm);
   }
   }
 }
@@ -228,7 +228,7 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(xi, xn),
     recycle_index(yi, yn),
     ++i){
-      p_out[i] = gcd2(p_x[xi], p_y[yi], na_rm);
+      p_out[i] = r_gcd(p_x[xi], p_y[yi], na_rm);
     }
     YIELD(NP);
     return out;
@@ -244,7 +244,7 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(xi, xn),
     recycle_index(yi, yn),
     ++i){
-      p_out[i] = gcd2(p_x[xi], p_y[yi], na_rm, tol);
+      p_out[i] = r_gcd(p_x[xi], p_y[yi], na_rm, tol);
     }
     YIELD(NP);
     return out;
@@ -284,7 +284,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(xi, xn),
     recycle_index(yi, yn),
     ++i){
-      p_out[i] = r_cast<int>(lcm2(p_x[xi], p_y[yi], na_rm));
+      p_out[i] = r_cast<int>(r_lcm(p_x[xi], p_y[yi], na_rm));
     }
     YIELD(NP);
     return out;
@@ -300,7 +300,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(xi, xn),
     recycle_index(yi, yn),
     ++i){
-      p_out[i] = r_cast<double>(lcm2(p_x[xi], p_y[yi], na_rm, tol));
+      p_out[i] = r_cast<double>(r_lcm(p_x[xi], p_y[yi], na_rm, tol));
     }
     YIELD(NP);
     return out;

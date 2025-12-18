@@ -973,37 +973,37 @@ inline SEXP na_value<SEXP>(const SEXP x){
 namespace vec {
 
 template<typename T>
-inline SEXP as_vec(const T x){
+inline SEXP as_vector(const T x){
   if constexpr (is_r_integral_v<T>){
-    return as_vec<int64_t>(x);
+    return as_vector<int64_t>(x);
   } else if constexpr (std::is_convertible_v<T, SEXP>){
-    return as_vec<SEXP>(x);
+    return as_vector<SEXP>(x);
   } else {
     static_assert(
       sizeof(T) == 0,
-      "Unimplemented `as_vec` specialisation"
+      "Unimplemented `as_vector` specialisation"
     );
     return T{};
   }
 }
 template<>
-inline SEXP as_vec<bool>(const bool x){
+inline SEXP as_vector<bool>(const bool x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_vec<r_bool_t>(const r_bool_t x){
+inline SEXP as_vector<r_bool_t>(const r_bool_t x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_vec<Rboolean>(const Rboolean x){
+inline SEXP as_vector<Rboolean>(const Rboolean x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_vec<int>(const int x){
+inline SEXP as_vector<int>(const int x){
   return Rf_ScalarInteger(x);
 }
 template<>
-inline SEXP as_vec<int64_t>(const int64_t x){
+inline SEXP as_vector<int64_t>(const int64_t x){
   if (is_r_na(x)){
     return Rf_ScalarInteger(na::integer);
   } else if (between<int64_t>(x, r_limits::r_int_min, r_limits::r_int_max)){
@@ -1013,48 +1013,48 @@ inline SEXP as_vec<int64_t>(const int64_t x){
   }
 }
 template<>
-inline SEXP as_vec<double>(const double x){
+inline SEXP as_vector<double>(const double x){
   return Rf_ScalarReal(x);
 }
 template<>
-inline SEXP as_vec<Rcomplex>(const Rcomplex x){
+inline SEXP as_vector<Rcomplex>(const Rcomplex x){
   return Rf_ScalarComplex(x);
 }
 template<>
-inline SEXP as_vec<Rbyte>(const Rbyte x){
+inline SEXP as_vector<Rbyte>(const Rbyte x){
   return Rf_ScalarRaw(x);
 }
 template<>
-inline SEXP as_vec<const char *>(const char * const x){
+inline SEXP as_vector<const char *>(const char * const x){
   return internal::make_utf8_strsxp(x);
 }
 template<>
-inline SEXP as_vec<std::string>(const std::string x){
-  return as_vec<const char *>(x.c_str());
+inline SEXP as_vector<std::string>(const std::string x){
+  return as_vector<const char *>(x.c_str());
 }
 template<>
-inline SEXP as_vec<cpp11::r_string>(const cpp11::r_string x){
+inline SEXP as_vector<cpp11::r_string>(const cpp11::r_string x){
   return Rf_ScalarString(x);
 }
 template<>
-inline SEXP as_vec<cpp11::r_bool>(const cpp11::r_bool x){
+inline SEXP as_vector<cpp11::r_bool>(const cpp11::r_bool x){
   return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
-inline SEXP as_vec<r_symbol_t>(const r_symbol_t x){
+inline SEXP as_vector<r_symbol_t>(const r_symbol_t x){
   return new_vector<SEXP>(1, x);
 }
 
 // Scalar string
 template<>
-inline SEXP as_vec<r_string_t>(const r_string_t x){
+inline SEXP as_vector<r_string_t>(const r_string_t x){
   return Rf_ScalarString(x);
 }
 template<>
-inline SEXP as_vec<SEXP>(const SEXP x){
+inline SEXP as_vector<SEXP>(const SEXP x){
   switch (TYPEOF(x)){
   case CHARSXP: {
-    return as_vec<r_string_t>(static_cast<r_string_t>(x));
+    return as_vector<r_string_t>(static_cast<r_string_t>(x));
   }
   case LGLSXP:
   case INTSXP:
@@ -1078,20 +1078,20 @@ inline SEXP as_r_obj(const T x){
   if constexpr (std::is_convertible_v<T, SEXP>){
     switch (TYPEOF(x)){
     case CHARSXP: {
-      return vec::as_vec<r_string_t>(static_cast<r_string_t>(x));
+      return vec::as_vector<r_string_t>(static_cast<r_string_t>(x));
     }
     default: {
       return x;
     }
     }
   } else {
-    return vec::as_vec(x);
+    return vec::as_vector(x);
   }
 }
 
 template<>
 inline SEXP as_r_obj<r_string_t>(const r_string_t x){
-  return vec::as_vec<r_string_t>(x);
+  return vec::as_vector<r_string_t>(x);
 }
 template<>
 inline SEXP as_r_obj<r_symbol_t>(const r_symbol_t x){
@@ -1497,14 +1497,6 @@ inline double r_signif(double x, const int digits = 6){
   }
 }
 
-inline double abs_diff(const double x, const double y){
-  return std::fabs(x - y);
-}
-
-inline r_bool_t is_whole_number(const double x, const double tolerance){
-  return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_bool_t>(abs_diff(x, std::round(x)) < tolerance);
-}
-
 template<typename T>
 inline T r_add(T x, T y){
   return is_r_na(x) || is_r_na(y) ? na_value(x) : x + y;
@@ -1534,11 +1526,20 @@ inline double r_divide(T x, U y){
   return r_cast<double>(x) / r_cast<double>(y);
 }
 
+template<typename T>
+inline T r_abs_diff(const T x, const T y){
+  return std::abs(r_subtract(x, y));
+}
+
+inline r_bool_t is_whole_number(const double x, const double tolerance){
+  return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_bool_t>(r_abs_diff(x, std::round(x)) <= tolerance);
+}
+
 template<
   typename T,
   typename = typename std::enable_if<is_r_arithmetic_v<T>>::type
 >
-inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
+inline T r_gcd(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
 
   if (is_r_na(x) || is_r_na(y)){
    if (na_rm){
@@ -1608,7 +1609,7 @@ inline T gcd2(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits
 // Overloaded lowest-common-multiple fn
 template<typename T,
          typename = typename std::enable_if<is_r_arithmetic_v<T>>::type>
-inline T lcm2(
+inline T r_lcm(
     T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
 ){
   if (is_r_na(x) || is_r_na(y)){
@@ -1627,7 +1628,7 @@ inline T lcm2(
     if (x == 0 && y == 0){
       return 0;
     }
-    T res = std::abs(x) / gcd2(x, y, na_rm);
+    T res = std::abs(x) / r_gcd(x, y, na_rm);
     if (y != 0 && (std::abs(res) > (std::numeric_limits<T>::max() / std::abs(y)))){
       return na_value(x);
     }
@@ -1636,7 +1637,7 @@ inline T lcm2(
     if (std::fabs(x) <= tol && std::fabs(y) <= tol){
       return 0.0;
     }
-    return ( std::fabs(x) / gcd2(x, y, na_rm, tol) ) * std::fabs(y);
+    return ( std::fabs(x) / r_gcd(x, y, na_rm, tol) ) * std::fabs(y);
   }
 }
 
@@ -2005,7 +2006,7 @@ inline void set_threads(uint16_t n){
   uint16_t max_threads = OMP_MAX_THREADS;
   uint16_t threads = std::min(n, max_threads);
   SEXP cheapr_set_threads = SHIELD(fn::find_pkg_fun("set_threads", "cheapr", true));
-  SEXP r_threads = SHIELD(vec::as_vec(r_cast<int>(threads)));
+  SEXP r_threads = SHIELD(vec::as_vector(r_cast<int>(threads)));
   SHIELD(fn::eval_fn(cheapr_set_threads, R_BaseEnv, r_threads));
   YIELD(3);
 }

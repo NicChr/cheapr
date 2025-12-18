@@ -21,12 +21,12 @@ bool cpp_is_simple_vec(SEXP x){
 
 [[cpp11::register]]
 SEXP cpp_vector_length(SEXP x){
-  return as_vec(vec::length(x));
+  return as_vector(vec::length(x));
 }
 
 [[cpp11::register]]
 SEXP cpp_address(SEXP x){
-  return as_vec(address(x));
+  return as_vector(address(x));
 }
 
 // Copy atomic elements from source to target
@@ -515,7 +515,7 @@ SEXP cpp_growth_rate(SEXP x){
     return new_vector<double>(0);
   }
   if (n == 1){
-    return as_vec(na::real);
+    return as_vector(na::real);
   }
   double a, b;
   switch(CHEAPR_TYPEOF(x)){
@@ -543,7 +543,7 @@ SEXP cpp_growth_rate(SEXP x){
     Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
   }
   }
-  return as_vec(growth_rate(a, b, n));
+  return as_vector(growth_rate(a, b, n));
 }
 
 [[cpp11::register]]
@@ -565,7 +565,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP is_dup_from_last = SHIELD(Rf_duplicated(names, TRUE)); ++NP;
   cpp_set_or(is_dup, is_dup_from_last);
 
-  SEXP r_true = SHIELD(as_vec(true)); ++NP;
+  SEXP r_true = SHIELD(as_vector(true)); ++NP;
   SEXP dup_locs = SHIELD(cpp_which_val(is_dup, r_true, false)); ++NP;
 
   int n_dups = Rf_length(dup_locs);
@@ -593,7 +593,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
     p_is_empty[i] = empty;
   }
 
-  SEXP r_n_empty = SHIELD(as_vec(n_empty)); ++NP;
+  SEXP r_n_empty = SHIELD(as_vector(n_empty)); ++NP;
 
   if (n_empty > 0){
     SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
@@ -702,7 +702,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
 [[cpp11::register]]
 SEXP cpp_is_whole_number(SEXP x, double tol_, bool na_rm_){
-  return as_vec(vec::all_whole_numbers(x, tol_, na_rm_));
+  return as_vector(vec::all_whole_numbers(x, tol_, na_rm_));
 }
 
 SEXP match(SEXP y, SEXP x, int no_match){
@@ -773,7 +773,7 @@ SEXP cheapr_do_memory_leak_test(){
   std::vector<int32_t> ints(1000);
   SEXP r_ints = r_safe(SHIELD)(r_safe(new_vector<int>)(ints.size()));
   SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
-  SEXP repl = r_safe(SHIELD)(r_safe(as_vec)(-1));
+  SEXP repl = r_safe(SHIELD)(r_safe(as_vector)(-1));
   r_safe(replace_in_place)(r_ints, seq, repl, true);
   r_safe(YIELD)(3);
   r_safe(Rf_error)("%s", "Expected error! This should not cause a C++ memory leak");

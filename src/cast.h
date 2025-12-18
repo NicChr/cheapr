@@ -265,7 +265,7 @@ template<>
 inline SEXP init<r_factor_t>(R_xlen_t n, bool with_na) {
   SEXP out = SHIELD(init<r_integer_t>(n, with_na));
   SEXP lvls = SHIELD(cheapr::vec::new_vector<cheapr::r_string_t>(0));
-  SEXP cls = SHIELD(cheapr::vec::as_vec("factor"));
+  SEXP cls = SHIELD(cheapr::vec::as_vector("factor"));
   cheapr::attr::set_attr(out, cheapr::symbol::levels_sym, lvls);
   cheapr::attr::set_class(out, cls);
   YIELD(3);
@@ -275,7 +275,7 @@ inline SEXP init<r_factor_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_date_t>(R_xlen_t n, bool with_na){
   SEXP out = SHIELD(init<r_double_t>(n, with_na));
-  SEXP cls = SHIELD(cheapr::vec::as_vec("Date"));
+  SEXP cls = SHIELD(cheapr::vec::as_vector("Date"));
   cheapr::attr::set_class(out, cls);
   YIELD(2);
   return out;
@@ -519,7 +519,7 @@ inline SEXP cast<r_date_t>(SEXP x, SEXP y) {
     if (TYPEOF(x) != INTSXP){
       SHIELD(out = cheapr::vec::coerce_vec(x, REALSXP)); ++NP;
     }
-    SEXP date_cls = SHIELD(cheapr::vec::as_vec("Date")); ++NP;
+    SEXP date_cls = SHIELD(cheapr::vec::as_vector("Date")); ++NP;
     cheapr::attr::set_class(out, date_cls);
     YIELD(NP);
     return out;

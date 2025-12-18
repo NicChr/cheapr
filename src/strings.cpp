@@ -153,7 +153,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
       }
     }
 
-    SEXP out = SHIELD(as_vec(strng.c_str())); ++NP;
+    SEXP out = SHIELD(as_vector(strng.c_str())); ++NP;
     R_Free(char_ptrs);
     YIELD(NP);
     return out;
