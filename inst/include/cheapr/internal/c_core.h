@@ -2000,6 +2000,16 @@ inline SEXP get(SEXP sym, SEXP env, bool inherits = true){
 }
 }
 
+// We call R fn`cheapr::set_threads` to make sure the R option is set
+inline void set_threads(uint16_t n){
+  uint16_t max_threads = OMP_MAX_THREADS;
+  uint16_t threads = std::min(n, max_threads);
+  SEXP cheapr_set_threads = SHIELD(fn::find_pkg_fun("set_threads", "cheapr", true));
+  SEXP r_threads = SHIELD(vec::as_vec(r_cast<int>(threads)));
+  SHIELD(fn::eval_fn(cheapr_set_threads, R_BaseEnv, r_threads));
+  YIELD(3);
+}
+
 
 namespace internal {
 // Wrap any callable f, and return a new callable that:
