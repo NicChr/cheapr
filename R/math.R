@@ -51,6 +51,11 @@ round_ <- function(x, digits = 0){
 }
 #' @rdname math
 #' @export
+signif_ <- function(x, digits = 6){
+  cpp_signif(x, digits)
+}
+#' @rdname math
+#' @export
 add_ <- cpp_add
 #' @rdname math
 #' @export

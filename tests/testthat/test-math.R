@@ -2,26 +2,30 @@ test_that("math operations", {
 
   # The first 2 will not trigger multi-threaded calculations
   make_test_data1 <- function(){
-    set.seed(3742)
+    with_local_seed({
     assign("x", na_insert(rnorm(10^3), 50),
            envir = parent.frame())
+    }, 3742)
   }
   make_test_data2 <- function(){
-    set.seed(3742)
+    with_local_seed({
     assign("x", na_insert(sample.int(100, 10^3, TRUE), 50),
            envir = parent.frame())
+    }, 3742)
   }
   make_test_data3 <- function(){
-    set.seed(3742)
+    with_local_seed({
     assign("x", na_insert(rnorm(10^5), 10^3),
            envir = parent.frame())
+    }, 3742)
   }
   make_test_data4 <- function(){
-    set.seed(3742)
+    with_local_seed({
     assign("x", val_insert(val_insert(na_insert(sample.int(100, 10^5, TRUE), 10^3),
                                       NaN, n = 10^3),
                            Inf, n = 10^3),
            envir = parent.frame())
+    }, 3742)
   }
 
   expect_error(abs_(iris))
@@ -38,12 +42,10 @@ test_that("math operations", {
     base::round(x, 2),
     round_(x, 2)
   )
-  make_test_data1()
   expect_equal(
     base::round(x),
     round_(x)
   )
-  make_test_data1()
   expect_equal(base::round(x, 1), round_(x, 1))
 
   expect_equal(abs(x), abs_(x))
@@ -132,36 +134,40 @@ test_that("math operations", {
 test_that("more math operations", {
 
   make_test_data1 <- function(){
-    set.seed(3742)
+    with_local_seed({
     assign("x", na_insert(rnorm(10^3), 50),
            envir = parent.frame())
     assign("y", c(0L, NA_integer_, 3:10), envir = parent.frame())
     assign("z", sample(c(Inf, -Inf, NA_real_, sequence_(100 - 3, 0, 0.1))),
            envir = parent.frame())
+    }, 3742)
   }
   make_test_data2 <- function(){
-    set.seed(3742)
+    with_local_seed({
     assign("x", na_insert(sample.int(100, 10^3, TRUE), 50),
            envir = parent.frame())
     assign("y", c(0L, NA_integer_, 3:10), envir = parent.frame())
     assign("z", sample(c(Inf, -Inf, NA_real_, sequence_(100 - 3, 0, 0.1))),
            envir = parent.frame())
+    }, 3742)
   }
   make_test_data3 <- function(){
-    set.seed(3742)
+    with_local_seed({
     assign("x", na_insert(rnorm(10^5), 10^3),
            envir = parent.frame())
     assign("y", c(0L, NA_integer_, 3:10), envir = parent.frame())
     assign("z", sample(c(Inf, -Inf, NA_real_, sequence_(1000 - 3, 0, 0.1))),
            envir = parent.frame())
+    }, 3742)
   }
   make_test_data4 <- function(){
-    set.seed(3742)
+    with_local_seed({
     assign("x", na_insert(sample.int(100, 10^5, TRUE), 10^3),
            envir = parent.frame())
     assign("y", c(0L, NA_integer_, 3:10), envir = parent.frame())
-    assign("z", sample(c(Inf, -Inf, NA_real_, sequence_(1000 - 3, 0, 0.1))),
+    assign("z", sample(c(Inf, -Inf, NA_real_, NaN, sequence_(1000 - 4, 0, 0.1))),
            envir = parent.frame())
+    }, 3742)
   }
 
   expect_error(add_(iris))

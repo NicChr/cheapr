@@ -13,6 +13,7 @@
 \alias{log_}
 \alias{log10_}
 \alias{round_}
+\alias{signif_}
 \alias{add_}
 \alias{subtract_}
 \alias{multiply_}
@@ -41,6 +42,8 @@ log_(x, base = exp(1))
 log10_(x)
 
 round_(x, digits = 0)
+
+signif_(x, digits = 6)
 
 add_(x, y)
 

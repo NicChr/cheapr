@@ -412,6 +412,13 @@ extern "C" SEXP _cheapr_cpp_round(SEXP x, SEXP digits) {
   END_CPP11
 }
 // math.cpp
+SEXP cpp_signif(SEXP x, SEXP digits);
+extern "C" SEXP _cheapr_cpp_signif(SEXP x, SEXP digits) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_signif(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(digits)));
+  END_CPP11
+}
+// math.cpp
 SEXP cpp_add(SEXP x, SEXP y);
 extern "C" SEXP _cheapr_cpp_add(SEXP x, SEXP y) {
   BEGIN_CPP11
@@ -989,6 +996,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_set_trunc",               (DL_FUNC) &_cheapr_cpp_set_trunc,               1},
     {"_cheapr_cpp_setdiff",                 (DL_FUNC) &_cheapr_cpp_setdiff,                 3},
     {"_cheapr_cpp_shallow_copy",            (DL_FUNC) &_cheapr_cpp_shallow_copy,            1},
+    {"_cheapr_cpp_signif",                  (DL_FUNC) &_cheapr_cpp_signif,                  2},
     {"_cheapr_cpp_sqrt",                    (DL_FUNC) &_cheapr_cpp_sqrt,                    1},
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    3},
     {"_cheapr_cpp_sset2",                   (DL_FUNC) &_cheapr_cpp_sset2,                   5},

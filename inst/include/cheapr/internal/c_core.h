@@ -833,6 +833,26 @@ inline constexpr bool is_r_inf<double>(const double x){
   return x == r_limits::r_pos_inf || x == r_limits::r_neg_inf;
 }
 
+template <typename T>
+inline constexpr bool is_r_pos_inf(const T x){
+  return false;
+}
+
+template <>
+inline constexpr bool is_r_pos_inf<double>(const double x){
+  return x == r_limits::r_pos_inf;
+}
+
+template <typename T>
+inline constexpr bool is_r_neg_inf(const T x){
+  return false;
+}
+
+template <>
+inline constexpr bool is_r_neg_inf<double>(const double x){
+  return x == r_limits::r_neg_inf;
+}
+
 // C++ templates
 
 template<typename T>
@@ -1459,12 +1479,16 @@ inline Rcomplex r_log(Rcomplex x){
 
 
 template<typename T, typename U>
-inline double r_round(T x, U digits){
+inline double r_round(T x, const U digits){
   if (is_r_na(x)){
     return r_cast<double>(x);
   } else if (is_r_na(digits)){
     return na::real;
   } else if (is_r_inf(x)){
+    return x;
+  } else if (is_r_neg_inf(digits)){
+    return 0.0;
+  } else if (is_r_pos_inf(digits)){
     return x;
   } else {
     double scale = std::pow(10.0, r_cast<double>(digits));
@@ -1483,17 +1507,19 @@ inline double r_round(T x){
   }
 }
 
-inline double r_signif(double x, const int digits = 6){
+template<typename T, typename U>
+inline double r_signif(T x, const U digits){
+  U new_digits = std::max(U(1), digits);
   if (is_r_na(x)){
-    return x;
-  } else if (is_r_na(digits)){
+    return r_cast<double>(x);
+  } else if (is_r_na(new_digits)){
     return na::real;
-  } else if (x == 0.0){
-    return 0.0;
+  } else if (is_r_pos_inf(digits)){
+    return x;
   } else {
-    int new_digits = digits - std::ceil(std::log10(std::abs(x)));
+    new_digits -= std::ceil(std::log10(std::abs(x)));
     double scale = std::pow(10, new_digits);
-    return internal::round_to_even(x * scale) / scale;
+    return internal::round_to_even(scale * x) / scale;
   }
 }
 

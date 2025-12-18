@@ -73,7 +73,7 @@ if (n_cores > 1){                                                        \
 
 // General parallelised optimised macro for applying
 // cheapr::math binary fns across 2 vectors
-#define CHEAPR_VECTORISED_MATH_LOOP(FUN, x, y, p_x, p_y, _n, n_cores)                                    \
+#define CHEAPR_VECTORISED_MATH_LOOP(FUN, x, y, p_x, p_y, p_out, _n, n_cores)                                    \
 R_xlen_t _xn = vec::length(x), _yn = vec::length(y);                                                     \
 if (_xn == 0 || _yn == 0){                                                                               \
   _n = 0;                                                                                                \
@@ -518,13 +518,13 @@ SEXP cpp_round(SEXP x, SEXP digits){
   int32_t NP = 0;
   check_numeric(x);
   check_numeric(digits);
-  SHIELD(digits = coerce_vec(digits, INTSXP)); ++NP;
+  SHIELD(digits = coerce_vec(digits, REALSXP)); ++NP;
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t digitsn = Rf_xlength(digits);
   int n_cores = get_cores(n);
   bool is_digits_scalar = digitsn == 1;
-  int *p_y = integer_ptr(digits);
-  int y;
+  double *p_y = real_ptr(digits);
+  double y;
   if (is_digits_scalar){
     y = p_y[0];
   }
@@ -536,7 +536,7 @@ SEXP cpp_round(SEXP x, SEXP digits){
     recycle_in_place(recycled_objs, n);
     x = VECTOR_ELT(recycled_objs, 0);
     digits = VECTOR_ELT(recycled_objs, 1);
-    p_y = integer_ptr(digits);
+    p_y = real_ptr(digits);
   }
 
   SEXP out;
@@ -568,6 +568,46 @@ SEXP cpp_round(SEXP x, SEXP digits){
 }
 
 [[cpp11::register]]
+SEXP cpp_signif(SEXP x, SEXP digits){
+  int32_t NP = 0;
+  check_numeric(x);
+  check_numeric(digits);
+  SHIELD(digits = coerce_vec(digits, REALSXP)); ++NP;
+  R_xlen_t n = Rf_xlength(x);
+  R_xlen_t digitsn = Rf_xlength(digits);
+  int n_cores = get_cores(n);
+  bool is_digits_scalar = digitsn == 1;
+
+  if (!is_digits_scalar){
+    SEXP recycled_objs = SHIELD(make_list(x, digits)); ++NP;
+    n = length_common(recycled_objs);
+    recycle_in_place(recycled_objs, n);
+    x = VECTOR_ELT(recycled_objs, 0);
+    digits = VECTOR_ELT(recycled_objs, 1);
+  }
+
+  double *p_digits = real_ptr(digits);
+
+  SEXP out = SHIELD(new_vector<double>(n)); ++NP;
+  double* RESTRICT p_out = real_ptr(out);
+
+  switch (TYPEOF(x)){
+  case INTSXP: {
+    const int *p_x = integer_ptr_ro(x);
+    CHEAPR_VECTORISED_MATH_LOOP(r_signif, x, digits, p_x, p_digits, p_out, n, n_cores)
+    break;
+  }
+  default: {
+    const double *p_x = real_ptr_ro(x);
+    CHEAPR_VECTORISED_MATH_LOOP(r_signif, x, digits, p_x, p_digits, p_out, n, n_cores)
+    break;
+  }
+  }
+  YIELD(NP);
+  return out;
+}
+
+[[cpp11::register]]
 SEXP cpp_add(SEXP x, SEXP y){
   int32_t NP = 0;
   check_numeric(x);
@@ -589,7 +629,7 @@ SEXP cpp_add(SEXP x, SEXP y){
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_add, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_add, x, y, p_x, p_y, p_out, n, n_cores)
     break;
   }
   default: {
@@ -597,7 +637,7 @@ SEXP cpp_add(SEXP x, SEXP y){
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_add, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_add, x, y, p_x, p_y, p_out, n, n_cores)
     break;
   }
   }
@@ -626,7 +666,7 @@ SEXP cpp_subtract(SEXP x, SEXP y){
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_subtract, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_subtract, x, y, p_x, p_y, p_out, n, n_cores)
       break;
   }
   default: {
@@ -634,7 +674,7 @@ SEXP cpp_subtract(SEXP x, SEXP y){
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_subtract, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_subtract, x, y, p_x, p_y, p_out, n, n_cores)
       break;
   }
   }
@@ -663,7 +703,7 @@ SEXP cpp_multiply(SEXP x, SEXP y){
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_multiply, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_multiply, x, y, p_x, p_y, p_out, n, n_cores)
       break;
   }
   default: {
@@ -671,7 +711,7 @@ SEXP cpp_multiply(SEXP x, SEXP y){
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_multiply, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_multiply, x, y, p_x, p_y, p_out, n, n_cores)
       break;
   }
   }
@@ -700,13 +740,13 @@ SEXP cpp_divide(SEXP x, SEXP y){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
-    CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, p_out, n, n_cores)
       break;
   }
   default: {
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
-    CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, p_out, n, n_cores)
       break;
   }
   }
@@ -735,13 +775,13 @@ SEXP cpp_pow(SEXP x, SEXP y){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
-    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, p_out, n, n_cores)
       break;
   }
   default: {
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
-    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, p_out, n, n_cores)
       break;
   }
   }

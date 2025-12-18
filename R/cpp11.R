@@ -232,6 +232,10 @@ cpp_round <- function(x, digits) {
   .Call(`_cheapr_cpp_round`, x, digits)
 }
 
+cpp_signif <- function(x, digits) {
+  .Call(`_cheapr_cpp_signif`, x, digits)
+}
+
 cpp_add <- function(x, y) {
   .Call(`_cheapr_cpp_add`, x, y)
 }
