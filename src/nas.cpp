@@ -24,12 +24,12 @@ for (R_xlen_t i = 0; i < n; ++i){                                \
 if (n_threads > 1){                                                           \
   OMP_PARALLEL_FOR_SIMD(n_threads)                                            \
   for (R_xlen_t i = 0; i < n; ++i){                                           \
-    set_val(p_out, i, is_r_na(p_x[i]));                                       \
+    set_value(p_out, i, static_cast<r_bool_t>(is_r_na(p_x[i])));                \
   }                                                                           \
 } else {                                                                      \
   OMP_SIMD                                                                    \
   for (R_xlen_t i = 0; i < n; ++i){                                           \
-    set_val(p_out, i, is_r_na(p_x[i]));                                       \
+    set_value(p_out, i, static_cast<r_bool_t>(is_r_na(p_x[i])));                \
   }                                                                           \
 }
 
@@ -243,28 +243,28 @@ SEXP cpp_is_na(SEXP x){
   case LGLSXP:
   case INTSXP: {
     out = SHIELD(new_vector<r_bool_t>(n));
-    int* RESTRICT p_out = integer_ptr(out);
+    r_bool_t* RESTRICT p_out = logical_ptr(out);
     const int *p_x = integer_ptr(x);
     CHEAPR_IS_NA
     break;
   }
   case CHEAPR_INT64SXP: {
     out = SHIELD(new_vector<r_bool_t>(n));
-    int* RESTRICT p_out = integer_ptr(out);
+    r_bool_t* RESTRICT p_out = logical_ptr(out);
     const int64_t *p_x = integer64_ptr_ro(x);
     CHEAPR_IS_NA
     break;
   }
   case REALSXP: {
     out = SHIELD(new_vector<r_bool_t>(n));
-    int* RESTRICT p_out = integer_ptr(out);
+    r_bool_t* RESTRICT p_out = logical_ptr(out);
     const double *p_x = real_ptr(x);
     CHEAPR_IS_NA
     break;
   }
   case STRSXP: {
     out = SHIELD(new_vector<r_bool_t>(n));
-    int* RESTRICT p_out = integer_ptr(out);
+    r_bool_t* RESTRICT p_out = logical_ptr(out);
     const r_string_t *p_x = string_ptr_ro(x);
     CHEAPR_IS_NA
     break;
@@ -275,7 +275,7 @@ SEXP cpp_is_na(SEXP x){
   }
   case CPLXSXP: {
     out = SHIELD(new_vector<r_bool_t>(n));
-    int* RESTRICT p_out = integer_ptr(out);
+    r_bool_t* RESTRICT p_out = logical_ptr(out);
     const Rcomplex *p_x = complex_ptr(x);
     CHEAPR_IS_NA
     break;

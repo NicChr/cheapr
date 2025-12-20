@@ -52,7 +52,7 @@ SEXP cpp_str_coalesce(SEXP x){
     return out;
   }
 
-  SEXP out = SHIELD(Rf_allocVector(STRSXP, n_strings)); ++NP;
+  SEXP out = SHIELD(new_vector<r_string_t>(n_strings)); ++NP;
   r_string_t inner_char = blank_r_string;
 
   R_xlen_t n_nas;
@@ -63,12 +63,12 @@ SEXP cpp_str_coalesce(SEXP x){
       inner_char = char_ptrs[j][i];
       n_nas += is_r_na(inner_char);
       if (!(inner_char == blank_r_string || is_r_na(inner_char))){
-        set_val(out, i, inner_char);
+        set_value(out, i, inner_char);
         break;
       }
       // If all ith elements are NA, then return NA
       if (n_nas == n_chars){
-        set_val(out, i, na::string);
+        set_value(out, i, na::string);
       }
     }
   }
@@ -171,7 +171,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
       for (R_xlen_t i = 1; i < n_chars; ++i){
         str_paste(strng, sep1, utf8_char(char_ptrs[i][j]));
       }
-      set_val(out, j, as_r_string(strng.c_str()));
+      set_value(out, j, as_r_string(strng.c_str()));
     }
 
     R_Free(char_ptrs);

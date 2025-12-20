@@ -451,84 +451,112 @@ inline SEXP get_r_obj(SEXP x, const R_xlen_t i){
 }
 
 template<typename T>
-inline void set_val(SEXP x, const R_xlen_t i, T val){
+inline void set_value(T *p_x, const R_xlen_t i, T val){
   static_assert(
     sizeof(T) == 0,
-    "Unimplemented `set_val` specialisation"
+    "Unimplemented `set_value` specialisation"
   );
   return T{};
 }
 
-inline void set_val(bool* p_x, const R_xlen_t i, bool val){
-  p_x[i] = val;
-}
-inline void set_val(int* p_x, const R_xlen_t i, bool val){
-  p_x[i] = static_cast<int>(val);
-}
-inline void set_val(SEXP x, const R_xlen_t i, bool val){
-  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
-}
-inline void set_val(r_bool_t* p_x, const R_xlen_t i, r_bool_t val){
-  p_x[i] = val;
-}
-inline void set_val(SEXP x, const R_xlen_t i, r_bool_t val){
-  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
-}
-inline void set_val(int* p_x, const R_xlen_t i, cpp11::r_bool val){
-  p_x[i] = static_cast<int>(val);
-}
-inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_bool val){
-  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
-}
-inline void set_val(int* p_x, const R_xlen_t i, int val){
-  p_x[i] = val;
-}
-inline void set_val(SEXP x, const R_xlen_t i, int val){
-  SET_INTEGER_ELT(x, i, val);
-}
-inline void set_val(int64_t* p_x, const R_xlen_t i, int64_t val){
-  p_x[i] = val;
-}
-inline void set_val(SEXP x, const R_xlen_t i, int64_t val){
-  r_ptr::integer64_ptr(x)[i] = val;
-}
-inline void set_val(double* p_x, const R_xlen_t i, double val){
-  p_x[i] = val;
-}
-inline void set_val(SEXP x, const R_xlen_t i, double val){
-  SET_REAL_ELT(x, i, val);
+template<typename T>
+inline void set_value(SEXP x, const R_xlen_t i, T val){
+  static_assert(
+    sizeof(T) == 0,
+    "Unimplemented `set_value` specialisation"
+  );
+  return T{};
 }
 
-inline void set_val(Rcomplex* p_x, const R_xlen_t i, Rcomplex val){
+template<>
+inline void set_value(bool* p_x, const R_xlen_t i, bool val){
+  p_x[i] = val;
+}
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, bool val){
+  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
+}
+template<>
+inline void set_value(r_bool_t* p_x, const R_xlen_t i, r_bool_t val){
+  p_x[i] = val;
+}
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, r_bool_t val){
+  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
+}
+template<>
+inline void set_value(cpp11::r_bool* p_x, const R_xlen_t i, cpp11::r_bool val){
+  p_x[i] = static_cast<int>(val);
+}
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, cpp11::r_bool val){
+  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
+}
+template<>
+inline void set_value(int* p_x, const R_xlen_t i, int val){
+  p_x[i] = val;
+}
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, int val){
+  SET_INTEGER_ELT(x, i, val);
+}
+template<>
+inline void set_value(int64_t* p_x, const R_xlen_t i, int64_t val){
+  p_x[i] = val;
+}
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, int64_t val){
+  r_ptr::integer64_ptr(x)[i] = val;
+}
+template<>
+inline void set_value(double* p_x, const R_xlen_t i, double val){
+  p_x[i] = val;
+}
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, double val){
+  SET_REAL_ELT(x, i, val);
+}
+template<>
+inline void set_value(Rcomplex* p_x, const R_xlen_t i, Rcomplex val){
   p_x[i].r = val.r;
   p_x[i].i = val.i;
 }
-inline void set_val(SEXP x, const R_xlen_t i, Rcomplex val){
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, Rcomplex val){
   SET_COMPLEX_ELT(x, i, val);
 }
-inline void set_val(Rbyte* p_x, const R_xlen_t i, Rbyte val){
+template<>
+inline void set_value(Rbyte* p_x, const R_xlen_t i, Rbyte val){
   p_x[i] = val;
 }
-inline void set_val(SEXP x, const R_xlen_t i, Rbyte val){
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, Rbyte val){
   SET_RAW_ELT(x, i, val);
 }
-inline void set_val(SEXP x, const R_xlen_t i, const char* val){
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, const char* val){
   SET_STRING_ELT(x, i, internal::make_utf8_charsxp(val));
 }
-inline void set_val(SEXP x, const R_xlen_t i, std::string val){
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, std::string val){
   SET_STRING_ELT(x, i, internal::make_utf8_charsxp(val.c_str()));
 }
-inline void set_val(SEXP x, const R_xlen_t i, cpp11::r_string val){
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, cpp11::r_string val){
   SET_STRING_ELT(x, i, val);
 }
-inline void set_val(SEXP x, const R_xlen_t i, r_string_t val){
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, r_string_t val){
   SET_STRING_ELT(x, i, static_cast<SEXP>(val));
 }
-inline void set_val(SEXP x, const R_xlen_t i, r_symbol_t val){
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, r_symbol_t val){
   SET_VECTOR_ELT(x, i, static_cast<SEXP>(val));
 }
+
 // Never use the pointer here to assign
-inline void set_val(SEXP x, const R_xlen_t i, SEXP val){
+template<>
+inline void set_value(SEXP x, const R_xlen_t i, SEXP val){
   switch (TYPEOF(val)){
   case CHARSXP: {
     SET_STRING_ELT(x, i, val);
@@ -563,14 +591,14 @@ inline void fast_fill(T *first, T *last, const T val) {
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
       for (R_xlen_t i = 0; i < size; ++i) {
-        vec::set_val(first, i, val);
+        vec::set_value(first, i, val);
       }
     } else {
       std::fill(first, last, val);
     }
   } else {
     for (T *it = first; it != last; ++it) {
-      vec::set_val(first, it - first, val);
+      vec::set_value(first, it - first, val);
     }
   }
 }
@@ -585,7 +613,7 @@ inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
       for (R_xlen_t i = 0; i < size; ++i) {
         if (eq(first[i], old_val)){
-          vec::set_val(first, i, new_val);
+          vec::set_value(first, i, new_val);
         }
       }
     } else {
@@ -595,7 +623,7 @@ inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
     for (T *it = first; it != last; ++it) {
       R_xlen_t i = it - first;
       if (eq(first[i], old_val)){
-        vec::set_val(first, i, new_val);
+        vec::set_value(first, i, new_val);
       }
     }
   }
@@ -608,14 +636,14 @@ inline void fast_copy_n(const T *source, R_xlen_t n, T *target){
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
       for (R_xlen_t i = 0; i < n; ++i) {
-        vec::set_val(target, i, source[i]);
+        vec::set_value(target, i, source[i]);
       }
     } else {
       std::copy_n(source, n, target);
     }
   } else {
     for (R_xlen_t i = 0; i < n; ++i) {
-      vec::set_val(target, i, source[i]);
+      vec::set_value(target, i, source[i]);
     }
   }
 }
@@ -818,8 +846,8 @@ inline int ncol(SEXP x){
 inline SEXP new_row_names(int n){
   if (n > 0){
     SEXP out = SHIELD(vec::new_vector<int>(2));
-    vec::set_val(out, 0, na::integer);
-    vec::set_val(out, 1, -n);
+    vec::set_value(out, 0, na::integer);
+    vec::set_value(out, 1, -n);
     YIELD(1);
     return out;
   } else {
@@ -1981,9 +2009,9 @@ inline SEXP get_attrs(SEXP x){
   SEXP current = a;
 
   for (int i = 0; i < n; ++i){
-    vec::set_val(out, i, CAR(current));
+    vec::set_value(out, i, CAR(current));
     if (!is_null(symbol::tag(current))){
-      vec::set_val(names, i, r_cast<r_string_t>(symbol::tag(current)));
+      vec::set_value(names, i, r_cast<r_string_t>(symbol::tag(current)));
     }
     current = CDR(current);
   }

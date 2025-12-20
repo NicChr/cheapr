@@ -5,22 +5,22 @@ if (all_not_scalar){                                             \
   OMP_ROUTINE                                                    \
   for (R_xlen_t i = 0; i < n; ++i){                              \
     if (p_x[i] == r_true){                                       \
-      set_val(p_out, i, p_yes[i]);                               \
+      set_value(p_out, i, p_yes[i]);                               \
     } else if (p_x[i] == r_false){                               \
-      set_val(p_out, i, p_no[i]);                                \
+      set_value(p_out, i, p_no[i]);                                \
     } else {                                                     \
-      set_val(p_out, i, p_na[i]);                                \
+      set_value(p_out, i, p_na[i]);                                \
     }                                                            \
   }                                                              \
 } else {                                                         \
   OMP_ROUTINE                                                    \
   for (R_xlen_t i = 0; i < n; ++i){                              \
     if (p_x[i] == r_true){                                       \
-      set_val(p_out, i, p_yes[yes_scalar ? 0 : i]);              \
+      set_value(p_out, i, p_yes[yes_scalar ? 0 : i]);              \
     } else if (p_x[i] == r_false){                               \
-      set_val(p_out, i, p_no[no_scalar ? 0 : i]);                \
+      set_value(p_out, i, p_no[no_scalar ? 0 : i]);                \
     } else {                                                     \
-      set_val(p_out, i, p_na[na_scalar ? 0 : i]);                \
+      set_value(p_out, i, p_na[na_scalar ? 0 : i]);                \
     }                                                            \
   }                                                              \
 }
@@ -30,11 +30,11 @@ if (all_not_scalar){                                             \
 for (R_xlen_t i = 0; i < n; ++i){                                                  \
   lgl = p_x[i];                                                                    \
   if (lgl == r_true){                                                              \
-    set_val(p_out, i, yes_value);                                                  \
+    set_value(p_out, i, yes_value);                                                  \
   } else if (lgl == r_false){                                                      \
-    set_val(p_out, i, no_value);                                                   \
+    set_value(p_out, i, no_value);                                                   \
   } else {                                                                         \
-    set_val(p_out, i, na_value);                                                   \
+    set_value(p_out, i, na_value);                                                   \
   }                                                                                \
 }
 

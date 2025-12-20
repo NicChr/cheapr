@@ -34,7 +34,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
       }
-      set_val(out, 0, r_abs(gcd));
+      set_value(out, 0, r_abs(gcd));
     }
     break;
   }
@@ -53,7 +53,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
           break;
         }
       }
-      set_val(out, 0, r_abs(gcd));
+      set_value(out, 0, r_abs(gcd));
     }
     break;
   }
@@ -76,7 +76,7 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
         double factor = std::pow(10, std::ceil(std::fabs(std::log10(tol))) + 1);
         gcd = r_round(gcd * factor) / factor;
       }
-      set_val(out, 0, r_abs(gcd));
+      set_value(out, 0, r_abs(gcd));
     }
     break;
   }
