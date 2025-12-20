@@ -2010,75 +2010,74 @@ inline void set_attrs(SEXP x, SEXP attrs){
 
 namespace vec {
 inline SEXP deep_copy(SEXP x){
-  return Rf_duplicate(x);
-  // int32_t NP = 0;
-  // SEXP out = r_null;
-  // R_xlen_t n = Rf_xlength(x);
-  // SEXP attrs = r_null;
-  //
-  // switch (TYPEOF(x)){
-  // case NILSXP: {
-  //   break;
-  // }
-  // case LGLSXP: {
-  //   out = SHIELD(new_vector<r_bool_t>(n)); ++NP;
-  //   fast_copy_n(r_ptr::logical_ptr_ro(x), n, r_ptr::logical_ptr(out));
-  //   break;
-  // }
-  // case INTSXP: {
-  //   out = SHIELD(new_vector<int>(n)); ++NP;
-  //   fast_copy_n(r_ptr::integer_ptr_ro(x), n, r_ptr::integer_ptr(out));
-  //   break;
-  // }
-  // case REALSXP: {
-  //   out = SHIELD(new_vector<double>(n)); ++NP;
-  //   fast_copy_n(r_ptr::real_ptr_ro(x), n, r_ptr::real_ptr(out));
-  //   break;
-  // }
-  // case STRSXP: {
-  //   out = SHIELD(new_vector<r_string_t>(n)); ++NP;
-  //   const r_string_t *p_x = r_ptr::string_ptr_ro(x);
-  //   for (R_xlen_t i = 0; i < n; ++i){
-  //     SET_STRING_ELT(out, i, p_x[i]);
-  //   }
-  //   break;
-  // }
-  // case CPLXSXP: {
-  //   out = SHIELD(new_vector<Rcomplex>(n)); ++NP;
-  //   fast_copy_n(r_ptr::complex_ptr_ro(x), n, r_ptr::complex_ptr(out));
-  //   break;
-  // }
-  // case RAWSXP: {
-  //   out = SHIELD(new_vector<Rbyte>(n)); ++NP;
-  //   fast_copy_n(r_ptr::raw_ptr_ro(x), n, r_ptr::raw_ptr(out));
-  //   break;
-  // }
-  // case VECSXP: {
-  //   out = SHIELD(new_vector<SEXP>(n)); ++NP;
-  //   const SEXP *p_x = r_ptr::list_ptr_ro(x);
-  //   for (R_xlen_t i = 0; i < n; ++i){
-  //     SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
-  //   }
-  //   break;
-  // }
-  // default: {
-  //   out = SHIELD(Rf_duplicate(x)); ++NP;
-  //   YIELD(NP);
-  //   return out;
-  // }
-  // }
-  //
-  // if (!is_null(x)){
-  //   SHIELD(attrs = attr::get_attrs(x)); ++NP;
-  //   int n_attrs = Rf_length(attrs);
-  //   for (R_xlen_t i = 0; i < n_attrs; ++i){
-  //     SET_VECTOR_ELT(attrs, i, deep_copy(VECTOR_ELT(attrs, i)));
-  //   }
-  //   attr::set_attrs(out, attrs);
-  // }
-  //
-  // YIELD(NP);
-  // return out;
+  int32_t NP = 0;
+  SEXP out = r_null;
+  R_xlen_t n = Rf_xlength(x);
+  SEXP attrs = r_null;
+
+  switch (TYPEOF(x)){
+  case NILSXP: {
+    break;
+  }
+  case LGLSXP: {
+    out = SHIELD(new_vector<r_bool_t>(n)); ++NP;
+    fast_copy_n(r_ptr::logical_ptr_ro(x), n, r_ptr::logical_ptr(out));
+    break;
+  }
+  case INTSXP: {
+    out = SHIELD(new_vector<int>(n)); ++NP;
+    fast_copy_n(r_ptr::integer_ptr_ro(x), n, r_ptr::integer_ptr(out));
+    break;
+  }
+  case REALSXP: {
+    out = SHIELD(new_vector<double>(n)); ++NP;
+    fast_copy_n(r_ptr::real_ptr_ro(x), n, r_ptr::real_ptr(out));
+    break;
+  }
+  case STRSXP: {
+    out = SHIELD(new_vector<r_string_t>(n)); ++NP;
+    const r_string_t *p_x = r_ptr::string_ptr_ro(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_STRING_ELT(out, i, p_x[i]);
+    }
+    break;
+  }
+  case CPLXSXP: {
+    out = SHIELD(new_vector<Rcomplex>(n)); ++NP;
+    fast_copy_n(r_ptr::complex_ptr_ro(x), n, r_ptr::complex_ptr(out));
+    break;
+  }
+  case RAWSXP: {
+    out = SHIELD(new_vector<Rbyte>(n)); ++NP;
+    fast_copy_n(r_ptr::raw_ptr_ro(x), n, r_ptr::raw_ptr(out));
+    break;
+  }
+  case VECSXP: {
+    out = SHIELD(new_vector<SEXP>(n)); ++NP;
+    const SEXP *p_x = r_ptr::list_ptr_ro(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
+    }
+    break;
+  }
+  default: {
+    out = SHIELD(Rf_duplicate(x)); ++NP;
+    YIELD(NP);
+    return out;
+  }
+  }
+
+  if (!is_null(x)){
+    SHIELD(attrs = attr::get_attrs(x)); ++NP;
+    int n_attrs = Rf_length(attrs);
+    for (R_xlen_t i = 0; i < n_attrs; ++i){
+      SET_VECTOR_ELT(attrs, i, deep_copy(VECTOR_ELT(attrs, i)));
+    }
+    attr::set_attrs(out, attrs);
+  }
+
+  YIELD(NP);
+  return out;
 }
 
 
