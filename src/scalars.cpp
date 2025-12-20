@@ -18,10 +18,12 @@ bool implicit_na_coercion(SEXP x, SEXP target){
 
 #define CHEAPR_VAL_COUNT(VAL)                                  \
 if (is_r_na(VAL)){                                             \
+  _Pragma("omp simd reduction(+:count)")                       \
   for (R_xlen_t i = 0; i < n; ++i){                            \
     count += is_r_na(p_x[i]);                                  \
   }                                                            \
 } else {                                                       \
+  _Pragma("omp simd reduction(+:count)")                       \
   for (R_xlen_t i = 0; i < n; ++i){                            \
     count += eq(p_x[i], VAL);                                  \
   }                                                            \

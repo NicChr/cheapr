@@ -38,21 +38,21 @@ for (R_xlen_t i = 0; i < n; ++i){                                               
   }                                                                                \
 }
 
-#define CHEAPR_DO_IF_ELSE                                      \
-if (all_scalar){                                               \
-  if (n_cores > 1){                                            \
-    OMP_PARALLEL_FOR_SIMD                                      \
-    CHEAPR_SCALAR_IF_ELSE                                      \
-  } else {                                                     \
-    OMP_FOR_SIMD                                               \
-    CHEAPR_SCALAR_IF_ELSE                                      \
-  }                                                            \
-} else {                                                       \
-  if (n_cores > 1){                                            \
-    CHEAPR_VECTORISED_IF_ELSE(OMP_PARALLEL_FOR_SIMD)           \
-  } else {                                                     \
-    CHEAPR_VECTORISED_IF_ELSE(OMP_FOR_SIMD)                    \
-  }                                                            \
+#define CHEAPR_DO_IF_ELSE                                                 \
+if (all_scalar){                                                          \
+  if (n_threads > 1){                                                     \
+    OMP_PARALLEL_FOR_SIMD(n_threads)                                      \
+    CHEAPR_SCALAR_IF_ELSE                                                 \
+  } else {                                                                \
+    OMP_SIMD                                                              \
+    CHEAPR_SCALAR_IF_ELSE                                                 \
+  }                                                                       \
+} else {                                                                  \
+  if (n_threads > 1){                                                     \
+    CHEAPR_VECTORISED_IF_ELSE(OMP_PARALLEL_FOR_SIMD(n_threads))           \
+  } else {                                                                \
+    CHEAPR_VECTORISED_IF_ELSE(OMP_SIMD)                                   \
+  }                                                                       \
 }
 
 
@@ -111,7 +111,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     bool all_not_scalar = !yes_scalar && !no_scalar && !na_scalar;
     r_bool_t lgl;
 
-    int n_cores = get_cores(n);
+    int n_threads = calc_threads(n);
 
     switch (common){
     case R_null: {

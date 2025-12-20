@@ -25,20 +25,25 @@
 
 #ifdef _OPENMP
 #include <omp.h>
+#define OMP_PRAGMA(x) _Pragma(#x)
 #define OMP_NUM_PROCS omp_get_num_procs()
 #define OMP_THREAD_LIMIT omp_get_thread_limit()
 #define OMP_MAX_THREADS omp_get_max_threads()
-#define OMP_PARALLEL _Pragma("omp parallel num_threads(n_cores) ")
-#define OMP_FOR_SIMD _Pragma("omp for simd ")
-#define OMP_PARALLEL_FOR_SIMD	_Pragma("omp parallel for simd num_threads(n_cores) ")
+#define OMP_PARALLEL(n_threads) OMP_PRAGMA(omp parallel if ((n_threads) > 1) num_threads((n_threads)))
+#define OMP_FOR_SIMD OMP_PRAGMA(omp for simd)
+#define OMP_SIMD OMP_PRAGMA(omp simd)
+#define OMP_PARALLEL_FOR_SIMD(n_threads) OMP_PRAGMA(omp parallel for simd if ((n_threads) > 1) num_threads((n_threads)))
+
 #define OMP_DO_NOTHING
 #else
+#define OMP_PRAGMA(x)
 #define OMP_NUM_PROCS 1
 #define OMP_THREAD_LIMIT 1
 #define OMP_MAX_THREADS 1
-#define OMP_PARALLEL
+#define OMP_PARALLEL(n_threads)
+#define OMP_SIMD
 #define OMP_FOR_SIMD
-#define OMP_PARALLEL_FOR_SIMD
+#define OMP_PARALLEL_FOR_SIMD(n_threads)
 #define OMP_DO_NOTHING
 #endif
 
@@ -64,7 +69,7 @@ namespace cheapr {
 
 namespace internal {
 
-inline constexpr int CHEAPR_OMP_THRESHOLD = 100000;
+inline constexpr int64_t CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 }
 
@@ -314,17 +319,22 @@ inline void set_attr(SEXP x, r_symbol_t sym, SEXP value){
 namespace internal {
 inline SEXP CHEAPR_CORES = r_null;
 
-inline int num_cores(){
+inline int get_threads(){
   if (is_null(CHEAPR_CORES)){
     CHEAPR_CORES = Rf_installChar(make_utf8_charsxp("cheapr.cores"));
   }
-  int n_cores = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
-  return n_cores >= 1 ? n_cores : 1;
+  int n_threads = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
+  n_threads = std::min(n_threads, OMP_MAX_THREADS);
+  return n_threads > 1 ? n_threads : 1;
 }
 
-inline int get_cores(R_xlen_t data_size){
-  return data_size >= CHEAPR_OMP_THRESHOLD ? num_cores() : 1;
+inline int calc_threads(R_xlen_t data_size){
+  return data_size >= CHEAPR_OMP_THRESHOLD ? get_threads() : 1;
 }
+
+// inline void set_omp_threshold(int64_t n){
+//   CHEAPR_OMP_THRESHOLD = n;
+// }
 
 }
 
@@ -549,9 +559,9 @@ inline void fast_fill(T *first, T *last, const T val) {
 
   if constexpr (is_r_arithmetic_v<T> || std::is_same_v<std::decay_t<T>, Rcomplex>){
     R_xlen_t size = last - first;
-    int n_cores = internal::get_cores(size);
-    if (n_cores > 1) {
-      OMP_PARALLEL_FOR_SIMD
+    int n_threads = internal::calc_threads(size);
+    if (n_threads > 1) {
+      OMP_PARALLEL_FOR_SIMD(n_threads)
       for (R_xlen_t i = 0; i < size; ++i) {
         vec::set_val(first, i, val);
       }
@@ -570,9 +580,9 @@ inline void fast_replace(T *first, T *last, const T old_val, const T new_val) {
 
   if constexpr (is_r_arithmetic_v<T> || std::is_same_v<std::decay_t<T>, Rcomplex>){
     R_xlen_t size = last - first;
-    int n_cores = internal::get_cores(size);
-    if (n_cores > 1) {
-      OMP_PARALLEL_FOR_SIMD
+    int n_threads = internal::calc_threads(size);
+    if (n_threads > 1) {
+      OMP_PARALLEL_FOR_SIMD(n_threads)
       for (R_xlen_t i = 0; i < size; ++i) {
         if (eq(first[i], old_val)){
           vec::set_val(first, i, new_val);
@@ -594,9 +604,9 @@ template <typename T>
 inline void fast_copy_n(const T *source, R_xlen_t n, T *target){
 
   if constexpr (is_r_arithmetic_v<T> || std::is_same_v<std::decay_t<T>, Rcomplex>){
-    int n_cores = internal::get_cores(n);
-    if (n_cores > 1) {
-      OMP_PARALLEL_FOR_SIMD
+    int n_threads = internal::calc_threads(n);
+    if (n_threads > 1) {
+      OMP_PARALLEL_FOR_SIMD(n_threads)
       for (R_xlen_t i = 0; i < n; ++i) {
         vec::set_val(target, i, source[i]);
       }
@@ -1832,10 +1842,6 @@ inline R_xlen_t length(SEXP x){
   }
 }
 
-inline SEXP deep_copy(SEXP x){
-  return Rf_duplicate(x);
-}
-
 inline SEXP shallow_copy(SEXP x){
   return Rf_shallow_duplicate(x);
 }
@@ -1919,7 +1925,7 @@ inline void add_attrs(SEXP x, SEXP attrs) {
       if (p_names[i] != blank_r_string){
         attr_nm = r_cast<r_symbol_t>(p_names[i]);
         if (address(x) == address(p_attributes[i])){
-          SEXP dup_attr = SHIELD(vec::deep_copy(p_attributes[i])); ++NP;
+          SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
           attr::set_attr(x, attr_nm, dup_attr);
         } else {
           attr::set_attr(x, attr_nm, p_attributes[i]);
@@ -1939,7 +1945,7 @@ inline void add_attrs(SEXP x, SEXP attrs) {
         Rf_error("Please only supply named attributes in %s", __func__);
       }
       if (addr_x == address(CAR(current))){
-        SEXP dup_attr = SHIELD(vec::deep_copy(CAR(current))); ++NP;
+        SEXP dup_attr = SHIELD(Rf_duplicate(CAR(current))); ++NP;
         attr::set_attr(x, symbol::tag(current), dup_attr);
       } else {
         attr::set_attr(x, symbol::tag(current), CAR(current));
@@ -1963,10 +1969,15 @@ namespace attr {
 // Attributes of x as a list
 inline SEXP get_attrs(SEXP x){
   SEXP a = ATTRIB(x);
+
+  if (is_null(a)){
+    return r_null;
+  }
+
   int n = Rf_length(a);
 
-  SEXP out = SHIELD(internal::new_vec(VECSXP, n));
-  SEXP names = SHIELD(internal::new_vec(STRSXP, n));
+  SEXP out = SHIELD(vec::new_list(n));
+  SEXP names = SHIELD(vec::new_vector<r_string_t>(n));
   SEXP current = a;
 
   for (int i = 0; i < n; ++i){
@@ -1989,11 +2000,90 @@ inline void modify_attrs(SEXP x, Args... args) {
 }
 
 inline void set_attrs(SEXP x, SEXP attrs){
-  clear_attrs(x);
-  internal::add_attrs(x, attrs);
+  if (!is_null(x)){
+    clear_attrs(x);
+    internal::add_attrs(x, attrs);
+  }
 }
 
 }
+
+namespace vec {
+inline SEXP deep_copy(SEXP x){
+  return Rf_duplicate(x);
+  // int32_t NP = 0;
+  // SEXP out = r_null;
+  // R_xlen_t n = Rf_xlength(x);
+  // SEXP attrs = r_null;
+  //
+  // switch (TYPEOF(x)){
+  // case NILSXP: {
+  //   break;
+  // }
+  // case LGLSXP: {
+  //   out = SHIELD(new_vector<r_bool_t>(n)); ++NP;
+  //   fast_copy_n(r_ptr::logical_ptr_ro(x), n, r_ptr::logical_ptr(out));
+  //   break;
+  // }
+  // case INTSXP: {
+  //   out = SHIELD(new_vector<int>(n)); ++NP;
+  //   fast_copy_n(r_ptr::integer_ptr_ro(x), n, r_ptr::integer_ptr(out));
+  //   break;
+  // }
+  // case REALSXP: {
+  //   out = SHIELD(new_vector<double>(n)); ++NP;
+  //   fast_copy_n(r_ptr::real_ptr_ro(x), n, r_ptr::real_ptr(out));
+  //   break;
+  // }
+  // case STRSXP: {
+  //   out = SHIELD(new_vector<r_string_t>(n)); ++NP;
+  //   const r_string_t *p_x = r_ptr::string_ptr_ro(x);
+  //   for (R_xlen_t i = 0; i < n; ++i){
+  //     SET_STRING_ELT(out, i, p_x[i]);
+  //   }
+  //   break;
+  // }
+  // case CPLXSXP: {
+  //   out = SHIELD(new_vector<Rcomplex>(n)); ++NP;
+  //   fast_copy_n(r_ptr::complex_ptr_ro(x), n, r_ptr::complex_ptr(out));
+  //   break;
+  // }
+  // case RAWSXP: {
+  //   out = SHIELD(new_vector<Rbyte>(n)); ++NP;
+  //   fast_copy_n(r_ptr::raw_ptr_ro(x), n, r_ptr::raw_ptr(out));
+  //   break;
+  // }
+  // case VECSXP: {
+  //   out = SHIELD(new_vector<SEXP>(n)); ++NP;
+  //   const SEXP *p_x = r_ptr::list_ptr_ro(x);
+  //   for (R_xlen_t i = 0; i < n; ++i){
+  //     SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
+  //   }
+  //   break;
+  // }
+  // default: {
+  //   out = SHIELD(Rf_duplicate(x)); ++NP;
+  //   YIELD(NP);
+  //   return out;
+  // }
+  // }
+  //
+  // if (!is_null(x)){
+  //   SHIELD(attrs = attr::get_attrs(x)); ++NP;
+  //   int n_attrs = Rf_length(attrs);
+  //   for (R_xlen_t i = 0; i < n_attrs; ++i){
+  //     SET_VECTOR_ELT(attrs, i, deep_copy(VECTOR_ELT(attrs, i)));
+  //   }
+  //   attr::set_attrs(out, attrs);
+  // }
+  //
+  // YIELD(NP);
+  // return out;
+}
+
+
+}
+
 
 namespace env {
 inline SEXP get(SEXP sym, SEXP env, bool inherits = true){
@@ -2038,6 +2128,33 @@ inline void set_threads(uint16_t n){
 
 
 namespace internal {
+
+// A type that signals the `SEXP` type is unsupported for the
+// current calculation
+struct unsupported_sexp_t {
+  SEXP value;
+  explicit unsupported_sexp_t(SEXP x) : value(x) {}
+};
+
+// Retrieve the pointer of x
+// To be used in a lambda
+// E.g. with_read_only_data(x, [&](auto p_x) {})
+template <class F>
+decltype(auto) with_read_only_data(SEXP x, F&& f) {
+  switch (CHEAPR_TYPEOF(x)) {
+  case NILSXP:          return f(static_cast<const int*>(nullptr));
+  case LGLSXP:          return f(r_ptr::logical_ptr_ro(x));
+  case INTSXP:          return f(r_ptr::integer_ptr_ro(x));
+  case CHEAPR_INT64SXP: return f(r_ptr::integer64_ptr_ro(x));
+  case REALSXP:         return f(r_ptr::real_ptr_ro(x));
+  case STRSXP:          return f(r_ptr::string_ptr_ro(x));
+  case VECSXP:          return f(r_ptr::list_ptr_ro(x));
+  case CPLXSXP:         return f(r_ptr::complex_ptr_ro(x));
+  case RAWSXP:          return f(r_ptr::raw_ptr_ro(x));
+  default:              return f(unsupported_sexp_t{x});
+  }
+}
+
 // Wrap any callable f, and return a new callable that:
 //   - takes (auto&&... args)
 //   - calls f(args...) inside cpp11::unwind_protect

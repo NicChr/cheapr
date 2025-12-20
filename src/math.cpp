@@ -27,13 +27,13 @@ for (R_xlen_t i = 0; i < n; ++i){                                           \
   p_out[i] = FUN(p_x[i]);                                                   \
 }
 
-#define CHEAPR_PARALLEL_MATH_LOOP(FUN)                         \
-if (n_cores > 1){                                              \
-  OMP_PARALLEL_FOR_SIMD                                        \
-  CHEAPR_MATH_LOOP(FUN);                                       \
-} else {                                                       \
-  OMP_FOR_SIMD                                                 \
-  CHEAPR_MATH_LOOP(FUN);                                       \
+#define CHEAPR_PARALLEL_MATH_LOOP(FUN)                                    \
+if (n_threads > 1){                                                       \
+  OMP_PARALLEL_FOR_SIMD(n_threads)                                        \
+  CHEAPR_MATH_LOOP(FUN);                                                  \
+} else {                                                                  \
+  OMP_SIMD                                                                \
+  CHEAPR_MATH_LOOP(FUN);                                                  \
 }
 
 // For fns like log(x, base)
@@ -44,13 +44,13 @@ for (R_xlen_t i = 0; i < n; ++i){                                               
   p_out[i] = FUN(p_x[i], p_y[i]);                                                                  \
 }
 
-#define CHEAPR_PARALLEL_MATH_LOOP2(FUN)                                  \
-if (n_cores > 1){                                                        \
-  OMP_PARALLEL_FOR_SIMD                                                  \
-  CHEAPR_MATH_LOOP2(FUN)                                                 \
-} else {                                                                 \
-  OMP_FOR_SIMD                                                           \
-  CHEAPR_MATH_LOOP2(FUN)                                                 \
+#define CHEAPR_PARALLEL_MATH_LOOP2(FUN)                                             \
+if (n_threads > 1){                                                                 \
+  OMP_PARALLEL_FOR_SIMD(n_threads)                                                  \
+  CHEAPR_MATH_LOOP2(FUN)                                                            \
+} else {                                                                            \
+  OMP_SIMD                                                                          \
+  CHEAPR_MATH_LOOP2(FUN)                                                            \
 }
 
 
@@ -62,73 +62,73 @@ for (R_xlen_t i = 0; i < n; ++i){                                               
   p_out[i] = FUN(p_x[i], y);                                                                       \
 }
 
-#define CHEAPR_PARALLEL_MATH_LOOP3(FUN)                                  \
-if (n_cores > 1){                                                        \
-  OMP_PARALLEL_FOR_SIMD                                                  \
-  CHEAPR_MATH_LOOP3(FUN)                                                 \
-} else {                                                                 \
-  OMP_FOR_SIMD                                                           \
-  CHEAPR_MATH_LOOP3(FUN)                                                 \
+#define CHEAPR_PARALLEL_MATH_LOOP3(FUN)                                             \
+if (n_threads > 1){                                                                 \
+  OMP_PARALLEL_FOR_SIMD(n_threads)                                                  \
+  CHEAPR_MATH_LOOP3(FUN)                                                            \
+} else {                                                                            \
+  OMP_SIMD                                                                          \
+  CHEAPR_MATH_LOOP3(FUN)                                                            \
 }
 
 // General parallelised optimised macro for applying
 // cheapr::math binary fns across 2 vectors
-#define CHEAPR_VECTORISED_MATH_LOOP(FUN, x, y, p_x, p_y, p_out, _n, n_cores)                                    \
-R_xlen_t _xn = vec::length(x), _yn = vec::length(y);                                                     \
-if (_xn == 0 || _yn == 0){                                                                               \
-  _n = 0;                                                                                                \
-}                                                                                                        \
-R_xlen_t xi = 0, yi = 0;                                                                                 \
-if (_xn == _n && _yn == _n){                                                                             \
-  if (n_cores > 1){                                                                                      \
-    OMP_PARALLEL_FOR_SIMD                                                                                \
-    for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(p_x[i], p_y[i]);                                                                    \
-    }                                                                                                    \
-  } else {                                                                                               \
-    OMP_FOR_SIMD                                                                                         \
-    for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(p_x[i], p_y[i]);                                                                    \
-    }                                                                                                    \
-  }                                                                                                      \
-} else if (_xn == 1 && _yn == _n){                                                                       \
-  auto left = p_x[0];                                                                                    \
-  if (n_cores > 1){                                                                                      \
-    OMP_PARALLEL_FOR_SIMD                                                                                \
-    for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(left, p_y[i]);                                                                      \
-    }                                                                                                    \
-  } else {                                                                                               \
-    OMP_FOR_SIMD                                                                                         \
-    for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(left, p_y[i]);                                                                      \
-    }                                                                                                    \
-  }                                                                                                      \
-} else if (_yn == 1){                                                                                    \
-  auto right = p_y[0];                                                                                   \
-  if (n_cores > 1){                                                                                      \
-    OMP_PARALLEL_FOR_SIMD                                                                                \
-    for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(p_x[i], right);                                                                     \
-    }                                                                                                    \
-  } else {                                                                                               \
-    OMP_FOR_SIMD                                                                                         \
-    for (R_xlen_t i = 0; i < _n; ++i){                                                                   \
-      p_out[i] = FUN(p_x[i], right);                                                                     \
-    }                                                                                                    \
-  }                                                                                                      \
-} else if (_xn == _n){                                                                                   \
-  for (R_xlen_t i = 0; i < _n; recycle_index(yi, _yn), ++i){                                             \
-    p_out[i] = FUN(p_x[i], p_y[yi]);                                                                     \
-  }                                                                                                      \
-} else if (_yn == _n){                                                                                   \
-  for (R_xlen_t i = 0; i < _n; recycle_index(xi, _xn), ++i){                                             \
-    p_out[i] = FUN(p_x[xi], p_y[i]);                                                                     \
-  }                                                                                                      \
-} else {                                                                                                 \
-  for (R_xlen_t i = 0; i < _n; recycle_index(xi, _xn), recycle_index(yi, _yn), ++i){                     \
-    p_out[i] = FUN(p_x[xi], p_y[yi]);                                                                    \
-  }                                                                                                      \
+#define CHEAPR_VECTORISED_MATH_LOOP(FUN, x, y, p_x, p_y, p_out, _n, n_threads)                                      \
+R_xlen_t _xn = vec::length(x), _yn = vec::length(y);                                                                \
+if (_xn == 0 || _yn == 0){                                                                                          \
+  _n = 0;                                                                                                           \
+}                                                                                                                   \
+R_xlen_t xi = 0, yi = 0;                                                                                            \
+if (_xn == _n && _yn == _n){                                                                                        \
+  if (n_threads > 1){                                                                                               \
+    OMP_PARALLEL_FOR_SIMD(n_threads)                                                                                \
+    for (R_xlen_t i = 0; i < _n; ++i){                                                                              \
+      p_out[i] = FUN(p_x[i], p_y[i]);                                                                               \
+    }                                                                                                               \
+  } else {                                                                                                          \
+    OMP_SIMD                                                                                                        \
+    for (R_xlen_t i = 0; i < _n; ++i){                                                                              \
+      p_out[i] = FUN(p_x[i], p_y[i]);                                                                               \
+    }                                                                                                               \
+  }                                                                                                                 \
+} else if (_xn == 1 && _yn == _n){                                                                                  \
+  auto left = p_x[0];                                                                                               \
+  if (n_threads > 1){                                                                                               \
+    OMP_PARALLEL_FOR_SIMD(n_threads)                                                                                \
+    for (R_xlen_t i = 0; i < _n; ++i){                                                                              \
+      p_out[i] = FUN(left, p_y[i]);                                                                                 \
+    }                                                                                                               \
+  } else {                                                                                                          \
+    OMP_SIMD                                                                                                        \
+    for (R_xlen_t i = 0; i < _n; ++i){                                                                              \
+      p_out[i] = FUN(left, p_y[i]);                                                                                 \
+    }                                                                                                               \
+  }                                                                                                                 \
+} else if (_yn == 1){                                                                                               \
+  auto right = p_y[0];                                                                                              \
+  if (n_threads > 1){                                                                                               \
+    OMP_PARALLEL_FOR_SIMD(n_threads)                                                                                \
+    for (R_xlen_t i = 0; i < _n; ++i){                                                                              \
+      p_out[i] = FUN(p_x[i], right);                                                                                \
+    }                                                                                                               \
+  } else {                                                                                                          \
+    OMP_SIMD                                                                                                        \
+    for (R_xlen_t i = 0; i < _n; ++i){                                                                              \
+      p_out[i] = FUN(p_x[i], right);                                                                                \
+    }                                                                                                               \
+  }                                                                                                                 \
+} else if (_xn == _n){                                                                                              \
+  for (R_xlen_t i = 0; i < _n; recycle_index(yi, _yn), ++i){                                                        \
+    p_out[i] = FUN(p_x[i], p_y[yi]);                                                                                \
+  }                                                                                                                 \
+} else if (_yn == _n){                                                                                              \
+  for (R_xlen_t i = 0; i < _n; recycle_index(xi, _xn), ++i){                                                        \
+    p_out[i] = FUN(p_x[xi], p_y[i]);                                                                                \
+  }                                                                                                                 \
+} else {                                                                                                            \
+  for (R_xlen_t i = 0; i < _n; recycle_index(xi, _xn), recycle_index(yi, _yn), ++i){                                \
+    p_out[i] = FUN(p_x[xi], p_y[yi]);                                                                               \
+  }                                                                                                                 \
 }
 
 
@@ -151,7 +151,7 @@ SEXP cpp_set_abs(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = integer_ptr(out);
@@ -174,7 +174,7 @@ SEXP cpp_set_abs(SEXP x){
 SEXP cpp_abs(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
@@ -201,7 +201,7 @@ SEXP cpp_set_floor(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
     double *p_x = p_out;
@@ -215,7 +215,7 @@ SEXP cpp_set_floor(SEXP x){
 SEXP cpp_floor(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
@@ -239,7 +239,7 @@ SEXP cpp_set_ceiling(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
     double *p_x = p_out;
@@ -253,7 +253,7 @@ SEXP cpp_set_ceiling(SEXP x){
 SEXP cpp_ceiling(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
@@ -277,7 +277,7 @@ SEXP cpp_set_trunc(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   if (Rf_isReal(out)){
     double *p_out = real_ptr(out);
     double *p_x = p_out;
@@ -291,7 +291,7 @@ SEXP cpp_set_trunc(SEXP x){
 SEXP cpp_trunc(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
@@ -315,7 +315,7 @@ SEXP cpp_set_change_sign(SEXP x){
   check_numeric(x);
   SEXP out = SHIELD(check_transform_altrep(x));
   R_xlen_t n = Rf_xlength(out);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   switch (TYPEOF(out)){
   case INTSXP: {
     int *p_out = integer_ptr(out);
@@ -338,7 +338,7 @@ SEXP cpp_set_change_sign(SEXP x){
 SEXP cpp_negate(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out;
   switch (TYPEOF(x)){
   case INTSXP: {
@@ -364,7 +364,7 @@ SEXP cpp_negate(SEXP x){
 SEXP cpp_set_exp(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   SEXP out = r_null;
 
@@ -385,7 +385,7 @@ SEXP cpp_set_exp(SEXP x){
 SEXP cpp_exp(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out = SHIELD(new_vector<double>(n));
   switch (TYPEOF(x)){
   case INTSXP: {
@@ -409,7 +409,7 @@ SEXP cpp_exp(SEXP x){
 SEXP cpp_set_sqrt(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   SEXP out = r_null;
 
@@ -430,7 +430,7 @@ SEXP cpp_set_sqrt(SEXP x){
 SEXP cpp_sqrt(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out = SHIELD(new_vector<double>(n));
   switch (TYPEOF(x)){
   case INTSXP: {
@@ -458,7 +458,7 @@ SEXP cpp_log(SEXP x, SEXP base){
   SHIELD(base = coerce_vec(base, REALSXP)); ++NP;
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t basen = Rf_xlength(base);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   bool is_base_scalar = basen == 1;
   double *p_y = real_ptr(base);
   double y;
@@ -521,7 +521,7 @@ SEXP cpp_round(SEXP x, SEXP digits){
   SHIELD(digits = coerce_vec(digits, REALSXP)); ++NP;
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t digitsn = Rf_xlength(digits);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   bool is_digits_scalar = digitsn == 1;
   double *p_y = real_ptr(digits);
   double y;
@@ -575,7 +575,7 @@ SEXP cpp_signif(SEXP x, SEXP digits){
   SHIELD(digits = coerce_vec(digits, REALSXP)); ++NP;
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t digitsn = Rf_xlength(digits);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   bool is_digits_scalar = digitsn == 1;
 
   if (!is_digits_scalar){
@@ -594,13 +594,13 @@ SEXP cpp_signif(SEXP x, SEXP digits){
   switch (TYPEOF(x)){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
-    CHEAPR_VECTORISED_MATH_LOOP(r_signif, x, digits, p_x, p_digits, p_out, n, n_cores)
-    break;
+    CHEAPR_VECTORISED_MATH_LOOP(r_signif, x, digits, p_x, p_digits, p_out, n, n_threads)
+      break;
   }
   default: {
     const double *p_x = real_ptr_ro(x);
-    CHEAPR_VECTORISED_MATH_LOOP(r_signif, x, digits, p_x, p_digits, p_out, n, n_cores)
-    break;
+    CHEAPR_VECTORISED_MATH_LOOP(r_signif, x, digits, p_x, p_digits, p_out, n, n_threads)
+      break;
   }
   }
   YIELD(NP);
@@ -620,7 +620,7 @@ SEXP cpp_add(SEXP x, SEXP y){
 
   R_xlen_t n = length_common(objs);
 
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   SEXP out;
   switch (TYPEOF(x)){
@@ -629,16 +629,16 @@ SEXP cpp_add(SEXP x, SEXP y){
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_add, x, y, p_x, p_y, p_out, n, n_cores)
-    break;
+    CHEAPR_VECTORISED_MATH_LOOP(r_add, x, y, p_x, p_y, p_out, n, n_threads)
+      break;
   }
   default: {
     out = SHIELD(new_vector<double>(n)); ++NP;
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_add, x, y, p_x, p_y, p_out, n, n_cores)
-    break;
+    CHEAPR_VECTORISED_MATH_LOOP(r_add, x, y, p_x, p_y, p_out, n, n_threads)
+      break;
   }
   }
   YIELD(NP);
@@ -657,7 +657,7 @@ SEXP cpp_subtract(SEXP x, SEXP y){
 
   R_xlen_t n = length_common(objs);
 
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   SEXP out;
   switch (TYPEOF(x)){
@@ -666,7 +666,7 @@ SEXP cpp_subtract(SEXP x, SEXP y){
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_subtract, x, y, p_x, p_y, p_out, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_subtract, x, y, p_x, p_y, p_out, n, n_threads)
       break;
   }
   default: {
@@ -674,7 +674,7 @@ SEXP cpp_subtract(SEXP x, SEXP y){
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_subtract, x, y, p_x, p_y, p_out, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_subtract, x, y, p_x, p_y, p_out, n, n_threads)
       break;
   }
   }
@@ -694,7 +694,7 @@ SEXP cpp_multiply(SEXP x, SEXP y){
 
   R_xlen_t n = length_common(objs);
 
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   SEXP out;
   switch (TYPEOF(x)){
@@ -703,7 +703,7 @@ SEXP cpp_multiply(SEXP x, SEXP y){
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
     int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_multiply, x, y, p_x, p_y, p_out, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_multiply, x, y, p_x, p_y, p_out, n, n_threads)
       break;
   }
   default: {
@@ -711,7 +711,7 @@ SEXP cpp_multiply(SEXP x, SEXP y){
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
     double* RESTRICT p_out = real_ptr(out);
-    CHEAPR_VECTORISED_MATH_LOOP(r_multiply, x, y, p_x, p_y, p_out, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_multiply, x, y, p_x, p_y, p_out, n, n_threads)
       break;
   }
   }
@@ -731,7 +731,7 @@ SEXP cpp_divide(SEXP x, SEXP y){
 
   R_xlen_t n = length_common(objs);
 
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   SEXP out = SHIELD(new_vector<double>(n)); ++NP;
   double* RESTRICT p_out = real_ptr(out);
@@ -740,13 +740,13 @@ SEXP cpp_divide(SEXP x, SEXP y){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
-    CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, p_out, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, p_out, n, n_threads)
       break;
   }
   default: {
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
-    CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, p_out, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_divide, x, y, p_x, p_y, p_out, n, n_threads)
       break;
   }
   }
@@ -766,7 +766,7 @@ SEXP cpp_pow(SEXP x, SEXP y){
 
   R_xlen_t n = length_common(objs);
 
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   SEXP out = SHIELD(new_vector<double>(n)); ++NP;
   double* RESTRICT p_out = real_ptr(out);
@@ -775,13 +775,13 @@ SEXP cpp_pow(SEXP x, SEXP y){
   case INTSXP: {
     const int *p_x = integer_ptr_ro(x);
     const int *p_y = integer_ptr_ro(y);
-    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, p_out, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, p_out, n, n_threads)
       break;
   }
   default: {
     const double *p_x = real_ptr_ro(x);
     const double *p_y = real_ptr_ro(y);
-    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, p_out, n, n_cores)
+    CHEAPR_VECTORISED_MATH_LOOP(r_pow, x, y, p_x, p_y, p_out, n, n_threads)
       break;
   }
   }
@@ -1184,7 +1184,7 @@ SEXP cpp_set_round(SEXP x, SEXP digits){
 SEXP cpp_int_sign(SEXP x){
   check_numeric(x);
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out = SHIELD(vec::new_vector<int>(n));
   int* RESTRICT p_out = integer_ptr(out);
   switch (TYPEOF(x)){
@@ -1196,12 +1196,12 @@ SEXP cpp_int_sign(SEXP x){
   case INTSXP: {
     const int *p_x = integer_ptr(x);
     CHEAPR_PARALLEL_MATH_LOOP(r_sign)
-    break;
+      break;
   }
   default: {
     double *p_x = real_ptr(x);
     CHEAPR_PARALLEL_MATH_LOOP(r_sign)
-    break;
+      break;
   }
   }
   YIELD(1);

@@ -37,19 +37,19 @@ get_max_threads <- cpp_max_threads
 #' @export
 set_threads <- function(n){
   if (!threads_are_valid(n)){
-    stop("Please supply a valid number of threads")
+    stop(paste("Please supply a valid number of threads between 1 and", get_max_threads()))
   }
-  threads <- min(n, get_max_threads())
-  threads <- max(1, threads)
+  threads <- min(as.integer(n), get_max_threads())
+  threads <- max(1L, threads)
   options(cheapr.cores = threads)
 }
 #' @rdname threads
 #' @export
 get_threads <- function(){
-  threads <- getOption("cheapr.cores", default = 2)
+  threads <- getOption("cheapr.cores", default = 2L)
   if (!threads_are_valid(threads)){
     warning("Invalid threads detected, setting threads to default 2")
-    threads <- 2
+    threads <- 2L
     set_threads(threads)
   }
   threads

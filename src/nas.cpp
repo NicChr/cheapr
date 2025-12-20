@@ -3,6 +3,7 @@
 // NA handling functions
 // Author: Nick Christofides
 
+
 #define CHEAPR_ANY_NA                                            \
 for (R_xlen_t i = 0; i < n; ++i){                                \
   if (is_r_na(p_x[i])){                                          \
@@ -19,26 +20,17 @@ for (R_xlen_t i = 0; i < n; ++i){                                \
   }                                                              \
 }
 
-#define CHEAPR_IS_NA                                               \
-if (n_cores > 1){                                                  \
-  OMP_PARALLEL_FOR_SIMD                                            \
-  for (R_xlen_t i = 0; i < n; ++i){                                \
-    set_val(p_out, i, is_r_na(p_x[i]));                            \
-  }                                                                \
-} else {                                                           \
-  OMP_FOR_SIMD                                                     \
-  for (R_xlen_t i = 0; i < n; ++i){                                \
-    set_val(p_out, i, is_r_na(p_x[i]));                            \
-  }                                                                \
-}
-
-#define CHEAPR_NA_COUNT                                                   \
-if (do_parallel){                                                         \
-  _Pragma("omp parallel for simd num_threads(n_cores) reduction(+:count)")\
-  for (R_xlen_t i = 0; i < n; ++i) count += is_r_na(p_x[i]);              \
-} else {                                                                  \
-  OMP_FOR_SIMD                                                            \
-  for (R_xlen_t i = 0; i < n; ++i) count += is_r_na(p_x[i]);              \
+#define CHEAPR_IS_NA                                                          \
+if (n_threads > 1){                                                           \
+  OMP_PARALLEL_FOR_SIMD(n_threads)                                            \
+  for (R_xlen_t i = 0; i < n; ++i){                                           \
+    set_val(p_out, i, is_r_na(p_x[i]));                                       \
+  }                                                                           \
+} else {                                                                      \
+  OMP_SIMD                                                                    \
+  for (R_xlen_t i = 0; i < n; ++i){                                           \
+    set_val(p_out, i, is_r_na(p_x[i]));                                       \
+  }                                                                           \
 }
 
 
@@ -75,61 +67,37 @@ R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t n = Rf_xlength(x);
   R_xlen_t count = 0;
   int32_t NP = 0;
-  int n_cores = get_cores(n);
-  bool do_parallel = n_cores > 1;
-  switch ( CHEAPR_TYPEOF(x) ){
-  case NILSXP: {
-    break;
-  }
-  case LGLSXP:
-  case INTSXP: {
-    const int *p_x = integer_ptr_ro(x);
-    CHEAPR_NA_COUNT
-    break;
-  }
-  case CHEAPR_INT64SXP: {
-    const int64_t *p_x = integer64_ptr_ro(x);
-    CHEAPR_NA_COUNT
-    break;
-  }
-  case REALSXP: {
-    const double *p_x = real_ptr_ro(x);
-    CHEAPR_NA_COUNT
-    break;
-  }
-  case STRSXP: {
-    const r_string_t *p_x = string_ptr_ro(x);
-    CHEAPR_NA_COUNT
-    break;
-  }
-  case RAWSXP: {
-    break;
-  }
-  case CPLXSXP: {
-    const Rcomplex *p_x = complex_ptr_ro(x);
-    CHEAPR_NA_COUNT
-    break;
-  }
-  case VECSXP: {
-    // We use a recursive method if recursive is true
-    // Otherwise we skip to the default section below
-    if (recursive){
-    const SEXP *p_x = list_ptr_ro(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      count += na_count(p_x[i], true);
+  int n_threads = calc_threads(n);
+  with_read_only_data(x, [&](auto p_x) {
+
+    using ptr_type = std::decay_t<decltype(p_x)>;
+
+    auto default_scalar_count = [&] {
+      SEXP is_missing   = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), x)); ++NP;
+      SEXP scalar_true  = SHIELD(as_vector(r_true)); ++NP;
+      count = scalar_count(is_missing, scalar_true, true);
+    };
+
+    if constexpr (std::is_same_v<ptr_type, unsupported_sexp_t>){
+      default_scalar_count();
+    } else if constexpr (std::is_same_v<ptr_type, const SEXP*>) {
+      if (recursive){
+        for (R_xlen_t i = 0; i < n; ++i){
+          count += na_count(p_x[i], true);
+        }
+      } else {
+        default_scalar_count();
+      }
+    } else {
+      if (n_threads > 1){
+        _Pragma("omp parallel for simd num_threads(n_threads) reduction(+:count)")
+        for (R_xlen_t i = 0; i < n; ++i) count += is_r_na(p_x[i]);
+      } else {
+        _Pragma("omp simd reduction(+:count)")
+        for (R_xlen_t i = 0; i < n; ++i) count += is_r_na(p_x[i]);
+      }
     }
-    break;
-  } else {
-    break;
-  }
-  }
-  default: {
-    SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", R_GetCurrentEnv(), x)); ++NP;
-    SEXP r_true = SHIELD(as_vector(true)); ++NP;
-    count = scalar_count(is_missing, r_true, true);
-    break;
-  }
-  }
+  });
   YIELD(NP);
   return count;
 }
@@ -265,7 +233,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
 [[cpp11::register]]
 SEXP cpp_is_na(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
   SEXP out;
   switch ( CHEAPR_TYPEOF(x) ){
   case NILSXP: {
@@ -342,7 +310,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
     case LGLSXP:
     case INTSXP: {
       const int *p_xj = integer_ptr_ro(p_x[j]);
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
       }
@@ -350,7 +318,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
     }
     case CHEAPR_INT64SXP: {
       const int64_t *p_xj = integer64_ptr_ro(p_x[j]);
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
       }
@@ -358,7 +326,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
     }
     case REALSXP: {
       const double *p_xj = real_ptr_ro(p_x[j]);
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
       }
@@ -366,7 +334,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
     }
     case STRSXP: {
       const SEXP *p_xj = STRING_PTR_RO(p_x[j]);
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
       }
@@ -377,7 +345,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
     }
     case CPLXSXP: {
       const Rcomplex *p_xj = complex_ptr_ro(p_x[j]);
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
       }

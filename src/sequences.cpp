@@ -497,14 +497,15 @@ SEXP cpp_seq_len(R_xlen_t n){
   if (n > r_limits::r_int_max){
     SEXP out = SHIELD(new_vector<double>(n));
     double* RESTRICT p_out = real_ptr(out);
-    OMP_FOR_SIMD
+    OMP_SIMD
     for (R_xlen_t i = 0; i < n; ++i) p_out[i] = 1.0 + static_cast<double>(i);
+    // for (R_xlen_t i = 1; i < (n + 1); ++i) p_out[i - 1] = static_cast<double>(i);
     YIELD(1);
     return out;
   } else {
     SEXP out = SHIELD(vec::new_vector<int>(n));
     int* RESTRICT p_out = integer_ptr(out);
-    OMP_FOR_SIMD
+    OMP_SIMD
     for (int i = 0; i < n; ++i) p_out[i] = i + 1;
     YIELD(1);
     return out;
@@ -749,7 +750,7 @@ SEXP cpp_fixed_width_breaks(double start, double end, double n,
       out = SHIELD(cpp_dbl_sequence(seq_size, seq_from, seq_width, false)); ++NP;
       int seq_n = n_breaks;
       double* RESTRICT p_out = real_ptr(out);
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (int i = 0; i < seq_n; ++i) p_out[i] /= scale_adj;
     }
 

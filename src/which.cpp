@@ -8,12 +8,13 @@
 
 R_xlen_t count_true(const r_bool_t* RESTRICT px, const uint_fast64_t n){
   uint_fast64_t size = 0;
-  if (n >= CHEAPR_OMP_THRESHOLD){
-#pragma omp parallel for simd num_threads(num_cores()) reduction(+:size)
+  int n_threads = calc_threads(n);
+  if (n_threads != 1){
+#pragma omp parallel for simd num_threads(n_threads) reduction(+:size)
     for (uint_fast64_t j = 0; j != n; ++j) size += static_cast<uint_fast64_t>(px[j] == r_true);
     return size;
   } else {
-    OMP_FOR_SIMD
+#pragma omp simd reduction(+:size)
     for (uint_fast64_t j = 0; j != n; ++j) size += static_cast<uint_fast64_t>(px[j] == r_true);
     return size;
   }

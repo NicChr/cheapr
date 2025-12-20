@@ -41,11 +41,11 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     auto fill_value = fill_size > 0 ? integer_ptr(fill)[0] : na_value(p_x[0]);
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
       safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int));
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
     break;
@@ -60,11 +60,11 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int64_t));
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
       safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int64_t));
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
     break;
@@ -79,11 +79,11 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
     } else {
       safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(double));
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
     }
     break;
@@ -101,7 +101,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
       for (R_xlen_t i = 0; i < k; ++i) SET_COMPLEX_ELT(out, i, fill_value);
     } else {
       safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(Rcomplex));
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = size - 1; i >= size + k; --i) SET_COMPLEX_ELT(out, i, fill_value);
     }
     break;

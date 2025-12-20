@@ -167,5 +167,5 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 }
 
 void replace_in_place(SEXP x, SEXP where, SEXP with, bool quiet){
- cpp_replace(x, where, with, true, quiet);
+  cpp_replace(x, where, with, true, quiet);
 }

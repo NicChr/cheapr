@@ -163,7 +163,6 @@ double cpp_sum(SEXP x){
 
     const int *p_x = integer_ptr(x);
 
-    OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
       sum = is_r_na(sum) || is_r_na(p_x[i]) ? na::real : sum + p_x[i];
     }
@@ -173,7 +172,6 @@ double cpp_sum(SEXP x){
 
     const int64_t *p_x = integer64_ptr_ro(x);
 
-    OMP_FOR_SIMD
     for (R_xlen_t i = 0; i < n; ++i){
       sum = is_r_na(sum) || is_r_na(p_x[i]) ? na::real : sum + p_x[i];
     }
@@ -183,7 +181,7 @@ double cpp_sum(SEXP x){
 
     const double *p_x = real_ptr(x);
 
-    OMP_FOR_SIMD
+    #pragma omp simd reduction(+:sum)
     for (R_xlen_t i = 0; i < n; ++i) sum += p_x[i];
     break;
   }
@@ -209,7 +207,7 @@ SEXP cpp_range(SEXP x){
       int min = std::numeric_limits<int>::max();
       int max = std::numeric_limits<int>::min();
 
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
         min = std::min(min, p_x[i]);
         max = std::max(max, p_x[i]);
@@ -225,7 +223,7 @@ SEXP cpp_range(SEXP x){
       int64_t min = std::numeric_limits<int64_t>::max();
       int64_t max = std::numeric_limits<int64_t>::min();
 
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = 0; i < n; ++i){
         min = std::min(min, p_x[i]);
         max = std::max(max, p_x[i]);
@@ -418,21 +416,21 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
 [[cpp11::register]]
 SEXP cpp_lgl_count(SEXP x){
   R_xlen_t n = Rf_xlength(x);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   const r_bool_t *p_x = logical_ptr_ro(x);
 
   R_xlen_t i;
   R_xlen_t ntrue = 0, nfalse = 0;
 
-  if (n_cores > 1){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:ntrue, nfalse)
+  if (n_threads > 1){
+#pragma omp parallel for simd num_threads(n_threads) reduction(+:ntrue, nfalse)
     for (i = 0; i < n; ++i){
       ntrue += p_x[i] == r_true;
       nfalse += p_x[i] == r_false;
     }
   } else {
-    OMP_FOR_SIMD
+#pragma omp simd reduction(+:ntrue, nfalse)
     for (i = 0; i < n; ++i){
       ntrue += p_x[i] == r_true;
       nfalse += p_x[i] == r_false;
@@ -565,8 +563,8 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP is_dup_from_last = SHIELD(Rf_duplicated(names, TRUE)); ++NP;
   cpp_set_or(is_dup, is_dup_from_last);
 
-  SEXP r_true = SHIELD(as_vector(true)); ++NP;
-  SEXP dup_locs = SHIELD(cpp_which_val(is_dup, r_true, false)); ++NP;
+  SEXP scalar_true = SHIELD(as_vector(r_true)); ++NP;
+  SEXP dup_locs = SHIELD(cpp_which_val(is_dup, scalar_true, false)); ++NP;
 
   int n_dups = Rf_length(dup_locs);
 
@@ -596,7 +594,7 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   SEXP r_n_empty = SHIELD(as_vector(n_empty)); ++NP;
 
   if (n_empty > 0){
-    SEXP empty_locs = SHIELD(cpp_val_find(is_empty, r_true, false, r_n_empty)); ++NP;
+    SEXP empty_locs = SHIELD(cpp_val_find(is_empty, scalar_true, false, r_n_empty)); ++NP;
     temp = SHIELD(sset_vec(names, empty_locs, true)); ++NP;
     replace = SHIELD(r_paste(R_BlankScalarString, r_null, temp, empty_sep, empty_locs)); ++NP;
     replace_in_place(out, empty_locs, replace, false);
@@ -685,7 +683,7 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
 
   uint32_t one = 1;
 
-  OMP_FOR_SIMD
+  OMP_SIMD
   for (R_xlen_t i = 0 ; i < n; ++i){
     if ((static_cast<uint32_t>(p_x[i]) - one) < n_bins){
       ++p_out[p_x[i] - 1];

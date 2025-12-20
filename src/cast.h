@@ -558,12 +558,12 @@ inline SEXP cast<r_posixt_t>(SEXP x, SEXP y) {
 
     if (TYPEOF(x) == INTSXP){
       const int *p_x = cheapr::r_ptr::integer_ptr_ro(x);
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = 0; i < n; ++i) p_out[i] = cheapr::r_cast<double>(p_x[i]) * 86400.0;
 
     } else {
       const double *p_x = cheapr::r_ptr::real_ptr_ro(x);
-      OMP_FOR_SIMD
+      OMP_SIMD
       for (R_xlen_t i = 0; i < n; ++i) p_out[i] = p_x[i] * 86400;
     }
 

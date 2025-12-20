@@ -167,7 +167,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   }
 
   R_xlen_t n = Rf_xlength(indices);
-  int n_cores = get_cores(n);
+  int n_threads = calc_threads(n);
 
   int_fast64_t out_size = na::integer64;
   bool check_indices = true;
@@ -220,8 +220,8 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
       // NA indices
       // From this we can also work out the number of negatives
 
-      if (n_cores > 1){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
+      if (n_threads > 1){
+#pragma omp parallel for simd num_threads(n_threads) reduction(+:zero_count,pos_count,oob_count,na_count)
         for (int j = 0; j < n; ++j){
           zero_count += (pi[j] == 0);
           pos_count += (pi[j] > 0);
@@ -229,7 +229,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
           na_count += is_r_na(pi[j]);
         }
       } else {
-        OMP_FOR_SIMD
+#pragma omp simd reduction(+:zero_count,pos_count,oob_count,na_count)
         for (int j = 0; j < n; ++j){
           zero_count += (pi[j] == 0);
           pos_count += (pi[j] > 0);
@@ -272,8 +272,8 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
       // NA indices
       // From this we can also work out the number of negatives
 
-      if (n_cores > 1){
-#pragma omp parallel for simd num_threads(n_cores) reduction(+:zero_count,pos_count,oob_count,na_count)
+      if (n_threads > 1){
+#pragma omp parallel for simd num_threads(n_threads) reduction(+:zero_count,pos_count,oob_count,na_count)
         for (int j = 0; j < n; ++j){
           zero_count += (pi[j] == 0);
           pos_count += (pi[j] > 0);
@@ -282,7 +282,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
           na_count += is_r_na(pi[j]);
         }
       } else {
-        OMP_FOR_SIMD
+#pragma omp simd reduction(+:zero_count,pos_count,oob_count,na_count)
         for (int j = 0; j < n; ++j){
           zero_count += (pi[j] == 0);
           pos_count += (pi[j] > 0);
@@ -537,11 +537,10 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   R_xlen_t in_bounds_size = std::max(out_size - n_oob, (R_xlen_t) 0);
 
-  SEXP out;
+  SEXP out = r_null;
 
   switch ( TYPEOF(x) ){
   case NILSXP: {
-    out = r_null;
     break;
   }
   case LGLSXP:
@@ -558,7 +557,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
         std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::integer);
       } else {
         std::fill(p_out, p_out + n_oob, na::integer);
-        OMP_FOR_SIMD
+        OMP_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
     }
@@ -577,7 +576,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
         std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::real);
       } else {
         std::fill(p_out, p_out + n_oob, na::real);
-        OMP_FOR_SIMD
+        OMP_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) p_out[istart - i - 1] = p_x[i];
       }
     }
@@ -625,7 +624,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
         std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::complex);
       } else {
         std::fill(p_out, p_out + n_oob, na::complex);
-        OMP_FOR_SIMD
+        OMP_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) set_val(p_out, istart - i - 1, p_x[i]);
       }
     }
@@ -644,7 +643,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
         std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::raw);
       } else {
         std::fill(p_out, p_out + n_oob, na::raw);
-        OMP_FOR_SIMD
+        OMP_SIMD
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i) set_val(p_out, istart - i - 1, p_x[i]);
       }
     }
@@ -998,7 +997,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         const int *p_x = integer_ptr_ro(x);
         out = SHIELD(internal::new_vec(xtype, n));
         int* RESTRICT p_out = integer_ptr(out);
-        OMP_FOR_SIMD
+        OMP_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
         }
@@ -1008,7 +1007,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         const double *p_x = real_ptr_ro(x);
         out = SHIELD(new_vector<double>(n));
         double* RESTRICT p_out = real_ptr(out);
-        OMP_FOR_SIMD
+        OMP_SIMD
         for (int_fast64_t i = 0; i < n; ++i){
           p_out[i] = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)];
         }
