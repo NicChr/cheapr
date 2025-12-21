@@ -151,8 +151,7 @@ template <typename T>
 inline constexpr bool is_r_integral_v =
 std::is_integral_v<T> ||
 std::is_same_v<std::decay_t<T>, r_bool_t> ||
-std::is_same_v<std::decay_t<T>, Rboolean> ||
-std::is_same_v<std::decay_t<T>, cpp11::r_bool>;
+std::is_same_v<std::decay_t<T>, Rboolean>;
 
 template <typename T>
 inline constexpr bool is_r_arithmetic_v =
@@ -451,6 +450,104 @@ inline SEXP get_r_obj(SEXP x, const R_xlen_t i){
 }
 
 template<typename T>
+inline T get_value(T *p_x, const R_xlen_t i){
+  static_assert(
+    sizeof(T) == 0,
+    "Unimplemented `get_value` specialisation"
+  );
+  return T{};
+}
+
+template<typename T>
+inline T get_value(SEXP x, const R_xlen_t i){
+  static_assert(
+    sizeof(T) == 0,
+    "Unimplemented `get_value` specialisation"
+  );
+  return T{};
+}
+
+template<>
+inline bool get_value<bool>(bool* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline bool get_value<bool>(SEXP x, const R_xlen_t i){
+  return static_cast<bool>(r_ptr::logical_ptr_ro(x)[i]);
+}
+template<>
+inline r_bool_t get_value<r_bool_t>(r_bool_t* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline r_bool_t get_value<r_bool_t>(SEXP x, const R_xlen_t i){
+  return r_ptr::logical_ptr_ro(x)[i];
+}
+template<>
+inline int get_value<int>(int* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline int get_value<int>(SEXP x, const R_xlen_t i){
+  return r_ptr::integer_ptr_ro(x)[i];
+}
+template<>
+inline int64_t get_value<int64_t>(int64_t* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline int64_t get_value<int64_t>(SEXP x, const R_xlen_t i){
+  return r_ptr::integer64_ptr_ro(x)[i];
+}
+template<>
+inline double get_value<double>(double* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline double get_value<double>(SEXP x, const R_xlen_t i){
+  return r_ptr::real_ptr_ro(x)[i];
+}
+template<>
+inline Rcomplex get_value<Rcomplex>(Rcomplex* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline Rcomplex get_value<Rcomplex>(SEXP x, const R_xlen_t i){
+  return r_ptr::complex_ptr_ro(x)[i];
+}
+template<>
+inline Rbyte get_value<Rbyte>(Rbyte* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline Rbyte get_value<Rbyte>(SEXP x, const R_xlen_t i){
+  return r_ptr::raw_ptr_ro(x)[i];
+}
+template<>
+inline r_string_t get_value<r_string_t>(r_string_t* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline r_string_t get_value<r_string_t>(SEXP x, const R_xlen_t i){
+  return r_ptr::string_ptr_ro(x)[i];
+}
+template<>
+inline SEXP get_value<SEXP>(SEXP* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline SEXP get_value<SEXP>(SEXP x, const R_xlen_t i){
+  switch (TYPEOF(x)){
+  case STRSXP: {
+    return r_ptr::string_ptr_ro(x)[i];
+  }
+  default: {
+    return r_ptr::list_ptr_ro(x)[i];
+  }
+  }
+}
+
+template<typename T>
 inline void set_value(T *p_x, const R_xlen_t i, T val){
   static_assert(
     sizeof(T) == 0,
@@ -469,97 +566,81 @@ inline void set_value(SEXP x, const R_xlen_t i, T val){
 }
 
 template<>
-inline void set_value(bool* p_x, const R_xlen_t i, bool val){
+inline void set_value<bool>(bool* p_x, const R_xlen_t i, bool val){
   p_x[i] = val;
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, bool val){
+inline void set_value<bool>(SEXP x, const R_xlen_t i, bool val){
   SET_LOGICAL_ELT(x, i, static_cast<int>(val));
 }
 template<>
-inline void set_value(r_bool_t* p_x, const R_xlen_t i, r_bool_t val){
+inline void set_value<r_bool_t>(r_bool_t* p_x, const R_xlen_t i, r_bool_t val){
   p_x[i] = val;
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, r_bool_t val){
+inline void set_value<r_bool_t>(SEXP x, const R_xlen_t i, r_bool_t val){
   SET_LOGICAL_ELT(x, i, static_cast<int>(val));
 }
 template<>
-inline void set_value(cpp11::r_bool* p_x, const R_xlen_t i, cpp11::r_bool val){
-  p_x[i] = static_cast<int>(val);
-}
-template<>
-inline void set_value(SEXP x, const R_xlen_t i, cpp11::r_bool val){
-  SET_LOGICAL_ELT(x, i, static_cast<int>(val));
-}
-template<>
-inline void set_value(int* p_x, const R_xlen_t i, int val){
+inline void set_value<int>(int* p_x, const R_xlen_t i, int val){
   p_x[i] = val;
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, int val){
+inline void set_value<int>(SEXP x, const R_xlen_t i, int val){
   SET_INTEGER_ELT(x, i, val);
 }
 template<>
-inline void set_value(int64_t* p_x, const R_xlen_t i, int64_t val){
+inline void set_value<int64_t>(int64_t* p_x, const R_xlen_t i, int64_t val){
   p_x[i] = val;
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, int64_t val){
+inline void set_value<int64_t>(SEXP x, const R_xlen_t i, int64_t val){
   r_ptr::integer64_ptr(x)[i] = val;
 }
 template<>
-inline void set_value(double* p_x, const R_xlen_t i, double val){
+inline void set_value<double>(double* p_x, const R_xlen_t i, double val){
   p_x[i] = val;
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, double val){
+inline void set_value<double>(SEXP x, const R_xlen_t i, double val){
   SET_REAL_ELT(x, i, val);
 }
 template<>
-inline void set_value(Rcomplex* p_x, const R_xlen_t i, Rcomplex val){
+inline void set_value<Rcomplex>(Rcomplex* p_x, const R_xlen_t i, Rcomplex val){
   p_x[i].r = val.r;
   p_x[i].i = val.i;
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, Rcomplex val){
+inline void set_value<Rcomplex>(SEXP x, const R_xlen_t i, Rcomplex val){
   SET_COMPLEX_ELT(x, i, val);
 }
 template<>
-inline void set_value(Rbyte* p_x, const R_xlen_t i, Rbyte val){
+inline void set_value<Rbyte>(Rbyte* p_x, const R_xlen_t i, Rbyte val){
   p_x[i] = val;
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, Rbyte val){
+inline void set_value<Rbyte>(SEXP x, const R_xlen_t i, Rbyte val){
   SET_RAW_ELT(x, i, val);
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, const char* val){
-  SET_STRING_ELT(x, i, internal::make_utf8_charsxp(val));
-}
-template<>
-inline void set_value(SEXP x, const R_xlen_t i, std::string val){
-  SET_STRING_ELT(x, i, internal::make_utf8_charsxp(val.c_str()));
-}
-template<>
-inline void set_value(SEXP x, const R_xlen_t i, cpp11::r_string val){
-  SET_STRING_ELT(x, i, val);
-}
-template<>
-inline void set_value(SEXP x, const R_xlen_t i, r_string_t val){
+inline void set_value<r_string_t>(SEXP x, const R_xlen_t i, r_string_t val){
   SET_STRING_ELT(x, i, static_cast<SEXP>(val));
 }
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, r_symbol_t val){
+inline void set_value<const char *>(SEXP x, const R_xlen_t i, const char* val){
+  set_value<r_string_t>(x, i,  static_cast<r_string_t>(internal::make_utf8_charsxp(val)));
+}
+template<>
+inline void set_value<r_symbol_t>(SEXP x, const R_xlen_t i, r_symbol_t val){
   SET_VECTOR_ELT(x, i, static_cast<SEXP>(val));
 }
 
 // Never use the pointer here to assign
 template<>
-inline void set_value(SEXP x, const R_xlen_t i, SEXP val){
+inline void set_value<SEXP>(SEXP x, const R_xlen_t i, SEXP val){
   switch (TYPEOF(val)){
   case CHARSXP: {
-    SET_STRING_ELT(x, i, val);
+    set_value<r_string_t>(x, i, static_cast<r_string_t>(val));
     break;
   }
   default: {
@@ -776,7 +857,7 @@ inline SEXP new_vector<r_string_t>(R_xlen_t n, const r_string_t default_value){
   SEXP out = SHIELD(new_vector<r_string_t>(n));
   if (default_value != blank_r_string){
     for (R_xlen_t i = 0; i < n; ++i){
-      SET_STRING_ELT(out, i, default_value);
+      set_value<r_string_t>(out, i, default_value);
     }
   }
   YIELD(1);
@@ -909,11 +990,6 @@ inline constexpr bool is_r_na<Rboolean>(const Rboolean x){
 }
 
 template<>
-inline bool is_r_na<cpp11::r_bool>(const cpp11::r_bool x){
-  return x == na::logical;
-}
-
-template<>
 inline constexpr bool is_r_na<int>(const int x){
   return x == na::integer;
 }
@@ -936,11 +1012,6 @@ inline constexpr bool is_r_na<Rcomplex>(const Rcomplex x){
 template<>
 inline constexpr bool is_r_na<Rbyte>(const Rbyte x){
   return false;
-}
-
-template<>
-inline bool is_r_na<cpp11::r_string>(const cpp11::r_string x){
-  return x == na::string;
 }
 
 template<>
@@ -976,11 +1047,6 @@ inline constexpr r_bool_t na_value<r_bool_t>(const r_bool_t x){
 }
 
 template<>
-inline cpp11::r_bool na_value<cpp11::r_bool>(const cpp11::r_bool x){
-  return cpp11::na<cpp11::r_bool>();
-}
-
-template<>
 inline constexpr int na_value<int>(const int x){
   return na::integer;
 }
@@ -1003,11 +1069,6 @@ inline Rcomplex na_value<Rcomplex>(const Rcomplex x){
 template<>
 inline constexpr Rbyte na_value<Rbyte>(const Rbyte x){
   return 0;
-}
-
-template<>
-inline cpp11::r_string na_value<cpp11::r_string>(const cpp11::r_string x){
-  return cpp11::na<cpp11::r_string>();
 }
 
 template<>
@@ -1085,18 +1146,6 @@ inline SEXP as_vector<Rbyte>(const Rbyte x){
 template<>
 inline SEXP as_vector<const char *>(const char * const x){
   return internal::make_utf8_strsxp(x);
-}
-template<>
-inline SEXP as_vector<std::string>(const std::string x){
-  return as_vector<const char *>(x.c_str());
-}
-template<>
-inline SEXP as_vector<cpp11::r_string>(const cpp11::r_string x){
-  return Rf_ScalarString(x);
-}
-template<>
-inline SEXP as_vector<cpp11::r_bool>(const cpp11::r_bool x){
-  return Rf_ScalarLogical(static_cast<int>(x));
 }
 template<>
 inline SEXP as_vector<r_symbol_t>(const r_symbol_t x){
@@ -1739,7 +1788,7 @@ struct arg {
 
   template<typename T>
   arg operator=(T v) const {
-    return arg(name, as_r_obj(v));
+    return arg(name, r_cast<SEXP>(v));
   }
 };
 
@@ -1770,9 +1819,9 @@ inline SEXP make_list(Args... args) {
     (([&]() {
       if constexpr (std::is_same_v<std::decay_t<Args>, arg>) {
         SET_VECTOR_ELT(out, i, args.value);
-        SET_STRING_ELT(nms, i, internal::make_utf8_charsxp(args.name));
+        set_value<r_string_t>(nms, i, r_cast<r_string_t>(args.name));
       } else {
-        SET_VECTOR_ELT(out, i, as_r_obj(args));
+        SET_VECTOR_ELT(out, i, r_cast<SEXP>(args));
       }
       ++i;
     }()), ...);
@@ -1803,7 +1852,7 @@ inline SEXP make_pairlist(Args... args) {
         SETCAR(current, args.value);
         SET_TAG(current, r_cast<r_symbol_t>(args.name));
       } else {
-        SETCAR(current, as_r_obj(args));
+        SETCAR(current, r_cast<SEXP>(args));
       }
       current = CDR(current);
     }()), ...);
@@ -2066,7 +2115,7 @@ inline SEXP deep_copy(SEXP x){
     out = SHIELD(new_vector<r_string_t>(n)); ++NP;
     const r_string_t *p_x = r_ptr::string_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i){
-      SET_STRING_ELT(out, i, p_x[i]);
+      set_value<r_string_t>(out, i, p_x[i]);
     }
     break;
   }

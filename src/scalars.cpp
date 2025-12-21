@@ -219,9 +219,9 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
     SHIELD(replace = cast<r_character_t>(replace, r_null)); ++NP;
-    SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
-    SEXP repl = SHIELD(STRING_ELT(replace, 0)); ++NP;
-    const SEXP *p_x = STRING_PTR_RO(x);
+    r_string_t val = get_value<r_string_t>(value, 0);
+    r_string_t repl = get_value<r_string_t>(replace, 0);
+    const r_string_t *p_x = string_ptr_ro(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
       eql = p_x[i] == val;
@@ -229,7 +229,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
         any_eq = true;
         out = SHIELD(cpp_semi_copy(out)); ++NP;
       }
-      if (eql) SET_STRING_ELT(out, i, repl);
+      if (eql) set_value<r_string_t>(out, i, repl);
     }
     break;
   }
@@ -369,11 +369,11 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       out = SHIELD(new_vector<r_string_t>(n_keep)); ++NP;
       SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
       SEXP val = SHIELD(STRING_ELT(value, 0)); ++NP;
-      const SEXP *p_x = STRING_PTR_RO(x);
+      const r_string_t *p_x = string_ptr_ro(x);
 
       for (R_xlen_t i = 0; i < n; ++i){
         if (p_x[i] != val){
-          SET_STRING_ELT(out, k++, p_x[i]);
+          set_value<r_string_t>(out, k++, p_x[i]);
         }
       }
       cpp_set_add_attributes(out, ATTRIB(x), false);

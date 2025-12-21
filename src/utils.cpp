@@ -60,9 +60,9 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
     break;
   }
   case STRSXP: {
-    const SEXP *p_source = STRING_PTR_RO(source);
+    const r_string_t *p_source = string_ptr_ro(source);
     for (R_xlen_t i = 0; i < n; ++i){
-      SET_STRING_ELT(target, i, p_source[i]);
+      set_value<r_string_t>(target, i, p_source[i]);
     }
     break;
   }

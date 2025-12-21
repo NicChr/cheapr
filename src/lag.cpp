@@ -109,11 +109,11 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   case STRSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    const SEXP *p_out = STRING_PTR_RO(out);
-    const SEXP *p_x = STRING_PTR_RO(xvec);
+    const r_string_t *p_out = string_ptr_ro(out);
+    const r_string_t *p_x = string_ptr_ro(xvec);
 
     SHIELD(fill = cast<r_character_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? STRING_ELT(fill, 0) : na_value(p_x[0]);
+    auto fill_value = fill_size > 0 ? get_value<r_string_t>(fill, 0) : na_value(p_x[0]);
 
     if (set){
       R_xlen_t tempi;
@@ -121,40 +121,40 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
       if (std::abs(k) >= 1){
         SEXP lag_temp = SHIELD(new_vector<r_string_t>(std::abs(k)));++NP;
         SEXP tempv = SHIELD(new_vector<r_string_t>(1)); ++NP;
-        const SEXP *p_lag = STRING_PTR_RO(lag_temp);
+        const r_string_t *p_lag = string_ptr_ro(lag_temp);
         // Positive lags
         if (k >= 0){
           for (R_xlen_t i = 0; i < k; ++i) {
-            SET_STRING_ELT(lag_temp, i, p_out[i]);
-            SET_STRING_ELT(out, i, fill_value);
+            set_value<r_string_t>(lag_temp, i, p_out[i]);
+            set_value<r_string_t>(out, i, fill_value);
           }
           for (R_xlen_t i = k; i < size; ++i) {
             tempi = ((i - k) % k);
-            SET_STRING_ELT(tempv, 0, p_lag[tempi]);
-            SET_STRING_ELT(lag_temp, tempi, p_out[i]);
-            SET_STRING_ELT(out, i, STRING_ELT(tempv, 0));
+            set_value<r_string_t>(tempv, 0, p_lag[tempi]);
+            set_value<r_string_t>(lag_temp, tempi, p_out[i]);
+            set_value<r_string_t>(out, i, get_value<r_string_t>(tempv, 0));
           }
           // Negative lags
         } else {
           for (R_xlen_t i = size - 1; i >= size + k; --i) {
-            SET_STRING_ELT(lag_temp, size - i - 1, p_out[i]);
-            SET_STRING_ELT(out, i, fill_value);
+            set_value<r_string_t>(lag_temp, size - i - 1, p_out[i]);
+            set_value<r_string_t>(out, i, fill_value);
           }
           for (R_xlen_t i = size + k - 1; i >= 0; --i) {
             tempi = ( (size - (i - k) - 1) % k);
-            SET_STRING_ELT(tempv, 0, p_lag[tempi]);
-            SET_STRING_ELT(lag_temp, tempi, p_out[i]);
-            SET_STRING_ELT(out, i, STRING_ELT(tempv, 0));
+            set_value<r_string_t>(tempv, 0, p_lag[tempi]);
+            set_value<r_string_t>(lag_temp, tempi, p_out[i]);
+            set_value<r_string_t>(out, i, get_value<r_string_t>(tempv, 0));
           }
         }
       }
     } else {
       if (k >= 0){
-        for (R_xlen_t i = 0; i < k; ++i) SET_STRING_ELT(out, i, fill_value);
-        for (R_xlen_t i = k; i < size; ++i) SET_STRING_ELT(out, i, p_x[i - k]);
+        for (R_xlen_t i = 0; i < k; ++i) set_value<r_string_t>(out, i, fill_value);
+        for (R_xlen_t i = k; i < size; ++i) set_value<r_string_t>(out, i, p_x[i - k]);
       } else {
-        for (R_xlen_t i = size - 1; i >= size + k; --i) SET_STRING_ELT(out, i, fill_value);
-        for (R_xlen_t i = size + k - 1; i >= 0; --i) SET_STRING_ELT(out, i, p_x[i - k]);
+        for (R_xlen_t i = size - 1; i >= size + k; --i) set_value<r_string_t>(out, i, fill_value);
+        for (R_xlen_t i = size + k - 1; i >= 0; --i) set_value<r_string_t>(out, i, p_x[i - k]);
       }
     }
     break;
@@ -514,9 +514,9 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    const SEXP *p_x = STRING_PTR_RO(x);
+    const r_string_t *p_x = string_ptr_ro(x);
     SEXP temp_fill = SHIELD(cast<r_character_t>(fill, r_null)); ++NP;
-    SEXP fill_value = SHIELD(fill_size >= 1 ? STRING_ELT(temp_fill, 0) : na::string); ++NP;
+    r_string_t fill_value = fill_size >= 1 ? get_value<r_string_t>(temp_fill, 0) : na::string;
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
@@ -547,9 +547,9 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
         }
         k = p_lag[recycle_lag ? oi % lag_size : 0];
         if (k >= 0){
-          SET_STRING_ELT(out, oi, (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
+          set_value<r_string_t>(out, oi, (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
         } else {
-          SET_STRING_ELT(out, oi, (j - run_end) < k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
+          set_value<r_string_t>(out, oi, (j - run_end) < k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
         }
       }
     }

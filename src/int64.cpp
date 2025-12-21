@@ -175,11 +175,11 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
 
     for (R_xlen_t i = 0; i < n; ++i){
       if (is_r_na(p_x[i])){
-        SET_STRING_ELT(out, i, na::string);
+        set_value<r_string_t>(out, i, na::string);
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, as_r_string(s.c_str()));
+        set_value<r_string_t>(out, i, as_r_string(s.c_str()));
       }
     }
     break;
@@ -191,11 +191,11 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
 
     for (R_xlen_t i = 0; i < n; ++i){
       if (is_r_na(p_x[i])){
-        SET_STRING_ELT(out, i, na::string);
+        set_value<r_string_t>(out, i, na::string);
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, as_r_string(s.c_str()));
+        set_value<r_string_t>(out, i, as_r_string(s.c_str()));
       }
     }
     break;
@@ -206,11 +206,11 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
     double *p_x = real_ptr(x);
     for (R_xlen_t i = 0; i < n; ++i){
       if (is_r_na(p_x[i])){
-        SET_STRING_ELT(out, i, na::string);
+        set_value<r_string_t>(out, i, na::string);
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        SET_STRING_ELT(out, i, as_r_string(s.c_str()));
+        set_value<r_string_t>(out, i, as_r_string(s.c_str()));
       }
     }
     break;

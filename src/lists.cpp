@@ -111,11 +111,11 @@ SEXP cpp_drop_null(SEXP x){
     return out;
   } else {
     SEXP out_names = SHIELD(new_vector<r_string_t>(n_keep));
-    const SEXP *p_names = STRING_PTR_RO(names);
+    const r_string_t *p_names = string_ptr_ro(names);
     for (uint_fast64_t i = 0; i < n; ++i){
       if (is_null(p_l[i])) continue;
       SET_VECTOR_ELT(out, k, p_l[i]);
-      SET_STRING_ELT(out_names, k, p_names[i]);
+      set_value<r_string_t>(out_names, k, p_names[i]);
       ++k;
     }
     set_r_names(out, out_names);
@@ -185,9 +185,9 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   }
 
   const SEXP *p_x = list_ptr_ro(x);
-  const SEXP *p_names = STRING_PTR_RO(names);
+  const r_string_t *p_names = string_ptr_ro(names);
   const SEXP *p_y = list_ptr_ro(values);
-  const SEXP *p_col_names = STRING_PTR_RO(col_names);
+  const r_string_t *p_col_names = string_ptr_ro(col_names);
 
   // We create an int vec to keep track of locations where to add col vecs
 
@@ -213,7 +213,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   // Initialise out
   for (int i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, p_x[i]);
-    SET_STRING_ELT(out_names, i, p_names[i]);
+    set_value<r_string_t>(out_names, i, p_names[i]);
   }
 
   int null_count = 0;
@@ -246,7 +246,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
         p_null_locs[nulli++] = -(n + 1);
       }
       SET_VECTOR_ELT(out, n, p_y[j]);
-      SET_STRING_ELT(out_names, n, p_col_names[j]);
+      set_value<r_string_t>(out_names, n, p_col_names[j]);
       ++n;
     } else {
       if (is_null(p_y[j])){
@@ -254,7 +254,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
       }
       --loc;
       SET_VECTOR_ELT(out, loc, p_y[j]);
-      SET_STRING_ELT(out_names, loc, p_col_names[j]);
+      set_value<r_string_t>(out_names, loc, p_col_names[j]);
     }
   }
   if (null_count != 0){
@@ -390,9 +390,9 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   }
 
   const SEXP *p_x = list_ptr_ro(x);
-  const SEXP *p_names = STRING_PTR_RO(names);
+  const r_string_t *p_names = string_ptr_ro(names);
   const SEXP *p_cols = list_ptr_ro(cols);
-  const SEXP *p_col_names = STRING_PTR_RO(col_names);
+  const r_string_t *p_col_names = string_ptr_ro(col_names);
 
   int n = Rf_length(x);
   int n_cols = Rf_length(cols);
@@ -411,7 +411,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   // Initialise out
   for (int i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, p_x[i]);
-    SET_STRING_ELT(out_names, i, p_names[i]);
+    set_value<r_string_t>(out_names, i, p_names[i]);
   }
 
   bool any_null = false;
@@ -425,12 +425,12 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
     any_null = any_null || is_null(vec);
     if (is_r_na(loc)){
       SET_VECTOR_ELT(out, n, cpp_rep_len(vec, n_rows));
-      SET_STRING_ELT(out_names, n, p_col_names[j]);
+      set_value<r_string_t>(out_names, n, p_col_names[j]);
       ++n;
     } else {
       --loc;
       SET_VECTOR_ELT(out, loc, cpp_rep_len(vec, n_rows));
-      SET_STRING_ELT(out_names, loc, p_col_names[j]);
+      set_value<r_string_t>(out_names, loc, p_col_names[j]);
     }
   }
   if (any_null){

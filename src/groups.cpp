@@ -9,7 +9,7 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
   const int* p_group_id = integer_ptr_ro(group_id);
   int* RESTRICT p_out = integer_ptr(out);
 
-  int fill_value = std::numeric_limits<int>::max();
+  int fill_value = r_limits::r_int_max;
 
   bool sorted = true;
 

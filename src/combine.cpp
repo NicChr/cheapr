@@ -139,22 +139,22 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       return out;
     }
     case STRSXP: {
-      const SEXP *p_x = STRING_PTR_RO(x);
+      const r_string_t *p_x = string_ptr_ro(x);
       SEXP out = SHIELD(new_vector<r_string_t>(out_size));
 
       if (size == 1){
-        SEXP val = p_x[0];
+        r_string_t val = p_x[0];
         for (R_xlen_t i = 0; i < out_size; ++i){
-          SET_STRING_ELT(out, i, val);
+          set_value<r_string_t>(out, i, val);
         }
       } else if (out_size > 0 && size > 0){
         for (R_xlen_t i = 0, xi = 0; i < out_size; recycle_index(xi, size), ++i){
-          SET_STRING_ELT(out, i, p_x[xi]);
+          set_value<r_string_t>(out, i, p_x[xi]);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
         for (R_xlen_t i = 0; i < out_size; ++i){
-          SET_STRING_ELT(out, i, na::string);
+          set_value<r_string_t>(out, i, na::string);
         }
       }
       Rf_copyMostAttrib(x, out);
@@ -291,10 +291,10 @@ SEXP cpp_rep(SEXP x, SEXP times){
         return out;
       }
       case STRSXP: {
-        const SEXP *p_x = STRING_PTR_RO(x);
+        const r_string_t *p_x = string_ptr_ro(x);
         R_xlen_t k = 0;
         for (R_xlen_t i = 0; i < n; ++i){
-          for (int j = 0; j < p_times[i]; ++j, ++k) SET_STRING_ELT(out, k, p_x[i]);
+          for (int j = 0; j < p_times[i]; ++j, ++k) set_value<r_string_t>(out, k, p_x[i]);
         }
         Rf_copyMostAttrib(x, out);
         YIELD(2);
@@ -589,7 +589,7 @@ SEXP cpp_list_c(SEXP x){
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
       if (x_has_names){
-        R_Reprotect(names = as_vector(get_r_string(x_names, i)), nm_idx);
+        R_Reprotect(names = as_vector(get_value<r_string_t>(x_names, i)), nm_idx);
       } else {
         names = r_null;
       }
@@ -601,7 +601,7 @@ SEXP cpp_list_c(SEXP x){
     if (!is_null(names)){
       for (R_xlen_t j = 0; j < m; ++k, ++j){
         SET_VECTOR_ELT(out, k, p_temp[j]);
-        SET_STRING_ELT(out_names, k, STRING_ELT(names, j));
+        set_value<r_string_t>(out_names, k, get_value<r_string_t>(names, j));
       }
     } else {
       for (R_xlen_t j = 0; j < m; ++k, ++j){
@@ -685,7 +685,7 @@ SEXP cpp_df_c(SEXP x){
   SEXP out = SHIELD(new_vector<SEXP>(n_cols)); ++NP;
   SEXP vectors = SHIELD(new_vector<SEXP>(n_frames)); ++NP;
 
-  const SEXP *p_ptype_names = STRING_PTR_RO(ptype_names);
+  const r_string_t *p_ptype_names = string_ptr_ro(ptype_names);
 
   if (na_padding){
     // Get archetype of each col
@@ -842,9 +842,9 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
       R_Reprotect(vec = cast<r_character_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
 
-      const SEXP *p_vec = STRING_PTR_RO(vec);
+      const r_string_t *p_vec = string_ptr_ro(vec);
       for (R_xlen_t j = 0; j < m; ++k, ++j){
-        SET_STRING_ELT(out, k, p_vec[j]);
+        set_value<r_string_t>(out, k, p_vec[j]);
       }
     }
     break;

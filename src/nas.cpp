@@ -195,7 +195,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
     break;
   }
   case STRSXP: {
-    const SEXP *p_x = STRING_PTR_RO(x);
+    const r_string_t *p_x = string_ptr_ro(x);
     CHEAPR_ALL_NA;
     break;
   }
@@ -333,7 +333,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       break;
     }
     case STRSXP: {
-      const SEXP *p_xj = STRING_PTR_RO(p_x[j]);
+      const r_string_t *p_xj = string_ptr_ro(p_x[j]);
       OMP_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
@@ -609,7 +609,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       break;
     }
     case STRSXP: {
-      const SEXP *p_x = STRING_PTR_RO(x);
+      const r_string_t *p_x = string_ptr_ro(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
         p_out[rowi] += is_r_na(p_x[i]);
@@ -687,7 +687,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
       break;
     }
     case STRSXP: {
-      const SEXP *p_x = STRING_PTR_RO(x);
+      const r_string_t *p_x = string_ptr_ro(x);
       for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
         new_col = rowi == num_row;
         if (new_col){
