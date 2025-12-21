@@ -942,6 +942,7 @@ inline void set_row_names(SEXP x, int n){
 }
 }
 
+namespace math {
 template <typename T>
 inline constexpr bool is_r_inf(const T x){
   return false;
@@ -970,6 +971,8 @@ inline constexpr bool is_r_neg_inf(const T x){
 template <>
 inline constexpr bool is_r_neg_inf<double>(const double x){
   return x == r_limits::r_neg_inf;
+}
+
 }
 
 // C++ templates
@@ -1180,6 +1183,7 @@ inline SEXP as_vector<SEXP>(const SEXP x){
 
 }
 
+namespace internal {
 template<typename T>
 inline SEXP as_r_obj(const T x){
   if constexpr (std::is_convertible_v<T, SEXP>){
@@ -1205,7 +1209,6 @@ inline SEXP as_r_obj<r_symbol_t>(const r_symbol_t x){
   return static_cast<SEXP>(x);
 }
 
-namespace internal {
 // Assumes no NAs at all
 template<typename T>
 inline constexpr bool can_be_int(T x){
@@ -1230,7 +1233,6 @@ inline constexpr bool can_be_int64(T x){
   } else {
     return false;
   }
-}
 }
 
 // Coerce functions that account for NA
@@ -1365,6 +1367,8 @@ inline r_symbol_t as_r_sym(T x){
     }
 
   }
+}
+
 }
 
 namespace internal {
