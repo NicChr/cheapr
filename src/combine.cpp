@@ -866,7 +866,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     SHIELD(out = init<r_raws_t>(out_size, false)); ++NP;
 
-    Rbyte *p_out = raw_ptr(out);
+    r_byte_t *p_out = raw_ptr(out);
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_raws_t>(p_x[i], vec_template), vec_idx);

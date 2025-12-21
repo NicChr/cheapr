@@ -73,9 +73,9 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
     break;
   }
   case RAWSXP: {
-    Rbyte *p_source = raw_ptr(source);
-    Rbyte *p_target = raw_ptr(target);
-    safe_memmove(&p_target[0], &p_source[0], n * sizeof(Rbyte));
+    r_byte_t *p_source = raw_ptr(source);
+    r_byte_t *p_target = raw_ptr(target);
+    safe_memmove(&p_target[0], &p_source[0], n * sizeof(r_byte_t));
     break;
   }
   default: {

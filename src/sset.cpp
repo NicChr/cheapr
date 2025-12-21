@@ -631,9 +631,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case RAWSXP: {
-    const Rbyte *p_x = raw_ptr_ro(x);
-    out = SHIELD(new_vector<Rbyte>(out_size)); ++NP;
-    Rbyte* RESTRICT p_out = raw_ptr(out);
+    const r_byte_t *p_x = raw_ptr_ro(x);
+    out = SHIELD(new_vector<r_byte_t>(out_size)); ++NP;
+    r_byte_t* RESTRICT p_out = raw_ptr(out);
     if (double_loop){
       std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
       std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
@@ -786,8 +786,8 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case RAWSXP: {
-        const Rbyte *p_x = raw_ptr_ro(x);
-        out = SHIELD(new_vector<Rbyte>(n));
+        const r_byte_t *p_x = raw_ptr_ro(x);
+        out = SHIELD(new_vector<r_byte_t>(n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -927,8 +927,8 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case RAWSXP: {
-        const Rbyte *p_x = raw_ptr_ro(x);
-        out = SHIELD(new_vector<Rbyte>(n));
+        const r_byte_t *p_x = raw_ptr_ro(x);
+        out = SHIELD(new_vector<r_byte_t>(n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -1031,8 +1031,8 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case RAWSXP: {
-        const Rbyte *p_x = raw_ptr_ro(x);
-        out = SHIELD(new_vector<Rbyte>(n));
+        const r_byte_t *p_x = raw_ptr_ro(x);
+        out = SHIELD(new_vector<r_byte_t>(n));
         for (int_fast64_t i = 0; i < n; ++i) SET_RAW_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         break;
       }
@@ -1099,9 +1099,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case RAWSXP: {
-        const Rbyte *p_x = raw_ptr_ro(x);
-        out = SHIELD(new_vector<Rbyte>(n));
-        Rbyte* RESTRICT p_out = raw_ptr(out);
+        const r_byte_t *p_x = raw_ptr_ro(x);
+        out = SHIELD(new_vector<r_byte_t>(n));
+        r_byte_t* RESTRICT p_out = raw_ptr(out);
         for (int i = 0; i != n; ++i){
           set_value(p_out, i, p_x[pind[i] - 1]);
         }
@@ -1207,10 +1207,10 @@ SEXP rev(SEXP x, bool set){
   }
   case RAWSXP: {
     out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
-    Rbyte *p_out = raw_ptr(out);
+    r_byte_t *p_out = raw_ptr(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
-      Rbyte left = p_out[i];
+      r_byte_t left = p_out[i];
       SET_RAW_ELT(out, i, p_out[k]);
       SET_RAW_ELT(out, k, left);
     }

@@ -202,14 +202,14 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     case R_raw: {
 
       SHIELD(out = init<r_raws_t>(n, false)); ++NP;
-      Rbyte *p_out = raw_ptr(out);
+      r_byte_t *p_out = raw_ptr(out);
 
-      const Rbyte *p_yes = raw_ptr(yes);
-      const Rbyte *p_no = raw_ptr(no);
-      const Rbyte *p_na = raw_ptr(na);
-      const Rbyte yes_value = p_yes[0];
-      const Rbyte no_value = p_no[0];
-      const Rbyte na_value = p_na[0];
+      const r_byte_t *p_yes = raw_ptr(yes);
+      const r_byte_t *p_no = raw_ptr(no);
+      const r_byte_t *p_na = raw_ptr(na);
+      const r_byte_t yes_value = p_yes[0];
+      const r_byte_t no_value = p_no[0];
+      const r_byte_t na_value = p_na[0];
       CHEAPR_DO_IF_ELSE
 
       break;

@@ -162,8 +162,8 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   case RAWSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    Rbyte *p_out = raw_ptr(out);
-    const Rbyte *p_x = raw_ptr_ro(xvec);
+    r_byte_t *p_out = raw_ptr(out);
+    const r_byte_t *p_x = raw_ptr_ro(xvec);
 
     SHIELD(fill = cast<r_raws_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? raw_ptr(fill)[0] : na_value(p_x[0]);
@@ -172,9 +172,9 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
       R_xlen_t tempi;
       // If k = 0 then no lag occurs
       if (std::abs(k) >= 1){
-        SEXP lag_temp = SHIELD(new_vector<Rbyte>(std::abs(k)));
+        SEXP lag_temp = SHIELD(new_vector<r_byte_t>(std::abs(k)));
         ++NP;
-        Rbyte *p_lag = raw_ptr(lag_temp);
+        r_byte_t *p_lag = raw_ptr(lag_temp);
         // Positive lags
         if (k >= 0){
           for (R_xlen_t i = 0; i < k; ++i) {
@@ -183,7 +183,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
           }
           for (R_xlen_t i = k; i < size; ++i) {
             tempi = ((i - k) % k);
-            Rbyte tempv = p_lag[tempi];
+            r_byte_t tempv = p_lag[tempi];
             SET_RAW_ELT(lag_temp, tempi, p_out[i]);
             SET_RAW_ELT(out, i, tempv);
           }
@@ -195,7 +195,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
           }
           for (R_xlen_t i = size + k - 1; i >= 0; --i) {
             tempi = ( (size - (i - k) - 1) % k);
-            Rbyte tempv = p_lag[tempi];
+            r_byte_t tempv = p_lag[tempi];
             SET_RAW_ELT(lag_temp, tempi, p_out[i]);
             SET_RAW_ELT(out, i, tempv);
           }
@@ -614,9 +614,9 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    Rbyte *p_x = raw_ptr(x);
+    r_byte_t *p_x = raw_ptr(x);
     SEXP raw_sexp = SHIELD(vec::coerce_vec(fill, RAWSXP));
-    Rbyte fill_value = fill_size == 0 ? 0 : raw_ptr(raw_sexp)[0]; ++NP;
+    r_byte_t fill_value = fill_size == 0? r_byte_t{0} : raw_ptr(raw_sexp)[0]; ++NP;
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run

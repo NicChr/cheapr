@@ -253,7 +253,11 @@ inline SEXP init<r_complexes_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_raws_t>(R_xlen_t n, bool with_na) {
-  return cheapr::vec::new_vector<Rbyte>(n);
+  if (with_na){
+    return cheapr::vec::new_vector<cheapr::r_byte_t>(n, cheapr::r_byte_t{0});
+  } else {
+    return cheapr::vec::new_vector<cheapr::r_byte_t>(n);
+  }
 }
 
 template<>

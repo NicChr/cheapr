@@ -98,7 +98,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_raw: {
 
-    const Rbyte *p_with = raw_ptr_ro(with);
+    const r_byte_t *p_with = raw_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       SET_RAW_ELT(x, p_where[i] - 1, p_with[withi]);
