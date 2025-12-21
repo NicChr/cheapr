@@ -137,13 +137,13 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
     return out;
   }
 
-  std::string sep1 = utf8_char(get_r_string(sep, 0));
+  std::string sep1 = utf8_char(get_value<r_string_t>(sep, 0));
   std::string sep2 = utf8_char(blank_r_string);
   std::string strng = utf8_char(blank_r_string);
 
   if (!is_null(collapse)){
 
-    sep2 = utf8_char(get_r_string(collapse, 0));
+    sep2 = utf8_char(get_value<r_string_t>(collapse, 0));
 
     for (R_xlen_t j = 0; j < n_strings; ++j){
       if (j != 0) strng += sep2;

@@ -29,7 +29,7 @@ if (is_r_na(VAL)){                                                   \
 } else {                                                             \
   while (whichi < out_size){                                         \
     p_out[whichi] = i + 1;                                           \
-    whichi += eq(p_x[i++], VAL);                                     \
+    whichi += (p_x[i++] == VAL);                                     \
   }                                                                  \
 }
 
@@ -43,7 +43,7 @@ if (is_r_na(VAL)){                                                 \
 } else {                                                           \
   while (whichi < out_size){                                       \
     p_out[whichi] = i + 1;                                         \
-    whichi += !eq(p_x[i++], VAL);                                  \
+    whichi += (p_x[i++] != VAL);                                   \
   }                                                                \
 }
 
@@ -190,7 +190,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case STRSXP: {
     SEXP out = SHIELD(is_long ? new_vector<double>(out_size) : new_vector<int>(out_size)); ++NP;
     SHIELD(value = cast<r_characters_t>(value, r_null)); ++NP;
-    r_string_t val = get_r_string(value, 0);
+    r_string_t val = get_value<r_string_t>(value, 0);
     const r_string_t *p_x = string_ptr_ro(x);
     if (is_long){
       double *p_out = real_ptr(out);
@@ -213,8 +213,8 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case CPLXSXP: {
     SEXP out = SHIELD(is_long ? new_vector<double>(out_size) : new_vector<int>(out_size)); ++NP;
     SHIELD(value = cast<r_complexes_t>(value, r_null)); ++NP;
-    Rcomplex val = complex_ptr(value)[0];
-    const Rcomplex *p_x = complex_ptr_ro(x);
+    r_complex_t val = complex_ptr(value)[0];
+    const r_complex_t *p_x = complex_ptr_ro(x);
     if (is_long){
       double* RESTRICT p_out = real_ptr(out);
       if (invert){

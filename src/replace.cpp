@@ -86,13 +86,12 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_cplx: {
 
-    Rcomplex* p_x = complex_ptr(x);
-    const Rcomplex *p_with = complex_ptr_ro(with);
+    r_complex_t* p_x = complex_ptr(x);
+    const r_complex_t *p_with = complex_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       xi = p_where[i] - 1;
-      p_x[xi].r = p_with[withi].r;
-      p_x[xi].i = p_with[withi].i;
+      set_value(p_x, xi, p_with[withi]);
     }
     break;
   }

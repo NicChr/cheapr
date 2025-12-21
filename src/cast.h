@@ -244,9 +244,9 @@ inline SEXP init<r_characters_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_complexes_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    return cheapr::vec::new_vector<Rcomplex>(0, cheapr::na::complex);
+    return cheapr::vec::new_vector<cheapr::r_complex_t>(0, cheapr::na::complex);
   } else {
-    return cheapr::vec::new_vector<Rcomplex>(n);
+    return cheapr::vec::new_vector<cheapr::r_complex_t>(n);
   }
 
 }
@@ -258,7 +258,7 @@ inline SEXP init<r_raws_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_list_t>(R_xlen_t n, bool with_na) {
-  return cheapr::vec::new_vector<SEXP>(n);
+  return cheapr::vec::new_list(n);
 }
 
 template<>
@@ -294,7 +294,7 @@ inline SEXP init<r_posixts_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
-  SEXP out = SHIELD(cheapr::vec::new_vector<SEXP>(0));
+  SEXP out = SHIELD(cheapr::vec::new_list(0));
   SHIELD(out = cpp_new_df(out, cheapr::r_null, false, false));
   SHIELD(out = cpp_na_init(out, n));
   YIELD(3);

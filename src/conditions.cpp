@@ -188,14 +188,14 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     case R_cplx: {
 
       SHIELD(out = init<r_complexes_t>(n, false)); ++NP;
-      Rcomplex *p_out = complex_ptr(out);
+      r_complex_t *p_out = complex_ptr(out);
 
-      const Rcomplex *p_yes = complex_ptr(yes);
-      const Rcomplex *p_no = complex_ptr(no);
-      const Rcomplex *p_na = complex_ptr(na);
-      const Rcomplex yes_value = p_yes[0];
-      const Rcomplex no_value = p_no[0];
-      const Rcomplex na_value = p_na[0];
+      const r_complex_t *p_yes = complex_ptr(yes);
+      const r_complex_t *p_no = complex_ptr(no);
+      const r_complex_t *p_na = complex_ptr(na);
+      const r_complex_t yes_value = p_yes[0];
+      const r_complex_t no_value = p_no[0];
+      const r_complex_t na_value = p_na[0];
       CHEAPR_DO_IF_ELSE
       break;
     }

@@ -344,7 +344,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
     }
   } else {
     SHIELD(nrows = cast<r_integers_t>(nrows, r_null)); ++NP;
-    num_row = get_int(nrows, 0);
+    num_row = get_value<int>(nrows, 0);
   }
 
   SEXP out_names = SHIELD(get_r_names(out)); ++NP;

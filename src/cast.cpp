@@ -136,7 +136,7 @@ SEXP cpp_cast_common(SEXP x){
     return x;
   }
 
-  SEXP out = SHIELD(new_vector<SEXP>(n)); ++NP;
+  SEXP out = SHIELD(new_list(n)); ++NP;
   SEXP vec_template = SHIELD(cpp_common_template(x)); ++NP;
   r_type common = get_r_type(vec_template);
 

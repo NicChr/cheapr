@@ -67,9 +67,9 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_source = complex_ptr(source);
-    Rcomplex *p_target = complex_ptr(target);
-    safe_memmove(&p_target[0], &p_source[0], n * sizeof(Rcomplex));
+    r_complex_t *p_source = complex_ptr(source);
+    r_complex_t *p_target = complex_ptr(target);
+    safe_memmove(&p_target[0], &p_source[0], n * sizeof(r_complex_t));
     break;
   }
   case RAWSXP: {

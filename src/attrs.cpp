@@ -32,7 +32,7 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
   if (Rf_length(which) != 1){
     Rf_error("`which` must be a character vector of length 1 in %s", __func__);
   }
-  r_symbol_t attr_char = r_cast<r_symbol_t>(get_r_string(which, 0));
+  r_symbol_t attr_char = r_cast<r_symbol_t>(get_value<r_string_t>(which, 0));
   SEXP value2 = SHIELD(address_equal(x, value) ? vec::deep_copy(value) : value);
   set_attr(x, attr_char, value2);
   YIELD(2);
@@ -47,7 +47,7 @@ SEXP cpp_set_rm_attr(SEXP x, SEXP which){
   if (TYPEOF(which) != STRSXP){
     Rf_error("`which` must be a length 1 character vector");
   }
-  set_attr(x, r_cast<r_symbol_t>(get_r_string(which, 0)), r_null);
+  set_attr(x, r_cast<r_symbol_t>(get_value<r_string_t>(which, 0)), r_null);
   return x;
 }
 

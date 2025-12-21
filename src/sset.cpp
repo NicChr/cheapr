@@ -612,9 +612,9 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     break;
   }
   case CPLXSXP: {
-    const Rcomplex *p_x = complex_ptr_ro(x);
-    out = SHIELD(new_vector<Rcomplex>(out_size)); ++NP;
-    Rcomplex* RESTRICT p_out = complex_ptr(out);
+    const r_complex_t *p_x = complex_ptr_ro(x);
+    out = SHIELD(new_vector<r_complex_t>(out_size)); ++NP;
+    r_complex_t* RESTRICT p_out = complex_ptr(out);
     if (double_loop){
       std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
       std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
@@ -762,9 +762,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex* p_x = complex_ptr_ro(x);
-        out = SHIELD(new_vector<Rcomplex>(n));
-        Rcomplex* RESTRICT p_out = complex_ptr(out);
+        const r_complex_t* p_x = complex_ptr_ro(x);
+        out = SHIELD(new_vector<r_complex_t>(n));
+        r_complex_t* RESTRICT p_out = complex_ptr(out);
           for (int_fast64_t i = 0; i < n; ++i){
 
             j = pind[i];
@@ -907,9 +907,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex* p_x = complex_ptr_ro(x);
-        out = SHIELD(new_vector<Rcomplex>(n));
-        Rcomplex* RESTRICT p_out = complex_ptr(out);
+        const r_complex_t* p_x = complex_ptr_ro(x);
+        out = SHIELD(new_vector<r_complex_t>(n));
+        r_complex_t* RESTRICT p_out = complex_ptr(out);
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -1022,12 +1022,11 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex *p_x = complex_ptr_ro(x);
-        out = SHIELD(new_vector<Rcomplex>(n));
-        Rcomplex* RESTRICT p_out = complex_ptr(out);
+        const r_complex_t *p_x = complex_ptr_ro(x);
+        out = SHIELD(new_vector<r_complex_t>(n));
+        r_complex_t* RESTRICT p_out = complex_ptr(out);
         for (int_fast64_t i = 0; i < n; ++i){
-          p_out[i].r = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].r;
-          p_out[i].i = p_x[static_cast<int_fast64_t>(pind[i] - 1.0)].i;
+          set_value(p_out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         }
         break;
       }
@@ -1091,9 +1090,9 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         break;
       }
       case CPLXSXP: {
-        const Rcomplex *p_x = complex_ptr_ro(x);
-        out = SHIELD(new_vector<Rcomplex>(n));
-        Rcomplex* RESTRICT p_out = complex_ptr(out);
+        const r_complex_t *p_x = complex_ptr_ro(x);
+        out = SHIELD(new_vector<r_complex_t>(n));
+        r_complex_t* RESTRICT p_out = complex_ptr(out);
         for (int i = 0; i != n; ++i){
           set_value(p_out, i, p_x[pind[i] - 1]);
         }
@@ -1197,12 +1196,12 @@ SEXP rev(SEXP x, bool set){
   }
   case CPLXSXP: {
     out = SHIELD(set ? x : cpp_semi_copy(x)); ++NP;
-    Rcomplex *p_out = complex_ptr(out);
+    r_complex_t *p_out = complex_ptr(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
-      Rcomplex left = p_out[i];
-      SET_COMPLEX_ELT(out, i, p_out[k]);
-      SET_COMPLEX_ELT(out, k, left);
+      r_complex_t left = p_out[i];
+      set_value<r_complex_t>(out, i, p_out[k]);
+      set_value<r_complex_t>(out, k, left);
     }
     break;
   }
@@ -1275,7 +1274,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
     if (cpp_any_na(cols, false)){
       for (int i = 0; i < Rf_length(cols); ++i){
         if (is_r_na(match_locs[i])){
-          const char *bad_loc = utf8_char(get_r_string(locs, i));
+          const char *bad_loc = utf8_char(get_value<r_string_t>(locs, i));
           YIELD(NP);
           Rf_error("Column %s does not exist", bad_loc);
         }

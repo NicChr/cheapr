@@ -25,7 +25,7 @@ if (is_r_na(VAL)){                                             \
 } else {                                                       \
   _Pragma("omp simd reduction(+:count)")                       \
   for (R_xlen_t i = 0; i < n; ++i){                            \
-    count += eq(p_x[i], VAL);                                  \
+    count += (p_x[i] == VAL);                                  \
   }                                                            \
 }
 
@@ -70,7 +70,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case STRSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_characters_t>(value, r_null)); ++NP;
-    const r_string_t val = get_r_string(value, 0);
+    const r_string_t val = get_value<r_string_t>(value, 0);
     const r_string_t *p_x = string_ptr_ro(x);
     CHEAPR_VAL_COUNT(val)
       break;
@@ -78,8 +78,8 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case CPLXSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_complexes_t>(value, r_null)); ++NP;
-    const Rcomplex val = complex_ptr(value)[0];
-    const Rcomplex *p_x = complex_ptr_ro(x);
+    const r_complex_t val = complex_ptr(value)[0];
+    const r_complex_t *p_x = complex_ptr_ro(x);
     CHEAPR_VAL_COUNT(val);
     break;
   }
@@ -239,17 +239,17 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SHIELD(value = cast<r_complexes_t>(value, r_null)); ++NP;
     SHIELD(replace = cast<r_complexes_t>(replace, r_null)); ++NP;
-    Rcomplex val = COMPLEX_ELT(value, 0);
-    Rcomplex repl = COMPLEX_ELT(replace, 0);
-    const Rcomplex *p_x = complex_ptr_ro(x);
+    r_complex_t val = get_value<r_complex_t>(value, 0);
+    r_complex_t repl = get_value<r_complex_t>(replace, 0);
+    const r_complex_t *p_x = complex_ptr_ro(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
-      eql = val_is_na ? is_r_na(p_x[i]) : eq(p_x[i], val);
+      eql = val_is_na ? is_r_na(p_x[i]) : (p_x[i] == val);
       if (!any_eq && eql){
         any_eq = true;
         out = SHIELD(cpp_semi_copy(out)); ++NP;
       }
-      if (eql) SET_COMPLEX_ELT(out, i, repl);
+      if (eql) set_value<r_complex_t>(out, i, repl);
     }
     break;
   }
@@ -383,14 +383,14 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       if (implicit_na_coercion(value, x)){
       break;
     }
-      out = SHIELD(new_vector<Rcomplex>(n_keep)); ++NP;
+      out = SHIELD(new_vector<r_complex_t>(n_keep)); ++NP;
       SHIELD(value = cast<r_complexes_t>(value, r_null)); ++NP;
-      Rcomplex val = COMPLEX_ELT(value, 0);
-      const Rcomplex *p_x = complex_ptr_ro(x);
+      r_complex_t val = get_value<r_complex_t>(value, 0);
+      const r_complex_t *p_x = complex_ptr_ro(x);
 
       for (R_xlen_t i = 0; i < n; ++i){
-        if ( !(is_r_na(val) ? is_r_na(p_x[i]) : eq(p_x[i], val)) ){
-          SET_COMPLEX_ELT(out, k++, p_x[i]);
+        if ( !(is_r_na(val) ? is_r_na(p_x[i]) : (p_x[i] == val)) ){
+          set_value<r_complex_t>(out, k++, p_x[i]);
         }
       }
       cpp_set_add_attributes(out, ATTRIB(x), false);

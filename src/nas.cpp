@@ -142,7 +142,7 @@ bool cpp_any_na(SEXP x, bool recursive){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_x = complex_ptr(x);
+    r_complex_t *p_x = complex_ptr(x);
     CHEAPR_ANY_NA;
     break;
   }
@@ -203,7 +203,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
     break;
   }
   case CPLXSXP: {
-    Rcomplex *p_x = complex_ptr(x);
+    r_complex_t *p_x = complex_ptr(x);
     CHEAPR_ALL_NA;
     break;
   }
@@ -276,7 +276,7 @@ SEXP cpp_is_na(SEXP x){
   case CPLXSXP: {
     out = SHIELD(new_vector<r_bool_t>(n));
     r_bool_t* RESTRICT p_out = logical_ptr(out);
-    const Rcomplex *p_x = complex_ptr(x);
+    const r_complex_t *p_x = complex_ptr(x);
     CHEAPR_IS_NA
     break;
   }
@@ -344,7 +344,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
       break;
     }
     case CPLXSXP: {
-      const Rcomplex *p_xj = complex_ptr_ro(p_x[j]);
+      const r_complex_t *p_xj = complex_ptr_ro(p_x[j]);
       OMP_SIMD
       for (int i = 0; i < num_row; ++i){
         p_out[i] += is_r_na(p_xj[i]);
@@ -361,7 +361,7 @@ SEXP cpp_df_row_na_counts(SEXP x){
         SEXP names = SHIELD(get_r_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 utf8_char(get_r_string(names, j)), element_length, int_nrows);
+                 utf8_char(get_value<r_string_t>(names, j)), element_length, int_nrows);
       }
       const r_bool_t* RESTRICT p_is_missing = logical_ptr_ro(is_missing);
       for (int k = 0; k < num_row; ++k){
@@ -407,7 +407,7 @@ SEXP cpp_df_col_na_counts(SEXP x){
         SEXP names = SHIELD(get_r_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 utf8_char(get_r_string(names, j)), element_length, int_nrows);
+                 utf8_char(get_value<r_string_t>(names, j)), element_length, int_nrows);
       }
       int *p_is_missing = integer_ptr(is_missing);
       for (int k = 0; k < num_row; ++k){
@@ -455,7 +455,7 @@ SEXP cpp_col_any_na(SEXP x, bool names){
         SEXP names = SHIELD(get_r_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 utf8_char(get_r_string(names, j)), element_length, int_nrows);
+                 utf8_char(get_value<r_string_t>(names, j)), element_length, int_nrows);
       }
       p_out[j] = static_cast<int>(vec_any(is_missing));
     } else {
@@ -512,7 +512,7 @@ SEXP cpp_col_all_na(SEXP x, bool names){
         SEXP names = SHIELD(get_r_names(x));
         YIELD(NP);
         Rf_error("is.na method for list variable %s produces a length (%d) vector which does not equal the number of rows (%d)",
-                 utf8_char(get_r_string(names, j)), element_length, int_nrows);
+                 utf8_char(get_value<r_string_t>(names, j)), element_length, int_nrows);
       }
       p_out[j] = static_cast<int>(vec_all(is_missing));
     } else {
@@ -620,7 +620,7 @@ SEXP cpp_matrix_row_na_counts(SEXP x){
       break;
     }
     case CPLXSXP: {
-      Rcomplex *p_x = complex_ptr(x);
+      r_complex_t *p_x = complex_ptr(x);
       for (R_xlen_t i = 0, rowi = 0; i < n; ++rowi, ++i){
         if (rowi == num_row) rowi = 0;
         p_out[rowi] += is_r_na(p_x[i]);
@@ -702,7 +702,7 @@ SEXP cpp_matrix_col_na_counts(SEXP x){
       break;
     }
     case CPLXSXP: {
-      Rcomplex *p_x = complex_ptr(x);
+      r_complex_t *p_x = complex_ptr(x);
       for (R_xlen_t i = 0, coli = 0, rowi = 0; i < n; ++rowi, ++i){
         new_col = rowi == num_row;
         if (new_col){
