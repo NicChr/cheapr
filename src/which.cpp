@@ -110,7 +110,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
     YIELD(NP);
     Rf_error("Value has been implicitly converted to NA, please check");
   }
-  SHIELD(n_values = cast<r_double_t>(n_values, r_null)); ++NP;
+  SHIELD(n_values = cast<r_doubles_t>(n_values, r_null)); ++NP;
   R_xlen_t n_vals = is_null(n_values) ? scalar_count(x, value, false) : real_ptr(n_values)[0];
   R_xlen_t out_size = invert ? n - n_vals : n_vals;
   R_xlen_t whichi = 0;
@@ -120,7 +120,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   case LGLSXP:
   case INTSXP: {
     SEXP out = SHIELD(is_long ? new_vector<double>(out_size) : new_vector<int>(out_size)); ++NP;
-    SHIELD(value = cast<r_integer_t>(value, r_null)); ++NP;
+    SHIELD(value = cast<r_integers_t>(value, r_null)); ++NP;
     int val = integer_ptr(value)[0];
     const int *p_x = integer_ptr(x);
     if (is_long){
@@ -143,7 +143,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   }
   case REALSXP: {
     SEXP out = SHIELD(is_long ? new_vector<double>(out_size) : new_vector<int>(out_size)); ++NP;
-    SHIELD(value = cast<r_double_t>(value, r_null)); ++NP;
+    SHIELD(value = cast<r_doubles_t>(value, r_null)); ++NP;
     double val = real_ptr(value)[0];
     const double *p_x = real_ptr(x);
     if (is_long){
@@ -166,7 +166,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   }
   case CHEAPR_INT64SXP: {
     SEXP out = SHIELD(is_long ? new_vector<double>(out_size) : new_vector<int>(out_size)); ++NP;
-    SHIELD(value = cast<r_integer64_t>(value, r_null)); ++NP;
+    SHIELD(value = cast<r_integers64_t>(value, r_null)); ++NP;
     int64_t val = integer64_ptr(value)[0];
     const int64_t *p_x = integer64_ptr_ro(x);
     if (is_long){
@@ -189,7 +189,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   }
   case STRSXP: {
     SEXP out = SHIELD(is_long ? new_vector<double>(out_size) : new_vector<int>(out_size)); ++NP;
-    SHIELD(value = cast<r_character_t>(value, r_null)); ++NP;
+    SHIELD(value = cast<r_characters_t>(value, r_null)); ++NP;
     r_string_t val = get_r_string(value, 0);
     const r_string_t *p_x = string_ptr_ro(x);
     if (is_long){
@@ -212,7 +212,7 @@ SEXP cpp_val_find(SEXP x, SEXP value, bool invert, SEXP n_values){
   }
   case CPLXSXP: {
     SEXP out = SHIELD(is_long ? new_vector<double>(out_size) : new_vector<int>(out_size)); ++NP;
-    SHIELD(value = cast<r_complex_t>(value, r_null)); ++NP;
+    SHIELD(value = cast<r_complexes_t>(value, r_null)); ++NP;
     Rcomplex val = complex_ptr(value)[0];
     const Rcomplex *p_x = complex_ptr_ro(x);
     if (is_long){

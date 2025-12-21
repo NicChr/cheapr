@@ -118,7 +118,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       break;
     }
     case R_lgl: {
-      SHIELD(out = init<r_logical_t>(n, false)); ++NP;
+      SHIELD(out = init<r_logicals_t>(n, false)); ++NP;
       r_bool_t* RESTRICT p_out = logical_ptr(out);
       const r_bool_t *p_yes = logical_ptr_ro(yes);
       const r_bool_t *p_no = logical_ptr_ro(no);
@@ -131,7 +131,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       break;
     }
     case R_int: {
-      SHIELD(out = init<r_integer_t>(n, false)); ++NP;
+      SHIELD(out = init<r_integers_t>(n, false)); ++NP;
       int* RESTRICT p_out = integer_ptr(out);
       const int *p_yes = integer_ptr_ro(yes);
       const int *p_no = integer_ptr_ro(no);
@@ -143,7 +143,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       break;
     }
     case R_int64: {
-      SHIELD(out = init<r_integer64_t>(n, false)); ++NP;
+      SHIELD(out = init<r_integers64_t>(n, false)); ++NP;
       int64_t* RESTRICT p_out = INTEGER64_PTR(out);
       const int64_t *p_yes = integer64_ptr_ro(yes);
       const int64_t *p_no = integer64_ptr_ro(no);
@@ -155,7 +155,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       break;
     }
     case R_dbl: {
-      SHIELD(out = init<r_double_t>(n, false)); ++NP;
+      SHIELD(out = init<r_doubles_t>(n, false)); ++NP;
       double* RESTRICT p_out = real_ptr(out);
       const double *p_yes = real_ptr_ro(yes);
       const double *p_no = real_ptr_ro(no);
@@ -168,7 +168,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_chr: {
 
-      SHIELD(out = init<r_character_t>(n, false)); ++NP;
+      SHIELD(out = init<r_characters_t>(n, false)); ++NP;
       SEXP p_out = out;
 
       const r_string_t *p_yes = string_ptr_ro(yes);
@@ -187,7 +187,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_cplx: {
 
-      SHIELD(out = init<r_complex_t>(n, false)); ++NP;
+      SHIELD(out = init<r_complexes_t>(n, false)); ++NP;
       Rcomplex *p_out = complex_ptr(out);
 
       const Rcomplex *p_yes = complex_ptr(yes);
@@ -201,7 +201,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_raw: {
 
-      SHIELD(out = init<r_raw_t>(n, false)); ++NP;
+      SHIELD(out = init<r_raws_t>(n, false)); ++NP;
       Rbyte *p_out = raw_ptr(out);
 
       const Rbyte *p_yes = raw_ptr(yes);

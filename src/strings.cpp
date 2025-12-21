@@ -30,7 +30,7 @@ SEXP cpp_str_coalesce(SEXP x){
   // First cast all to character vectors
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
-    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], r_null));
+    SET_VECTOR_ELT(chars, i, cast<r_characters_t>(p_chars[i], r_null));
   }
 
   // The reason for not assigning these ptrs in the previous loop is because
@@ -86,7 +86,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
 
   int32_t NP = 0;
 
-  SHIELD(sep = cast<r_character_t>(sep, r_null)); ++NP;
+  SHIELD(sep = cast<r_characters_t>(sep, r_null)); ++NP;
 
   if (Rf_length(sep) != 1){
     YIELD(NP);
@@ -111,11 +111,11 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
   // First cast all to character vectors
 
   for (R_xlen_t i = 0; i < n_chars; ++i){
-    SET_VECTOR_ELT(chars, i, cast<r_character_t>(p_chars[i], r_null));
+    SET_VECTOR_ELT(chars, i, cast<r_characters_t>(p_chars[i], r_null));
   }
 
   if (!is_null(collapse)){
-    SHIELD(collapse = cast<r_character_t>(collapse, r_null)); ++NP;
+    SHIELD(collapse = cast<r_characters_t>(collapse, r_null)); ++NP;
     if (Rf_length(collapse) != 1){
       YIELD(NP);
       Rf_error("`.collapse` must be a length 1 character vector in %s", __func__);

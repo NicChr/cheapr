@@ -79,7 +79,7 @@ SEXP cpp_common_template(SEXP x){
         if (Rf_isFactor(p_x[i])){
           R_Reprotect(new_lvls = get_attr(p_x[i], symbol::levels_sym), new_lvls_idx);
         } else {
-          R_Reprotect(new_lvls = cast<r_character_t>(p_x[i], r_null), new_lvls_idx);
+          R_Reprotect(new_lvls = cast<r_characters_t>(p_x[i], r_null), new_lvls_idx);
         }
         if (!R_compute_identical(all_lvls, new_lvls, 0)){
           R_Reprotect(new_lvls = cpp_setdiff(new_lvls, all_lvls, false), new_lvls_idx);
@@ -111,7 +111,7 @@ SEXP cpp_common_template(SEXP x){
     case R_pxt: {
       // Initialised date-time gets timezone of first date-time
       if (Rf_xlength(x) > 0){
-      SHIELD(out = cast<r_posixt_t>(out, p_x[0])); ++NP;
+      SHIELD(out = cast<r_posixts_t>(out, p_x[0])); ++NP;
     }
       break;
     }
@@ -146,43 +146,43 @@ SEXP cpp_cast_common(SEXP x){
   }
   case R_lgl: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_logical_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_logicals_t>(p_x[i], vec_template));
   }
     break;
   }
   case R_int: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_integer_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_integers_t>(p_x[i], vec_template));
   }
     break;
   }
   case R_int64: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_integer64_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_integers64_t>(p_x[i], vec_template));
   }
     break;
   }
   case R_dbl: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_double_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_doubles_t>(p_x[i], vec_template));
   }
     break;
   }
   case R_chr: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_character_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_characters_t>(p_x[i], vec_template));
   }
     break;
   }
   case R_cplx: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_complex_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_complexes_t>(p_x[i], vec_template));
   }
     break;
   }
   case R_raw: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_raw_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_raws_t>(p_x[i], vec_template));
   }
     break;
   }
@@ -194,19 +194,19 @@ SEXP cpp_cast_common(SEXP x){
   }
   case R_fct: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_factor_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_factors_t>(p_x[i], vec_template));
   }
     break;
   }
   case R_date: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_date_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_dates_t>(p_x[i], vec_template));
   }
     break;
   }
   case R_pxt: {
     for (R_xlen_t i = 0; i < n; ++i){
-    SET_VECTOR_ELT(out, i, cast<r_posixt_t>(p_x[i], vec_template));
+    SET_VECTOR_ELT(out, i, cast<r_posixts_t>(p_x[i], vec_template));
   }
     break;
   }

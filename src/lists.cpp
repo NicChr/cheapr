@@ -60,7 +60,7 @@ SEXP cpp_lengths(SEXP x, bool names){
 
 [[cpp11::register]]
 SEXP cpp_new_list(SEXP size, SEXP default_value){
-  SHIELD(size = cast<r_double_t>(size, r_null));
+  SHIELD(size = cast<r_doubles_t>(size, r_null));
   if (Rf_length(size) != 1){
     Rf_error("`size` must be a vector of length 1");
   }
@@ -343,7 +343,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
       num_row = vec::length(VECTOR_ELT(out, 0));
     }
   } else {
-    SHIELD(nrows = cast<r_integer_t>(nrows, r_null)); ++NP;
+    SHIELD(nrows = cast<r_integers_t>(nrows, r_null)); ++NP;
     num_row = get_int(nrows, 0);
   }
 

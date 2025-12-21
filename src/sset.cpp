@@ -372,7 +372,7 @@ SEXP clean_locs(SEXP locs, SEXP x){
     return locs;
   }
 
-  SHIELD(locs = cast<r_integer_t>(locs, r_null)); ++NP;
+  SHIELD(locs = cast<r_integers_t>(locs, r_null)); ++NP;
 
   const int *p_locs = integer_ptr_ro(locs);
 
@@ -1297,7 +1297,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   }
   default: {
     // Catch-all make sure cols is an int vector
-    cols = SHIELD(cast<r_integer_t>(locs, r_null)); ++NP;
+    cols = SHIELD(cast<r_integers_t>(locs, r_null)); ++NP;
     break;
   }
   }

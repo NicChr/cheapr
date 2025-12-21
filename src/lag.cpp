@@ -37,7 +37,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     int* RESTRICT p_out = integer_ptr(out);
     int *p_x = integer_ptr(xvec);
-    SHIELD(fill = cast<r_integer_t>(fill, r_null)); ++NP;
+    SHIELD(fill = cast<r_integers_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? integer_ptr(fill)[0] : na_value(p_x[0]);
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
@@ -55,7 +55,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     int64_t* RESTRICT p_out = integer64_ptr(out);
     int64_t *p_x = integer64_ptr(xvec);
-    SHIELD(fill = cast<r_integer64_t>(fill, r_null)); ++NP;
+    SHIELD(fill = cast<r_integers64_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? integer64_ptr(fill)[0] : na_value(p_x[0]);
 
     if (k >= 0){
@@ -74,7 +74,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     double* RESTRICT p_out = real_ptr(out);
     double *p_x = real_ptr(xvec);
-    SHIELD(fill = cast<r_double_t>(fill, r_null)); ++NP;
+    SHIELD(fill = cast<r_doubles_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? real_ptr(fill)[0] : na_value(p_x[0]);
 
     if (k >= 0){
@@ -93,7 +93,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     Rcomplex *p_out = complex_ptr(out);
     Rcomplex *p_x = complex_ptr(xvec);
-    SHIELD(fill = cast<r_complex_t>(fill, r_null)); ++NP;
+    SHIELD(fill = cast<r_complexes_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? complex_ptr(fill)[0] : na_value(p_x[0]);
 
     if (k >= 0){
@@ -112,7 +112,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     const r_string_t *p_out = string_ptr_ro(out);
     const r_string_t *p_x = string_ptr_ro(xvec);
 
-    SHIELD(fill = cast<r_character_t>(fill, r_null)); ++NP;
+    SHIELD(fill = cast<r_characters_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? get_value<r_string_t>(fill, 0) : na_value(p_x[0]);
 
     if (set){
@@ -165,7 +165,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     Rbyte *p_out = raw_ptr(out);
     const Rbyte *p_x = raw_ptr_ro(xvec);
 
-    SHIELD(fill = cast<r_raw_t>(fill, r_null)); ++NP;
+    SHIELD(fill = cast<r_raws_t>(fill, r_null)); ++NP;
     auto fill_value = fill_size > 0 ? raw_ptr(fill)[0] : na_value(p_x[0]);
 
     if (set){
@@ -354,7 +354,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const int *p_x = integer_ptr(x);
     int fill_value = na::integer;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(cast<r_integer_t>(fill, r_null)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_integers_t>(fill, r_null)); ++NP;
       fill_value = integer_ptr(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
@@ -409,7 +409,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const int64_t *p_x = integer64_ptr_ro(x);
     int64_t fill_value = na::integer64;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(cast<r_integer64_t>(fill, r_null)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_integers64_t>(fill, r_null)); ++NP;
       fill_value = integer64_ptr(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
@@ -463,7 +463,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     const double *p_x = real_ptr(x);
     double fill_value = na::real;
     if (fill_size >= 1){
-      SEXP temp_fill = SHIELD(cast<r_double_t>(fill, r_null)); ++NP;
+      SEXP temp_fill = SHIELD(cast<r_doubles_t>(fill, r_null)); ++NP;
       fill_value = real_ptr(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
@@ -515,7 +515,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const r_string_t *p_x = string_ptr_ro(x);
-    SEXP temp_fill = SHIELD(cast<r_character_t>(fill, r_null)); ++NP;
+    SEXP temp_fill = SHIELD(cast<r_characters_t>(fill, r_null)); ++NP;
     r_string_t fill_value = fill_size >= 1 ? get_value<r_string_t>(temp_fill, 0) : na::string;
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
