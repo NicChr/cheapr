@@ -6,6 +6,8 @@ cheapr 1.5.0 supersedes cheapr 1.4.0
 
 - New functions for setting and getting the number of threads being used.
 
+- New multi-threaded vector initialisers like `new_integer` and `new_double`. 
+
 - Plain list vectors are now never regarded as `NA` even if they contain `NA`
 elements.
 
