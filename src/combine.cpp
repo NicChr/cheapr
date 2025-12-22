@@ -71,10 +71,31 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
     if (out_size == size) return x;
 
     switch (CHEAPR_TYPEOF(x)){
-    case LGLSXP:
+    case LGLSXP: {
+      const r_bool_t *p_x = logical_ptr_ro(x);
+      SEXP out = SHIELD(new_vector<r_bool_t>(out_size));
+      r_bool_t* RESTRICT p_out = logical_ptr(out);
+
+      if (size == 1){
+        fast_fill(p_out, p_out + out_size, p_x[0]);
+      } else if (out_size > 0 && size > 0){
+        n_chunks = std::ceil(static_cast<double>(out_size) / size);
+        for (int i = 0; i < n_chunks; ++i){
+          k = i * size;
+          chunk_size = std::min(k + size, out_size) - k;
+          std::copy(p_x, p_x + chunk_size, p_out + k);
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        fast_fill(p_out, p_out + out_size, na::logical);
+      }
+      Rf_copyMostAttrib(x, out);
+      YIELD(1);
+      return out;
+    }
     case INTSXP: {
       const int *p_x = integer_ptr_ro(x);
-      SEXP out = SHIELD(internal::new_vec(TYPEOF(x), out_size));
+      SEXP out = SHIELD(new_vector<int>(out_size));
       int* RESTRICT p_out = integer_ptr(out);
 
       if (size == 1){
@@ -96,7 +117,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
     }
     case CHEAPR_INT64SXP: {
       const int64_t *p_x = integer64_ptr_ro(x);
-      SEXP out = SHIELD(new_vector<double>(out_size));
+      SEXP out = SHIELD(new_vector<int64_t>(out_size));
       int64_t* RESTRICT p_out = integer64_ptr(out);
 
       if (size == 1){
