@@ -33,10 +33,10 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
 
       // Method dispatch, users can write `rebuild` methods which
       // this will use
-      return eval_pkg_fun("rebuild", "cheapr", R_GetCurrentEnv(), x, source, arg("shallow_copy") = shallow_copy);
+      return eval_pkg_fun("rebuild", "cheapr", env::base_env, x, source, arg("shallow_copy") = shallow_copy);
     }
   } else {
-    return eval_pkg_fun("rebuild", "cheapr", R_GetCurrentEnv(), x, source, arg("shallow_copy") = shallow_copy);
+    return eval_pkg_fun("rebuild", "cheapr", env::base_env, x, source, arg("shallow_copy") = shallow_copy);
   }
 }
 // SEXP cpp_rep_len(SEXP x, R_xlen_t length){
@@ -77,7 +77,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
 //         if (r_length(x) == length){
 //           return SHIELD(x);
 //         } else {
-//           return SHIELD(eval_pkg_fun("rep", "base", R_GetCurrentEnv(), x, arg("length.out") = length));
+//           return SHIELD(eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length));
 //         }
 //       } else {
 //
@@ -106,7 +106,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
 //     if (r_length(x) == length){
 //       return x;
 //     } else {
-//       return eval_pkg_fun("rep", "base", R_GetCurrentEnv(), x, arg("length.out") = length);
+//       return eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length);
 //     }
 //   }
 // }
@@ -302,7 +302,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       if (r_length(x) == length){
       return x;
     } else {
-      return eval_pkg_fun("rep", "base", R_GetCurrentEnv(), x, arg("length.out") = length);
+      return eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length);
     }
     }
     }
@@ -310,7 +310,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
     if (r_length(x) == length){
       return x;
     } else {
-      return eval_pkg_fun("rep", "base", R_GetCurrentEnv(), x, arg("length.out") = length);
+      return eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length);
     }
   }
 }
@@ -415,13 +415,13 @@ SEXP cpp_rep(SEXP x, SEXP times){
         return out;
       }
       default: {
-        SEXP out = SHIELD(eval_pkg_fun("rep", "base", R_GetCurrentEnv(), x, times));
+        SEXP out = SHIELD(eval_pkg_fun("rep", "base", env::base_env, x, times));
         YIELD(3);
         return out;
       }
       }
     } else {
-      SEXP out = SHIELD(eval_pkg_fun("rep", "base", R_GetCurrentEnv(), x, times));
+      SEXP out = SHIELD(eval_pkg_fun("rep", "base", env::base_env, x, times));
       YIELD(2);
       return out;
     }
@@ -540,11 +540,11 @@ SEXP cpp_unique(SEXP x, bool names){
       return out;
     }
   } else if (is_simple){
-    SEXP out = SHIELD(eval_pkg_fun("unique_", "cheapr", R_GetCurrentEnv(), x)); ++NP;
+    SEXP out = SHIELD(eval_pkg_fun("unique_", "cheapr", env::base_env, x)); ++NP;
     YIELD(NP);
     return out;
   } else {
-    SEXP out = SHIELD(eval_pkg_fun("unique", "base", R_GetCurrentEnv(), x)); ++NP;
+    SEXP out = SHIELD(eval_pkg_fun("unique", "base", env::base_env, x)); ++NP;
     YIELD(NP);
     return out;
   }
@@ -1042,7 +1042,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case R_unk: {
     SEXP call = SHIELD(vec::coerce_vec(x, LISTSXP)); ++NP;
     SHIELD(call = Rf_lcons(r_cast<r_symbol_t>("c"), call)); ++NP;
-    SHIELD(out = eval(call, R_GetCurrentEnv())); ++NP;
+    SHIELD(out = eval(call, env::base_env)); ++NP;
     break;
   }
   default: {

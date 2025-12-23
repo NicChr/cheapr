@@ -473,7 +473,7 @@ SEXP cpp_as_df(SEXP x){
   } else if (is_bare_list(x)){
     return cpp_new_df(x, r_null, true, true);
   } else {
-    SEXP out = SHIELD(eval_pkg_fun("as.data.frame", "base", R_GetCurrentEnv(), x));
+    SEXP out = SHIELD(eval_pkg_fun("as.data.frame", "base", env::base_env, x));
     SEXP col_seq = SHIELD(cpp_seq_len(Rf_length(out)));
     SEXP col_str = SHIELD(as_vector("col_"));
     SEXP new_names = SHIELD(r_paste(R_BlankScalarString, r_null, col_str, col_seq));

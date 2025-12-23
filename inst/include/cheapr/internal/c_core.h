@@ -1996,7 +1996,7 @@ inline R_xlen_t length(SEXP x){
         internal::r_length_sym = r_cast<r_symbol_t>("length");
       }
       SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
-      SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
+      SEXP r_len = SHIELD(eval(expr, env::base_env));
       R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
       YIELD(2);
       return out;
@@ -2007,7 +2007,7 @@ inline R_xlen_t length(SEXP x){
       internal::r_length_sym = r_cast<r_symbol_t>("length");
     }
     SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
-    SEXP r_len = SHIELD(eval(expr, R_GetCurrentEnv()));
+    SEXP r_len = SHIELD(eval(expr, env::base_env));
     R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
     YIELD(2);
     return out;

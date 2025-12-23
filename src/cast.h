@@ -350,7 +350,7 @@ inline SEXP cast<r_logicals_t>(SEXP x, SEXP y) {
   } else if (cheapr::vec::is_object(x)){
     r_as_lgl = !cheapr::is_null(r_as_lgl) ? r_as_lgl : cheapr::r_cast<cheapr::r_symbol_t>("as.logical");
     SEXP expr = SHIELD(Rf_lang2(r_as_lgl, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -366,7 +366,7 @@ inline SEXP cast<r_integers_t>(SEXP x, SEXP y) {
   } else if (cheapr::vec::is_object(x)){
     r_as_int = !cheapr::is_null(r_as_int) ? r_as_int : cheapr::r_cast<cheapr::r_symbol_t>("as.integer");
     SEXP expr = SHIELD(Rf_lang2(r_as_int, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -382,7 +382,7 @@ inline SEXP cast<r_doubles_t>(SEXP x, SEXP y) {
   } else if (cheapr::vec::is_object(x)){
     r_as_dbl = !cheapr::is_null(r_as_dbl) ? r_as_dbl : cheapr::r_cast<cheapr::r_symbol_t>("as.double");
     SEXP expr = SHIELD(Rf_lang2(r_as_dbl, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -412,7 +412,7 @@ inline SEXP cast<r_characters_t>(SEXP x, SEXP y) {
   } else if (cheapr::vec::is_object(x)){
     r_as_char = !cheapr::is_null(r_as_char) ? r_as_char : cheapr::r_cast<cheapr::r_symbol_t>("as.character");
     SEXP expr = SHIELD(Rf_lang2(r_as_char, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -428,7 +428,7 @@ inline SEXP cast<r_complexes_t>(SEXP x, SEXP y) {
   } else if (cheapr::vec::is_object(x)){
     r_as_cplx = !cheapr::is_null(r_as_cplx) ? r_as_cplx : cheapr::r_cast<cheapr::r_symbol_t>("as.complex");
     SEXP expr = SHIELD(Rf_lang2(r_as_cplx, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -444,7 +444,7 @@ inline SEXP cast<r_raws_t>(SEXP x, SEXP y) {
   } else if (cheapr::vec::is_object(x)){
     r_as_raw = !cheapr::is_null(r_as_raw) ? r_as_raw : cheapr::r_cast<cheapr::r_symbol_t>("as.raw");
     SEXP expr = SHIELD(Rf_lang2(r_as_raw, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -460,7 +460,7 @@ inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
   } else if (cheapr::vec::is_object(x)){
     r_as_list = !cheapr::is_null(r_as_list) ? r_as_list : cheapr::r_cast<cheapr::r_symbol_t>("as.list");
     SEXP expr = SHIELD(Rf_lang2(r_as_list, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -489,7 +489,7 @@ inline SEXP cast<r_factors_t>(SEXP x, SEXP y) {
   } else {
     SEXP cheapr_factor = SHIELD(cheapr::fn::find_pkg_fun("factor_", "cheapr", true));
     SEXP expr = SHIELD(Rf_lang2(cheapr_factor, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(3);
     return out;
@@ -511,7 +511,7 @@ inline SEXP cast<r_dates_t>(SEXP x, SEXP y) {
   } else if (cheapr::vec::is_object(x)){
     r_as_date = !cheapr::is_null(r_as_date) ? r_as_date : cheapr::r_cast<cheapr::r_symbol_t>("as.Date");
     SEXP expr = SHIELD(Rf_lang2(r_as_date, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     YIELD(2);
     return out;
@@ -585,7 +585,7 @@ inline SEXP cast<r_posixts_t>(SEXP x, SEXP y) {
   } else {
     r_as_posixct = !cheapr::is_null(r_as_posixct) ? r_as_posixct : cheapr::r_cast<cheapr::r_symbol_t>("as.POSIXct");
     SEXP expr = SHIELD(Rf_lang2(r_as_posixct, x));
-    SEXP out = SHIELD(cheapr::eval(expr, R_GetCurrentEnv()));
+    SEXP out = SHIELD(cheapr::eval(expr, cheapr::env::base_env));
     check_casted_length(x, out);
     SHIELD(out = cast<r_posixts_t>(out, y)); // To set the correct attributes
     YIELD(3);
@@ -619,7 +619,7 @@ inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
     return x;
   } else {
     SEXP base_cast_fn = SHIELD(cheapr::fn::find_pkg_fun("base_cast", "cheapr", true));
-    SEXP out = SHIELD(cheapr::fn::eval_fn(base_cast_fn, R_GetCurrentEnv(), x, y));
+    SEXP out = SHIELD(cheapr::fn::eval_fn(base_cast_fn, cheapr::env::base_env, x, y));
     check_casted_length(x, out);
     YIELD(2);
     return out;

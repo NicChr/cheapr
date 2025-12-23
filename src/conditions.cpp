@@ -332,7 +332,7 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     // to take advantage of the fact that `[<-` avoids creating copies due to
     // correct reference-tracking in R
     // If we call `[<-` directly then unnecessary copies are made
-    SEXP out = SHIELD(eval_pkg_fun("if_else2", "cheapr", R_GetCurrentEnv(), yes, no, na)); ++NP;
+    SEXP out = SHIELD(eval_pkg_fun("if_else2", "cheapr", env::base_env, yes, no, na)); ++NP;
     YIELD(NP);
     return out;
   }
