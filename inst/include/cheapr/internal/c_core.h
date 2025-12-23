@@ -56,7 +56,8 @@
 // These should be functions in cheapr namespace but
 // rchk produces errors with that method
 #ifndef SHIELD
-#define SHIELD(x) (Rf_protect(x))
+#define SHIELD(x)                                              \
+  static_cast<std::decay_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x)))
 #endif
 
 #ifndef YIELD
@@ -474,7 +475,7 @@ namespace internal {
 
 inline int get_threads(){
   if (is_null(CHEAPR_CORES)){
-    CHEAPR_CORES = Rf_installChar(make_utf8_charsxp("cheapr.cores"));
+    CHEAPR_CORES = Rf_install("cheapr.cores");
   }
   int n_threads = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
   n_threads = std::min(n_threads, OMP_MAX_THREADS);
@@ -727,7 +728,7 @@ inline void set_value<r_string_t>(SEXP x, const R_xlen_t i, r_string_t val){
 }
 template<>
 inline void set_value<const char *>(SEXP x, const R_xlen_t i, const char* val){
-  set_value<r_string_t>(x, i,  static_cast<r_string_t>(internal::make_utf8_charsxp(val)));
+  set_value<r_string_t>(x, i, static_cast<r_string_t>(internal::make_utf8_charsxp(val)));
 }
 template<>
 inline void set_value<r_symbol_t>(SEXP x, const R_xlen_t i, r_symbol_t val){
@@ -1450,7 +1451,7 @@ inline r_symbol_t as_r_sym(T x){
   if constexpr (std::is_same_v<std::decay_t<T>, r_symbol_t>){
     return x;
   } else if constexpr (std::is_same_v<std::decay_t<T>, const char *>){
-    return static_cast<r_symbol_t>(Rf_installChar(internal::make_utf8_charsxp(x)));
+    return static_cast<r_symbol_t>(Rf_install(x));
   } else if constexpr (std::is_same_v<std::decay_t<T>, r_string_t>){
     return as_r_sym(CHAR(static_cast<SEXP>(x)));
   } else {

@@ -179,7 +179,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        set_value<r_string_t>(out, i, as_r_string(s.c_str()));
+        set_value<r_string_t>(out, i, r_cast<r_string_t>(s.c_str()));
       }
     }
     break;
@@ -195,7 +195,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        set_value<r_string_t>(out, i, as_r_string(s.c_str()));
+        set_value<r_string_t>(out, i, r_cast<r_string_t>(s.c_str()));
       }
     }
     break;
@@ -210,7 +210,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        set_value<r_string_t>(out, i, as_r_string(s.c_str()));
+        set_value<r_string_t>(out, i, r_cast<r_string_t>(s.c_str()));
       }
     }
     break;

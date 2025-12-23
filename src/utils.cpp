@@ -777,11 +777,11 @@ SEXP cheapr_do_memory_leak_test(){
   // Check that 4000 bytes are not lost
 
   std::vector<int32_t> ints(1000);
-  SEXP r_ints = r_safe(SHIELD)(r_safe(new_vector<int>)(ints.size()));
-  SEXP seq = r_safe(SHIELD)(r_safe(cpp_seq_len)(ints.size()));
-  SEXP repl = r_safe(SHIELD)(r_safe(as_vector)(-1));
+  SEXP r_ints = r_safe(Rf_protect)(r_safe(new_vector<int>)(ints.size()));
+  SEXP seq = r_safe(Rf_protect)(r_safe(cpp_seq_len)(ints.size()));
+  SEXP repl = r_safe(Rf_protect)(r_safe(as_vector)(-1));
   r_safe(replace_in_place)(r_ints, seq, repl, true);
-  r_safe(YIELD)(3);
+  r_safe(Rf_unprotect)(3);
   r_safe(Rf_error)("%s", "Expected error! This should not cause a C++ memory leak");
   return r_ints; // Never reached
 }
