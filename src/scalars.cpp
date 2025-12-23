@@ -96,7 +96,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     if (cpp_all_na(value, true, false)){
     count = na_count(x, false);
   } else {
-    SEXP is_equal = SHIELD(eval_pkg_fun("==", "base", R_GetCurrentEnv(), x, value)); ++NP;
+    SEXP is_equal = SHIELD(eval_pkg_fun("==", "base", env::base_env, x, value)); ++NP;
     count = cpp_sum(is_equal);
   }
   break;
@@ -415,7 +415,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     default: {
       SEXP sexp_n_vals = SHIELD(as_vector(r_cast<double>(n_vals))); ++NP;
       SEXP val_locs = SHIELD(cpp_val_find(x, value, true, sexp_n_vals)); ++NP;
-      out = SHIELD(eval_pkg_fun("cheapr_sset", "cheapr", R_GetCurrentEnv(), x, val_locs)); ++NP;
+      out = SHIELD(eval_pkg_fun("cheapr_sset", "cheapr", env::base_env, x, val_locs)); ++NP;
       break;
     }
     }

@@ -714,7 +714,7 @@ SEXP match(SEXP y, SEXP x, int no_match){
   if (Rf_xlength(x) < 100000 && Rf_xlength(y) < 100000){
     return Rf_match(y, x, no_match);
   } else {
-    return eval_pkg_fun("fast_match", "cheapr", R_GetCurrentEnv(), x, y, no_match);
+    return eval_pkg_fun("fast_match", "cheapr", env::base_env, x, y, no_match);
   }
 }
 
@@ -731,7 +731,7 @@ SEXP get_vec_names(SEXP x){
       return get_r_names(x);
     }
     case R_unk: {
-      return eval_pkg_fun("names", "base", R_GetCurrentEnv(), x);
+      return eval_pkg_fun("names", "base", env::base_env, x);
     }
     }
     return r_null;
@@ -755,7 +755,7 @@ void set_vec_names(SEXP x, SEXP names){
       return;
     }
     default: {
-      SEXP vec_with_names = SHIELD(eval_pkg_fun("names<-", "base", R_GetCurrentEnv(), x, names));
+      SEXP vec_with_names = SHIELD(eval_pkg_fun("names<-", "base", env::base_env, x, names));
       SEXP attrs = SHIELD(get_attrs(vec_with_names));
       attr::set_attrs(x, attrs);
       YIELD(2);

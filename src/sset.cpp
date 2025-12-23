@@ -1475,7 +1475,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       SHIELD(out = cpp_df_subset(x, i, j, check)); ++NP;
     } else {
       if (Rf_length(args) == 0){
-        SHIELD(out = eval_pkg_fun("cheapr_sset", "cheapr", R_GetCurrentEnv(), x, i, j)); ++NP;
+        SHIELD(out = eval_pkg_fun("cheapr_sset", "cheapr", env::base_env, x, i, j)); ++NP;
       } else {
         SEXP usual_args = SHIELD(make_list(
           arg("x") = x,
@@ -1486,13 +1486,13 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
         // Combine all args into one list
         SEXP all_args = SHIELD(combine(usual_args, args)); ++NP;
         SEXP cheapr_sset_fn = SHIELD(fn::find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
-        SHIELD(out = eval_pkg_fun("do.call", "base", R_GetCurrentEnv(), cheapr_sset_fn, all_args)); ++NP;
+        SHIELD(out = eval_pkg_fun("do.call", "base", env::base_env, cheapr_sset_fn, all_args)); ++NP;
       }
     }
   } else {
     // Fall-back to `cheapr_sset()` S3 methods
     if (Rf_length(args) == 0){
-      SHIELD(out = eval_pkg_fun("cheapr_sset", "cheapr", R_GetCurrentEnv(), x, i, j)); ++NP;
+      SHIELD(out = eval_pkg_fun("cheapr_sset", "cheapr", env::base_env, x, i, j)); ++NP;
     } else {
       SEXP usual_args = SHIELD(make_list(
         arg("x") = x,
@@ -1503,7 +1503,7 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       // Combine all args into one list
       SEXP all_args = SHIELD(combine(usual_args, args)); ++NP;
       SEXP cheapr_sset_fn = SHIELD(fn::find_pkg_fun("cheapr_sset", "cheapr", true)); ++NP;
-      SHIELD(out = eval_pkg_fun("do.call", "base", R_GetCurrentEnv(), cheapr_sset_fn, all_args)); ++NP;
+      SHIELD(out = eval_pkg_fun("do.call", "base", env::base_env, cheapr_sset_fn, all_args)); ++NP;
     }
   }
   YIELD(NP);
