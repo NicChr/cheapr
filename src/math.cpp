@@ -1190,7 +1190,7 @@ SEXP cpp_int_sign(SEXP x){
   switch (TYPEOF(x)){
   case LGLSXP: {
     const int *p_x = integer_ptr(x);
-    fast_copy_n(p_x, n, p_out);
+    r_copy_n(out, p_out, p_x, 0, n);
     break;
   }
   case INTSXP: {

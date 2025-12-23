@@ -15,7 +15,7 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
 
   if (n < fill_value){
     // Initialise start locations
-    fast_fill(p_out, p_out + n_groups, fill_value);
+    r_fill(out, p_out, 0, n_groups, fill_value);
 
     for (int i = 0; i < n; ++i){
       int curr_group = p_group_id[i] - 1;
@@ -26,7 +26,7 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
 
     // This will set groups with no start locations to 0
     // (e.g. undropped factor levels)
-    fast_replace(p_out, p_out + n_groups, fill_value, 0);
+    r_replace(out, p_out, 0, n_groups, fill_value, 0);
   } else {
 
     // Slightly slower method than above
@@ -34,7 +34,7 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
     // happens to be at .Machine$integer.max
 
     // Initialise start locations
-    fast_fill(p_out, p_out + n_groups, 0);
+    r_fill(out, p_out, 0, n_groups, 0);
 
     for (int i = 0; i < n; ++i){
       int curr_group = p_group_id[i] - 1;

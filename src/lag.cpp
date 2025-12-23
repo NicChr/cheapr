@@ -33,12 +33,14 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   }
   case LGLSXP:
   case INTSXP: {
+    using r_t = int;
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     int* RESTRICT p_out = integer_ptr(out);
     int *p_x = integer_ptr(xvec);
     SHIELD(fill = cast<r_integers_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? integer_ptr(fill)[0] : na_value(p_x[0]);
+    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
+
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
       OMP_SIMD
@@ -51,12 +53,13 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     break;
   }
   case CHEAPR_INT64SXP: {
+    using r_t = int64_t;
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     int64_t* RESTRICT p_out = integer64_ptr(out);
     int64_t *p_x = integer64_ptr(xvec);
     SHIELD(fill = cast<r_integers64_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? integer64_ptr(fill)[0] : na_value(p_x[0]);
+    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int64_t));
@@ -70,12 +73,13 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     break;
   }
   case REALSXP: {
+    using r_t = double;
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     double* RESTRICT p_out = real_ptr(out);
     double *p_x = real_ptr(xvec);
     SHIELD(fill = cast<r_doubles_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? real_ptr(fill)[0] : na_value(p_x[0]);
+    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
@@ -89,12 +93,13 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     break;
   }
   case CPLXSXP: {
+    using r_t = r_complex_t;
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     r_complex_t *p_out = complex_ptr(out);
     r_complex_t *p_x = complex_ptr(xvec);
     SHIELD(fill = cast<r_complexes_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? complex_ptr(fill)[0] : na_value(p_x[0]);
+    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
 
     if (k >= 0){
       safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(r_complex_t));
@@ -107,13 +112,14 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     break;
   }
   case STRSXP: {
+    using r_t = r_string_t;
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     const r_string_t *p_out = string_ptr_ro(out);
     const r_string_t *p_x = string_ptr_ro(xvec);
 
     SHIELD(fill = cast<r_characters_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? get_value<r_string_t>(fill, 0) : na_value(p_x[0]);
+    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
 
     if (set){
       R_xlen_t tempi;
@@ -160,13 +166,14 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
     break;
   }
   case RAWSXP: {
+    using r_t = r_byte_t;
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
     out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
     r_byte_t *p_out = raw_ptr(out);
     const r_byte_t *p_x = raw_ptr_ro(xvec);
 
     SHIELD(fill = cast<r_raws_t>(fill, r_null)); ++NP;
-    auto fill_value = fill_size > 0 ? raw_ptr(fill)[0] : na_value(p_x[0]);
+    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
 
     if (set){
       R_xlen_t tempi;

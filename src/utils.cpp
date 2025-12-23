@@ -307,9 +307,9 @@ double var_sum_squared_diff(SEXP x, double mu){
 // The main difference is that codes or breaks can be returned efficiently
 // Values outside the (right or left) intervals can be included too
 
-#define CHEAPR_BIN_CODES                                                                                  \
+#define CHEAPR_BIN_CODES(na)                                                                                  \
 for (R_xlen_t i = 0; i < n; ++i) {                                                                        \
-  p_out[i] = na_value(p_out[0]);                                                                           \
+  p_out[i] = na;                                               \
   if (!is_r_na(p_x[i])) {                                                                                 \
     lo = 0;                                                                                               \
     hi = nb1;                                                                                             \
@@ -331,9 +331,9 @@ for (R_xlen_t i = 0; i < n; ++i) {                                              
   }                                                                                                       \
 }
 
-#define CHEAPR_BIN_NCODES                                                                                                              \
+#define CHEAPR_BIN_NCODES(na)                                                                                                              \
 for (R_xlen_t i = 0; i < n; ++i) {                                                                                                     \
-  p_out[i] = na_value(p_out[0]);                                                                                                        \
+  p_out[i] = na;                                               \
   if (!is_r_na(p_x[i])) {                                                                                                              \
     lo = 0;                                                                                                                            \
     hi = nb1;                                                                                                                          \
@@ -372,8 +372,8 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
     const int *p_x = integer_ptr(x);
     const double *p_b = real_ptr(breaks);
-    int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_BIN_CODES;
+    int* RESTRICT p_out = sexp_ptr<int>(out);
+    CHEAPR_BIN_CODES(na_value<int>())
     YIELD(2);
     return out;
   } else {
@@ -382,7 +382,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     const int *p_x = integer_ptr(x);
     const double *p_b = real_ptr(breaks);
     int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_BIN_NCODES
+    CHEAPR_BIN_NCODES(na_value<int>())
     YIELD(2);
     return out;
   }
@@ -394,7 +394,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     const double *p_x = real_ptr(x);
     const double *p_b = real_ptr(breaks);
     int* RESTRICT p_out = integer_ptr(out);
-    CHEAPR_BIN_CODES;
+    CHEAPR_BIN_CODES(na_value<int>())
     YIELD(2);
     return out;
   } else {
@@ -403,7 +403,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     const double *p_x = real_ptr(x);
     const double *p_b = real_ptr(breaks);
     double* RESTRICT p_out = real_ptr(out);
-    CHEAPR_BIN_NCODES
+    CHEAPR_BIN_NCODES(na_value<double>())
     YIELD(2);
     return out;
   }

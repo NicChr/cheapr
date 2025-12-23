@@ -86,7 +86,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
 
   // Which elements do we keep?
   bool *keep = (bool *) R_Calloc(n, bool);
-  fast_fill(keep, keep + n, true);
+  std::fill(keep, keep + n, true);
 
   if (xn > r_limits::r_int_max){
     SHIELD(exclude = vec::coerce_vec(exclude, REALSXP)); ++NP;
