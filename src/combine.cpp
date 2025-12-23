@@ -883,7 +883,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_logicals_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(logical_ptr_ro(vec), m, &p_out[k]);
+      r_copy_n(out, p_out, sexp_ptr_ro<r_bool_t>(vec), k, m);
     }
     break;
   }
@@ -896,7 +896,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_integers_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(integer_ptr_ro(vec), m, &p_out[k]);
+      r_copy_n(out, p_out, sexp_ptr_ro<int>(vec), k, m);
     }
     break;
   }
@@ -909,7 +909,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_integers64_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(integer64_ptr_ro(vec), m, &p_out[k]);
+      r_copy_n(out, p_out, sexp_ptr_ro<int64_t>(vec), k, m);
     }
     break;
   }
@@ -922,22 +922,19 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_doubles_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(real_ptr_ro(vec), m, &p_out[k]);
+      r_copy_n(out, p_out, sexp_ptr_ro<double>(vec), k, m);
     }
     break;
   }
   case R_chr: {
 
     SHIELD(out = init<r_characters_t>(out_size, false)); ++NP;
+    const r_string_t* p_out = string_ptr_ro(out);
 
-    for (int i = 0; i < n; ++i){
+    for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_characters_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-
-      const r_string_t *p_vec = string_ptr_ro(vec);
-      for (R_xlen_t j = 0; j < m; ++k, ++j){
-        set_value<r_string_t>(out, k, p_vec[j]);
-      }
+      r_copy_n(out, p_out, sexp_ptr_ro<r_string_t>(vec), k, m);
     }
     break;
   }
@@ -950,7 +947,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_complexes_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(complex_ptr_ro(vec), m, &p_out[k]);
+      r_copy_n(out, p_out, sexp_ptr_ro<r_complex_t>(vec), k, m);
     }
     break;
   }
@@ -963,22 +960,19 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_raws_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      std::copy_n(raw_ptr_ro(vec), m, &p_out[k]);
+      r_copy_n(out, p_out, sexp_ptr_ro<r_byte_t>(vec), k, m);
     }
     break;
   }
   case R_list: {
 
     SHIELD(out = init<r_list_t>(out_size, false)); ++NP;
+    const SEXP *p_out = list_ptr_ro(out);
 
-    for (int i = 0; i < n; ++i){
+    for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_list_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-
-      const SEXP *p_vec = list_ptr_ro(vec);
-      for (R_xlen_t j = 0; j < m; ++k, ++j){
-        SET_VECTOR_ELT(out, k, p_vec[j]);
-      }
+      r_copy_n(out, p_out, sexp_ptr_ro<SEXP>(vec), k, m);
     }
     break;
   }
