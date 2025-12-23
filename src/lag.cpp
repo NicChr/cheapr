@@ -622,8 +622,8 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     r_byte_t *p_x = raw_ptr(x);
-    SEXP raw_sexp = SHIELD(vec::coerce_vec(fill, RAWSXP));
-    r_byte_t fill_value = fill_size == 0? r_byte_t{0} : raw_ptr(raw_sexp)[0]; ++NP;
+    SEXP raw_sexp = SHIELD(vec::coerce_vec(fill, RAWSXP)); ++NP;
+    r_byte_t fill_value = fill_size == 0? r_byte_t{0} : raw_ptr(raw_sexp)[0];
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
