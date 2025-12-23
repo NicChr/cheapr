@@ -49,6 +49,189 @@ cheapr is primarily an extension to R for developers that want to write
 clean, fast and safe code without sacrificing any one of these core
 design principles.
 
+## cheapr C/C++ API
+
+cheapr includes a feature-rich C API that can be used interchangeably
+with the R C API. Despite the API requiring C++17 and making heavy use
+of C++ templates, C++ objects cannot be safely used. More specifically,
+C++ objects with destructors cannot be safely used because when R
+encounters an error, it terminates in a way that doesn't run these
+destructors, leading to memory leaks. This applies to any C++ object
+with a destructor like `std::string` and `std::vector`.
+
+To safely call R C API functions or cheapr C++ functions (from c_api.h)
+one must wrap these R C API functions with `cpp11::safe[]` or cheapr's
+`r_safe` macro. For more info see cpp11's FAQ section 15 [Should I call
+cpp11::unwind_protect()
+manually?](https://cpp11.r-lib.org/articles/FAQ.html)
+
+The reason we have opted for a mostly C API with C++ templates is for
+maximal speed, efficiency and interoperability with the R C API.
+
+We aim to create a fully C++ compatible API in an upcoming release.
+
+## C/C++ API features
+
+R internally labels all R allocated objects as `SEXP` which is an
+abbreviation for "S expression". This naturally creates ambiguity
+regarding the type of R object we are dealing with, which is canonically
+disambiguated via the use of R's `TYPEOF()`. While this provides
+flexibility, it also makes programming more cumbersome and complicated.
+All R objects are `SEXP` which includes not only vectors (integer,
+character, etc) but also non-vector objects such as symbols, functions,
+etc.
+
+### cheapr C/C++ types
+
+The current available types are:
+
+-   r_bool_t - Contains either `r_true`, `r_false`, or `r_na`
+    (internally 1, 0, or NA_INTEGER)
+
+-   r_string_t - Alias type for R strings `CHARSXP`
+
+-   r_symbol_t - Alias type for R symbols `SYMSXP`
+
+-   r_complex_t - Alternative to Rcomplex type
+
+-   r_byte_t - Alias type for Rbyte
+
+It's important to note that these types must be preferred over the R C
+API types to allow cheapr's templates to work correctly and efficiently.
+
+In an effort to distinguish vectors and non-vectors (including C/C++
+types) we have created aliases for `CHARSXP` and `SYMSXP`, which are
+`r_string_t` and `r_symbol_t` respectively. To interact with R strings
+(`CHARSXP`) objects with the cheapr API, one must label all of them
+`r_string_t` \
+The same goes for symbols (`SYMSXP`).
+
+\
+All template functions depend on the `SEXP` type being reserved for any
+R object that isn't a `CHARSXP` or `SYMSXP`. For example `new_vector<T>`
+is a template that creates a new R vector based on the type of objects
+`T` it holds.\
+`new_vector<int>` will create an R integer vector and `new_vector<SEXP>`
+will always create a list vector. In the pure R C API `SEXP` would be
+ambiguous in this scenario, in cheapr it is not because there are
+dedicated types for R strings and symbols. Since the only vector that
+can hold all other `SEXP` is a list, then the result of
+`new_vector<SEXP>` must also be a list. If we had to check the type of
+`SEXP` (via `TYPEOF()`) in each `<SEXP>` template specialisation, this
+would slow things down considerably.\
+\
+For all other `SEXP` objects we have opted to continue using `SEXP` for
+flexibility.
+
+`CHARSXP` is R's string type that identifies the elements of a character
+vector. Remember it is also an `SEXP` and its internal type `CHARSXP`
+can only be revealed via `TYPEOF()`. When working with these R strings
+in cheapr we recommend assigning them as `r_string_t` for clarity and
+performance.
+
+The advantages of using `r_string_t` over `SEXP` for CHARSXP objects
+are:
+
+-   It clearly identifies that it is an R string which we are calling
+    `r_string_t`, similar in naming convention to C++ types like
+    `int32_t`
+
+-   Template functions like `is_r_na()` have been written with a
+    specialisation for `r_string_t` and thus having this differentiated
+    type instead of `SEXP` is more efficient.
+
+`SYMSXP` is used for R symbols and is heavily used for attribute
+manipulation, expression evaluation and more. cheapr internally labels
+these symbols as `r_symbol_t` for similar reasons to `r_string_t`
+
+`r_cast<>`
+
+For those familiar with C++ and `static_cast<>` the intent of this
+function is hopefully clear. `r_cast<>` can convert between C/C++ types
+while being very careful to handle `NA` values properly.
+
+For example `r_cast<int>(NA_REAL)` returns `NA_INTEGER` and inversely
+`r_cast<double>(NA_INTEGER)` returns `NA_REAL`. This is not the case for
+`static_cast<>` which will convert `NA_INTEGER` to its literal internal
+representation, the smallest (usually 32-bit) integer.
+
+As for referencing `NA` values in cheapr, these are all defined the `na`
+namespace.
+
+`NA` values and their R equivalents
+
+-   `na::logical` (r_bool_t) - `NA`
+
+-   `na::integer` (int) - `NA_INTEGER_`
+
+-   `na::real` (double) - `NA_REAL_`
+
+-   `na::complex` (Rcomplex) - `NA_COMPLEX_`
+
+-   `na::string` (r_string_t) - `NA_CHARACTER_`
+
+## Creating new vectors
+
+Creating new vectors can be done via `new_vector<>`\
+For example, to create a new integer vector of length 10, specify
+`new_vector<int>(10)` and to\
+create a new character vector of length 20, specify
+`new_vector<r_string_t>(20)`. Supply the 2nd argument to give a default
+value to fill all the elements with,\
+e.g. `new_vector<int>(100, na::integer)`
+
+All vectors are created using multiple threads (except for character and
+list vectors).\
+To set the number of threads, simply use `cheapr::set_threads()` in
+either R or C/C++
+
+## Scalar vectors
+
+To efficiently create length-one vectors directly from C/C++ types, use
+`as_vec<>`\
+For example, to create a length-one character vector from a string, we
+can run `as_vec("hello")` or\
+`as_vec(r_cast<r_string_t>("hello"))`
+
+Alternatively use `as_r_obj` to convert any object to an R (`SEXP`)
+object. The caveat is that `CHARSXP` / `r_string_t` objects are always
+converted to `STRSXP` (character vectors). Some of the rationale for
+this is that `CHARSXP` objects are (typically) never returned in R and
+only used in internal C code whereas symbols (`SYMSXP`) can be returned
+in R and are used frequently.
+
+## Combining values with `combine()`
+
+There is quite a lot of work under-the-hood to make this work well. It
+behaves like `c()` and indeed is part of the underlying code for the R
+function `cheapr::c_()`\
+In a nutshell it can combine both C/C++ types and R vectors into one
+single vector.\
+To do this it will cast all objects to a single common type. For more
+detail see `?cast`\
+For example,
+`combine(1, 2.5, "str1", r_cast<r_string_t>("str2"), as_vec("str3"))`
+will\
+return the character vector `c("1", "2.5", "str1", "str2", "str3")`
+because the common type that\
+these objects can be cast to is a character vector.
+
+## Creating lists
+
+Creating lists is also easy with `make_list()`. For example,
+`make_list(1, 2, 3)` and
+`make_list(arg("x") = 1, arg("y") = 2, arg("z") = 3)` are equivalent to
+the R version `list(1, 2, 3)` and `list(x = 1, y = 2, z = 3)`
+
+## Math in C/C++
+
+Many simple math functions are available in the `cheapr::math`
+namespace, e.g. `math::r_abs()`\
+`math::r_round()` (which uses round-to-even), `math::r_gcd()` and more.
+These also handle `NA`, `NaN`, and `Inf` values carefully.
+
+## cheapr R API
+
 Some common R operations that cheapr can do much faster and more
 efficiently include:
 
@@ -95,7 +278,6 @@ Let's first load the required packages
 library(cheapr) 
 library(bench)
 ```
-
 
 Because R mostly uses vectors and vectorised operations, this means that
 there are few scalar-optimised operations.
@@ -175,7 +357,8 @@ mark(is.na(hours), is_na(hours))
 
 It differs in 2 regards:
 
--   List vectors are never regarded as `NA` even if they contain `NA` values.
+-   List vectors are never regarded as `NA` even if they contain `NA`
+    values.
 -   For data frames, `is_na` returns a logical vector where `TRUE`
     defines an empty row of only `NA` values.
 
