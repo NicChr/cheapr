@@ -8,15 +8,15 @@ static SEXP CHEAPR_COMPACT_REALSEQ = r_null;
 static SEXP CHEAPR_BASE = r_null;
 
 SEXP alt_class(SEXP x){
-  if (altrep::is_altrep(x)){
-    return CAR(ATTRIB(ALTREP_CLASS(x)));
+  if (altrep::is_altrep(x) && has_attrs(x)){
+    return VECTOR_ELT(get_attrs(x), 0);
   } else {
     return r_null;
   }
 }
 SEXP alt_pkg(SEXP x){
-  if (altrep::is_altrep(x)){
-    return CADR(ATTRIB(ALTREP_CLASS(x)));
+  if (altrep::is_altrep(x) && has_attrs(x)){
+    return VECTOR_ELT(get_attrs(x), 1);
   } else {
     return r_null;
   }

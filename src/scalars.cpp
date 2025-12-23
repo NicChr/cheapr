@@ -286,7 +286,8 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     return x;
   } else if (n_vals == Rf_xlength(x)){
     SEXP out = SHIELD(internal::new_vec(TYPEOF(x), 0)); ++NP;
-    cpp_set_add_attributes(out, ATTRIB(x), false);
+    SEXP attrs = SHIELD(attr::get_attrs(x)); ++NP;
+    attr::set_attrs(out, attrs);
     YIELD(NP);
     return out;
   } else {
@@ -315,7 +316,8 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
           p_out[k++] = p_x[i];
         }
       }
-      cpp_set_add_attributes(out, ATTRIB(x), false);
+      SEXP attrs = SHIELD(attr::get_attrs(x)); ++NP;
+      attr::set_attrs(out, attrs);
       break;
     }
     case REALSXP: {
@@ -341,7 +343,8 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
           }
         }
       }
-      cpp_set_add_attributes(out, ATTRIB(x), false);
+      SEXP attrs = SHIELD(attr::get_attrs(x)); ++NP;
+      attr::set_attrs(out, attrs);
       break;
     }
     case CHEAPR_INT64SXP: {
@@ -359,7 +362,8 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
           p_out[k++] = p_x[i];
         }
       }
-      cpp_set_add_attributes(out, ATTRIB(x), false);
+      SEXP attrs = SHIELD(attr::get_attrs(x)); ++NP;
+      attr::set_attrs(out, attrs);
       break;
     }
     case STRSXP: {
@@ -376,7 +380,8 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
           set_value<r_string_t>(out, k++, p_x[i]);
         }
       }
-      cpp_set_add_attributes(out, ATTRIB(x), false);
+      SEXP attrs = SHIELD(attr::get_attrs(x)); ++NP;
+      attr::set_attrs(out, attrs);
       break;
     }
     case CPLXSXP: {
@@ -393,7 +398,8 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
           set_value<r_complex_t>(out, k++, p_x[i]);
         }
       }
-      cpp_set_add_attributes(out, ATTRIB(x), false);
+      SEXP attrs = SHIELD(attr::get_attrs(x)); ++NP;
+      attr::set_attrs(out, attrs);
       break;
     }
     case VECSXP: {

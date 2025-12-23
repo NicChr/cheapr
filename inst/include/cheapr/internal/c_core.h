@@ -437,7 +437,28 @@ inline bool is_altrep(SEXP x){
 }
 }
 
+
+namespace internal {
+inline SEXP BASE_ATTRIBUTES = r_null;
+inline SEXP CHEAPR_CORES = r_null;
+}
+
 namespace attr {
+
+// Attributes of x as a list
+inline SEXP get_attrs(SEXP x){
+  if (is_null(internal::BASE_ATTRIBUTES)){
+    internal::BASE_ATTRIBUTES = Rf_install("attributes");
+  }
+  SEXP expr = SHIELD(Rf_lang2(internal::BASE_ATTRIBUTES, x));
+  SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
+  YIELD(2);
+  return out;
+}
+
+inline bool has_attrs(SEXP x){
+  return !is_null(get_attrs(x));
+}
 
 inline SEXP get_attr(SEXP x, r_symbol_t sym){
   return Rf_getAttrib(x, static_cast<SEXP>(sym));
@@ -450,7 +471,6 @@ inline void set_attr(SEXP x, r_symbol_t sym, SEXP value){
 }
 
 namespace internal {
-inline SEXP CHEAPR_CORES = r_null;
 
 inline int get_threads(){
   if (is_null(CHEAPR_CORES)){
@@ -486,7 +506,7 @@ inline bool is_vec(SEXP x){
 }
 
 inline bool is_bare(SEXP x){
-  return Rf_length(ATTRIB(x)) == 0;
+  return !is_object(x);
 }
 
 inline bool is_logical(SEXP x){
@@ -880,14 +900,6 @@ inline void set_class(SEXP x, SEXP cls){
   Rf_classgets(x, cls);
 }
 
-inline void clear_attrs(SEXP x){
-  SEXP current = ATTRIB(x);
-  while (!is_null(current)){
-    set_attr(x, symbol::tag(current), r_null);
-    current = CDR(current);
-  }
-}
-
 inline bool inherits(SEXP x, SEXP classes){
   R_xlen_t n = Rf_xlength(classes);
   for (R_xlen_t i = 0; i < n; ++i) {
@@ -1265,7 +1277,7 @@ inline SEXP as_vector<r_byte_t>(const r_byte_t x){
   return new_vector<r_byte_t>(1, x);
 }
 template<>
-inline SEXP as_vector<const char *>(const char * const x){
+inline SEXP as_vector<const char *>(const char *x){
   return internal::make_utf8_strsxp(x);
 }
 template<>
@@ -2126,30 +2138,21 @@ inline void add_attrs(SEXP x, SEXP attrs) {
 
 namespace attr {
 
-// Attributes of x as a list
-inline SEXP get_attrs(SEXP x){
-  SEXP a = ATTRIB(x);
-
-  if (is_null(a)){
-    return r_null;
+inline void clear_attrs(SEXP x){
+  SEXP attrs = SHIELD(get_attrs(x));
+  if (is_null(attrs)){
+    YIELD(1);
+    return;
   }
+  SEXP names = SHIELD(internal::get_r_names(attrs));
+  const r_string_t *p_names = r_ptr::sexp_ptr_ro<r_string_t>(names);
 
-  int n = Rf_length(a);
-
-  SEXP out = SHIELD(vec::new_list(n));
-  SEXP names = SHIELD(vec::new_vector<r_string_t>(n));
-  SEXP current = a;
-
-  for (int i = 0; i < n; ++i){
-    vec::set_value(out, i, CAR(current));
-    if (!is_null(symbol::tag(current))){
-      vec::set_value(names, i, r_cast<r_string_t>(symbol::tag(current)));
-    }
-    current = CDR(current);
+  int n = Rf_length(attrs);
+  for (R_xlen_t i = 0; i < n; ++i){
+    r_symbol_t target_sym = r_cast<r_symbol_t>(p_names[i]);
+    set_attr(x, target_sym, r_null);
   }
-  internal::set_r_names(out, names);
   YIELD(2);
-  return out;
 }
 
 template<typename... Args>

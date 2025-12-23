@@ -107,7 +107,7 @@ SEXP cpp_semi_copy(SEXP x){
 
   // If no attributes then we can just full-copy immediately
 
-  if (is_null(ATTRIB(x))){
+  if (!has_attrs(x)){
     return vec::deep_copy(x);
   }
 
@@ -612,21 +612,29 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
 
   if (shallow_copy){
     SHIELD(target = cheapr::vec::shallow_copy(target)); ++NP;
-  }
-
-  if (address_equal(target, source)){
+  } else if (address_equal(target, source)){
     YIELD(NP);
     return target;
   }
 
-  SEXP target_attrs = ATTRIB(target);
-  SEXP source_attrs = ATTRIB(source);
+
+  SEXP target_attrs = SHIELD(get_attrs(target)); ++NP;
+  SEXP source_attrs = SHIELD(get_attrs(source)); ++NP;
+
+  SEXP target_nms = SHIELD(internal::get_r_names(target_attrs)); ++NP;
+  SEXP source_nms = SHIELD(internal::get_r_names(source_attrs)); ++NP;
+
+
+  const r_string_t *p_target_nms = string_ptr_ro(target_nms);
+  const r_string_t *p_source_nms = string_ptr_ro(source_nms);
+
+  int n_target_nms = Rf_length(target_nms);
+  int n_source_nms = Rf_length(source_nms);
 
   // Start from clean slate - no attributes
   attr::clear_attrs(target);
 
-  r_symbol_t curr_tag;
-  SEXP current = r_null;
+  r_string_t curr_tag;
 
   const r_string_t *p_ta = string_ptr_ro(target_attr_names);
   const r_string_t *p_sa = string_ptr_ro(source_attr_names);
@@ -634,31 +642,30 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
   const int n_target = Rf_length(target_attr_names);
   const int n_source = Rf_length(source_attr_names);
 
-  for (int i = 0; i < n_target; ++i){
-    current = target_attrs;
-    while (!is_null(current)){
 
-      curr_tag = symbol::tag(current);
+  // Source attributes to keep
+  for (int i = 0; i < n_source; ++i){
+    for (int j = 0; j < n_source_nms; ++j){
 
-      if (r_cast<r_string_t>(curr_tag) == p_ta[i]){
-        set_attr(target, curr_tag, CAR(current));
+      curr_tag = p_source_nms[j];
+
+      if (curr_tag == p_sa[i]){
+        set_attr(target, r_cast<r_symbol_t>(curr_tag), VECTOR_ELT(source_attrs, j));
         break;
       }
-      current = CDR(current);
     }
   }
 
-  for (int i = 0; i < n_source; ++i){
-    current = source_attrs;
-    while (!is_null(current)){
+  // Target attributes to keep
+  for (int i = 0; i < n_target; ++i){
+    for (int j = 0; j < n_target_nms; ++j){
 
-      curr_tag = symbol::tag(current);
+      curr_tag = p_target_nms[j];
 
-      if (r_cast<r_string_t>(curr_tag) == p_sa[i]){
-        set_attr(target, curr_tag, CAR(current));
+      if (curr_tag == p_ta[i]){
+        set_attr(target, r_cast<r_symbol_t>(curr_tag), VECTOR_ELT(target_attrs, j));
         break;
       }
-      current = CDR(current);
     }
   }
 
@@ -749,8 +756,9 @@ void set_vec_names(SEXP x, SEXP names){
     }
     default: {
       SEXP vec_with_names = SHIELD(eval_pkg_fun("names<-", "base", R_GetCurrentEnv(), x, names));
-      attr::set_attrs(x, ATTRIB(vec_with_names));
-      YIELD(1);
+      SEXP attrs = SHIELD(get_attrs(vec_with_names));
+      attr::set_attrs(x, attrs);
+      YIELD(2);
       return;
     }
     }
