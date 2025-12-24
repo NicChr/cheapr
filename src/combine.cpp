@@ -235,19 +235,14 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       SEXP out = SHIELD(new_vector<r_string_t>(out_size));
 
       if (size == 1){
-        r_string_t val = p_x[0];
-        for (R_xlen_t i = 0; i < out_size; ++i){
-          set_value<r_string_t>(out, i, val);
-        }
+        r_fill(out, string_ptr_ro(out), 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         for (R_xlen_t i = 0, xi = 0; i < out_size; recycle_index(xi, size), ++i){
           set_value<r_string_t>(out, i, p_x[xi]);
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        for (R_xlen_t i = 0; i < out_size; ++i){
-          r_fill(out, string_ptr_ro(out), 0, out_size, na::string);
-        }
+        r_fill(out, string_ptr_ro(out), 0, out_size, na::string);
       }
       Rf_copyMostAttrib(x, out);
       YIELD(1);
@@ -287,11 +282,6 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       } else if (out_size > 0 && size > 0){
         for (R_xlen_t i = 0, xi = 0; i < out_size; recycle_index(xi, size), ++i){
           SET_VECTOR_ELT(out, i, p_x[xi]);
-        }
-        // If length > 0 but length(x) == 0 then fill with NA
-      } else if (size == 0 && out_size > 0){
-        for (R_xlen_t i = 0; i < out_size; ++i){
-          SET_VECTOR_ELT(out, i, r_null);
         }
       }
       Rf_copyMostAttrib(x, out);
