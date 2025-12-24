@@ -190,6 +190,9 @@ inline r_symbol_t missing_arg = static_cast<r_symbol_t>(R_MissingArg);
 
 }
 
+template <class... T>
+inline constexpr bool always_false = false;
+
 template <typename T>
 inline constexpr bool is_r_integral_v =
 std::is_integral_v<T> ||
@@ -225,7 +228,7 @@ namespace na {
   inline const SEXP r_obj = r_null;
 }
 
-namespace r_ptr {
+namespace internal {
 
 inline int* integer_ptr(SEXP x){
   return INTEGER(x);
@@ -266,94 +269,135 @@ inline const r_byte_t* raw_ptr_ro(SEXP x){
 inline const r_string_t* string_ptr_ro(SEXP x){
   return reinterpret_cast<const r_string_t*>(STRING_PTR_RO(x));
 }
+
+}
+
 inline const SEXP* list_ptr_ro(SEXP x){
   return VECTOR_PTR_RO(x);
 }
 
 template<typename T>
-inline T* sexp_ptr(SEXP x) {
-  static_assert(sizeof(T) == 0, "Unsupported type for sexp_ptr");
+inline T* r_ptr(SEXP x) {
+  static_assert(always_false<T>, "Unsupported type for r_ptr");
   return nullptr;
 }
 
 template<typename T>
-inline const T* sexp_ptr_ro(SEXP x) {
-  static_assert(sizeof(T) == 0, "Unsupported type for sexp_ptr_ro");
+inline const T* r_ptr_ro(SEXP x) {
+  static_assert(always_false<T>, "Unsupported type for r_ptr_ro");
   return nullptr;
 }
 
 
 template<>
-inline r_bool_t* sexp_ptr<r_bool_t>(SEXP x) {
-  return logical_ptr(x);
+inline r_bool_t* r_ptr<r_bool_t>(SEXP x) {
+  return internal::logical_ptr(x);
 }
 
 template<>
-inline int* sexp_ptr<int>(SEXP x) {
-  return integer_ptr(x);
+inline int* r_ptr<int>(SEXP x) {
+  return internal::integer_ptr(x);
 }
 
 template<>
-inline double* sexp_ptr<double>(SEXP x) {
-  return real_ptr(x);
+inline double* r_ptr<double>(SEXP x) {
+  return internal::real_ptr(x);
 }
 
 template<>
-inline int64_t* sexp_ptr<int64_t>(SEXP x) {
-  return integer64_ptr(x);
+inline int64_t* r_ptr<int64_t>(SEXP x) {
+  return internal::integer64_ptr(x);
 }
 
 template<>
-inline r_complex_t* sexp_ptr<r_complex_t>(SEXP x) {
-  return complex_ptr(x);
+inline r_complex_t* r_ptr<r_complex_t>(SEXP x) {
+  return internal::complex_ptr(x);
 }
 
 template<>
-inline r_byte_t* sexp_ptr<r_byte_t>(SEXP x) {
-  return raw_ptr(x);
+inline r_byte_t* r_ptr<r_byte_t>(SEXP x) {
+  return internal::raw_ptr(x);
 }
 
 template<>
-inline const r_bool_t* sexp_ptr_ro<r_bool_t>(SEXP x) {
-  return logical_ptr_ro(x);
-}
-
-
-template<>
-inline const int* sexp_ptr_ro<int>(SEXP x) {
-  return integer_ptr_ro(x);
+inline const r_bool_t* r_ptr<const r_bool_t>(SEXP x) {
+  return internal::logical_ptr_ro(x);
 }
 
 template<>
-inline const double* sexp_ptr_ro<double>(SEXP x) {
-  return real_ptr_ro(x);
+inline const int* r_ptr<const int>(SEXP x) {
+  return internal::integer_ptr_ro(x);
 }
 
 template<>
-inline const int64_t* sexp_ptr_ro<int64_t>(SEXP x) {
-  return integer64_ptr_ro(x);
+inline const double* r_ptr<const double>(SEXP x) {
+  return internal::real_ptr_ro(x);
 }
 
 template<>
-inline const r_complex_t* sexp_ptr_ro<r_complex_t>(SEXP x) {
-  return complex_ptr_ro(x);
+inline const int64_t* r_ptr<const int64_t>(SEXP x) {
+  return internal::integer64_ptr_ro(x);
 }
 
 template<>
-inline const r_byte_t* sexp_ptr_ro<r_byte_t>(SEXP x) {
-  return raw_ptr_ro(x);
+inline const r_complex_t* r_ptr<const r_complex_t>(SEXP x) {
+  return internal::complex_ptr_ro(x);
 }
 
 template<>
-inline const r_string_t* sexp_ptr_ro<r_string_t>(SEXP x) {
-  return string_ptr_ro(x);
+inline const r_string_t* r_ptr<const r_string_t>(SEXP x) {
+  return internal::string_ptr_ro(x);
 }
 
 template<>
-inline const SEXP* sexp_ptr_ro<SEXP>(SEXP x) {
+inline const r_byte_t* r_ptr<const r_byte_t>(SEXP x) {
+  return internal::raw_ptr_ro(x);
+}
+
+template<>
+inline const SEXP* r_ptr<const SEXP>(SEXP x) {
   return list_ptr_ro(x);
 }
 
+template<>
+inline const r_bool_t* r_ptr_ro<r_bool_t>(SEXP x) {
+  return internal::logical_ptr_ro(x);
+}
+
+
+template<>
+inline const int* r_ptr_ro<int>(SEXP x) {
+  return internal::integer_ptr_ro(x);
+}
+
+template<>
+inline const double* r_ptr_ro<double>(SEXP x) {
+  return internal::real_ptr_ro(x);
+}
+
+template<>
+inline const int64_t* r_ptr_ro<int64_t>(SEXP x) {
+  return internal::integer64_ptr_ro(x);
+}
+
+template<>
+inline const r_complex_t* r_ptr_ro<r_complex_t>(SEXP x) {
+  return internal::complex_ptr_ro(x);
+}
+
+template<>
+inline const r_byte_t* r_ptr_ro<r_byte_t>(SEXP x) {
+  return internal::raw_ptr_ro(x);
+}
+
+template<>
+inline const r_string_t* r_ptr_ro<r_string_t>(SEXP x) {
+  return internal::string_ptr_ro(x);
+}
+
+template<>
+inline const SEXP* r_ptr_ro<SEXP>(SEXP x) {
+  return list_ptr_ro(x);
 }
 
 
@@ -370,10 +414,10 @@ inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
 }
 
 inline int64_t* INTEGER64_PTR(SEXP x) {
-  return r_ptr::integer64_ptr(x);
+  return internal::integer64_ptr(x);
 }
 inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
-  return r_ptr::integer64_ptr_ro(x);
+  return internal::integer64_ptr_ro(x);
 }
 // Check that n = 0 to avoid R CMD warnings
 inline void *safe_memmove(void *dst, const void *src, size_t n){
@@ -573,7 +617,7 @@ inline bool get_value<bool>(bool* p_x, const R_xlen_t i){
 }
 template<>
 inline bool get_value<bool>(SEXP x, const R_xlen_t i){
-  return static_cast<bool>(r_ptr::logical_ptr_ro(x)[i]);
+  return static_cast<bool>(internal::logical_ptr_ro(x)[i]);
 }
 template<>
 inline r_bool_t get_value<r_bool_t>(r_bool_t* p_x, const R_xlen_t i){
@@ -581,7 +625,7 @@ inline r_bool_t get_value<r_bool_t>(r_bool_t* p_x, const R_xlen_t i){
 }
 template<>
 inline r_bool_t get_value<r_bool_t>(SEXP x, const R_xlen_t i){
-  return r_ptr::logical_ptr_ro(x)[i];
+  return internal::logical_ptr_ro(x)[i];
 }
 template<>
 inline int get_value<int>(int* p_x, const R_xlen_t i){
@@ -589,7 +633,7 @@ inline int get_value<int>(int* p_x, const R_xlen_t i){
 }
 template<>
 inline int get_value<int>(SEXP x, const R_xlen_t i){
-  return r_ptr::integer_ptr_ro(x)[i];
+  return internal::integer_ptr_ro(x)[i];
 }
 template<>
 inline int64_t get_value<int64_t>(int64_t* p_x, const R_xlen_t i){
@@ -597,7 +641,7 @@ inline int64_t get_value<int64_t>(int64_t* p_x, const R_xlen_t i){
 }
 template<>
 inline int64_t get_value<int64_t>(SEXP x, const R_xlen_t i){
-  return r_ptr::integer64_ptr_ro(x)[i];
+  return internal::integer64_ptr_ro(x)[i];
 }
 template<>
 inline double get_value<double>(double* p_x, const R_xlen_t i){
@@ -605,7 +649,7 @@ inline double get_value<double>(double* p_x, const R_xlen_t i){
 }
 template<>
 inline double get_value<double>(SEXP x, const R_xlen_t i){
-  return r_ptr::real_ptr_ro(x)[i];
+  return internal::real_ptr_ro(x)[i];
 }
 template<>
 inline r_complex_t get_value<r_complex_t>(r_complex_t* p_x, const R_xlen_t i){
@@ -613,7 +657,7 @@ inline r_complex_t get_value<r_complex_t>(r_complex_t* p_x, const R_xlen_t i){
 }
 template<>
 inline r_complex_t get_value<r_complex_t>(SEXP x, const R_xlen_t i){
-  return r_ptr::complex_ptr_ro(x)[i];
+  return internal::complex_ptr_ro(x)[i];
 }
 template<>
 inline r_byte_t get_value<r_byte_t>(r_byte_t* p_x, const R_xlen_t i){
@@ -621,7 +665,7 @@ inline r_byte_t get_value<r_byte_t>(r_byte_t* p_x, const R_xlen_t i){
 }
 template<>
 inline r_byte_t get_value<r_byte_t>(SEXP x, const R_xlen_t i){
-  return r_ptr::raw_ptr_ro(x)[i];
+  return internal::raw_ptr_ro(x)[i];
 }
 template<>
 inline r_string_t get_value<r_string_t>(r_string_t* p_x, const R_xlen_t i){
@@ -629,7 +673,7 @@ inline r_string_t get_value<r_string_t>(r_string_t* p_x, const R_xlen_t i){
 }
 template<>
 inline r_string_t get_value<r_string_t>(SEXP x, const R_xlen_t i){
-  return r_ptr::string_ptr_ro(x)[i];
+  return internal::string_ptr_ro(x)[i];
 }
 template<>
 inline SEXP get_value<SEXP>(SEXP* p_x, const R_xlen_t i){
@@ -639,10 +683,10 @@ template<>
 inline SEXP get_value<SEXP>(SEXP x, const R_xlen_t i){
   switch (TYPEOF(x)){
   case STRSXP: {
-    return r_ptr::string_ptr_ro(x)[i];
+    return r_ptr<const r_string_t>(x)[i];
   }
   default: {
-    return r_ptr::list_ptr_ro(x)[i];
+    return list_ptr_ro(x)[i];
   }
   }
 }
@@ -671,7 +715,7 @@ inline void set_value<r_bool_t>(r_bool_t* p_x, const R_xlen_t i, r_bool_t val){
 }
 template<>
 inline void set_value<r_bool_t>(SEXP x, const R_xlen_t i, r_bool_t val){
-  set_value(r_ptr::logical_ptr(x), i, val);
+  set_value(internal::logical_ptr(x), i, val);
 }
 template<>
 inline void set_value<bool>(bool* p_x, const R_xlen_t i, bool val){
@@ -679,7 +723,7 @@ inline void set_value<bool>(bool* p_x, const R_xlen_t i, bool val){
 }
 template<>
 inline void set_value<bool>(SEXP x, const R_xlen_t i, bool val){
-  set_value(r_ptr::logical_ptr(x), i, static_cast<r_bool_t>(val));
+  set_value(internal::logical_ptr(x), i, static_cast<r_bool_t>(val));
 }
 template<>
 inline void set_value<int>(int* p_x, const R_xlen_t i, int val){
@@ -687,7 +731,7 @@ inline void set_value<int>(int* p_x, const R_xlen_t i, int val){
 }
 template<>
 inline void set_value<int>(SEXP x, const R_xlen_t i, int val){
-  set_value(r_ptr::integer_ptr(x), i, val);
+  set_value(internal::integer_ptr(x), i, val);
 }
 template<>
 inline void set_value<int64_t>(int64_t* p_x, const R_xlen_t i, int64_t val){
@@ -695,7 +739,7 @@ inline void set_value<int64_t>(int64_t* p_x, const R_xlen_t i, int64_t val){
 }
 template<>
 inline void set_value<int64_t>(SEXP x, const R_xlen_t i, int64_t val){
-  set_value(r_ptr::integer64_ptr(x), i, val);
+  set_value(internal::integer64_ptr(x), i, val);
 }
 template<>
 inline void set_value<double>(double* p_x, const R_xlen_t i, double val){
@@ -703,7 +747,7 @@ inline void set_value<double>(double* p_x, const R_xlen_t i, double val){
 }
 template<>
 inline void set_value<double>(SEXP x, const R_xlen_t i, double val){
-  set_value(r_ptr::real_ptr(x), i, val);
+  set_value(internal::real_ptr(x), i, val);
 }
 template<>
 inline void set_value<r_complex_t>(r_complex_t* p_x, const R_xlen_t i, r_complex_t val){
@@ -712,7 +756,7 @@ inline void set_value<r_complex_t>(r_complex_t* p_x, const R_xlen_t i, r_complex
 }
 template<>
 inline void set_value<r_complex_t>(SEXP x, const R_xlen_t i, r_complex_t val){
-  set_value(r_ptr::complex_ptr(x), i, val);
+  set_value(internal::complex_ptr(x), i, val);
 }
 template<>
 inline void set_value<r_byte_t>(r_byte_t* p_x, const R_xlen_t i, r_byte_t val){
@@ -720,7 +764,7 @@ inline void set_value<r_byte_t>(r_byte_t* p_x, const R_xlen_t i, r_byte_t val){
 }
 template<>
 inline void set_value<r_byte_t>(SEXP x, const R_xlen_t i, r_byte_t val){
-  set_value(r_ptr::raw_ptr(x), i, val);
+  set_value(internal::raw_ptr(x), i, val);
 }
 template<>
 inline void set_value<r_string_t>(SEXP x, const R_xlen_t i, r_string_t val){
@@ -943,7 +987,7 @@ inline SEXP new_vector<r_bool_t>(R_xlen_t n) {
 template <>
 inline SEXP new_vector<r_bool_t>(R_xlen_t n, const r_bool_t default_value) {
   SEXP out = SHIELD(new_vector<r_bool_t>(n));
-  r_bool_t* RESTRICT p_out = r_ptr::logical_ptr(out);
+  r_bool_t* RESTRICT p_out = internal::logical_ptr(out);
   r_fill(out, p_out, 0, n, default_value);
   YIELD(1);
   return out;
@@ -955,7 +999,7 @@ inline SEXP new_vector<int>(R_xlen_t n){
 template <>
 inline SEXP new_vector<int>(R_xlen_t n, const int default_value){
   SEXP out = SHIELD(new_vector<int>(n));
-  int* RESTRICT p_out = r_ptr::integer_ptr(out);
+  int* RESTRICT p_out = internal::integer_ptr(out);
   r_fill(out, p_out, 0, n, default_value);
   YIELD(1);
   return out;
@@ -967,7 +1011,7 @@ inline SEXP new_vector<double>(R_xlen_t n){
 template <>
 inline SEXP new_vector<double>(R_xlen_t n, const double default_value){
   SEXP out = SHIELD(new_vector<double>(n));
-  double* RESTRICT p_out = r_ptr::real_ptr(out);
+  double* RESTRICT p_out = internal::real_ptr(out);
   r_fill(out, p_out, 0, n, default_value);
   YIELD(1);
   return out;
@@ -982,7 +1026,7 @@ inline SEXP new_vector<int64_t>(R_xlen_t n){
 template <>
 inline SEXP new_vector<int64_t>(R_xlen_t n, const int64_t default_value){
   SEXP out = SHIELD(new_vector<int64_t>(n));
-  int64_t* RESTRICT p_out = r_ptr::integer64_ptr(out);
+  int64_t* RESTRICT p_out = internal::integer64_ptr(out);
   r_fill(out, p_out, 0, n, default_value);
   YIELD(1);
   return out;
@@ -1009,7 +1053,7 @@ inline SEXP new_vector<r_complex_t>(R_xlen_t n){
 template <>
 inline SEXP new_vector<r_complex_t>(R_xlen_t n, const r_complex_t default_value){
   SEXP out = SHIELD(new_vector<r_complex_t>(n));
-  r_complex_t* RESTRICT p_out = r_ptr::complex_ptr(out);
+  r_complex_t* RESTRICT p_out = internal::complex_ptr(out);
   r_fill(out, p_out, 0, n, default_value);
   YIELD(1);
   return out;
@@ -1021,7 +1065,7 @@ inline SEXP new_vector<r_byte_t>(R_xlen_t n){
 template <>
 inline SEXP new_vector<r_byte_t>(R_xlen_t n, const r_byte_t default_value){
   SEXP out = SHIELD(new_vector<r_byte_t>(n));
-  r_byte_t *p_out = r_ptr::raw_ptr(out);
+  r_byte_t *p_out = internal::raw_ptr(out);
   r_fill(out, p_out, 0, n, default_value);
   YIELD(1);
   return out;
@@ -1986,7 +2030,7 @@ inline R_xlen_t length(SEXP x){
     if (internal::inherits1(x, "vctrs_rcrd")){
       return Rf_length(x) > 0 ? vec::length(VECTOR_ELT(x, 0)) : 0;
     } else if (internal::inherits1(x, "POSIXlt")){
-      const SEXP *p_x = r_ptr::list_ptr_ro(x);
+      const SEXP *p_x = list_ptr_ro(x);
       R_xlen_t out = 0;
       for (int i = 0; i != 10; ++i){
         out = std::max(out, Rf_xlength(p_x[i]));
@@ -2049,7 +2093,7 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
     break;
   }
   case REALSXP: {
-    const double *p_x = r_ptr::real_ptr_ro(x);
+    const double *p_x = internal::real_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i) {
       out = static_cast<r_bool_t>(math::is_whole_number(p_x[i], tol_));
       na_count += is_r_na(out);
@@ -2089,8 +2133,8 @@ inline void add_attrs(SEXP x, SEXP attrs) {
       YIELD(NP);
       Rf_error("attributes must be a named list");
     }
-    const SEXP *p_attributes = r_ptr::list_ptr_ro(attrs);
-    const r_string_t *p_names = r_ptr::string_ptr_ro(names);
+    const SEXP *p_attributes = list_ptr_ro(attrs);
+    const r_string_t *p_names = r_ptr<const r_string_t>(names);
 
     r_symbol_t attr_nm;
 
@@ -2146,7 +2190,7 @@ inline void clear_attrs(SEXP x){
     return;
   }
   SEXP names = SHIELD(internal::get_r_names(attrs));
-  const r_string_t *p_names = r_ptr::sexp_ptr_ro<r_string_t>(names);
+  const r_string_t *p_names = r_ptr<const r_string_t>(names);
 
   int n = Rf_length(attrs);
   for (R_xlen_t i = 0; i < n; ++i){
@@ -2186,43 +2230,43 @@ inline SEXP deep_copy(SEXP x){
   case LGLSXP: {
     using r_t = r_bool_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr::sexp_ptr<r_t>(out), r_ptr::sexp_ptr_ro<r_t>(x), 0, n);
+    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
     break;
   }
   case INTSXP: {
     using r_t = int;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr::sexp_ptr<r_t>(out), r_ptr::sexp_ptr_ro<r_t>(x), 0, n);
+    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
     break;
   }
   case REALSXP: {
     using r_t = double;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr::sexp_ptr<r_t>(out), r_ptr::sexp_ptr_ro<r_t>(x), 0, n);
+    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
     break;
   }
   case STRSXP: {
     using r_t = r_string_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr::sexp_ptr_ro<r_t>(out), r_ptr::sexp_ptr_ro<r_t>(x), 0, n);
+    r_copy_n(out, r_ptr<const r_t>(out), r_ptr<const r_t>(x), 0, n);
     break;
   }
   case CPLXSXP: {
     using r_t = r_complex_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr::sexp_ptr<r_t>(out), r_ptr::sexp_ptr_ro<r_t>(x), 0, n);
+    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
     break;
   }
   case RAWSXP: {
     using r_t = r_byte_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr::sexp_ptr<r_t>(out), r_ptr::sexp_ptr_ro<r_t>(x), 0, n);
+    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
     break;
   }
   case VECSXP: {
     using r_t = SEXP;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    const r_t *p_x = r_ptr::sexp_ptr_ro<r_t>(x);
+    const r_t *p_x = r_ptr<const r_t>(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
     }
@@ -2310,14 +2354,14 @@ template <class F>
 decltype(auto) with_read_only_data(SEXP x, F&& f) {
   switch (CHEAPR_TYPEOF(x)) {
   case NILSXP:          return f(static_cast<const int*>(nullptr));
-  case LGLSXP:          return f(r_ptr::logical_ptr_ro(x));
-  case INTSXP:          return f(r_ptr::integer_ptr_ro(x));
-  case CHEAPR_INT64SXP: return f(r_ptr::integer64_ptr_ro(x));
-  case REALSXP:         return f(r_ptr::real_ptr_ro(x));
-  case STRSXP:          return f(r_ptr::string_ptr_ro(x));
-  case VECSXP:          return f(r_ptr::list_ptr_ro(x));
-  case CPLXSXP:         return f(r_ptr::complex_ptr_ro(x));
-  case RAWSXP:          return f(r_ptr::raw_ptr_ro(x));
+  case LGLSXP:          return f(r_ptr<const r_bool_t>(x));
+  case INTSXP:          return f(r_ptr<const int>(x));
+  case CHEAPR_INT64SXP: return f(r_ptr<const int64_t>(x));
+  case REALSXP:         return f(r_ptr<const double>(x));
+  case STRSXP:          return f(r_ptr<const r_string_t>(x));
+  case VECSXP:          return f(list_ptr_ro(x));
+  case CPLXSXP:         return f(r_ptr<const r_complex_t>(x));
+  case RAWSXP:          return f(r_ptr<const r_byte_t>(x));
   default:              return f(unsupported_sexp_t{x});
   }
 }

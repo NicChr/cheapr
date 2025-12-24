@@ -372,7 +372,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
     const int *p_x = integer_ptr(x);
     const double *p_b = real_ptr(breaks);
-    int* RESTRICT p_out = sexp_ptr<int>(out);
+    int* RESTRICT p_out = r_ptr<int>(out);
     CHEAPR_BIN_CODES(na_value<int>())
     YIELD(2);
     return out;

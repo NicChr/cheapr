@@ -13,7 +13,6 @@ using namespace cheapr;
 using namespace cheapr::vec;
 using namespace cheapr::internal;
 using namespace cheapr::attr;
-using namespace cheapr::r_ptr;
 using namespace cheapr::symbol;
 using namespace cheapr::math;
 

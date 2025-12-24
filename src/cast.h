@@ -558,15 +558,15 @@ inline SEXP cast<r_posixts_t>(SEXP x, SEXP y) {
     cheapr::attr::set_class(out, out_class);
     cheapr::attr::set_attr(out, cheapr::r_cast<cheapr::r_symbol_t>("tzone"), out_tzone);
 
-    double* RESTRICT p_out = cheapr::r_ptr::real_ptr(out);
+    double* RESTRICT p_out = cheapr::internal::real_ptr(out);
 
     if (TYPEOF(x) == INTSXP){
-      const int *p_x = cheapr::r_ptr::integer_ptr_ro(x);
+      const int *p_x = cheapr::internal::integer_ptr_ro(x);
       OMP_SIMD
       for (R_xlen_t i = 0; i < n; ++i) p_out[i] = cheapr::r_cast<double>(p_x[i]) * 86400.0;
 
     } else {
-      const double *p_x = cheapr::r_ptr::real_ptr_ro(x);
+      const double *p_x = cheapr::internal::real_ptr_ro(x);
       OMP_SIMD
       for (R_xlen_t i = 0; i < n; ++i) p_out[i] = p_x[i] * 86400;
     }
