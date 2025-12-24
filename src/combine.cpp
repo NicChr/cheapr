@@ -13,7 +13,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
-        attr::set_class(out, get_attr(source, symbol::class_sym));
+        attr::set_old_class(out, get_old_class(source));
         YIELD(1);
         return out;
       }
@@ -25,7 +25,7 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
-        attr::set_class(out, get_attr(source, symbol::class_sym));
+        attr::set_old_class(out, get_old_class(source));
         YIELD(1);
         return out;
       }
@@ -52,8 +52,8 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
 //     for (int i = 0; i < n_cols; ++i){
 //       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
 //     }
-//     SEXP names = SHIELD(get_r_names(x));
-//     set_r_names(out, names);
+//     SEXP names = SHIELD(get_old_names(x));
+//     set_old_names(out, names);
 //     set_list_as_df(out);
 //     df::set_row_names(out, length);
 //     SHIELD(out = rebuild(out, x, false));
@@ -125,8 +125,8 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
     for (int i = 0; i < n_cols; ++i){
       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
     }
-    SEXP names = SHIELD(get_r_names(x));
-    set_r_names(out, names);
+    SEXP names = SHIELD(get_old_names(x));
+    set_old_names(out, names);
     set_list_as_df(out);
     df::set_row_names(out, length);
     SHIELD(out = rebuild(out, x, false));
@@ -522,9 +522,9 @@ SEXP cpp_unique(SEXP x, bool names){
       SEXP out = SHIELD(sset_vec(x, unique_locs, false)); ++NP;
       Rf_copyMostAttrib(x, out);
       if (names){
-        SEXP names = SHIELD(get_r_names(x)); ++NP;
+        SEXP names = SHIELD(get_old_names(x)); ++NP;
         SHIELD(names = sset_vec(names, unique_locs, false)); ++NP;
-        set_r_names(out, names);
+        set_old_names(out, names);
       }
       YIELD(NP);
       return out;
@@ -602,8 +602,8 @@ SEXP get_ptypes(SEXP x){
     SET_VECTOR_ELT(out, i, get_ptype(VECTOR_ELT(x, i)));
   }
 
-  SEXP names = SHIELD(get_r_names(x));
-  set_r_names(out, names);
+  SEXP names = SHIELD(get_old_names(x));
+  set_old_names(out, names);
 
   YIELD(2);
   return out;
@@ -626,7 +626,7 @@ SEXP character_as_factor(SEXP x, SEXP levels){
   SEXP out = SHIELD(match(levels, x, na::integer)); ++NP;
   SEXP cls = SHIELD(as_vector("factor")); ++NP;
   set_attr(out, symbol::levels_sym, levels);
-  attr::set_class(out, cls);
+  attr::set_old_class(out, cls);
   YIELD(NP);
   return out;
 }
@@ -645,7 +645,7 @@ SEXP cpp_list_c(SEXP x){
     out_size += (TYPEOF(p_x[i]) == VECSXP ? Rf_xlength(p_x[i]) : 1);
   }
 
-  SEXP x_names = SHIELD(get_r_names(x)); ++NP;
+  SEXP x_names = SHIELD(get_old_names(x)); ++NP;
   bool x_has_names = !is_null(x_names);
 
   R_xlen_t k = 0;
@@ -666,7 +666,7 @@ SEXP cpp_list_c(SEXP x){
 
     if (TYPEOF(p_x[i]) == VECSXP){
       p_temp = list_ptr_ro(p_x[i]);
-      R_Reprotect(names = get_r_names(p_x[i]), nm_idx);
+      R_Reprotect(names = get_old_names(p_x[i]), nm_idx);
       m = Rf_xlength(p_x[i]);
     } else {
       SET_VECTOR_ELT(container_list, 0, p_x[i]);
@@ -692,7 +692,7 @@ SEXP cpp_list_c(SEXP x){
     }
   }
   if (any_names){
-    set_r_names(out, out_names);
+    set_old_names(out, out_names);
   }
   YIELD(NP);
   return out;
@@ -728,7 +728,7 @@ SEXP cpp_df_c(SEXP x){
 
   R_ProtectWithIndex(new_names = r_null, &new_names_idx); ++NP;
   R_ProtectWithIndex(df_names = r_null, &df_names_idx); ++NP;
-  R_ProtectWithIndex(ptype_names = get_r_names(df), &ptype_names_idx); ++NP;
+  R_ProtectWithIndex(ptype_names = get_old_names(df), &ptype_names_idx); ++NP;
 
   int n_cols = Rf_length(ptype_names);
 
@@ -742,7 +742,7 @@ SEXP cpp_df_c(SEXP x){
 
   for (int i = 1; i < n_frames; ++i){
     R_Reprotect(df = cast<r_data_frame_t>(p_x[i], r_null), df_idx);
-    R_Reprotect(df_names = get_r_names(df), df_names_idx);
+    R_Reprotect(df_names = get_old_names(df), df_names_idx);
 
     R_Reprotect(new_names = cpp_setdiff(
       df_names, ptype_names, false
@@ -802,7 +802,7 @@ SEXP cpp_df_c(SEXP x){
 
   set_list_as_df(out);
   df::set_row_names(out, out_size);
-  set_r_names(out, ptype_names);
+  set_old_names(out, ptype_names);
   SHIELD(out = rebuild(out, VECTOR_ELT(frames, 0), false)); ++NP;
   YIELD(NP);
   return out;
@@ -984,7 +984,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     if (TYPEOF(vec_template) == INTSXP){
     SHIELD(out = init<r_integers_t>(out_size, false)); ++NP;
     SEXP date_cls = SHIELD(as_vector("Date")); ++NP;
-    attr::set_class(out, date_cls);
+    attr::set_old_class(out, date_cls);
 
     int* RESTRICT p_out = integer_ptr(out);
 
@@ -997,7 +997,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   } else {
     SHIELD(out = init<r_doubles_t>(out_size, false)); ++NP;
     SEXP date_cls = SHIELD(as_vector("Date")); ++NP;
-    attr::set_class(out, date_cls);
+    attr::set_old_class(out, date_cls);
 
     double* RESTRICT p_out = real_ptr(out);
 

@@ -31,10 +31,10 @@ inline int df_nrow(SEXP x){
 }
 
 inline SEXP get_names(SEXP x){
-  return internal::get_r_names(x);
+  return attr::get_old_names(x);
 }
 inline void set_names(SEXP x, SEXP names){
-  return internal::set_r_names(x, names);
+  return attr::set_old_names(x, names);
 }
 
 inline bool

@@ -493,6 +493,7 @@ inline bool is_altrep(SEXP x){
 namespace internal {
 inline SEXP BASE_ATTRIBUTES = r_null;
 inline SEXP CHEAPR_CORES = r_null;
+inline SEXP BASE_LENGTH = r_null;
 }
 
 namespace attr {
@@ -923,32 +924,29 @@ inline void r_copy_n(
 }
 
 
-namespace internal {
+namespace attr {
 
-inline SEXP r_length_sym = r_null;
-
-inline void set_r_names(SEXP x, SEXP names){
+inline void set_old_names(SEXP x, SEXP names){
   if (is_null(names)){
     attr::set_attr(x, symbol::names_sym, r_null);
   } else {
     Rf_namesgets(x, names);
   }
 }
-inline SEXP get_r_names(SEXP x){
+inline SEXP get_old_names(SEXP x){
   return attr::get_attr(x, symbol::names_sym);
 }
 inline bool has_r_names(SEXP x){
-  SEXP names = SHIELD(get_r_names(x));
+  SEXP names = SHIELD(get_old_names(x));
   bool out = !is_null(names);
   YIELD(1);
   return out;
 }
 
+inline SEXP get_old_class(SEXP x){
+  return get_attr(x, symbol::class_sym);
 }
-
-namespace attr {
-
-inline void set_class(SEXP x, SEXP cls){
+inline void set_old_class(SEXP x, SEXP cls){
   Rf_classgets(x, cls);
 }
 
@@ -1026,7 +1024,7 @@ inline SEXP new_vector<double>(R_xlen_t n, const double default_value){
 template <>
 inline SEXP new_vector<int64_t>(R_xlen_t n){
   SEXP out = SHIELD(new_vector<double>(n));
-  attr::set_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
+  attr::set_old_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
   YIELD(2);
   return out;
 }
@@ -1973,7 +1971,7 @@ inline SEXP make_list(Args... args) {
       ++i;
     }()), ...);
 
-    internal::set_r_names(out, nms);
+    attr::set_old_names(out, nms);
     YIELD(2);
     return out;
   }
@@ -2027,6 +2025,10 @@ inline SEXP eval_fn(SEXP r_fn, SEXP envir, Args... args){
 
 namespace vec {
 
+inline R_xlen_t old_length(SEXP x){
+  return Rf_xlength(x);
+}
+
 inline R_xlen_t length(SEXP x){
   if (!vec::is_object(x) || vec::is_atomic(x)){
     return Rf_xlength(x);
@@ -2044,10 +2046,10 @@ inline R_xlen_t length(SEXP x){
       }
       return out;
     } else {
-      if (is_null(internal::r_length_sym)){
-        internal::r_length_sym = r_cast<r_symbol_t>("length");
+      if (is_null(internal::BASE_LENGTH)){
+        internal::BASE_LENGTH = r_cast<r_symbol_t>("length");
       }
-      SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
+      SEXP expr = SHIELD(Rf_lang2(internal::BASE_LENGTH, x));
       SEXP r_len = SHIELD(eval(expr, env::base_env));
       R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
       YIELD(2);
@@ -2055,10 +2057,10 @@ inline R_xlen_t length(SEXP x){
     }
     // Catch-all
   } else {
-    if (is_null(internal::r_length_sym)){
-      internal::r_length_sym = r_cast<r_symbol_t>("length");
+    if (is_null(internal::BASE_LENGTH)){
+      internal::BASE_LENGTH = r_cast<r_symbol_t>("length");
     }
-    SEXP expr = SHIELD(Rf_lang2(internal::r_length_sym, x));
+    SEXP expr = SHIELD(Rf_lang2(internal::BASE_LENGTH, x));
     SEXP r_len = SHIELD(eval(expr, env::base_env));
     R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
     YIELD(2);
@@ -2139,7 +2141,7 @@ inline void add_attrs(SEXP x, SEXP attrs) {
     break;
   }
   case VECSXP: {
-    SEXP names = SHIELD(internal::get_r_names(attrs)); ++NP;
+    SEXP names = SHIELD(attr::get_old_names(attrs)); ++NP;
     if (is_null(names)){
       YIELD(NP);
       Rf_error("attributes must be a named list");
@@ -2200,7 +2202,7 @@ inline void clear_attrs(SEXP x){
     YIELD(1);
     return;
   }
-  SEXP names = SHIELD(internal::get_r_names(attrs));
+  SEXP names = SHIELD(attr::get_old_names(attrs));
   const r_string_t *p_names = r_ptr<const r_string_t>(names);
 
   int n = Rf_length(attrs);

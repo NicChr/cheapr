@@ -302,9 +302,9 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
         Rf_error("`ncol(yes)` must equal `ncol(na)`");
       }
 
-      SEXP col_names = SHIELD(internal::get_r_names(yes)); ++NP;
-      SEXP col_names2 = SHIELD(internal::get_r_names(no)); ++NP;
-      SEXP col_names3 = SHIELD(internal::get_r_names(na)); ++NP;
+      SEXP col_names = SHIELD(attr::get_old_names(yes)); ++NP;
+      SEXP col_names2 = SHIELD(attr::get_old_names(no)); ++NP;
+      SEXP col_names3 = SHIELD(attr::get_old_names(na)); ++NP;
 
       if (!R_compute_identical(col_names, col_names2, 0)){
         YIELD(NP);

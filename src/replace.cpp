@@ -108,10 +108,10 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   case R_date:
   case R_pxt: {
-    SEXP x_cls = SHIELD(get_attr(x, symbol::class_sym)); ++NP;
-    attr::set_class(x, r_null);
+    SEXP x_cls = SHIELD(get_old_class(x)); ++NP;
+    attr::set_old_class(x, r_null);
     replace_in_place(x, where, with, false);
-    attr::set_class(x, x_cls);
+    attr::set_old_class(x, x_cls);
     break;
   }
 
@@ -136,8 +136,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
       Rf_error("`ncol(x)` must equal `ncol(with)`");
     }
 
-    SEXP x_names = SHIELD(get_r_names(x)); ++NP;
-    SEXP with_names = SHIELD(get_r_names(with)); ++NP;
+    SEXP x_names = SHIELD(get_old_names(x)); ++NP;
+    SEXP with_names = SHIELD(get_old_names(with)); ++NP;
 
     if (!R_compute_identical(x_names, with_names, 0)){
       YIELD(NP);

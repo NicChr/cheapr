@@ -299,8 +299,8 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive){
     }
   } else {
     out = SHIELD(lag(x, k, fill, set)); ++NP;
-    SEXP names = SHIELD(get_r_names(x)); ++NP;
-    set_r_names(out, lag(names, k, fill, set && !ALTREP(x)));
+    SEXP names = SHIELD(get_old_names(x)); ++NP;
+    set_old_names(out, lag(names, k, fill, set && !ALTREP(x)));
   }
   YIELD(NP);
   return out;
@@ -738,9 +738,9 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
       SET_VECTOR_ELT(out, i, cpp_lag2(p_x[i], lag, order, run_lengths, fill, true));
     }
   } else {
-    SEXP names = SHIELD(get_r_names(x)); ++NP;
+    SEXP names = SHIELD(get_old_names(x)); ++NP;
     out = SHIELD(lag2(x, lag, order, run_lengths, fill)); ++NP;
-    set_r_names(out, lag2(names, lag, order, run_lengths, fill));
+    set_old_names(out, lag2(names, lag, order, run_lengths, fill));
   }
   YIELD(NP);
   return out;

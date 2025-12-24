@@ -237,7 +237,7 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
   SEXP out = SHIELD(new_vector<double>(Rf_xlength(locs))); ++NP;
   int64_t* RESTRICT p_out = integer64_ptr(out);
 
-  SEXP names = SHIELD(get_r_names(x)); ++NP;
+  SEXP names = SHIELD(get_old_names(x)); ++NP;
   SEXP out_names = SHIELD(sset_vec(names, locs, true)); ++NP;
 
   if (Rf_xlength(x) > r_limits::r_int_max){
@@ -267,7 +267,7 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
       SHIELD(out = Rf_xlengthgets(out, k)); ++NP;
     }
 
-    set_r_names(out, out_names);
+    set_old_names(out, out_names);
 
     YIELD(NP);
     return out;
@@ -302,7 +302,7 @@ SEXP cpp_sset_int64(SEXP x, SEXP locs){
       SHIELD(out = Rf_lengthgets(out, k)); ++NP;
     }
 
-    set_r_names(out, out_names);
+    set_old_names(out, out_names);
 
     YIELD(NP);
     return out;

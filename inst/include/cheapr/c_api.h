@@ -72,21 +72,6 @@ sset_vec(SEXP x, SEXP indices, bool check){
 namespace vec {
 
 inline SEXP
-get_names(SEXP x){
-  typedef SEXP fn_t(SEXP);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_get_names");
-  return fn(x);
-}
-
-inline void
-set_names(SEXP x, SEXP names){
-  typedef void fn_t(SEXP, SEXP);
-  static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_set_names");
-  fn(x, names);
-  return;
-}
-
-inline SEXP
 sset(SEXP x, SEXP indices){
   typedef SEXP fn_t(SEXP, SEXP, bool);
   static fn_t *fn = (fn_t*) R_GetCCallable("cheapr", "api_sset");

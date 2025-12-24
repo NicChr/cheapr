@@ -174,7 +174,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   SEXP clean_indices = r_null;
 
   if (TYPEOF(indices) == STRSXP){
-    SEXP names = SHIELD(get_r_names(x)); ++NP;
+    SEXP names = SHIELD(get_old_names(x)); ++NP;
     if (is_null(names)){
       YIELD(NP);
       Rf_error("Cannot subset on the names of an unnamed vector");
@@ -345,7 +345,7 @@ SEXP clean_locs(SEXP locs, SEXP x){
   int_fast64_t n = Rf_xlength(locs);
 
   if (get_r_type(locs) == R_chr){
-    SEXP names = SHIELD(get_r_names(x)); ++NP;
+    SEXP names = SHIELD(get_old_names(x)); ++NP;
     if (is_null(names)){
       YIELD(NP);
       Rf_error("Cannot subset on the names of an unnamed vector");
@@ -1228,9 +1228,9 @@ SEXP rev(SEXP x, bool set){
 [[cpp11::register]]
 SEXP cpp_rev(SEXP x, bool set){
   SEXP out = SHIELD(rev(x, set));
-  SEXP names = SHIELD(get_r_names(x));
+  SEXP names = SHIELD(get_old_names(x));
   SHIELD(names = rev(names, set && !ALTREP(x)));
-  set_r_names(out, names);
+  set_old_names(out, names);
   YIELD(3);
   return out;
 }
@@ -1255,7 +1255,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Flag to check indices
   bool check = true;
 
-  SEXP names = SHIELD(get_r_names(x)); ++NP;
+  SEXP names = SHIELD(get_old_names(x)); ++NP;
 
   SEXP cols;
   int loc_type = TYPEOF(locs);
@@ -1356,8 +1356,8 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
   // Make a plain data frame
   df::set_row_names(out, n_rows);
   SEXP df_cls = SHIELD(as_vector("data.frame")); ++NP;
-  attr::set_class(out, df_cls);
-  set_r_names(out, out_names);
+  attr::set_old_class(out, df_cls);
+  set_old_names(out, out_names);
   YIELD(NP);
   return out;
 }
@@ -1394,13 +1394,13 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
     SET_VECTOR_ELT(out, j, cpp_sset(p_x[j], indices, check_indices));
   }
 
-  SEXP names = SHIELD(get_r_names(x)); ++NP;
-  set_r_names(out, names);
+  SEXP names = SHIELD(get_old_names(x)); ++NP;
+  set_old_names(out, names);
 
   // list to data frame object
   df::set_row_names(out, out_size);
   SEXP df_cls = SHIELD(as_vector("data.frame")); ++NP;
-  attr::set_class(out, df_cls);
+  attr::set_old_class(out, df_cls);
   YIELD(NP);
   return out;
 }
@@ -1458,18 +1458,18 @@ SEXP cpp_sset2(SEXP x, SEXP i, SEXP j, bool check, SEXP args){
       SHIELD(out = cpp_sset_range(x, p_data[0], p_data[1], p_data[2])); ++NP;
 
       // Subset names
-      SHIELD(names = get_r_names(x)); ++NP;
+      SHIELD(names = get_old_names(x)); ++NP;
       SHIELD(names = cpp_sset_range(names, p_data[0], p_data[1], p_data[2])); ++NP;
     } else {
 
       SHIELD(out = sset_vec(x, i, check)); ++NP;
 
       // Subset names
-      SHIELD(names = get_r_names(x)); ++NP;
+      SHIELD(names = get_old_names(x)); ++NP;
       SHIELD(names = sset_vec(names, i, check)); ++NP;
     }
     Rf_copyMostAttrib(x, out);
-    set_r_names(out, names);
+    set_old_names(out, names);
   } else if (is_df(x)){
     if (is_bare_df(x) || is_bare_tbl(x)){
       SHIELD(out = cpp_df_subset(x, i, j, check)); ++NP;

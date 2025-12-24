@@ -327,7 +327,7 @@ SEXP cpp_sequence(SEXP size, SEXP from, SEXP by, bool as_list, bool add_id) {
     } else {
       SHIELD(out_names = cpp_sequence_id(size)); ++NP;
     }
-    set_r_names(out, out_names);
+    set_old_names(out, out_names);
   }
   YIELD(NP);
   return out;

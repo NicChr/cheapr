@@ -621,8 +621,8 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
   SEXP target_attrs = SHIELD(get_attrs(target)); ++NP;
   SEXP source_attrs = SHIELD(get_attrs(source)); ++NP;
 
-  SEXP target_nms = SHIELD(internal::get_r_names(target_attrs)); ++NP;
-  SEXP source_nms = SHIELD(internal::get_r_names(source_attrs)); ++NP;
+  SEXP target_nms = SHIELD(attr::get_old_names(target_attrs)); ++NP;
+  SEXP source_nms = SHIELD(attr::get_old_names(source_attrs)); ++NP;
 
 
   const r_string_t *p_target_nms = string_ptr_ro(target_nms);
@@ -720,7 +720,7 @@ SEXP match(SEXP y, SEXP x, int no_match){
 
 SEXP get_vec_names(SEXP x){
   if (vec::is_atomic(x)){
-    return get_r_names(x);
+    return get_old_names(x);
   } else {
     switch(get_r_type(x)){
     case R_null:
@@ -728,7 +728,7 @@ SEXP get_vec_names(SEXP x){
       return r_null;
     }
     case R_list: {
-      return get_r_names(x);
+      return get_old_names(x);
     }
     case R_unk: {
       return eval_pkg_fun("names", "base", env::base_env, x);
@@ -742,7 +742,7 @@ void set_vec_names(SEXP x, SEXP names){
   if (is_null(names)){
     return;
   } else if (vec::is_atomic(x)){
-    internal::set_r_names(x, names);
+    attr::set_old_names(x, names);
     return;
   } else {
     switch(get_r_type(x)){
@@ -751,7 +751,7 @@ void set_vec_names(SEXP x, SEXP names){
       return;
     }
     case R_list: {
-      internal::set_r_names(x, names);
+      attr::set_old_names(x, names);
       return;
     }
     default: {
