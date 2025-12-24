@@ -225,7 +225,7 @@ inline const double real = NA_REAL;
 inline const r_complex_t complex = r_complex_t{NA_REAL, NA_REAL};
 inline constexpr r_byte_t raw = static_cast<r_byte_t>(0);
 inline const r_string_t string = static_cast<r_string_t>(NA_STRING);
-inline const SEXP r_obj = r_null;
+inline const SEXP nil = r_null;
 }
 
 namespace internal {
