@@ -67,4 +67,3 @@ SEXP compact_seq_data(SEXP x){
 SEXP altrep_materialise(SEXP x) {
   return altrep::is_altrep(x) ? cpp_semi_copy(x) : x;
 }
-

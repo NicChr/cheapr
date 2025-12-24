@@ -2124,8 +2124,12 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
 }
 
 namespace internal {
-// template<typename... Args>
+
 inline void add_attrs(SEXP x, SEXP attrs) {
+
+  if (is_null(x)){
+    Rf_error("Cannot add attributes to `NULL`");
+  }
 
   int32_t NP = 0;
 
