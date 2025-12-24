@@ -57,7 +57,7 @@
 // rchk produces errors with that method
 #ifndef SHIELD
 #define SHIELD(x)                                              \
-  static_cast<std::decay_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x)))
+static_cast<std::decay_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x)))
 #endif
 
 #ifndef YIELD
@@ -87,8 +87,8 @@ inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
 
 enum r_bool_t : int {
   r_true = 1,
-  r_false = 0,
-  r_na = std::numeric_limits<int>::min()
+    r_false = 0,
+    r_na = std::numeric_limits<int>::min()
 };
 
 
@@ -218,14 +218,14 @@ inline const SEXP base_env = R_BaseEnv;
 // NAs
 
 namespace na {
-  inline constexpr r_bool_t logical = r_na;
-  inline constexpr int integer = std::numeric_limits<int>::min();
-  inline constexpr int64_t integer64 = std::numeric_limits<int64_t>::min();
-  inline const double real = NA_REAL;
-  inline const r_complex_t complex = r_complex_t{NA_REAL, NA_REAL};
-  inline constexpr r_byte_t raw = static_cast<r_byte_t>(0);
-  inline const r_string_t string = static_cast<r_string_t>(NA_STRING);
-  inline const SEXP r_obj = r_null;
+inline constexpr r_bool_t logical = r_na;
+inline constexpr int integer = std::numeric_limits<int>::min();
+inline constexpr int64_t integer64 = std::numeric_limits<int64_t>::min();
+inline const double real = NA_REAL;
+inline const r_complex_t complex = r_complex_t{NA_REAL, NA_REAL};
+inline constexpr r_byte_t raw = static_cast<r_byte_t>(0);
+inline const r_string_t string = static_cast<r_string_t>(NA_STRING);
+inline const SEXP r_obj = r_null;
 }
 
 namespace internal {
@@ -278,13 +278,19 @@ inline const SEXP* list_ptr_ro(SEXP x){
 
 template<typename T>
 inline T* r_ptr(SEXP x) {
-  static_assert(always_false<T>, "Unsupported type for r_ptr");
+  static_assert(
+    always_false<T>,
+    "Unsupported type for r_ptr"
+  );
   return nullptr;
 }
 
 template<typename T>
 inline const T* r_ptr_ro(SEXP x) {
-  static_assert(always_false<T>, "Unsupported type for r_ptr_ro");
+  static_assert(
+    always_false<T>,
+    "Unsupported type for r_ptr_ro"
+  );
   return nullptr;
 }
 
@@ -596,7 +602,7 @@ inline bool is_df(SEXP x){
 template<typename T>
 inline T get_value(T *p_x, const R_xlen_t i){
   static_assert(
-    sizeof(T) == 0,
+    always_false<T>,
     "Unimplemented `get_value` specialisation"
   );
   return T{};
@@ -605,7 +611,7 @@ inline T get_value(T *p_x, const R_xlen_t i){
 template<typename T>
 inline T get_value(SEXP x, const R_xlen_t i){
   static_assert(
-    sizeof(T) == 0,
+    always_false<T>,
     "Unimplemented `get_value` specialisation"
   );
   return T{};
@@ -694,7 +700,7 @@ inline SEXP get_value<SEXP>(SEXP x, const R_xlen_t i){
 template<typename T>
 inline void set_value(T *p_x, const R_xlen_t i, T val){
   static_assert(
-    sizeof(T) == 0,
+    always_false<T>,
     "Unimplemented `set_value` specialisation"
   );
   return T{};
@@ -703,7 +709,7 @@ inline void set_value(T *p_x, const R_xlen_t i, T val){
 template<typename T>
 inline void set_value(SEXP x, const R_xlen_t i, T val){
   static_assert(
-    sizeof(T) == 0,
+    always_false<T>,
     "Unimplemented `set_value` specialisation"
   );
   return T{};
@@ -965,7 +971,7 @@ inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
 template <typename T>
 inline SEXP new_vector(R_xlen_t n, const T default_value) {
   static_assert(
-    sizeof(T) == 0,
+    always_false<T>,
     "Unimplemented `new_vector` specialisation"
   );
   return T{};
@@ -974,7 +980,7 @@ inline SEXP new_vector(R_xlen_t n, const T default_value) {
 template <typename T>
 inline SEXP new_vector(R_xlen_t n) {
   static_assert(
-    sizeof(T) == 0,
+    always_false<T>,
     "Unimplemented `new_vector` specialisation"
   );
   return T{};
@@ -1220,7 +1226,7 @@ inline bool is_r_na<SEXP>(const SEXP x){
 template<typename T>
 inline constexpr T na_value() {
   static_assert(
-    sizeof(T) == 0,
+    always_false<T>,
     "Unimplemented `na_value` specialisation"
   );
   return T{};
@@ -1277,7 +1283,7 @@ inline SEXP as_vector(const T x){
     return as_vector<SEXP>(x);
   } else {
     static_assert(
-      sizeof(T) == 0,
+      always_false<T>,
       "Unimplemented `as_vector` specialisation"
     );
     return T{};
@@ -1516,7 +1522,7 @@ template<typename T, typename U>
 struct r_cast_impl {
   static T cast(U x) {
     static_assert(
-      sizeof(T) == 0,
+      always_false<T>,
       "Can't `r_cast` this type, use `static_cast`"
     );
     return T{};
@@ -1792,107 +1798,107 @@ template<
   typename T,
   typename = typename std::enable_if<is_r_arithmetic_v<T>>::type
 >
-inline T r_gcd(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
+  inline T r_gcd(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
 
-  if (is_r_na(x) || is_r_na(y)){
-   if (na_rm){
-     if (is_r_na(x)){
-       return r_abs(y);
-     } else {
-       return r_abs(x);
-     }
-   } else {
-     return na_value<decltype(x)>();
-   }
-  }
-
-  T ax = std::abs(x);
-  T ay = std::abs(y);
-
-  if constexpr (is_r_integral_v<T>){
-
-    // Taken from number theory lecture notes
-
-    // GCD(0,0)=0
-    if (ax == 0 && ay == 0){
-      return 0;
+    if (is_r_na(x) || is_r_na(y)){
+      if (na_rm){
+        if (is_r_na(x)){
+          return r_abs(y);
+        } else {
+          return r_abs(x);
+        }
+      } else {
+        return na_value<decltype(x)>();
+      }
     }
-    // GCD(a,0)=a
-    if (ax == 0){
-      return ay;
-    }
-    // GCD(a,0)=a
-    if (ay == 0){
+
+    T ax = std::abs(x);
+    T ay = std::abs(y);
+
+    if constexpr (is_r_integral_v<T>){
+
+      // Taken from number theory lecture notes
+
+      // GCD(0,0)=0
+      if (ax == 0 && ay == 0){
+        return 0;
+      }
+      // GCD(a,0)=a
+      if (ax == 0){
+        return ay;
+      }
+      // GCD(a,0)=a
+      if (ay == 0){
+        return ax;
+      }
+
+      T r;
+      while(ay != 0){
+        r = ax % ay;
+        ax = ay;
+        ay = r;
+      }
+      return ax;
+    } else {
+
+      // GCD(0,0)=0
+      if (ax <= tol && ay <= tol){
+        return 0.0;
+      }
+      // GCD(a,0)=a
+      if (ax <= tol){
+        return ay;
+      }
+      // GCD(a,0)=a
+      if (ay <= tol){
+        return ax;
+      }
+
+      T r;
+      while(ay > tol){
+        r = std::fmod(ax, ay);
+        ax = ay;
+        ay = r;
+      }
       return ax;
     }
-
-    T r;
-    while(ay != 0){
-      r = ax % ay;
-      ax = ay;
-      ay = r;
-    }
-    return ax;
-  } else {
-
-    // GCD(0,0)=0
-    if (ax <= tol && ay <= tol){
-      return 0.0;
-    }
-    // GCD(a,0)=a
-    if (ax <= tol){
-      return ay;
-    }
-    // GCD(a,0)=a
-    if (ay <= tol){
-      return ax;
-    }
-
-    T r;
-    while(ay > tol){
-      r = std::fmod(ax, ay);
-      ax = ay;
-      ay = r;
-    }
-    return ax;
   }
-}
 
 
 // Lowest common multiple
 template<typename T,
          typename = typename std::enable_if<is_r_arithmetic_v<T>>::type>
-inline T r_lcm(
-    T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
-){
-  if (is_r_na(x) || is_r_na(y)){
-    if (na_rm){
-      if (is_r_na(x)){
-        return y;
+  inline T r_lcm(
+      T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
+  ){
+    if (is_r_na(x) || is_r_na(y)){
+      if (na_rm){
+        if (is_r_na(x)){
+          return y;
+        } else {
+          return x;
+        }
       } else {
-        return x;
+        return na_value<decltype(x)>();
       }
-    } else {
-      return na_value<decltype(x)>();
     }
-  }
 
-  if constexpr (is_r_integral_v<T>){
-    if (x == 0 && y == 0){
-      return 0;
+    if constexpr (is_r_integral_v<T>){
+      if (x == 0 && y == 0){
+        return 0;
+      }
+      T res = std::abs(x) / r_gcd(x, y, na_rm);
+      if (y != 0 && (std::abs(res) > (std::numeric_limits<T>::max() / std::abs(y)))){
+        return na_value<decltype(x)>();
+      }
+      return res * std::abs(y);
+    } else {
+      if (std::fabs(x) <= tol && std::fabs(y) <= tol){
+        return 0.0;
+      }
+      return ( std::fabs(x) / r_gcd(x, y, na_rm, tol) ) * std::fabs(y);
     }
-    T res = std::abs(x) / r_gcd(x, y, na_rm);
-    if (y != 0 && (std::abs(res) > (std::numeric_limits<T>::max() / std::abs(y)))){
-      return na_value<decltype(x)>();
-    }
-    return res * std::abs(y);
-  } else {
-    if (std::fabs(x) <= tol && std::fabs(y) <= tol){
-      return 0.0;
-    }
-    return ( std::fabs(x) / r_gcd(x, y, na_rm, tol) ) * std::fabs(y);
   }
-}
 
 }
 
@@ -2176,8 +2182,8 @@ inline void add_attrs(SEXP x, SEXP attrs) {
     Rf_error("`attrs` must be a named list");
   }
   }
-    YIELD(NP);
-  }
+  YIELD(NP);
+}
 
 }
 
