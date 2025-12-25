@@ -796,7 +796,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
               YIELD(3);
               return out2;
             } else if (j != 0){
-              SET_RAW_ELT(out, k++, (is_r_na(pind[i]) || j > xn) ? 0 : p_x[j - 1]);
+              set_value<r_byte_t>(out, k++, (is_r_na(pind[i]) || j > xn) ? na::raw : p_x[j - 1]);
             }
           }
         break;
@@ -932,7 +932,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
-           SET_RAW_ELT(out, k++, p_x[--j]);
+           set_value<r_byte_t>(out, k++, p_x[--j]);
             // If j > n_val then it is a negative 32-bit integer
           } else if (j > na_val){
             SEXP new_indices = SHIELD(exclude_locs(indices, xn));
@@ -940,7 +940,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
             YIELD(3);
             return out2;
           } else if (j != 0U){
-            SET_RAW_ELT(out, k++, 0);
+            set_value<r_byte_t>(out, k++, r_byte_t{0});
           }
         }
         break;
@@ -1033,7 +1033,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       case RAWSXP: {
         const r_byte_t *p_x = raw_ptr_ro(x);
         out = SHIELD(new_vector<r_byte_t>(n));
-        for (int_fast64_t i = 0; i < n; ++i) SET_RAW_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
+        for (int_fast64_t i = 0; i < n; ++i) set_value<r_byte_t>(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         break;
       }
       case VECSXP: {
@@ -1211,8 +1211,8 @@ SEXP rev(SEXP x, bool set){
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
       r_byte_t left = p_out[i];
-      SET_RAW_ELT(out, i, p_out[k]);
-      SET_RAW_ELT(out, k, left);
+      set_value<r_byte_t>(out, i, p_out[k]);
+      set_value<r_byte_t>(out, k, left);
     }
     break;
   }

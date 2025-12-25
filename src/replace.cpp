@@ -101,7 +101,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
     const r_byte_t *p_with = raw_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
-      SET_RAW_ELT(x, p_where[i] - 1, p_with[withi]);
+      set_value<r_byte_t>(x, p_where[i] - 1, p_with[withi]);
     }
     break;
   }

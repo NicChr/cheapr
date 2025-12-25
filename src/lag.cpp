@@ -185,37 +185,37 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
         // Positive lags
         if (k >= 0){
           for (R_xlen_t i = 0; i < k; ++i) {
-            SET_RAW_ELT(lag_temp, i, p_out[i]);
-            SET_RAW_ELT(out, i, fill_value);
+            set_value<r_byte_t>(lag_temp, i, p_out[i]);
+            set_value<r_byte_t>(out, i, fill_value);
           }
           for (R_xlen_t i = k; i < size; ++i) {
             tempi = ((i - k) % k);
             r_byte_t tempv = p_lag[tempi];
-            SET_RAW_ELT(lag_temp, tempi, p_out[i]);
-            SET_RAW_ELT(out, i, tempv);
+            set_value<r_byte_t>(lag_temp, tempi, p_out[i]);
+            set_value<r_byte_t>(out, i, tempv);
           }
           // Negative lags
         } else {
           for (R_xlen_t i = size - 1; i >= size + k; --i) {
-            SET_RAW_ELT(lag_temp, size - i - 1, p_out[i]);
-            SET_RAW_ELT(out, i, fill_value);
+            set_value<r_byte_t>(lag_temp, size - i - 1, p_out[i]);
+            set_value<r_byte_t>(out, i, fill_value);
           }
           for (R_xlen_t i = size + k - 1; i >= 0; --i) {
             tempi = ( (size - (i - k) - 1) % k);
             r_byte_t tempv = p_lag[tempi];
-            SET_RAW_ELT(lag_temp, tempi, p_out[i]);
-            SET_RAW_ELT(out, i, tempv);
+            set_value<r_byte_t>(lag_temp, tempi, p_out[i]);
+            set_value<r_byte_t>(out, i, tempv);
           }
         }
       }
     } else {
       if (k >= 0){
         for (R_xlen_t i = 0; i < size; ++i) {
-          SET_RAW_ELT(out, i, i >= k ? p_x[i - k] : fill_value);
+          set_value<r_byte_t>(out, i, i >= k ? p_x[i - k] : fill_value);
         }
       } else {
         for (R_xlen_t i = size - 1; i >= 0; --i) {
-          SET_RAW_ELT(out, i, (i - size) < k ? p_x[i - k] : fill_value);
+          set_value<r_byte_t>(out, i, (i - size) < k ? p_x[i - k] : fill_value);
         }
       }
     }
@@ -654,9 +654,9 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
         }
         k = p_lag[recycle_lag ? oi % lag_size : 0];
         if (k >= 0){
-          SET_RAW_ELT(out, oi, (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
+          set_value<r_byte_t>(out, oi, (j - run_start) >= k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
         } else {
-          SET_RAW_ELT(out, oi, (j - run_end) < k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
+          set_value<r_byte_t>(out, oi, (j - run_end) < k ? p_x[has_order ? p_o[j - k] - 1 : j - k] : fill_value);
         }
       }
     }

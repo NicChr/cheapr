@@ -87,8 +87,8 @@ inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
 
 enum r_bool_t : int {
   r_true = 1,
-    r_false = 0,
-    r_na = std::numeric_limits<int>::min()
+  r_false = 0,
+  r_na = std::numeric_limits<int>::min()
 };
 
 
@@ -2344,18 +2344,11 @@ inline void set_threads(uint16_t n){
 
 namespace internal {
 
-// A type that signals the `SEXP` type is unsupported for the
-// current calculation
-struct unsupported_sexp_t {
-  SEXP value;
-  explicit unsupported_sexp_t(SEXP x) : value(x) {}
-};
-
 // Retrieve the pointer of x
 // To be used in a lambda
 // E.g. with_read_only_data(x, [&](auto p_x) {})
 template <class F>
-decltype(auto) with_read_only_data(SEXP x, F&& f) {
+decltype(auto) visit_r_ptr(SEXP x, F&& f) {
   switch (CHEAPR_TYPEOF(x)) {
   case NILSXP:          return f(static_cast<const int*>(nullptr));
   case LGLSXP:          return f(r_ptr<const r_bool_t>(x));
@@ -2363,10 +2356,10 @@ decltype(auto) with_read_only_data(SEXP x, F&& f) {
   case CHEAPR_INT64SXP: return f(r_ptr<const int64_t>(x));
   case REALSXP:         return f(r_ptr<const double>(x));
   case STRSXP:          return f(r_ptr<const r_string_t>(x));
-  case VECSXP:          return f(list_ptr_ro(x));
+  case VECSXP:          return f(r_ptr<const SEXP>(x));
   case CPLXSXP:         return f(r_ptr<const r_complex_t>(x));
   case RAWSXP:          return f(r_ptr<const r_byte_t>(x));
-  default:              return f(unsupported_sexp_t{x});
+  default:              return f(nullptr);
   }
 }
 

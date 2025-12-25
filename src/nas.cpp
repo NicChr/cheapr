@@ -68,9 +68,9 @@ R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t count = 0;
   int32_t NP = 0;
   int n_threads = calc_threads(n);
-  with_read_only_data(x, [&](auto p_x) {
+  visit_r_ptr(x, [&](auto p_x) {
 
-    using ptr_type = std::decay_t<decltype(p_x)>;
+    using r_t = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(p_x)>>>;
 
     auto default_scalar_count = [&] {
       SEXP is_missing   = SHIELD(eval_pkg_fun("is_na", "cheapr", env::base_env, x)); ++NP;
@@ -78,9 +78,9 @@ R_xlen_t na_count(SEXP x, bool recursive){
       count = scalar_count(is_missing, scalar_true, true);
     };
 
-    if constexpr (std::is_same_v<ptr_type, unsupported_sexp_t>){
+    if constexpr (std::is_same_v<r_t, std::nullptr_t>){
       default_scalar_count();
-    } else if constexpr (std::is_same_v<ptr_type, const SEXP*>) {
+    } else if constexpr (std::is_same_v<r_t, SEXP>) {
       if (recursive){
         for (R_xlen_t i = 0; i < n; ++i){
           count += na_count(p_x[i], true);
