@@ -68,20 +68,25 @@ R_xlen_t na_count(SEXP x, bool recursive){
   R_xlen_t count = 0;
   int32_t NP = 0;
   int n_threads = calc_threads(n);
-  visit_r_ptr(x, [&](auto p_x) {
+  visit_vector(x, [&](auto p_x) {
 
-    using r_t = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(p_x)>>>;
+    using data_t = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(p_x)>>>;
 
     auto default_scalar_count = [&] {
-      SEXP is_missing   = SHIELD(eval_pkg_fun("is_na", "cheapr", env::base_env, x)); ++NP;
-      SEXP scalar_true  = SHIELD(as_vector(r_true)); ++NP;
+      SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", env::base_env, x)); ++NP;
+      SEXP scalar_true = SHIELD(as_vector(r_true)); ++NP;
       count = scalar_count(is_missing, scalar_true, true);
     };
 
-    if constexpr (std::is_same_v<r_t, std::nullptr_t>){
-      default_scalar_count();
-    } else if constexpr (std::is_same_v<r_t, SEXP>) {
+    if constexpr (std::is_same_v<data_t, std::nullptr_t>){
+      if (is_null(x)){
+        return;
+      } else {
+        default_scalar_count();
+      }
+    } else if constexpr (std::is_same_v<data_t, SEXP>) {
       if (recursive){
+        R_CheckStack(); // Check C Stack size isn't close to the limit
         for (R_xlen_t i = 0; i < n; ++i){
           count += na_count(p_x[i], true);
         }
@@ -148,6 +153,7 @@ bool cpp_any_na(SEXP x, bool recursive){
   }
   case VECSXP: {
     if (recursive){
+    R_CheckStack(); // Check C Stack size isn't close to the limit
     for (int i = 0; i < n; ++i){
       out = cpp_any_na(VECTOR_ELT(x, i), true);
       if (out) break;
@@ -209,6 +215,7 @@ bool cpp_all_na(SEXP x, bool return_true_on_empty, bool recursive){
   }
   case VECSXP: {
     if (recursive){
+    R_CheckStack(); // Check C Stack size isn't close to the limit
     for (int i = 0; i < n; ++i){
       out = cpp_all_na(VECTOR_ELT(x, i), return_true_on_empty, true);
       if (!out) break;

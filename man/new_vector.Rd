@@ -17,7 +17,7 @@ new_double(n = 0L, names = NULL, default = 0)
 
 new_character(n = 0L, names = NULL, default = "")
 
-new_complex(n = 0L, names = NULL, default = 0+0i)
+new_complex(n = 0L, names = NULL, default = complex(real = 0, imaginary = 0))
 
 new_raw(n = 0L, names = NULL, default = as.raw(0))
 }

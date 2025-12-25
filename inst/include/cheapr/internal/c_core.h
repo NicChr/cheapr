@@ -278,10 +278,10 @@ inline const SEXP* list_ptr_ro(SEXP x){
 }
 
 template<typename T>
-inline T* r_ptr(SEXP x) {
+inline T* vector_ptr(SEXP x) {
   static_assert(
     always_false<T>,
-    "Unsupported type for r_ptr"
+    "Unsupported type for vector_ptr"
   );
   return nullptr;
 }
@@ -297,72 +297,72 @@ inline const T* r_ptr_ro(SEXP x) {
 
 
 template<>
-inline r_bool_t* r_ptr<r_bool_t>(SEXP x) {
+inline r_bool_t* vector_ptr<r_bool_t>(SEXP x) {
   return internal::logical_ptr(x);
 }
 
 template<>
-inline int* r_ptr<int>(SEXP x) {
+inline int* vector_ptr<int>(SEXP x) {
   return internal::integer_ptr(x);
 }
 
 template<>
-inline double* r_ptr<double>(SEXP x) {
+inline double* vector_ptr<double>(SEXP x) {
   return internal::real_ptr(x);
 }
 
 template<>
-inline int64_t* r_ptr<int64_t>(SEXP x) {
+inline int64_t* vector_ptr<int64_t>(SEXP x) {
   return internal::integer64_ptr(x);
 }
 
 template<>
-inline r_complex_t* r_ptr<r_complex_t>(SEXP x) {
+inline r_complex_t* vector_ptr<r_complex_t>(SEXP x) {
   return internal::complex_ptr(x);
 }
 
 template<>
-inline r_byte_t* r_ptr<r_byte_t>(SEXP x) {
+inline r_byte_t* vector_ptr<r_byte_t>(SEXP x) {
   return internal::raw_ptr(x);
 }
 
 template<>
-inline const r_bool_t* r_ptr<const r_bool_t>(SEXP x) {
+inline const r_bool_t* vector_ptr<const r_bool_t>(SEXP x) {
   return internal::logical_ptr_ro(x);
 }
 
 template<>
-inline const int* r_ptr<const int>(SEXP x) {
+inline const int* vector_ptr<const int>(SEXP x) {
   return internal::integer_ptr_ro(x);
 }
 
 template<>
-inline const double* r_ptr<const double>(SEXP x) {
+inline const double* vector_ptr<const double>(SEXP x) {
   return internal::real_ptr_ro(x);
 }
 
 template<>
-inline const int64_t* r_ptr<const int64_t>(SEXP x) {
+inline const int64_t* vector_ptr<const int64_t>(SEXP x) {
   return internal::integer64_ptr_ro(x);
 }
 
 template<>
-inline const r_complex_t* r_ptr<const r_complex_t>(SEXP x) {
+inline const r_complex_t* vector_ptr<const r_complex_t>(SEXP x) {
   return internal::complex_ptr_ro(x);
 }
 
 template<>
-inline const r_string_t* r_ptr<const r_string_t>(SEXP x) {
+inline const r_string_t* vector_ptr<const r_string_t>(SEXP x) {
   return internal::string_ptr_ro(x);
 }
 
 template<>
-inline const r_byte_t* r_ptr<const r_byte_t>(SEXP x) {
+inline const r_byte_t* vector_ptr<const r_byte_t>(SEXP x) {
   return internal::raw_ptr_ro(x);
 }
 
 template<>
-inline const SEXP* r_ptr<const SEXP>(SEXP x) {
+inline const SEXP* vector_ptr<const SEXP>(SEXP x) {
   return list_ptr_ro(x);
 }
 
@@ -691,7 +691,7 @@ template<>
 inline SEXP get_value<SEXP>(SEXP x, const R_xlen_t i){
   switch (TYPEOF(x)){
   case STRSXP: {
-    return r_ptr<const r_string_t>(x)[i];
+    return vector_ptr<const r_string_t>(x)[i];
   }
   default: {
     return list_ptr_ro(x)[i];
@@ -2147,7 +2147,7 @@ inline void add_attrs(SEXP x, SEXP attrs) {
       Rf_error("attributes must be a named list");
     }
     const SEXP *p_attributes = list_ptr_ro(attrs);
-    const r_string_t *p_names = r_ptr<const r_string_t>(names);
+    const r_string_t *p_names = vector_ptr<const r_string_t>(names);
 
     r_symbol_t attr_nm;
 
@@ -2203,7 +2203,7 @@ inline void clear_attrs(SEXP x){
     return;
   }
   SEXP names = SHIELD(attr::get_old_names(attrs));
-  const r_string_t *p_names = r_ptr<const r_string_t>(names);
+  const r_string_t *p_names = vector_ptr<const r_string_t>(names);
 
   int n = Rf_length(attrs);
   for (R_xlen_t i = 0; i < n; ++i){
@@ -2243,43 +2243,43 @@ inline SEXP deep_copy(SEXP x){
   case LGLSXP: {
     using r_t = r_bool_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
+    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case INTSXP: {
     using r_t = int;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
+    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case REALSXP: {
     using r_t = double;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
+    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case STRSXP: {
     using r_t = r_string_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr<const r_t>(out), r_ptr<const r_t>(x), 0, n);
+    r_copy_n(out, vector_ptr<const r_t>(out), vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case CPLXSXP: {
     using r_t = r_complex_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
+    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case RAWSXP: {
     using r_t = r_byte_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, r_ptr<r_t>(out), r_ptr<const r_t>(x), 0, n);
+    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case VECSXP: {
     using r_t = SEXP;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    const r_t *p_x = r_ptr<const r_t>(x);
+    const r_t *p_x = vector_ptr<const r_t>(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
     }
@@ -2344,21 +2344,36 @@ inline void set_threads(uint16_t n){
 
 namespace internal {
 
-// Retrieve the pointer of x
+// A cleaner lambda-based alternative to
+// using the canonical switch(TYPEOF(x))
+//
+// Pass both the SEXP and an auto variable inside a lambda
+// and visit_vector() will assign the auto variable to the
+// correct pointer
+// Then simply deduce its type (via decltype) for further manipulation
 // To be used in a lambda
-// E.g. with_read_only_data(x, [&](auto p_x) {})
+// E.g. visit_r_ptr(x, [&](auto p_x) {})
+
+// One must account for the default case via
+// if constexpr (std::is_same_v<T, std::nullptr_t>)
+// Since `NULL` is included in the default case, if you want
+// separate logic to handle this case, just do the below inside the default case
+// if (is_null(x)){
+// ...
+// } else {
+// ...
+// }
 template <class F>
-decltype(auto) visit_r_ptr(SEXP x, F&& f) {
+decltype(auto) visit_vector(SEXP x, F&& f) {
   switch (CHEAPR_TYPEOF(x)) {
-  case NILSXP:          return f(static_cast<const int*>(nullptr));
-  case LGLSXP:          return f(r_ptr<const r_bool_t>(x));
-  case INTSXP:          return f(r_ptr<const int>(x));
-  case CHEAPR_INT64SXP: return f(r_ptr<const int64_t>(x));
-  case REALSXP:         return f(r_ptr<const double>(x));
-  case STRSXP:          return f(r_ptr<const r_string_t>(x));
-  case VECSXP:          return f(r_ptr<const SEXP>(x));
-  case CPLXSXP:         return f(r_ptr<const r_complex_t>(x));
-  case RAWSXP:          return f(r_ptr<const r_byte_t>(x));
+  case LGLSXP:          return f(vector_ptr<const r_bool_t>(x));
+  case INTSXP:          return f(vector_ptr<const int>(x));
+  case CHEAPR_INT64SXP: return f(vector_ptr<const int64_t>(x));
+  case REALSXP:         return f(vector_ptr<const double>(x));
+  case STRSXP:          return f(vector_ptr<const r_string_t>(x));
+  case VECSXP:          return f(vector_ptr<const SEXP>(x));
+  case CPLXSXP:         return f(vector_ptr<const r_complex_t>(x));
+  case RAWSXP:          return f(vector_ptr<const r_byte_t>(x));
   default:              return f(nullptr);
   }
 }

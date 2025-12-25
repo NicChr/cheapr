@@ -59,7 +59,7 @@ new_character <- function(n = 0L, names = NULL, default = ""){
 }
 #' @rdname new_vector
 #' @export
-new_complex <- function(n = 0L, names = NULL, default = 0i){
+new_complex <- function(n = 0L, names = NULL, default = complex(real = 0, imaginary = 0)){
   attrs_modify(
     rep_len_(as.complex(default), n),
     names = names,

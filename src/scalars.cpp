@@ -85,6 +85,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   }
   case VECSXP: {
     if (recursive){
+    R_CheckStack(); // Check C Stack size isn't close to the limit
     const SEXP *p_x = list_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i){
       count += scalar_count(p_x[i], value, true);
@@ -255,6 +256,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
   case VECSXP: {
     if (recursive){
+    R_CheckStack(); // Check C Stack size isn't close to the limit
     SHIELD(out = vec::shallow_copy(out)); ++NP;
     for (R_xlen_t i = 0; i < n; ++i){
       // Once we extract the vector it maybe needs protecting??
@@ -404,6 +406,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     }
     case VECSXP: {
       if (recursive){
+      R_CheckStack(); // Check C Stack size isn't close to the limit
       SHIELD(out = vec::shallow_copy(out)); ++NP;
       attr::clear_attrs(out);
       for (R_xlen_t i = 0; i < n; ++i){

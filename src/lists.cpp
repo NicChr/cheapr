@@ -18,6 +18,7 @@ SEXP cpp_list_args(SEXP args1, SEXP args2){
 }
 
 R_xlen_t unnested_length(SEXP x){
+  R_CheckStack(); // Check C Stack size isn't close to the limit
   if (TYPEOF(x) != VECSXP){
     return Rf_xlength(x);
   }
@@ -142,18 +143,6 @@ SEXP which_not_null(SEXP x){
   }
   YIELD(1);
   return keep;
-}
-
-SEXP get_list_element(SEXP list, SEXP str){
-  SEXP out = r_null, names = get_old_names(list);
-
-  for (int i = 0; i < Rf_length(list); ++i){
-    if (STRING_ELT(names, i) == str){
-      out = VECTOR_ELT(list, i);
-      break;
-    }
-  }
-  return out;
 }
 
 // Multi-assign named list elements
