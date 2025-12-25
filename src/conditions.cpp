@@ -80,13 +80,19 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
   no = VECTOR_ELT(args, 1);
   na = VECTOR_ELT(args, 2);
 
+  R_xlen_t n = vec::length(condition);
+
+  if (n == 0){
+    YIELD(NP);
+    return yes;
+  }
+
   r_type common = get_r_type(yes);
 
   if (common != R_unk){
 
     SEXP out = r_null;
 
-    R_xlen_t n = vec::length(condition);
     R_xlen_t yes_size = vec::length(yes);
     R_xlen_t no_size = vec::length(no);
     R_xlen_t na_size = vec::length(na);
