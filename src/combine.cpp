@@ -39,78 +39,6 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
     return eval_pkg_fun("rebuild", "cheapr", env::base_env, x, source, arg("shallow_copy") = shallow_copy);
   }
 }
-// SEXP cpp_rep_len(SEXP x, R_xlen_t length){
-//   R_xlen_t out_size = length;
-//
-//   if (is_null(x)){
-//     return r_null;
-//   } else if (is_df(x)){
-//     if (out_size == df::nrow(x)) return x;
-//     int n_cols = Rf_length(x);
-//     SEXP out = SHIELD(new_list(n_cols));
-//     const SEXP *p_x = list_ptr_ro(x);
-//     for (int i = 0; i < n_cols; ++i){
-//       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
-//     }
-//     SEXP names = SHIELD(get_old_names(x));
-//     set_old_names(out, names);
-//     set_list_as_df(out);
-//     df::set_row_names(out, length);
-//     SHIELD(out = rebuild(out, x, false));
-//     YIELD(3);
-//     return out;
-//   } else if (cheapr_is_simple_vec2(x)){
-//
-//     R_xlen_t size = Rf_xlength(x);
-//     int n_chunks;
-//     R_xlen_t k, chunk_size;
-//
-//     // Return x if length(x) == length
-//     if (out_size == size) return x;
-//
-//     SEXP out = with_writable_data(x, [&](auto p_x) -> SEXP {
-//
-//       using ptr_t = std::decay_t<decltype(p_x)>;
-//       using elem_t = std::remove_const_t<std::remove_pointer_t<ptr_t>>;
-//
-//       if constexpr (std::is_same_v<ptr_t, unsupported_sexp_t>) {
-//         if (r_length(x) == length){
-//           return SHIELD(x);
-//         } else {
-//           return SHIELD(eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length));
-//         }
-//       } else {
-//
-//         SEXP res = SHIELD(new_vector<elem_t>(out_size));
-//         const elem_t* RESTRICT p_res = r_ptr_ro<elem_t>(res);
-//
-//         if (size == 1){
-//           r_fill(res, p_res, 0, out_size, p_x[0]);
-//         } else if (out_size > 0 && size > 0){
-//           n_chunks = std::ceil(static_cast<double>(out_size) / size);
-//           for (int i = 0; i < n_chunks; ++i){
-//             k = i * size;
-//             chunk_size = std::min(k + size, out_size) - k;
-//             r_copy_n(res, p_res, p_x, k, chunk_size);
-//           }
-//           // If length > 0 but length(x) == 0 then fill with NA
-//         } else if (size == 0 && out_size > 0){
-//           r_fill(res, p_res, 0, out_size, na_value<elem_t>(r_cast<elem_t>(0)));
-//         }
-//         return res;
-//       }
-//     });
-//     YIELD(1);
-//     return out;
-//   } else {
-//     if (r_length(x) == length){
-//       return x;
-//     } else {
-//       return eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length);
-//     }
-//   }
-// }
-
 [[cpp11::register]]
 SEXP cpp_rep_len(SEXP x, R_xlen_t length){
   R_xlen_t out_size = length;
@@ -135,167 +63,50 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
   } else if (cheapr_is_simple_vec2(x)){
 
     R_xlen_t size = Rf_xlength(x);
-    int n_chunks;
-    R_xlen_t k, chunk_size;
 
     // Return x if length(x) == length
     if (out_size == size) return x;
 
-    switch (CHEAPR_TYPEOF(x)){
-    case LGLSXP: {
-      const r_bool_t *p_x = logical_ptr_ro(x);
-      SEXP out = SHIELD(new_vector<r_bool_t>(out_size));
-      r_bool_t* RESTRICT p_out = logical_ptr(out);
+    SEXP out = visit_vector(x, [&](auto p_x) -> SEXP {
 
-      if (size == 1){
-        r_fill(out, p_out, 0, out_size, p_x[0]);
-      } else if (out_size > 0 && size > 0){
-        n_chunks = std::ceil(static_cast<double>(out_size) / size);
-        for (int i = 0; i < n_chunks; ++i){
-          k = i * size;
-          chunk_size = std::min(k + size, out_size) - k;
-          std::copy(p_x, p_x + chunk_size, p_out + k);
-        }
-        // If length > 0 but length(x) == 0 then fill with NA
-      } else if (size == 0 && out_size > 0){
-        r_fill(out, p_out, 0, out_size, na::logical);
-      }
-      Rf_copyMostAttrib(x, out);
-      YIELD(1);
-      return out;
-    }
-    case INTSXP: {
-      const int *p_x = integer_ptr_ro(x);
-      SEXP out = SHIELD(new_vector<int>(out_size));
-      int* RESTRICT p_out = integer_ptr(out);
+      using data_t = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(p_x)>>>;
 
-      if (size == 1){
-        r_fill(out, p_out, 0, out_size, p_x[0]);
-      } else if (out_size > 0 && size > 0){
-        n_chunks = std::ceil(static_cast<double>(out_size) / size);
-        for (int i = 0; i < n_chunks; ++i){
-          k = i * size;
-          chunk_size = std::min(k + size, out_size) - k;
-          std::copy(p_x, p_x + chunk_size, p_out + k);
+      if constexpr (std::is_same_v<data_t, std::nullptr_t>) {
+        if (r_length(x) == length){
+          return SHIELD(x);
+        } else {
+          return SHIELD(eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length));
         }
-        // If length > 0 but length(x) == 0 then fill with NA
-      } else if (size == 0 && out_size > 0){
-        r_fill(out, p_out, 0, out_size, na::integer);
-      }
-      Rf_copyMostAttrib(x, out);
-      YIELD(1);
-      return out;
-    }
-    case CHEAPR_INT64SXP: {
-      const int64_t *p_x = integer64_ptr_ro(x);
-      SEXP out = SHIELD(new_vector<int64_t>(out_size));
-      int64_t* RESTRICT p_out = integer64_ptr(out);
+      } else {
 
-      if (size == 1){
-        r_fill(out, p_out, 0, out_size, p_x[0]);
-      } else if (out_size > 0 && size > 0){
-        n_chunks = std::ceil((static_cast<double>(out_size)) / size);
-        for (int i = 0; i < n_chunks; ++i){
-          k = i * size;
-          chunk_size = std::min(k + size, out_size) - k;
-          std::copy(p_x, p_x + chunk_size, p_out + k);
-        }
-        // If length > 0 but length(x) == 0 then fill with NA
-      } else if (size == 0 && out_size > 0){
-        r_fill(out, p_out, 0, out_size, na::integer64);
-      }
-      Rf_copyMostAttrib(x, out);
-      YIELD(1);
-      return out;
-    }
-    case REALSXP: {
-      const double *p_x = real_ptr_ro(x);
-      SEXP out = SHIELD(new_vector<double>(out_size));
-      double* RESTRICT p_out = real_ptr(out);
+        SEXP res = SHIELD(new_vector<data_t>(out_size));
+        auto *p_res = vector_ptr<const data_t>(res);
 
-      if (size == 1){
-        r_fill(out, p_out, 0, out_size, p_x[0]);
-      } else if (out_size > 0 && size > 0){
-        n_chunks = std::ceil((static_cast<double>(out_size)) / size);
-        for (int i = 0; i < n_chunks; ++i){
-          k = i * size;
-          chunk_size = std::min(k + size, out_size) - k;
-          std::copy(p_x, p_x + chunk_size, p_out + k);
-        }
-        // If length > 0 but length(x) == 0 then fill with NA
-      } else if (size == 0 && out_size > 0){
-        r_fill(out, p_out, 0, out_size, na::real);
-      }
-      Rf_copyMostAttrib(x, out);
-      YIELD(1);
-      return out;
-    }
-    case STRSXP: {
-      const r_string_t *p_x = string_ptr_ro(x);
-      SEXP out = SHIELD(new_vector<r_string_t>(out_size));
+        if (size == 1){
+          r_fill(res, p_res, 0, out_size, p_x[0]);
+        } else if (out_size > 0 && size > 0){
+          // Copy first block
+          r_copy_n(res, p_res, p_x, 0, size);
 
-      if (size == 1){
-        r_fill(out, string_ptr_ro(out), 0, out_size, p_x[0]);
-      } else if (out_size > 0 && size > 0){
-        for (R_xlen_t i = 0, xi = 0; i < out_size; recycle_index(xi, size), ++i){
-          set_value<r_string_t>(out, i, p_x[xi]);
+          // copy result to itself, doubling each iteration
+          R_xlen_t copied = size;
+          while (copied < out_size) {
+            R_xlen_t to_copy = std::min(copied, out_size - copied);
+            r_copy_n(res, p_res, p_res, copied, to_copy);
+            // std::copy_n(p_x, to_copy, p_res + copied);
+            copied += to_copy;
+          }
+          // If length > 0 but length(x) == 0 then fill with NA
+        } else if (size == 0 && out_size > 0 &&
+          !std::is_same_v<data_t, SEXP>){ // Already filled with `NULL`
+          r_fill(res, p_res, 0, out_size, na_value<data_t>());
         }
-        // If length > 0 but length(x) == 0 then fill with NA
-      } else if (size == 0 && out_size > 0){
-        r_fill(out, string_ptr_ro(out), 0, out_size, na::string);
+        return res;
       }
-      Rf_copyMostAttrib(x, out);
-      YIELD(1);
-      return out;
-    }
-    case CPLXSXP: {
-      const r_complex_t *p_x = complex_ptr_ro(x);
-      SEXP out = SHIELD(new_vector<r_complex_t>(out_size));
-      r_complex_t* RESTRICT p_out = complex_ptr(out);
-
-      if (size == 1){
-        r_fill(out, p_out, 0, out_size, p_x[0]);
-      } else if (out_size > 0 && size > 0){
-        n_chunks = std::ceil((static_cast<double>(out_size)) / size);
-        for (int i = 0; i < n_chunks; ++i){
-          k = i * size;
-          chunk_size = std::min(k + size, out_size) - k;
-          std::copy(p_x, p_x + chunk_size, p_out + k);
-        }
-        // If length > 0 but length(x) == 0 then fill with NA
-      } else if (size == 0 && out_size > 0){
-        r_fill(out, p_out, 0, out_size, na::complex);
-      }
-      Rf_copyMostAttrib(x, out);
-      YIELD(1);
-      return out;
-    }
-    case VECSXP: {
-      const SEXP *p_x = list_ptr_ro(x);
-      SEXP out = SHIELD(new_list(out_size));
-
-      if (size == 1){
-        SEXP val = p_x[0];
-        for (int i = 0; i < out_size; ++i){
-          SET_VECTOR_ELT(out, i, val);
-        }
-      } else if (out_size > 0 && size > 0){
-        for (R_xlen_t i = 0, xi = 0; i < out_size; recycle_index(xi, size), ++i){
-          SET_VECTOR_ELT(out, i, p_x[xi]);
-        }
-      }
-      Rf_copyMostAttrib(x, out);
-      YIELD(1);
-      return out;
-    }
-    default: {
-      if (r_length(x) == length){
-      return x;
-    } else {
-      return eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length);
-    }
-    }
-    }
+    });
+    Rf_copyMostAttrib(x, out);
+    YIELD(1);
+    return out;
   } else {
     if (r_length(x) == length){
       return x;
