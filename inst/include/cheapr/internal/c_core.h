@@ -1221,9 +1221,10 @@ inline bool is_r_na<SEXP>(const SEXP x){
 }
 
 // NA type
+namespace internal {
 
 template<typename T>
-inline constexpr T na_value() {
+inline constexpr T na_value_impl() {
   static_assert(
     always_false<T>,
     "Unimplemented `na_value` specialisation"
@@ -1232,43 +1233,50 @@ inline constexpr T na_value() {
 }
 
 template<>
-inline constexpr r_bool_t na_value<r_bool_t>(){
+inline constexpr r_bool_t na_value_impl<r_bool_t>(){
   return na::logical;
 }
 
 template<>
-inline constexpr int na_value<int>(){
+inline constexpr int na_value_impl<int>(){
   return na::integer;
 }
 
 template<>
-inline double na_value<double>(){
+inline double na_value_impl<double>(){
   return na::real;
 }
 
 template<>
-inline constexpr int64_t na_value<int64_t>(){
+inline constexpr int64_t na_value_impl<int64_t>(){
   return na::integer64;
 }
 
 template<>
-inline r_complex_t na_value<r_complex_t>(){
+inline r_complex_t na_value_impl<r_complex_t>(){
   return na::complex;
 }
 
 template<>
-inline constexpr r_byte_t na_value<r_byte_t>(){
+inline constexpr r_byte_t na_value_impl<r_byte_t>(){
   return r_byte_t{0};
 }
 
 template<>
-inline r_string_t na_value<r_string_t>(){
+inline r_string_t na_value_impl<r_string_t>(){
   return na::string;
 }
 
 template<>
-inline SEXP na_value<SEXP>(){
+inline SEXP na_value_impl<SEXP>(){
   return r_null;
+}
+
+}
+
+template<typename T>
+inline constexpr auto na_value() {
+  return internal::na_value_impl<std::decay_t<T>>();
 }
 
 

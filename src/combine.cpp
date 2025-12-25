@@ -69,7 +69,8 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
 
     SEXP out = visit_vector(x, [&](auto p_x) -> SEXP {
 
-      using data_t = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(p_x)>>>;
+      // Data type of vector elements
+      using data_t = std::remove_pointer_t<decltype(p_x)>;
 
       if constexpr (std::is_same_v<data_t, std::nullptr_t>) {
         if (r_length(x) == length){
@@ -79,8 +80,8 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
       } else {
 
-        SEXP res = SHIELD(new_vector<data_t>(out_size));
-        auto *p_res = vector_ptr<const data_t>(res);
+        SEXP res = SHIELD(new_vector<std::decay_t<data_t>>(out_size));
+        auto *p_res = vector_ptr<data_t>(res);
 
         if (size == 1){
           r_fill(res, p_res, 0, out_size, p_x[0]);
@@ -93,7 +94,6 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
           while (copied < out_size) {
             R_xlen_t to_copy = std::min(copied, out_size - copied);
             r_copy_n(res, p_res, p_res, copied, to_copy);
-            // std::copy_n(p_x, to_copy, p_res + copied);
             copied += to_copy;
           }
           // If length > 0 but length(x) == 0 then fill with NA
