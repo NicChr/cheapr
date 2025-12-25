@@ -1680,12 +1680,13 @@ inline double r_sqrt(T x){
 
 template<typename T>
 inline double r_pow(T x, T y){
+  if (y == 0) return 1.0;
+  if (x == 1) return 1.0;
   if (y == 2){
     double left = r_cast<double>(x);
     return left * left;
-  } else {
-    return std::pow(r_cast<double>(x), r_cast<double>(y));
   }
+  return std::pow(r_cast<double>(x), r_cast<double>(y));
 }
 
 template<typename T>
