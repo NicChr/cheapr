@@ -158,7 +158,7 @@ All R-specific `NA` values are available in the `na` namespace
 | `na::real`        | `double`      | `NA_REAL`      |
 | `na::complex`     | `r_complex_t` | Not applicable |
 | `na::string`      | `r_string_t`  | `NA_STRING`    |
-| `na::r_obj`       | `SEXP`        | `R_NilValue`   |
+| `na::nil`         | `SEXP`        | `R_NilValue`   |
 
 ## Creating Vectors
 
@@ -200,8 +200,8 @@ vectors into a single vector. It automatically determines the common
 type (see `?cast`).
 
 ``` cpp
-// Returns a character vector: c("1", "2.5", "str1", "str2", "str3")
-SEXP res = combine(1, 2.5, "str1", r_cast<r_string_t>("str2"), as_vector("str3"));
+// Returns a character vector: c("1", "2.5", "str1")
+combine(1, 2.5, "str1");
 ```
 
 ## Creating Lists
@@ -237,14 +237,17 @@ SEXP int_vec = SHIELD(as_vector(1)); // SHIELD is the same as Rf_protect
 
 // Get the vector's first value
 
-// Have to specify the type int
-Rprintf("first value: %d", get_value<int>(int_vec, 0));
+// Have to specify the type int in get_value<>
+int first_val = get_value<int>(int_vec, 0)
+Rprintf("first value: %d", first_val);
 
 // Set the vector's first value
 
 // `set_value<>` can deduce that it is an int based on the 
 // type of value being set
 set_value(int_vec, 0, 42);
+// or more explicitly 
+set_value<int>(int_vec, 0, 42);
 Rprintf("first value: %d", get_value<int>(int_vec, 0));
 ```
 
@@ -253,13 +256,13 @@ first value: 1
 first value: 42
 ```
 
-They can also use pointers directly
+The getters/setters can also accept pointers directly
 
 ``` cpp
-int *vec_ptr = r_ptr<int>(int_vec);
+auto *vec_ptr = vector_ptr<int>(int_vec);
 
 set_value(vec_ptr, 0, 123);
-int first_val = get_value<int>(vec_ptr, 0);
+auto first_val = get_value<int>(vec_ptr, 0);
 
 Rprintf("\nfirst value: %d", first_val);
 ```
@@ -285,6 +288,87 @@ Some notes:
 -   Because cheapr tries to treat data frames as vectors wherever
     possible, functions like `vec::length()` return the number of rows
     of a data frame. Use `vec::old_length()` to match `Rf_xlength()`
+
+### An alternative to switch(TYPEOF())
+
+Sometimes you need to apply different code to handle the different
+nuances of your vector type. Let's showcase an example of this by
+calculating the sum of a vector using plain R C API style code.
+
+``` cpp
+[[cpp11::register]]
+double r_style_sum(SEXP x){
+  double sum = 0;
+
+  R_xlen_t n = vec::old_length(x);
+
+  switch (TYPEOF(x)){
+  case LGLSXP: {
+    int *p_x = LOGICAL(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      sum += p_x[i] == NA_LOGICAL ? NA_REAL : static_cast<double>(p_x[i]);
+    }
+    break;
+  }
+  case INTSXP: {
+    int *p_x = INTEGER(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      sum += p_x[i] == NA_INTEGER ? NA_REAL : static_cast<double>(p_x[i]);
+    }
+    break;
+  }
+  case REALSXP: {
+    double *p_x = REAL(x);
+    for (R_xlen_t i = 0; i < n; ++i){
+      sum += p_x[i];
+    }
+    break;
+  }
+  default: {
+    Rf_error("`x` must be an integer or double vector in `r_style_sum`");
+  }
+  }
+  return sum;
+}
+```
+
+Notice that every branch has slightly different syntax. You could reduce
+the first two branches into one by using `INTEGER()` for logical vector
+inputs but I digress.
+
+In cheapr this can be done in a more generic way using a C++ lambda and
+cheapr's templated functions like `r_cast<>`
+
+``` cpp
+[[cpp11::register]]
+double cheapr_sum(SEXP x){
+
+  double out = visit_vector(x, [&](auto p_x) -> double {
+
+    // Data type of vector elements
+    using data_t = std::decay_t<std::remove_pointer_t<decltype(p_x)>>;
+
+    double sum = 0;
+
+    // This includes C++ arithmetic types and `r_bool_t`
+    // constexpr allows this if statement to be evaluated at compile-time
+    if constexpr (is_r_arithmetic_v<data_t>){
+
+      R_xlen_t n = vec::old_length(x);
+
+      for (R_xlen_t i = 0; i < n; ++i){
+        // r_cast will naturally handle NA values
+        sum += r_cast<double>(p_x[i]);
+      }
+    } else {
+      Rf_error("`x` must be numeric in `cheapr_sum`");
+    }
+    return sum;
+  });
+
+  return out;
+}
+```
 
 ## cheapr R API
 
@@ -1051,3 +1135,4 @@ gg +
 gg +
   scale_x_continuous(breaks = \(x) get_breaks(range(x), 20)) 
 ```
+
