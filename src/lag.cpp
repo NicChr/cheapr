@@ -63,8 +63,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
         // If k = 0 then no lag occurs
         if (std::abs(k) >= 1){
           SEXP lag_temp = SHIELD(new_vector<std::decay_t<data_t>>(std::abs(k))); ++NP;
-          SEXP tempv = SHIELD(new_vector<std::decay_t<data_t>>(1)); ++NP;
-          auto *p_tempv = vector_ptr<data_t>(tempv);
+          std::decay_t<data_t> temp_value;
           auto *p_lag = vector_ptr<data_t>(lag_temp);
           // Positive lags
           if (k >= 0){
@@ -74,9 +73,9 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
             }
             for (R_xlen_t i = k; i < size; ++i) {
               tempi = ((i - k) % k);
-              set_value(tempv, 0, p_lag[tempi]);
+              temp_value = p_lag[tempi];
               set_value(lag_temp, tempi, p_res[i]);
-              set_value(res, i, p_tempv[0]);
+              set_value(res, i, temp_value);
             }
             // Negative lags
           } else {
@@ -86,9 +85,9 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
             }
             for (R_xlen_t i = size + k - 1; i >= 0; --i) {
               tempi = ( (size - (i - k) - 1) % k);
-              set_value(tempv, 0, p_lag[tempi]);
+              temp_value = p_lag[tempi];
               set_value(lag_temp, tempi, p_res[i]);
-              set_value(res, i, p_tempv[0]);
+              set_value(res, i, temp_value);
             }
           }
         }
