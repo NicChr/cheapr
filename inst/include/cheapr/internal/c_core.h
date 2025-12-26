@@ -206,7 +206,7 @@ is_r_integral_v<T> ||
 std::is_arithmetic_v<T>;
 
 template <typename T>
-inline constexpr bool is_sexp_writable_v =
+inline constexpr bool is_r_ptr_writable_v =
 is_r_arithmetic_v<T> ||
 std::is_same_v<std::decay_t<T>, r_complex_t> ||
 std::is_same_v<std::decay_t<T>, r_byte_t>;
@@ -802,7 +802,7 @@ inline void r_fill(
     R_xlen_t start, R_xlen_t n, const T val
 ){
 
-  if constexpr (is_sexp_writable_v<T>){
+  if constexpr (is_r_ptr_writable_v<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
@@ -825,14 +825,8 @@ inline void r_fill(
     [[maybe_unused]] const T *p_target,
     R_xlen_t start, R_xlen_t n, const T val
 ){
-  if constexpr (is_sexp_writable_v<T>){
-    using r_t = std::remove_const_t<T>;
-    r_fill(target, const_cast<r_t*>(p_target), start, n, val);
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      vec::set_value(target, start + i, val);
-    }
-  }
+  using r_t = std::remove_const_t<T>;
+  r_fill(target, const_cast<r_t*>(p_target), start, n, val);
 }
 
 template <typename T>
@@ -841,8 +835,7 @@ inline void r_replace(
     [[maybe_unused]] T *p_target,
     R_xlen_t start, R_xlen_t n, const T old_val, const T new_val
 ){
-
-  if constexpr (is_sexp_writable_v<T>){
+  if constexpr (is_r_ptr_writable_v<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
@@ -870,17 +863,8 @@ inline void r_replace(
     [[maybe_unused]] const T *p_target,
     R_xlen_t start, R_xlen_t n, const T old_val, const T new_val
 ){
-  if constexpr (is_sexp_writable_v<T>){
-    using r_t = std::remove_const_t<T>;
-    r_replace(target, const_cast<r_t*>(p_target), start, n, old_val, new_val);
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      R_xlen_t idx = start + i;
-      if (p_target[idx] == old_val){
-        vec::set_value(target, idx, new_val);
-      }
-    }
-  }
+  using r_t = std::remove_const_t<T>;
+  r_replace(target, const_cast<r_t*>(p_target), start, n, old_val, new_val);
 }
 
 template <typename T>
@@ -890,7 +874,7 @@ inline void r_copy_n(
     const T *p_source, R_xlen_t target_offset, R_xlen_t n
 ){
 
-  if constexpr (is_sexp_writable_v<T>){
+  if constexpr (is_r_ptr_writable_v<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
@@ -912,15 +896,8 @@ inline void r_copy_n(
     [[maybe_unused]] const T *p_target,
     const T *p_source, R_xlen_t target_offset, R_xlen_t n
 ){
-
-  if constexpr (is_sexp_writable_v<T>){
-    using r_t = std::remove_const_t<T>;
-    r_copy_n(target, const_cast<r_t*>(p_target), p_source, target_offset, n);
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      vec::set_value(target, target_offset + i, p_source[i]);
-    }
-  }
+  using r_t = std::remove_const_t<T>;
+  r_copy_n(target, const_cast<r_t*>(p_target), p_source, target_offset, n);
 }
 
 

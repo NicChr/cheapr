@@ -37,7 +37,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
         return r_null;
       }
       Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
-    } else if constexpr (is_sexp_writable_v<data_t>){
+    } else if constexpr (is_r_ptr_writable_v<data_t>){
       using writable_data_t = std::remove_const_t<data_t>;
       SEXP res = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
       auto *p_res = vector_ptr<writable_data_t>(res);
