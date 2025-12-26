@@ -18,7 +18,6 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   }
 
   bool set_and_altrep = set && ALTREP(x);
-  SEXP out;
   if (ALTREP(x)){
     set = true;
   }
@@ -26,259 +25,87 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   if (set_and_altrep){
     Rf_warning("Cannot lag an ALTREP by reference, a copy has been made.\n\tEnsure the result is assigned to an object if used in further calculations\n\te.g. `x <- lag_(x, set = TRUE)`");
   }
-  switch(CHEAPR_TYPEOF(xvec)){
-  case NILSXP: {
-    out = r_null;
-    break;
-  }
-  case LGLSXP:
-  case INTSXP: {
-    using r_t = int;
-    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    int* RESTRICT p_out = integer_ptr(out);
-    int *p_x = integer_ptr(xvec);
-    SHIELD(fill = cast<r_integers_t>(fill, r_null)); ++NP;
-    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
+  k = k >= 0 ? std::min(size, k) : std::max(-size, k);
 
-    if (k >= 0){
-      safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int));
-      OMP_SIMD
-      for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
-    } else {
-      safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int));
-      OMP_SIMD
-      for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
-    }
-    break;
-  }
-  case CHEAPR_INT64SXP: {
-    using r_t = int64_t;
-    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    int64_t* RESTRICT p_out = integer64_ptr(out);
-    int64_t *p_x = integer64_ptr(xvec);
-    SHIELD(fill = cast<r_integers64_t>(fill, r_null)); ++NP;
-    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
+  SEXP out = visit_vector(xvec, [&](auto p_x) -> SEXP {
 
-    if (k >= 0){
-      safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(int64_t));
-      OMP_SIMD
-      for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
-    } else {
-      safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(int64_t));
-      OMP_SIMD
-      for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
-    }
-    break;
-  }
-  case REALSXP: {
-    using r_t = double;
-    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    double* RESTRICT p_out = real_ptr(out);
-    double *p_x = real_ptr(xvec);
-    SHIELD(fill = cast<r_doubles_t>(fill, r_null)); ++NP;
-    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
+    // Data type of vector elements
+    using data_t = std::remove_pointer_t<decltype(p_x)>;
 
-    if (k >= 0){
-      safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(double));
-      OMP_SIMD
-      for (R_xlen_t i = 0; i < k; ++i) p_out[i] = fill_value;
-    } else {
-      safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(double));
-      OMP_SIMD
-      for (R_xlen_t i = size - 1; i >= size + k; --i) p_out[i] = fill_value;
-    }
-    break;
-  }
-  case CPLXSXP: {
-    using r_t = r_complex_t;
-    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    r_complex_t *p_out = complex_ptr(out);
-    r_complex_t *p_x = complex_ptr(xvec);
-    SHIELD(fill = cast<r_complexes_t>(fill, r_null)); ++NP;
-    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
-
-    if (k >= 0){
-      safe_memmove(&p_out[k], &p_x[0], (size - k) * sizeof(r_complex_t));
-      for (R_xlen_t i = 0; i < k; ++i) set_value<r_complex_t>(out, i, fill_value);
-    } else {
-      safe_memmove(&p_out[0], &p_x[-k], (size + k) * sizeof(r_complex_t));
-      OMP_SIMD
-      for (R_xlen_t i = size - 1; i >= size + k; --i) set_value<r_complex_t>(out, i, fill_value);
-    }
-    break;
-  }
-  case STRSXP: {
-    using r_t = r_string_t;
-    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    const r_string_t *p_out = string_ptr_ro(out);
-    const r_string_t *p_x = string_ptr_ro(xvec);
-
-    SHIELD(fill = cast<r_characters_t>(fill, r_null)); ++NP;
-    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
-
-    if (set){
-      R_xlen_t tempi;
-      // If k = 0 then no lag occurs
-      if (std::abs(k) >= 1){
-        SEXP lag_temp = SHIELD(new_vector<r_string_t>(std::abs(k)));++NP;
-        SEXP tempv = SHIELD(new_vector<r_string_t>(1)); ++NP;
-        const r_string_t *p_lag = string_ptr_ro(lag_temp);
-        // Positive lags
-        if (k >= 0){
-          for (R_xlen_t i = 0; i < k; ++i) {
-            set_value<r_string_t>(lag_temp, i, p_out[i]);
-            set_value<r_string_t>(out, i, fill_value);
-          }
-          for (R_xlen_t i = k; i < size; ++i) {
-            tempi = ((i - k) % k);
-            set_value<r_string_t>(tempv, 0, p_lag[tempi]);
-            set_value<r_string_t>(lag_temp, tempi, p_out[i]);
-            set_value<r_string_t>(out, i, get_value<r_string_t>(tempv, 0));
-          }
-          // Negative lags
-        } else {
-          for (R_xlen_t i = size - 1; i >= size + k; --i) {
-            set_value<r_string_t>(lag_temp, size - i - 1, p_out[i]);
-            set_value<r_string_t>(out, i, fill_value);
-          }
-          for (R_xlen_t i = size + k - 1; i >= 0; --i) {
-            tempi = ( (size - (i - k) - 1) % k);
-            set_value<r_string_t>(tempv, 0, p_lag[tempi]);
-            set_value<r_string_t>(lag_temp, tempi, p_out[i]);
-            set_value<r_string_t>(out, i, get_value<r_string_t>(tempv, 0));
-          }
-        }
+    if constexpr (std::is_same_v<data_t, std::nullptr_t>) {
+      if (is_null(xvec)){
+        return r_null;
       }
-    } else {
+      Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
+    } else if constexpr (is_sexp_writable_v<data_t>){
+      using writable_data_t = std::remove_const_t<data_t>;
+      SEXP res = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
+      auto *p_res = vector_ptr<writable_data_t>(res);
+      SHIELD(fill = cast_(get_r_type(xvec), fill, r_null)); ++NP;
+      auto fill_value = fill_size > 0 ? get_value<writable_data_t>(fill, 0) : na_value<data_t>();
+
       if (k >= 0){
-        for (R_xlen_t i = 0; i < k; ++i) set_value<r_string_t>(out, i, fill_value);
-        for (R_xlen_t i = k; i < size; ++i) set_value<r_string_t>(out, i, p_x[i - k]);
+        safe_memmove(&p_res[k], &p_x[0], sizeof(data_t) * (size - k));
+        r_fill(res, p_res, 0, k, fill_value);
       } else {
-        for (R_xlen_t i = size - 1; i >= size + k; --i) set_value<r_string_t>(out, i, fill_value);
-        for (R_xlen_t i = size + k - 1; i >= 0; --i) set_value<r_string_t>(out, i, p_x[i - k]);
+        safe_memmove(&p_res[0], &p_x[-k], sizeof(data_t) * (size + k));
+        r_fill(res, p_res, size + k, -k, fill_value);
       }
-    }
-    break;
-  }
-  case RAWSXP: {
-    using r_t = r_byte_t;
-    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    out = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
-    r_byte_t *p_out = raw_ptr(out);
-    const r_byte_t *p_x = raw_ptr_ro(xvec);
-
-    SHIELD(fill = cast<r_raws_t>(fill, r_null)); ++NP;
-    r_t fill_value = fill_size > 0 ? get_value<r_t>(fill, 0) : na_value<r_t>();
-
-    if (set){
-      R_xlen_t tempi;
-      // If k = 0 then no lag occurs
-      if (std::abs(k) >= 1){
-        SEXP lag_temp = SHIELD(new_vector<r_byte_t>(std::abs(k)));
-        ++NP;
-        r_byte_t *p_lag = raw_ptr(lag_temp);
-        // Positive lags
-        if (k >= 0){
-          for (R_xlen_t i = 0; i < k; ++i) {
-            set_value<r_byte_t>(lag_temp, i, p_out[i]);
-            set_value<r_byte_t>(out, i, fill_value);
-          }
-          for (R_xlen_t i = k; i < size; ++i) {
-            tempi = ((i - k) % k);
-            r_byte_t tempv = p_lag[tempi];
-            set_value<r_byte_t>(lag_temp, tempi, p_out[i]);
-            set_value<r_byte_t>(out, i, tempv);
-          }
-          // Negative lags
-        } else {
-          for (R_xlen_t i = size - 1; i >= size + k; --i) {
-            set_value<r_byte_t>(lag_temp, size - i - 1, p_out[i]);
-            set_value<r_byte_t>(out, i, fill_value);
-          }
-          for (R_xlen_t i = size + k - 1; i >= 0; --i) {
-            tempi = ( (size - (i - k) - 1) % k);
-            r_byte_t tempv = p_lag[tempi];
-            set_value<r_byte_t>(lag_temp, tempi, p_out[i]);
-            set_value<r_byte_t>(out, i, tempv);
-          }
-        }
-      }
+      return res;
     } else {
-      if (k >= 0){
-        for (R_xlen_t i = 0; i < size; ++i) {
-          set_value<r_byte_t>(out, i, i >= k ? p_x[i - k] : fill_value);
+      SEXP res = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
+      auto *p_res = vector_ptr<data_t>(res);
+      SHIELD(fill = cast_(get_r_type(xvec), fill, r_null)); ++NP;
+      auto fill_value = fill_size > 0 ? get_value<std::decay_t<data_t>>(fill, 0) : na_value<data_t>();
+
+      if (set){
+        R_xlen_t tempi;
+        // If k = 0 then no lag occurs
+        if (std::abs(k) >= 1){
+          SEXP lag_temp = SHIELD(new_vector<std::decay_t<data_t>>(std::abs(k))); ++NP;
+          SEXP tempv = SHIELD(new_vector<std::decay_t<data_t>>(1)); ++NP;
+          auto *p_tempv = vector_ptr<data_t>(tempv);
+          auto *p_lag = vector_ptr<data_t>(lag_temp);
+          // Positive lags
+          if (k >= 0){
+            for (R_xlen_t i = 0; i < k; ++i) {
+              set_value(lag_temp, i, p_res[i]);
+              set_value(res, i, fill_value);
+            }
+            for (R_xlen_t i = k; i < size; ++i) {
+              tempi = ((i - k) % k);
+              set_value(tempv, 0, p_lag[tempi]);
+              set_value(lag_temp, tempi, p_res[i]);
+              set_value(res, i, p_tempv[0]);
+            }
+            // Negative lags
+          } else {
+            for (R_xlen_t i = size - 1; i >= size + k; --i) {
+              set_value(lag_temp, size - i - 1, p_res[i]);
+              set_value(res, i, fill_value);
+            }
+            for (R_xlen_t i = size + k - 1; i >= 0; --i) {
+              tempi = ( (size - (i - k) - 1) % k);
+              set_value(tempv, 0, p_lag[tempi]);
+              set_value(lag_temp, tempi, p_res[i]);
+              set_value(res, i, p_tempv[0]);
+            }
+          }
         }
       } else {
-        for (R_xlen_t i = size - 1; i >= 0; --i) {
-          set_value<r_byte_t>(out, i, (i - size) < k ? p_x[i - k] : fill_value);
-        }
-      }
-    }
-    break;
-  }
-  case VECSXP: {
-    k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    SHIELD(fill = cast<r_list_t>(fill, r_null)); ++NP;
-    const SEXP fill_value = fill_size > 0 ? get_value<SEXP>(fill, 0) : na_value<SEXP>();
-    out = SHIELD(set ? xvec : new_list(size)); ++NP;
-    const SEXP *p_out = list_ptr_ro(out);
-    if (set){
-      R_xlen_t tempi;
-      // If k = 0 then no lag occurs
-      if (std::abs(k) >= 1){
-        SEXP lag_temp = SHIELD(new_list(std::abs(k))); ++NP;
-        SEXP tempv = SHIELD(new_list(1)); ++NP;
-        const SEXP *p_lag = list_ptr_ro(lag_temp);
-        // Positive lags
         if (k >= 0){
-          for (R_xlen_t i = 0; i < k; ++i) {
-            SET_VECTOR_ELT(lag_temp, i, p_out[i]);
-            SET_VECTOR_ELT(out, i, fill_value);
+          for (R_xlen_t i = 0; i < size; ++i) {
+            set_value(res, i, i >= k ? p_x[i - k] : fill_value);
           }
-          for (R_xlen_t i = k; i < size; ++i) {
-            tempi = ((i - k) % k);
-            SET_VECTOR_ELT(tempv, 0, p_lag[tempi]);
-            SET_VECTOR_ELT(lag_temp, tempi, p_out[i]);
-            SET_VECTOR_ELT(out, i, VECTOR_ELT(tempv, 0));
-          }
-          // Negative lags
         } else {
-          for (R_xlen_t i = size - 1; i >= size + k; --i) {
-            SET_VECTOR_ELT(lag_temp, size - i - 1, p_out[i]);
-            SET_VECTOR_ELT(out, i, fill_value);
-          }
-          for (R_xlen_t i = size + k - 1; i >= 0; --i) {
-            tempi = ( (size - (i - k) - 1) % k);
-            SET_VECTOR_ELT(tempv, 0, p_lag[tempi]);
-            SET_VECTOR_ELT(lag_temp, tempi, p_out[i]);
-            SET_VECTOR_ELT(out, i, VECTOR_ELT(tempv, 0));
+          for (R_xlen_t i = size - 1; i >= 0; --i) {
+            set_value(res, i, (i - size) < k ? p_x[i - k] : fill_value);
           }
         }
       }
-    } else {
-      const SEXP *p_x = list_ptr_ro(xvec);
-      if (k >= 0){
-        for (R_xlen_t i = 0; i < size; ++i) {
-          SET_VECTOR_ELT(out, i, i >= k ? p_x[i - k] : fill_value);
-        }
-      } else {
-        for (R_xlen_t i = size - 1; i >= 0; --i) {
-          SET_VECTOR_ELT(out, i, (i - size) < k ? p_x[i - k] : fill_value);
-        }
-      }
+      return res;
     }
-    break;
-  }
-  default: {
-    YIELD(NP);
-    Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(xvec)));
-  }
-  }
+  });
   YIELD(NP);
   return out;
 }
