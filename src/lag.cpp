@@ -56,7 +56,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
       SEXP res = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
       auto *p_res = vector_ptr<data_t>(res);
       SHIELD(fill = cast_(get_r_type(xvec), fill, r_null)); ++NP;
-      auto fill_value = fill_size > 0 ? get_value<std::decay_t<data_t>>(fill, 0) : na_value<data_t>();
+      auto fill_value = fill_size > 0 ? get_value<data_t>(fill, 0) : na_value<data_t>();
 
       if (set){
         R_xlen_t tempi;

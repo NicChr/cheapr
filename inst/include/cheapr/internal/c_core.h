@@ -602,101 +602,100 @@ inline bool is_df(SEXP x){
 // R vector getters + setters
 
 template<typename T>
-inline T get_value(T *p_x, const R_xlen_t i){
+inline T get_value_impl(T *p_x, const R_xlen_t i){
   static_assert(
     always_false<T>,
-    "Unimplemented `get_value` specialisation"
+    "Unimplemented `get_value_impl` specialisation"
   );
   return T{};
 }
 
 template<typename T>
-inline T get_value(SEXP x, const R_xlen_t i){
+inline T get_value_impl(SEXP x, const R_xlen_t i){
   static_assert(
     always_false<T>,
-    "Unimplemented `get_value` specialisation"
+    "Unimplemented `get_value_impl` specialisation"
   );
   return T{};
 }
 
 template<>
-inline bool get_value<bool>(bool* p_x, const R_xlen_t i){
-  return p_x[i];
-}
-template<>
-inline bool get_value<bool>(SEXP x, const R_xlen_t i){
+inline bool get_value_impl<bool>(SEXP x, const R_xlen_t i){
   return static_cast<bool>(internal::logical_ptr_ro(x)[i]);
 }
 template<>
-inline r_bool_t get_value<r_bool_t>(r_bool_t* p_x, const R_xlen_t i){
+inline r_bool_t get_value_impl<r_bool_t>(r_bool_t* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline r_bool_t get_value<r_bool_t>(SEXP x, const R_xlen_t i){
+inline r_bool_t get_value_impl<r_bool_t>(SEXP x, const R_xlen_t i){
   return internal::logical_ptr_ro(x)[i];
 }
 template<>
-inline int get_value<int>(int* p_x, const R_xlen_t i){
+inline int get_value_impl<int>(int* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline int get_value<int>(SEXP x, const R_xlen_t i){
+inline int get_value_impl<int>(SEXP x, const R_xlen_t i){
   return internal::integer_ptr_ro(x)[i];
 }
 template<>
-inline int64_t get_value<int64_t>(int64_t* p_x, const R_xlen_t i){
+inline int64_t get_value_impl<int64_t>(int64_t* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline int64_t get_value<int64_t>(SEXP x, const R_xlen_t i){
+inline int64_t get_value_impl<int64_t>(SEXP x, const R_xlen_t i){
   return internal::integer64_ptr_ro(x)[i];
 }
 template<>
-inline double get_value<double>(double* p_x, const R_xlen_t i){
+inline double get_value_impl<double>(double* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline double get_value<double>(SEXP x, const R_xlen_t i){
+inline double get_value_impl<double>(SEXP x, const R_xlen_t i){
   return internal::real_ptr_ro(x)[i];
 }
 template<>
-inline r_complex_t get_value<r_complex_t>(r_complex_t* p_x, const R_xlen_t i){
+inline r_complex_t get_value_impl<r_complex_t>(r_complex_t* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline r_complex_t get_value<r_complex_t>(SEXP x, const R_xlen_t i){
+inline r_complex_t get_value_impl<r_complex_t>(SEXP x, const R_xlen_t i){
   return internal::complex_ptr_ro(x)[i];
 }
 template<>
-inline r_byte_t get_value<r_byte_t>(r_byte_t* p_x, const R_xlen_t i){
+inline r_byte_t get_value_impl<r_byte_t>(r_byte_t* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline r_byte_t get_value<r_byte_t>(SEXP x, const R_xlen_t i){
+inline r_byte_t get_value_impl<r_byte_t>(SEXP x, const R_xlen_t i){
   return internal::raw_ptr_ro(x)[i];
 }
 template<>
-inline r_string_t get_value<r_string_t>(r_string_t* p_x, const R_xlen_t i){
+inline r_string_t get_value_impl<r_string_t>(r_string_t* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline r_string_t get_value<r_string_t>(SEXP x, const R_xlen_t i){
+inline r_string_t get_value_impl<r_string_t>(SEXP x, const R_xlen_t i){
   return internal::string_ptr_ro(x)[i];
 }
 template<>
-inline SEXP get_value<SEXP>(SEXP* p_x, const R_xlen_t i){
+inline SEXP get_value_impl<SEXP>(SEXP* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline SEXP get_value<SEXP>(SEXP x, const R_xlen_t i){
-  switch (TYPEOF(x)){
-  case STRSXP: {
-    return vector_ptr<const r_string_t>(x)[i];
-  }
-  default: {
-    return list_ptr_ro(x)[i];
-  }
-  }
+inline SEXP get_value_impl<SEXP>(SEXP x, const R_xlen_t i){
+  return list_ptr_ro(x)[i];
+}
+
+template<typename T>
+inline auto get_value(T *p_x, const R_xlen_t i) {
+  return get_value_impl<std::decay_t<T>>(p_x, i);
+}
+
+template<typename T>
+inline auto get_value(SEXP x, const R_xlen_t i) {
+  return get_value_impl<std::decay_t<T>>(x, i);
 }
 
 template<typename T>
