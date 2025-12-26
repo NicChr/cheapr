@@ -223,7 +223,8 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
   }
   case VECSXP: {
     k = k >= 0 ? std::min(size, k) : std::max(-size, k);
-    SEXP fill_value = SHIELD(vec::coerce_vec(fill_size >= 1 ? fill : r_null, VECSXP)); ++NP;
+    SHIELD(fill = cast<r_list_t>(fill, r_null)); ++NP;
+    const SEXP fill_value = fill_size > 0 ? get_value<SEXP>(fill, 0) : na_value<SEXP>();
     out = SHIELD(set ? xvec : new_list(size)); ++NP;
     const SEXP *p_out = list_ptr_ro(out);
     if (set){
@@ -237,7 +238,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
         if (k >= 0){
           for (R_xlen_t i = 0; i < k; ++i) {
             SET_VECTOR_ELT(lag_temp, i, p_out[i]);
-            SET_VECTOR_ELT(out, i, VECTOR_ELT(fill_value, 0));
+            SET_VECTOR_ELT(out, i, fill_value);
           }
           for (R_xlen_t i = k; i < size; ++i) {
             tempi = ((i - k) % k);
@@ -249,7 +250,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
         } else {
           for (R_xlen_t i = size - 1; i >= size + k; --i) {
             SET_VECTOR_ELT(lag_temp, size - i - 1, p_out[i]);
-            SET_VECTOR_ELT(out, i, VECTOR_ELT(fill_value, 0));
+            SET_VECTOR_ELT(out, i, fill_value);
           }
           for (R_xlen_t i = size + k - 1; i >= 0; --i) {
             tempi = ( (size - (i - k) - 1) % k);
@@ -263,11 +264,11 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
       const SEXP *p_x = list_ptr_ro(xvec);
       if (k >= 0){
         for (R_xlen_t i = 0; i < size; ++i) {
-          SET_VECTOR_ELT(out, i, i >= k ? p_x[i - k] : VECTOR_ELT(fill_value, 0));
+          SET_VECTOR_ELT(out, i, i >= k ? p_x[i - k] : fill_value);
         }
       } else {
         for (R_xlen_t i = size - 1; i >= 0; --i) {
-          SET_VECTOR_ELT(out, i, (i - size) < k ? p_x[i - k] : VECTOR_ELT(fill_value, 0));
+          SET_VECTOR_ELT(out, i, (i - size) < k ? p_x[i - k] : fill_value);
         }
       }
     }
@@ -672,7 +673,11 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     const SEXP *p_x = list_ptr_ro(x);
-    SEXP fill_value = SHIELD(VECTOR_ELT(vec::coerce_vec(fill_size >= 1 ? fill : r_null, VECSXP), 0)); ++NP;
+    SEXP fill_value = r_null;
+    if (fill_size >= 1){
+      SEXP temp_fill = SHIELD(cast<r_list_t>(fill, r_null)); ++NP;
+      fill_value = get_value<SEXP>(temp_fill, 0);
+    }
     out = SHIELD(new_list(size)); ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
