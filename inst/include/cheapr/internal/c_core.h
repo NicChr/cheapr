@@ -599,6 +599,10 @@ inline bool is_df(SEXP x){
   return internal::inherits1(x, "data.frame");
 }
 
+}
+
+namespace internal {
+
 // R vector getters + setters
 
 template<typename T>
@@ -688,14 +692,17 @@ inline SEXP get_value_impl<SEXP>(SEXP x, const R_xlen_t i){
   return list_ptr_ro(x)[i];
 }
 
+}
+namespace vec {
+
 template<typename T>
 inline auto get_value(T *p_x, const R_xlen_t i) {
-  return get_value_impl<std::decay_t<T>>(p_x, i);
+  return internal::get_value_impl<std::decay_t<T>>(p_x, i);
 }
 
 template<typename T>
 inline auto get_value(SEXP x, const R_xlen_t i) {
-  return get_value_impl<std::decay_t<T>>(x, i);
+  return internal::get_value_impl<std::decay_t<T>>(x, i);
 }
 
 template<typename T>
@@ -1579,7 +1586,7 @@ struct r_cast_impl<SEXP, U> {
 
 template<typename T, typename U>
 inline constexpr T r_cast(U x) {
-  return internal::r_cast_impl<T, U>::cast(x);
+  return internal::r_cast_impl<std::decay_t<T>, U>::cast(x);
 }
 
 
