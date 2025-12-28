@@ -97,9 +97,9 @@ inline const SEXP r_null = R_NilValue;
 // Alias type for CHARSXP
 struct r_string_t {
   SEXP value;
-  r_string_t() : value(R_BlankString) {}
+  r_string_t() : value{R_BlankString} {}
   // Explicit SEXP -> r_string_t
-  explicit constexpr r_string_t(SEXP x) : value(x) {}
+  explicit constexpr r_string_t(SEXP x) : value{x} {}
   // Implicit r_string_t -> SEXP
   constexpr operator SEXP() const { return value; }
 };
@@ -109,8 +109,8 @@ inline const r_string_t blank_r_string = r_string_t();
 // Alias type for SYMSXP
 struct r_symbol_t {
   SEXP value;
-  r_symbol_t() : value(R_MissingArg) {}
-  explicit constexpr r_symbol_t(SEXP x) : value(x) {}
+  r_symbol_t() : value{R_MissingArg} {}
+  explicit constexpr r_symbol_t(SEXP x) : value{x} {}
   constexpr operator SEXP() const { return value; }
 };
 
@@ -123,7 +123,7 @@ struct r_complex_t {
   constexpr r_complex_t(double r, double i) : value{r, i} {}
 
   // Conversion handling
-  explicit constexpr r_complex_t(Rcomplex x) : value(x) {}
+  explicit constexpr r_complex_t(Rcomplex x) : value{x} {}
   constexpr operator Rcomplex() const { return value; }
 
   // Get real and imaginary parts
@@ -150,9 +150,10 @@ struct r_byte_t {
   constexpr r_byte_t() : value{static_cast<Rbyte>(0)} {}
 
   // Conversion handling
-  explicit constexpr r_byte_t(Rbyte x) : value(x) {}
+  explicit constexpr r_byte_t(Rbyte x) : value{x} {}
   constexpr operator Rbyte() const { return value; }
 };
+
 
 namespace symbol {
 inline r_symbol_t class_sym = static_cast<r_symbol_t>(R_ClassSymbol);
@@ -1589,6 +1590,10 @@ inline constexpr T r_cast(U x) {
   return internal::r_cast_impl<std::decay_t<T>, U>::cast(x);
 }
 
+// Methods for custom R types
+
+
+
 
 // R math fns
 namespace internal {
@@ -2296,7 +2301,6 @@ inline SEXP deep_copy(SEXP x){
   YIELD(NP);
   return out;
 }
-
 
 }
 
