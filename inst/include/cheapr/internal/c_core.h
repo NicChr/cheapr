@@ -68,6 +68,9 @@ namespace cheapr {
 
 // Constants
 
+// R C NULL
+inline const SEXP r_null = R_NilValue;
+
 namespace internal {
 
 inline constexpr int64_t CHEAPR_OMP_THRESHOLD = 100000;
@@ -85,14 +88,22 @@ inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
 
 // bool type, similar to Rboolean
 
-enum r_bool_t : int {
-  r_true = 1,
-  r_false = 0,
-  r_na = std::numeric_limits<int>::min()
+struct r_bool_t {
+  int value;
+  r_bool_t() : value{0} {}
+  // Conversion operators
+  explicit constexpr r_bool_t(int x) : value{x} {}
+  constexpr operator int() const { return value; }
+  // r_na -> bool is false
+  // This matches `isTRUE()` semantics
+  constexpr operator bool() const { return value == 1; }
 };
 
+// Constants for true, false and NA
+inline constexpr r_bool_t r_true{1};
+inline constexpr r_bool_t r_false{0};
+inline constexpr r_bool_t r_na{std::numeric_limits<int>::min()};
 
-inline const SEXP r_null = R_NilValue;
 
 // Alias type for CHARSXP
 struct r_string_t {
@@ -625,10 +636,6 @@ inline T get_value_impl(SEXP x, const R_xlen_t i){
 }
 
 template<>
-inline bool get_value_impl<bool>(SEXP x, const R_xlen_t i){
-  return static_cast<bool>(internal::logical_ptr_ro(x)[i]);
-}
-template<>
 inline r_bool_t get_value_impl<r_bool_t>(r_bool_t* p_x, const R_xlen_t i){
   return p_x[i];
 }
@@ -731,14 +738,6 @@ inline void set_value<r_bool_t>(r_bool_t* p_x, const R_xlen_t i, r_bool_t val){
 template<>
 inline void set_value<r_bool_t>(SEXP x, const R_xlen_t i, r_bool_t val){
   set_value(internal::logical_ptr(x), i, val);
-}
-template<>
-inline void set_value<bool>(bool* p_x, const R_xlen_t i, bool val){
-  p_x[i] = val;
-}
-template<>
-inline void set_value<bool>(SEXP x, const R_xlen_t i, bool val){
-  set_value(internal::logical_ptr(x), i, static_cast<r_bool_t>(val));
 }
 template<>
 inline void set_value<int>(int* p_x, const R_xlen_t i, int val){
