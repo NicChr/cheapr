@@ -88,21 +88,11 @@ inline constexpr double r_neg_inf = -std::numeric_limits<double>::infinity();
 
 // bool type, similar to Rboolean
 
-struct r_bool_t {
-  int value;
-  r_bool_t() : value{0} {}
-  // Conversion operators
-  explicit constexpr r_bool_t(int x) : value{x} {}
-  constexpr operator int() const { return value; }
-  // r_na -> bool is false
-  // This matches `isTRUE()` semantics
-  constexpr operator bool() const { return value == 1; }
+enum r_bool_t : int {
+  r_true = 1,
+  r_false = 0,
+  r_na = std::numeric_limits<int>::min()
 };
-
-// Constants for true, false and NA
-inline constexpr r_bool_t r_true{1};
-inline constexpr r_bool_t r_false{0};
-inline constexpr r_bool_t r_na{std::numeric_limits<int>::min()};
 
 
 // Alias type for CHARSXP
@@ -1147,6 +1137,27 @@ inline constexpr bool is_r_neg_inf<double>(const double x){
 
 // C++ templates
 
+
+template<typename T>
+inline constexpr bool is_r_true(const T x) {
+  return false;
+}
+
+template<>
+inline constexpr bool is_r_true<r_bool_t>(const r_bool_t x){
+  return x == r_true;
+}
+
+template<typename T>
+inline constexpr bool is_r_false(const T x) {
+  return false;
+}
+
+template<>
+inline constexpr bool is_r_false<r_bool_t>(const r_bool_t x){
+  return x == r_false;
+}
+
 template<typename T>
 inline constexpr bool is_r_na(const T x) {
   return false;
@@ -1520,6 +1531,7 @@ struct r_cast_impl {
 };
 
 // Specializations for each target type
+
 template<typename U>
 struct r_cast_impl<r_bool_t, U> {
   static constexpr r_bool_t cast(U x) {
@@ -1591,7 +1603,71 @@ inline constexpr T r_cast(U x) {
 
 // Methods for custom R types
 
+// r_bool_t methods
 
+// Comparison operators
+// inline constexpr bool operator==(r_bool_t lhs, r_bool_t rhs) {
+//   return lhs.value == rhs.value;
+// }
+//
+// inline constexpr r_bool_t operator!=(r_bool_t lhs, r_bool_t rhs) {
+//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
+//     return r_na;
+//   }
+//   return lhs.value == rhs.value ? r_false : r_true;
+// }
+//
+// inline constexpr r_bool_t operator<(r_bool_t lhs, r_bool_t rhs) {
+//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
+//     return r_na;
+//   }
+//   return lhs.value < rhs.value ? r_true : r_false;
+// }
+// inline constexpr r_bool_t operator<=(r_bool_t lhs, r_bool_t rhs) {
+//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
+//     return r_na;
+//   }
+//   return lhs.value <= rhs.value ? r_true : r_false;
+// }
+// inline constexpr r_bool_t operator>(r_bool_t lhs, r_bool_t rhs) {
+//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
+//     return r_na;
+//   }
+//   return lhs.value > rhs.value ? r_true : r_false;
+// }
+// inline constexpr r_bool_t operator>=(r_bool_t lhs, r_bool_t rhs) {
+//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
+//     return r_na;
+//   }
+//   return lhs.value >= rhs.value ? r_true : r_false;
+// }
+//
+// // Binary arithmetic operators (free functions)
+// inline constexpr int operator+(r_bool_t lhs, r_bool_t rhs) {
+//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
+//     return r_na;
+//   }
+//   return lhs.value + rhs.value;
+// }
+//
+// Compound assignment (should remain members)
+// inline constexpr r_bool_t& operator+=(r_bool_t& lhs, r_bool_t rhs) {
+//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
+//     lhs.value = r_na;
+//   } else {
+//     lhs.value += rhs.value;
+//   }
+//   return lhs;
+// }
+//
+// inline constexpr r_bool_t& operator-=(r_bool_t& lhs, r_bool_t rhs) {
+//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
+//     lhs.value = r_na;
+//   } else {
+//     lhs.value -= rhs.value;
+//   }
+//   return lhs;
+// }
 
 
 // R math fns
@@ -2087,7 +2163,7 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
 
   R_xlen_t n = Rf_xlength(x);
 
-  // Use int instead of bool as int can hold NA
+  // Use r_bool_t instead of bool as r_bool_t can hold NA
   r_bool_t out = r_true;
   R_xlen_t na_count = 0;
 
@@ -2102,11 +2178,11 @@ inline r_bool_t all_whole_numbers(SEXP x, double tol_, bool na_rm_){
     for (R_xlen_t i = 0; i < n; ++i) {
       out = static_cast<r_bool_t>(math::is_whole_number(p_x[i], tol_));
       na_count += is_r_na(out);
-      if (out == r_false){
+      if (is_r_false(out)){
         break;
       }
     }
-    if (out && !na_rm_ && na_count > 0){
+    if (is_r_true(out) && !na_rm_ && na_count > 0){
       out = r_na;
     } else if (na_rm_ && na_count == n){
       out = r_true;

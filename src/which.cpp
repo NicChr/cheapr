@@ -11,11 +11,11 @@ R_xlen_t count_true(const r_bool_t* RESTRICT px, const uint_fast64_t n){
   int n_threads = calc_threads(n);
   if (n_threads != 1){
 #pragma omp parallel for simd num_threads(n_threads) reduction(+:size)
-    for (uint_fast64_t j = 0; j != n; ++j) size += static_cast<uint_fast64_t>(px[j] == r_true);
+    for (uint_fast64_t j = 0; j != n; ++j) size += is_r_true(px[j]);
     return size;
   } else {
 #pragma omp simd reduction(+:size)
-    for (uint_fast64_t j = 0; j != n; ++j) size += static_cast<uint_fast64_t>(px[j] == r_true);
+    for (uint_fast64_t j = 0; j != n; ++j) size += is_r_true(px[j]);
     return size;
   }
 }

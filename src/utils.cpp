@@ -426,14 +426,14 @@ SEXP cpp_lgl_count(SEXP x){
   if (n_threads > 1){
 #pragma omp parallel for simd num_threads(n_threads) reduction(+:ntrue, nfalse)
     for (i = 0; i < n; ++i){
-      ntrue += p_x[i] == r_true;
-      nfalse += p_x[i] == r_false;
+      ntrue += is_r_true(p_x[i]);
+      nfalse += is_r_false(p_x[i]);
     }
   } else {
 #pragma omp simd reduction(+:ntrue, nfalse)
     for (i = 0; i < n; ++i){
-      ntrue += p_x[i] == r_true;
-      nfalse += p_x[i] == r_false;
+      ntrue += is_r_true(p_x[i]);
+      nfalse += is_r_false(p_x[i]);
     }
   }
 
@@ -466,12 +466,12 @@ SEXP cpp_set_or(SEXP x, SEXP y){
 
   for (i = yi = 0; i < n; yi = (++yi == yn) ? 0 : yi, ++i){
 
-    if (p_x[i] != r_true){
-      if (p_y[yi] == r_true){
+    if (!is_r_true(p_x[i])){
+      if (is_r_true(p_y[yi])){
         p_x[i] = r_true;
       } else if (is_r_na(p_x[i]) || is_r_na(p_y[yi])){
         p_x[i] = na::logical;
-      } else if (p_x[i] == r_true || p_y[yi] == r_true){
+      } else if (is_r_true(p_x[i]) || is_r_true(p_y[yi])){
         p_x[i] = r_true;
       }
     }

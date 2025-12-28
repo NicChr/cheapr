@@ -40,7 +40,7 @@ bool vec_any(SEXP x){
 
   bool out = false;
   for (R_xlen_t i = 0; i < n; ++i){
-    if (p_x[i] == r_true){
+    if (is_r_true(p_x[i])){
      out = true;
       break;
     }
