@@ -141,6 +141,7 @@ struct r_complex_t {
   constexpr bool operator!=(const r_complex_t& other) const {
     return !(*this == other);
   }
+
 };
 
 // Alias type for r_byte_t
@@ -1603,71 +1604,66 @@ inline constexpr T r_cast(U x) {
 
 // Methods for custom R types
 
-// r_bool_t methods
+// r_complex_t methods
 
-// Comparison operators
-// inline constexpr bool operator==(r_bool_t lhs, r_bool_t rhs) {
-//   return lhs.value == rhs.value;
-// }
-//
-// inline constexpr r_bool_t operator!=(r_bool_t lhs, r_bool_t rhs) {
-//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
-//     return r_na;
-//   }
-//   return lhs.value == rhs.value ? r_false : r_true;
-// }
-//
-// inline constexpr r_bool_t operator<(r_bool_t lhs, r_bool_t rhs) {
-//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
-//     return r_na;
-//   }
-//   return lhs.value < rhs.value ? r_true : r_false;
-// }
-// inline constexpr r_bool_t operator<=(r_bool_t lhs, r_bool_t rhs) {
-//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
-//     return r_na;
-//   }
-//   return lhs.value <= rhs.value ? r_true : r_false;
-// }
-// inline constexpr r_bool_t operator>(r_bool_t lhs, r_bool_t rhs) {
-//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
-//     return r_na;
-//   }
-//   return lhs.value > rhs.value ? r_true : r_false;
-// }
-// inline constexpr r_bool_t operator>=(r_bool_t lhs, r_bool_t rhs) {
-//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
-//     return r_na;
-//   }
-//   return lhs.value >= rhs.value ? r_true : r_false;
-// }
-//
-// // Binary arithmetic operators (free functions)
-// inline constexpr int operator+(r_bool_t lhs, r_bool_t rhs) {
-//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
-//     return r_na;
-//   }
-//   return lhs.value + rhs.value;
-// }
-//
-// Compound assignment (should remain members)
-// inline constexpr r_bool_t& operator+=(r_bool_t& lhs, r_bool_t rhs) {
-//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
-//     lhs.value = r_na;
-//   } else {
-//     lhs.value += rhs.value;
-//   }
-//   return lhs;
-// }
-//
-// inline constexpr r_bool_t& operator-=(r_bool_t& lhs, r_bool_t rhs) {
-//   if (is_r_na(lhs.value) || is_r_na(rhs.value)) {
-//     lhs.value = r_na;
-//   } else {
-//     lhs.value -= rhs.value;
-//   }
-//   return lhs;
-// }
+// Unary minus
+inline constexpr r_complex_t operator-(const r_complex_t& x) {
+  return r_complex_t{-x.re(), -x.im()};
+}
+
+// Binary arithmetic operators
+inline constexpr r_complex_t operator+(const r_complex_t& lhs, const r_complex_t& rhs) {
+  return r_complex_t{lhs.re() + rhs.re(), lhs.im() + rhs.im()};
+}
+
+inline constexpr r_complex_t operator-(const r_complex_t& lhs, const r_complex_t& rhs) {
+  return r_complex_t{lhs.re() - rhs.re(), lhs.im() - rhs.im()};
+}
+
+inline constexpr r_complex_t operator*(const r_complex_t& lhs, const r_complex_t& rhs) {
+  // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
+  double a = lhs.re(), b = lhs.im();
+  double c = rhs.re(), d = rhs.im();
+  return r_complex_t{a*c - b*d, a*d + b*c};
+}
+
+inline constexpr r_complex_t operator/(const r_complex_t& lhs, const r_complex_t& rhs) {
+  // (a+bi) / (c+di) = [(ac+bd)/(c²+d²) + (bc-ad)/(c²+d²)i]
+  double a = lhs.re(), b = lhs.im();
+  double c = rhs.re(), d = rhs.im();
+  double denom = c*c + d*d;
+  return r_complex_t{(a*c + b*d) / denom, (b*c - a*d) / denom};
+}
+
+// Compound assignment operators
+inline constexpr r_complex_t& operator+=(r_complex_t& lhs, const r_complex_t& rhs) {
+  lhs.re() += rhs.re();
+  lhs.im() += rhs.im();
+  return lhs;
+}
+
+inline constexpr r_complex_t& operator-=(r_complex_t& lhs, const r_complex_t& rhs) {
+  lhs.re() -= rhs.re();
+  lhs.im() -= rhs.im();
+  return lhs;
+}
+
+inline constexpr r_complex_t& operator*=(r_complex_t& lhs, const r_complex_t& rhs) {
+  double a = lhs.re(), b = lhs.im();
+  double c = rhs.re(), d = rhs.im();
+  lhs.re() = a*c - b*d;
+  lhs.im() = a*d + b*c;
+  return lhs;
+}
+
+inline constexpr r_complex_t& operator/=(r_complex_t& lhs, const r_complex_t& rhs) {
+  double a = lhs.re(), b = lhs.im();
+  double c = rhs.re(), d = rhs.im();
+  double denom = c*c + d*d;
+  lhs.re() = (a*c + b*d) / denom;
+  lhs.im() = (b*c - a*d) / denom;
+  return lhs;
+}
 
 
 // R math fns
