@@ -16,6 +16,10 @@ cpp_set_add_attributes <- function(x, attributes, add) {
   .Call(`_cheapr_cpp_set_add_attributes`, x, attributes, add)
 }
 
+foo <- function() {
+  .Call(`_cheapr_foo`)
+}
+
 cpp_common_template <- function(x) {
   .Call(`_cheapr_cpp_common_template`, x)
 }

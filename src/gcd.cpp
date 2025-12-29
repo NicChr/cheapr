@@ -121,12 +121,12 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
 
       if (overflowed){
         i = n; // Terminate the loop
-        double lcm_dbl = r_cast<double>(p_x[0]);
+        double lcm_dbl = as<double>(p_x[0]);
         for (R_xlen_t j = 1; j < n; ++j) {
           if (!na_rm && is_r_na(lcm_dbl)){
             break;
           }
-          lcm_dbl = r_lcm<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
+          lcm_dbl = r_lcm<double>(lcm_dbl, as<double>(p_x[j]), na_rm, tol);
         }
         return as_vector(lcm_dbl);
       } else {
@@ -157,19 +157,19 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
 
       if (overflowed){
         i = n; // Terminate the loop
-        double lcm_dbl = r_cast<double>(p_x[0]);
+        double lcm_dbl = as<double>(p_x[0]);
         for (R_xlen_t j = 1; j < n; ++j) {
           if (!na_rm && is_r_na(lcm_dbl)){
             break;
           }
-          lcm_dbl = r_lcm<double>(lcm_dbl, r_cast<double>(p_x[j]), na_rm, tol);
+          lcm_dbl = r_lcm<double>(lcm_dbl, as<double>(p_x[j]), na_rm, tol);
         }
         return as_vector(lcm_dbl);
       } else {
         lcm = res;
       }
     }
-    return as_vector(r_cast<double>(lcm));
+    return as_vector(as<double>(lcm));
   }
   default: {
 
@@ -284,7 +284,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(xi, xn),
     recycle_index(yi, yn),
     ++i){
-      p_out[i] = r_cast<int>(r_lcm(p_x[xi], p_y[yi], na_rm));
+      p_out[i] = as<int>(r_lcm(p_x[xi], p_y[yi], na_rm));
     }
     YIELD(NP);
     return out;
@@ -300,7 +300,7 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     recycle_index(xi, xn),
     recycle_index(yi, yn),
     ++i){
-      p_out[i] = r_cast<double>(r_lcm(p_x[xi], p_y[yi], na_rm, tol));
+      p_out[i] = as<double>(r_lcm(p_x[xi], p_y[yi], na_rm, tol));
     }
     YIELD(NP);
     return out;

@@ -49,7 +49,7 @@ SEXP cpp_group_starts(SEXP group_id, int n_groups){
   }
 
   SEXP r_sorted = SHIELD(as_vector(sorted));
-  set_attr(out, r_cast<r_symbol_t>("sorted"), r_sorted);
+  set_attr(out, as<r_symbol_t>("sorted"), r_sorted);
   YIELD(2);
   return out;
 }

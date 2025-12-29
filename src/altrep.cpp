@@ -36,13 +36,13 @@ bool is_compact_seq(SEXP x){
   SEXP alt_pkg_sym = alt_pkg(x);
 
   if (is_null(CHEAPR_COMPACT_INTSEQ)){
-    CHEAPR_COMPACT_INTSEQ = r_cast<r_symbol_t>("compact_intseq");
+    CHEAPR_COMPACT_INTSEQ = as<r_symbol_t>("compact_intseq");
   }
   if (is_null(CHEAPR_COMPACT_REALSEQ)){
-    CHEAPR_COMPACT_REALSEQ = r_cast<r_symbol_t>("compact_realseq");
+    CHEAPR_COMPACT_REALSEQ = as<r_symbol_t>("compact_realseq");
   }
   if (is_null(CHEAPR_BASE)){
-    CHEAPR_BASE = r_cast<r_symbol_t>("base");
+    CHEAPR_BASE = as<r_symbol_t>("base");
   }
   return (alt_class_sym == CHEAPR_COMPACT_INTSEQ ||
           alt_class_sym == CHEAPR_COMPACT_REALSEQ) &&

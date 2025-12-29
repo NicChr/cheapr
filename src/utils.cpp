@@ -521,15 +521,15 @@ SEXP cpp_growth_rate(SEXP x){
   case INTSXP: {
     int x_n = integer_ptr(x)[n - 1];
     int x_1 = integer_ptr(x)[0];
-    a = r_cast<double>(x_1);
-    b = r_cast<double>(x_n);
+    a = as<double>(x_1);
+    b = as<double>(x_n);
     break;
   }
   case CHEAPR_INT64SXP: {
     int64_t x_n = integer64_ptr(x)[n - 1];
     int64_t x_1 = integer64_ptr(x)[0];
-    a = r_cast<double>(x_1);
-    b = r_cast<double>(x_n);
+    a = as<double>(x_1);
+    b = as<double>(x_n);
     break;
   }
   case REALSXP: {
@@ -581,12 +581,12 @@ SEXP cpp_name_repair(SEXP names, SEXP dup_sep, SEXP empty_sep){
   }
 
   SEXP is_empty = SHIELD(new_vector<r_bool_t>(n)); ++NP;
-  int *p_is_empty = integer_ptr(is_empty);
-  bool empty;
+  r_bool_t *p_is_empty = vector_ptr<r_bool_t>(is_empty);
+  r_bool_t empty;
   int n_empty = 0;
 
   for (int i = 0; i < n; ++i){
-    empty = (STRING_ELT(names, i) == blank_r_string);
+    empty = (get_value<r_string_t>(names, i) == blank_r_string);
     n_empty += empty;
     p_is_empty[i] = empty;
   }
@@ -650,7 +650,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
       curr_tag = p_source_nms[j];
 
       if (curr_tag == p_sa[i]){
-        set_attr(target, r_cast<r_symbol_t>(curr_tag), VECTOR_ELT(source_attrs, j));
+        set_attr(target, as<r_symbol_t>(curr_tag), VECTOR_ELT(source_attrs, j));
         break;
       }
     }
@@ -663,7 +663,7 @@ SEXP cpp_rebuild(SEXP target, SEXP source, SEXP target_attr_names,
       curr_tag = p_target_nms[j];
 
       if (curr_tag == p_ta[i]){
-        set_attr(target, r_cast<r_symbol_t>(curr_tag), VECTOR_ELT(target_attrs, j));
+        set_attr(target, as<r_symbol_t>(curr_tag), VECTOR_ELT(target_attrs, j));
         break;
       }
     }

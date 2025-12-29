@@ -126,25 +126,25 @@ elements** (or generic R objects).
 Since a list is the only vector capable of holding other R objects,
 `new_vector<SEXP>` unambiguously resolves to creating a new list.
 
-## `r_cast<>`
+## `as<>`
 
 Standard C++ casts (`static_cast<>`) are unaware of R's special `NA`
 values.
 
 -   `static_cast<int>(NA_REAL)` results in `INT_MIN` not `NA_INTEGER`.
 
-`cheapr` provides **`r_cast<>`**, a powerful cast that handles R
+`cheapr` provides **`as<>`**, a powerful cast that handles R
 specific values correctly:
 
--   `r_cast<int>(na::real)` returns `na::integer`.
+-   `as<int>(na::real)` returns `na::integer`.
 
--   `r_cast<double>(na::integer)` returns `na::real`.
+-   `as<double>(na::integer)` returns `na::real`.
 
--   `r_cast<int>(limits::r_pos_inf)` returns `na::integer`
+-   `as<int>(limits::r_pos_inf)` returns `na::integer`
 
--   `r_cast<r_symbol_t>("my_string")` returns the R symbol `my_string`
+-   `as<r_symbol_t>("my_string")` returns the R symbol `my_string`
 
--   `r_cast<r_string_t>(R_ClassSymbol)` returns the internal R string
+-   `as<r_string_t>(R_ClassSymbol)` returns the internal R string
     "class"
 
 ## `NA` constants
@@ -186,10 +186,10 @@ To create length-one vectors (scalars) efficiently:
 // Create scalar character vector
 SEXP s1 = as_vector("hello");
 // Similarly
-SEXP s2 = as_vector(r_cast<r_string_t>("hello"));
+SEXP s2 = as_vector(as<r_string_t>("hello"));
 ```
 
-Alternatively, `r_cast<SEXP>` can convert any object to a SEXP. Note
+Alternatively, `as<SEXP>` can convert any object to a SEXP. Note
 that `r_string_t` are always converted to length-one character vectors
 and `r_symbol_t` objects are always converted to length-one lists.
 
@@ -337,7 +337,7 @@ the first two branches into one by using `INTEGER()` for logical vector
 inputs but I digress.
 
 In cheapr this can be done in a more generic way using a C++ lambda and
-cheapr's templated functions like `r_cast<>`
+cheapr's templated functions like `as<>`
 
 ``` cpp
 [[cpp11::register]]
@@ -357,8 +357,8 @@ double cheapr_sum(SEXP x){
       R_xlen_t n = vec::old_length(x);
 
       for (R_xlen_t i = 0; i < n; ++i){
-        // r_cast will naturally handle NA values
-        sum += r_cast<double>(p_x[i]);
+        // as will naturally handle NA values
+        sum += as<double>(p_x[i]);
       }
     } else {
       Rf_error("`x` must be numeric in `cheapr_sum`");

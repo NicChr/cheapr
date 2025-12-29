@@ -8,3 +8,4 @@
 ^CRAN-SUBMISSION$
 ^.*\.Rproj$
 ^codecov\.yml$
+^\.vscode$

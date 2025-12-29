@@ -140,7 +140,7 @@ SEXP convert_int_to_real(SEXP x){
   SEXP out = SHIELD(new_vector<double>(n));
   double* RESTRICT p_out = real_ptr(out);
   for (R_xlen_t i = 0; i < n; ++i){
-    p_out[i] = r_cast<double>(p_x[i]);
+    p_out[i] = as<double>(p_x[i]);
   }
   YIELD(1);
   return out;
@@ -843,7 +843,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
     for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
-      p_x[i] = r_add(p_x[i], r_cast<double>(p_y[yi]));
+      p_x[i] = r_add(p_x[i], as<double>(p_y[yi]));
     }
     break;
   }
@@ -916,7 +916,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
     for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
-      p_x[i] = r_subtract(p_x[i], r_cast<double>(p_y[yi]));
+      p_x[i] = r_subtract(p_x[i], as<double>(p_y[yi]));
     }
     break;
   }
@@ -989,7 +989,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
     for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
-      p_x[i] = r_multiply(p_x[i], r_cast<double>(p_y[yi]));
+      p_x[i] = r_multiply(p_x[i], as<double>(p_y[yi]));
     }
     break;
   }
@@ -1039,7 +1039,7 @@ SEXP cpp_set_divide(SEXP x, SEXP y){
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
     for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
-      p_x[i] = r_divide(p_x[i], r_cast<double>(p_y[yi]));
+      p_x[i] = r_divide(p_x[i], as<double>(p_y[yi]));
     }
     break;
   }
@@ -1084,7 +1084,7 @@ SEXP cpp_set_pow(SEXP x, SEXP y){
     double *p_x = real_ptr(out);
     int *p_y = integer_ptr(y);
     for (R_xlen_t i = 0; i < xn; recycle_index(yi, yn), ++i) {
-      p_x[i] = r_pow(r_cast<double>(p_x[i]), r_cast<double>(p_y[yi]));
+      p_x[i] = r_pow(as<double>(p_x[i]), as<double>(p_y[yi]));
     }
     break;
   }

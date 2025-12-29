@@ -38,7 +38,7 @@ SEXP cpp_int64_to_double(SEXP x){
   const int64_t *p_x = integer64_ptr_ro(x);
 
   for (R_xlen_t i = 0; i < n; ++i){
-    p_out[i] = r_cast<double>(p_x[i]);
+    p_out[i] = as<double>(p_x[i]);
   }
   YIELD(1);
   return out;
@@ -119,7 +119,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     out = SHIELD(new_vector<int64_t>(n)); ++NP;
     int64_t *p_out = integer64_ptr(out);
     for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = r_cast<int64_t>(p_x[i]);
+      p_out[i] = as<int64_t>(p_x[i]);
     }
     break;
   }
@@ -132,7 +132,7 @@ SEXP cpp_numeric_to_int64(SEXP x){
     out = SHIELD(new_vector<int64_t>(n)); ++NP;
     int64_t *p_out = integer64_ptr(out);
     for (R_xlen_t i = 0; i < n; ++i){
-      p_out[i] = r_cast<int64_t>(p_x[i]);
+      p_out[i] = as<int64_t>(p_x[i]);
     }
     break;
   }
@@ -179,7 +179,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        set_value<r_string_t>(out, i, r_cast<r_string_t>(s.c_str()));
+        set_value<r_string_t>(out, i, as<r_string_t>(s.c_str()));
       }
     }
     break;
@@ -195,7 +195,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        set_value<r_string_t>(out, i, r_cast<r_string_t>(s.c_str()));
+        set_value<r_string_t>(out, i, as<r_string_t>(s.c_str()));
       }
     }
     break;
@@ -210,7 +210,7 @@ SEXP cpp_format_numeric_as_int64(SEXP x){
       } else {
         int64_t temp = p_x[i];
         s = string_format("%lld", temp);
-        set_value<r_string_t>(out, i, r_cast<r_string_t>(s.c_str()));
+        set_value<r_string_t>(out, i, as<r_string_t>(s.c_str()));
       }
     }
     break;

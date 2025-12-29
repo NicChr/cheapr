@@ -33,6 +33,13 @@ extern "C" SEXP _cheapr_cpp_set_add_attributes(SEXP x, SEXP attributes, SEXP add
     return cpp11::as_sexp(cpp_set_add_attributes(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(attributes), cpp11::as_cpp<cpp11::decay_t<bool>>(add)));
   END_CPP11
 }
+// attrs.cpp
+SEXP foo();
+extern "C" SEXP _cheapr_foo() {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo());
+  END_CPP11
+}
 // cast.cpp
 SEXP cpp_common_template(SEXP x);
 extern "C" SEXP _cheapr_cpp_common_template(SEXP x) {
@@ -1015,6 +1022,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_not_na",            (DL_FUNC) &_cheapr_cpp_which_not_na,            1},
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
+    {"_cheapr_foo",                         (DL_FUNC) &_cheapr_foo,                         0},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}

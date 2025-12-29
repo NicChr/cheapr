@@ -305,3 +305,4 @@ docs/
 *.so
 *.dll
 
+.vscode

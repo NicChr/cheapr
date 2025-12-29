@@ -171,7 +171,7 @@ SEXP cpp_paste(SEXP x, SEXP sep, SEXP collapse){
       for (R_xlen_t i = 1; i < n_chars; ++i){
         str_paste(strng, sep1, utf8_char(char_ptrs[i][j]));
       }
-      set_value(out, j, r_cast<r_string_t>(strng.c_str()));
+      set_value(out, j, as<r_string_t>(strng.c_str()));
     }
 
     R_Free(char_ptrs);

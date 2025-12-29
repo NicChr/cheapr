@@ -637,7 +637,7 @@ SEXP cpp_df_col_c(SEXP x, bool recycle, bool name_repair){
   int32_t NP = 0;
   R_xlen_t common_size = length_common(x);
   SEXP out = SHIELD(cpp_list_c(x)); ++NP;
-  SEXP df_nrows = SHIELD(as_vector(r_cast<int>(common_size))); ++NP;
+  SEXP df_nrows = SHIELD(as_vector(as<int>(common_size))); ++NP;
   SHIELD(out = cpp_new_df(out, df_nrows, recycle, name_repair)); ++NP;
 
   if (Rf_length(x) != 0 && is_df(VECTOR_ELT(x, 0))){
@@ -834,8 +834,8 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   case R_pxt: {
 
     SHIELD(out = init<r_posixts_t>(out_size, false)); ++NP;
-    SEXP out_tzone = SHIELD(get_attr(vec_template, r_cast<r_symbol_t>("tzone"))); ++NP;
-    set_attr(out, r_cast<r_symbol_t>("tzone"), out_tzone);
+    SEXP out_tzone = SHIELD(get_attr(vec_template, as<r_symbol_t>("tzone"))); ++NP;
+    set_attr(out, as<r_symbol_t>("tzone"), out_tzone);
 
     double* RESTRICT p_out = real_ptr(out);
 
@@ -852,7 +852,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case R_unk: {
     SEXP call = SHIELD(vec::coerce_vec(x, LISTSXP)); ++NP;
-    SHIELD(call = Rf_lcons(r_cast<r_symbol_t>("c"), call)); ++NP;
+    SHIELD(call = Rf_lcons(as<r_symbol_t>("c"), call)); ++NP;
     SHIELD(out = eval(call, env::base_env)); ++NP;
     break;
   }
