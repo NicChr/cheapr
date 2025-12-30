@@ -3,7 +3,7 @@ Updated to version 1.5.0
 - Fixed cheapr causing fastplyr to not be able to be installed.
 - Fixed rchk errors.
 - Fixed unit test failures.
-- Removed non-API C entry point `DATAPTR`
+- Removed non-API C entry points `DATAPTR` and `ATTRIB`
 
 We checked 3 reverse dependencies, comparing R CMD check results across CRAN and dev versions of this package.
 

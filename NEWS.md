@@ -5,6 +5,8 @@ cheapr 1.5.0 supersedes cheapr 1.4.0
 The C/C++ API is currently under development and a 
 stable release can be expected for cheapr 2.0.0
 
+Note: cheapr 2.0.0 will require C++20
+
 ### General news
 
 - Thanks @ChampLeeTX for spotting an issue where the package 
