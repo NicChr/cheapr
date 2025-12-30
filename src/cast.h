@@ -208,9 +208,9 @@ inline SEXP init<r_logicals_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_integers_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    return cheapr::vec::new_vector<int>(n, cheapr::na::integer);
+    return cheapr::vec::new_vector<cheapr::r_int_t>(n, cheapr::na::integer);
   } else {
-    return cheapr::vec::new_vector<int>(n);
+    return cheapr::vec::new_vector<cheapr::r_int_t>(n);
   }
 }
 
@@ -226,9 +226,9 @@ inline SEXP init<r_integers64_t>(R_xlen_t n, bool with_na) {
 template<>
 inline SEXP init<r_doubles_t>(R_xlen_t n, bool with_na) {
   if (with_na){
-    return cheapr::vec::new_vector<double>(n, cheapr::na::real);
+    return cheapr::vec::new_vector<cheapr::r_double_t>(n, cheapr::na::real);
   } else {
-    return cheapr::vec::new_vector<double>(n);
+    return cheapr::vec::new_vector<cheapr::r_double_t>(n);
   }
 }
 
@@ -552,21 +552,21 @@ inline SEXP cast<r_posixts_t>(SEXP x, SEXP y) {
     // Fast method for converting into a date into a date-time
   } else if (cheapr::internal::inherits1(x, "Date") && cheapr::internal::inherits1(y, "POSIXct")){
     R_xlen_t n = Rf_xlength(x);
-    SEXP out = SHIELD(cheapr::vec::new_vector<double>(n));
+    SEXP out = SHIELD(cheapr::vec::new_vector<cheapr::r_double_t>(n));
     SEXP out_class = SHIELD(cheapr::vec::combine("POSIXct", "POSIXt"));
     SEXP out_tzone = SHIELD(cheapr::attr::get_attr(y, cheapr::as<cheapr::r_symbol_t>("tzone")));
     cheapr::attr::set_old_class(out, out_class);
     cheapr::attr::set_attr(out, cheapr::as<cheapr::r_symbol_t>("tzone"), out_tzone);
 
-    double* RESTRICT p_out = cheapr::internal::real_ptr(out);
+    auto* RESTRICT p_out = cheapr::internal::real_ptr(out);
 
     if (TYPEOF(x) == INTSXP){
-      const int *p_x = cheapr::internal::integer_ptr_ro(x);
+      auto *p_x = cheapr::vector_ptr<const cheapr::r_int_t>(x);
       OMP_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) p_out[i] = cheapr::as<double>(p_x[i]) * 86400.0;
+      for (R_xlen_t i = 0; i < n; ++i) p_out[i] = cheapr::as<cheapr::r_double_t>(p_x[i]) * 86400.0;
 
     } else {
-      const double *p_x = cheapr::internal::real_ptr_ro(x);
+      auto *p_x = cheapr::vector_ptr<const cheapr::r_double_t>(x);
       OMP_SIMD
       for (R_xlen_t i = 0; i < n; ++i) p_out[i] = p_x[i] * 86400;
     }

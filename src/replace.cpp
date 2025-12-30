@@ -15,7 +15,7 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
 
   // Clean where vector
   SHIELD(where = clean_locs(where, x)); ++NP;
-  const int* RESTRICT p_where = integer_ptr_ro(where);
+  const r_int_t* RESTRICT p_where = vector_ptr<const r_int_t>(where);
 
   // Cast replacement to type of x
   SHIELD(with = cast_(get_r_type(x), with, x)); ++NP;
@@ -44,8 +44,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   case R_int:
   case R_fct: {
 
-    int* RESTRICT p_x = integer_ptr(x);
-    const int* RESTRICT p_with = integer_ptr_ro(with);
+    r_int_t* RESTRICT p_x = vector_ptr<r_int_t>(x);
+    const r_int_t* RESTRICT p_with = vector_ptr<const r_int_t>(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       p_x[p_where[i] - 1] = p_with[withi];
@@ -54,8 +54,8 @@ SEXP cpp_replace(SEXP x, SEXP where, SEXP with, bool in_place, bool quiet){
   }
   case R_dbl: {
 
-    double* RESTRICT p_x = real_ptr(x);
-    const double* RESTRICT p_with = real_ptr_ro(with);
+    r_double_t* RESTRICT p_x = real_ptr(x);
+    const r_double_t* RESTRICT p_with = real_ptr_ro(with);
 
     for (R_xlen_t i = 0; i < where_size; recycle_index(withi, with_size), ++i){
       p_x[p_where[i] - 1] = p_with[withi];

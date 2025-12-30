@@ -138,10 +138,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_int: {
       SHIELD(out = init<r_integers_t>(n, false)); ++NP;
-      int* RESTRICT p_out = integer_ptr(out);
-      const int *p_yes = integer_ptr_ro(yes);
-      const int *p_no = integer_ptr_ro(no);
-      const int *p_na = integer_ptr_ro(na);
+      r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
+      const r_int_t *p_yes = vector_ptr<const r_int_t>(yes);
+      const r_int_t *p_no = vector_ptr<const r_int_t>(no);
+      const r_int_t *p_na = vector_ptr<const r_int_t>(na);
       const int yes_value = p_yes[0];
       const int no_value = p_no[0];
       const int na_value = p_na[0];
@@ -162,10 +162,10 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_dbl: {
       SHIELD(out = init<r_doubles_t>(n, false)); ++NP;
-      double* RESTRICT p_out = real_ptr(out);
-      const double *p_yes = real_ptr_ro(yes);
-      const double *p_no = real_ptr_ro(no);
-      const double *p_na = real_ptr_ro(na);
+      r_double_t* RESTRICT p_out = real_ptr(out);
+      const r_double_t *p_yes = real_ptr_ro(yes);
+      const r_double_t *p_no = real_ptr_ro(no);
+      const r_double_t *p_na = real_ptr_ro(na);
       const double yes_value = p_yes[0];
       const double no_value = p_no[0];
       const double na_value = p_na[0];
@@ -222,11 +222,11 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     }
     case R_fct: {
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
-      int* RESTRICT p_out = integer_ptr(out);
+      r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
 
-      const int *p_yes = integer_ptr_ro(yes);
-      const int *p_no = integer_ptr_ro(no);
-      const int *p_na = integer_ptr_ro(na);
+      const r_int_t *p_yes = vector_ptr<const r_int_t>(yes);
+      const r_int_t *p_no = vector_ptr<const r_int_t>(no);
+      const r_int_t *p_na = vector_ptr<const r_int_t>(na);
       const int yes_value = p_yes[0];
       const int no_value = p_no[0];
       const int na_value = p_na[0];
@@ -238,19 +238,19 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
 
       if (TYPEOF(out) == INTSXP){
-        int* RESTRICT p_out = integer_ptr(out);
-        const int *p_yes = integer_ptr_ro(yes);
-        const int *p_no = integer_ptr_ro(no);
-        const int *p_na = integer_ptr_ro(na);
+        r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
+        const r_int_t *p_yes = vector_ptr<const r_int_t>(yes);
+        const r_int_t *p_no = vector_ptr<const r_int_t>(no);
+        const r_int_t *p_na = vector_ptr<const r_int_t>(na);
         const int yes_value = p_yes[0];
         const int no_value = p_no[0];
         const int na_value = p_na[0];
         CHEAPR_DO_IF_ELSE
       } else {
-        double* RESTRICT p_out = real_ptr(out);
-        const double *p_yes = real_ptr_ro(yes);
-        const double *p_no = real_ptr_ro(no);
-        const double *p_na = real_ptr_ro(na);
+        r_double_t* RESTRICT p_out = real_ptr(out);
+        const r_double_t *p_yes = real_ptr_ro(yes);
+        const r_double_t *p_no = real_ptr_ro(no);
+        const r_double_t *p_na = real_ptr_ro(na);
         const double yes_value = p_yes[0];
         const double no_value = p_no[0];
         const double na_value = p_na[0];
@@ -262,11 +262,11 @@ SEXP cpp_if_else(SEXP condition, SEXP yes, SEXP no, SEXP na){
     case R_pxt: {
 
       SHIELD(out = cpp_na_init(yes, n)); ++NP;
-      double* RESTRICT p_out = real_ptr(out);
+      r_double_t* RESTRICT p_out = real_ptr(out);
 
-      const double *p_yes = real_ptr_ro(yes);
-      const double *p_no = real_ptr_ro(no);
-      const double *p_na = real_ptr_ro(na);
+      const r_double_t *p_yes = real_ptr_ro(yes);
+      const r_double_t *p_no = real_ptr_ro(no);
+      const r_double_t *p_na = real_ptr_ro(na);
       const double yes_value = p_yes[0];
       const double no_value = p_no[0];
       const double na_value = p_na[0];

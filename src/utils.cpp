@@ -48,14 +48,14 @@ void cpp_set_copy_elements(SEXP source, SEXP target){
   }
   case LGLSXP:
   case INTSXP: {
-    int *p_source = integer_ptr(source);
-    int *p_target = integer_ptr(target);
+    r_int_t *p_source = vector_ptr<r_int_t>(source);
+    r_int_t *p_target = vector_ptr<r_int_t>(target);
     safe_memmove(&p_target[0], &p_source[0], n * sizeof(int));
     break;
   }
   case REALSXP: {
-    double *p_source = real_ptr(source);
-    double *p_target = real_ptr(target);
+    r_double_t *p_source = real_ptr(source);
+    r_double_t *p_target = real_ptr(target);
     safe_memmove(&p_target[0], &p_source[0], n * sizeof(double));
     break;
   }
@@ -161,7 +161,7 @@ double cpp_sum(SEXP x){
   case LGLSXP:
   case INTSXP: {
 
-    const int *p_x = integer_ptr(x);
+    const r_int_t *p_x = vector_ptr<r_int_t>(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
       sum = is_r_na(sum) || is_r_na(p_x[i]) ? na::real : sum + p_x[i];
@@ -179,7 +179,7 @@ double cpp_sum(SEXP x){
   }
   default: {
 
-    const double *p_x = real_ptr(x);
+    const r_double_t *p_x = real_ptr(x);
 
     #pragma omp simd reduction(+:sum)
     for (R_xlen_t i = 0; i < n; ++i) sum += p_x[i];
@@ -203,7 +203,7 @@ SEXP cpp_range(SEXP x){
     case LGLSXP:
     case INTSXP: {
 
-      const int *p_x = integer_ptr_ro(x);
+      const r_int_t *p_x = vector_ptr<const r_int_t>(x);
       int min = std::numeric_limits<int>::max();
       int max = std::numeric_limits<int>::min();
 
@@ -234,7 +234,7 @@ SEXP cpp_range(SEXP x){
     }
     default: {
 
-      const double *p_x = real_ptr_ro(x);
+      const r_double_t *p_x = real_ptr_ro(x);
 
       double min = r_limits::r_pos_inf;
       double max = r_limits::r_neg_inf;
@@ -280,7 +280,7 @@ double var_sum_squared_diff(SEXP x, double mu){
     switch (TYPEOF(x)){
 
     case INTSXP: {
-      const int *p_x = integer_ptr(x);
+      const r_int_t *p_x = vector_ptr<r_int_t>(x);
       for (R_xlen_t i = 0; i < n; ++i){
         if (is_r_na(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
@@ -288,7 +288,7 @@ double var_sum_squared_diff(SEXP x, double mu){
       break;
     }
     default: {
-      const double *p_x = real_ptr(x);
+      const r_double_t *p_x = real_ptr(x);
       for (R_xlen_t i = 0; i < n; ++i){
         if (is_r_na(p_x[i])) continue;
         out += std::pow(p_x[i] - mu, 2);
@@ -368,20 +368,20 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   switch(TYPEOF(x)){
   case INTSXP: {
     if (codes){
-    SEXP out = SHIELD(vec::new_vector<int>(n));
+    SEXP out = SHIELD(vec::new_vector<r_int_t>(n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
-    const int *p_x = integer_ptr(x);
-    const double *p_b = real_ptr(breaks);
-    int* RESTRICT p_out = vector_ptr<int>(out);
+    const r_int_t *p_x = vector_ptr<r_int_t>(x);
+    const r_double_t *p_b = real_ptr(breaks);
+    r_int_t* RESTRICT p_out = vector_ptr<int>(out);
     CHEAPR_BIN_CODES(na_value<int>())
     YIELD(2);
     return out;
   } else {
     SEXP out = SHIELD(cpp_semi_copy(x));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
-    const int *p_x = integer_ptr(x);
-    const double *p_b = real_ptr(breaks);
-    int* RESTRICT p_out = integer_ptr(out);
+    const r_int_t *p_x = vector_ptr<r_int_t>(x);
+    const r_double_t *p_b = real_ptr(breaks);
+    r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
     CHEAPR_BIN_NCODES(na_value<int>())
     YIELD(2);
     return out;
@@ -389,20 +389,20 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   }
   default: {
     if (codes){
-    SEXP out = SHIELD(vec::new_vector<int>(n));
+    SEXP out = SHIELD(vec::new_vector<r_int_t>(n));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
-    const double *p_x = real_ptr(x);
-    const double *p_b = real_ptr(breaks);
-    int* RESTRICT p_out = integer_ptr(out);
+    const r_double_t *p_x = real_ptr(x);
+    const r_double_t *p_b = real_ptr(breaks);
+    r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
     CHEAPR_BIN_CODES(na_value<int>())
     YIELD(2);
     return out;
   } else {
     SEXP out = SHIELD(cpp_semi_copy(x));
     SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
-    const double *p_x = real_ptr(x);
-    const double *p_b = real_ptr(breaks);
-    double* RESTRICT p_out = real_ptr(out);
+    const r_double_t *p_x = real_ptr(x);
+    const r_double_t *p_b = real_ptr(breaks);
+    r_double_t* RESTRICT p_out = real_ptr(out);
     CHEAPR_BIN_NCODES(na_value<double>())
     YIELD(2);
     return out;
@@ -510,7 +510,7 @@ double growth_rate(double a, double b, double n){
 SEXP cpp_growth_rate(SEXP x){
   R_xlen_t n = Rf_xlength(x);
   if (n == 0){
-    return new_vector<double>(0);
+    return new_vector<r_double_t>(0);
   }
   if (n == 1){
     return as_vector(na::real);
@@ -519,17 +519,17 @@ SEXP cpp_growth_rate(SEXP x){
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
-    int x_n = integer_ptr(x)[n - 1];
-    int x_1 = integer_ptr(x)[0];
-    a = as<double>(x_1);
-    b = as<double>(x_n);
+    int x_n = vector_ptr<r_int_t>(x)[n - 1];
+    int x_1 = vector_ptr<r_int_t>(x)[0];
+    a = as<r_double_t>(x_1);
+    b = as<r_double_t>(x_n);
     break;
   }
   case CHEAPR_INT64SXP: {
     int64_t x_n = integer64_ptr(x)[n - 1];
     int64_t x_1 = integer64_ptr(x)[0];
-    a = as<double>(x_1);
-    b = as<double>(x_n);
+    a = as<r_double_t>(x_1);
+    b = as<r_double_t>(x_n);
     break;
   }
   case REALSXP: {
@@ -684,9 +684,9 @@ SEXP cpp_tabulate(SEXP x, uint32_t n_bins){
   R_xlen_t n = Rf_xlength(x);
 
   // Initialise counts to 0
-  SEXP out = SHIELD(vec::new_vector<int>(n_bins, 0));
-  const int *p_x = integer_ptr_ro(x);
-  int* RESTRICT p_out = integer_ptr(out);
+  SEXP out = SHIELD(vec::new_vector<r_int_t>(n_bins, 0));
+  const r_int_t *p_x = vector_ptr<const r_int_t>(x);
+  r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
 
   uint32_t one = 1;
 
@@ -777,7 +777,7 @@ SEXP cheapr_do_memory_leak_test(){
   // Check that 4000 bytes are not lost
 
   std::vector<int32_t> ints(1000);
-  SEXP r_ints = r_safe(Rf_protect)(r_safe(new_vector<int>)(ints.size()));
+  SEXP r_ints = r_safe(Rf_protect)(r_safe(new_vector<r_int_t>)(ints.size()));
   SEXP seq = r_safe(Rf_protect)(r_safe(cpp_seq_len)(ints.size()));
   SEXP repl = r_safe(Rf_protect)(r_safe(as_vector)(-1));
   r_safe(replace_in_place)(r_ints, seq, repl, true);

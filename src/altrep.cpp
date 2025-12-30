@@ -54,7 +54,7 @@ SEXP compact_seq_data(SEXP x){
     Rf_error("x must be an altrep compact_intseq");
   }
   SEXP alt_data = SHIELD(vec::coerce_vec(alt_data1(x), REALSXP));
-  double *p_alt_data = real_ptr(alt_data);
+  r_double_t *p_alt_data = real_ptr(alt_data);
   double size = p_alt_data[0];
   double from = p_alt_data[1];
   double by = p_alt_data[2];

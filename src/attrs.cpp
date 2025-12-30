@@ -64,7 +64,7 @@ SEXP cpp_set_add_attributes(SEXP x, SEXP attributes, bool add) {
 
 [[cpp11::register]]
 SEXP foo(){
-  r_int_t x = r_int_t{5}; 
+  r_int_t x = r_int_t{5};
   r_double_t y = 10.5;
   auto z = x + y;
   return as_vector(z.value);

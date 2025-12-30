@@ -5,56 +5,26 @@
 // Author: Nick Christofides
 // License: MIT
 
-// template<typename T>
-// struct r_vector_t {
-//   SEXP sexp;
-  
-//   // Constructor that wraps new_vector<T>
-//   explicit r_vector_t(R_xlen_t size) : sexp(new_vector<T>(size)) {}
-  
-//   // Constructor from existing SEXP
-//   explicit r_vector_t(SEXP s) : sexp(s) {}
-  
-//   // Get/set using your existing templates
-//   void set(R_xlen_t index, T value) {
-//     set_value<T>(sexp, index, value);
-//   }
-  
-//   T get(R_xlen_t index) const {
-//     return get_value<T>(sexp, index);
-//   }
-  
-//   // Implicit conversion to SEXP
-//   operator SEXP() const {
-//     return sexp;
-//   }
-  
-//   // Get size
-//   R_xlen_t size() const {
-//     return Rf_xlength(sexp);
-//   }
-// };
-
 // Can also play around with automatic protection (unlikely with this method..)
 // template<typename T>
 // struct r_vector_t {
 //   SEXP sexp;
 //   bool owned;
-  
-//   explicit r_vector_t(R_xlen_t size) 
+
+//   explicit r_vector_t(R_xlen_t size)
 //     : sexp(PROTECT(new_vector<T>(size))), owned(true) {}
-  
-//   explicit r_vector_t(SEXP s, bool protect = false) 
+
+//   explicit r_vector_t(SEXP s, bool protect = false)
 //     : sexp(protect ? PROTECT(s) : s), owned(protect) {}
-  
+
 //   ~r_vector_t() {
 //     if (owned) UNPROTECT(1);
 //   }
-  
+
 //   // Disable copying (Rule of Three)
 //   r_vector_t(const r_vector_t&) = delete;
 //   r_vector_t& operator=(const r_vector_t&) = delete;
-  
+
 //   // Methods as before...
 // };
 
@@ -135,15 +105,15 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 // struct r_wrapper_t {
 // private:
 //   T val;
-  
+
 // public:
 //   // Construction from underlying type
 //   explicit r_wrapper_t(T v) : val(v) {}
-  
+
 //   // Implicit conversion to underlying type
 //   operator T&() { return val; }
 //   operator const T&() const { return val; }
-  
+
 //   // Explicit extraction if needed
 //   T& get() { return val; }
 //   const T& get() const { return val; }
@@ -157,15 +127,33 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 struct r_bool_t {
   int value;
   r_bool_t() : value{0} {}
-  explicit constexpr r_bool_t(bool x) : value{x} {}
   explicit constexpr r_bool_t(int x) : value{x} {}
   constexpr operator int() const { return value; }
-  constexpr operator bool() const { return value; }
+
+
+constexpr bool as_bool() const {
+  return static_cast<bool>(value);
+}
+
+  constexpr bool is_true() const {
+  return value == 1;
+}
+
+constexpr bool is_false() const {
+  return value == 0;
+}
 };
 
 inline constexpr r_bool_t r_true{1};
 inline constexpr r_bool_t r_false{0};
 inline constexpr r_bool_t r_na{std::numeric_limits<int>::min()};
+
+inline bool is_r_true(r_bool_t x){
+  return x.is_true();
+}
+inline bool is_r_false(r_bool_t x){
+  return x.is_false();
+}
 
 struct r_int_t {
   int value;
@@ -179,6 +167,13 @@ struct r_double_t {
   r_double_t() : value{0} {}
   constexpr r_double_t(double x) : value{x} {}
   constexpr operator double() const { return value; }
+};
+
+struct r_int64_t {
+  int64_t value;
+  r_int64_t() : value{0} {}
+  constexpr r_int64_t(int x) : value{x} {}
+  constexpr operator int64_t() const { return value; }
 };
 
 // Alias type for CHARSXP
@@ -217,28 +212,6 @@ struct r_complex_t {
   // Get real and imaginary parts
     constexpr r_double_t re() const { return r_double_t{value.r}; }
     constexpr r_double_t im() const { return r_double_t{value.i}; }
-  // constexpr r_double_t re() { return r_double_t{value.r}; }
-  // constexpr r_double_t im() { return r_double_t{value.i}; }
-  // constexpr const r_double_t& re() const { return value.r; }
-  // constexpr const r_double_t& im() const { return value.i; }
-
-  // Equality operators
-  // constexpr r_bool_t operator==(const r_complex_t& other) const {
-  //   if (re() != re() || im() != im() || other.re() != other.re() || other.im() != other.im()){
-  //     return r_na;
-  //   } else {
-  //     return r_bool_t{re() == other.re() && im() == other.im()};
-  //   }
-  // }
-  //
-  // constexpr r_bool_t operator!=(const r_complex_t& other) const {
-  //   if (re() != re() || im() != im() || other.re() != other.re() || other.im() != other.im()){
-  //     return r_na;
-  //   } else {
-  //     return r_bool_t{!(re() == other.re() && im() == other.im())};
-  //   }
-  // }
-
 };
 
 // Alias type for r_byte_t
@@ -256,8 +229,8 @@ struct r_byte_t {
 namespace r_limits {
 inline constexpr r_int_t r_int_min = r_int_t{-std::numeric_limits<int>::max()};
 inline constexpr r_int_t r_int_max = r_int_t{std::numeric_limits<int>::max()};
-inline constexpr int64_t r_int64_min = -std::numeric_limits<int64_t>::max();
-inline constexpr int64_t r_int64_max = std::numeric_limits<int64_t>::max();
+inline constexpr r_int64_t r_int64_min = -std::numeric_limits<int64_t>::max();
+inline constexpr r_int64_t r_int64_max = std::numeric_limits<int64_t>::max();
 inline constexpr r_double_t r_pos_inf = r_double_t{std::numeric_limits<double>::infinity()};
 inline constexpr r_double_t r_neg_inf = r_double_t{-std::numeric_limits<double>::infinity()};
 }
@@ -307,29 +280,51 @@ template<typename T, typename U>
 template<typename T>
 concept RMathType = std::same_as<std::remove_cvref_t<T>, r_bool_t> ||
 std::same_as<std::remove_cvref_t<T>, r_int_t> ||
+std::same_as<std::remove_cvref_t<T>, r_int64_t> ||
 std::same_as<std::remove_cvref_t<T>, r_double_t>;
+
+template<typename T>
+concept CppMathType = std::is_arithmetic_v<std::remove_cvref_t<T>>;
+
+template<typename T>
+concept MathType = RMathType<T> || CppMathType<T>;
+
+template<typename T, typename U>
+concept AtLeastOneRMathType =
+(RMathType<T> || RMathType<U>) && (MathType<T> && MathType<U>);
+// (RMathType<T> && RMathType<U>) ||
+// (RMathType<T> && CppMathType<U>) ||
+// (CppMathType<T> && RMathType<U>);
 
 template<typename T>
 concept RType = RMathType<T> ||
 std::same_as<std::remove_cvref_t<T>, r_complex_t> ||
 std::same_as<std::remove_cvref_t<T>, r_string_t> ||
-std::same_as<std::remove_cvref_t<T>, r_symbol_t> ||
-std::same_as<std::remove_cvref_t<T>, SEXP>;
+std::same_as<std::remove_cvref_t<T>, r_byte_t> ||
+std::same_as<std::remove_cvref_t<T>, r_symbol_t>;
 
+template<typename T>
+concept CppType = !RType<T>;
+
+template<typename T, typename U>
+concept AtLeastOneRType = (RType<T> || RType<U>);
+// (RType<T> && CppType<U>) ||
+// (CppType<T> && RType<U>);
 
 template <class... T>
 inline constexpr bool always_false = false;
 
 template <typename T>
 inline constexpr bool is_r_or_cpp_integral_v =
-std::is_integral_v<T> ||
+std::is_integral_v<std::remove_cvref_t<T>> ||
 is<T, r_bool_t> ||
 is<T, r_int_t>;
 
 template <typename T>
 inline constexpr bool is_r_or_cpp_arithmetic_v =
-is_r_or_cpp_integral_v<T> ||
-std::is_arithmetic_v<T> ||
+std::is_arithmetic_v<std::remove_cvref_t<T>> ||
+is<T, r_bool_t> ||
+is<T, r_int_t> ||
 is<T, r_double_t>;
 
 
@@ -339,9 +334,6 @@ is_r_or_cpp_arithmetic_v<T> ||
 is<T, r_complex_t> ||
 is<T, r_byte_t>;
 
-
-template<typename T>
-concept MathType = is_r_or_cpp_arithmetic_v<T>;
 
 namespace env {
 inline const SEXP empty_env = R_EmptyEnv;
@@ -358,7 +350,7 @@ inline auto as_r_type(T x) {
   } else if constexpr (is<T, int>) {
     return r_int_t{x};
   } else if constexpr (is<T, double>) {
-    return r_double_t{x};    
+    return r_double_t{x};
   } else if constexpr (is<T, r_string_t>) {
     return r_string_t{x};
   } else if constexpr (is<T, Rcomplex>) {
@@ -380,7 +372,7 @@ inline auto as_r_type(T x) {
 namespace na {
 inline constexpr r_bool_t logical = r_na;
 inline constexpr r_int_t integer = r_int_t{std::numeric_limits<int>::min()};
-inline constexpr int64_t integer64 = std::numeric_limits<int64_t>::min();
+inline constexpr r_int64_t integer64 = std::numeric_limits<int64_t>::min();
 inline const r_double_t real = r_double_t{NA_REAL};
 inline const r_complex_t complex = r_complex_t{NA_REAL, NA_REAL};
 inline constexpr r_byte_t raw = r_byte_t{0};
@@ -408,11 +400,11 @@ inline r_double_t* real_ptr(SEXP x){
 inline const r_double_t* real_ptr_ro(SEXP x){
   return reinterpret_cast<const r_double_t*>(REAL_RO(x));
 }
-inline int64_t* integer64_ptr(SEXP x){
-  return reinterpret_cast<int64_t*>(real_ptr(x));
+inline r_int64_t* integer64_ptr(SEXP x){
+  return reinterpret_cast<r_int64_t*>(real_ptr(x));
 }
-inline const int64_t* integer64_ptr_ro(SEXP x){
-  return reinterpret_cast<const int64_t*>(real_ptr_ro(x));
+inline const r_int64_t* integer64_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_int64_t*>(real_ptr_ro(x));
 }
 inline r_complex_t* complex_ptr(SEXP x){
   return reinterpret_cast<r_complex_t*>(COMPLEX(x));
@@ -446,7 +438,7 @@ inline T* vector_ptr(SEXP x) {
 }
 
 
-template<> 
+template<>
 inline r_bool_t* vector_ptr<r_bool_t>(SEXP x) {
   return internal::logical_ptr(x);
 }
@@ -462,7 +454,7 @@ inline r_double_t* vector_ptr<r_double_t>(SEXP x) {
 }
 
 template<>
-inline int64_t* vector_ptr<int64_t>(SEXP x) {
+inline r_int64_t* vector_ptr<r_int64_t>(SEXP x) {
   return internal::integer64_ptr(x);
 }
 
@@ -492,7 +484,7 @@ inline const r_double_t* vector_ptr<const r_double_t>(SEXP x) {
 }
 
 template<>
-inline const int64_t* vector_ptr<const int64_t>(SEXP x) {
+inline const r_int64_t* vector_ptr<const r_int64_t>(SEXP x) {
   return internal::integer64_ptr_ro(x);
 }
 
@@ -506,10 +498,10 @@ inline const r_string_t* vector_ptr<const r_string_t>(SEXP x) {
   return internal::string_ptr_ro(x);
 }
 
-// template<>
-// inline const r_byte_t* vector_ptr<const r_byte_t>(SEXP x) {
-//   return internal::raw_ptr_ro(x);
-// }
+template<>
+inline const r_byte_t* vector_ptr<const r_byte_t>(SEXP x) {
+  return internal::raw_ptr_ro(x);
+}
 
 template<>
 inline const SEXP* vector_ptr<const SEXP>(SEXP x) {
@@ -530,10 +522,10 @@ inline SEXPTYPE CHEAPR_TYPEOF(SEXP x){
 }
 
 inline int64_t* INTEGER64_PTR(SEXP x) {
-  return internal::integer64_ptr(x);
+  return reinterpret_cast<int64_t*>(real_ptr(x));
 }
 inline const int64_t* INTEGER64_PTR_RO(SEXP x) {
-  return internal::integer64_ptr_ro(x);
+  return reinterpret_cast<const int64_t*>(real_ptr_ro(x));
 }
 // Check that n = 0 to avoid R CMD warnings
 inline void *safe_memmove(void *dst, const void *src, size_t n){
@@ -741,6 +733,14 @@ inline r_bool_t get_value_impl<r_bool_t>(SEXP x, const R_xlen_t i){
   return internal::logical_ptr_ro(x)[i];
 }
 template<>
+inline int get_value_impl<int>(int* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline int get_value_impl<int>(SEXP x, const R_xlen_t i){
+  return internal::integer_ptr_ro(x)[i];
+}
+template<>
 inline r_int_t get_value_impl<r_int_t>(r_int_t* p_x, const R_xlen_t i){
   return p_x[i];
 }
@@ -749,11 +749,11 @@ inline r_int_t get_value_impl<r_int_t>(SEXP x, const R_xlen_t i){
   return internal::integer_ptr_ro(x)[i];
 }
 template<>
-inline int64_t get_value_impl<int64_t>(int64_t* p_x, const R_xlen_t i){
+inline r_int64_t get_value_impl<r_int64_t>(r_int64_t* p_x, const R_xlen_t i){
   return p_x[i];
 }
 template<>
-inline int64_t get_value_impl<int64_t>(SEXP x, const R_xlen_t i){
+inline r_int64_t get_value_impl<r_int64_t>(SEXP x, const R_xlen_t i){
   return internal::integer64_ptr_ro(x)[i];
 }
 template<>
@@ -762,6 +762,14 @@ inline r_double_t get_value_impl<r_double_t>(r_double_t* p_x, const R_xlen_t i){
 }
 template<>
 inline r_double_t get_value_impl<r_double_t>(SEXP x, const R_xlen_t i){
+  return internal::real_ptr_ro(x)[i];
+}
+template<>
+inline double get_value_impl<double>(double* p_x, const R_xlen_t i){
+  return p_x[i];
+}
+template<>
+inline double get_value_impl<double>(SEXP x, const R_xlen_t i){
   return internal::real_ptr_ro(x)[i];
 }
 template<>
@@ -816,7 +824,6 @@ inline void set_value(T *p_x, const R_xlen_t i, T val){
     always_false<T>,
     "Unimplemented `set_value` specialisation"
   );
-  return T{};
 }
 
 template<typename T>
@@ -825,7 +832,6 @@ inline void set_value(SEXP x, const R_xlen_t i, T val){
     always_false<T>,
     "Unimplemented `set_value` specialisation"
   );
-  return T{};
 }
 
 template<>
@@ -845,11 +851,19 @@ inline void set_value<r_int_t>(SEXP x, const R_xlen_t i, r_int_t val){
   set_value(internal::integer_ptr(x), i, val);
 }
 template<>
-inline void set_value<int64_t>(int64_t* p_x, const R_xlen_t i, int64_t val){
+inline void set_value<int>(int* p_x, const R_xlen_t i, int val){
   p_x[i] = val;
 }
 template<>
-inline void set_value<int64_t>(SEXP x, const R_xlen_t i, int64_t val){
+inline void set_value<int>(SEXP x, const R_xlen_t i, int val){
+  set_value(vector_ptr<r_int_t>(x), i, r_int_t(val));
+}
+template<>
+inline void set_value<r_int64_t>(r_int64_t* p_x, const R_xlen_t i, r_int64_t val){
+  p_x[i] = val;
+}
+template<>
+inline void set_value<r_int64_t>(SEXP x, const R_xlen_t i, r_int64_t val){
   set_value(internal::integer64_ptr(x), i, val);
 }
 template<>
@@ -859,6 +873,14 @@ inline void set_value<r_double_t>(r_double_t* p_x, const R_xlen_t i, r_double_t 
 template<>
 inline void set_value<r_double_t>(SEXP x, const R_xlen_t i, r_double_t val){
   set_value(internal::real_ptr(x), i, val);
+}
+template<>
+inline void set_value<double>(double* p_x, const R_xlen_t i, double val){
+  p_x[i] = val;
+}
+template<>
+inline void set_value<double>(SEXP x, const R_xlen_t i, double val){
+  set_value(vector_ptr<r_double_t>(x), i, r_double_t(val));
 }
 template<>
 inline void set_value<r_complex_t>(r_complex_t* p_x, const R_xlen_t i, r_complex_t val){
@@ -896,111 +918,6 @@ inline void set_value<SEXP>(SEXP x, const R_xlen_t i, SEXP val){
   SET_VECTOR_ELT(x, i, val);
 }
 
-}
-
-template <typename T>
-inline void r_fill(
-    [[maybe_unused]] SEXP target,
-    [[maybe_unused]] T *p_target,
-    R_xlen_t start, R_xlen_t n, const T val
-){
-
-  if constexpr (is_r_ptr_writable_v<T>){
-    int n_threads = internal::calc_threads(n);
-    if (n_threads > 1) {
-      OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i) {
-        vec::set_value(p_target, start + i, val);
-      }
-    } else {
-      std::fill_n(p_target + start, n, val);
-    }
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      vec::set_value(target, start + i, val);
-    }
-  }
-}
-
-template <typename T>
-inline void r_fill(
-    [[maybe_unused]] SEXP target,
-    [[maybe_unused]] const T *p_target,
-    R_xlen_t start, R_xlen_t n, const T val
-){
-  using r_t = std::remove_const_t<T>;
-  r_fill(target, const_cast<r_t*>(p_target), start, n, val);
-}
-
-template <typename T>
-inline void r_replace(
-    [[maybe_unused]] SEXP target,
-    [[maybe_unused]] T *p_target,
-    R_xlen_t start, R_xlen_t n, const T old_val, const T new_val
-){
-  if constexpr (is_r_ptr_writable_v<T>){
-    int n_threads = internal::calc_threads(n);
-    if (n_threads > 1) {
-      OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_target[start + i] == old_val){
-          vec::set_value(p_target, start + i, new_val);
-        }
-      }
-    } else {
-      std::replace(p_target + start, p_target + start + n, old_val, new_val);
-    }
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      R_xlen_t idx = start + i;
-      if (p_target[idx] == old_val){
-        vec::set_value(target, idx, new_val);
-      }
-    }
-  }
-}
-
-template <typename T>
-inline void r_replace(
-    [[maybe_unused]] SEXP target,
-    [[maybe_unused]] const T *p_target,
-    R_xlen_t start, R_xlen_t n, const T old_val, const T new_val
-){
-  using r_t = std::remove_const_t<T>;
-  r_replace(target, const_cast<r_t*>(p_target), start, n, old_val, new_val);
-}
-
-template <typename T>
-inline void r_copy_n(
-    [[maybe_unused]] SEXP target,
-    [[maybe_unused]] T *p_target,
-    const T *p_source, R_xlen_t target_offset, R_xlen_t n
-){
-
-  if constexpr (is_r_ptr_writable_v<T>){
-    int n_threads = internal::calc_threads(n);
-    if (n_threads > 1) {
-      OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i) {
-        vec::set_value(p_target, target_offset + i, p_source[i]);
-      }
-    } else {
-      std::copy_n(p_source, n, p_target + target_offset);
-    }
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      vec::set_value(target, target_offset + i, p_source[i]);
-    }
-  }
-}
-template <typename T>
-inline void r_copy_n(
-    [[maybe_unused]] SEXP target,
-    [[maybe_unused]] const T *p_target,
-    const T *p_source, R_xlen_t target_offset, R_xlen_t n
-){
-  using r_t = std::remove_const_t<T>;
-  r_copy_n(target, const_cast<r_t*>(p_target), p_source, target_offset, n);
 }
 
 
@@ -1041,174 +958,6 @@ inline bool inherits(SEXP x, SEXP classes){
 }
 }
 
-namespace vec {
-
-inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
-  return Rf_coerceVector(x, type);
-}
-
-template <typename T>
-inline SEXP new_vector(R_xlen_t n, const T default_value) {
-  static_assert(
-    always_false<T>,
-    "Unimplemented `new_vector` specialisation"
-  );
-  return T{};
-}
-// One-parameter template version
-template <typename T>
-inline SEXP new_vector(R_xlen_t n) {
-  static_assert(
-    always_false<T>,
-    "Unimplemented `new_vector` specialisation"
-  );
-  return T{};
-}
-
-template <>
-inline SEXP new_vector<r_bool_t>(R_xlen_t n) {
-  return internal::new_vec(LGLSXP, n);
-}
-template <>
-inline SEXP new_vector<r_bool_t>(R_xlen_t n, const r_bool_t default_value) {
-  SEXP out = SHIELD(new_vector<r_bool_t>(n));
-  r_bool_t* RESTRICT p_out = internal::logical_ptr(out);
-  r_fill(out, p_out, 0, n, default_value);
-  YIELD(1);
-  return out;
-}
-template <>
-inline SEXP new_vector<r_int_t>(R_xlen_t n){
-  return internal::new_vec(INTSXP, n);
-}
-template <>
-inline SEXP new_vector<r_int_t>(R_xlen_t n, const r_int_t default_value){
-  SEXP out = SHIELD(new_vector<r_int_t>(n));
-  r_int_t* RESTRICT p_out = internal::integer_ptr(out);
-  r_fill(out, p_out, 0, n, default_value);
-  YIELD(1);
-  return out;
-}
-template <>
-inline SEXP new_vector<r_double_t>(R_xlen_t n){
-  return internal::new_vec(REALSXP, n);
-}
-template <>
-inline SEXP new_vector<r_double_t>(R_xlen_t n, const r_double_t default_value){
-  SEXP out = SHIELD(new_vector<r_double_t>(n));
-  r_double_t* RESTRICT p_out = internal::real_ptr(out);
-  r_fill(out, p_out, 0, n, default_value);
-  YIELD(1);
-  return out;
-}
-template <>
-inline SEXP new_vector<int64_t>(R_xlen_t n){
-  SEXP out = SHIELD(new_vector<r_double_t>(n));
-  attr::set_old_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
-  YIELD(2);
-  return out;
-}
-template <>
-inline SEXP new_vector<int64_t>(R_xlen_t n, const int64_t default_value){
-  SEXP out = SHIELD(new_vector<int64_t>(n));
-  int64_t* RESTRICT p_out = internal::integer64_ptr(out);
-  r_fill(out, p_out, 0, n, default_value);
-  YIELD(1);
-  return out;
-}
-template <>
-inline SEXP new_vector<r_string_t>(R_xlen_t n){
-  return internal::new_vec(STRSXP, n);
-}
-template <>
-inline SEXP new_vector<r_string_t>(R_xlen_t n, const r_string_t default_value){
-  SEXP out = SHIELD(new_vector<r_string_t>(n));
-  if (default_value != blank_r_string){
-    for (R_xlen_t i = 0; i < n; ++i){
-      set_value<r_string_t>(out, i, default_value);
-    }
-  }
-  YIELD(1);
-  return out;
-}
-template <>
-inline SEXP new_vector<r_complex_t>(R_xlen_t n){
-  return internal::new_vec(CPLXSXP, n);
-}
-template <>
-inline SEXP new_vector<r_complex_t>(R_xlen_t n, const r_complex_t default_value){
-  SEXP out = SHIELD(new_vector<r_complex_t>(n));
-  r_complex_t* RESTRICT p_out = internal::complex_ptr(out);
-  r_fill(out, p_out, 0, n, default_value);
-  YIELD(1);
-  return out;
-}
-template <>
-inline SEXP new_vector<r_byte_t>(R_xlen_t n){
-  return internal::new_vec(RAWSXP, n);
-}
-template <>
-inline SEXP new_vector<r_byte_t>(R_xlen_t n, const r_byte_t default_value){
-  SEXP out = SHIELD(new_vector<r_byte_t>(n));
-  r_byte_t *p_out = internal::raw_ptr(out);
-  r_fill(out, p_out, 0, n, default_value);
-  YIELD(1);
-  return out;
-}
-inline SEXP new_list(R_xlen_t n){
-  return internal::new_vec(VECSXP, n);
-}
-inline SEXP new_list(R_xlen_t n, const SEXP default_value){
-  SEXP out = SHIELD(internal::new_vec(VECSXP, n));
-  if (!is_null(default_value)){
-    for (R_xlen_t i = 0; i < n; ++i){
-      SET_VECTOR_ELT(out, i, default_value);
-    }
-  }
-  YIELD(1);
-  return out;
-}
-template <>
-inline SEXP new_vector<SEXP>(R_xlen_t n){
-  return new_list(n);
-}
-template <>
-inline SEXP new_vector<SEXP>(R_xlen_t n, const SEXP default_value){
-  return new_list(n, default_value);
-}
-
-}
-
-namespace df {
-
-inline bool is_df(SEXP x){
-  return vec::is_df(x);
-}
-
-inline r_int_t nrow(SEXP x){
-  return Rf_length(attr::get_attr(x, symbol::row_names_sym));
-}
-inline r_int_t ncol(SEXP x){
-  return Rf_length(x);
-}
-inline SEXP new_row_names(int n){
-  if (n > 0){
-    SEXP out = SHIELD(vec::new_vector<r_int_t>(2));
-    vec::set_value(out, 0, na::integer);
-    vec::set_value(out, 1, -n);
-    YIELD(1);
-    return out;
-  } else {
-    return vec::new_vector<r_int_t>(0);
-  }
-}
-inline void set_row_names(SEXP x, int n){
-  SEXP row_names = SHIELD(new_row_names(n));
-  attr::set_attr(x, symbol::row_names_sym, row_names);
-  YIELD(1);
-}
-}
-
 namespace math {
 template <typename T>
 inline constexpr bool is_r_inf(const T x){
@@ -1244,27 +993,6 @@ inline constexpr bool is_r_neg_inf<r_double_t>(const r_double_t x){
 
 // C++ templates
 
-
-template<typename T>
-inline constexpr bool is_r_true(const T x) {
-  return false;
-}
-
-template<>
-inline constexpr bool is_r_true<r_bool_t>(const r_bool_t x){
-  return x == r_true;
-}
-
-template<typename T>
-inline constexpr bool is_r_false(const T x) {
-  return false;
-}
-
-template<>
-inline constexpr bool is_r_false<r_bool_t>(const r_bool_t x){
-  return x == r_false;
-}
-
 template<typename T>
 inline constexpr bool is_r_na(const T x) {
   return false;
@@ -1284,14 +1012,22 @@ template<>
 inline constexpr bool is_r_na<r_int_t>(const r_int_t x){
   return x == na::integer;
 }
+template<>
+inline constexpr bool is_r_na<int>(const int x){
+  return x == na::integer.value;
+}
 
 template<>
 inline constexpr bool is_r_na<r_double_t>(const r_double_t x){
   return x.value != x.value;
 }
+template<>
+inline constexpr bool is_r_na<double>(const double x){
+  return x != x;
+}
 
 template<>
-inline constexpr bool is_r_na<int64_t>(const int64_t x){
+inline constexpr bool is_r_na<r_int64_t>(const r_int64_t x){
   return x == na::integer64;
 }
 
@@ -1347,9 +1083,18 @@ template<>
 inline r_double_t na_value_impl<r_double_t>(){
   return na::real;
 }
+template<>
+inline constexpr int na_value_impl<int>(){
+  return na::integer.value;
+}
 
 template<>
-inline constexpr int64_t na_value_impl<int64_t>(){
+inline double na_value_impl<double>(){
+  return na::real.value;
+}
+
+template<>
+inline constexpr r_int64_t na_value_impl<r_int64_t>(){
   return na::integer64;
 }
 
@@ -1380,13 +1125,651 @@ inline constexpr auto na_value() {
   return internal::na_value_impl<std::remove_cvref_t<T>>();
 }
 
+// Methods for custom R types
+
+  // ! operator for r_bool_t
+inline constexpr r_bool_t operator!(r_bool_t x) {
+  if (is_r_na(x)) {
+    return r_na;
+  }
+  return r_bool_t{!x.value};
+}
+
+// r_complex_t methods
+
+// Unary minus
+inline constexpr r_complex_t operator-(const r_complex_t& x) {
+  return r_complex_t{-x.re(), -x.im()};
+}
+
+// Binary arithmetic operators
+inline constexpr r_complex_t operator+(const r_complex_t& lhs, const r_complex_t& rhs) {
+  return r_complex_t{lhs.re() + rhs.re(), lhs.im() + rhs.im()};
+}
+
+inline constexpr r_complex_t operator-(const r_complex_t& lhs, const r_complex_t& rhs) {
+  return r_complex_t{lhs.re() - rhs.re(), lhs.im() - rhs.im()};
+}
+
+inline constexpr r_complex_t operator*(const r_complex_t& lhs, const r_complex_t& rhs) {
+  // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
+  r_double_t a = lhs.re(), b = lhs.im();
+  r_double_t c = rhs.re(), d = rhs.im();
+  return r_complex_t{a*c - b*d, a*d + b*c};
+}
+
+inline constexpr r_complex_t operator/(const r_complex_t& lhs, const r_complex_t& rhs) {
+  // (a+bi) / (c+di) = [(ac+bd)/(c²+d²) + (bc-ad)/(c²+d²)i]
+  r_double_t a = lhs.re(), b = lhs.im();
+  r_double_t c = rhs.re(), d = rhs.im();
+  r_double_t denom = c*c + d*d;
+  return r_complex_t{(a*c + b*d) / denom, (b*c - a*d) / denom};
+}
+
+// Compound assignment operators
+inline constexpr r_complex_t& operator+=(r_complex_t& lhs, const r_complex_t& rhs) {
+  lhs.value.r += rhs.value.r;
+  lhs.value.i += rhs.value.i;
+  return lhs;
+}
+
+inline constexpr r_complex_t& operator-=(r_complex_t& lhs, const r_complex_t& rhs) {
+  lhs.value.r -= rhs.value.r;
+  lhs.value.i -= rhs.value.i;
+  return lhs;
+}
+
+inline constexpr r_complex_t& operator*=(r_complex_t& lhs, const r_complex_t& rhs) {
+  r_double_t a = lhs.re(), b = lhs.im();
+  r_double_t c = rhs.re(), d = rhs.im();
+  lhs.re() = a*c - b*d;
+  lhs.im() = a*d + b*c;
+  return lhs;
+}
+
+inline constexpr r_complex_t& operator/=(r_complex_t& lhs, const r_complex_t& rhs) {
+  r_double_t a = lhs.re(), b = lhs.im();
+  r_double_t c = rhs.re(), d = rhs.im();
+  r_double_t denom = c*c + d*d;
+  lhs.re() = (a*c + b*d) / denom;
+  lhs.im() = (b*c - a*d) / denom;
+  return lhs;
+}
+
+template<RType T, RType U>
+inline constexpr r_bool_t operator==(const T lhs, const U rhs) {
+
+  // Check for NA in either operand
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    return na::logical;
+  }
+
+  if constexpr (is<T, r_complex_t> && is<U, r_complex_t>){
+    // Compare complex types by components
+    return r_bool_t{lhs.re() == rhs.re() && lhs.im() == rhs.im()};
+  } else {
+    return r_bool_t{lhs.value == rhs.value};
+  }
+}
+
+template<RType T, CppType U>
+inline constexpr r_bool_t operator==(const T lhs, const U rhs) {
+
+  // Check for NA in either operand
+  if (is_r_na(lhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value == rhs};
+}
+
+template<CppType T, RType U>
+inline constexpr r_bool_t operator==(const T lhs, const U rhs) {
+
+  // Check for NA in either operand
+  if (is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs == rhs.value};
+}
+
+// Other comparison operators
+template<typename T, typename U>
+inline constexpr r_bool_t operator!=(const T lhs, const U rhs) {
+  return r_bool_t{!(lhs == rhs)};
+}
+
+template<RMathType T, RMathType U>
+inline constexpr r_bool_t operator<(const T lhs, const U rhs) {
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value < rhs.value};
+}
+template<RMathType T, CppMathType U>
+inline constexpr r_bool_t operator<(const T lhs, const U rhs) {
+  if (is_r_na(lhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value < rhs};
+}
+template<CppMathType T, RMathType U>
+inline constexpr r_bool_t operator<(const T lhs, const U rhs) {
+  if (is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs < rhs.value};
+}
+
+template<RMathType T, RMathType U>
+inline constexpr r_bool_t operator<=(const T lhs, const U rhs) {
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value <= rhs.value};
+}
+template<RMathType T, CppMathType U>
+inline constexpr r_bool_t operator<=(const T lhs, const U rhs) {
+  if (is_r_na(lhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value <= rhs};
+}
+template<CppMathType T, RMathType U>
+inline constexpr r_bool_t operator<=(const T lhs, const U rhs) {
+  if (is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs <= rhs.value};
+}
+
+template<RMathType T, RMathType U>
+inline constexpr r_bool_t operator>(const T lhs, const U rhs) {
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value > rhs.value};
+}
+template<RMathType T, CppMathType U>
+inline constexpr r_bool_t operator>(const T lhs, const U rhs) {
+  if (is_r_na(lhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value > rhs};
+}
+template<CppMathType T, RMathType U>
+inline constexpr r_bool_t operator>(const T lhs, const U rhs) {
+  if (is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs > rhs.value};
+}
+
+template<RMathType T, RMathType U>
+inline constexpr r_bool_t operator>=(const T lhs, const U rhs) {
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value >= rhs.value};
+}
+template<RMathType T, CppMathType U>
+inline constexpr r_bool_t operator>=(const T lhs, const U rhs) {
+  if (is_r_na(lhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs.value >= rhs};
+}
+template<CppMathType T, RMathType U>
+inline constexpr r_bool_t operator>=(const T lhs, const U rhs) {
+  if (is_r_na(rhs)) {
+    return na::logical;
+  }
+  return r_bool_t{lhs >= rhs.value};
+}
+
+template<RMathType T, RMathType U>
+inline constexpr T operator+=(T &lhs, const U rhs) {
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs.value += rhs.value;
+  }
+  return lhs;
+}
+template<RMathType T, CppMathType U>
+inline constexpr T operator+=(T &lhs, const U rhs) {
+  if (is_r_na(lhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs.value += rhs;
+  }
+  return lhs;
+}
+template<CppMathType T, RMathType U>
+inline constexpr T operator+=(T &lhs, const U rhs) {
+  if (is_r_na(rhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs += rhs.value;
+  }
+  return lhs;
+}
+
+template<>
+inline constexpr r_double_t operator+=(r_double_t &lhs, const r_double_t rhs) {
+  lhs.value += rhs.value;
+  return lhs;
+}
+
+template<typename T, typename U>
+  requires (AtLeastOneRMathType<T, U>)
+inline constexpr T operator+(const T lhs, const U rhs) {
+  auto res = lhs;
+  res += rhs;
+  return res;
+}
+
+template<RMathType T, RMathType U>
+inline constexpr T operator-=(T &lhs, const U rhs) {
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs.value -= rhs.value;
+  }
+  return lhs;
+}
+
+template<RMathType T, CppMathType U>
+inline constexpr T operator-=(T &lhs, const U rhs) {
+  if (is_r_na(lhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs.value -= rhs;
+  }
+  return lhs;
+}
+
+template<CppMathType T, RMathType U>
+inline constexpr T operator-=(T &lhs, const U rhs) {
+  if (is_r_na(rhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs -= rhs.value;
+  }
+  return lhs;
+}
+template<>
+inline constexpr r_double_t operator-=(r_double_t &lhs, const r_double_t rhs) {
+  lhs.value -= rhs.value;
+  return lhs;
+}
+
+template<RMathType T, RMathType U>
+  requires (AtLeastOneRMathType<T, U>)
+inline constexpr T operator-(const T lhs, const U rhs) {
+  auto res = lhs;
+  res -= rhs;
+  return res;
+}
+
+template<RMathType T, RMathType U>
+inline constexpr T operator*=(T &lhs, const U rhs) {
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs.value *= rhs.value;
+  }
+  return lhs;
+}
+
+template<RMathType T, CppMathType U>
+inline constexpr T operator*=(T &lhs, const U rhs) {
+  if (is_r_na(lhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs.value *= rhs;
+  }
+  return lhs;
+}
+
+template<CppMathType T, RMathType U>
+inline constexpr T operator*=(T &lhs, const U rhs) {
+  if (is_r_na(rhs)){
+    lhs = na_value<T>();
+  } else {
+    lhs *= rhs.value;
+  }
+  return lhs;
+}
+
+template<>
+inline constexpr r_double_t operator*=(r_double_t &lhs, const r_double_t rhs) {
+  lhs.value *= rhs.value;
+  return lhs;
+}
+
+template<RMathType T, RMathType U>
+  requires (AtLeastOneRMathType<T, U>)
+inline constexpr T operator*(const T lhs, const U rhs) {
+  auto res = lhs;
+  res *= rhs;
+  return res;
+}
+
+template<RMathType T, RMathType U>
+inline constexpr T operator/=(T &lhs, const U rhs) {
+  if (is_r_na(lhs) || is_r_na(rhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs.value /= rhs.value;
+  }
+  return lhs;
+}
+
+template<RMathType T, CppMathType U>
+inline constexpr T operator/=(T &lhs, const U rhs) {
+  if (is_r_na(rhs)) {
+    lhs = na_value<T>();
+  } else {
+    lhs.value /= rhs;
+  }
+  return lhs;
+}
+
+template<CppMathType T, RMathType U>
+inline constexpr T operator/=(T &lhs, const U rhs) {
+  if (is_r_na(rhs)){
+    lhs = na_value<T>();
+  } else {
+    lhs /= rhs.value;
+  }
+  return lhs;
+}
+
+template<>
+inline constexpr r_double_t operator/=(r_double_t &lhs, const r_double_t rhs) {
+  lhs.value /= rhs.value;
+  return lhs;
+}
+
+template<RMathType T, RMathType U>
+  requires (AtLeastOneRMathType<T, U>)
+inline constexpr T operator/(const T lhs, const U rhs) {
+  auto res = lhs;
+  res /= rhs;
+  return res;
+}
+
+template<RMathType T>
+inline constexpr T operator-(const T x) {
+  if (is_r_na(x)){
+    return x;
+  }
+  return T{-x.value};
+}
+template<>
+inline constexpr r_double_t operator-(const r_double_t x) {
+  return r_double_t{-x.value};
+}
+
+template<RType T>
+struct r_vector_t {
+  SEXP value;
+  const T* const_ptr;  // Always created
+  T* ptr;              // Only initialized if writable
+
+  // Constructor that wraps new_vector<T>
+  explicit r_vector_t(R_xlen_t size) 
+    : value(new_vector<T>(size))
+    , const_ptr(vector_ptr<const T>(value))
+    , ptr(nullptr)
+  {
+    if constexpr (is_r_ptr_writable_v<T>) {
+      ptr = vector_ptr<T>(value);
+    }
+  }
+
+  // Constructor from existing SEXP
+  explicit r_vector_t(SEXP s) 
+    : value(s)
+    , const_ptr(vector_ptr<const T>(s))
+    , ptr(nullptr)
+  {
+    if constexpr (is_r_ptr_writable_v<T>) {
+      ptr = vector_ptr<T>(s);
+    }
+  }
+
+  // Get uses const pointer (always works)
+  T get(R_xlen_t index) const {
+    return const_ptr[index];
+  }
+
+  // Set only available if writable
+  void set(R_xlen_t index, T val) {
+    if constexpr (is_r_ptr_writable_v<T>){
+      ptr[index] = val;
+    } else {
+      set_value<T>(value, index, val);
+    }
+  }
+
+  // Direct pointer access
+  T* data() requires is_r_ptr_writable_v<T>{
+    return ptr;
+  }
+
+  const T* data() const {
+    return const_ptr;
+  }
+
+  // Implicit conversion to SEXP
+  operator SEXP() const {
+    return value;
+  }
+
+  // Get size
+  R_xlen_t size() const {
+    return Rf_xlength(value);
+  }
+
+  void fill(R_xlen_t start, R_xlen_t n, const T val){
+  if constexpr (is_r_ptr_writable_v<T>){
+    int n_threads = internal::calc_threads(n);
+    auto *p_target = data();
+    if (n_threads > 1) {
+      OMP_PARALLEL_FOR_SIMD(n_threads)
+      for (R_xlen_t i = 0; i < n; ++i) {
+        p_target[start + i] = val;
+      }
+    } else {
+      std::fill_n(p_target + start, n, val);
+    }
+  } else {
+    for (R_xlen_t i = 0; i < n; ++i) {
+      set(start + i, val);
+    }
+  }
+}
+
+void replace(R_xlen_t start, R_xlen_t n, const T old_val, const T new_val){ 
+  if constexpr (is_r_ptr_writable_v<T>){
+    int n_threads = internal::calc_threads(n);
+    auto *p_target = data();
+    if (n_threads > 1) {
+      OMP_PARALLEL_FOR_SIMD(n_threads)
+      for (R_xlen_t i = 0; i < n; ++i) {
+        if (p_target[start + i] == old_val){
+          p_target[start + i] = new_val;
+        }
+      }
+    } else {
+      std::replace(data() + start, data() + start + n, old_val, new_val);
+    }
+  } else {
+    for (R_xlen_t i = 0; i < n; ++i) {
+      R_xlen_t idx = start + i;
+      if (get(idx) == old_val){
+        set(idx, new_val);
+      }
+    }
+  }
+}
+
+};
+
+
+template <RType T>
+inline void r_copy_n(r_vector_t<T> &target, const T *p_source, R_xlen_t target_offset, R_xlen_t n){
+  if constexpr (is_r_ptr_writable_v<T>){
+    int n_threads = internal::calc_threads(n);
+    if (n_threads > 1) {
+      OMP_PARALLEL_FOR_SIMD(n_threads)
+      for (R_xlen_t i = 0; i < n; ++i) {
+        target.set(target_offset + i, p_source[i]); 
+      }
+    } else {
+      std::copy_n(p_source, n, target.data() + target_offset);
+    }
+  } else {
+    for (R_xlen_t i = 0; i < n; ++i) {
+      target.set(target_offset + i, p_source[i]);
+    }
+  }
+}
+
+namespace vec {
+
+inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
+  return Rf_coerceVector(x, type);
+}
+
+// One-parameter template version
+template <RType T>
+inline r_vector_t<T> new_vector(R_xlen_t n) {
+  static_assert(
+    always_false<T>,
+    "Unimplemented `new_vector` specialisation"
+  );
+  return r_vector_t<r_int_t>(0);
+}
+
+template <>
+inline r_vector_t<r_bool_t> new_vector<r_bool_t>(R_xlen_t n) {
+  return r_vector_t<r_bool_t>(internal::new_vec(LGLSXP, n));
+}
+template <>
+inline r_vector_t<r_int_t> new_vector<r_int_t>(R_xlen_t n){
+  return static_cast<r_vector_t<r_int_t>>(internal::new_vec(INTSXP, n));
+}
+template <>
+inline r_vector_t<r_double_t> new_vector<r_double_t>(R_xlen_t n){ 
+  return static_cast<r_vector_t<r_double_t>>(internal::new_vec(REALSXP, n));
+} 
+template <>
+inline r_vector_t<r_int64_t> new_vector<r_int64_t>(R_xlen_t n){
+  SEXP out = SHIELD(new_vector<r_double_t>(n));
+  attr::set_old_class(out, SHIELD(internal::make_utf8_strsxp("integer64")));
+  YIELD(2);
+  return static_cast<r_vector_t<r_int64_t>>(out);
+}
+template <>
+inline r_vector_t<r_string_t> new_vector<r_string_t>(R_xlen_t n){
+  return static_cast<r_vector_t<r_string_t>>(internal::new_vec(STRSXP, n));
+}
+template <>
+inline r_vector_t<r_complex_t> new_vector<r_complex_t>(R_xlen_t n){
+  return static_cast<r_vector_t<r_complex_t>>(internal::new_vec(CPLXSXP, n));
+}
+template <>
+inline r_vector_t<r_byte_t> new_vector<r_byte_t>(R_xlen_t n){ 
+  return static_cast<r_vector_t<r_byte_t>>(internal::new_vec(RAWSXP, n));
+}
+// template <>
+// inline r_vector_t<r_bool_t> new_vector<r_bool_t>(R_xlen_t n, const r_bool_t default_value) {
+//   r_vector_t<r_bool_t> out = SHIELD(new_vector<r_bool_t>(n));
+//   out.fill(0, n, default_value);
+//   YIELD(1);
+//   return out;
+// }
+
+// template <>
+// inline r_vector_t<r_int_t> new_vector<r_int_t>(R_xlen_t n, const r_int_t default_value){
+//   r_vector_t<r_int_t> out = SHIELD(new_vector<r_int_t>(n));
+//   out.fill(0, n, default_value);
+//   YIELD(1);
+//   return out;
+// }
+
+// template <>
+// inline r_vector_t<r_double_t> new_vector<r_double_t>(R_xlen_t n, const r_double_t default_value){
+//   r_vector_t<r_double_t> out = SHIELD(new_vector<r_double_t>(n));
+//   out.fill(0, n, default_value);
+//   YIELD(1);
+//   return out;
+// }
+// template <>
+// inline r_vector_t<r_int64_t> new_vector<r_int64_t>(R_xlen_t n, const r_int64_t default_value){
+//   r_vector_t<r_int64_t> out = SHIELD(new_vector<r_int64_t>(n));
+//   out.fill(0, n, default_value);
+//   YIELD(1);
+//   return out;
+// }
+
+// template <>
+// inline r_vector_t<r_string_t> new_vector<r_string_t>(R_xlen_t n, const r_string_t default_value){
+//   r_vector_t<r_string_t> out = SHIELD(new_vector<r_string_t>(n));
+//   if ((default_value == blank_r_string).is_false()){
+//     for (R_xlen_t i = 0; i < n; ++i){
+//       out.set(i, default_value);
+//     }
+//   }
+//   YIELD(1);
+//   return out;
+// }
+// template <>
+// inline r_vector_t<r_complex_t> new_vector<r_complex_t>(R_xlen_t n, const r_complex_t default_value){
+//   auto out = SHIELD(new_vector<r_complex_t>(n));
+//   out.fill(0, n, default_value);
+//   YIELD(1);
+//   return out;
+// }
+// template <>
+// inline r_vector_t<r_byte_t> new_vector<r_byte_t>(R_xlen_t n, const r_byte_t default_value){
+//   auto out = SHIELD(new_vector<r_byte_t>(n));
+//   out.fill(0, n, default_value);
+//   YIELD(1);
+//   return out;
+// }
+inline SEXP new_list(R_xlen_t n){
+  return internal::new_vec(VECSXP, n);
+}
+inline SEXP new_list(R_xlen_t n, const SEXP default_value){
+  SEXP out = SHIELD(internal::new_vec(VECSXP, n));
+  if (!is_null(default_value)){
+    for (R_xlen_t i = 0; i < n; ++i){
+      SET_VECTOR_ELT(out, i, default_value);
+    }
+  }
+  YIELD(1);
+  return out;
+}
+
+template <RType T>
+inline auto new_vector<T>(R_xlen_t n, const T default_value){
+  auto out = SHIELD(new_vector<T>(n));
+  out.fill(0, n, default_value);
+  YIELD(1);
+  return out;
+}
+
+}
 
 namespace vec {
 
 template<typename T>
 inline SEXP as_vector(const T x){
   if constexpr (is_r_or_cpp_integral_v<T>){
-    return as_vector<int64_t>(x);
+    return as_vector<r_int64_t>(x);
   } else if constexpr (std::is_convertible_v<T, SEXP>){
     return as_vector<SEXP>(x);
   } else {
@@ -1394,30 +1777,30 @@ inline SEXP as_vector(const T x){
       always_false<T>,
       "Unimplemented `as_vector` specialisation"
     );
-    return T{};
+    return r_null;
   }
 }
 template<>
 inline SEXP as_vector<bool>(const bool x){
-  return new_vector<r_bool_t>(1, static_cast<r_bool_t>(x));
+  return new_vector<r_bool_t>(1, r_bool_t(x));
 }
 template<>
 inline SEXP as_vector<r_bool_t>(const r_bool_t x){
   return new_vector<r_bool_t>(1, x);
 }
 template<>
-inline SEXP as_vector<Rboolean>(const Rboolean x){
-  return new_vector<r_bool_t>(1, static_cast<r_bool_t>(x));
-}
-template<>
 inline SEXP as_vector<r_int_t>(const r_int_t x){
   return new_vector<r_int_t>(1, x);
 }
 template<>
-inline SEXP as_vector<int64_t>(const int64_t x){
+inline SEXP as_vector<int>(const int x){
+  return as_vector<r_int_t>(r_int_t(x));
+}
+template<>
+inline SEXP as_vector<r_int64_t>(const r_int64_t x){
   if (is_r_na(x)){
     return Rf_ScalarInteger(na::integer);
-  } else if (between<int64_t>(x, r_limits::r_int_min, r_limits::r_int_max)){
+  } else if (between<r_int64_t>(x, r_limits::r_int_min.value, r_limits::r_int_max.value)){
     return Rf_ScalarInteger(static_cast<int>(x));
   } else {
     return Rf_ScalarReal(static_cast<double>(x));
@@ -1426,6 +1809,10 @@ inline SEXP as_vector<int64_t>(const int64_t x){
 template<>
 inline SEXP as_vector<r_double_t>(const r_double_t x){
   return new_vector<r_double_t>(1, x);
+}
+template<>
+inline SEXP as_vector<double>(const double x){
+  return as_vector<r_double_t>(r_double_t(x));
 }
 template<>
 inline SEXP as_vector<r_complex_t>(const r_complex_t x){
@@ -1505,7 +1892,7 @@ template<typename T>
 inline constexpr bool can_be_int64(T x){
   // If x is an int64 type whose size is <= int64 OR
   // an arithmetic type (e.g. double)
-  if constexpr (is_r_or_cpp_integral_v<T> && sizeof(T) <= sizeof(int64_t)){
+  if constexpr (is_r_or_cpp_integral_v<T> && sizeof(T) <= sizeof(r_int64_t)){
     return true;
   } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
     return between<T>(x, r_limits::r_int64_min, r_limits::r_int64_max);
@@ -1536,11 +1923,11 @@ inline constexpr r_int_t as_int(T x){
   }
 }
 template<typename T>
-inline constexpr int64_t as_int64(T x){
-  if constexpr (is<T, int64_t>){
+inline constexpr r_int64_t as_int64(T x){
+  if constexpr (is<T, r_int64_t>){
     return x;
   } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
-    return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<int64_t>(x);
+    return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<r_int64_t>(x);
   } else {
     return na::integer64;
   }
@@ -1654,8 +2041,8 @@ struct as_impl<r_int_t, U> {
 };
 
 template<typename U>
-struct as_impl<int64_t, U> {
-  static constexpr int64_t cast(U x) {
+struct as_impl<r_int64_t, U> {
+  static constexpr r_int64_t cast(U x) {
     return as_int64(x);
   }
 };
@@ -1708,236 +2095,6 @@ inline constexpr T as(U x) {
   return internal::as_impl<std::remove_cvref_t<T>, U>::cast(x);
 }
 
-// Methods for custom R types
-
-// r_complex_t methods
-
-// Unary minus
-inline constexpr r_complex_t operator-(const r_complex_t& x) {
-  return r_complex_t{-x.re(), -x.im()};
-}
-
-// Binary arithmetic operators
-inline constexpr r_complex_t operator+(const r_complex_t& lhs, const r_complex_t& rhs) {
-  return r_complex_t{lhs.re() + rhs.re(), lhs.im() + rhs.im()};
-}
-
-inline constexpr r_complex_t operator-(const r_complex_t& lhs, const r_complex_t& rhs) {
-  return r_complex_t{lhs.re() - rhs.re(), lhs.im() - rhs.im()};
-}
-
-inline constexpr r_complex_t operator*(const r_complex_t& lhs, const r_complex_t& rhs) {
-  // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
-  r_double_t a = lhs.re(), b = lhs.im();
-  r_double_t c = rhs.re(), d = rhs.im();
-  return r_complex_t{a*c - b*d, a*d + b*c};
-}
-
-inline constexpr r_complex_t operator/(const r_complex_t& lhs, const r_complex_t& rhs) {
-  // (a+bi) / (c+di) = [(ac+bd)/(c²+d²) + (bc-ad)/(c²+d²)i]
-  r_double_t a = lhs.re(), b = lhs.im();
-  r_double_t c = rhs.re(), d = rhs.im();
-  r_double_t denom = c*c + d*d;
-  return r_complex_t{(a*c + b*d) / denom, (b*c - a*d) / denom};
-}
-
-// Compound assignment operators
-inline constexpr r_complex_t& operator+=(r_complex_t& lhs, const r_complex_t& rhs) {
-  lhs.value.r += rhs.value.r;
-  lhs.value.i += rhs.value.i;
-  return lhs;
-}
-
-inline constexpr r_complex_t& operator-=(r_complex_t& lhs, const r_complex_t& rhs) {
-  lhs.value.r -= rhs.value.r;
-  lhs.value.i -= rhs.value.i;
-  return lhs;
-}
-
-inline constexpr r_complex_t& operator*=(r_complex_t& lhs, const r_complex_t& rhs) {
-  r_double_t a = lhs.re(), b = lhs.im();
-  r_double_t c = rhs.re(), d = rhs.im();
-  lhs.re() = a*c - b*d;
-  lhs.im() = a*d + b*c;
-  return lhs;
-}
-
-inline constexpr r_complex_t& operator/=(r_complex_t& lhs, const r_complex_t& rhs) {
-  r_double_t a = lhs.re(), b = lhs.im();
-  r_double_t c = rhs.re(), d = rhs.im();
-  r_double_t denom = c*c + d*d;
-  lhs.re() = (a*c + b*d) / denom;
-  lhs.im() = (b*c - a*d) / denom;
-  return lhs;
-}
-
-template<RType T, RType U>
-inline constexpr r_bool_t operator==(const T lhs, const U rhs) {
-
-  // Check for NA in either operand
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    return r_na;
-  }
-
-  if constexpr (is<T, r_complex_t> && is<U, r_complex_t>){
-    // Compare complex types by components
-    return r_bool_t{lhs.re() == rhs.re() && lhs.im() == rhs.im()};
-  } else {
-    return r_bool_t{lhs.value == rhs.value};
-  }
-}
-
-// Other comparison operators
-template<RType T, RType U>
-inline constexpr r_bool_t operator!=(const T lhs, const U rhs) {
-
-  // Check for NA in either operand
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    return r_na;
-  }
-
-  if constexpr (is<T, r_complex_t> && is<U, r_complex_t>){
-    return r_bool_t{lhs.re() != rhs.re() || lhs.im() != rhs.im()};
-  } else {
-    return r_bool_t{lhs.value != rhs.value};
-  }
-}
-
-template<RMathType T, RMathType U>
-inline constexpr r_bool_t operator<(const T lhs, const U rhs) {
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    return r_na;
-  }
-  return r_bool_t{lhs.value < rhs.value};
-}
-
-template<RMathType T, RMathType U>
-inline constexpr r_bool_t operator<=(const T lhs, const U rhs) {
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    return r_na;
-  }
-  return r_bool_t{lhs.value <= rhs.value};
-}
-
-template<RMathType T, RMathType U>
-inline constexpr r_bool_t operator>(const T lhs, const U rhs) {
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    return r_na;
-  }
-  return r_bool_t{lhs.value > rhs.value};
-}
-
-template<RMathType T, RMathType U>
-inline constexpr r_bool_t operator>=(const T lhs, const U rhs) {
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    return r_na;
-  }
-  return r_bool_t{lhs.value >= rhs.value};
-}
-
-template<RMathType T, RMathType U>
-inline constexpr T operator+=(T &lhs, const U rhs) {
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    lhs = na_value<T>();
-  } else {
-    lhs.value += rhs.value;
-  }
-  return lhs;
-}
-
-template<>
-inline constexpr r_double_t operator+=(r_double_t &lhs, const r_double_t rhs) {
-  lhs.value += rhs.value;
-  return lhs;
-}
-
-template<RMathType T, RMathType U>
-inline constexpr T operator+(const T lhs, const U rhs) {
-  auto res = lhs;
-  res += rhs;
-  return res;
-}
-
-template<RMathType T, RMathType U>
-inline constexpr T operator-=(T &lhs, const U rhs) {
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    lhs = na_value<T>();
-  } else {
-    lhs.value -= rhs.value;
-  }
-  return lhs;
-}
-
-template<>
-inline constexpr r_double_t operator-=(r_double_t &lhs, const r_double_t rhs) {
-  lhs.value -= rhs.value;
-  return lhs;
-}
-
-template<RMathType T, RMathType U>
-inline constexpr T operator-(const T lhs, const U rhs) {
-  auto res = lhs;
-  res -= rhs;
-  return res;
-}
-
-template<RMathType T, RMathType U>
-inline constexpr T operator*=(T &lhs, const U rhs) {
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    lhs = na_value<T>();
-  } else {
-    lhs.value *= rhs.value;
-  }
-  return lhs;
-}
-
-template<>
-inline constexpr r_double_t operator*=(r_double_t &lhs, const r_double_t rhs) {
-  lhs.value *= rhs.value;
-  return lhs;
-}
-
-template<RMathType T, RMathType U>
-inline constexpr T operator*(const T lhs, const U rhs) {
-  auto res = lhs;
-  res *= rhs;
-  return res;
-}
-
-template<RMathType T, RMathType U>
-inline constexpr T operator/=(T &lhs, const U rhs) {
-  if (is_r_na(lhs) || is_r_na(rhs)) {
-    lhs = na_value<T>();
-  } else {
-    lhs.value /= rhs.value;
-  }
-  return lhs;
-}
-
-template<>
-inline constexpr r_double_t operator/=(r_double_t &lhs, const r_double_t rhs) {
-  lhs.value /= rhs.value;
-  return lhs;
-}
-
-template<RMathType T, RMathType U>
-inline constexpr T operator/(const T lhs, const U rhs) {
-  auto res = lhs;
-  res /= rhs;
-  return res;
-}
-
-template<RMathType T>
-inline constexpr T operator-(const T x) {
-  if (is_r_na(x)){
-    return x;
-  }
-  return T{-x.value};
-}
-template<>
-inline constexpr r_double_t operator-(const r_double_t x) {
-  return r_double_t{-x.value};
-}
 
 // R math fns
 namespace internal {
@@ -1952,62 +2109,54 @@ namespace math {
 
 template<RMathType T>
 inline constexpr T r_abs(T x){
-  if constexpr (is_r_or_cpp_integral_v<T>){
-    return is_r_na(x) ? x : static_cast<T>(std::abs(x));
-  } else {
-    return static_cast<T>(std::abs(x));
-  }
-}
-
-inline r_double_t r_abs(r_complex_t x){
-  return std::sqrt(x.re() * x.re() + x.im() * x.im());
+  return is_r_na(x) ? x : T{std::abs(x.value)};
 }
 
 template<RMathType T>
 inline T r_floor(T x){
-  return is_r_na(x) ? x : std::floor(x);
+  return is_r_na(x) ? x : T{std::floor(x.value)};
 }
 template<>
 inline r_double_t r_floor(r_double_t x){
-  return std::floor(x);
+  return std::floor(x.value);
 }
 
-template<typename T>
+template<RMathType T>
 inline T r_ceiling(T x){
-  return is_r_na(x) ? x : std::ceil(x);
+  return is_r_na(x) ? x : T{std::ceil(x.value)};
 }
 template<>
 inline r_double_t r_ceiling(r_double_t x){
-  return std::ceil(x);
+  return std::ceil(x.value);
 }
 
-template<typename T>
+template<RMathType T>
 inline T r_trunc(T x){
-  return is_r_na(x) ? x : std::trunc(x);
+  return is_r_na(x) ? x : T{std::trunc(x.value)};
 }
 
 template <>
 inline r_double_t r_trunc(r_double_t x){
-  return std::trunc(x) + 0.0;
+  return std::trunc(x.value) + 0.0;
 }
 
-template <typename T>
+template <RMathType T>
 inline r_int_t r_sign(T x) {
   return is_r_na(x) ? na::integer : (T(0) < x) - (x < T(0));
 }
 
-template<MathType T>
+template<RMathType T>
 inline T r_negate(T x){
-  return -x;
+  return -x.value;
 }
 
-template<MathType T>
+template<RMathType T>
 inline r_double_t r_sqrt(T x){
-  return std::sqrt(as<r_double_t>(x));
+  return std::sqrt(as<r_double_t>(x).value);
 }
 
 template<typename T, typename U>
-  requires (is_r_or_cpp_arithmetic_v<T> || is_r_or_cpp_arithmetic_v<U>)
+  requires (AtLeastOneRMathType<T, U>)
 inline r_double_t r_pow(T x, U y){
   if (y == 0) return 1.0;
   if (x == 1) return 1.0;
@@ -2015,29 +2164,30 @@ inline r_double_t r_pow(T x, U y){
     r_double_t left = as<r_double_t>(x);
     return left * left;
   }
-  return std::pow(as<r_double_t>(x), as<r_double_t>(y));
+  return std::pow(as<r_double_t>(x).value, as<r_double_t>(y).value);
 }
 
-template<typename T>
+template<RMathType T>
 inline r_double_t r_log10(T x){
-  return std::log10(as<r_double_t>(x));
+  return std::log10(as<r_double_t>(x).value);
 }
 
-template<typename T>
+template<RMathType T>
 inline r_double_t r_exp(T x){
-  return std::exp(as<r_double_t>(x));
+  return std::exp(as<r_double_t>(x).value);
 }
 
 template<typename T, typename U>
+requires (AtLeastOneRMathType<T, U>)
 inline r_double_t r_log(T x, U base){
   return std::log(as<r_double_t>(x)) / std::log(as<r_double_t>(base));
 }
-template<typename T>
+template<RMathType T>
 inline r_double_t r_log(T x){
-  return std::log(as<r_double_t>(x));
+  return std::log(as<r_double_t>(x).value);
 }
 inline r_complex_t r_log(r_complex_t x){
-  if (is_r_na(x)){ 
+  if (is_r_na(x)){
     return x;
   }
   r_double_t real = 0.5 * (r_log(r_pow(x.re(), 2.0) + r_pow(x.im(), 2.0)));
@@ -2047,6 +2197,7 @@ inline r_complex_t r_log(r_complex_t x){
 
 
 template<typename T, typename U>
+requires (AtLeastOneRMathType<T, U>)
 inline r_double_t r_round(T x, const U digits){
   if (is_r_na(x)){
     return as<r_double_t>(x);
@@ -2064,7 +2215,7 @@ inline r_double_t r_round(T x, const U digits){
   }
 }
 
-template<typename T>
+template<RMathType T>
 inline r_double_t r_round(T x){
   if (is_r_na(x)){
     return as<r_double_t>(x);
@@ -2076,6 +2227,7 @@ inline r_double_t r_round(T x){
 }
 
 template<typename T, typename U>
+requires (AtLeastOneRMathType<T, U>)
 inline r_double_t r_signif(T x, const U digits){
   U new_digits = std::max(U(1), digits);
   if (is_r_na(x)){
@@ -2091,13 +2243,13 @@ inline r_double_t r_signif(T x, const U digits){
   }
 }
 
-template<typename T>
-inline T r_abs_diff(const T x, const T y){
+template<MathType T, MathType U>
+inline T r_abs_diff(const T x, const U y){
   return r_abs(x - y);
 }
 
 inline r_bool_t is_whole_number(const r_double_t x, const r_double_t tolerance){
-  return is_r_na(x) || is_r_na(tolerance) ? na::logical : static_cast<r_bool_t>(r_abs_diff(x, std::round(x)) <= tolerance);
+  return is_r_na(x) || is_r_na(tolerance) ? na::logical : r_abs_diff(x, r_round(x)) <= tolerance;
 }
 
 
@@ -2331,6 +2483,35 @@ inline SEXP eval_fn(SEXP r_fn, SEXP envir, Args... args){
 }
 }
 
+namespace df {
+
+inline bool is_df(SEXP x){
+  return vec::is_df(x);
+}
+
+inline r_int_t nrow(SEXP x){
+  return Rf_length(attr::get_attr(x, symbol::row_names_sym));
+}
+inline r_int_t ncol(SEXP x){
+  return Rf_length(x);
+}
+inline SEXP new_row_names(r_int_t n){
+  if (n > 0){
+    SEXP out = SHIELD(vec::new_vector<r_int_t>(2));
+    vec::set_value(out, 0, na::integer);
+    vec::set_value(out, 1, -n);
+    YIELD(1);
+    return out;
+  } else {
+    return vec::new_vector<r_int_t>(0);
+  }
+}
+inline void set_row_names(SEXP x, int n){
+  SEXP row_names = SHIELD(new_row_names(n));
+  attr::set_attr(x, symbol::row_names_sym, row_names);
+  YIELD(1);
+}
+}
 
 namespace vec {
 
@@ -2420,7 +2601,7 @@ inline r_bool_t all_whole_numbers(SEXP x, r_double_t tol_, bool na_rm_){
       }
     }
     if (is_r_true(out) && !na_rm_ && na_count > 0){
-      out = r_na;
+      out = na::logical;
     } else if (na_rm_ && na_count == n){
       out = r_true;
     }
@@ -2461,7 +2642,7 @@ inline void add_attrs(SEXP x, SEXP attrs) {
     r_symbol_t attr_nm;
 
     for (int i = 0; i < Rf_length(names); ++i){
-      if (p_names[i] != blank_r_string){
+      if ((p_names[i] == blank_r_string).is_false()){
         attr_nm = as<r_symbol_t>(p_names[i]);
         if (address(x) == address(p_attributes[i])){
           SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
@@ -2676,7 +2857,7 @@ decltype(auto) visit_vector(SEXP x, F&& f) {
   switch (CHEAPR_TYPEOF(x)) {
   case LGLSXP:          return f(vector_ptr<const r_bool_t>(x));
   case INTSXP:          return f(vector_ptr<const r_int_t>(x));
-  case CHEAPR_INT64SXP: return f(vector_ptr<const int64_t>(x));
+  case CHEAPR_INT64SXP: return f(vector_ptr<const r_int64_t>(x));
   case REALSXP:         return f(vector_ptr<const r_double_t>(x));
   case STRSXP:          return f(vector_ptr<const r_string_t>(x));
   case VECSXP:          return f(vector_ptr<const SEXP>(x));

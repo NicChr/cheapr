@@ -46,8 +46,8 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
   case INTSXP: {
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_integers_t>(value, r_null)); ++NP;
-    const int val = integer_ptr(value)[0];
-    const int *p_x = integer_ptr(x);
+    const int val = vector_ptr<r_int_t>(value)[0];
+    const r_int_t *p_x = vector_ptr<r_int_t>(x);
     CHEAPR_VAL_COUNT(val)
       break;
   }
@@ -55,7 +55,7 @@ R_xlen_t scalar_count(SEXP x, SEXP value, bool recursive){
     if (implicit_na_coercion(value, x)) break;
     SHIELD(value = cast<r_doubles_t>(value, r_null)); ++NP;
     const double val = real_ptr(value)[0];
-    const double *p_x = real_ptr(x);
+    const r_double_t *p_x = real_ptr(x);
     CHEAPR_VAL_COUNT(val)
       break;
   }
@@ -138,12 +138,12 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
     if (implicit_na_coercion(value, x)){
     break;
   }
-    int *p_out = integer_ptr(out);
+    r_int_t *p_out = vector_ptr<r_int_t>(out);
     SHIELD(value = cast<r_integers_t>(value, r_null)); ++NP;
     SHIELD(replace = cast<r_integers_t>(replace, r_null)); ++NP;
-    int val = integer_ptr(value)[0];
-    int repl = integer_ptr(replace)[0];
-    int *p_x = integer_ptr(x);
+    int val = vector_ptr<r_int_t>(value)[0];
+    int repl = vector_ptr<r_int_t>(replace)[0];
+    r_int_t *p_x = vector_ptr<r_int_t>(x);
 
     for (R_xlen_t i = 0; i < n; ++i){
       eql = p_x[i] == val;
@@ -151,7 +151,7 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
         any_eq = true;
         out = SHIELD(cpp_semi_copy(out)); ++NP;
         // Change where pointer is pointing to
-        p_out = integer_ptr(out);
+        p_out = vector_ptr<r_int_t>(out);
       }
       if (eql) p_out[i] = repl;
     }
@@ -163,10 +163,10 @@ SEXP cpp_val_replace(SEXP x, SEXP value, SEXP replace, bool recursive){
   }
     SHIELD(value = cast<r_doubles_t>(value, r_null)); ++NP;
     SHIELD(replace = cast<r_doubles_t>(replace, r_null)); ++NP;
-    double *p_out = real_ptr(out);
+    r_double_t *p_out = real_ptr(out);
     double val = real_ptr(value)[0];
     double repl = real_ptr(replace)[0];
-    double *p_x = real_ptr(x);
+    r_double_t *p_x = real_ptr(x);
     if (val_is_na){
       for (R_xlen_t i = 0; i < n; ++i){
         eql = is_r_na(p_x[i]);
@@ -309,9 +309,9 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     }
       out = SHIELD(internal::new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = cast<r_integers_t>(value, r_null)); ++NP;
-      int val = integer_ptr(value)[0];
-      int *p_x = integer_ptr(x);
-      int *p_out = integer_ptr(out);
+      int val = vector_ptr<r_int_t>(value)[0];
+      r_int_t *p_x = vector_ptr<r_int_t>(x);
+      r_int_t *p_out = vector_ptr<r_int_t>(out);
 
       for (R_xlen_t i = 0; i < n; ++i){
         if (p_x[i] != val){
@@ -329,8 +329,8 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       out = SHIELD(internal::new_vec(TYPEOF(x), n_keep)); ++NP;
       SHIELD(value = cast<r_doubles_t>(value, r_null)); ++NP;
       double val = real_ptr(value)[0];
-      double *p_x = real_ptr(x);
-      double *p_out = real_ptr(out);
+      r_double_t *p_x = real_ptr(x);
+      r_double_t *p_out = real_ptr(out);
 
       if (cpp_any_na(value, true)){
         for (R_xlen_t i = 0; i < n; ++i){
@@ -353,7 +353,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
       if (implicit_na_coercion(value, x)){
       break;
     }
-      out = SHIELD(new_vector<double>(n_keep)); ++NP;
+      out = SHIELD(new_vector<r_double_t>(n_keep)); ++NP;
       SHIELD(value = cast<r_integers64_t>(value, r_null)); ++NP;
       int64_t val = integer64_ptr(value)[0];
       int64_t *p_x = integer64_ptr(x);
@@ -416,7 +416,7 @@ SEXP cpp_val_remove(SEXP x, SEXP value, bool recursive){
     }
     }
     default: {
-      SEXP sexp_n_vals = SHIELD(as_vector(as<double>(n_vals))); ++NP;
+      SEXP sexp_n_vals = SHIELD(as_vector(as<r_double_t>(n_vals))); ++NP;
       SEXP val_locs = SHIELD(cpp_val_find(x, value, true, sexp_n_vals)); ++NP;
       out = SHIELD(eval_pkg_fun("cheapr_sset", "cheapr", env::base_env, x, val_locs)); ++NP;
       break;

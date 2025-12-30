@@ -20,9 +20,9 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
   switch(CHEAPR_TYPEOF(x)){
   case LGLSXP:
   case INTSXP: {
-    const int *p_x = integer_ptr(x);
+    const r_int_t *p_x = vector_ptr<r_int_t>(x);
 
-    out = SHIELD(vec::new_vector<int>((n == 0) ? 0 : 1));
+    out = SHIELD(vec::new_vector<r_int_t>((n == 0) ? 0 : 1));
 
     if (n > 0){
       auto gcd = p_x[0];
@@ -58,8 +58,8 @@ SEXP cpp_gcd(SEXP x, double tol, bool na_rm, bool break_early, bool round){
     break;
   }
   default: {
-    const double *p_x = real_ptr(x);
-    out = SHIELD(new_vector<double>((n == 0) ? 0 : 1));
+    const r_double_t *p_x = real_ptr(x);
+    out = SHIELD(new_vector<r_double_t>((n == 0) ? 0 : 1));
     if (n > 0){
       auto gcd = p_x[0];
       for (R_xlen_t i = 1; i < n; ++i) {
@@ -102,10 +102,10 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
   case INTSXP: {
 
     if (n == 0){
-    return new_vector<int>(0);
+    return new_vector<r_int_t>(0);
   }
 
-    int *p_x = integer_ptr(x);
+    r_int_t *p_x = vector_ptr<r_int_t>(x);
 
     // Initialise first value as lcm
     int lcm = p_x[0];
@@ -121,12 +121,12 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
 
       if (overflowed){
         i = n; // Terminate the loop
-        double lcm_dbl = as<double>(p_x[0]);
+        double lcm_dbl = as<r_double_t>(p_x[0]);
         for (R_xlen_t j = 1; j < n; ++j) {
           if (!na_rm && is_r_na(lcm_dbl)){
             break;
           }
-          lcm_dbl = r_lcm<double>(lcm_dbl, as<double>(p_x[j]), na_rm, tol);
+          lcm_dbl = r_lcm<double>(lcm_dbl, as<r_double_t>(p_x[j]), na_rm, tol);
         }
         return as_vector(lcm_dbl);
       } else {
@@ -138,7 +138,7 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
   case CHEAPR_INT64SXP: {
 
     if (n == 0){
-    return new_vector<double>(0);
+    return new_vector<r_double_t>(0);
   }
 
     int64_t *p_x = integer64_ptr(x);
@@ -157,27 +157,27 @@ SEXP cpp_lcm(SEXP x, double tol, bool na_rm){
 
       if (overflowed){
         i = n; // Terminate the loop
-        double lcm_dbl = as<double>(p_x[0]);
+        double lcm_dbl = as<r_double_t>(p_x[0]);
         for (R_xlen_t j = 1; j < n; ++j) {
           if (!na_rm && is_r_na(lcm_dbl)){
             break;
           }
-          lcm_dbl = r_lcm<double>(lcm_dbl, as<double>(p_x[j]), na_rm, tol);
+          lcm_dbl = r_lcm<double>(lcm_dbl, as<r_double_t>(p_x[j]), na_rm, tol);
         }
         return as_vector(lcm_dbl);
       } else {
         lcm = res;
       }
     }
-    return as_vector(as<double>(lcm));
+    return as_vector(as<r_double_t>(lcm));
   }
   default: {
 
     if (n == 0){
-    return new_vector<double>(0);
+    return new_vector<r_double_t>(0);
   }
 
-    double *p_x = real_ptr(x);
+    r_double_t *p_x = real_ptr(x);
 
     double lcm = p_x[0];
     for (R_xlen_t i = 1; i < n; ++i) {
@@ -220,10 +220,10 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   case INTSXP: {
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
-    SEXP out = SHIELD(vec::new_vector<int>(n)); ++NP;
-    int* RESTRICT p_out = integer_ptr(out);
-    const int *p_x = integer_ptr(x);
-    const int *p_y = integer_ptr(y);
+    SEXP out = SHIELD(vec::new_vector<r_int_t>(n)); ++NP;
+    r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
+    const r_int_t *p_x = vector_ptr<r_int_t>(x);
+    const r_int_t *p_y = vector_ptr<r_int_t>(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
     recycle_index(xi, xn),
     recycle_index(yi, yn),
@@ -236,10 +236,10 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   default: {
     SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
-    SEXP out = SHIELD(new_vector<double>(n)); ++NP;
-    double* RESTRICT p_out = real_ptr(out);
-    const double *p_x = real_ptr(x);
-    const double *p_y = real_ptr(y);
+    SEXP out = SHIELD(new_vector<r_double_t>(n)); ++NP;
+    r_double_t* RESTRICT p_out = real_ptr(out);
+    const r_double_t *p_x = real_ptr(x);
+    const r_double_t *p_y = real_ptr(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
     recycle_index(xi, xn),
     recycle_index(yi, yn),
@@ -276,15 +276,15 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   case INTSXP: {
     SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
-    SEXP out = SHIELD(vec::new_vector<int>(n)); ++NP;
-    int* RESTRICT p_out = integer_ptr(out);
-    const int *p_x = integer_ptr(x);
-    const int *p_y = integer_ptr(y);
+    SEXP out = SHIELD(vec::new_vector<r_int_t>(n)); ++NP;
+    r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
+    const r_int_t *p_x = vector_ptr<r_int_t>(x);
+    const r_int_t *p_y = vector_ptr<r_int_t>(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
     recycle_index(xi, xn),
     recycle_index(yi, yn),
     ++i){
-      p_out[i] = as<int>(r_lcm(p_x[xi], p_y[yi], na_rm));
+      p_out[i] = as<r_int_t>(r_lcm(p_x[xi], p_y[yi], na_rm));
     }
     YIELD(NP);
     return out;
@@ -292,15 +292,15 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   default: {
     SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
     SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
-    SEXP out = SHIELD(new_vector<double>(n)); ++NP;
-    double* RESTRICT p_out = real_ptr(out);
-    const double *p_x = real_ptr(x);
-    const double *p_y = real_ptr(y);
+    SEXP out = SHIELD(new_vector<r_double_t>(n)); ++NP;
+    r_double_t* RESTRICT p_out = real_ptr(out);
+    const r_double_t *p_x = real_ptr(x);
+    const r_double_t *p_y = real_ptr(y);
     for (R_xlen_t i = 0, xi = 0, yi = 0; i < n;
     recycle_index(xi, xn),
     recycle_index(yi, yn),
     ++i){
-      p_out[i] = as<double>(r_lcm(p_x[xi], p_y[yi], na_rm, tol));
+      p_out[i] = as<r_double_t>(r_lcm(p_x[xi], p_y[yi], na_rm, tol));
     }
     YIELD(NP);
     return out;

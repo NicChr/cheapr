@@ -161,11 +161,11 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
   SHIELD(order = has_order ? vec::coerce_vec(order, INTSXP) : r_null); ++NP;
   SHIELD(run_lengths = has_rl ? vec::coerce_vec(run_lengths, INTSXP) : r_null); ++NP;
   int foo = 42;
-  const int *p_o = &foo;
-  const int *p_rl = &foo;
-  if (has_order) p_o = integer_ptr(order);
-  if (has_rl) p_rl = integer_ptr(run_lengths);
-  const int *p_lag = integer_ptr(lag);
+  const r_int_t *p_o = &foo;
+  const r_int_t *p_rl = &foo;
+  if (has_order) p_o = vector_ptr<r_int_t>(order);
+  if (has_rl) p_rl = vector_ptr<r_int_t>(run_lengths);
+  const r_int_t *p_lag = vector_ptr<r_int_t>(lag);
   int rl; // Run-length
   int run_start = 0; // Start index of current run
   int run_end = 0; // End index of current run
@@ -185,14 +185,14 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    const int *p_x = integer_ptr(x);
+    const r_int_t *p_x = vector_ptr<r_int_t>(x);
     int fill_value = na::integer;
     if (fill_size >= 1){
       SEXP temp_fill = SHIELD(cast<r_integers_t>(fill, r_null)); ++NP;
-      fill_value = integer_ptr(temp_fill)[0];
+      fill_value = vector_ptr<r_int_t>(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
-    int* RESTRICT p_out = integer_ptr(out);
+    r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
       // Manually set run rl if order = NULL
@@ -294,14 +294,14 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
     if (has_order && (size != o_size)){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
-    const double *p_x = real_ptr(x);
+    const r_double_t *p_x = real_ptr(x);
     double fill_value = na::real;
     if (fill_size >= 1){
       SEXP temp_fill = SHIELD(cast<r_doubles_t>(fill, r_null)); ++NP;
       fill_value = real_ptr(temp_fill)[0];
     }
     out = SHIELD(cpp_semi_copy(x)); ++NP;
-    double* RESTRICT p_out = real_ptr(out);
+    r_double_t* RESTRICT p_out = real_ptr(out);
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
       rl = has_rl ? p_rl[i] : size; // Current run-length
