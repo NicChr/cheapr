@@ -91,36 +91,25 @@ namespace cheapr {
 
 // Constants
 
-// R C NULL
-inline const SEXP r_null = R_NilValue;
-
 namespace internal {
 
 inline constexpr int64_t CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 }
 
-// An idea for unified wrapper type
-// template<typename T>
-// struct r_wrapper_t {
-// private:
-//   T val;
+// R types
 
-// public:
-//   // Construction from underlying type
-//   explicit r_wrapper_t(T v) : val(v) {}
+struct sexp_t {
+ SEXP value;
+  
+  constexpr sexp_t() : value(R_NilValue) {}
+  // Implicit coercion both ways
+  explicit constexpr sexp_t(SEXP s) : value(s) {}
+  constexpr operator SEXP() const { return value; }
+};
 
-//   // Implicit conversion to underlying type
-//   operator T&() { return val; }
-//   operator const T&() const { return val; }
-
-//   // Explicit extraction if needed
-//   T& get() { return val; }
-//   const T& get() const { return val; }
-// };
-
-// using r_int_t = r_wrapper_t<int>;
-// using r_double_t = r_wrapper_t<double>;
+// R C NULL
+inline const sexp_t r_null = sexp_t();
 
 // bool type, similar to Rboolean
 
@@ -301,7 +290,8 @@ concept RType = RMathType<T> ||
 std::same_as<std::remove_cvref_t<T>, r_complex_t> ||
 std::same_as<std::remove_cvref_t<T>, r_string_t> ||
 std::same_as<std::remove_cvref_t<T>, r_byte_t> ||
-std::same_as<std::remove_cvref_t<T>, r_symbol_t>;
+std::same_as<std::remove_cvref_t<T>, r_symbol_t> ||
+std::same_as<std::remove_cvref_t<T>, sexp_t>;
 
 template<typename T>
 concept CppType = !RType<T>;
@@ -333,7 +323,6 @@ inline constexpr bool is_r_ptr_writable_v =
 is_r_or_cpp_arithmetic_v<T> ||
 is<T, r_complex_t> ||
 is<T, r_byte_t>;
-
 
 namespace env {
 inline const SEXP empty_env = R_EmptyEnv;
@@ -377,7 +366,7 @@ inline const r_double_t real = r_double_t{NA_REAL};
 inline const r_complex_t complex = r_complex_t{NA_REAL, NA_REAL};
 inline constexpr r_byte_t raw = r_byte_t{0};
 inline const r_string_t string = r_string_t{NA_STRING};
-inline const SEXP nil = r_null;
+inline const sexp_t nil = r_null;
 }
 
 namespace internal {
@@ -504,8 +493,8 @@ inline const r_byte_t* vector_ptr<const r_byte_t>(SEXP x) {
 }
 
 template<>
-inline const SEXP* vector_ptr<const SEXP>(SEXP x) {
-  return list_ptr_ro(x);
+inline const sexp_t* vector_ptr<const sexp_t>(SEXP x) {
+  return reinterpret_cast<const sexp_t*>(VECTOR_PTR_RO(x));
 }
 
 
@@ -797,12 +786,12 @@ inline r_string_t get_value_impl<r_string_t>(SEXP x, const R_xlen_t i){
   return internal::string_ptr_ro(x)[i];
 }
 template<>
-inline SEXP get_value_impl<SEXP>(SEXP* p_x, const R_xlen_t i){
-  return p_x[i];
+inline sexp_t get_value_impl<sexp_t>(sexp_t* p_x, const R_xlen_t i){
+  return p_x[i]; 
 }
 template<>
-inline SEXP get_value_impl<SEXP>(SEXP x, const R_xlen_t i){
-  return list_ptr_ro(x)[i];
+inline sexp_t get_value_impl<sexp_t>(SEXP x, const R_xlen_t i){
+  return vector_ptr<sexp_t>(x)[i];
 }
 
 }
@@ -907,16 +896,12 @@ template<>
 inline void set_value<const char *>(SEXP x, const R_xlen_t i, const char* val){
   set_value<r_string_t>(x, i, static_cast<r_string_t>(internal::make_utf8_charsxp(val)));
 }
-template<>
-inline void set_value<r_symbol_t>(SEXP x, const R_xlen_t i, r_symbol_t val){
-  SET_VECTOR_ELT(x, i, static_cast<SEXP>(val));
-}
 
 // Never use the pointer here to assign
 template<>
-inline void set_value<SEXP>(SEXP x, const R_xlen_t i, SEXP val){
+inline void set_value<sexp_t>(SEXP x, const R_xlen_t i, sexp_t val){
   SET_VECTOR_ELT(x, i, val);
-}
+} 
 
 }
 
@@ -1057,6 +1042,11 @@ inline bool is_r_na<SEXP>(const SEXP x){
   return is_null(x);
 }
 
+template<>
+inline bool is_r_na<sexp_t>(const sexp_t x){
+  return is_null(x);
+}
+
 // NA type
 namespace internal {
 
@@ -1115,6 +1105,11 @@ inline r_string_t na_value_impl<r_string_t>(){
 
 template<>
 inline SEXP na_value_impl<SEXP>(){
+  return r_null;
+}
+
+template<>
+inline sexp_t na_value_impl<sexp_t>(){
   return r_null;
 }
 
@@ -1539,7 +1534,7 @@ struct r_vector_t {
     }
   }
 
-  // Get uses const pointer (always works)
+  // get uses const pointer
   T get(R_xlen_t index) const {
     return const_ptr[index];
   }
@@ -1617,6 +1612,15 @@ void replace(R_xlen_t start, R_xlen_t n, const T old_val, const T new_val){
 
 };
 
+template<typename T>
+struct is_r_vector : std::false_type {};
+
+template<typename T>
+struct is_r_vector<r_vector_t<T>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value;
+
 
 template <RType T>
 inline void r_copy_n(r_vector_t<T> &target, const T *p_source, R_xlen_t target_offset, R_xlen_t n){
@@ -1684,6 +1688,10 @@ template <>
 inline r_vector_t<r_byte_t> new_vector<r_byte_t>(R_xlen_t n){ 
   return static_cast<r_vector_t<r_byte_t>>(internal::new_vec(RAWSXP, n));
 }
+template <>
+inline r_vector_t<sexp_t> new_vector<sexp_t>(R_xlen_t n){ 
+  return static_cast<r_vector_t<sexp_t>>(internal::new_vec(VECSXP, n));
+}
 // template <>
 // inline r_vector_t<r_bool_t> new_vector<r_bool_t>(R_xlen_t n, const r_bool_t default_value) {
 //   r_vector_t<r_bool_t> out = SHIELD(new_vector<r_bool_t>(n));
@@ -1741,7 +1749,7 @@ inline r_vector_t<r_byte_t> new_vector<r_byte_t>(R_xlen_t n){
 //   return out;
 // }
 inline SEXP new_list(R_xlen_t n){
-  return internal::new_vec(VECSXP, n);
+  return new_vector<sexp_t>(n);
 }
 inline SEXP new_list(R_xlen_t n, const SEXP default_value){
   SEXP out = SHIELD(internal::new_vec(VECSXP, n));
@@ -1767,12 +1775,14 @@ inline auto new_vector<T>(R_xlen_t n, const T default_value){
 namespace vec {
 
 template<typename T>
-inline SEXP as_vector(const T x){
-  if constexpr (is_r_or_cpp_integral_v<T>){
-    return as_vector<r_int64_t>(x);
-  } else if constexpr (std::is_convertible_v<T, SEXP>){
-    return as_vector<SEXP>(x);
-  } else {
+inline auto as_vector(const T x){
+  if (constexpr (is_r_vector_v<T>)){
+    return x;
+    // This is a catch-all for all C integer types that aren't int or int64_t which are handled via specialisations
+    // Also they can't have NA values so it's okay to static cast
+  } else if constexpr (is_r_or_cpp_integral_v<T>){
+    // return as_vector<r_double_t>(static_cast<);
+  } else { 
     static_assert(
       always_false<T>,
       "Unimplemented `as_vector` specialisation"
@@ -1781,77 +1791,72 @@ inline SEXP as_vector(const T x){
   }
 }
 template<>
-inline SEXP as_vector<bool>(const bool x){
+inline auto as_vector<bool>(const bool x){
   return new_vector<r_bool_t>(1, r_bool_t(x));
 }
 template<>
-inline SEXP as_vector<r_bool_t>(const r_bool_t x){
+inline auto as_vector<r_bool_t>(const r_bool_t x){
   return new_vector<r_bool_t>(1, x);
 }
 template<>
-inline SEXP as_vector<r_int_t>(const r_int_t x){
+inline auto as_vector<r_int_t>(const r_int_t x){
   return new_vector<r_int_t>(1, x);
 }
 template<>
-inline SEXP as_vector<int>(const int x){
+inline auto as_vector<int>(const int x){
   return as_vector<r_int_t>(r_int_t(x));
 }
 template<>
-inline SEXP as_vector<r_int64_t>(const r_int64_t x){
-  if (is_r_na(x)){
-    return Rf_ScalarInteger(na::integer);
-  } else if (between<r_int64_t>(x, r_limits::r_int_min.value, r_limits::r_int_max.value)){
-    return Rf_ScalarInteger(static_cast<int>(x));
-  } else {
-    return Rf_ScalarReal(static_cast<double>(x));
-  }
-}
-template<>
-inline SEXP as_vector<r_double_t>(const r_double_t x){
+inline auto as_vector<r_double_t>(const r_double_t x){
   return new_vector<r_double_t>(1, x);
 }
 template<>
-inline SEXP as_vector<double>(const double x){
+inline auto as_vector<r_int64_t>(const r_int64_t x){
+  return as_vector<r_double_t>(is_r_na(x) ? na::real : static_cast<r_double_t>(x));
+}
+template<>
+inline auto as_vector<double>(const double x){
   return as_vector<r_double_t>(r_double_t(x));
 }
 template<>
-inline SEXP as_vector<r_complex_t>(const r_complex_t x){
+inline auto as_vector<r_complex_t>(const r_complex_t x){
   return new_vector<r_complex_t>(1, x);
 }
 template<>
-inline SEXP as_vector<r_byte_t>(const r_byte_t x){
+inline auto as_vector<r_byte_t>(const r_byte_t x){
   return new_vector<r_byte_t>(1, x);
 }
 template<>
-inline SEXP as_vector<const char *>(const char *x){
+inline auto as_vector<const char *>(const char *x){
   return internal::make_utf8_strsxp(x);
 }
 template<>
-inline SEXP as_vector<r_symbol_t>(const r_symbol_t x){
+inline auto as_vector<r_symbol_t>(const r_symbol_t x){
   return new_list(1, x);
 }
 
 // Scalar string
 template<>
-inline SEXP as_vector<r_string_t>(const r_string_t x){
+inline auto as_vector<r_string_t>(const r_string_t x){
   return new_vector<r_string_t>(1, x);
 }
+
 template<>
-inline SEXP as_vector<SEXP>(const SEXP x){
+inline auto as_vector<SEXP>(const SEXP x){ 
   switch (TYPEOF(x)){
   case LGLSXP:
   case INTSXP:
   case REALSXP:
   case STRSXP:
   case VECSXP:
-  case CPLXSXP:
+  case CPLXSXP: 
   case RAWSXP: {
     return x;
   }
   default: {
-    return new_list(1, x);
+    return static_cast<SEXP>(new_list(1, x));
   }
-  }
+  } 
 }
 
 }
@@ -1878,28 +1883,41 @@ inline SEXP as_r_obj<r_symbol_t>(const r_symbol_t x){
 // Assumes no NAs at all
 template<typename T>
 inline constexpr bool can_be_int(T x){
-  // If x is an int type whose size is <= int OR
-  // an arithmetic type (e.g. double)
-  if constexpr (std::is_integral_v<T> && sizeof(T) <= sizeof(int)){
-    return true;
-  } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
-    return between<T>(x, r_limits::r_int_min, r_limits::r_int_max);
+  using xt = std::remove_cvref_t<T>;
+  if constexpr (std::is_integral_v<xt> && sizeof(xt) <= sizeof(int)){
+    // Check if unsigned type's max exceeds signed int range
+    if constexpr (
+      std::is_unsigned_v<xt> && std::numeric_limits<xt>::max() > static_cast<xt>(std::numeric_limits<int>::max())){
+      return between<xt>(x, 0, std::numeric_limits<int>::max());
+    } else {
+      return true;  // Small types can safely cast to int
+    }
+    // Larger types that can safely cast to T
+  } else if constexpr (is_r_or_cpp_arithmetic_v<xt>){
+    return between<xt>(x, r_limits::r_int_min, r_limits::r_int_max);
   } else {
     return false;
   }
 }
 template<typename T>
 inline constexpr bool can_be_int64(T x){
-  // If x is an int64 type whose size is <= int64 OR
-  // an arithmetic type (e.g. double)
-  if constexpr (is_r_or_cpp_integral_v<T> && sizeof(T) <= sizeof(r_int64_t)){
-    return true;
-  } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
-    return between<T>(x, r_limits::r_int64_min, r_limits::r_int64_max);
+  using xt = std::remove_cvref_t<T>;
+  if constexpr (std::is_integral_v<xt> && sizeof(xt) <= sizeof(int64_t)){
+    // Check if unsigned type's max exceeds signed int64 range
+    if constexpr (
+      std::is_unsigned_v<xt> && 
+      std::numeric_limits<xt>::max() > static_cast<xt>(std::numeric_limits<int64_t>::max())){
+      return x <= std::numeric_limits<int64_t>::max();
+    } else {
+      return true;  // Small types can safely cast to int64
+    }
+  } else if constexpr (is_r_or_cpp_arithmetic_v<xt>){
+    return between<xt>(x, r_limits::r_int64_min, r_limits::r_int64_max);
   } else {
     return false;
   }
-}
+} 
+
 
 // Coerce functions that account for NA
 template<typename T>
@@ -2403,20 +2421,21 @@ namespace vec {
 
 // Variadic list constructor
 template<typename... Args>
-inline SEXP make_list(Args... args) {
+inline r_vector_t<sexp_t> make_list(Args... args) {
   constexpr int n = sizeof...(args);
 
   if constexpr (n == 0){
-    return new_list(0);
+    return r_vector_t<sexp_t> out(0);
   } else {
-    SEXP out = SHIELD(vec::new_list(n));
+    
+    r_vector_t<sexp_t> out(n);
 
     // Are any args named?
     constexpr bool any_named = (is<Args, arg> || ...);
 
     SEXP nms = r_null;
 
-    if (any_named){
+    if (any_named){ 
       nms = vec::new_vector<r_string_t>(n);
     }
     SHIELD(nms);
@@ -2425,7 +2444,7 @@ inline SEXP make_list(Args... args) {
     (([&]() {
       if constexpr (is<Args, arg>) {
         SET_VECTOR_ELT(out, i, args.value);
-        set_value<r_string_t>(nms, i, as<r_string_t>(args.name));
+        set_value(nms, i, as<r_string_t>(args.name));
       } else {
         SET_VECTOR_ELT(out, i, as<SEXP>(args));
       }
@@ -2489,17 +2508,17 @@ inline bool is_df(SEXP x){
   return vec::is_df(x);
 }
 
-inline r_int_t nrow(SEXP x){
+inline int nrow(SEXP x){
   return Rf_length(attr::get_attr(x, symbol::row_names_sym));
 }
-inline r_int_t ncol(SEXP x){
+inline int ncol(SEXP x){
   return Rf_length(x);
 }
 inline SEXP new_row_names(r_int_t n){
   if (n > 0){
-    SEXP out = SHIELD(vec::new_vector<r_int_t>(2));
-    vec::set_value(out, 0, na::integer);
-    vec::set_value(out, 1, -n);
+    auto out = SHIELD(vec::new_vector<r_int_t>(2));
+    out.set(0, na::integer);
+    out.set(0, r_int_t(-n));
     YIELD(1);
     return out;
   } else {
@@ -2733,41 +2752,47 @@ inline SEXP deep_copy(SEXP x){
   case LGLSXP: {
     using r_t = r_bool_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
+    auto temp = r_vector_t<r_t>(out);
+    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case INTSXP: {
     using r_t = r_int_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
+    auto temp = r_vector_t<r_t>(out);
+    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case REALSXP: {
     using r_t = r_double_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
+    auto temp = r_vector_t<r_t>(out);
+    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case STRSXP: {
     using r_t = r_string_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<const r_t>(out), vector_ptr<const r_t>(x), 0, n);
+    auto temp = r_vector_t<r_t>(out);
+    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case CPLXSXP: {
     using r_t = r_complex_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
+    auto temp = r_vector_t<r_t>(out);
+    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case RAWSXP: {
     using r_t = r_byte_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
+    auto temp = r_vector_t<r_t>(out);
+    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
     break;
   }
   case VECSXP: {
-    using r_t = SEXP;
+    using r_t = sexp_t;
     out = SHIELD(new_vector<r_t>(n)); ++NP;
     const r_t *p_x = vector_ptr<const r_t>(x);
     for (R_xlen_t i = 0; i < n; ++i){
