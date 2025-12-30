@@ -2,6 +2,14 @@
 
 cheapr 1.5.0 supersedes cheapr 1.4.0
 
+The C/C++ API is currently under development and a 
+stable release can be expected for cheapr 2.0.0
+
+### General news
+
+- Thanks @ChampLeeTX for spotting an issue where the package 
+wasn't installing for older versions of R. This is now fixed.
+
 - A new rich set of parallelised math functions like `abs_`, `round_` and more.
 
 - New functions for setting and getting the number of threads being used.
@@ -20,9 +28,6 @@ use `set_threads()`
 switches to using doubles internally, returning a double value.
 
 - `if_else_` can now handle data frames and is fully SIMD parallelised.
-
-- Fixed an issue where the package wasn't installing for older versions of R.
-Thanks @ChampLeeTX
 
 ### New features 
 
