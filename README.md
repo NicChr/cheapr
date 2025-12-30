@@ -34,329 +34,6 @@ cheapr is primarily an extension to R for developers that want to write
 clean, fast and safe code without sacrificing any one of these core
 design principles.
 
-## cheapr C/C++ API
-
-cheapr includes a feature-rich C API meant as an alternative to the R C
-API. Features include efficient vector creation, replacement, subsetting
-and comparison. The cheapr C API also includes tools to efficiently work
-with C types while carefully handling `NA` values and other R-specific
-values.  
-  
-**Important note:** Despite the API requiring C++17 and making heavy use
-of C++ templates, C++ objects cannot be safely used. More specifically,
-C++ objects with destructors cannot be safely used because when R
-encounters an error, it terminates in a way that doesn’t run these
-destructors, leading to memory leaks. This applies to any C++ object
-with a destructor like `std::string` and `std::vector`.
-
-We plan on creating a C++ safe API in the future, but if you still
-really want to use C++ objects (like `std::vector`) along with the
-cheapr or R C API then you must call any C API functions with either
-`cpp11::safe[]` or cheapr’s `r_safe()`. For more info see cpp11’s FAQ
-section 15 [Should I call cpp11::unwind_protect()
-manually?](https://cpp11.r-lib.org/articles/FAQ.html)
-
-The reason we have opted for a mostly C API with C++ templates is for
-maximal speed, efficiency and interoperability with the R C API.
-
-We aim to create a fully C++ compatible API in an upcoming release.
-
-## The double-edged `SEXP`
-
-R internally labels nearly all allocated objects as `SEXP`
-(S-Expression). While this provides much flexibility in inputs and
-outputs, it also creates ambiguity regarding the underlying type: a
-`SEXP` might represent a vector (like `INTSXP`), a single element (like
-a string `CHARSXP`), or a language object (like `SYMSXP`). In the
-standard R C API, these can be disambiguated at runtime using
-`TYPEOF()`, which makes meta-programming cumbersome and difficult.  
-Furthermore because of the lack of generic functions in the R C API,
-dedicated ones must be used that are specific to the type of object one
-is working with.
-
-`cheapr` solves this by introducing distinct C++ types for R’s
-non-vector elements, enabling optimised template specialisations. The
-underlying types are C-based and do not need C++ destructors.
-
-## `cheapr` C/C++ Types
-
-The following types should be preferred over standard R API types to
-ensure cheapr templates function correctly.
-
-- **`r_bool_t`** – Represents R’s tri-state logical (TRUE, FALSE, NA).
-  Is internally `int`
-
-- **`r_string_t`** – Alias for `CHARSXP` (internal R strings)
-
-- **`r_symbol_t`** – Alias for `SYMSXP` (R symbols).
-
-- **`r_byte_t`** – Alias for `Rbyte` (raw elements).
-
-- **`r_complex_t`** – An alternative to `Rcomplex`
-
-## Disambiguating `CHARSXP` and `SYMSXP`
-
-By introducing `r_string_t` and `r_symbol_t`, we remove the ambiguity of
-`SEXP` in template meta-programming in the context of vectors.
-
-In `cheapr`, the `SEXP` type is effectively reserved for **list
-elements** (or generic R objects).
-
-- `new_vector<int>` creates an integer vector (`INTSXP`)
-
-- `new_vector<r_string_t>` creates a character vector (`STRSXP`)
-
-- `new_vector<SEXP>` creates a **list** (`VECSXP`)
-
-Since a list is the only vector capable of holding other R objects,
-`new_vector<SEXP>` unambiguously resolves to creating a new list.
-
-## `r_cast<>`
-
-Standard C++ casts (`static_cast<>`) are unaware of R’s special `NA`
-values.
-
-- `static_cast<int>(NA_REAL)` results in `INT_MIN` not `NA_INTEGER`.
-
-`cheapr` provides **`r_cast<>`**, a powerful cast that handles R
-specific values correctly:
-
-- `r_cast<int>(na::real)` returns `na::integer`.
-
-- `r_cast<double>(na::integer)` returns `na::real`.
-
-- `r_cast<int>(limits::r_pos_inf)` returns `na::integer`
-
-- `r_cast<r_symbol_t>("my_string")` returns the R symbol `my_string`
-
-- `r_cast<r_string_t>(R_ClassSymbol)` returns the internal R string
-  “class”
-
-## `NA` constants
-
-All R-specific `NA` values are available in the `na` namespace
-
-| `cheapr` Constant | C/C++ Type    | R C API Macro  |
-|:------------------|:--------------|:---------------|
-| `na::logical`     | `r_bool_t`    | `NA_LOGICAL`   |
-| `na::integer`     | `int`         | `NA_INTEGER`   |
-| `na::real`        | `double`      | `NA_REAL`      |
-| `na::complex`     | `r_complex_t` | Not applicable |
-| `na::string`      | `r_string_t`  | `NA_STRING`    |
-| `na::nil`         | `SEXP`        | `R_NilValue`   |
-
-## Creating Vectors
-
-Use `new_vector<T>(size, fill_value)` to create R vectors efficiently.
-
-``` cpp
-// Create integer vector of length 10
-SEXP v1 = new_vector<int>(10);
-
-// Create character vector of length 20
-SEXP v2 = new_vector<r_string_t>(20);
-
-// Create integer vector filled with NAs
-SEXP v3 = new_vector<int>(100, na::integer);
-```
-
-**Note:** Large vectors (except character/list vectors) are initialised
-using multiple threads which be adjusted via `cheapr::set_threads()`
-
-## Creating Scalars
-
-To create length-one vectors (scalars) efficiently:
-
-``` cpp
-// Create scalar character vector
-SEXP s1 = as_vector("hello");
-// Similarly
-SEXP s2 = as_vector(r_cast<r_string_t>("hello"));
-```
-
-Alternatively, `r_cast<SEXP>` can convert any object to a SEXP. Note
-that `r_string_t` are always converted to length-one character vectors
-and `r_symbol_t` objects are always converted to length-one lists.
-
-## Combining Values
-
-`cheapr::combine()` (the backend for `c_()`) unifies C++ types and R
-vectors into a single vector. It automatically determines the common
-type (see `?cast`).
-
-``` cpp
-// Returns a character vector: c("1", "2.5", "str1")
-combine(1, 2.5, "str1");
-```
-
-## Creating Lists
-
-Lists are created via `make_list()` with optional named arguments:
-
-``` cpp
-// Equivalent to list(1, 2, 3)
-SEXP l1 = make_list(1, 2, 3);
-
-// Equivalent to list(x = 1, y = 2, z = 3)
-SEXP l2 = make_list(arg("x") = 1, arg("y") = 2, arg("z") = 3);
-```
-
-## Math Utilities
-
-The `cheapr::math` namespace provides safe, NA aware implementations of
-common math functions, including `math::r_abs()`, `math::r_round()`
-(round-to-even), `math::r_gcd()` and more.
-
-### Getting & setting vector values
-
-In the R C API you would typically either use a pointer to the
-underlying data (very efficient) to get/set data, or you would use a
-function like `INTEGER_ELT` or `SET_INTEGER_ELT` to respectively get and
-set an int value (less efficient).
-
-cheapr uses overloaded template functions `get_value<>` and
-`set_value<>` to simplify this without sacrificing efficiency.
-
-``` cpp
-SEXP int_vec = SHIELD(as_vector(1)); // SHIELD is the same as Rf_protect
-
-// Get the vector's first value
-
-// Have to specify the type int in get_value<>
-int first_val = get_value<int>(int_vec, 0)
-Rprintf("first value: %d", first_val);
-
-// Set the vector's first value
-
-// `set_value<>` can deduce that it is an int based on the 
-// type of value being set
-set_value(int_vec, 0, 42);
-// or more explicitly 
-set_value<int>(int_vec, 0, 42);
-Rprintf("first value: %d", get_value<int>(int_vec, 0));
-```
-
-``` r
-first value: 1
-first value: 42
-```
-
-The getters/setters can also accept pointers directly
-
-``` cpp
-auto *vec_ptr = vector_ptr<int>(int_vec);
-
-set_value(vec_ptr, 0, 123);
-auto first_val = get_value<int>(vec_ptr, 0);
-
-Rprintf("\nfirst value: %d", first_val);
-```
-
-``` r
-first value: 123
-```
-
-Don’t forget to unprotect all previously protected objects
-
-``` cpp
-YIELD(1); // Same as Rf_unprotect
-```
-
-Some notes:
-
-- Strings are converted to UT8 almost everywhere
-
-- Coercion between the R API and C API may not always match, especially
-  for data frames. This is something that is likely to be improved in
-  the future.
-
-- Because cheapr tries to treat data frames as vectors wherever
-  possible, functions like `vec::length()` return the number of rows of
-  a data frame. Use `vec::old_length()` to match `Rf_xlength()`
-
-### An alternative to switch(TYPEOF())
-
-Sometimes you need to apply different code to handle the different
-nuances of your vector type. Let’s showcase an example of this by
-calculating the sum of a vector using plain R C API style code.
-
-``` cpp
-[[cpp11::register]]
-double r_style_sum(SEXP x){
-  double sum = 0;
-
-  R_xlen_t n = vec::old_length(x);
-
-  switch (TYPEOF(x)){
-  case LGLSXP: {
-    int *p_x = LOGICAL(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      sum += p_x[i] == NA_LOGICAL ? NA_REAL : static_cast<double>(p_x[i]);
-    }
-    break;
-  }
-  case INTSXP: {
-    int *p_x = INTEGER(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      sum += p_x[i] == NA_INTEGER ? NA_REAL : static_cast<double>(p_x[i]);
-    }
-    break;
-  }
-  case REALSXP: {
-    double *p_x = REAL(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      sum += p_x[i];
-    }
-    break;
-  }
-  default: {
-    Rf_error("`x` must be an integer or double vector in `r_style_sum`");
-  }
-  }
-  return sum;
-}
-```
-
-Notice that every branch has slightly different syntax. You could reduce
-the first two branches into one by using `INTEGER()` for logical vector
-inputs but I digress.
-
-In cheapr this can be done in a more generic way using a C++ lambda and
-cheapr’s templated functions like `r_cast<>`
-
-``` cpp
-[[cpp11::register]]
-double cheapr_sum(SEXP x){
-
-  double out = visit_vector(x, [&](auto p_x) -> double {
-
-    // Data type of vector elements
-    using data_t = std::decay_t<std::remove_pointer_t<decltype(p_x)>>;
-
-    double sum = 0;
-
-    // This includes C++ arithmetic types and `r_bool_t`
-    // constexpr allows this if statement to be evaluated at compile-time
-    if constexpr (is_r_arithmetic_v<data_t>){
-
-      R_xlen_t n = vec::old_length(x);
-
-      for (R_xlen_t i = 0; i < n; ++i){
-        // r_cast will naturally handle NA values
-        sum += r_cast<double>(p_x[i]);
-      }
-    } else {
-      Rf_error("`x` must be numeric in `cheapr_sum`");
-    }
-    return sum;
-  });
-
-  return out;
-}
-```
-
-## cheapr R API
-
 Some common R operations that cheapr can do much faster and more
 efficiently include:
 
@@ -481,16 +158,16 @@ mark(row_na_counts(m),
 #> # A tibble: 2 × 6
 #>   expression             min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>        <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 row_na_counts(m)   483.9µs  583.6µs     1618.   13.08KB      0  
-#> 2 rowSums(is.na(m))   2.99ms   3.57ms      281.    3.84MB     25.9
+#> 1 row_na_counts(m)   457.5µs 520.65µs     1624.   13.08KB      0  
+#> 2 rowSums(is.na(m))   2.91ms   3.59ms      274.    3.84MB     26.4
 # Number of NA values by col
 mark(col_na_counts(m), 
      colSums(is.na(m)))
 #> # A tibble: 2 × 6
 #>   expression             min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>        <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 col_na_counts(m)    1.36ms   1.57ms      603.   13.08KB      0  
-#> 2 colSums(is.na(m))   1.27ms   1.54ms      598.    3.82MB     60.0
+#> 1 col_na_counts(m)     1.4ms   1.64ms      533.   13.08KB      0  
+#> 2 colSums(is.na(m))   1.29ms   1.57ms      593.    3.82MB     59.6
 ```
 
 `is_na` is a multi-threaded alternative to `is.na`
@@ -503,15 +180,15 @@ mark(is.na(x), is_na(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 is.na(x)      596µs    722µs     1244.    3.81MB     228.
-#> 2 is_na(x)      161µs    250µs     4154.    3.82MB     414.
+#> 1 is.na(x)      569µs    773µs     1209.    3.81MB     204.
+#> 2 is_na(x)      172µs    241µs     3981.    3.82MB     398.
 set_threads(1)
 mark(is.na(x), is_na(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 is.na(x)      592µs    730µs     1277.    3.81MB     134.
-#> 2 is_na(x)      390µs    479µs     2001.    3.81MB     200.
+#> 1 is.na(x)      541µs    645µs     1350.    3.81MB     149.
+#> 2 is_na(x)      355µs    470µs     2014.    3.81MB     200.
 set_threads(2)
 
 ### posixlt method is much faster
@@ -525,8 +202,8 @@ mark(is.na(hours), is_na(hours))
 #> # A tibble: 2 × 6
 #>   expression        min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 is.na(hours)    1.18s    1.18s     0.849   61.05MB     1.70
-#> 2 is_na(hours)   3.79ms   4.69ms   194.       7.65MB    13.9
+#> 1 is.na(hours)    1.29s    1.29s     0.775   61.05MB     1.55
+#> 2 is_na(hours)   3.88ms   4.76ms   191.       7.65MB    13.9
 ```
 
 It differs in 2 regards:
@@ -594,7 +271,7 @@ mark(overview(df, hist = FALSE))
 #> # A tibble: 1 × 6
 #>   expression                      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                 <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 overview(df, hist = FALSE)   72.4ms   79.7ms      12.6      512B        0
+#> 1 overview(df, hist = FALSE)   69.9ms   73.8ms      12.9      512B        0
 ```
 
 ## Cheaper and consistent subsetting with `sset`
@@ -629,9 +306,9 @@ mark(sset(x, x %in_% y), sset(x, x %in% y), x[x %in% y])
 #> # A tibble: 3 × 6
 #>   expression              min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>         <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 sset(x, x %in_% y)   88.1µs    109µs     7769.      86KB     8.32
-#> 2 sset(x, x %in% y)   132.3µs    160µs     5503.     286KB    19.2 
-#> 3 x[x %in% y]         137.8µs    208µs     4424.     325KB    15.1
+#> 1 sset(x, x %in_% y)   90.9µs    132µs     7575.      86KB     6.24
+#> 2 sset(x, x %in% y)   138.7µs    163µs     5444.     286KB    15.0 
+#> 3 x[x %in% y]         136.7µs    160µs     5317.     325KB    19.6
 ```
 
 `sset` uses an internal range-based subset when `i` is an ALTREP integer
@@ -642,8 +319,8 @@ mark(sset(df, 0:10^5), df[0:10^5, , drop = FALSE])
 #> # A tibble: 2 × 6
 #>   expression                      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                 <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 sset(df, 0:10^5)            462.6µs  607.1µs     1484.    3.43MB     68.2
-#> 2 df[0:10^5, , drop = FALSE]   6.26ms    7.2ms      128.    4.83MB     13.5
+#> 1 sset(df, 0:10^5)              465µs  545.9µs     1644.    3.43MB     79.7
+#> 2 df[0:10^5, , drop = FALSE]    6.2ms    6.8ms      145.    4.83MB     11.0
 ```
 
 It also accepts negative indexes
@@ -655,8 +332,8 @@ mark(sset(df, -10^4:0),
 #> # A tibble: 2 × 6
 #>   expression                       min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                  <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 sset(df, -10^4:0)             2.66ms   4.38ms     233.     18.9MB     110.
-#> 2 df[-10^4:0, , drop = FALSE]  24.48ms  24.48ms      40.8    72.5MB     858.
+#> 1 sset(df, -10^4:0)             2.75ms   4.06ms     249.     18.9MB     122.
+#> 2 df[-10^4:0, , drop = FALSE]  18.89ms  21.17ms      47.2    72.5MB     520.
 ```
 
 The biggest difference between `sset` and `[` is the way logical vectors
@@ -725,11 +402,11 @@ today <- Sys.Date()
 now <- Sys.time()
 
 c(today, now);c(now, today) # base
-#> [1] "2025-12-25" "2025-12-25"
-#> [1] "2025-12-25 12:08:39 GMT" "2025-12-25 00:00:00 GMT"
+#> [1] "2025-12-30" "2025-12-30"
+#> [1] "2025-12-30 08:51:39 GMT" "2025-12-30 00:00:00 GMT"
 c_(today, now);c_(now, today) # cheapr
-#> [1] "2025-12-25 00:00:00 GMT" "2025-12-25 12:08:39 GMT"
-#> [1] "2025-12-25 12:08:39 GMT" "2025-12-25 00:00:00 GMT"
+#> [1] "2025-12-30 00:00:00 GMT" "2025-12-30 08:51:39 GMT"
+#> [1] "2025-12-30 08:51:39 GMT" "2025-12-30 00:00:00 GMT"
 ```
 
 `c_()` combines date frames by row
@@ -1107,13 +784,13 @@ mark(gcd(x))
 #> # A tibble: 1 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 gcd(x)        800ns      1µs   791755.        0B     79.2
+#> 1 gcd(x)        800ns    900ns   909198.        0B     90.9
 x <- seq(0, 10^6, 0.5)
 mark(gcd(x))
 #> # A tibble: 1 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 gcd(x)       31.3ms   34.8ms      27.5        0B        0
+#> 1 gcd(x)       29.9ms   31.5ms      31.6        0B        0
 ```
 
 ## Creating many sequences
@@ -1200,92 +877,92 @@ mark(negate_(x), -x)
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 negate_(x)   87.5µs    154µs     5236.    2.29MB    112. 
-#> 2 -x            260µs    396µs     2274.    2.29MB     41.2
+#> 1 negate_(x)   91.9µs    134µs     6159.    2.29MB    142. 
+#> 2 -x            262µs    307µs     2430.    2.29MB     54.6
 mark(abs_(x), abs(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 abs_(x)      98.1µs    146µs     5549.    2.29MB    109. 
-#> 2 abs(x)      179.9µs    233µs     3011.    2.29MB     60.6
+#> 1 abs_(x)      94.2µs    143µs     6005.    2.29MB    135. 
+#> 2 abs(x)      187.5µs    223µs     3030.    2.29MB     64.7
 mark(floor_(x), floor(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 floor_(x)   114.3µs  189.8µs     4526.    2.29MB     93.2
-#> 2 floor(x)     1.48ms   1.71ms      588.    2.29MB     10.9
+#> 1 floor_(x)   112.8µs 183.95µs     5153.    2.29MB    105. 
+#> 2 floor(x)     1.45ms   1.59ms      608.    2.29MB     10.8
 mark(ceiling_(x), ceiling(x))
 #> # A tibble: 2 × 6
 #>   expression       min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>  <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 ceiling_(x)  113.4µs    192µs     4519.    2.29MB     90.7
-#> 2 ceiling(x)    1.29ms   1.55ms      593.    2.29MB     13.3
+#> 1 ceiling_(x)    113µs  186.2µs     4369.    2.29MB     93.5
+#> 2 ceiling(x)    1.25ms    1.4ms      685.    2.29MB     15.5
 mark(trunc_(x), trunc(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 trunc_(x)   110.5µs 177.15µs     5031.    2.29MB    108. 
-#> 2 trunc(x)      1.3ms   1.49ms      575.    2.29MB     10.9
+#> 1 trunc_(x)   104.2µs  163.4µs     5271.    2.29MB    116. 
+#> 2 trunc(x)      1.5ms    1.8ms      546.    2.29MB     12.2
 mark(sqrt_(x), sqrt(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 sqrt_(x)      137µs    245µs     4040.    2.29MB     90.2
-#> 2 sqrt(x)       636µs    671µs     1261.    2.29MB     27.9
+#> 1 sqrt_(x)      161µs    290µs     3596.    2.29MB     74.7
+#> 2 sqrt(x)       742µs    994µs     1021.    2.29MB     20.8
 mark(log_(x), log(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 log_(x)      1.76ms   2.16ms      437.     2.3MB     9.55
-#> 2 log(x)       6.91ms   7.16ms      123.    2.29MB     2.05
+#> 1 log_(x)      2.33ms   2.88ms      331.     2.3MB     6.33
+#> 2 log(x)       7.59ms   8.57ms      116.    2.29MB     2.03
 mark(exp_(x), exp(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 exp_(x)      3.42ms   3.96ms     227.     2.29MB     6.30
-#> 2 exp(x)      11.82ms  12.38ms      72.1    2.29MB     0
+#> 1 exp_(x)      3.58ms   4.96ms     212.     2.29MB     4.15
+#> 2 exp(x)      12.19ms     13ms      75.9    2.29MB     2.05
 mark(round_(x), round(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 round_(x)    1.08ms   1.33ms      683.     2.3MB    15.4 
-#> 2 round(x)     8.69ms   9.07ms      100.    2.29MB     2.00
+#> 1 round_(x)     1.2ms   1.49ms     641.      2.3MB    15.5 
+#> 2 round(x)     9.37ms  10.74ms      93.8    2.29MB     2.04
 mark(signif_(x), signif(x))
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 signif_(x)    3.1ms      4ms     240.      2.3MB     6.36
-#> 2 signif(x)    14.5ms   14.8ms      60.4    2.29MB     0
+#> 1 signif_(x)    3.8ms   5.06ms     200.      2.3MB     6.38
+#> 2 signif(x)    16.9ms  18.15ms      54.9    2.29MB     0
 mark(add_(x, x), x + x)
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 add_(x, x)   97.7µs    152µs     4507.    2.29MB     98.6
-#> 2 x + x       184.3µs    215µs     3250.    2.29MB     69.5
+#> 1 add_(x, x)    108µs    148µs     5557.    2.29MB    140. 
+#> 2 x + x         189µs    221µs     2934.    2.29MB     71.2
 mark(subtract_(x, x), x - x)
 #> # A tibble: 2 × 6
 #>   expression           min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>      <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 subtract_(x, x)   98.1µs    149µs     5439.    2.29MB    118. 
-#> 2 x - x            170.5µs    254µs     3137.    2.29MB     66.2
+#> 1 subtract_(x, x)    114µs    162µs     4724.    2.29MB     93.4
+#> 2 x - x              194µs    250µs     2734.    2.29MB     55.6
 mark(multiply_(x, x), x * x)
 #> # A tibble: 2 × 6
 #>   expression           min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>      <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 multiply_(x, x)   92.2µs    130µs     5589.    2.29MB    114. 
-#> 2 x * x            179.3µs    320µs     2647.    2.29MB     54.3
+#> 1 multiply_(x, x)    111µs    150µs     5102.    2.29MB    104. 
+#> 2 x * x              196µs    233µs     2766.    2.29MB     54.5
 mark(divide_(x, x), x / x)
 #> # A tibble: 2 × 6
 #>   expression         min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 divide_(x, x)   90.2µs    228µs     3963.    2.29MB     86.1
-#> 2 x/x            191.1µs    225µs     2684.    2.29MB     57.1
+#> 1 divide_(x, x)    108µs    158µs     4997.    2.29MB    109. 
+#> 2 x/x              206µs    263µs     2717.    2.29MB     50.6
 mark(pow_(x, 2), x^2)
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 pow_(x, 2)    120µs    159µs     4308.    2.29MB     87.5
-#> 2 x^2           181µs    224µs     3064.    2.29MB     57.5
+#> 1 pow_(x, 2)    147µs    241µs     3943.    2.29MB     77.9
+#> 2 x^2           192µs    230µs     2794.    2.29MB     59.4
 
 set_threads(2)
 ```
@@ -1342,8 +1019,8 @@ mark(
 #> # A tibble: 2 × 6
 #>   expression                             min median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                          <bch:> <bch:>     <dbl> <bch:byt>    <dbl>
-#> 1 x * 10 * 20 + 1 - 1                 1.39ms 2.25ms      487.    7.63MB     41.0
-#> 2 set_subtract(set_add(set_multiply(… 1.87ms 1.97ms      473.        0B      0
+#> 1 x * 10 * 20 + 1 - 1                 1.47ms 2.52ms      421.    7.63MB     33.8
+#> 2 set_subtract(set_add(set_multiply(… 2.05ms 2.21ms      434.        0B      0
 ```
 
 ### `.args`
@@ -1376,14 +1053,14 @@ mark(
 #> # A tibble: 2 × 6
 #>   expression         min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 do.call(c, x)   2.72ms   3.91ms      238.     781KB   133.  
-#> 2 c_(.args = x)   1.02ms   1.15ms      773.     781KB     4.15
+#> 1 do.call(c, x)   2.79ms   3.65ms      262.     781KB   143.  
+#> 2 c_(.args = x)   1.07ms   1.17ms      822.     781KB     4.12
 
 # Matches the speed of `unlist()` without removing attributes
 unlist(list(Sys.Date()), recursive = FALSE)
-#> [1] 20447
+#> [1] 20452
 c_(.args = list(Sys.Date()))
-#> [1] "2025-12-25"
+#> [1] "2025-12-30"
 ```
 
 ## Recycling
@@ -1504,17 +1181,17 @@ mark(shallow_copy(iris))
 #> # A tibble: 1 × 6
 #>   expression              min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>         <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 shallow_copy(iris)    300ns    400ns  2070522.    6.34KB        0
+#> 1 shallow_copy(iris)    300ns    500ns  1740190.    6.34KB        0
 mark(deep_copy(iris))
 #> # A tibble: 1 × 6
 #>   expression           min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>      <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 deep_copy(iris)    3.6µs    5.6µs   152729.    10.6KB     15.3
+#> 1 deep_copy(iris)    3.9µs    5.7µs   148694.    10.6KB     29.7
 mark(semi_copy(iris))
 #> # A tibble: 1 × 6
 #>   expression           min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>      <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 semi_copy(iris)    2.5µs    4.5µs   161579.    9.36KB     16.2
+#> 1 semi_copy(iris)    2.6µs    4.1µs   210574.    9.36KB     21.1
 ```
 
 ### `shallow_copy`
@@ -1545,8 +1222,8 @@ mark(
 #> # A tibble: 2 × 6
 #>   expression         min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 semi_copy(df)  211.4µs  249.2µs     3267.    3.81MB     160.
-#> 2 deep_copy(df)    1.4ms   1.69ms      500.   15.26MB     125.
+#> 1 semi_copy(df)  218.6µs  264.2µs     2908.    3.81MB     143.
+#> 2 deep_copy(df)   1.46ms    1.6ms      570.   15.26MB     159.
 ```
 
 ### Attributes
@@ -1615,8 +1292,8 @@ mark(
 #> # A tibble: 2 × 6
 #>   expression                             min median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                           <bch> <bch:>     <dbl> <bch:byt>    <dbl>
-#> 1 add_length_class(integer(10^5))      175µs  175µs     5711.     391KB        0
-#> 2 add_length_class_in_place(integer(1… 166µs  166µs     6013.     391KB        0
+#> 1 add_length_class(integer(10^5))      122µs  122µs     8197.     391KB        0
+#> 2 add_length_class_in_place(integer(1…  71µs   71µs    14085.     391KB        0
 mark(
   add_length_class(integer(10^5)),
   add_length_class_in_place(integer(10^5)),
@@ -1625,8 +1302,8 @@ mark(
 #> # A tibble: 2 × 6
 #>   expression                             min median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                           <bch> <bch:>     <dbl> <bch:byt>    <dbl>
-#> 1 add_length_class(integer(10^5))      117µs  117µs     8562.     391KB        0
-#> 2 add_length_class_in_place(integer(1… 144µs  144µs     6920.     391KB        0
+#> 1 add_length_class(integer(10^5))      116µs  116µs     8621.     391KB        0
+#> 2 add_length_class_in_place(integer(1… 131µs  131µs     7616.     391KB        0
   
 
 # R detected that the vector we created had been modified (because it was)
@@ -1646,32 +1323,32 @@ mark(cheapr_which = which_(x),
 #> # A tibble: 2 × 6
 #>   expression        min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_which   82.2µs    240µs     2683.     397KB     10.5
-#> 2 base_which     69.8µs   79.9µs     8347.     781KB     56.9
+#> 1 cheapr_which   78.6µs    141µs     5491.     397KB     17.8
+#> 2 base_which     76.1µs     82µs     8190.     781KB     56.9
 x <- rep(FALSE, 10^5)
 mark(cheapr_which = which_(x),
      base_which = which(x))
 #> # A tibble: 2 × 6
 #>   expression        min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_which   18.9µs   33.3µs    27903.        0B      0  
-#> 2 base_which     23.3µs   26.4µs    29181.     391KB     93.7
+#> 1 cheapr_which   20.9µs   35.4µs    27124.        0B       0 
+#> 2 base_which     24.4µs   26.2µs    35219.     391KB     124.
 x <- c(rep(TRUE, 5e04), rep(FALSE, 1e05))
 mark(cheapr_which = which_(x),
      base_which = which(x))
 #> # A tibble: 2 × 6
 #>   expression        min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_which   53.2µs   89.3µs    10800.     195KB     15.6
-#> 2 base_which     57.7µs    124µs     9080.     781KB     54.6
+#> 1 cheapr_which     51µs   72.2µs    10938.     195KB     19.5
+#> 2 base_which     57.3µs  130.2µs     8440.     781KB     61.3
 x <- c(rep(FALSE, 5e04), rep(TRUE, 1e05))
 mark(cheapr_which = which_(x),
      base_which = which(x))
 #> # A tibble: 2 × 6
 #>   expression        min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_which  100.5µs    165µs     5699.     391KB     18.6
-#> 2 base_which     77.2µs    132µs     6959.     977KB     53.9
+#> 1 cheapr_which  108.8µs    175µs     5903.     391KB     18.4
+#> 2 base_which     90.4µs    140µs     6794.     977KB     51.7
 x <- sample(c(TRUE, FALSE), 10^5, TRUE)
 x[sample.int(10^5, 10^3)] <- NA
 mark(cheapr_which = which_(x),
@@ -1679,8 +1356,8 @@ mark(cheapr_which = which_(x),
 #> # A tibble: 2 × 6
 #>   expression        min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>   <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_which   69.1µs    108µs     8900.     193KB    13.2 
-#> 2 base_which    367.5µs    410µs     2080.     584KB     8.43
+#> 1 cheapr_which   75.8µs    112µs     9077.     193KB     13.1
+#> 2 base_which    358.5µs    414µs     2297.     584KB     10.6
 ```
 
 ### factor
@@ -1693,31 +1370,29 @@ mark(cheapr_factor = factor_(x),
 #> # A tibble: 2 × 6
 #>   expression         min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_factor   9.19ms   10.7ms     78.4     6.13MB     6.28
-#> 2 base_factor   313.54ms  350.1ms      2.86   27.84MB     0
+#> 1 cheapr_factor    9.4ms   10.5ms     93.9     6.13MB     7.22
+#> 2 base_factor    318.4ms  326.5ms      3.06   27.84MB     0
 mark(cheapr_factor = factor_(x, order = FALSE), 
      base_factor = factor(x, levels = unique(x)))
 #> # A tibble: 2 × 6
 #>   expression         min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_factor   2.96ms   3.28ms    253.      1.55MB     4.29
-#> 2 base_factor    615.9ms  615.9ms      1.62   22.79MB     0
+#> 1 cheapr_factor   3.07ms   3.26ms    289.      1.55MB     4.31
+#> 2 base_factor   514.98ms 514.98ms      1.94   22.79MB     0
 mark(cheapr_factor = factor_(y), 
      base_factor = factor(y))
-#> Warning: Some expressions had a GC in every iteration; so filtering is
-#> disabled.
 #> # A tibble: 2 × 6
 #>   expression         min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_factor  66.29ms  85.36ms    10.1      17.4MB    3.38 
-#> 2 base_factor      3.63s    3.63s     0.275    54.4MB    0.275
+#> 1 cheapr_factor  70.91ms  73.18ms    13.7      17.4MB     5.48
+#> 2 base_factor      2.79s    2.79s     0.358    54.4MB     0
 mark(cheapr_factor = factor_(y, order = FALSE), 
      base_factor = factor(y, levels = unique(y)))
 #> # A tibble: 2 × 6
 #>   expression         min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>    <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_factor   4.38ms   5.55ms     121.     3.49MB     5.37
-#> 2 base_factor    46.78ms   54.4ms      17.5   39.89MB    14.0
+#> 1 cheapr_factor   4.69ms   5.33ms     187.     3.49MB     9.59
+#> 2 base_factor    46.43ms  50.25ms      20.4   39.89MB    34.0
 ```
 
 ### intersect & setdiff
@@ -1730,15 +1405,15 @@ mark(cheapr_intersect = intersect_(x, y, dups = FALSE),
 #> # A tibble: 2 × 6
 #>   expression            min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>       <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_intersect    139µs    217µs     4066.     167KB     9.67
-#> 2 base_intersect      298µs    343µs     2387.     736KB    28.4
+#> 1 cheapr_intersect    148µs    219µs     4361.     167KB     6.91
+#> 2 base_intersect      329µs    379µs     2176.     736KB    21.1
 mark(cheapr_setdiff = setdiff_(x, y, dups = FALSE),
      base_setdiff = setdiff(x, y))
 #> # A tibble: 2 × 6
 #>   expression          min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>     <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_setdiff    147µs    219µs     3972.     254KB     9.97
-#> 2 base_setdiff      313µs    373µs     2197.     812KB    18.1
+#> 1 cheapr_setdiff    153µs    188µs     4921.     254KB     14.3
+#> 2 base_setdiff      328µs    363µs     2432.     812KB     21.1
 ```
 
 ### `%in_%` and `%!in_%`
@@ -1749,15 +1424,15 @@ mark(cheapr = x %in_% y,
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr       79.2µs    102µs     8163.    78.2KB     6.67
-#> 2 base          122µs    151µs     5209.   284.5KB    14.6
+#> 1 cheapr       82.5µs    102µs     9192.    78.2KB     6.58
+#> 2 base        128.2µs    153µs     5451.   284.5KB    17.6
 mark(cheapr = x %!in_% y,
      base = !x %in% y)
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr       74.3µs   97.7µs     9077.    89.2KB     6.71
-#> 2 base        133.5µs  157.7µs     4874.   323.6KB    14.7
+#> 1 cheapr       75.7µs   93.9µs     9749.    89.2KB     8.74
+#> 2 base        134.5µs  153.7µs     5530.   323.6KB    17.3
 ```
 
 ### `as_discrete`
@@ -1772,8 +1447,8 @@ mark(cheapr_cut = as_discrete(x, b, left = FALSE),
 #> # A tibble: 2 × 6
 #>   expression      min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 cheapr_cut   13.6ms     15ms      62.4    3.92MB     4.62
-#> 2 base_cut     25.4ms   28.3ms      32.0   15.32MB     7.39
+#> 1 cheapr_cut   14.8ms   16.2ms      60.4    3.92MB     4.48
+#> 2 base_cut     26.3ms     28ms      35.8   15.32MB    11.0
 ```
 
 ### `if_else_`
@@ -1789,9 +1464,9 @@ mark(
 #> # A tibble: 3 × 6
 #>   expression                            min  median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                        <bch:t> <bch:t>     <dbl> <bch:byt>    <dbl>
-#> 1 if_else_(x >= 0, 1, -1)            2.58ms  3.09ms     276.     11.4MB     65.8
-#> 2 ifelse(x >= 0, 1, -1)             17.75ms 19.03ms      52.9    53.4MB    172. 
-#> 3 data.table::fifelse(x >= 0, 1, -…  3.91ms  4.92ms     197.     11.4MB     35.6
+#> 1 if_else_(x >= 0, 1, -1)            2.52ms  2.68ms     356.     11.4MB     80.5
+#> 2 ifelse(x >= 0, 1, -1)             17.71ms 17.71ms      56.5    53.4MB   1186. 
+#> 3 data.table::fifelse(x >= 0, 1, -…  4.04ms  4.41ms     219.     11.4MB     35.1
 ```
 
 ### `case`
@@ -1814,8 +1489,8 @@ data.table::fcase(
 #> # A tibble: 2 × 6
 #>   expression                             min median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                          <bch:> <bch:>     <dbl> <bch:byt>    <dbl>
-#> 1 "case(x >= 0 ~ \"pos\", x < 0 ~ \"… 17.6ms 19.3ms      48.3    28.8MB     48.3
-#> 2 "data.table::fcase(x >= 0, \"pos\"… 15.6ms 18.7ms      50.7    26.7MB     32.6
+#> 1 "case(x >= 0 ~ \"pos\", x < 0 ~ \"…   18ms 19.3ms      52.0    28.8MB     91.0
+#> 2 "data.table::fcase(x >= 0, \"pos\"… 16.5ms 17.2ms      56.7    26.7MB     28.3
 ```
 
 `val_match` is an even cheaper special variant of `case` when all LHS
@@ -1836,9 +1511,9 @@ mark(
 #> # A tibble: 3 × 6
 #>   expression                            min  median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>                        <bch:t> <bch:t>     <dbl> <bch:byt>    <dbl>
-#> 1 val_match(x, 1 ~ Inf, 2 ~ -Inf, …  3.14ms  3.57ms     250.     8.78MB     48.3
-#> 2 case(x == 1 ~ Inf, x == 2 ~ -Inf… 13.46ms 17.41ms      57.2   27.62MB     52.0
-#> 3 data.table::fcase(x == 1, Inf, x… 10.97ms 12.78ms      71.2   30.52MB     35.6
+#> 1 val_match(x, 1 ~ Inf, 2 ~ -Inf, …  3.07ms  3.87ms     264.     8.78MB     24.7
+#> 2 case(x == 1 ~ Inf, x == 2 ~ -Inf… 13.93ms 14.84ms      66.7   27.62MB     47.1
+#> 3 data.table::fcase(x == 1, Inf, x… 12.25ms 13.17ms      72.7   30.52MB     44.4
 ```
 
 `get_breaks` is a very fast function for generating pretty equal-width
@@ -1861,8 +1536,8 @@ mark(
 #> # A tibble: 2 × 6
 #>   expression             min   median `itr/sec` mem_alloc `gc/sec`
 #>   <bch:expr>        <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
-#> 1 get_breaks(x, 20)   61.5µs   65.6µs    11794.        0B      0  
-#> 2 pretty(x, 20)      414.2µs  517.5µs     1671.    1.91MB     24.6
+#> 1 get_breaks(x, 20)   61.4µs   66.3µs    14370.        0B      0  
+#> 2 pretty(x, 20)      423.2µs  487.5µs     1786.    1.91MB     44.8
 
 # Not pretty but equal width breaks
 get_breaks(x, 5, pretty = FALSE)
