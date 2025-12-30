@@ -102,7 +102,7 @@ inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 struct sexp_t {
  SEXP value;
   
-  constexpr sexp_t() : value(R_NilValue) {}
+  sexp_t() : value(R_NilValue) {}
   // Implicit coercion both ways
   explicit constexpr sexp_t(SEXP s) : value(s) {}
   constexpr operator SEXP() const { return value; }
@@ -161,7 +161,7 @@ struct r_double_t {
 struct r_int64_t {
   int64_t value;
   r_int64_t() : value{0} {}
-  constexpr r_int64_t(int x) : value{x} {}
+  constexpr r_int64_t(int64_t x) : value{x} {}
   constexpr operator int64_t() const { return value; }
 };
 
@@ -791,7 +791,7 @@ inline sexp_t get_value_impl<sexp_t>(sexp_t* p_x, const R_xlen_t i){
 }
 template<>
 inline sexp_t get_value_impl<sexp_t>(SEXP x, const R_xlen_t i){
-  return vector_ptr<sexp_t>(x)[i];
+  return vector_ptr<const sexp_t>(x)[i];
 }
 
 }
@@ -900,6 +900,11 @@ inline void set_value<const char *>(SEXP x, const R_xlen_t i, const char* val){
 // Never use the pointer here to assign
 template<>
 inline void set_value<sexp_t>(SEXP x, const R_xlen_t i, sexp_t val){
+  SET_VECTOR_ELT(x, i, val);
+} 
+
+template<>
+inline void set_value<SEXP>(SEXP x, const R_xlen_t i, SEXP val){ 
   SET_VECTOR_ELT(x, i, val);
 } 
 
@@ -1514,7 +1519,7 @@ struct r_vector_t {
 
   // Constructor that wraps new_vector<T>
   explicit r_vector_t(R_xlen_t size) 
-    : value(new_vector<T>(size))
+    : value(vec::new_vector<T>(size))
     , const_ptr(vector_ptr<const T>(value))
     , ptr(nullptr)
   {
@@ -1544,7 +1549,7 @@ struct r_vector_t {
     if constexpr (is_r_ptr_writable_v<T>){
       ptr[index] = val;
     } else {
-      set_value<T>(value, index, val);
+      vec::set_value<T>(value, index, val);
     }
   }
 
@@ -1647,7 +1652,7 @@ inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
   return Rf_coerceVector(x, type);
 }
 
-// One-parameter template version
+// // One-parameter template version
 template <RType T>
 inline r_vector_t<T> new_vector(R_xlen_t n) {
   static_assert(
@@ -1659,7 +1664,7 @@ inline r_vector_t<T> new_vector(R_xlen_t n) {
 
 template <>
 inline r_vector_t<r_bool_t> new_vector<r_bool_t>(R_xlen_t n) {
-  return r_vector_t<r_bool_t>(internal::new_vec(LGLSXP, n));
+  return r_vector_t<r_bool_t>(internal::new_vec(LGLSXP, n)); 
 }
 template <>
 inline r_vector_t<r_int_t> new_vector<r_int_t>(R_xlen_t n){
@@ -1692,62 +1697,6 @@ template <>
 inline r_vector_t<sexp_t> new_vector<sexp_t>(R_xlen_t n){ 
   return static_cast<r_vector_t<sexp_t>>(internal::new_vec(VECSXP, n));
 }
-// template <>
-// inline r_vector_t<r_bool_t> new_vector<r_bool_t>(R_xlen_t n, const r_bool_t default_value) {
-//   r_vector_t<r_bool_t> out = SHIELD(new_vector<r_bool_t>(n));
-//   out.fill(0, n, default_value);
-//   YIELD(1);
-//   return out;
-// }
-
-// template <>
-// inline r_vector_t<r_int_t> new_vector<r_int_t>(R_xlen_t n, const r_int_t default_value){
-//   r_vector_t<r_int_t> out = SHIELD(new_vector<r_int_t>(n));
-//   out.fill(0, n, default_value);
-//   YIELD(1);
-//   return out;
-// }
-
-// template <>
-// inline r_vector_t<r_double_t> new_vector<r_double_t>(R_xlen_t n, const r_double_t default_value){
-//   r_vector_t<r_double_t> out = SHIELD(new_vector<r_double_t>(n));
-//   out.fill(0, n, default_value);
-//   YIELD(1);
-//   return out;
-// }
-// template <>
-// inline r_vector_t<r_int64_t> new_vector<r_int64_t>(R_xlen_t n, const r_int64_t default_value){
-//   r_vector_t<r_int64_t> out = SHIELD(new_vector<r_int64_t>(n));
-//   out.fill(0, n, default_value);
-//   YIELD(1);
-//   return out;
-// }
-
-// template <>
-// inline r_vector_t<r_string_t> new_vector<r_string_t>(R_xlen_t n, const r_string_t default_value){
-//   r_vector_t<r_string_t> out = SHIELD(new_vector<r_string_t>(n));
-//   if ((default_value == blank_r_string).is_false()){
-//     for (R_xlen_t i = 0; i < n; ++i){
-//       out.set(i, default_value);
-//     }
-//   }
-//   YIELD(1);
-//   return out;
-// }
-// template <>
-// inline r_vector_t<r_complex_t> new_vector<r_complex_t>(R_xlen_t n, const r_complex_t default_value){
-//   auto out = SHIELD(new_vector<r_complex_t>(n));
-//   out.fill(0, n, default_value);
-//   YIELD(1);
-//   return out;
-// }
-// template <>
-// inline r_vector_t<r_byte_t> new_vector<r_byte_t>(R_xlen_t n, const r_byte_t default_value){
-//   auto out = SHIELD(new_vector<r_byte_t>(n));
-//   out.fill(0, n, default_value);
-//   YIELD(1);
-//   return out;
-// }
 inline SEXP new_list(R_xlen_t n){
   return new_vector<sexp_t>(n);
 }
@@ -1763,7 +1712,7 @@ inline SEXP new_list(R_xlen_t n, const SEXP default_value){
 }
 
 template <RType T>
-inline auto new_vector<T>(R_xlen_t n, const T default_value){
+inline auto new_vector(R_xlen_t n, const T default_value){
   auto out = SHIELD(new_vector<T>(n));
   out.fill(0, n, default_value);
   YIELD(1);
@@ -1776,7 +1725,7 @@ namespace vec {
 
 template<typename T>
 inline auto as_vector(const T x){
-  if (constexpr (is_r_vector_v<T>)){
+  if constexpr (is_r_vector_v<T>){
     return x;
     // This is a catch-all for all C integer types that aren't int or int64_t which are handled via specialisations
     // Also they can't have NA values so it's okay to static cast
@@ -1864,10 +1813,12 @@ inline auto as_vector<SEXP>(const SEXP x){
 namespace internal {
 template<typename T>
 inline SEXP as_r_obj(const T x){
-  if constexpr (std::is_convertible_v<T, SEXP>){
-    return x;
+  if constexpr (is_r_vector_v<T>){
+    return static_cast<SEXP>(x);
+  } else if constexpr (std::is_convertible_v<T, SEXP>){
+    return static_cast<SEXP>(x);
   } else {
-    return vec::as_vector(x);
+    return static_cast<SEXP>(vec::as_vector(x));
   }
 }
 
@@ -2425,7 +2376,7 @@ inline r_vector_t<sexp_t> make_list(Args... args) {
   constexpr int n = sizeof...(args);
 
   if constexpr (n == 0){
-    return r_vector_t<sexp_t> out(0);
+    return r_vector_t<sexp_t>(0);
   } else {
     
     r_vector_t<sexp_t> out(n);
