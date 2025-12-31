@@ -57,7 +57,7 @@
 // rchk produces errors with that method
 #ifndef SHIELD
 #define SHIELD(x)                                              \
-static_cast<std::decay_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x)))
+static_cast<std::remove_reference_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x)))
 #endif
 
 #ifndef YIELD
@@ -2299,78 +2299,7 @@ inline void set_attrs(SEXP x, SEXP attrs){
 
 namespace vec {
 inline SEXP deep_copy(SEXP x){
-  int32_t NP = 0;
-  SEXP out = r_null;
-  R_xlen_t n = Rf_xlength(x);
-  SEXP attrs = r_null;
-
-  switch (TYPEOF(x)){
-  case NILSXP: {
-    break;
-  }
-  case LGLSXP: {
-    using r_t = r_bool_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case INTSXP: {
-    using r_t = int;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case REALSXP: {
-    using r_t = double;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case STRSXP: {
-    using r_t = r_string_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<const r_t>(out), vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case CPLXSXP: {
-    using r_t = r_complex_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case RAWSXP: {
-    using r_t = r_byte_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    r_copy_n(out, vector_ptr<r_t>(out), vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case VECSXP: {
-    using r_t = SEXP;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    const r_t *p_x = vector_ptr<const r_t>(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
-    }
-    break;
-  }
-  default: {
-    out = SHIELD(Rf_duplicate(x)); ++NP;
-    YIELD(NP);
-    return out;
-  }
-  }
-
-  if (!is_null(x)){
-    SHIELD(attrs = attr::get_attrs(x)); ++NP;
-    int n_attrs = Rf_length(attrs);
-    for (R_xlen_t i = 0; i < n_attrs; ++i){
-      SET_VECTOR_ELT(attrs, i, deep_copy(VECTOR_ELT(attrs, i)));
-    }
-    attr::set_attrs(out, attrs);
-  }
-
-  YIELD(NP);
-  return out;
+  return Rf_duplicate(x);
 }
 
 }
