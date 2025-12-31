@@ -114,22 +114,25 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
 
 [[cpp11::register]]
 SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive){
-  int32_t NP = 0;
   SEXP out = r_null;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
     const SEXP *p_x = list_ptr_ro(x);
-    out = SHIELD(new_list(size)); ++NP;
+    out = SHIELD(new_list(size));
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (R_xlen_t i = 0; i < size; ++i){
-      SET_VECTOR_ELT(out, i, cpp_lag(p_x[i], k, fill, set && !ALTREP(p_x[i]), true));
+      SEXP elem = SHIELD(cpp_lag(p_x[i], k, fill, set && !ALTREP(p_x[i]), true));
+      SET_VECTOR_ELT(out, i, elem);
+      YIELD(1);
     }
+    YIELD(1);
   } else {
-    out = SHIELD(lag(x, k, fill, set)); ++NP;
-    SEXP names = SHIELD(get_old_names(x)); ++NP;
-    set_old_names(out, lag(names, k, fill, set && !ALTREP(x)));
+    out = SHIELD(lag(x, k, fill, set));
+    SEXP names = SHIELD(get_old_names(x));
+    SEXP lagged_names = SHIELD(lag(names, k, fill, set && !ALTREP(x)));
+    set_old_names(out, lagged_names);
+    YIELD(3);
   }
-  YIELD(NP);
   return out;
 }
 
@@ -558,21 +561,24 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
 
 [[cpp11::register]]
 SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool recursive){
-  int32_t NP = 0;
   SEXP out = r_null;
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
     const SEXP *p_x = list_ptr_ro(x);
-    out = SHIELD(new_list(size)); ++NP;
+    out = SHIELD(new_list(size));
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (R_xlen_t i = 0; i < size; ++i){
-      SET_VECTOR_ELT(out, i, cpp_lag2(p_x[i], lag, order, run_lengths, fill, true));
+      SEXP elem = SHIELD(cpp_lag2(p_x[i], lag, order, run_lengths, fill, true));
+      SET_VECTOR_ELT(out, i, elem);
+      YIELD(1);
     }
+    YIELD(1);
   } else {
-    SEXP names = SHIELD(get_old_names(x)); ++NP;
-    out = SHIELD(lag2(x, lag, order, run_lengths, fill)); ++NP;
-    set_old_names(out, lag2(names, lag, order, run_lengths, fill));
+    SEXP names = SHIELD(get_old_names(x));
+    out = SHIELD(lag2(x, lag, order, run_lengths, fill));
+    SEXP lagged_names = SHIELD(lag2(names, lag, order, run_lengths, fill));
+    set_old_names(out, lagged_names);
+    YIELD(3);
   }
-  YIELD(NP);
   return out;
 }
