@@ -61,7 +61,7 @@
 // rchk produces errors with that method
 #ifndef SHIELD
 #define SHIELD(x)                                              \
-static_cast<std::remove_cvref_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x)))
+static_cast<std::remove_reference_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x)))
 #endif
 
 #ifndef YIELD
