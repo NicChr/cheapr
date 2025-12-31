@@ -8,6 +8,7 @@
 #include <r_types.h>
 #include <r_symbols.h>
 #include <r_limits.h>
+#include <r_concepts.h>
 #include <optional>
 #include <type_traits>
 
@@ -75,69 +76,6 @@ namespace internal {
 inline constexpr int64_t CHEAPR_OMP_THRESHOLD = 100000;
 inline constexpr SEXPTYPE CHEAPR_INT64SXP = 64;
 }
-
-// Compile-time type check `is<>`
-template<typename T, typename U>
-    inline constexpr bool is = std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
-
-// Concepts to enable R type templates
-template<typename T>
-concept RMathType = std::same_as<std::remove_cvref_t<T>, r_bool_t> ||
-std::same_as<std::remove_cvref_t<T>, r_int_t> ||
-std::same_as<std::remove_cvref_t<T>, r_int64_t> ||
-std::same_as<std::remove_cvref_t<T>, r_double_t>;
-
-template<typename T>
-concept CppMathType = std::is_arithmetic_v<std::remove_cvref_t<T>>;
-
-template<typename T>
-concept MathType = RMathType<T> || CppMathType<T>;
-
-template<typename T, typename U>
-concept AtLeastOneRMathType =
-(RMathType<T> || RMathType<U>) && (MathType<T> && MathType<U>);
-// (RMathType<T> && RMathType<U>) ||
-// (RMathType<T> && CppMathType<U>) ||
-// (CppMathType<T> && RMathType<U>);
-
-template<typename T>
-concept RType = RMathType<T> ||
-std::same_as<std::remove_cvref_t<T>, r_complex_t> ||
-std::same_as<std::remove_cvref_t<T>, r_string_t> ||
-std::same_as<std::remove_cvref_t<T>, r_byte_t> ||
-std::same_as<std::remove_cvref_t<T>, r_symbol_t> ||
-std::same_as<std::remove_cvref_t<T>, sexp_t>;
-
-template<typename T>
-concept CppType = !RType<T>;
-
-template<typename T, typename U>
-concept AtLeastOneRType = (RType<T> || RType<U>);
-// (RType<T> && CppType<U>) ||
-// (CppType<T> && RType<U>);
-
-template <class... T>
-inline constexpr bool always_false = false;
-
-template <typename T>
-inline constexpr bool is_r_or_cpp_integral_v =
-std::is_integral_v<std::remove_cvref_t<T>> ||
-is<T, r_bool_t> ||
-is<T, r_int_t>;
-
-template <typename T>
-inline constexpr bool is_r_or_cpp_arithmetic_v =
-std::is_arithmetic_v<std::remove_cvref_t<T>> ||
-is<T, r_bool_t> ||
-is<T, r_int_t> ||
-is<T, r_double_t>;
-
-
-template <typename T>
-inline constexpr bool is_r_ptr_writable_v =
-is_r_or_cpp_arithmetic_v<T> ||
-is<T, r_complex_t> ||
-is<T, r_byte_t>;
 
 namespace env {
 inline const SEXP empty_env = R_EmptyEnv;
@@ -1530,7 +1468,7 @@ inline constexpr bool can_be_int(T x){
       return true;  // Small types can safely cast to int
     }
     // Larger types that can safely cast to T
-  } else if constexpr (is_r_or_cpp_arithmetic_v<xt>){
+  } else if constexpr (MathType<xt>){
     return between<xt>(x, r_limits::r_int_min, r_limits::r_int_max);
   } else {
     return false;
@@ -1548,7 +1486,7 @@ inline constexpr bool can_be_int64(T x){
     } else {
       return true;  // Small types can safely cast to int64
     }
-  } else if constexpr (is_r_or_cpp_arithmetic_v<xt>){
+  } else if constexpr (MathType<xt>){
     return between<xt>(x, r_limits::r_int64_min, r_limits::r_int64_max);
   } else {
     return false;
@@ -1691,7 +1629,7 @@ template<typename T>
 inline constexpr r_bool_t as_bool(T x){
   if constexpr (is<T, int> || is<T, r_bool_t>){
     return static_cast<r_bool_t>(x);
-  } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
+  } else if constexpr (MathType<T>){
     return is_r_na(x) ? na::logical : static_cast<r_bool_t>(static_cast<bool>(x));
   } else {
     return na::logical;
@@ -1701,7 +1639,7 @@ template<typename T>
 inline constexpr r_int_t as_int(T x){
   if constexpr (is<T, int> || is<T, r_int_t>){
     return static_cast<r_int_t>(x);
-  } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
+  } else if constexpr (MathType<T>){
     return is_r_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<r_int_t>(x);
   } else {
     return na::integer;
@@ -1711,7 +1649,7 @@ template<typename T>
 inline constexpr r_int64_t as_int64(T x){
   if constexpr (is<T, r_int64_t>){
     return x;
-  } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
+  } else if constexpr (MathType<T>){
     return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<r_int64_t>(x);
   } else {
     return na::integer64;
@@ -1721,7 +1659,7 @@ template<typename T>
 inline constexpr r_double_t as_double(T x){
   if constexpr (is<T, double> || is<T, r_double_t>){
     return static_cast<r_double_t>(x);
-  } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
+  } else if constexpr (MathType<T>){
     return is_r_na(x) ? na::real : static_cast<r_double_t>(x);
   } else {
     return na::real;
@@ -1731,7 +1669,7 @@ template<typename T>
 inline constexpr r_complex_t as_complex(T x){
   if constexpr (is<T, r_complex_t>){
     return x;
-  } else if constexpr (is_r_or_cpp_arithmetic_v<T>){
+  } else if constexpr (MathType<T>){
     return r_complex_t{as_double(x), 0.0};
   } else {
     return na::complex;
@@ -2039,10 +1977,7 @@ inline r_bool_t is_whole_number(const r_double_t x, const r_double_t tolerance){
 
 
 // Greatest common divisor
-template<
-  typename T,
-  typename = typename std::enable_if<is_r_or_cpp_arithmetic_v<T>>::type
->
+template<MathType T>
   inline T r_gcd(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
 
     if (is_r_na(x) || is_r_na(y)){
@@ -2111,8 +2046,7 @@ template<
 
 
 // Lowest common multiple
-template<typename T,
-         typename = typename std::enable_if<is_r_or_cpp_arithmetic_v<T>>::type>
+template<MathType T>
   inline T r_lcm(
       T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
   ){
