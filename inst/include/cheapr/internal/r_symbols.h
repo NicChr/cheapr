@@ -41,6 +41,10 @@ inline r_symbol_t drop_sym = r_symbol_t(R_DropSymbol);
 inline r_symbol_t missing_arg = r_symbol_t(R_MissingArg);
 inline r_symbol_t unbound_value = r_symbol_t(R_UnboundValue);
 
+inline r_symbol_t tag(SEXP x){
+  return static_cast<r_symbol_t>(TAG(x));
+}
+
 }
 
 }

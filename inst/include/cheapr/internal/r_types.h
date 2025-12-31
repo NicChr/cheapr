@@ -21,6 +21,10 @@ struct sexp_t {
 // R C NULL constant
 inline const sexp_t r_null = sexp_t();
 
+inline bool is_null(SEXP x){ 
+  return x == r_null;
+}
+
 // bool type, similar to Rboolean
 // Contains bember functions to extract bool
 struct r_bool_t {
