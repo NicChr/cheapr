@@ -264,7 +264,7 @@ inline SEXP init<r_raws_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_list_t>(R_xlen_t n, bool with_na) {
-  return vec::new_list(n);
+  return vec::new_vector<sexp_t>(n);
 }
 
 template<>
@@ -300,7 +300,7 @@ inline SEXP init<r_posixts_t>(R_xlen_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
-  SEXP out = SHIELD(vec::new_list(0));
+  SEXP out = SHIELD(vec::new_vector<sexp_t>(0));
   SHIELD(out = cpp_new_df(out, r_null, false, false));
   SHIELD(out = cpp_na_init(out, n));
   YIELD(3);
@@ -357,7 +357,7 @@ inline SEXP cast<r_logicals_t>(SEXP x, SEXP y) {
     YIELD(2);
     return out;
   } else {
-    return vec::coerce_vec(x, LGLSXP);
+    return internal::coerce_vec(x, LGLSXP);
   }
 }
 
@@ -373,7 +373,7 @@ inline SEXP cast<r_integers_t>(SEXP x, SEXP y) {
     YIELD(2);
     return out;
   } else {
-    return vec::coerce_vec(x, INTSXP);
+    return internal::coerce_vec(x, INTSXP);
   }
 }
 
@@ -389,7 +389,7 @@ inline SEXP cast<r_doubles_t>(SEXP x, SEXP y) {
     YIELD(2);
     return out;
   } else {
-    return vec::coerce_vec(x, REALSXP);
+    return internal::coerce_vec(x, REALSXP);
   }
 }
 
@@ -419,7 +419,7 @@ inline SEXP cast<r_characters_t>(SEXP x, SEXP y) {
     YIELD(2);
     return out;
   } else {
-    return vec::coerce_vec(x, STRSXP);
+    return internal::coerce_vec(x, STRSXP);
   }
 }
 
@@ -435,7 +435,7 @@ inline SEXP cast<r_complexes_t>(SEXP x, SEXP y) {
     YIELD(2);
     return out;
   } else {
-    return vec::coerce_vec(x, CPLXSXP);
+    return internal::coerce_vec(x, CPLXSXP);
   }
 }
 
@@ -451,7 +451,7 @@ inline SEXP cast<r_raws_t>(SEXP x, SEXP y) {
     YIELD(2);
     return out;
   } else {
-    return vec::coerce_vec(x, RAWSXP);
+    return internal::coerce_vec(x, RAWSXP);
   }
 }
 
@@ -467,7 +467,7 @@ inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
     YIELD(2);
     return out;
   } else {
-    return vec::coerce_vec(x, VECSXP);
+    return internal::coerce_vec(x, VECSXP);
   }
 }
 
@@ -506,7 +506,7 @@ inline SEXP cast<r_dates_t>(SEXP x, SEXP y) {
     if (TYPEOF(x) == TYPEOF(y)){
       return x;
     } else {
-      return vec::coerce_vec(x, TYPEOF(y));
+      return internal::coerce_vec(x, TYPEOF(y));
     }
   } else if (is_null(x) && is_null(y)){
     return init<r_dates_t>(vec::length(x), true);
@@ -523,7 +523,7 @@ inline SEXP cast<r_dates_t>(SEXP x, SEXP y) {
 
     SEXP out = SHIELD(vec::shallow_copy(x)); ++NP;
     if (TYPEOF(x) != INTSXP){
-      SHIELD(out = vec::coerce_vec(x, REALSXP)); ++NP;
+      SHIELD(out = internal::coerce_vec(x, REALSXP)); ++NP;
     }
     SEXP date_cls = SHIELD(vec::as_vector("Date")); ++NP;
     attr::set_old_class(out, date_cls);
@@ -576,7 +576,7 @@ inline SEXP cast<r_posixts_t>(SEXP x, SEXP y) {
     YIELD(3);
     return out;
   } else if (!vec::is_object(x)){
-    SEXP out = SHIELD(vec::coerce_vec(x, REALSXP));
+    SEXP out = SHIELD(internal::coerce_vec(x, REALSXP));
     SEXP out_class = SHIELD(vec::combine("POSIXct", "POSIXt"));
     SEXP out_tzone = SHIELD(vec::new_vector<r_string_t>(1));
     attr::set_old_class(out, out_class);

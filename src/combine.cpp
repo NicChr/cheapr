@@ -48,7 +48,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
   } else if (is_df(x)){
     if (out_size == df::nrow(x)) return x;
     int n_cols = Rf_length(x);
-    SEXP out = SHIELD(new_list(n_cols));
+    SEXP out = SHIELD(new_vector<sexp_t>(n_cols));
     const SEXP *p_x = list_ptr_ro(x);
     for (int i = 0; i < n_cols; ++i){
       SET_VECTOR_ELT(out, i, cpp_rep_len(p_x[i], length));
@@ -80,26 +80,25 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
       } else {
 
-        SEXP res = SHIELD(new_vector<std::decay_t<data_t>>(out_size));
-        auto *p_res = vector_ptr<data_t>(res);
+        auto res = SHIELD(new_vector<std::decay_t<data_t>>(out_size));
 
         if (size == 1){
-          r_fill(res, p_res, 0, out_size, p_x[0]);
+          res.fill(0, out_size, p_x[0]);
         } else if (out_size > 0 && size > 0){
           // Copy first block
-          r_copy_n(res, p_res, p_x, 0, size);
+          r_copy_n(res, p_x, 0, size);
 
           // copy result to itself, doubling each iteration
           R_xlen_t copied = size;
           while (copied < out_size) {
             R_xlen_t to_copy = std::min(copied, out_size - copied);
-            r_copy_n(res, p_res, p_res, copied, to_copy);
+            r_copy_n(res, res.data(), copied, to_copy);
             copied += to_copy;
           }
           // If length > 0 but length(x) == 0 then fill with NA
         } else if (size == 0 && out_size > 0 &&
-          !std::is_same_v<data_t, SEXP>){ // Already filled with `NULL`
-          r_fill(res, p_res, 0, out_size, na_value<data_t>());
+          !std::is_same_v<data_t, sexp_t>){ // Already filled with `NULL`
+          res.fill(0, out_size, na_value<data_t>());
         }
         return res;
       }
@@ -407,7 +406,7 @@ SEXP get_ptype(SEXP x){
 
 SEXP get_ptypes(SEXP x){
   int n = Rf_length(x);
-  SEXP out = SHIELD(new_list(n));
+  SEXP out = SHIELD(new_vector<sexp_t>(n));
 
   for (int i = 0; i < n; ++i){
     SET_VECTOR_ELT(out, i, get_ptype(VECTOR_ELT(x, i)));
@@ -460,7 +459,7 @@ SEXP cpp_list_c(SEXP x){
   bool x_has_names = !is_null(x_names);
 
   R_xlen_t k = 0;
-  SEXP out = SHIELD(new_list(out_size)); ++NP;
+  SEXP out = SHIELD(new_vector<sexp_t>(out_size)); ++NP;
   SEXP container_list = SHIELD(make_list(arg("") = r_null)); ++NP;
 
   SEXP names;
@@ -585,14 +584,14 @@ SEXP cpp_df_c(SEXP x){
   PROTECT_INDEX vec_idx;
   R_ProtectWithIndex(vec = r_null, &vec_idx); ++NP;
 
-  SEXP out = SHIELD(new_list(n_cols)); ++NP;
-  SEXP vectors = SHIELD(new_list(n_frames)); ++NP;
+  SEXP out = SHIELD(new_vector<sexp_t>(n_cols)); ++NP;
+  SEXP vectors = SHIELD(new_vector<sexp_t>(n_frames)); ++NP;
 
   const r_string_t *p_ptype_names = string_ptr_ro(ptype_names);
 
   if (na_padding){
     // Get archetype of each col
-    SEXP vec_archetypes = SHIELD(new_list(n_cols)); ++NP;
+    SEXP vec_archetypes = SHIELD(new_vector<sexp_t>(n_cols)); ++NP;
     const SEXP *p_vec_archetypes = list_ptr_ro(vec_archetypes);
     for (int j = 0; j < n_cols; ++j){
       for (int i = 0; i < n_frames; ++i){
@@ -687,14 +686,12 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
   }
   case R_lgl: {
 
-    SHIELD(out = init<r_logicals_t>(out_size, false)); ++NP;
-
-    r_bool_t* RESTRICT p_out = logical_ptr(out);
+    out = SHIELD(new_vector<r_bool_t>(out_size)); ++NP;
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_logicals_t>(p_x[i], vec_template), vec_idx);
       m = Rf_xlength(vec);
-      r_copy_n(out, p_out, vector_ptr<const r_bool_t>(vec), k, m);
+      r_copy_n(out, vector_ptr<const r_bool_t>(vec), k, m);
     }
     break;
   }
@@ -811,7 +808,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_dates_t>(p_x[i], vec_template), vec_idx);
-      R_Reprotect(vec = vec::coerce_vec(vec, INTSXP), vec_idx);
+      R_Reprotect(vec = internal::coerce_vec(vec, INTSXP), vec_idx);
       m = Rf_xlength(vec);
       r_copy_n(out, p_out, vector_ptr<const int>(vec), k, m);
     }
@@ -824,7 +821,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
 
     for (int i = 0; i < n; ++i, k += m){
       R_Reprotect(vec = cast<r_dates_t>(p_x[i], vec_template), vec_idx);
-      R_Reprotect(vec = vec::coerce_vec(vec, REALSXP), vec_idx);
+      R_Reprotect(vec = internal::coerce_vec(vec, REALSXP), vec_idx);
       m = Rf_xlength(vec);
       r_copy_n(out, p_out, vector_ptr<const double>(vec), k, m);
     }
@@ -851,7 +848,7 @@ SEXP combine_internal(SEXP x, const R_xlen_t out_size, SEXP vec_template){
     break;
   }
   case R_unk: {
-    SEXP call = SHIELD(vec::coerce_vec(x, LISTSXP)); ++NP;
+    SEXP call = SHIELD(internal::coerce_vec(x, LISTSXP)); ++NP;
     SHIELD(call = Rf_lcons(as<r_symbol_t>("c"), call)); ++NP;
     SHIELD(out = eval(call, env::base_env)); ++NP;
     break;

@@ -218,8 +218,8 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
   }
   switch(TYPEOF(x)){
   case INTSXP: {
-    SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
-    SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
+    SHIELD(x = internal::coerce_vec(x, INTSXP)); ++NP;
+    SHIELD(y = internal::coerce_vec(y, INTSXP)); ++NP;
     SEXP out = SHIELD(vec::new_vector<r_int_t>(n)); ++NP;
     r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
     const r_int_t *p_x = vector_ptr<r_int_t>(x);
@@ -234,8 +234,8 @@ SEXP cpp_gcd2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     return out;
   }
   default: {
-    SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
-    SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
+    SHIELD(x = internal::coerce_vec(x, REALSXP)); ++NP;
+    SHIELD(y = internal::coerce_vec(y, REALSXP)); ++NP;
     SEXP out = SHIELD(new_vector<r_double_t>(n)); ++NP;
     r_double_t* RESTRICT p_out = real_ptr(out);
     const r_double_t *p_x = real_ptr(x);
@@ -274,8 +274,8 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
 
   switch(TYPEOF(x)){
   case INTSXP: {
-    SHIELD(x = vec::coerce_vec(x, INTSXP)); ++NP;
-    SHIELD(y = vec::coerce_vec(y, INTSXP)); ++NP;
+    SHIELD(x = internal::coerce_vec(x, INTSXP)); ++NP;
+    SHIELD(y = internal::coerce_vec(y, INTSXP)); ++NP;
     SEXP out = SHIELD(vec::new_vector<r_int_t>(n)); ++NP;
     r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
     const r_int_t *p_x = vector_ptr<r_int_t>(x);
@@ -290,8 +290,8 @@ SEXP cpp_lcm2_vectorised(SEXP x, SEXP y, double tol, bool na_rm){
     return out;
   }
   default: {
-    SHIELD(x = vec::coerce_vec(x, REALSXP)); ++NP;
-    SHIELD(y = vec::coerce_vec(y, REALSXP)); ++NP;
+    SHIELD(x = internal::coerce_vec(x, REALSXP)); ++NP;
+    SHIELD(y = internal::coerce_vec(y, REALSXP)); ++NP;
     SEXP out = SHIELD(new_vector<r_double_t>(n)); ++NP;
     r_double_t* RESTRICT p_out = real_ptr(out);
     const r_double_t *p_x = real_ptr(x);

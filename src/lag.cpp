@@ -119,7 +119,7 @@ SEXP cpp_lag(SEXP x, R_xlen_t k, SEXP fill, bool set, bool recursive){
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
     const SEXP *p_x = list_ptr_ro(x);
-    out = SHIELD(new_list(size)); ++NP;
+    out = SHIELD(new_vector<sexp_t>(size)); ++NP;
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (R_xlen_t i = 0; i < size; ++i){
       SET_VECTOR_ELT(out, i, cpp_lag(p_x[i], k, fill, set && !ALTREP(p_x[i]), true));
@@ -157,9 +157,9 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
   // hence order/run_lengths should remain NULL throughout each recursion
   // if they are NULL
 
-  SHIELD(lag = vec::coerce_vec(lag, INTSXP)); ++NP;
-  SHIELD(order = has_order ? vec::coerce_vec(order, INTSXP) : r_null); ++NP;
-  SHIELD(run_lengths = has_rl ? vec::coerce_vec(run_lengths, INTSXP) : r_null); ++NP;
+  SHIELD(lag = internal::coerce_vec(lag, INTSXP)); ++NP;
+  SHIELD(order = has_order ? internal::coerce_vec(order, INTSXP) : r_null); ++NP;
+  SHIELD(run_lengths = has_rl ? internal::coerce_vec(run_lengths, INTSXP) : r_null); ++NP;
   int foo = 42;
   const r_int_t *p_o = &foo;
   const r_int_t *p_rl = &foo;
@@ -449,7 +449,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
       Rf_error("length(order) must equal length(x) (%d)", size);
     }
     r_byte_t *p_x = raw_ptr(x);
-    SEXP raw_sexp = SHIELD(vec::coerce_vec(fill, RAWSXP)); ++NP;
+    SEXP raw_sexp = SHIELD(internal::coerce_vec(fill, RAWSXP)); ++NP;
     r_byte_t fill_value = fill_size == 0? r_byte_t{0} : raw_ptr(raw_sexp)[0];
     out = SHIELD(cpp_semi_copy(x)); ++NP;
     for (int i = 0; i != rl_size; ++i){
@@ -504,7 +504,7 @@ SEXP lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill){
       SEXP temp_fill = SHIELD(cast<r_list_t>(fill, r_null)); ++NP;
       fill_value = get_value<SEXP>(temp_fill, 0);
     }
-    out = SHIELD(new_list(size)); ++NP;
+    out = SHIELD(new_vector<sexp_t>(size)); ++NP;
     for (int i = 0; i != rl_size; ++i){
       run_start = run_end; // Start at the end of the previous run
       rl = has_rl ? p_rl[i] : size; // Current run-length
@@ -563,7 +563,7 @@ SEXP cpp_lag2(SEXP x, SEXP lag, SEXP order, SEXP run_lengths, SEXP fill, bool re
   if (recursive && TYPEOF(x) == VECSXP){
     R_xlen_t size = Rf_xlength(x);
     const SEXP *p_x = list_ptr_ro(x);
-    out = SHIELD(new_list(size)); ++NP;
+    out = SHIELD(new_vector<sexp_t>(size)); ++NP;
     SHALLOW_DUPLICATE_ATTRIB(out, x);
     for (R_xlen_t i = 0; i < size; ++i){
       SET_VECTOR_ELT(out, i, cpp_lag2(p_x[i], lag, order, run_lengths, fill, true));

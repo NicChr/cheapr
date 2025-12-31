@@ -118,7 +118,7 @@ SEXP cpp_semi_copy(SEXP x){
     // Lists
 
     R_xlen_t n = Rf_xlength(x);
-    SEXP out = SHIELD(new_list(n));
+    SEXP out = SHIELD(new_vector<sexp_t>(n));
     const SEXP *p_x = list_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i){
       SET_VECTOR_ELT(out, i, vec::deep_copy(p_x[i]));
@@ -369,7 +369,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   case INTSXP: {
     if (codes){
     SEXP out = SHIELD(vec::new_vector<r_int_t>(n));
-    SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
+    SHIELD(breaks = internal::coerce_vec(breaks, REALSXP));
     const r_int_t *p_x = vector_ptr<r_int_t>(x);
     const r_double_t *p_b = real_ptr(breaks);
     r_int_t* RESTRICT p_out = vector_ptr<int>(out);
@@ -378,7 +378,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     return out;
   } else {
     SEXP out = SHIELD(cpp_semi_copy(x));
-    SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
+    SHIELD(breaks = internal::coerce_vec(breaks, REALSXP));
     const r_int_t *p_x = vector_ptr<r_int_t>(x);
     const r_double_t *p_b = real_ptr(breaks);
     r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
@@ -390,7 +390,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
   default: {
     if (codes){
     SEXP out = SHIELD(vec::new_vector<r_int_t>(n));
-    SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
+    SHIELD(breaks = internal::coerce_vec(breaks, REALSXP));
     const r_double_t *p_x = real_ptr(x);
     const r_double_t *p_b = real_ptr(breaks);
     r_int_t* RESTRICT p_out = vector_ptr<r_int_t>(out);
@@ -399,7 +399,7 @@ SEXP cpp_bin(SEXP x, SEXP breaks, bool codes, bool right,
     return out;
   } else {
     SEXP out = SHIELD(cpp_semi_copy(x));
-    SHIELD(breaks = vec::coerce_vec(breaks, REALSXP));
+    SHIELD(breaks = internal::coerce_vec(breaks, REALSXP));
     const r_double_t *p_x = real_ptr(x);
     const r_double_t *p_b = real_ptr(breaks);
     r_double_t* RESTRICT p_out = real_ptr(out);

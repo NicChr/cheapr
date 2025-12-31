@@ -66,7 +66,7 @@ SEXP cpp_new_list(SEXP size, SEXP default_value){
     Rf_error("`size` must be a vector of length 1");
   }
   R_xlen_t out_size = real_ptr(size)[0];
-  SEXP out = SHIELD(new_list(out_size, default_value));
+  SEXP out = SHIELD(new_vector<sexp_t>(out_size, default_value));
   YIELD(2);
   return out;
 }
@@ -90,7 +90,7 @@ SEXP cpp_drop_null(SEXP x){
 
   if (n_null == 0){
     // Always return a plain-list
-    SEXP out = SHIELD(new_list(n));
+    SEXP out = SHIELD(new_vector<sexp_t>(n));
     for (uint_fast64_t i = 0; i < n; ++i) SET_VECTOR_ELT(out, i, p_l[i]);
     set_old_names(out, names);
     YIELD(2);
@@ -101,7 +101,7 @@ SEXP cpp_drop_null(SEXP x){
   // Subset on both the list and names of the list
   uint_fast64_t n_keep = n - n_null;
   uint_fast64_t k = 0;
-  SEXP out = SHIELD(new_list(n_keep));
+  SEXP out = SHIELD(new_vector<sexp_t>(n_keep));
 
   if (is_null(names)){
     for (uint_fast64_t i = 0; i < n; ++i){
@@ -196,7 +196,7 @@ SEXP cpp_list_assign(SEXP x, SEXP values){
   int out_size = n + n_cols_to_add;
 
   int loc;
-  SEXP out = SHIELD(new_list(out_size)); ++NP;
+  SEXP out = SHIELD(new_vector<sexp_t>(out_size)); ++NP;
   SEXP out_names = SHIELD(new_vector<r_string_t>(out_size)); ++NP;
 
   // Initialise out
@@ -340,7 +340,7 @@ SEXP cpp_new_df(SEXP x, SEXP nrows, bool recycle, bool name_repair){
   if (is_null(out_names)){
     SHIELD(out_names = new_vector<r_string_t>(Rf_length(out))); ++NP;
   } else {
-    SHIELD(out_names = vec::coerce_vec(out_names, STRSXP)); ++NP;
+    SHIELD(out_names = internal::coerce_vec(out_names, STRSXP)); ++NP;
   }
 
   if (name_repair){
@@ -394,7 +394,7 @@ SEXP cpp_df_assign_cols(SEXP x, SEXP cols){
   int n_cols_to_add = na_count(add_locs, false);
   int out_size = n + n_cols_to_add;
 
-  SEXP out = SHIELD(new_list(out_size)); ++NP;
+  SEXP out = SHIELD(new_vector<sexp_t>(out_size)); ++NP;
   SEXP out_names = SHIELD(new_vector<r_string_t>(out_size)); ++NP;
 
   // Initialise out

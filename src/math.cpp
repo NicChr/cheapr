@@ -825,7 +825,7 @@ SEXP cpp_set_add(SEXP x, SEXP y){
   }
   default: {
     copy_warning();
-    SHIELD(out = vec::coerce_vec(out, REALSXP)); ++NP;
+    SHIELD(out = internal::coerce_vec(out, REALSXP)); ++NP;
     r_double_t *p_x = real_ptr(out);
     r_double_t *p_y = real_ptr(y);
     for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
@@ -898,7 +898,7 @@ SEXP cpp_set_subtract(SEXP x, SEXP y){
   }
   default: {
     copy_warning();
-    SHIELD(out = vec::coerce_vec(out, REALSXP)); ++NP;
+    SHIELD(out = internal::coerce_vec(out, REALSXP)); ++NP;
     r_double_t *p_x = real_ptr(out);
     r_double_t *p_y = real_ptr(y);
     for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){
@@ -971,7 +971,7 @@ SEXP cpp_set_multiply(SEXP x, SEXP y){
   }
   default: {
     copy_warning();
-    SHIELD(out = vec::coerce_vec(out, REALSXP)); ++NP;
+    SHIELD(out = internal::coerce_vec(out, REALSXP)); ++NP;
     r_double_t *p_x = real_ptr(out);
     r_double_t *p_y = real_ptr(y);
     for (uint_fast64_t i = 0; i < xn; recycle_index(yi, yn), ++i){

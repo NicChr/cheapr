@@ -89,7 +89,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
   std::fill(keep, keep + n, true);
 
   if (xn > r_limits::r_int_max){
-    SHIELD(exclude = vec::coerce_vec(exclude, REALSXP)); ++NP;
+    SHIELD(exclude = internal::coerce_vec(exclude, REALSXP)); ++NP;
     r_double_t *p_excl = real_ptr(exclude);
 
     for (int j = 0; j < m; ++j) {
@@ -207,7 +207,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     check_indices = false;
   } else if (xn > r_limits::r_int_max){
 
-    SHIELD(clean_indices = vec::coerce_vec(indices, REALSXP)); ++NP;
+    SHIELD(clean_indices = internal::coerce_vec(indices, REALSXP)); ++NP;
 
     if (count){
 
@@ -258,7 +258,7 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
     }
   } else {
 
-    SHIELD(clean_indices = vec::coerce_vec(indices, INTSXP)); ++NP;
+    SHIELD(clean_indices = internal::coerce_vec(indices, INTSXP)); ++NP;
 
 
     if (count){
@@ -651,7 +651,7 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   }
   case VECSXP: {
     const SEXP *p_x = list_ptr_ro(x);
-    out = SHIELD(new_list(out_size)); ++NP;
+    out = SHIELD(new_vector<sexp_t>(out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
         SET_VECTOR_ELT(out, k, p_x[i]);
@@ -803,7 +803,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case VECSXP: {
         const SEXP *p_x = list_ptr_ro(x);
-        out = SHIELD(new_list(n));
+        out = SHIELD(new_vector<sexp_t>(n));
           for (int_fast64_t i = 0; i < n; ++i){
             j = pind[i];
             if (j < 0){
@@ -947,7 +947,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case VECSXP: {
         const SEXP *p_x = list_ptr_ro(x);
-        out = SHIELD(new_list(n));
+        out = SHIELD(new_vector<sexp_t>(n));
         for (unsigned int i = 0; i < n; ++i){
           j = pind[i];
           if (between<unsigned int>(j, 1U, xn)){
@@ -1038,7 +1038,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case VECSXP: {
         const SEXP *p_x = list_ptr_ro(x);
-        out = SHIELD(new_list(n));
+        out = SHIELD(new_vector<sexp_t>(n));
         for (int_fast64_t i = 0; i < n; ++i){
           SET_VECTOR_ELT(out, i, p_x[static_cast<int_fast64_t>(pind[i] - 1.0)]);
         }
@@ -1109,7 +1109,7 @@ SEXP sset_vec(SEXP x, SEXP indices, bool check){
       }
       case VECSXP: {
         const SEXP *p_x = list_ptr_ro(x);
-        out = SHIELD(new_list(n));
+        out = SHIELD(new_vector<sexp_t>(n));
         for (int i = 0; i != n; ++i){
           SET_VECTOR_ELT(out, i, p_x[pind[i] - 1]);
         }
@@ -1310,7 +1310,7 @@ SEXP cpp_df_select(SEXP x, SEXP locs){
 
   const r_int_t *p_cols = vector_ptr<const r_int_t>(cols);
 
-  SEXP out = SHIELD(new_list(n_locs)); ++NP;
+  SEXP out = SHIELD(new_vector<sexp_t>(n_locs)); ++NP;
   SEXP out_names = SHIELD(new_vector<r_string_t>(n_locs)); ++NP;
 
   const SEXP *p_x = list_ptr_ro(x);
@@ -1371,7 +1371,7 @@ SEXP cpp_df_slice(SEXP x, SEXP indices, bool check){
   int ncols = Rf_length(x);
   int32_t NP = 0;
   const SEXP *p_x = list_ptr_ro(x);
-  SEXP out = SHIELD(new_list(ncols)); ++NP;
+  SEXP out = SHIELD(new_vector<sexp_t>(ncols)); ++NP;
 
   // Clean indices and get metadata
 

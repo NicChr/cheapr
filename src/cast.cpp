@@ -103,7 +103,7 @@ SEXP cpp_common_template(SEXP x){
           break;
         }
       }
-      SHIELD(out = vec::coerce_vec(out, date_type)); ++NP;
+      SHIELD(out = internal::coerce_vec(out, date_type)); ++NP;
     }
 
       break;
@@ -136,7 +136,7 @@ SEXP cpp_cast_common(SEXP x){
     return x;
   }
 
-  SEXP out = SHIELD(new_list(n)); ++NP;
+  SEXP out = SHIELD(new_vector<sexp_t>(n)); ++NP;
   SEXP vec_template = SHIELD(cpp_common_template(x)); ++NP;
   r_type common = get_r_type(vec_template);
 
