@@ -8,8 +8,9 @@
 #include <r_types.h>
 #include <r_symbols.h>
 #include <r_limits.h>
-#include <r_concepts.h>
-#include <optional>
+#include <r_concepts.h> 
+#include <r_nas.h>
+#include <optional> 
 #include <type_traits>
 
 #ifdef _MSC_VER
@@ -19,7 +20,7 @@
 #endif
 
 #ifndef R_NO_REMAP
-#define R_NO_REMAP
+#define R_NO_REMAP 
 #endif
 
 #if !defined(OBJSXP) && defined(S4SXP) 
@@ -107,19 +108,6 @@ inline auto as_r_type(T x) {
   }
 }
 
-}
-
-// NAs
-
-namespace na {
-inline constexpr r_bool_t logical = r_na;
-inline constexpr r_int_t integer = r_int_t{std::numeric_limits<int>::min()};
-inline constexpr r_int64_t integer64 = r_int64_t(std::numeric_limits<int64_t>::min());
-inline const r_double_t real = r_double_t{NA_REAL};
-inline const r_complex_t complex = r_complex_t{real, real};
-inline constexpr r_byte_t raw = r_byte_t{0};
-inline const r_string_t string = r_string_t{NA_STRING};
-inline const sexp_t nil = r_null;
 }
 
 namespace internal {
