@@ -1,7 +1,12 @@
+#ifndef CHEAPR_R_TYPES_H
+#define CHEAPR_R_TYPES_H
+
 #include <cpp11.hpp>
 
 // R types
 
+namespace cheapr {
+  
 
 // General SEXP, reserved for everything except R vectors, CHARSXP, and SYMSXP
 struct sexp_t {
@@ -122,3 +127,7 @@ struct r_byte_t {
   explicit constexpr r_byte_t(Rbyte x) : value{x} {}
   constexpr operator Rbyte() const { return value; }
 };
+
+}
+
+#endif
