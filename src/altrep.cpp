@@ -33,9 +33,20 @@ SEXP foo2(SEXP x){
 }
 
 [[cpp11::register]]
-SEXP foo3(SEXP x){
-  return ALTREP_CLASS(x);
+bool foo4(SEXP x){
+  SEXP altrep_cls = SHIELD(ALTREP_CLASS(x));
+  bool alt_has_attrs = has_attrs(altrep_cls);
+  YIELD(1);
+  return true;
+}
 
+[[cpp11::register]]
+bool foo5(SEXP x){
+  SEXP altrep_cls = SHIELD(ALTREP_CLASS(x));
+  bool alt_has_attrs = has_attrs(altrep_cls);
+  SEXP attrs = SHIELD(get_attrs(altrep_cls));
+  YIELD(2);
+  return true;
 }
 [[cpp11::register]]
 SEXP alt_pkg(SEXP x){

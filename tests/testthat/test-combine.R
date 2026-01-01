@@ -23,7 +23,8 @@ test_that("combining", {
   names(result) <- names(objs)
   unnamed_objs <- unname(objs)
 
-  expect_equal(foo3(1:3), foo3(1:3))
+  expect_true(foo4(1:3))
+  expect_true(foo5(1:3))
   expect_equal(foo2(1:3), foo2(1:3))
   expect_equal(alt_class(1:3), alt_class(1:3))
   expect_equal(foobarfoo(1:3), expect_true(bar(1:3)))
