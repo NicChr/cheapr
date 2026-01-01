@@ -22,6 +22,10 @@ test_that("combining", {
   result <- new_list(length(objs))
   names(result) <- names(objs)
 
+  expect_equal(sset(unname(objs), 1:3), sset(unname(objs), 1:3))
+  expect_equal(sset(unname(objs), seq_len(1)), sset(unname(objs), seq_len(1)))
+  expect_equal(sset(unname(objs), 1), sset(unname(objs), 1))
+
   for (ii in seq_along(objs)){
     result <- replace_(
       result, ii, list(a = suppressWarnings(c_(.args = unname(objs)[seq_len(ii)])))
