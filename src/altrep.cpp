@@ -36,10 +36,7 @@ SEXP foo2(SEXP x){
 
 [[cpp11::register]]
 SEXP foo3(SEXP x){
-  SEXP expr = Rf_protect(Rf_lang2(Rf_install("attributes"), x));
-  SEXP out = Rf_protect(Rf_eval(expr, R_BaseEnv));
-  Rf_unprotect(2);
-  return out;
+  return get_attrs(x);
 }
 
 

@@ -494,7 +494,7 @@ inline bool is_altrep(SEXP x){
 
 
 namespace internal {
-inline SEXP BASE_ATTRIBUTES = r_null;
+inline SEXP BASE_ATTRIBUTES = NULL;
 inline SEXP CHEAPR_CORES = r_null;
 inline SEXP BASE_LENGTH = r_null;
 }
@@ -503,16 +503,10 @@ namespace attr {
 
 // Attributes of x as a list
 inline SEXP get_attrs(SEXP x){
-  if (is_null(internal::BASE_ATTRIBUTES)){
-    internal::BASE_ATTRIBUTES = Rf_install("attributes");
-  }
-  if (r_null != R_NilValue){
-    Rf_error("internal error, `r_null` should be `NULL`");
-  }
-  if (internal::BASE_ATTRIBUTES == R_NilValue){
-    Rf_error("internal error");
-  }
-  SEXP expr = SHIELD(Rf_lang2(internal::BASE_ATTRIBUTES, x));
+  // if (internal::BASE_ATTRIBUTES == NULL){
+  //   internal::BASE_ATTRIBUTES = Rf_install("attributes");
+  // }
+  SEXP expr = SHIELD(Rf_lang2(Rf_install("attributes"), x));
   SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
   YIELD(2);
   return out;
