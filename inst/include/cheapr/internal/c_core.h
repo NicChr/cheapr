@@ -1369,7 +1369,9 @@ inline constexpr bool can_be_int64(T x){
   if constexpr (is_r_integral_v<T> && sizeof(T) <= sizeof(int64_t)){
     return true;
   } else if constexpr (is_r_arithmetic_v<T>){
-    return between<T>(x, r_limits::r_int64_min, r_limits::r_int64_max);
+    constexpr T min_int64 = static_cast<T>(r_limits::r_int64_min);
+    constexpr T max_int64 = static_cast<T>(r_limits::r_int64_max);
+    return between<T>(x, min_int64, max_int64);
   } else {
     return false;
   }
