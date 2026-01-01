@@ -31,6 +31,12 @@ SEXP foo2(SEXP x){
     return r_null;
   }
 }
+
+[[cpp11::register]]
+SEXP foo3(SEXP x){
+  return ALTREP_CLASS(x);
+
+}
 [[cpp11::register]]
 SEXP alt_pkg(SEXP x){
   if (altrep::is_altrep(x) && has_attrs(ALTREP_CLASS(x))){

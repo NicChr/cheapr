@@ -8,6 +8,10 @@ foo2 <- function(x) {
   .Call(`_cheapr_foo2`, x)
 }
 
+foo3 <- function(x) {
+  .Call(`_cheapr_foo3`, x)
+}
+
 alt_pkg <- function(x) {
   .Call(`_cheapr_alt_pkg`, x)
 }
