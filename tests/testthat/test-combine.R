@@ -23,9 +23,9 @@ test_that("combining", {
   names(result) <- names(objs)
   unnamed_objs <- unname(objs)
 
-  expect_true(foo(1:3))
   expect_true(bar(1:3))
   expect_true(foobar(1:3))
+  expect_true(foo(1:3))
   expect_equal(compact_seq_data(1:3), compact_seq_data(1:3))
   expect_equal(clean_indices(1:3, unnamed_objs, FALSE), clean_indices(1:3, unnamed_objs, FALSE))
   expect_equal(cpp_sset_range(unnamed_objs, 1L, 3L, 1L), cpp_sset_range(unnamed_objs, 1L, 3L, 1L))
