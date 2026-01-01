@@ -318,11 +318,16 @@ SEXP clean_indices(SEXP indices, SEXP x, bool count){
   SEXP r_out_size = SHIELD(as_vector(r_cast<double>(out_size))); ++NP;
   SEXP r_check_indices = SHIELD(as_vector(check_indices)); ++NP;
 
-  SEXP out = SHIELD(make_list(
-    clean_indices,
-    r_out_size,
-    r_check_indices
-  )); ++NP;
+  SEXP out = SHIELD(new_vec(VECSXP, 3)); ++NP;
+  SET_VECTOR_ELT(out, 0, clean_indices);
+  SET_VECTOR_ELT(out, 1, r_out_size);
+  SET_VECTOR_ELT(out, 2, r_check_indices);
+
+  // SEXP out = SHIELD(make_list(
+  //   clean_indices,
+  //   r_out_size,
+  //   r_check_indices
+  // )); ++NP;
 
   YIELD(NP);
   return out;
