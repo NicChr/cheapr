@@ -153,6 +153,7 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
 // Also returns metadata regarding final vec size and if indices should be
 // checked (internal flag)
 
+[[cpp11::register]]
 SEXP clean_indices(SEXP indices, SEXP x, bool count){
   R_xlen_t xn = vec::length(x);
   int32_t NP = 0;
@@ -428,6 +429,7 @@ SEXP clean_locs(SEXP locs, SEXP x){
 // Can be readily used when indices are an altrep compact integer sequence
 // Also works with negative-indexing
 
+[[cpp11::register]]
 SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
   int32_t NP = 0;
   R_xlen_t n = Rf_xlength(x);

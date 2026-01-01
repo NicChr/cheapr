@@ -664,6 +664,20 @@ extern "C" SEXP _cheapr_cpp_fixed_width_breaks(SEXP start, SEXP end, SEXP n, SEX
   END_CPP11
 }
 // sset.cpp
+SEXP clean_indices(SEXP indices, SEXP x, bool count);
+extern "C" SEXP _cheapr_clean_indices(SEXP indices, SEXP x, SEXP count) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(clean_indices(cpp11::as_cpp<cpp11::decay_t<SEXP>>(indices), cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(count)));
+  END_CPP11
+}
+// sset.cpp
+SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by);
+extern "C" SEXP _cheapr_cpp_sset_range(SEXP x, SEXP from, SEXP to, SEXP by) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(cpp_sset_range(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(from), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(to), cpp11::as_cpp<cpp11::decay_t<R_xlen_t>>(by)));
+  END_CPP11
+}
+// sset.cpp
 SEXP cpp_rev(SEXP x, bool set);
 extern "C" SEXP _cheapr_cpp_rev(SEXP x, SEXP set) {
   BEGIN_CPP11
@@ -892,6 +906,7 @@ extern "C" SEXP _cheapr_cpp_lgl_locs(SEXP x, SEXP n_true, SEXP n_false, SEXP inc
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cheapr_do_memory_leak_test",  (DL_FUNC) &_cheapr_cheapr_do_memory_leak_test,  0},
+    {"_cheapr_clean_indices",               (DL_FUNC) &_cheapr_clean_indices,               3},
     {"_cheapr_cpp_abs",                     (DL_FUNC) &_cheapr_cpp_abs,                     1},
     {"_cheapr_cpp_add",                     (DL_FUNC) &_cheapr_cpp_add,                     2},
     {"_cheapr_cpp_address",                 (DL_FUNC) &_cheapr_cpp_address,                 1},
@@ -1001,6 +1016,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_sset",                    (DL_FUNC) &_cheapr_cpp_sset,                    3},
     {"_cheapr_cpp_sset2",                   (DL_FUNC) &_cheapr_cpp_sset2,                   5},
     {"_cheapr_cpp_sset_int64",              (DL_FUNC) &_cheapr_cpp_sset_int64,              2},
+    {"_cheapr_cpp_sset_range",              (DL_FUNC) &_cheapr_cpp_sset_range,              4},
     {"_cheapr_cpp_str_coalesce",            (DL_FUNC) &_cheapr_cpp_str_coalesce,            1},
     {"_cheapr_cpp_subtract",                (DL_FUNC) &_cheapr_cpp_subtract,                2},
     {"_cheapr_cpp_tabulate",                (DL_FUNC) &_cheapr_cpp_tabulate,                2},

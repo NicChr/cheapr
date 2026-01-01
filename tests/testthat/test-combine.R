@@ -22,6 +22,9 @@ test_that("combining", {
   result <- new_list(length(objs))
   names(result) <- names(objs)
 
+  expect_equal(clean_indices(1:3, unname(objs), FALSE), clean_indices(1:3, unname(objs), FALSE))
+  expect_equal(cpp_sset_range(unname(objs), 1L, 3L, 1L), cpp_sset_range(unname(objs), 1L, 3L, 1L))
+  expect_equal(cpp_sset2(unname(objs), 1:3, NULL, TRUE, NULL), cpp_sset2(unname(objs), 1:3, NULL, TRUE, NULL))
   expect_equal(sset(unname(objs), 1:3), sset(unname(objs), 1:3))
   expect_equal(sset(unname(objs), seq_len(1)), sset(unname(objs), seq_len(1)))
   expect_equal(sset(unname(objs), 1), sset(unname(objs), 1))

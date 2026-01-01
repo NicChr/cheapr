@@ -376,6 +376,14 @@ cpp_fixed_width_breaks <- function(start, end, n, pretty, expand_min, expand_max
   .Call(`_cheapr_cpp_fixed_width_breaks`, start, end, n, pretty, expand_min, expand_max)
 }
 
+clean_indices <- function(indices, x, count) {
+  .Call(`_cheapr_clean_indices`, indices, x, count)
+}
+
+cpp_sset_range <- function(x, from, to, by) {
+  .Call(`_cheapr_cpp_sset_range`, x, from, to, by)
+}
+
 cpp_rev <- function(x, set) {
   .Call(`_cheapr_cpp_rev`, x, set)
 }
