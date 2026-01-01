@@ -864,39 +864,6 @@ inline void r_replace(
   r_replace(target, const_cast<r_t*>(p_target), start, n, old_val, new_val);
 }
 
-template <typename T>
-inline void r_copy_n(
-    [[maybe_unused]] SEXP target,
-    [[maybe_unused]] T *p_target,
-    const T *p_source, R_xlen_t target_offset, R_xlen_t n
-){
-
-  if constexpr (is_r_ptr_writable_v<T>){
-    int n_threads = internal::calc_threads(n);
-    if (n_threads > 1) {
-      OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i) {
-        vec::set_value(p_target, target_offset + i, p_source[i]);
-      }
-    } else {
-      std::copy_n(p_source, n, p_target + target_offset);
-    }
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      vec::set_value(target, target_offset + i, p_source[i]);
-    }
-  }
-}
-template <typename T>
-inline void r_copy_n(
-    [[maybe_unused]] SEXP target,
-    [[maybe_unused]] const T *p_target,
-    const T *p_source, R_xlen_t target_offset, R_xlen_t n
-){
-  using r_t = std::remove_const_t<T>;
-  r_copy_n(target, const_cast<r_t*>(p_target), p_source, target_offset, n);
-}
-
 
 namespace attr {
 
