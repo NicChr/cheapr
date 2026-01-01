@@ -7,6 +7,7 @@ static SEXP CHEAPR_COMPACT_INTSEQ = r_null;
 static SEXP CHEAPR_COMPACT_REALSEQ = r_null;
 static SEXP CHEAPR_BASE = r_null;
 
+[[cpp11::register]]
 SEXP alt_class(SEXP x){
   if (altrep::is_altrep(x) && has_attrs(ALTREP_CLASS(x))){
     return VECTOR_ELT(get_attrs(ALTREP_CLASS(x)), 0);
@@ -14,6 +15,23 @@ SEXP alt_class(SEXP x){
     return r_null;
   }
 }
+
+[[cpp11::register]]
+SEXP foo2(SEXP x){
+  SEXP altrep_cls = SHIELD(ALTREP_CLASS(x));
+  bool alt_has_attrs = has_attrs(altrep_cls);
+
+  if (altrep::is_altrep(x) && alt_has_attrs){
+    SEXP attrs = SHIELD(get_attrs(altrep_cls));
+    SEXP out = SHIELD(VECTOR_ELT(attrs, 0));
+    YIELD(3);
+    return out;
+  } else {
+    YIELD(1);
+    return r_null;
+  }
+}
+[[cpp11::register]]
 SEXP alt_pkg(SEXP x){
   if (altrep::is_altrep(x) && has_attrs(ALTREP_CLASS(x))){
     return VECTOR_ELT(get_attrs(ALTREP_CLASS(x)), 1);
@@ -21,7 +39,7 @@ SEXP alt_pkg(SEXP x){
     return r_null;
   }
 }
-
+[[cpp11::register]]
 SEXP alt_data1(SEXP x){
   if (altrep::is_altrep(x)){
     return R_altrep_data1(x);
