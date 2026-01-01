@@ -495,8 +495,8 @@ inline bool is_altrep(SEXP x){
 
 namespace internal {
 inline SEXP BASE_ATTRIBUTES = NULL;
-inline SEXP CHEAPR_CORES = r_null;
-inline SEXP BASE_LENGTH = r_null;
+inline SEXP CHEAPR_CORES = NULL;
+inline SEXP BASE_LENGTH = NULL;
 }
 
 namespace attr {
@@ -529,7 +529,7 @@ inline void set_attr(SEXP x, r_symbol_t sym, SEXP value){
 namespace internal {
 
 inline int get_threads(){
-  if (is_null(CHEAPR_CORES)){
+  if (CHEAPR_CORES == NULL){
     CHEAPR_CORES = Rf_install("cheapr.cores");
   }
   int n_threads = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
@@ -2081,7 +2081,7 @@ inline R_xlen_t length(SEXP x){
       }
       return out;
     } else {
-      if (is_null(internal::BASE_LENGTH)){
+      if (internal::BASE_LENGTH == NULL){
         internal::BASE_LENGTH = r_cast<r_symbol_t>("length");
       }
       SEXP expr = SHIELD(Rf_lang2(internal::BASE_LENGTH, x));
@@ -2092,7 +2092,7 @@ inline R_xlen_t length(SEXP x){
     }
     // Catch-all
   } else {
-    if (is_null(internal::BASE_LENGTH)){
+    if (internal::BASE_LENGTH == NULL){
       internal::BASE_LENGTH = r_cast<r_symbol_t>("length");
     }
     SEXP expr = SHIELD(Rf_lang2(internal::BASE_LENGTH, x));
