@@ -710,7 +710,6 @@ inline void set_value(T *p_x, const R_xlen_t i, T val){
     always_false<T>,
     "Unimplemented `set_value` specialisation"
   );
-  return T{};
 }
 
 template<typename T>
@@ -719,7 +718,6 @@ inline void set_value(SEXP x, const R_xlen_t i, T val){
     always_false<T>,
     "Unimplemented `set_value` specialisation"
   );
-  return T{};
 }
 
 template<>
@@ -914,7 +912,7 @@ inline SEXP new_vector(R_xlen_t n, const T default_value) {
     always_false<T>,
     "Unimplemented `new_vector` specialisation"
   );
-  return T{};
+  return r_null;
 }
 // One-parameter template version
 template <typename T>
@@ -923,7 +921,7 @@ inline SEXP new_vector(R_xlen_t n) {
     always_false<T>,
     "Unimplemented `new_vector` specialisation"
   );
-  return T{};
+  return r_null;
 }
 
 template <>
@@ -1255,7 +1253,7 @@ inline SEXP as_vector(const T x){
       always_false<T>,
       "Unimplemented `as_vector` specialisation"
     );
-    return T{};
+    r_null;
   }
 }
 template<>
