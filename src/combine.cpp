@@ -81,7 +81,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       auto *p_out = internal::logical_ptr(out);
 
       if (size == 1){
-        std::fill(p_out, p_out + out_size, p_x[0]);
+        r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
         std::copy_n(p_x, size, p_out);
@@ -95,7 +95,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, na::logical);
+        r_fill(out, p_out, 0, out_size, na::logical);
       }
       break;
     }
@@ -105,7 +105,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       auto *p_out = internal::integer_ptr(out);
 
       if (size == 1){
-        std::fill(p_out, p_out + out_size, p_x[0]);
+        r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
         std::copy_n(p_x, size, p_out);
@@ -119,7 +119,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, na::integer);
+        r_fill(out, p_out, 0, out_size, na::integer);
       }
       break;
     }
@@ -129,7 +129,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       auto *p_out = internal::real_ptr(out);
 
       if (size == 1){
-        std::fill(p_out, p_out + out_size, p_x[0]);
+        r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
         std::copy_n(p_x, size, p_out);
@@ -143,7 +143,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, na::real);
+        r_fill(out, p_out, 0, out_size, na::real);
       }
       break;
     }
@@ -153,7 +153,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       auto *p_out = internal::integer64_ptr(out);
 
       if (size == 1){
-        std::fill(p_out, p_out + out_size, p_x[0]);
+        r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
         std::copy_n(p_x, size, p_out);
@@ -167,7 +167,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, na::integer64);
+        r_fill(out, p_out, 0, out_size, na::integer64);
       }
       break;
     }
@@ -209,7 +209,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       auto *p_out = internal::complex_ptr(out);
 
       if (size == 1){
-        std::fill(p_out, p_out + out_size, p_x[0]);
+        r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
         std::copy_n(p_x, size, p_out);
@@ -223,7 +223,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, na::complex);
+        r_fill(out, p_out, 0, out_size, na::complex);
       }
       break;
     }
@@ -233,7 +233,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
       auto *p_out = internal::raw_ptr(out);
 
       if (size == 1){
-        std::fill(p_out, p_out + out_size, p_x[0]);
+        r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
         std::copy_n(p_x, size, p_out);
@@ -247,7 +247,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
         // If length > 0 but length(x) == 0 then fill with NA
       } else if (size == 0 && out_size > 0){
-        std::fill(p_out, p_out + out_size, na::raw);
+        r_fill(out, p_out, 0, out_size, na::raw);
       }
       break;
     }
