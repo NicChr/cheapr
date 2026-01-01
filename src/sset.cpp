@@ -587,25 +587,25 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out = SHIELD(new_vector<r_string_t>(out_size)); ++NP;
     if (double_loop){
       for (R_xlen_t i = istart1 - 1, k = 0; i < iend1; ++i, ++k){
-        set_value(out, k, p_x[i]);
+        SET_STRING_ELT(out, k, p_x[i]);
       }
       for (R_xlen_t j = istart2 - 1, k = iend1; j < iend2; ++j, ++k){
-        set_value(out, k, p_x[j]);
+        SET_STRING_ELT(out, k, p_x[j]);
       }
     } else {
       if (by > 0){
         for (R_xlen_t i = istart - 1, k = 0; i < (iend - n_oob); ++i, ++k){
-          set_value(out, k, p_x[i]);
+          SET_STRING_ELT(out, k, p_x[i]);
         }
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          set_value(out, in_bounds_size + i, na::string);
+          SET_STRING_ELT(out, in_bounds_size + i, na::string);
         }
       } else {
         for (R_xlen_t i = 0; i < n_oob; ++i){
-          set_value(out, i, na::string);
+          SET_STRING_ELT(out, i, na::string);
         }
         for (R_xlen_t i = istart - 1 - n_oob; i >= iend - 1; --i){
-          set_value(out, istart - i - 1, p_x[i]);
+          SET_STRING_ELT(out, istart - i - 1, p_x[i]);
         }
       }
     }
