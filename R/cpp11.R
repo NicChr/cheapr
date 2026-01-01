@@ -4,20 +4,8 @@ alt_class <- function(x) {
   .Call(`_cheapr_alt_class`, x)
 }
 
-foo2 <- function(x) {
-  .Call(`_cheapr_foo2`, x)
-}
-
 foo3 <- function(x) {
   .Call(`_cheapr_foo3`, x)
-}
-
-foo4 <- function(x) {
-  .Call(`_cheapr_foo4`, x)
-}
-
-foo5 <- function(x) {
-  .Call(`_cheapr_foo5`, x)
 }
 
 alt_pkg <- function(x) {
@@ -30,10 +18,6 @@ alt_data1 <- function(x) {
 
 compact_seq_data <- function(x) {
   .Call(`_cheapr_compact_seq_data`, x)
-}
-
-foobarfoo <- function(x) {
-  .Call(`_cheapr_foobarfoo`, x)
 }
 
 cpp_set_rm_attributes <- function(x) {

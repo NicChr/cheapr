@@ -503,10 +503,10 @@ namespace attr {
 
 // Attributes of x as a list
 inline SEXP get_attrs(SEXP x){
-  // if (internal::BASE_ATTRIBUTES == NULL){
-  //   internal::BASE_ATTRIBUTES = Rf_install("attributes");
-  // }
-  SEXP expr = SHIELD(Rf_lang2(Rf_install("attributes"), x));
+  if (internal::BASE_ATTRIBUTES == NULL){
+    internal::BASE_ATTRIBUTES = Rf_install("attributes");
+  }
+  SEXP expr = SHIELD(Rf_lang2(internal::BASE_ATTRIBUTES, x));
   SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
   YIELD(2);
   return out;
