@@ -65,6 +65,21 @@ SEXP compact_seq_data(SEXP x){
   return out;
 }
 
+[[cpp11::register]]
+SEXP foobarfoo(SEXP x){
+  if (!is_compact_seq(x)){
+    Rf_error("x must be an altrep compact_intseq");
+  }
+  SEXP alt_data = SHIELD(vec::coerce_vec(alt_data1(x), REALSXP));
+  double *p_alt_data = real_ptr(alt_data);
+  double size = p_alt_data[0];
+  double from = p_alt_data[1];
+  double by = p_alt_data[2];
+  double to = (std::fmax(size - 1.0, 0.0) * by) + from;
+  YIELD(1);
+  return r_null;
+}
+
 SEXP altrep_materialise(SEXP x) {
   return altrep::is_altrep(x) ? cpp_semi_copy(x) : x;
 }

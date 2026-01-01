@@ -4,6 +4,10 @@ compact_seq_data <- function(x) {
   .Call(`_cheapr_compact_seq_data`, x)
 }
 
+foobarfoo <- function(x) {
+  .Call(`_cheapr_foobarfoo`, x)
+}
+
 cpp_set_rm_attributes <- function(x) {
   .Call(`_cheapr_cpp_set_rm_attributes`, x)
 }
