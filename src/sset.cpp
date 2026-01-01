@@ -149,6 +149,38 @@ SEXP exclude_locs(SEXP exclude, R_xlen_t xn) {
   }
 }
 
+[[cpp11::register]]
+bool foo(SEXP indices){
+  R_xlen_t xn = 13;
+  SEXP clean_indices = r_null;
+  clean_indices = indices;
+  SEXP seq_data = SHIELD(compact_seq_data(indices));
+  R_xlen_t from = real_ptr(seq_data)[0];
+  R_xlen_t to = real_ptr(seq_data)[1];
+  R_xlen_t by = real_ptr(seq_data)[2];
+  int_fast64_t out_size = get_alt_final_sset_size(xn, from, to, by);
+  YIELD(1);
+  return xn == 13;
+}
+
+[[cpp11::register]]
+bool bar(SEXP indices){
+  R_xlen_t xn = 13;
+  SEXP clean_indices = r_null;
+  clean_indices = indices;
+  return xn == 13;
+}
+
+[[cpp11::register]]
+bool foobar(SEXP indices){
+  R_xlen_t xn = 13;
+  SEXP clean_indices = r_null;
+  clean_indices = indices;
+  SEXP seq_data = SHIELD(compact_seq_data(indices));
+  YIELD(1);
+  return xn == 13;
+}
+
 // Cleans indices for subsetting
 // Also returns metadata regarding final vec size and if indices should be
 // checked (internal flag)

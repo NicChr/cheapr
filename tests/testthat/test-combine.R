@@ -15,19 +15,24 @@ test_that("combining", {
   j <- factor(c("f", "g"), levels = c("f", "G", "g"))
   k <- list(10)
   # l <- list(value = 123)
-  l <- new_df(y = "ok")
+  l <- data.frame(y = "ok")
 
   objs <- named_list(A, a, b, c, d, e, f, g, h, i, j, k, l)
 
-  result <- new_list(length(objs))
+  result <- vector("list", length(objs))
   names(result) <- names(objs)
+  unnamed_objs <- unname(objs)
 
-  expect_equal(clean_indices(1:3, unname(objs), FALSE), clean_indices(1:3, unname(objs), FALSE))
-  expect_equal(cpp_sset_range(unname(objs), 1L, 3L, 1L), cpp_sset_range(unname(objs), 1L, 3L, 1L))
-  expect_equal(cpp_sset2(unname(objs), 1:3, NULL, TRUE, NULL), cpp_sset2(unname(objs), 1:3, NULL, TRUE, NULL))
-  expect_equal(sset(unname(objs), 1:3), sset(unname(objs), 1:3))
-  expect_equal(sset(unname(objs), seq_len(1)), sset(unname(objs), seq_len(1)))
-  expect_equal(sset(unname(objs), 1), sset(unname(objs), 1))
+  expect_true(foo(1:3))
+  expect_true(bar(1:3))
+  expect_true(foobar(1:3))
+  expect_equal(compact_seq_data(1:3), compact_seq_data(1:3))
+  expect_equal(clean_indices(1:3, unnamed_objs, FALSE), clean_indices(1:3, unnamed_objs, FALSE))
+  expect_equal(cpp_sset_range(unnamed_objs, 1L, 3L, 1L), cpp_sset_range(unnamed_objs, 1L, 3L, 1L))
+  expect_equal(cpp_sset2(unnamed_objs, 1:3, NULL, TRUE, NULL), cpp_sset2(unnamed_objs, 1:3, NULL, TRUE, NULL))
+  expect_equal(sset(unnamed_objs, 1:3), sset(unnamed_objs, 1:3))
+  expect_equal(sset(unnamed_objs, seq_len(1)), sset(unnamed_objs, seq_len(1)))
+  expect_equal(sset(unnamed_objs, 1), sset(unnamed_objs, 1))
 
   for (ii in seq_along(objs)){
     result <- replace_(
