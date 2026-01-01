@@ -67,43 +67,225 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
     // Return x if length(x) == length
     if (out_size == size) return x;
 
-    SEXP out = visit_vector(x, [&](auto p_x) -> SEXP {
+    SEXP out = r_null;
 
-      // Data type of vector elements
-      using data_t = std::remove_pointer_t<decltype(p_x)>;
+    switch (CHEAPR_TYPEOF(x)){
 
-      if constexpr (std::is_same_v<data_t, std::nullptr_t>) {
-        if (r_length(x) == length){
-          return SHIELD(x);
-        } else {
-          return SHIELD(eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length));
+    case NILSXP: {
+      break;
+    }
+    case LGLSXP: {
+
+      out = SHIELD(internal::new_vec(LGLSXP, out_size));
+      auto *p_x = internal::logical_ptr_ro(x);
+      auto *p_out = internal::logical_ptr(out);
+
+      if (size == 1){
+        std::fill(p_out, p_out + out_size, p_x[0]);
+      } else if (out_size > 0 && size > 0){
+        // Copy first block
+        std::copy_n(p_x, size, p_out);
+
+        // copy result to itself, doubling each iteration
+        R_xlen_t copied = size;
+        while (copied < out_size) {
+          R_xlen_t to_copy = std::min(copied, out_size - copied);
+          std::copy_n(p_out, to_copy, p_out + copied);
+          copied += to_copy;
         }
-      } else {
-
-        SEXP res = SHIELD(new_vector<std::decay_t<data_t>>(out_size));
-        auto *p_res = vector_ptr<data_t>(res);
-
-        if (size == 1){
-          r_fill(res, p_res, 0, out_size, p_x[0]);
-        } else if (out_size > 0 && size > 0){
-          // Copy first block
-          r_copy_n(res, p_res, p_x, 0, size);
-
-          // copy result to itself, doubling each iteration
-          R_xlen_t copied = size;
-          while (copied < out_size) {
-            R_xlen_t to_copy = std::min(copied, out_size - copied);
-            r_copy_n(res, p_res, p_res, copied, to_copy);
-            copied += to_copy;
-          }
-          // If length > 0 but length(x) == 0 then fill with NA
-        } else if (size == 0 && out_size > 0 &&
-          !std::is_same_v<data_t, SEXP>){ // Already filled with `NULL`
-          r_fill(res, p_res, 0, out_size, na_value<data_t>());
-        }
-        return res;
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        std::fill(p_out, p_out + out_size, na::logical);
       }
-    });
+      break;
+    }
+    case INTSXP: {
+      out = SHIELD(internal::new_vec(INTSXP, out_size));
+      auto *p_x = internal::integer_ptr_ro(x);
+      auto *p_out = internal::integer_ptr(out);
+
+      if (size == 1){
+        std::fill(p_out, p_out + out_size, p_x[0]);
+      } else if (out_size > 0 && size > 0){
+        // Copy first block
+        std::copy_n(p_x, size, p_out);
+
+        // copy result to itself, doubling each iteration
+        R_xlen_t copied = size;
+        while (copied < out_size) {
+          R_xlen_t to_copy = std::min(copied, out_size - copied);
+          std::copy_n(p_out, to_copy, p_out + copied);
+          copied += to_copy;
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        std::fill(p_out, p_out + out_size, na::integer);
+      }
+      break;
+    }
+    case REALSXP: {
+      out = SHIELD(internal::new_vec(REALSXP, out_size));
+      auto *p_x = internal::real_ptr_ro(x);
+      auto *p_out = internal::real_ptr(out);
+
+      if (size == 1){
+        std::fill(p_out, p_out + out_size, p_x[0]);
+      } else if (out_size > 0 && size > 0){
+        // Copy first block
+        std::copy_n(p_x, size, p_out);
+
+        // copy result to itself, doubling each iteration
+        R_xlen_t copied = size;
+        while (copied < out_size) {
+          R_xlen_t to_copy = std::min(copied, out_size - copied);
+          std::copy_n(p_out, to_copy, p_out + copied);
+          copied += to_copy;
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        std::fill(p_out, p_out + out_size, na::real);
+      }
+      break;
+    }
+    case CHEAPR_INT64SXP: {
+      out = SHIELD(new_vector<int64_t>(out_size));
+      auto *p_x = internal::integer64_ptr_ro(x);
+      auto *p_out = internal::integer64_ptr(out);
+
+      if (size == 1){
+        std::fill(p_out, p_out + out_size, p_x[0]);
+      } else if (out_size > 0 && size > 0){
+        // Copy first block
+        std::copy_n(p_x, size, p_out);
+
+        // copy result to itself, doubling each iteration
+        R_xlen_t copied = size;
+        while (copied < out_size) {
+          R_xlen_t to_copy = std::min(copied, out_size - copied);
+          std::copy_n(p_out, to_copy, p_out + copied);
+          copied += to_copy;
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        std::fill(p_out, p_out + out_size, na::integer64);
+      }
+      break;
+    }
+    case STRSXP: {
+      out = SHIELD(internal::new_vec(STRSXP, out_size));
+      auto *p_x = internal::string_ptr_ro(x);
+      auto *p_out = internal::string_ptr_ro(out);
+
+      if (size == 1){
+        for (R_xlen_t i = 0; i < out_size; ++i){
+          SET_STRING_ELT(out, i, p_x[0]);
+        }
+      } else if (out_size > 0 && size > 0){
+
+        for (R_xlen_t i = 0; i < size; ++i){
+          SET_STRING_ELT(out, i, p_x[i]);
+        }
+
+        // copy result to itself, doubling each iteration
+        R_xlen_t copied = size;
+        while (copied < out_size) {
+          R_xlen_t to_copy = std::min(copied, out_size - copied);
+          for (R_xlen_t i = 0; i < to_copy; ++i){
+            SET_STRING_ELT(out, copied + i, p_out[i]);
+          }
+          copied += to_copy;
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        for (R_xlen_t i = 0; i < out_size; ++i){
+          SET_STRING_ELT(out, i, na::string);
+        }
+      }
+      break;
+    }
+    case CPLXSXP: {
+      out = SHIELD(internal::new_vec(CPLXSXP, out_size));
+      auto *p_x = internal::complex_ptr_ro(x);
+      auto *p_out = internal::complex_ptr(out);
+
+      if (size == 1){
+        std::fill(p_out, p_out + out_size, p_x[0]);
+      } else if (out_size > 0 && size > 0){
+        // Copy first block
+        std::copy_n(p_x, size, p_out);
+
+        // copy result to itself, doubling each iteration
+        R_xlen_t copied = size;
+        while (copied < out_size) {
+          R_xlen_t to_copy = std::min(copied, out_size - copied);
+          std::copy_n(p_out, to_copy, p_out + copied);
+          copied += to_copy;
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        std::fill(p_out, p_out + out_size, na::complex);
+      }
+      break;
+    }
+    case RAWSXP: {
+      out = SHIELD(internal::new_vec(RAWSXP, out_size));
+      auto *p_x = internal::raw_ptr_ro(x);
+      auto *p_out = internal::raw_ptr(out);
+
+      if (size == 1){
+        std::fill(p_out, p_out + out_size, p_x[0]);
+      } else if (out_size > 0 && size > 0){
+        // Copy first block
+        std::copy_n(p_x, size, p_out);
+
+        // copy result to itself, doubling each iteration
+        R_xlen_t copied = size;
+        while (copied < out_size) {
+          R_xlen_t to_copy = std::min(copied, out_size - copied);
+          std::copy_n(p_out, to_copy, p_out + copied);
+          copied += to_copy;
+        }
+        // If length > 0 but length(x) == 0 then fill with NA
+      } else if (size == 0 && out_size > 0){
+        std::fill(p_out, p_out + out_size, na::raw);
+      }
+      break;
+    }
+    case VECSXP: {
+      out = SHIELD(internal::new_vec(VECSXP, out_size));
+      auto *p_x = VECTOR_PTR_RO(x);
+      auto *p_out = VECTOR_PTR_RO(out);
+
+      if (size == 1){
+        for (R_xlen_t i = 0; i < out_size; ++i){
+          SET_VECTOR_ELT(out, i, p_x[0]);
+        }
+      } else if (out_size > 0 && size > 0){
+
+        for (R_xlen_t i = 0; i < size; ++i){
+          SET_VECTOR_ELT(out, i, p_x[i]);
+        }
+
+        // copy result to itself, doubling each iteration
+        R_xlen_t copied = size;
+        while (copied < out_size) {
+          R_xlen_t to_copy = std::min(copied, out_size - copied);
+          for (R_xlen_t i = 0; i < to_copy; ++i){
+            SET_VECTOR_ELT(out, copied + i, p_out[i]);
+          }
+          copied += to_copy;
+        }
+      }
+      break;
+    }
+    default: {
+      if (r_length(x) == length){
+      return x;
+    } else {
+      return eval_pkg_fun("rep", "base", env::base_env, x, arg("length.out") = length);
+    }
+    }
+    }
     Rf_copyMostAttrib(x, out);
     YIELD(1);
     return out;
