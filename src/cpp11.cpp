@@ -20,6 +20,13 @@ extern "C" SEXP _cheapr_foo2(SEXP x) {
   END_CPP11
 }
 // altrep.cpp
+SEXP foo3(SEXP x);
+extern "C" SEXP _cheapr_foo3(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo3(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// altrep.cpp
 bool foo4(SEXP x);
 extern "C" SEXP _cheapr_foo4(SEXP x) {
   BEGIN_CPP11
@@ -1115,6 +1122,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
     {"_cheapr_foo",                         (DL_FUNC) &_cheapr_foo,                         1},
     {"_cheapr_foo2",                        (DL_FUNC) &_cheapr_foo2,                        1},
+    {"_cheapr_foo3",                        (DL_FUNC) &_cheapr_foo3,                        1},
     {"_cheapr_foo4",                        (DL_FUNC) &_cheapr_foo4,                        1},
     {"_cheapr_foo5",                        (DL_FUNC) &_cheapr_foo5,                        1},
     {"_cheapr_foobar",                      (DL_FUNC) &_cheapr_foobar,                      1},

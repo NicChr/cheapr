@@ -506,6 +506,12 @@ inline SEXP get_attrs(SEXP x){
   if (is_null(internal::BASE_ATTRIBUTES)){
     internal::BASE_ATTRIBUTES = Rf_install("attributes");
   }
+  if (r_null != R_NilValue){
+    Rf_error("internal error, `r_null` should be `NULL`");
+  }
+  if (internal::BASE_ATTRIBUTES == R_NilValue){
+    Rf_error("internal error");
+  }
   SEXP expr = SHIELD(Rf_lang2(internal::BASE_ATTRIBUTES, x));
   SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
   YIELD(2);

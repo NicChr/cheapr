@@ -1,4 +1,5 @@
 #include "cheapr.h"
+#include <R_ext/Altrep.h>
 
 // Altrep utils
 
@@ -31,6 +32,13 @@ SEXP foo2(SEXP x){
     return r_null;
   }
 }
+
+
+[[cpp11::register]]
+SEXP foo3(SEXP x){
+  return get_attrs(x);
+}
+
 
 [[cpp11::register]]
 bool foo4(SEXP x){
