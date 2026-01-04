@@ -1,8 +1,9 @@
-#ifndef CHEAPR_R_NAS
-#define CHEAPR_R_NAS
+#ifndef CHEAPR_R_NAS_H
+#define CHEAPR_R_NAS_H
 
+#include <cheapr/internal/r_setup.h>
+#include <cheapr/internal/r_types.h>
 #include <limits>
-#include <r_types.h>
 
 namespace cheapr {
     
@@ -113,14 +114,14 @@ inline constexpr bool is_r_na_impl<double>(double x){
 
 template<>
 inline constexpr bool is_r_na_impl<r_complex_t>(r_complex_t x){
-  return is_r_na<r_double_t>(x.re()) || is_r_na<r_double_t>(x.im());
+  return is_r_na_impl<r_double_t>(x.re()) || is_r_na_impl<r_double_t>(x.im());
 }
 
 template<>
 inline constexpr bool is_r_na_impl<r_byte_t>(r_byte_t x){
   return false;
 }
-
+ 
 // NULL is treated as NA of general R objects
 template<>
 inline bool is_r_na_impl<SEXP>(SEXP x){

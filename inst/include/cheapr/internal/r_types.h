@@ -1,7 +1,7 @@
 #ifndef CHEAPR_R_TYPES_H
 #define CHEAPR_R_TYPES_H
 
-#include <cpp11.hpp>
+#include <cheapr/internal/r_setup.h>
 
 // R types
 
@@ -130,6 +130,22 @@ struct r_byte_t {
   // Conversion handling
   explicit constexpr r_byte_t(Rbyte x) : value{x} {}
   constexpr operator Rbyte() const { return value; }
+};
+
+// R Date proxy (integer-based) 
+struct r_date_t {
+  int value;
+  r_date_t() : value{0} {}
+  explicit constexpr r_date_t(int x) : value{x} {}
+  constexpr operator int() const { return value; }
+};
+
+// R POSIXct proxy
+struct r_posixct_t {
+  double value;
+  r_posixct_t() : value{0.0} {}
+  explicit constexpr r_posixct_t(double x) : value{x} {}
+  constexpr operator double() const { return value; }
 };
 
 }

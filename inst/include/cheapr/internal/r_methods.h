@@ -1,9 +1,10 @@
-#ifndef CHEAPR_R_METHODS
-#define CHEAPR_R_METHODS
+#ifndef CHEAPR_R_METHODS_H
+#define CHEAPR_R_METHODS_H
 
-#include <r_types.h>
-#include <r_concepts.h>
-#include <r_nas.h>
+#include <cheapr/internal/r_setup.h>
+#include <cheapr/internal/r_types.h>
+#include <cheapr/internal/r_concepts.h>
+#include <cheapr/internal/r_nas.h>
 
 namespace cheapr {
 

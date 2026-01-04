@@ -1,8 +1,8 @@
 #ifndef CHEAPR_R_CONCEPTS_H
 #define CHEAPR_R_CONCEPTS_H
 
-#include <cpp11.hpp>
-#include <r_types.h>
+#include <cheapr/internal/r_setup.h>
+#include <cheapr/internal/r_types.h>
 
 namespace cheapr {
 // Compile-time type check `is<>`

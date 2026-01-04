@@ -3,7 +3,6 @@
 
 #include <cheapr/internal/c_core.h>
 #include "internal_helpers.h"
-#include "types.h"
 #include "declarations.h"
 #include "variadic.h"
 #include "cast.h"

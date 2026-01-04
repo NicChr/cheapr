@@ -1,8 +1,9 @@
 #ifndef CHEAPR_R_LIMITS_H
 #define CHEAPR_R_LIMITS_H
 
+#include <cheapr/internal/r_setup.h>
+#include <cheapr/internal/r_types.h>
 #include <limits>
-#include <r_types.h>
 
 namespace cheapr {
     

@@ -2,43 +2,15 @@
 #define CHEAPR_CAST_H
 
 #include <cheapr/internal/c_core.h>
-#include "types.h"
 #include "variadic.h"
 
-using namespace cheapr;
+namespace cheapr {
 
 // Defining custom R types
 // for casting, initialising, combining and assigning
 
-// Symbols for R conversion fns
+using r_type = uint8_t;
 
-inline SEXP r_as_lgl = r_null;
-inline SEXP r_as_int = r_null;
-inline SEXP r_as_dbl = r_null;
-inline SEXP r_as_char = r_null;
-inline SEXP r_as_cplx = r_null;
-inline SEXP r_as_raw = r_null;
-inline SEXP r_as_date = r_null;
-inline SEXP r_as_posixct = r_null;
-inline SEXP r_as_list = r_null;
-
-using internal::r_type;
-
-// Custom r types
-
-struct r_null_t {};
-struct r_logicals_t {};
-struct r_integers_t {};
-struct r_integers64_t {};
-struct r_doubles_t {};
-struct r_complexes_t {};
-struct r_raws_t {};
-struct r_dates_t {};
-struct r_posixts_t {};
-struct r_characters_t {};
-struct r_factors_t {};
-struct r_list_t {};
-struct r_data_frame_t {};
 struct r_unknown_t {};
 
 // r type constants
@@ -120,11 +92,11 @@ inline r_type get_r_type(SEXP x) {
     }
   } else {
 
-    if (internal::inherits1(x, "factor"))     return R_fct;
-    if (internal::inherits1(x, "Date"))       return R_date;
-    if (internal::inherits1(x, "POSIXct"))    return R_pxt;
-    if (internal::inherits1(x, "data.frame")) return R_df;
-    if (internal::inherits1(x, "integer64"))  return R_int64;
+    if (attr::inherits1(x, "factor"))     return R_fct;
+    if (attr::inherits1(x, "Date"))       return R_date;
+    if (attr::inherits1(x, "POSIXct"))    return R_pxt;
+    if (attr::inherits1(x, "data.frame")) return R_df;
+    if (attr::inherits1(x, "integer64"))  return R_int64;
     return R_unk;
   }
 }
@@ -350,7 +322,7 @@ inline SEXP cast<r_logicals_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "logical")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_lgl = !is_null(r_as_lgl) ? r_as_lgl : as<r_symbol_t>("as.logical");
+    r_as_lgl = r_as_lgl != NULL ? r_as_lgl : as<r_symbol_t>("as.logical");
     SEXP expr = SHIELD(Rf_lang2(r_as_lgl, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -366,7 +338,7 @@ inline SEXP cast<r_integers_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "integer")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_int = !is_null(r_as_int) ? r_as_int : as<r_symbol_t>("as.integer");
+    r_as_int = r_as_int != NULL ? r_as_int : as<r_symbol_t>("as.integer");
     SEXP expr = SHIELD(Rf_lang2(r_as_int, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -382,7 +354,7 @@ inline SEXP cast<r_doubles_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "numeric")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_dbl = !is_null(r_as_dbl) ? r_as_dbl : as<r_symbol_t>("as.double");
+    r_as_dbl = r_as_dbl != NULL  ? r_as_dbl : as<r_symbol_t>("as.double");
     SEXP expr = SHIELD(Rf_lang2(r_as_dbl, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -412,7 +384,7 @@ inline SEXP cast<r_characters_t>(SEXP x, SEXP y) {
   } else if (internal::inherits1(x, "factor")){
     return factor_as_character(x);
   } else if (vec::is_object(x)){
-    r_as_char = !is_null(r_as_char) ? r_as_char : as<r_symbol_t>("as.character");
+    r_as_char = r_as_char != NULL  ? r_as_char : as<r_symbol_t>("as.character");
     SEXP expr = SHIELD(Rf_lang2(r_as_char, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -428,7 +400,7 @@ inline SEXP cast<r_complexes_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "complex")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_cplx = !is_null(r_as_cplx) ? r_as_cplx : as<r_symbol_t>("as.complex");
+    r_as_cplx = r_as_cplx != NULL  ? r_as_cplx : as<r_symbol_t>("as.complex");
     SEXP expr = SHIELD(Rf_lang2(r_as_cplx, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -444,7 +416,7 @@ inline SEXP cast<r_raws_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "raw")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_raw = !is_null(r_as_raw) ? r_as_raw : as<r_symbol_t>("as.raw");
+    r_as_raw = r_as_raw != NULL  ? r_as_raw : as<r_symbol_t>("as.raw");
     SEXP expr = SHIELD(Rf_lang2(r_as_raw, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -460,7 +432,7 @@ inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "list")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_list = !is_null(r_as_list) ? r_as_list : as<r_symbol_t>("as.list");
+    r_as_list = r_as_list != NULL  ? r_as_list : as<r_symbol_t>("as.list");
     SEXP expr = SHIELD(Rf_lang2(r_as_list, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -511,7 +483,7 @@ inline SEXP cast<r_dates_t>(SEXP x, SEXP y) {
   } else if (is_null(x) && is_null(y)){
     return init<r_dates_t>(vec::length(x), true);
   } else if (vec::is_object(x)){
-    r_as_date = !is_null(r_as_date) ? r_as_date : as<r_symbol_t>("as.Date");
+    r_as_date = r_as_date != NULL  ? r_as_date : as<r_symbol_t>("as.Date");
     SEXP expr = SHIELD(Rf_lang2(r_as_date, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -585,7 +557,7 @@ inline SEXP cast<r_posixts_t>(SEXP x, SEXP y) {
     YIELD(4);
     return out;
   } else {
-    r_as_posixct = !is_null(r_as_posixct) ? r_as_posixct : as<r_symbol_t>("as.POSIXct");
+    r_as_posixct = r_as_posixct != NULL  ? r_as_posixct : as<r_symbol_t>("as.POSIXct");
     SEXP expr = SHIELD(Rf_lang2(r_as_posixct, x));
     SEXP out = SHIELD(eval(expr, env::base_env));
     check_casted_length(x, out);
@@ -684,6 +656,8 @@ inline SEXP cast_(r_type cast_type, SEXP x, SEXP y) {
 }
 inline SEXP init_(r_type cast_type, R_xlen_t n, bool with_na) {
   return INIT_FNS[cast_type](n, with_na);
+}
+
 }
 
 #endif

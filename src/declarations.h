@@ -1,8 +1,6 @@
 #ifndef CHEAPR_DECLARATIONS_H
 #define CHEAPR_DECLARATIONS_H
 
-#include "types.h"
-
 // Make function definitions visible to all C++ files
 SEXP cpp_which_(SEXP x, bool invert);
 SEXP cpp_missing_row(SEXP x, double threshold, bool threshold_is_prop);

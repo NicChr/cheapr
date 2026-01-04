@@ -1,9 +1,24 @@
 #ifndef CHEAPR_R_SYMBOLS_H
 #define CHEAPR_R_SYMBOLS_H
 
-#include <r_types.h>
+#include <cheapr/internal/r_types.h>
 
 namespace cheapr {
+
+namespace internal {
+inline SEXP BASE_ATTRIBUTES = NULL;
+inline SEXP CHEAPR_CORES = NULL;
+inline SEXP BASE_LENGTH = NULL;
+inline SEXP r_as_lgl = NULL;
+inline SEXP r_as_int = NULL;
+inline SEXP r_as_dbl = NULL;
+inline SEXP r_as_char = NULL;
+inline SEXP r_as_cplx = NULL;
+inline SEXP r_as_raw = NULL;
+inline SEXP r_as_date = NULL;
+inline SEXP r_as_posixct = NULL;
+inline SEXP r_as_list = NULL;
+}
 
 namespace symbol {
 

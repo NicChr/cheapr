@@ -5,6 +5,13 @@
 #include "cpp11/declarations.hpp"
 #include <R_ext/Visibility.h>
 
+// altrep.cpp
+SEXP foo3(SEXP x);
+extern "C" SEXP _cheapr_foo3(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo3(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 // attrs.cpp
 SEXP cpp_set_rm_attributes(SEXP x);
 extern "C" SEXP _cheapr_cpp_set_rm_attributes(SEXP x) {
@@ -1023,6 +1030,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_cpp_which_val",               (DL_FUNC) &_cheapr_cpp_which_val,               3},
     {"_cheapr_cpp_window_sequence",         (DL_FUNC) &_cheapr_cpp_window_sequence,         4},
     {"_cheapr_foo",                         (DL_FUNC) &_cheapr_foo,                         0},
+    {"_cheapr_foo3",                        (DL_FUNC) &_cheapr_foo3,                        1},
     {"_cheapr_r_copy",                      (DL_FUNC) &_cheapr_r_copy,                      1},
     {"_cheapr_var_sum_squared_diff",        (DL_FUNC) &_cheapr_var_sum_squared_diff,        2},
     {NULL, NULL, 0}
