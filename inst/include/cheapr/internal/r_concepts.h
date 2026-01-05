@@ -58,6 +58,11 @@ RMathType<T> ||
 is<T, r_complex_t> ||
 is<T, r_byte_t>;
 
+template <typename T>
+concept RFastWritableType = RMathType<T> ||
+is<T, r_complex_t> ||
+is<T, r_byte_t>;
+
 }
 
 #endif

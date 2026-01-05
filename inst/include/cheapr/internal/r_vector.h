@@ -24,7 +24,7 @@ struct r_vector_t {
     , const_ptr(internal::vector_ptr<const T>(value))
     , ptr(nullptr)
   {
-    if constexpr (is_r_ptr_writable_v<T>) {
+    if constexpr (RFastWritableType<T>) {
       ptr = internal::vector_ptr<T>(value);
     }
   }
@@ -35,7 +35,7 @@ struct r_vector_t {
     , const_ptr(s == R_NilValue ? nullptr : internal::vector_ptr<const T>(s))
     , ptr(nullptr)
   {
-    if constexpr (is_r_ptr_writable_v<T>){
+    if constexpr (RFastWritableType<T>){
       if (const_ptr != nullptr){
         ptr = internal::vector_ptr<T>(s);
       }
@@ -47,7 +47,7 @@ struct r_vector_t {
   }
 
     // Direct pointer access
-  T* data() requires is_r_ptr_writable_v<T>{
+  T* data() requires RFastWritableType<T>{
     return ptr;
   }
 
@@ -72,15 +72,32 @@ struct r_vector_t {
     return internal::address(value);
   }
 
-  r_vector_t<r_bool_t> is_na() const {
-    R_xlen_t n = length();
-    auto out = SHIELD(r_vector_t<r_bool_t>(n));
+r_vector_t<r_bool_t> is_na() const {
+  R_xlen_t n = length();
+  auto out = SHIELD(r_vector_t<r_bool_t>(n));
+  
+  if constexpr (RFastWritableType<T>){
+    int n_threads = internal::calc_threads(n);
+    if (n_threads > 1){
+      OMP_PARALLEL_FOR_SIMD(n_threads)
+      for (R_xlen_t i = 0; i < n; ++i){
+        out.set(i, is_r_na(get(i)));
+      }
+    } else {
+      OMP_SIMD
+      for (R_xlen_t i = 0; i < n; ++i){
+        out.set(i, is_r_na(get(i)));
+      }
+    }
+  } else {
     for (R_xlen_t i = 0; i < n; ++i){
       out.set(i, is_r_na(get(i)));
     }
-    YIELD(1);
-    return out;
   }
+  
+  YIELD(1);
+  return out;
+}
 
     // get uses const pointer
   T get(R_xlen_t index) const {
@@ -92,7 +109,7 @@ struct r_vector_t {
   template <typename U>
    void set(R_xlen_t index, U val) {
     T val2 = internal::as_r<T>(val);
-    if constexpr (is_r_ptr_writable_v<T>){
+    if constexpr (RFastWritableType<T>){
       ptr[index] = val2;
     } else {
       internal::set_value<T>(value, index, val2);
@@ -102,7 +119,7 @@ struct r_vector_t {
   template <typename U>
   void fill(R_xlen_t start, R_xlen_t n, const U val){
   auto val2 = internal::as_r<T>(val);
-  if constexpr (is_r_ptr_writable_v<T>){
+  if constexpr (RFastWritableType<T>){
     int n_threads = internal::calc_threads(n);
     auto *p_target = data();
     if (n_threads > 1) {
@@ -124,7 +141,7 @@ template <typename U1, typename U2>
 void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
   auto old_val2 = internal::as_r<T>(old_val);
   auto new_val2 = internal::as_r<T>(new_val);
-  if constexpr (is_r_ptr_writable_v<T>){
+  if constexpr (RFastWritableType<T>){
     int n_threads = internal::calc_threads(n);
     auto *p_target = data();
     if (n_threads > 1) {
