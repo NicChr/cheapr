@@ -22,31 +22,31 @@ inline constexpr r_bool_t operator!(r_bool_t x) {
 
 // Unary minus
 inline constexpr r_complex_t operator-(const r_complex_t& x) {
-  return r_complex_t{-x.re(), -x.im()};
+  return r_complex_t{r_double_t(-x.re().value), r_double_t(-x.im().value)};
 }
 
 // Binary arithmetic operators
 inline constexpr r_complex_t operator+(const r_complex_t& lhs, const r_complex_t& rhs) {
-  return r_complex_t{lhs.re() + rhs.re(), lhs.im() + rhs.im()};
+  return r_complex_t{r_double_t(lhs.re() + rhs.re()), r_double_t(lhs.im() + rhs.im())};
 }
 
 inline constexpr r_complex_t operator-(const r_complex_t& lhs, const r_complex_t& rhs) {
-  return r_complex_t{lhs.re() - rhs.re(), lhs.im() - rhs.im()};
+  return r_complex_t{r_double_t(lhs.re() - rhs.re()), r_double_t(lhs.im() - rhs.im())};
 }
 
 inline constexpr r_complex_t operator*(const r_complex_t& lhs, const r_complex_t& rhs) {
   // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
-  r_double_t a = lhs.re(), b = lhs.im();
-  r_double_t c = rhs.re(), d = rhs.im();
-  return r_complex_t{a*c - b*d, a*d + b*c};
+  double a = lhs.re(), b = lhs.im();
+  double c = rhs.re(), d = rhs.im();
+  return r_complex_t{r_double_t(a*c - b*d), r_double_t(a*d + b*c)};
 }
 
 inline constexpr r_complex_t operator/(const r_complex_t& lhs, const r_complex_t& rhs) {
   // (a+bi) / (c+di) = [(ac+bd)/(c²+d²) + (bc-ad)/(c²+d²)i]
-  r_double_t a = lhs.re(), b = lhs.im();
-  r_double_t c = rhs.re(), d = rhs.im();
-  r_double_t denom = c*c + d*d;
-  return r_complex_t{(a*c + b*d) / denom, (b*c - a*d) / denom};
+  double a = lhs.re(), b = lhs.im();
+  double c = rhs.re(), d = rhs.im();
+  double denom = c*c + d*d; 
+  return r_complex_t{r_double_t((a*c + b*d) / denom), r_double_t((b*c - a*d) / denom)};
 }
 
 // Compound assignment operators
@@ -63,19 +63,19 @@ inline constexpr r_complex_t& operator-=(r_complex_t& lhs, const r_complex_t& rh
 }
 
 inline constexpr r_complex_t& operator*=(r_complex_t& lhs, const r_complex_t& rhs) {
-  r_double_t a = lhs.re(), b = lhs.im();
-  r_double_t c = rhs.re(), d = rhs.im();
-  lhs.re() = a*c - b*d;
-  lhs.im() = a*d + b*c;
+  double a = lhs.re(), b = lhs.im();
+  double c = rhs.re(), d = rhs.im();
+  lhs.re() = r_double_t(a*c - b*d);
+  lhs.im() = r_double_t(a*d + b*c);
   return lhs;
 }
 
 inline constexpr r_complex_t& operator/=(r_complex_t& lhs, const r_complex_t& rhs) {
-  r_double_t a = lhs.re(), b = lhs.im();
-  r_double_t c = rhs.re(), d = rhs.im();
-  r_double_t denom = c*c + d*d;
-  lhs.re() = (a*c + b*d) / denom;
-  lhs.im() = (b*c - a*d) / denom;
+  double a = lhs.re(), b = lhs.im();
+  double c = rhs.re(), d = rhs.im();
+  double denom = c*c + d*d;
+  lhs.re() = r_double_t((a*c + b*d) / denom);
+  lhs.im() = r_double_t((b*c - a*d) / denom); 
   return lhs;
 }
 
@@ -118,7 +118,7 @@ inline constexpr r_bool_t operator==(const T lhs, const U rhs) {
 // Other comparison operators
 template<typename T, typename U>
 inline constexpr r_bool_t operator!=(const T lhs, const U rhs) {
-  return r_bool_t{!(lhs == rhs)};
+  return r_bool_t{(lhs == rhs).is_false()};
 }
 
 template<RMathType T, RMathType U>

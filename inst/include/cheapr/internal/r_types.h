@@ -6,7 +6,6 @@
 // R types
 
 namespace cheapr {
-  
 
 // General SEXP, reserved for everything except R vectors, CHARSXP, and SYMSXP
 struct sexp_t {
@@ -83,6 +82,9 @@ struct r_int64_t {
 };
 
 // Alias type for CHARSXP
+// CHARSXP must never be converted to `SEXP`/`sexp_t`
+// all templates assume that `SEXP`/`sexp_t` is reserved for objects that can safely fit into an R list vector
+// Furthermore CHARSXP is a special case because it is essentially the only SEXP that already fits into a non-list vector: a character vector
 struct r_string_t {
   SEXP value;
   r_string_t() : value{R_BlankString} {}
@@ -133,20 +135,20 @@ struct r_byte_t {
 };
 
 // R Date proxy (integer-based) 
-struct r_date_t {
-  int value;
-  r_date_t() : value{0} {}
-  explicit constexpr r_date_t(int x) : value{x} {}
-  constexpr operator int() const { return value; }
-};
+// struct r_date_t {
+//   int value;
+//   r_date_t() : value{0} {}
+//   explicit constexpr r_date_t(int x) : value{x} {}
+//   constexpr operator int() const { return value; }
+// };
 
-// R POSIXct proxy
-struct r_posixct_t {
-  double value;
-  r_posixct_t() : value{0.0} {}
-  explicit constexpr r_posixct_t(double x) : value{x} {}
-  constexpr operator double() const { return value; }
-};
+// // R POSIXct proxy
+// struct r_posixct_t {
+//   double value;
+//   r_posixct_t() : value{0.0} {}
+//   explicit constexpr r_posixct_t(double x) : value{x} {}
+//   constexpr operator double() const { return value; }
+// };
 
 }
 

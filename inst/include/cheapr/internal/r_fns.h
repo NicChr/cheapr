@@ -7,6 +7,7 @@
 #include <cheapr/internal/r_symbols.h>
 #include <cheapr/internal/r_exprs.h>
 #include <cheapr/internal/r_coerce.h>
+#include <cheapr/internal/r_vector.h>
 
 namespace cheapr {
 
@@ -29,9 +30,9 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
 template<typename... Args>
 inline SEXP eval_fn(SEXP r_fn, SEXP envir, Args... args){
   // Expression
-  SEXP expr = SHIELD(make_expr(r_fns, args...));
+  SEXP expr = SHIELD(make_expr(r_fn, args...));
   // Evaluate expression
-  SEXP out = SHIELD(eval(call, envir));
+  SEXP out = SHIELD(eval(expr, envir));
   YIELD(2);
   return out;
 }

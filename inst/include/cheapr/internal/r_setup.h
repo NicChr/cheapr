@@ -84,6 +84,25 @@ inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
   return Rf_allocVector(type, n);
 }
 
+inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
+  return Rf_coerceVector(x, type);
+}
+
+inline SEXP CHEAPR_CORES = NULL;
+
+inline int get_threads(){
+  if (CHEAPR_CORES == NULL){
+    CHEAPR_CORES = Rf_install("cheapr.cores");
+  }
+  int n_threads = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
+  n_threads = std::min(n_threads, OMP_MAX_THREADS);
+  return n_threads > 1 ? n_threads : 1;
+}
+
+inline int calc_threads(R_xlen_t data_size){
+  return data_size >= CHEAPR_OMP_THRESHOLD ? get_threads() : 1;
+}
+
 }
 
 template<typename T>

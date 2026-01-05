@@ -7,7 +7,6 @@ namespace cheapr {
 
 namespace internal {
 inline SEXP BASE_ATTRIBUTES = NULL;
-inline SEXP CHEAPR_CORES = NULL;
 inline SEXP BASE_LENGTH = NULL;
 inline SEXP r_as_lgl = NULL;
 inline SEXP r_as_int = NULL;

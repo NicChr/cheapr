@@ -15,9 +15,9 @@
 #include <cheapr/internal/r_nas.h>
 #include <cheapr/internal/r_methods.h>
 #include <cheapr/internal/r_fns.h>
+#include <cheapr/internal/r_coerce.h>
 #include <cheapr/internal/r_vector.h>
 #include <cheapr/internal/r_attrs.h>
-#include <cheapr/internal/r_coerce.h>
 #include <cheapr/internal/r_math.h>
 #include <optional>
 #include <type_traits>
@@ -32,75 +32,6 @@ namespace altrep {
 inline bool is_altrep(SEXP x){
   return ALTREP(x);
 }
-}
-
-namespace internal {
-
-inline int get_threads(){
-  if (CHEAPR_CORES == NULL){
-    CHEAPR_CORES = Rf_install("cheapr.cores");
-  }
-  int n_threads = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
-  n_threads = std::min(n_threads, OMP_MAX_THREADS);
-  return n_threads > 1 ? n_threads : 1;
-}
-
-inline int calc_threads(R_xlen_t data_size){
-  return data_size >= CHEAPR_OMP_THRESHOLD ? get_threads() : 1;
-}
-
-}
-
-
-template <RType T>
-inline void r_copy_n(r_vector_t<T> &target, const T *p_source, R_xlen_t target_offset, R_xlen_t n){
-  if constexpr (is_r_ptr_writable_v<T>){
-    int n_threads = internal::calc_threads(n);
-    if (n_threads > 1) {
-      OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i) {
-        target.set(target_offset + i, p_source[i]);
-      }
-    } else {
-      std::copy_n(p_source, n, target.data() + target_offset);
-    }
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      target.set(target_offset + i, p_source[i]);
-    }
-  }
-}
-
-
-
-namespace internal {
-
-template<typename... Args>
-inline SEXP make_pairlist(Args... args) {
-  constexpr int n = sizeof...(args);
-
-  if constexpr (n == 0){
-    return Rf_allocList(0);
-  } else {
-    SEXP out = SHIELD(Rf_allocList(n));
-
-    SEXP current = out;
-
-    (([&]() {
-      if constexpr (is<Args, arg>) {
-        SETCAR(current, args.value);
-        SET_TAG(current, as<r_symbol_t>(args.name));
-      } else {
-        SETCAR(current, as<SEXP>(args));
-      }
-      current = CDR(current);
-    }()), ...);
-
-    YIELD(1);
-    return out;
-  }
-}
-
 }
 
 namespace df {
@@ -144,7 +75,7 @@ inline R_xlen_t length(SEXP x){
     return Rf_xlength(x);
   } else if (attr::inherits1(x, "data.frame")){
     return df::nrow(x);
-    // Is x a list?
+    // Is x a list? 
   } else if (TYPEOF(x) == VECSXP){
     if (attr::inherits1(x, "vctrs_rcrd")){
       return Rf_length(x) > 0 ? vec::length(VECTOR_ELT(x, 0)) : 0;
@@ -156,8 +87,8 @@ inline R_xlen_t length(SEXP x){
       }
       return out;
     } else {
-      if (internal::BASE_LENGTH == NULL){
-        internal::BASE_LENGTH = as<r_symbol_t>("length");
+      if (internal::BASE_LENGTH == NULL){  
+        internal::BASE_LENGTH = as<r_symbol_t>("length"); 
       }
       SEXP expr = SHIELD(Rf_lang2(internal::BASE_LENGTH, x));
       SEXP r_len = SHIELD(eval(expr, env::base_env));
@@ -238,190 +169,194 @@ inline r_bool_t all_whole_numbers(SEXP x, r_double_t tol_, bool na_rm_){
 
 namespace internal {
 
-inline void add_attrs(SEXP x, SEXP attrs) {
+// inline void add_attrs(SEXP x, SEXP attrs) {
 
-  if (is_null(x)){
-    Rf_error("Cannot add attributes to `NULL`");
-  }
+//   if (is_null(x)){
+//     Rf_error("Cannot add attributes to `NULL`");
+//   }
 
-  int32_t NP = 0;
+//   int32_t NP = 0;
 
-  switch (TYPEOF(attrs)){
-  case NILSXP: {
-    break;
-  }
-  case VECSXP: {
-    SEXP names = SHIELD(attr::get_old_names(attrs)); ++NP;
-    if (is_null(names)){
-      YIELD(NP);
-      Rf_error("attributes must be a named list");
-    }
-    const SEXP *p_attributes = VECTOR_PTR_RO(attrs);
-    const r_string_t *p_names = vector_ptr<const r_string_t>(names);
+//   switch (TYPEOF(attrs)){
+//   case NILSXP: {
+//     break;
+//   }
+//   case VECSXP: {
+//     SEXP r_names = SHIELD(attr::get_old_names(attrs)); ++NP;
+//     if (is_null(r_names)){
+//       YIELD(NP);
+//       Rf_error("attributes must be a named list");
+//     }
 
-    r_symbol_t attr_nm;
+//     r_vector_t<r_int_t> foo = SHIELD(as<r_vector_t<r_int_t>>(attr::get_old_names(attrs)));
 
-    for (int i = 0; i < Rf_length(names); ++i){
-      if ((p_names[i] == blank_r_string).is_false()){
-        attr_nm = as<r_symbol_t>(p_names[i]);
-        if (address(x) == address(p_attributes[i])){
-          SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
-          attr::set_attr(x, attr_nm, dup_attr);
-        } else {
-          attr::set_attr(x, attr_nm, p_attributes[i]);
-        }
-      }
-    }
-    break;
-  }
-  case LISTSXP: {
-    r_string_t addr_x = SHIELD(address(x)); ++NP;
+//     r_vector_t<sexp_t> attributes = r_vector_t<sexp_t>(attrs);
+//     r_vector_t<r_string_t> names = r_vector_t<r_string_t>(r_names);
+//     r_symbol_t attr_nm;
 
-    SEXP current = attrs;
+//     int n = names.length();
 
-    while (!is_null(current)){
-      if (is_null(symbol::tag(current)) || as<r_string_t>(symbol::tag(current)) == blank_r_string){
-        YIELD(NP);
-        Rf_error("Please only supply named attributes in %s", __func__);
-      }
-      if (addr_x == address(CAR(current))){
-        SEXP dup_attr = SHIELD(Rf_duplicate(CAR(current))); ++NP;
-        attr::set_attr(x, symbol::tag(current), dup_attr);
-      } else {
-        attr::set_attr(x, symbol::tag(current), CAR(current));
-      }
-      // Next node
-      current = CDR(current);
-    }
-    break;
-  }
-  default: {
-    Rf_error("`attrs` must be a named list");
-  }
-  }
-  YIELD(NP);
-}
+//     for (int i = 0; i < n; ++i){
+//       if ((names.get(i) == blank_r_string).is_false()){
+//         attr_nm = as<r_symbol_t>(names.get(i));
+//         if (address(x) == address(attributes.get(i))){
+//           SEXP dup_attr = SHIELD(Rf_duplicate(attributes.get(i))); ++NP;
+//           attr::set_attr(x, attr_nm, dup_attr);
+//         } else {
+//           attr::set_attr(x, attr_nm, attributes.get(i));
+//         }
+//       }
+//     }
+//     break;
+//   }
+//   case LISTSXP: {
+//     r_string_t addr_x = SHIELD(address(x)); ++NP;
 
-}
+//     SEXP current = attrs;
 
-namespace attr {
-
-inline void clear_attrs(SEXP x){
-  SEXP attrs = SHIELD(get_attrs(x));
-  if (is_null(attrs)){
-    YIELD(1);
-    return;
-  }
-  SEXP names = SHIELD(attr::get_old_names(attrs));
-  const r_string_t *p_names = vector_ptr<const r_string_t>(names);
-
-  int n = Rf_length(attrs);
-  for (R_xlen_t i = 0; i < n; ++i){
-    r_symbol_t target_sym = as<r_symbol_t>(p_names[i]);
-    set_attr(x, target_sym, r_null);
-  }
-  YIELD(2);
-}
-
-template<typename... Args>
-inline void modify_attrs(SEXP x, Args... args) {
-  SEXP attrs = SHIELD(internal::make_pairlist(args...));;
-  internal::add_attrs(x, attrs);
-  YIELD(1);
-}
-
-inline void set_attrs(SEXP x, SEXP attrs){
-  if (!is_null(x)){
-    clear_attrs(x);
-    internal::add_attrs(x, attrs);
-  }
-}
+//     while (!is_null(current)){
+//       if (is_null(symbol::tag(current)) || as<r_string_t>(symbol::tag(current)) == blank_r_string){
+//         YIELD(NP);
+//         Rf_error("Please only supply named attributes in %s", __func__);
+//       }
+//       if (addr_x == address(CAR(current))){
+//         SEXP dup_attr = SHIELD(Rf_duplicate(CAR(current))); ++NP;
+//         attr::set_attr(x, symbol::tag(current), dup_attr);
+//       } else {
+//         attr::set_attr(x, symbol::tag(current), CAR(current));
+//       }
+//       // Next node
+//       current = CDR(current);
+//     }
+//     break;
+//   }
+//   default: {
+//     Rf_error("`attrs` must be a named list");
+//   }
+//   }
+//   YIELD(NP);
+// }
 
 }
 
-namespace vec {
-inline SEXP deep_copy(SEXP x){
-  int32_t NP = 0;
-  SEXP out = r_null;
-  R_xlen_t n = Rf_xlength(x);
-  SEXP attrs = r_null;
+// namespace attr {
 
-  switch (TYPEOF(x)){
-  case NILSXP: {
-    break;
-  }
-  case LGLSXP: {
-    using r_t = r_bool_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    auto temp = r_vector_t<r_t>(out);
-    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case INTSXP: {
-    using r_t = r_int_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    auto temp = r_vector_t<r_t>(out);
-    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case REALSXP: {
-    using r_t = r_double_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    auto temp = r_vector_t<r_t>(out);
-    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case STRSXP: {
-    using r_t = r_string_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    auto temp = r_vector_t<r_t>(out);
-    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case CPLXSXP: {
-    using r_t = r_complex_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    auto temp = r_vector_t<r_t>(out);
-    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case RAWSXP: {
-    using r_t = r_byte_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    auto temp = r_vector_t<r_t>(out);
-    r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
-    break;
-  }
-  case VECSXP: {
-    using r_t = sexp_t;
-    out = SHIELD(new_vector<r_t>(n)); ++NP;
-    const r_t *p_x = vector_ptr<const r_t>(x);
-    for (R_xlen_t i = 0; i < n; ++i){
-      SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
-    }
-    break;
-  }
-  default: {
-    out = SHIELD(Rf_duplicate(x)); ++NP;
-    YIELD(NP);
-    return out;
-  }
-  }
+// inline void clear_attrs(SEXP x){
+//   SEXP attrs = SHIELD(get_attrs(x));
+//   if (is_null(attrs)){
+//     YIELD(1);
+//     return;
+//   }
+//   SEXP names = SHIELD(attr::get_old_names(attrs));
+//   const r_string_t *p_names = vector_ptr<const r_string_t>(names);
 
-  if (!is_null(x)){
-    SHIELD(attrs = attr::get_attrs(x)); ++NP;
-    int n_attrs = Rf_length(attrs);
-    for (R_xlen_t i = 0; i < n_attrs; ++i){
-      SET_VECTOR_ELT(attrs, i, deep_copy(VECTOR_ELT(attrs, i)));
-    }
-    attr::set_attrs(out, attrs);
-  }
+//   int n = Rf_length(attrs);
+//   for (R_xlen_t i = 0; i < n; ++i){
+//     r_symbol_t target_sym = as<r_symbol_t>(p_names[i]);
+//     set_attr(x, target_sym, r_null);
+//   }
+//   YIELD(2);
+// }
 
-  YIELD(NP);
-  return out;
-}
+// template<typename... Args>
+// inline void modify_attrs(SEXP x, Args... args) {
+//   SEXP attrs = SHIELD(internal::make_pairlist(args...));;
+//   internal::add_attrs(x, attrs);
+//   YIELD(1);
+// }
 
-}
+// inline void set_attrs(SEXP x, SEXP attrs){
+//   if (!is_null(x)){
+//     clear_attrs(x);
+//     internal::add_attrs(x, attrs);
+//   }
+// }
+
+// }
+
+// namespace vec {
+// inline SEXP deep_copy(SEXP x){
+//   int32_t NP = 0;
+//   SEXP out = r_null;
+//   R_xlen_t n = Rf_xlength(x);
+//   SEXP attrs = r_null;
+
+//   switch (TYPEOF(x)){
+//   case NILSXP: {
+//     break;
+//   }
+//   case LGLSXP: {
+//     using r_t = r_bool_t;
+//     out = SHIELD(new_vector<r_t>(n)); ++NP;
+//     auto temp = r_vector_t<r_t>(out);
+//     r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
+//     break;
+//   }
+//   case INTSXP: {
+//     using r_t = r_int_t;
+//     out = SHIELD(new_vector<r_t>(n)); ++NP;
+//     auto temp = r_vector_t<r_t>(out);
+//     r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
+//     break;
+//   }
+//   case REALSXP: {
+//     using r_t = r_double_t;
+//     out = SHIELD(new_vector<r_t>(n)); ++NP;
+//     auto temp = r_vector_t<r_t>(out);
+//     r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
+//     break;
+//   }
+//   case STRSXP: {
+//     using r_t = r_string_t;
+//     out = SHIELD(new_vector<r_t>(n)); ++NP;
+//     auto temp = r_vector_t<r_t>(out);
+//     r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
+//     break;
+//   }
+//   case CPLXSXP: {
+//     using r_t = r_complex_t;
+//     out = SHIELD(new_vector<r_t>(n)); ++NP;
+//     auto temp = r_vector_t<r_t>(out);
+//     r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
+//     break;
+//   }
+//   case RAWSXP: {
+//     using r_t = r_byte_t;
+//     out = SHIELD(new_vector<r_t>(n)); ++NP;
+//     auto temp = r_vector_t<r_t>(out);
+//     r_copy_n(temp, vector_ptr<const r_t>(x), 0, n);
+//     break;
+//   }
+//   case VECSXP: {
+//     using r_t = sexp_t;
+//     out = SHIELD(new_vector<r_t>(n)); ++NP;
+//     const r_t *p_x = vector_ptr<const r_t>(x);
+//     for (R_xlen_t i = 0; i < n; ++i){
+//       SET_VECTOR_ELT(out, i, deep_copy(p_x[i]));
+//     }
+//     break;
+//   }
+//   default: {
+//     out = SHIELD(Rf_duplicate(x)); ++NP;
+//     YIELD(NP);
+//     return out;
+//   }
+//   }
+
+//   if (!is_null(x)){
+//     SHIELD(attrs = attr::get_attrs(x)); ++NP;
+//     int n_attrs = Rf_length(attrs);
+//     for (R_xlen_t i = 0; i < n_attrs; ++i){
+//       SET_VECTOR_ELT(attrs, i, deep_copy(VECTOR_ELT(attrs, i)));
+//     }
+//     attr::set_attrs(out, attrs);
+//   }
+
+//   YIELD(NP);
+//   return out;
+// }
+
+// }
 
 
 // We call R fn`cheapr::set_threads` to make sure the R option is set

@@ -3,11 +3,32 @@
 
 #include <cheapr/internal/r_setup.h>
 #include <cheapr/internal/r_types.h>
-#include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_limits.h>
+#include <cheapr/internal/r_nas.h>
+#include <cheapr/internal/r_vector_utils.h>
 
 namespace cheapr {
 
 namespace internal {
+
+// Coerce to an R type from the C type (useful for RType templates)
+// template<typename T>
+// inline auto as_r_type(T x) {
+//   if constexpr (RType<T>){
+//     return x;
+//   } else if (CppMathType>){
+//     if constexpr (internal::can_be_int<T>){
+//       return r_int_t(static_cast<int>(x));
+//     } else {
+//       r_double_t(static_cast<double>(x));
+//     }
+//   } else {
+//   static_assert(
+//     always_false<T>,
+//     "Unsupported type for `as_r_type`"
+//   );
+//   } 
+// }
 
 // Assumes no NAs at all
 template<typename T>
@@ -46,30 +67,6 @@ inline constexpr bool can_be_int64(T x){
     return false;
   }
 }
-
-}
-
-namespace internal {
-template<typename T>
-inline SEXP as_r_obj(const T x){
-  if constexpr (is_r_vector_v<T>){
-    return static_cast<SEXP>(x);
-  } else if constexpr (std::is_convertible_v<T, SEXP>){
-    return static_cast<SEXP>(x);
-  } else {
-    return static_cast<SEXP>(vec::as_vector(x));
-  }
-}
-
-template<>
-inline SEXP as_r_obj<r_string_t>(const r_string_t x){
-  return vec::as_vector<r_string_t>(x);
-}
-template<>
-inline SEXP as_r_obj<r_symbol_t>(const r_symbol_t x){
-  return static_cast<SEXP>(x);
-}
-
 
 // Coerce functions that account for NA
 template<typename T>
@@ -126,7 +123,7 @@ template<typename T>
 inline constexpr r_byte_t as_raw(T x){
   if constexpr (is<T, r_byte_t>){
     return x;
-  } else if constexpr (is_r_or_cpp_integral_v<T> && sizeof(T) <= sizeof(int8_t)){
+  } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
     return is_r_na(x) || x < 0 ? na::raw : static_cast<r_byte_t>(x);
   } else if constexpr (std::is_convertible_v<T, r_byte_t>){
     return is_r_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_byte_t>(x);
@@ -143,20 +140,47 @@ inline r_string_t as_r_string(T x){
     return static_cast<r_string_t>(internal::make_utf8_charsxp(x));
   } else if constexpr (is<T, r_symbol_t>){
     return static_cast<r_string_t>(PRINTNAME(static_cast<SEXP>(x)));
-  } else {
-    SEXP scalar = SHIELD(as_r_obj(x));
-    if (Rf_length(scalar) != 1){
-      YIELD(1);
-      Rf_error("`x` is a non-scalar vector and cannot be convered to an `r_string_t` in %s", __func__);
-    }
-    if (is_r_na(x)){
-      YIELD(1);
+  } else if constexpr (is<T, r_bool_t>){
+    if (x == r_true){
+      return as_r_string("TRUE");
+    } else if (x == r_false){
+      return as_r_string("FALSE");
+    } else {
       return na::string;
     }
-    SEXP str = SHIELD(internal::coerce_vec(scalar, STRSXP));
-    r_string_t out = internal::get_value<r_string_t>(str, 0);
-    YIELD(2);
+  } else if constexpr (RMathType<T>){
+    if (is_r_na(x)){
+      return na::string;
+    }
+    std::string str = std::to_string(x.value);
+    return as_r_string(str.c_str());
+  } else if constexpr (MathType<T>){
+    std::string str = std::to_string(x);
+    return as_r_string(str.c_str());
+  } else if constexpr (is<T, r_complex_t>){
+    if (is_r_na(x)){
+      return na::string;
+    }
+    double re = x.re();
+    double im = x.im();
+
+    std::string str;
+    if (im >= 0){
+      str = std::to_string(re) + "+" + std::to_string(im) + "i";
+    } else {
+      str = std::to_string(re) + std::to_string(im) + "i";
+    }
+    return as_r_string(str.c_str());
+  } else if constexpr (is<T, SEXP>){
+    if (Rf_length(x) != 1){
+      Rf_error("`x` is a non-scalar vector and cannot be converted to an `r_string_t` in %s", __func__);
+    }
+    SEXP str = SHIELD(Rf_coerceVector(x, STRSXP));
+    r_string_t out = r_string_t(STRING_ELT(str, 0));
+    YIELD(1);
     return out;
+  } else {
+    static_assert(always_false<T>, "Unsupported type for `as_r_string`");
   }
 }
 
@@ -166,21 +190,73 @@ inline r_symbol_t as_r_sym(T x){
   if constexpr (is<T, r_symbol_t>){
     return x;
   } else if constexpr (is<T, const char *>){
-    return static_cast<r_symbol_t>(Rf_install(x));
+    SEXP str = SHIELD(internal::make_utf8_charsxp(x));
+    r_symbol_t out = r_symbol_t(Rf_installChar(str));
+    YIELD(1);
+    return out;
   } else if constexpr (is<T, r_string_t>){
-    return as_r_sym(CHAR(static_cast<SEXP>(x)));
+    return r_symbol_t(Rf_installChar(x));
   } else {
-    SEXP scalar = SHIELD(as_r_obj(x));
-    if (Rf_length(scalar) != 1){
-      YIELD(1);
-      Rf_error("`x` is a non-scalar vector and cannot be convered to an `r_symbol_t` in %s", __func__);
-    }
-    SEXP str = SHIELD(internal::coerce_vec(scalar, STRSXP));
-    r_symbol_t out = as_r_sym(internal::get_value<r_string_t>(str, 0));
-    YIELD(2);
+    r_string_t str = SHIELD(as_r_string(x));
+    r_symbol_t out = as_r_sym(str);
+    YIELD(1);
     return out;
   }
 }
+
+// CHARSXP is always converted to STRSXP here, see `r_types.h` for info
+template<typename T>
+inline sexp_t as_sexp(T x){
+  if constexpr (is<T, sexp_t>){
+    return x;
+  } else if constexpr (RType<T>){
+    return sexp_t(new_scalar_vector(x));
+  } else if constexpr (IntegerType<T>){
+    if constexpr (internal::can_be_int<T>){
+      return sexp_t(new_scalar_vector(r_int_t(static_cast<int>(x))));
+    } else {
+      return sexp_t(new_scalar_vector(r_double_t(static_cast<double>(x))));
+    }
+  } else {
+    static_assert(
+      always_false<T>,
+      "Unimplemented `as_sexp` specialisation"
+    );
+    return r_null;
+  }
+}
+
+template<>
+inline sexp_t as_sexp<const char *>(const char *x){
+  return sexp_t(internal::make_utf8_strsxp(x));
+}
+template<>
+inline sexp_t as_sexp<r_symbol_t>(r_symbol_t x){
+  return sexp_t(static_cast<SEXP>(x));
+}
+
+template<>
+inline sexp_t as_sexp<SEXP>(SEXP x){ 
+  return sexp_t(x);
+}
+
+// template<typename T>
+// inline sexp_t as_sexp(const T x){
+//   if constexpr (is<T, SEXP> || std::is_convertible_v<T, SEXP>){
+//     return sexp_t(static_cast<SEXP>(x));
+//   } else {
+//     return sexp_t(static_cast<SEXP>(vec::as_vector(x)));
+//   }
+// }
+
+// template<>
+// inline sexp_t as_sexp<r_string_t>(const r_string_t x){
+//   return sexp_t(Rf_ScalarString(x));
+// }
+// template<>
+// inline sexp_t as_sexp<r_symbol_t>(const r_symbol_t x){
+//   return sexp_t(static_cast<SEXP>(x));
+// }
 
 // R version of static_cast
 template<typename T, typename U>
@@ -253,51 +329,19 @@ struct as_impl<r_symbol_t, U> {
 };
 
 template<typename U>
-struct as_impl<SEXP, U> {
-  static SEXP cast(U x) {
-    return as_r_obj(x);
+struct as_impl<sexp_t, U> {
+  static sexp_t cast(U x) {
+    return as_sexp(x);
   }
 };
-}
 
-template<typename T, typename U>
-inline constexpr T as(U x) {
+template<RType T, typename U>
+inline T as_r(U x) {
   if constexpr (is<U, T>){ 
     return x;
   } else {
-  using r_t = std::remove_cvref_t<T>;
-  // if constexpr (is_r_vector_v<r_t>){    
-  // using data_t = std::remove_pointer_t<std::remove_cvref_t<decltype(x.data())>>;
-  // return as_vector(as<data_t>(x));
-  // } else {
-  return internal::as_impl<r_t, U>::cast(x);
-  } 
-}
-
-
-// Get the R type from the C type (useful for mixed type operators)
-
-namespace internal {
-template<typename T>
-inline auto as_r_type(T x) {
-  if constexpr (is<T, bool>) {
-    return r_bool_t{x};
-  } else if constexpr (is<T, int>) {
-    return r_int_t{x};
-  } else if constexpr (is<T, double>) {
-    return r_double_t{x};
-  } else if constexpr (is<T, r_string_t>) {
-    return r_string_t{x};
-  } else if constexpr (is<T, Rcomplex>) {
-    return r_complex_t{x};
-  }  else if constexpr (is<T, Rbyte>) {
-    return r_byte_t{x};
-  } else {
-  static_assert(
-    always_false<T>,
-    "Unsupported type for `as_r_type`"
-  );
-  return T{};
+    using r_t = std::remove_cvref_t<T>;
+    return internal::as_impl<r_t, U>::cast(x);
   } 
 }
 

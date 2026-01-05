@@ -10,11 +10,20 @@ template<typename T, typename U>
     inline constexpr bool is = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 
 // Concepts to enable R type templates
+
 template<typename T>
-concept RMathType = std::same_as<std::remove_cvref_t<T>, r_bool_t> ||
+concept RIntegerType = std::same_as<std::remove_cvref_t<T>, r_bool_t> ||
 std::same_as<std::remove_cvref_t<T>, r_int_t> ||
-std::same_as<std::remove_cvref_t<T>, r_int64_t> ||
-std::same_as<std::remove_cvref_t<T>, r_double_t>;
+std::same_as<std::remove_cvref_t<T>, r_int64_t>;
+
+template<typename T>
+concept CppIntegerType = std::is_integral_v<std::remove_cvref_t<T>>;
+
+template<typename T>
+concept IntegerType = RIntegerType<T> || CppIntegerType<T>;
+
+template<typename T>
+concept RMathType = RIntegerType<T> || std::same_as<std::remove_cvref_t<T>, r_double_t>;
 
 template<typename T>
 concept CppMathType = std::is_arithmetic_v<std::remove_cvref_t<T>>;
@@ -42,13 +51,6 @@ concept AtLeastOneRType = (RType<T> || RType<U>);
 
 template <class... T>
 inline constexpr bool always_false = false;
-
-template <typename T>
-inline constexpr bool is_r_or_cpp_integral_v =
-std::is_integral_v<std::remove_cvref_t<T>> ||
-is<T, r_bool_t> ||
-is<T, r_int_t>;
-
 
 template <typename T>
 inline constexpr bool is_r_ptr_writable_v =

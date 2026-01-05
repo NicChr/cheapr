@@ -93,6 +93,7 @@ inline constexpr auto na_value() {
 }
 
 namespace internal {
+
 template<typename T>
 inline constexpr bool is_r_na_impl(T x) {
     if constexpr (RType<T>){
@@ -132,7 +133,7 @@ inline bool is_r_na_impl<SEXP>(SEXP x){
 
 template<typename T>
 inline constexpr bool is_r_na(const T x) {
-    return is_r_na_impl<std::remove_cvref_t<T>>(x);
+    return internal::is_r_na_impl<std::remove_cvref_t<T>>(x);
 }
 
 }

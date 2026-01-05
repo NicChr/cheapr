@@ -93,44 +93,44 @@ inline r_int_t r_sign(T x) {
 
 template<RMathType T>
 inline T r_negate(T x){
-  return -x.value;
+  return T(-x.value);
 }
 
 template<RMathType T>
 inline r_double_t r_sqrt(T x){
-  return std::sqrt(as<r_double_t>(x).value);
+  return r_double_t(std::sqrt(as<r_double_t>(x).value));
 }
 
 template<typename T, typename U>
   requires (AtLeastOneRMathType<T, U>)
 inline r_double_t r_pow(T x, U y){
-  if (y == 0) return 1.0;
-  if (x == 1) return 1.0;
+  if (y == 0) return r_double_t(1.0);
+  if (x == 1) return r_double_t(1.0);
   if (y == 2){
     r_double_t left = as<r_double_t>(x);
     return left * left;
   }
-  return std::pow(as<r_double_t>(x).value, as<r_double_t>(y).value);
+  return r_double_t(std::pow(as<r_double_t>(x).value, as<r_double_t>(y).value));
 }
 
 template<RMathType T>
 inline r_double_t r_log10(T x){
-  return std::log10(as<r_double_t>(x).value);
+  return r_double_t(std::log10(as<r_double_t>(x).value));
 }
 
 template<RMathType T>
 inline r_double_t r_exp(T x){
-  return std::exp(as<r_double_t>(x).value);
+  return r_double_t(std::exp(as<r_double_t>(x).value));
 }
 
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
 inline r_double_t r_log(T x, U base){
-  return std::log(as<r_double_t>(x)) / std::log(as<r_double_t>(base));
+  return r_double_t(std::log(as<r_double_t>(x)) / std::log(as<r_double_t>(base)));
 }
 template<RMathType T>
 inline r_double_t r_log(T x){
-  return std::log(as<r_double_t>(x).value);
+  return r_double_t(std::log(as<r_double_t>(x).value));
 }
 inline r_complex_t r_log(r_complex_t x){
   if (is_r_na(x)){
@@ -152,7 +152,7 @@ inline r_double_t r_round(T x, const U digits){
   } else if (is_r_inf(x)){
     return x;
   } else if (is_r_neg_inf(digits)){
-    return 0.0;
+    return r_double_t(0.0);
   } else if (is_r_pos_inf(digits)){
     return x;
   } else {
@@ -218,7 +218,7 @@ template<MathType T>
     T ax = std::abs(x);
     T ay = std::abs(y);
 
-    if constexpr (is_r_or_cpp_integral_v<T>){
+    if constexpr (IntegerType<T>){
 
       // Taken from number theory lecture notes
 
@@ -285,7 +285,7 @@ template<MathType T>
       }
     }
 
-    if constexpr (is_r_or_cpp_integral_v<T>){
+    if constexpr (IntegerType<T>){
       if (x == 0 && y == 0){
         return 0;
       }
