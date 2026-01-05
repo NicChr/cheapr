@@ -14,8 +14,8 @@ namespace cheapr {
 template<RType T>
 struct r_vector_t {
   SEXP value = R_NilValue;
-  const T* const_ptr;  // Always created
-  T* ptr;              // Only initialized if writable
+  const T* const_ptr = nullptr;  // Always created
+  T* ptr = nullptr;              // Only initialized if writable
   using data_t = T;
 
   // Constructor that wraps new_vector<T>
@@ -314,7 +314,7 @@ struct data_type<r_vector_t<T>> {
   using type = T; 
 };
 
-// Coercion function, can handle many types and convert to R-spcific C++ types and R vectors
+// Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
 requires (RType<T> || RVectorType<T>)
 inline T as(U x) {
@@ -332,6 +332,7 @@ if constexpr (is<U, T>){
   using data_t = typename data_type<T>::type;
   R_xlen_t n = x.length();
   auto out = SHIELD(T(n));
+  OMP_SIMD
   for (R_xlen_t i = 0; i < n; ++i){
   out.set(i, internal::as_r<data_t>(x.get(i)));
   }
@@ -368,12 +369,12 @@ inline r_vector_t<sexp_t> make_list(Args... args) {
     return r_vector_t<sexp_t>(0);
   } else {
 
-    r_vector_t<sexp_t> out(n);
+    auto out = SHIELD(r_vector_t<sexp_t>(n));
 
     // Are any args named?
     constexpr bool any_named = (is<Args, arg> || ...);
 
-    r_vector_t<r_string_t> nms(any_named ? n : 0);
+    auto nms = any_named ? r_vector_t<r_string_t>(n) : r_vector_t<r_string_t>();
     SHIELD(nms);
 
     int i = 0;
@@ -387,9 +388,7 @@ inline r_vector_t<sexp_t> make_list(Args... args) {
       ++i;
     }()), ...);
 
-    if (any_named){
-      attr::set_old_names(out, nms);
-    }
+    attr::set_old_names(out, nms);
     YIELD(2);
     return out;
   }

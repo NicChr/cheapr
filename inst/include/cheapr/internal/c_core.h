@@ -50,7 +50,7 @@ inline SEXP new_row_names(int n){
   if (n > 0){
     auto out = SHIELD(vec::new_vector<r_int_t>(2));
     out.set(0, na::integer);
-    out.set(1, r_int_t(-n));
+    out.set(1, -n);
     YIELD(1);
     return out;
   } else {
@@ -147,11 +147,11 @@ inline r_bool_t all_whole_numbers(SEXP x, r_double_t tol_, bool na_rm_){
     for (R_xlen_t i = 0; i < n; ++i) {
       out = static_cast<r_bool_t>(math::is_whole_number(p_x[i], tol_));
       na_count += is_r_na(out);
-      if (is_r_false(out)){
+      if (out == r_false){
         break;
       }
     }
-    if (is_r_true(out) && !na_rm_ && na_count > 0){
+    if (out == r_true && !na_rm_ && na_count > 0){
       out = na::logical;
     } else if (na_rm_ && na_count == n){
       out = r_true;
@@ -390,20 +390,20 @@ namespace internal {
 // } else {
 // ...
 // }
-// template <class F>
-// decltype(auto) visit_vector(SEXP x, F&& f) {
-//   switch (CHEAPR_TYPEOF(x)) {
-//   case LGLSXP:          return f(r_vector_t<r_bool_t>(x));
-//   case INTSXP:          return f(r_vector_t<r_int_t>(x));
-//   case CHEAPR_INT64SXP: return f(r_vector_t<r_int64_t>(x));
-//   case REALSXP:         return f(r_vector_t<r_double_t>(x));
-//   case STRSXP:          return f(r_vector_t<r_string_t>(x));
-//   case VECSXP:          return f(r_vector_t<sexp_t>(x));
-//   case CPLXSXP:         return f(r_vector_t<r_complex_t>(x));
-//   case RAWSXP:          return f(r_vector_t<r_byte_t>(x));
-//   default:              return f(nullptr);
-//   }
-// }
+template <class F>
+decltype(auto) visit_vector(SEXP x, F&& f) {
+  switch (CHEAPR_TYPEOF(x)) {
+  case LGLSXP:          return f(r_vector_t<r_bool_t>(x));
+  case INTSXP:          return f(r_vector_t<r_int_t>(x));
+  case CHEAPR_INT64SXP: return f(r_vector_t<r_int64_t>(x));
+  case REALSXP:         return f(r_vector_t<r_double_t>(x));
+  case STRSXP:          return f(r_vector_t<r_string_t>(x));
+  case VECSXP:          return f(r_vector_t<sexp_t>(x));
+  case CPLXSXP:         return f(r_vector_t<r_complex_t>(x));
+  case RAWSXP:          return f(r_vector_t<r_byte_t>(x));
+  default:              Rf_error("`x` must be a vector");
+  }
+}
 
 // Wrap any callable f, and return a new callable that:
 //   - takes (auto&&... args)

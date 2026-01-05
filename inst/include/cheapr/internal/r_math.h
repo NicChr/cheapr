@@ -30,7 +30,7 @@ inline constexpr bool is_r_inf(const T x){
 
 template <>
 inline constexpr bool is_r_inf<r_double_t>(const r_double_t x){
-  return x == r_limits::r_pos_inf || x == r_limits::r_neg_inf;
+  return x.value == r_limits::r_pos_inf || x.value == r_limits::r_neg_inf;
 }
 
 template <typename T>
@@ -40,7 +40,7 @@ inline constexpr bool is_r_pos_inf(const T x){
 
 template <>
 inline constexpr bool is_r_pos_inf<r_double_t>(const r_double_t x){
-  return x == r_limits::r_pos_inf;
+  return x.value == r_limits::r_pos_inf;
 }
 
 template <typename T>
@@ -50,7 +50,7 @@ inline constexpr bool is_r_neg_inf(const T x){
 
 template <>
 inline constexpr bool is_r_neg_inf<r_double_t>(const r_double_t x){
-  return x == r_limits::r_neg_inf;
+  return x.value == r_limits::r_neg_inf;
 }
 
 template<RMathType T>
@@ -110,7 +110,7 @@ inline r_double_t r_pow(T x, U y){
     r_double_t left = as<r_double_t>(x);
     return left * left;
   }
-  return r_double_t(std::pow(as<r_double_t>(x).value, as<r_double_t>(y).value));
+  return r_double_t(std::pow(as<r_double_t>(x), as<r_double_t>(y)));
 }
 
 template<RMathType T>
@@ -195,7 +195,7 @@ inline T r_abs_diff(const T x, const U y){
 }
 
 inline r_bool_t is_whole_number(const r_double_t x, const r_double_t tolerance){
-  return is_r_na(x) || is_r_na(tolerance) ? na::logical : r_abs_diff(x, r_round(x)) <= tolerance;
+  return is_r_na(x) || is_r_na(tolerance) ? na::logical : r_bool_t(r_abs_diff(x, r_round(x)) <= tolerance);
 }
 
 

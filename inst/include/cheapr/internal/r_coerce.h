@@ -6,12 +6,14 @@
 #include <cheapr/internal/r_limits.h>
 #include <cheapr/internal/r_nas.h>
 #include <cheapr/internal/r_vector_utils.h>
+#include <charconv>
 
 namespace cheapr {
 
 namespace internal {
 
 // Coerce to an R type from the C type (useful for RType templates)
+// Difficult cause if it returns `r_string_`, that needs to be protected but other types don't
 // template<typename T>
 // inline auto as_r_type(T x) {
 //   if constexpr (RType<T>){
@@ -34,7 +36,7 @@ namespace internal {
 template<typename T>
 inline constexpr bool can_be_int(T x){
   using xt = std::remove_cvref_t<T>;
-  if constexpr (std::is_integral_v<xt> && sizeof(xt) <= sizeof(int)){
+  if constexpr (CppIntegerType<xt> && sizeof(xt) <= sizeof(int)){
     // Check if unsigned type's max exceeds signed int range
     if constexpr (
         std::is_unsigned_v<xt> && std::numeric_limits<xt>::max() > static_cast<xt>(std::numeric_limits<int>::max())){
@@ -43,8 +45,10 @@ inline constexpr bool can_be_int(T x){
       return true;  // Small types can safely cast to int
     }
     // Larger types that can safely cast to T
-  } else if constexpr (MathType<xt>){
+  } else if constexpr (CppMathType<xt>){
     return between<xt>(x, r_limits::r_int_min, r_limits::r_int_max);
+  } else if constexpr (RMathType<xt>){
+    return between(x.value, static_cast<decltype(x.value)>(r_limits::r_int_min), static_cast<decltype(x.value)>(r_limits::r_int_max));
   } else {
     return false;
   }
@@ -52,7 +56,7 @@ inline constexpr bool can_be_int(T x){
 template<typename T>
 inline constexpr bool can_be_int64(T x){
   using xt = std::remove_cvref_t<T>;
-  if constexpr (std::is_integral_v<xt> && sizeof(xt) <= sizeof(int64_t)){
+  if constexpr (CppIntegerType<xt> && sizeof(xt) <= sizeof(int64_t)){
     // Check if unsigned type's max exceeds signed int64 range
     if constexpr (
         std::is_unsigned_v<xt> &&
@@ -61,8 +65,10 @@ inline constexpr bool can_be_int64(T x){
     } else {
       return true;  // Small types can safely cast to int64
     }
-  } else if constexpr (MathType<xt>){
+  } else if constexpr (CppMathType<xt>){
     return between<xt>(x, r_limits::r_int64_min, r_limits::r_int64_max);
+  } else if constexpr (RMathType<xt>){
+    return between(x.value, static_cast<decltype(x.value)>(r_limits::r_int64_min), static_cast<decltype(x.value)>(r_limits::r_int64_max));
   } else {
     return false;
   }
@@ -70,7 +76,7 @@ inline constexpr bool can_be_int64(T x){
 
 // Coerce functions that account for NA
 template<typename T>
-inline constexpr r_bool_t as_bool(T x){
+inline r_bool_t as_bool(T x){
   if constexpr (is<T, int> || is<T, r_bool_t>){
     return static_cast<r_bool_t>(x);
   } else if constexpr (MathType<T>){
@@ -80,7 +86,7 @@ inline constexpr r_bool_t as_bool(T x){
   }
 }
 template<typename T>
-inline constexpr r_int_t as_int(T x){
+inline r_int_t as_int(T x){
   if constexpr (is<T, int> || is<T, r_int_t>){
     return static_cast<r_int_t>(x);
   } else if constexpr (MathType<T>){
@@ -90,7 +96,7 @@ inline constexpr r_int_t as_int(T x){
   }
 }
 template<typename T>
-inline constexpr r_int64_t as_int64(T x){
+inline r_int64_t as_int64(T x){
   if constexpr (is<T, r_int64_t>){
     return x;
   } else if constexpr (MathType<T>){
@@ -100,7 +106,7 @@ inline constexpr r_int64_t as_int64(T x){
   }
 }
 template<typename T>
-inline constexpr r_double_t as_double(T x){
+inline r_double_t as_double(T x){
   if constexpr (is<T, double> || is<T, r_double_t>){
     return static_cast<r_double_t>(x);
   } else if constexpr (MathType<T>){
@@ -110,17 +116,17 @@ inline constexpr r_double_t as_double(T x){
   }
 }
 template<typename T>
-inline constexpr r_complex_t as_complex(T x){
+inline r_complex_t as_complex(T x){
   if constexpr (is<T, r_complex_t>){
     return x;
   } else if constexpr (MathType<T>){
-    return r_complex_t{as_double(x), 0.0};
+    return r_complex_t{as_double(x), r_double_t(0.0)};
   } else {
     return na::complex;
   }
 }
 template<typename T>
-inline constexpr r_byte_t as_raw(T x){
+inline r_byte_t as_raw(T x){
   if constexpr (is<T, r_byte_t>){
     return x;
   } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
@@ -141,22 +147,29 @@ inline r_string_t as_r_string(T x){
   } else if constexpr (is<T, r_symbol_t>){
     return static_cast<r_string_t>(PRINTNAME(static_cast<SEXP>(x)));
   } else if constexpr (is<T, r_bool_t>){
-    if (x == r_true){
-      return as_r_string("TRUE");
-    } else if (x == r_false){
-      return as_r_string("FALSE");
-    } else {
+    if (is_r_na(x)){
       return na::string;
+    } else if (x == r_true){
+      return as_r_string("TRUE");
+    } else {
+      return as_r_string("FALSE");
     }
   } else if constexpr (RMathType<T>){
     if (is_r_na(x)){
       return na::string;
     }
-    std::string str = std::to_string(x.value);
-    return as_r_string(str.c_str());
-  } else if constexpr (MathType<T>){
-    std::string str = std::to_string(x);
-    return as_r_string(str.c_str());
+    char buffer[32];
+    auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
+    *result.ptr = '\0';  // Null-terminate
+    return as_r_string(static_cast<const char *>(buffer));
+    // std::snprintf(buffer, sizeof(buffer), "%g", x.value);    
+    // std::string str = std::to_string(x.value);
+    // return as_r_string(str.c_str());
+  } else if constexpr (CppMathType<T>){
+    char buffer[32];
+    auto result = std::to_chars(buffer, buffer + sizeof(buffer), x);
+    *result.ptr = '\0';  // Null-terminate
+    return as_r_string(static_cast<const char *>(buffer));
   } else if constexpr (is<T, r_complex_t>){
     if (is_r_na(x)){
       return na::string;
@@ -164,14 +177,19 @@ inline r_string_t as_r_string(T x){
     double re = x.re();
     double im = x.im();
 
-    std::string str;
+    char buffer[64];
     if (im >= 0){
-      str = std::to_string(re) + "+" + std::to_string(im) + "i";
+      snprintf(buffer, sizeof(buffer), "%g+%gi", re, im);
     } else {
-      str = std::to_string(re) + std::to_string(im) + "i";
+      snprintf(buffer, sizeof(buffer), "%g%gi", re, im);
     }
-    return as_r_string(str.c_str());
-  } else if constexpr (is<T, SEXP>){
+    return as_r_string(static_cast<const char *>(buffer));
+  } else if constexpr (is<T, r_byte_t>){
+    char buffer[8];
+    auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
+    *result.ptr = '\0';
+    return as_r_string(static_cast<const char *>(buffer));
+  } else if constexpr (is<T, SEXP> || is<T, sexp_t>){
     if (Rf_length(x) != 1){
       Rf_error("`x` is a non-scalar vector and cannot be converted to an `r_string_t` in %s", __func__);
     }

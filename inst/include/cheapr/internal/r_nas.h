@@ -97,7 +97,7 @@ namespace internal {
 template<typename T>
 inline constexpr bool is_r_na_impl(T x) {
     if constexpr (RType<T>){
-        return x == na_value<T>();
+        return x.value == na_value<T>().value;
     } else {
         return false;
     }
