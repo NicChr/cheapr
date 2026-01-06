@@ -24,7 +24,7 @@ struct r_vector_t {
     , const_ptr(internal::vector_ptr<const T>(value))
     , ptr(nullptr)
   {
-    if constexpr (RFastWritableType<T>) {
+    if constexpr (RPtrWritableType<T>) {
       ptr = internal::vector_ptr<T>(value);
     }
   }
@@ -35,7 +35,7 @@ struct r_vector_t {
     , const_ptr(s == R_NilValue ? nullptr : internal::vector_ptr<const T>(s))
     , ptr(nullptr)
   {
-    if constexpr (RFastWritableType<T>){
+    if constexpr (RPtrWritableType<T>){
       if (const_ptr != nullptr){
         ptr = internal::vector_ptr<T>(s);
       }
@@ -47,7 +47,7 @@ struct r_vector_t {
   }
 
     // Direct pointer access
-  T* data() requires RFastWritableType<T>{
+  T* data() requires RPtrWritableType<T>{
     return ptr;
   }
 
@@ -76,7 +76,7 @@ r_vector_t<r_bool_t> is_na() const {
   R_xlen_t n = length();
   auto out = SHIELD(r_vector_t<r_bool_t>(n));
   
-  if constexpr (RFastWritableType<T>){
+  if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1){
       OMP_PARALLEL_FOR_SIMD(n_threads)
@@ -109,7 +109,7 @@ r_vector_t<r_bool_t> is_na() const {
   template <typename U>
    void set(R_xlen_t index, U val) {
     T val2 = internal::as_r<T>(val);
-    if constexpr (RFastWritableType<T>){
+    if constexpr (RPtrWritableType<T>){
       ptr[index] = val2;
     } else {
       internal::set_value<T>(value, index, val2);
@@ -119,7 +119,7 @@ r_vector_t<r_bool_t> is_na() const {
   template <typename U>
   void fill(R_xlen_t start, R_xlen_t n, const U val){
   auto val2 = internal::as_r<T>(val);
-  if constexpr (RFastWritableType<T>){
+  if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     auto *p_target = data();
     if (n_threads > 1) {
@@ -141,7 +141,7 @@ template <typename U1, typename U2>
 void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
   auto old_val2 = internal::as_r<T>(old_val);
   auto new_val2 = internal::as_r<T>(new_val);
-  if constexpr (RFastWritableType<T>){
+  if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     auto *p_target = data();
     if (n_threads > 1) {
@@ -198,7 +198,7 @@ concept RVectorType = is_r_vector_v<T>;
 
 template <RType T>
 inline void r_copy_n(r_vector_t<T> &target, const T *p_source, R_xlen_t target_offset, R_xlen_t n){
-  if constexpr (is_r_ptr_writable_v<T>){
+  if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)

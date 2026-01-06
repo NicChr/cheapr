@@ -1,7 +1,6 @@
 #ifndef CHEAPR_R_CONCEPTS_H
 #define CHEAPR_R_CONCEPTS_H
 
-#include <cheapr/internal/r_setup.h>
 #include <cheapr/internal/r_types.h>
 
 namespace cheapr {
@@ -49,19 +48,16 @@ concept CppType = !RType<T>;
 template<typename T, typename U>
 concept AtLeastOneRType = (RType<T> || RType<U>);
 
+template <typename T>
+concept RPtrWritableType = RMathType<T> ||
+is<T, r_complex_t> ||
+is<T, r_byte_t>;
+
 template <class... T>
 inline constexpr bool always_false = false;
 
-template <typename T>
-inline constexpr bool is_r_ptr_writable_v =
-RMathType<T> ||
-is<T, r_complex_t> ||
-is<T, r_byte_t>;
-
-template <typename T>
-concept RFastWritableType = RMathType<T> ||
-is<T, r_complex_t> ||
-is<T, r_byte_t>;
+template <class... T>
+inline constexpr bool always_true = true;
 
 }
 
