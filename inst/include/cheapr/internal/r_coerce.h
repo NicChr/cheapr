@@ -245,6 +245,10 @@ inline sexp_t as_sexp(T x){
 }
 
 template<>
+inline sexp_t as_sexp<bool>(bool x){
+  return sexp_t(new_scalar_vector(r_bool_t(static_cast<int>(x))));
+}
+template<>
 inline sexp_t as_sexp<const char *>(const char *x){
   return sexp_t(internal::make_utf8_strsxp(x));
 }

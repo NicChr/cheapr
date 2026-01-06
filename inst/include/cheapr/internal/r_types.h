@@ -31,25 +31,11 @@ struct r_bool_t {
   r_bool_t() : value{0} {}
   explicit constexpr r_bool_t(int x) : value{x} {}
   explicit constexpr operator int() const { return value; }
-  operator bool() const { 
-    if (value == NA_INTEGER){
-    Rf_error("Cannot convert NA to bool, please check");
-  }
-  return static_cast<bool>(value);
-}
 
-
-  // bool as_bool() const {
-  //   return static_cast<bool>(value);
-  // }
-
-  // bool is_true() const {
-  //   return value == 1;
-  // }
-
-  // bool is_false() const {
-  //   return value == 0;
-  // }
+  operator bool() const;
+  constexpr bool is_true() const;
+  constexpr bool is_false() const;
+  constexpr bool is_na() const;
 };
 
 // The 3 possible values of r_bool_t
@@ -57,12 +43,25 @@ inline constexpr r_bool_t r_true{1};
 inline constexpr r_bool_t r_false{0};
 inline constexpr r_bool_t r_na{std::numeric_limits<int>::min()};
 
-// inline bool is_r_true(r_bool_t x){
-//   return x.is_true();
-// }
-// inline bool is_r_false(r_bool_t x){
-//   return x.is_false();
-// }
+  inline constexpr bool r_bool_t::is_true() const {
+    return value == 1;
+  }
+
+  inline constexpr bool r_bool_t::is_false() const {
+    return value == 0;
+  }
+
+  inline constexpr bool r_bool_t::is_na() const {
+    return value == r_na.value;
+  }
+
+  inline r_bool_t::operator bool() const { 
+    if (is_na()){
+    Rf_error("Cannot convert NA to bool, please check");
+  }
+  return static_cast<bool>(value);
+}
+
 // is_r_na is defined later as a template
 
 // R integer 
@@ -139,22 +138,6 @@ struct r_byte_t {
   explicit constexpr r_byte_t(Rbyte x) : value{x} {}
   constexpr operator Rbyte() const { return value; }
 };
-
-// R Date proxy (integer-based) 
-// struct r_date_t {
-//   int value;
-//   r_date_t() : value{0} {}
-//   explicit constexpr r_date_t(int x) : value{x} {}
-//   constexpr operator int() const { return value; }
-// };
-
-// // R POSIXct proxy
-// struct r_posixct_t {
-//   double value;
-//   r_posixct_t() : value{0.0} {}
-//   explicit constexpr r_posixct_t(double x) : value{x} {}
-//   constexpr operator double() const { return value; }
-// };
 
 }
 

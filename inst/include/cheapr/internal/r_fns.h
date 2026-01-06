@@ -1,12 +1,8 @@
 #ifndef CHEAPR_R_FNS_H
 #define CHEAPR_R_FNS_H
 
-#include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_env.h>
 #include <cheapr/internal/r_symbols.h>
-#include <cheapr/internal/r_exprs.h>
-#include <cheapr/internal/r_coerce.h>
 #include <cheapr/internal/r_vector.h>
 
 namespace cheapr {

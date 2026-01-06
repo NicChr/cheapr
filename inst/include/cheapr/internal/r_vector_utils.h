@@ -5,7 +5,6 @@
 #include <cheapr/internal/r_utf8.h>
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_concepts.h>
-#include <cheapr/internal/r_attrs.h>
 
 
 namespace cheapr {

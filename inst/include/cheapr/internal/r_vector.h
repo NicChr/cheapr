@@ -166,6 +166,24 @@ void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
 
 };
 
+
+// R Date proxy (integer-based) 
+struct r_dates_t : public r_vector_t<r_int_t> {
+  
+  // Constructors
+  r_dates_t() : r_vector_t<r_int_t>() {}
+  
+  explicit r_dates_t(SEXP x) : r_vector_t<r_int_t>(x) {
+    if (!attr::inherits1(x, "Date") && !is_null()){ 
+      Rf_error("`SEXP` must be a Date");
+    }
+  }
+  
+  explicit r_dates_t(R_xlen_t n) : r_vector_t<r_int_t>(n) {
+    attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
+  }
+};
+
 template<typename T>
 struct is_r_vector : std::false_type {};
 
