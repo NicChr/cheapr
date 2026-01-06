@@ -16,7 +16,6 @@ struct r_vec {
   SEXP value = R_NilValue;
   const T* const_ptr = nullptr;  // Always created
   T* ptr = nullptr;              // Only initialized if writable
-  using data_t = T;
 
   // Constructor that wraps new_vector<T>
   explicit r_vec(R_xlen_t size)
@@ -167,21 +166,67 @@ void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
 };
 
 
-// R Date proxy (integer-based) 
-struct r_dates_t : public r_vec<r_int> {
+// R Date vector
+struct r_dates : public r_vec<r_int> {
   
   // Constructors
-  r_dates_t() : r_vec<r_int>() {}
+  r_dates() : r_vec<r_int>() {}
   
-  explicit r_dates_t(SEXP x) : r_vec<r_int>(x) {
-    if (!attr::inherits1(x, "Date") && !is_null()){ 
+  explicit r_dates(SEXP x) : r_vec<r_int>(x) {
+    if (!is_null() && !attr::inherits1(x, "Date")){ 
       Rf_error("`SEXP` must be a Date");
     }
   }
   
-  explicit r_dates_t(R_xlen_t n) : r_vec<r_int>(n) {
+  explicit r_dates(R_xlen_t n) : r_vec<r_int>(n) {
     attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
   }
+};
+
+// R POSIXct vector
+struct r_posixcts : public r_vec<r_dbl> {
+  
+  // Constructors
+  r_posixcts() : r_vec<r_dbl>() {}
+  
+  explicit r_posixcts(SEXP x) : r_vec<r_dbl>(x) {
+    if (!(is_null() || (attr::inherits1(x, "POSIXct") && attr::inherits1(x, "POSIXt")))){ 
+      Rf_error("`SEXP` must be a POSIXct");
+    }
+  }
+  
+  explicit r_posixcts(R_xlen_t n) : r_vec<r_dbl>(n) {
+    auto cls = SHIELD(r_vec<r_str>(2));
+    auto tz = SHIELD(internal::new_scalar_vector(blank_r_string));
+    cls.set(0, "POSIXct"); cls.set(1, "POSIXt");
+    // Set class
+    attr::set_old_class(this->value, cls);
+    // Set timezone
+    attr::set_attr(this->value, internal::as_r<r_sym>("tzone"), tz);
+    YIELD(2);
+  }
+
+  r_str tzone_get() const {
+    auto tz = r_vec<r_str>(attr::get_attr(this->value, internal::as_r<r_sym>("tzone")));
+    if (tz.is_null() || tz.length() == 0){
+      return blank_r_string;
+    } else {
+      return tz.get(0);
+    }
+  }
+
+    void tzone_set(r_str tzone) {
+    auto tz = SHIELD(r_vec<r_str>(attr::get_attr(this->value, internal::as_r<r_sym>("tzone"))));
+    if (tz.length() != 0){
+      tz.set(0, tzone);
+      YIELD(1);
+    } else {
+      auto new_tz = SHIELD(internal::new_scalar_vector(tzone));
+      attr::set_attr(this->value, internal::as_r<r_sym>("tzone"), new_tz);
+      YIELD(2);
+    }
+  }
+
 };
 
 template<typename T>
