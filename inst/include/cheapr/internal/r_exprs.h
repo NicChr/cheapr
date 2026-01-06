@@ -25,7 +25,7 @@ inline SEXP make_pairlist(Args... args) {
         SETCAR(current, args.value);
         SET_TAG(current, as<r_sym>(args.name));
       } else {
-        SETCAR(current, as<sexp_t>(args));
+        SETCAR(current, as<r_sexp>(args));
       }
       current = CDR(current);
     }()), ...);

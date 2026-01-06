@@ -122,8 +122,8 @@ inline const r_str* vector_ptr<const r_str>(SEXP x) {
 }
 
 template<>
-inline const sexp_t* vector_ptr<const sexp_t>(SEXP x) {
-  return reinterpret_cast<const sexp_t*>(VECTOR_PTR_RO(x));
+inline const r_sexp* vector_ptr<const r_sexp>(SEXP x) {
+  return reinterpret_cast<const r_sexp*>(VECTOR_PTR_RO(x));
 }
 
 // R vector getters + setters
@@ -176,7 +176,7 @@ inline void set_value<const char *>(SEXP x, const R_xlen_t i, const char* val){
 
 // Never use the pointer here to assign
 template<>
-inline void set_value<sexp_t>(SEXP x, const R_xlen_t i, sexp_t val){
+inline void set_value<r_sexp>(SEXP x, const R_xlen_t i, r_sexp val){
   SET_VECTOR_ELT(x, i, val);
 }
 
@@ -223,7 +223,7 @@ inline SEXP new_vector_impl<r_raw>(R_xlen_t n){
   return internal::new_vec(RAWSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<sexp_t>(R_xlen_t n){
+inline SEXP new_vector_impl<r_sexp>(R_xlen_t n){
   return internal::new_vec(VECSXP, n);
 }
 

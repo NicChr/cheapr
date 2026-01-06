@@ -17,7 +17,7 @@ inline const r_dbl real = r_dbl{NA_REAL};
 inline const r_cplx complex = r_cplx{real, real};
 inline constexpr r_raw raw = r_raw{0};
 inline const r_str string = r_str{NA_STRING};
-inline const sexp_t nil = r_null;
+inline const r_sexp nil = r_null;
 }
 
 namespace internal {
@@ -81,7 +81,7 @@ inline SEXP na_value_impl<SEXP>(){
 }
 
 template<>
-inline sexp_t na_value_impl<sexp_t>(){
+inline r_sexp na_value_impl<r_sexp>(){
   return r_null;
 }
 

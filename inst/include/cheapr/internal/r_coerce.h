@@ -40,7 +40,7 @@ inline constexpr bool can_be_int(T x){
     // Check if unsigned type's max exceeds signed int range
     if constexpr (
         std::is_unsigned_v<xt> && std::numeric_limits<xt>::max() > static_cast<xt>(std::numeric_limits<int>::max())){
-      return between<xt>(x, 0, std::numeric_limits<int>::max());
+      return x <= static_cast<xt>(std::numeric_limits<int>::max());
     } else {
       return true;  // Small types can safely cast to int
     }
@@ -61,7 +61,7 @@ inline constexpr bool can_be_int64(T x){
     if constexpr (
         std::is_unsigned_v<xt> &&
           std::numeric_limits<xt>::max() > static_cast<xt>(std::numeric_limits<int64_t>::max())){
-      return x <= std::numeric_limits<int64_t>::max();
+      return x <= static_cast<xt>(std::numeric_limits<int64_t>::max());
     } else {
       return true;  // Small types can safely cast to int64
     }
@@ -158,16 +158,19 @@ inline r_str as_r_string(T x){
     if (is_r_na(x)){
       return na::string;
     }
-    char buffer[32];
+    char buffer[48];
     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
+    if (result.ec != std::errc{}) {
+      Rf_error("Internal error, increase buffer size for string conversion");
+    }
     *result.ptr = '\0';  // Null-terminate
     return as_r_string(static_cast<const char *>(buffer));
-    // std::snprintf(buffer, sizeof(buffer), "%g", x.value);    
-    // std::string str = std::to_string(x.value);
-    // return as_r_string(str.c_str());
   } else if constexpr (CppMathType<T>){
-    char buffer[32];
+    char buffer[48];
     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x);
+    if (result.ec != std::errc{}) {
+      Rf_error("Internal error, increase buffer size for string conversion");
+    }
     *result.ptr = '\0';  // Null-terminate
     return as_r_string(static_cast<const char *>(buffer));
   } else if constexpr (is<T, r_cplx>){
@@ -177,7 +180,7 @@ inline r_str as_r_string(T x){
     double re = x.re();
     double im = x.im();
 
-    char buffer[64];
+    char buffer[96];
     if (im >= 0){
       snprintf(buffer, sizeof(buffer), "%g+%gi", re, im);
     } else {
@@ -186,10 +189,9 @@ inline r_str as_r_string(T x){
     return as_r_string(static_cast<const char *>(buffer));
   } else if constexpr (is<T, r_raw>){
     char buffer[8];
-    auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
-    *result.ptr = '\0';
+    snprintf(buffer, sizeof(buffer), "%02x", x.value);
     return as_r_string(static_cast<const char *>(buffer));
-  } else if constexpr (is<T, SEXP> || is<T, sexp_t>){
+  } else if constexpr (is<T, SEXP> || is<T, r_sexp>){
     if (Rf_length(x) != 1){
       Rf_error("`x` is a non-scalar vector and cannot be converted to an `r_str` in %s", __func__);
     }
@@ -224,16 +226,16 @@ inline r_sym as_r_sym(T x){
 
 // CHARSXP is always converted to STRSXP here, see `r_types.h` for info
 template<typename T>
-inline sexp_t as_sexp(T x){
-  if constexpr (is<T, sexp_t>){
+inline r_sexp as_sexp(T x){
+  if constexpr (is<T, r_sexp>){
     return x;
   } else if constexpr (RType<T>){
-    return sexp_t(new_scalar_vector(x));
+    return r_sexp(new_scalar_vector(x));
   } else if constexpr (IntegerType<T>){
     if constexpr (internal::can_be_int<T>){
-      return sexp_t(new_scalar_vector(r_int(static_cast<int>(x))));
+      return r_sexp(new_scalar_vector(r_int(static_cast<int>(x))));
     } else {
-      return sexp_t(new_scalar_vector(r_dbl(static_cast<double>(x))));
+      return r_sexp(new_scalar_vector(r_dbl(static_cast<double>(x))));
     }
   } else {
     static_assert(
@@ -245,40 +247,22 @@ inline sexp_t as_sexp(T x){
 }
 
 template<>
-inline sexp_t as_sexp<bool>(bool x){
-  return sexp_t(new_scalar_vector(r_lgl(static_cast<int>(x))));
+inline r_sexp as_sexp<bool>(bool x){
+  return r_sexp(new_scalar_vector(r_lgl(static_cast<int>(x))));
 }
 template<>
-inline sexp_t as_sexp<const char *>(const char *x){
-  return sexp_t(internal::make_utf8_strsxp(x));
+inline r_sexp as_sexp<const char *>(const char *x){
+  return r_sexp(internal::make_utf8_strsxp(x));
 }
 template<>
-inline sexp_t as_sexp<r_sym>(r_sym x){
-  return sexp_t(static_cast<SEXP>(x));
+inline r_sexp as_sexp<r_sym>(r_sym x){
+  return r_sexp(static_cast<SEXP>(x));
 }
 
 template<>
-inline sexp_t as_sexp<SEXP>(SEXP x){ 
-  return sexp_t(x);
+inline r_sexp as_sexp<SEXP>(SEXP x){ 
+  return r_sexp(x);
 }
-
-// template<typename T>
-// inline sexp_t as_sexp(const T x){
-//   if constexpr (is<T, SEXP> || std::is_convertible_v<T, SEXP>){
-//     return sexp_t(static_cast<SEXP>(x));
-//   } else {
-//     return sexp_t(static_cast<SEXP>(vec::as_vector(x)));
-//   }
-// }
-
-// template<>
-// inline sexp_t as_sexp<r_str>(const r_str x){
-//   return sexp_t(Rf_ScalarString(x));
-// }
-// template<>
-// inline sexp_t as_sexp<r_sym>(const r_sym x){
-//   return sexp_t(static_cast<SEXP>(x));
-// }
 
 // R version of static_cast
 template<typename T, typename U>
@@ -351,8 +335,8 @@ struct as_impl<r_sym, U> {
 };
 
 template<typename U>
-struct as_impl<sexp_t, U> {
-  static sexp_t cast(U x) {
+struct as_impl<r_sexp, U> {
+  static r_sexp cast(U x) {
     return as_sexp(x);
   }
 };

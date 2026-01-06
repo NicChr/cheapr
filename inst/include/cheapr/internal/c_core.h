@@ -169,7 +169,7 @@ inline r_lgl all_whole_numbers(SEXP x, r_dbl tol_, bool na_rm_){
 
 namespace internal {
 
-inline void add_attrs(SEXP x, r_vec<sexp_t> attrs) {
+inline void add_attrs(SEXP x, r_vec<r_sexp> attrs) {
 
   if (is_null(x)){
     Rf_error("Cannot add attributes to `NULL`");
@@ -213,7 +213,7 @@ namespace attr {
 
 inline void clear_attrs(SEXP x){
   
-  auto attrs = SHIELD(static_cast<r_vec<sexp_t>>(get_attrs(x)));
+  auto attrs = SHIELD(static_cast<r_vec<r_sexp>>(get_attrs(x)));
 
   if (is_null(attrs)){
     YIELD(1);
@@ -240,7 +240,7 @@ inline void modify_attrs(SEXP x, Args... args) {
 inline void set_attrs(SEXP x, SEXP attrs){
   if (!is_null(x)){
     clear_attrs(x);
-    internal::add_attrs(x, static_cast<r_vec<sexp_t>>(attrs));
+    internal::add_attrs(x, static_cast<r_vec<r_sexp>>(attrs));
   }
 }
 
@@ -267,7 +267,7 @@ decltype(auto) visit_vector(SEXP x, F&& f) {
   case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
   case REALSXP:         return f(r_vec<r_dbl>(x));
   case STRSXP:          return f(r_vec<r_str>(x));
-  case VECSXP:          return f(r_vec<sexp_t>(x));
+  case VECSXP:          return f(r_vec<r_sexp>(x));
   case CPLXSXP:         return f(r_vec<r_cplx>(x));
   case RAWSXP:          return f(r_vec<r_raw>(x));
   default:              Rf_error("`x` must be a vector");
@@ -291,7 +291,7 @@ inline SEXP deep_copy(SEXP x){
         
         auto local_out = SHIELD(r_t(n)); ++NP;
 
-        if constexpr (is<r_t, r_vec<sexp_t>>){
+        if constexpr (is<r_t, r_vec<r_sexp>>){
           for (R_xlen_t i = 0; i < n; ++i){
             local_out.set(i, deep_copy(vec.get(i)));
           }
@@ -305,7 +305,7 @@ inline SEXP deep_copy(SEXP x){
       out = SHIELD(Rf_duplicate(x)); ++NP;
     }
 
-    auto attrs = SHIELD(static_cast<r_vec<sexp_t>>(attr::get_attrs(x))); ++NP;
+    auto attrs = SHIELD(static_cast<r_vec<r_sexp>>(attr::get_attrs(x))); ++NP;
     int n_attrs = attrs.length();
     for (R_xlen_t i = 0; i < n_attrs; ++i){
       attrs.set(i, deep_copy(attrs.get(i)));

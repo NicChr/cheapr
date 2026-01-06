@@ -8,17 +8,17 @@
 namespace cheapr {
 
 // General SEXP, reserved for everything except R vectors, CHARSXP, and SYMSXP
-struct sexp_t {
+struct r_sexp {
   SEXP value;
 
-  sexp_t() : value(R_NilValue) {}
+  r_sexp() : value(R_NilValue) {}
   // Implicit coercion both ways
-  explicit constexpr sexp_t(SEXP s) : value(s) {}
+  explicit constexpr r_sexp(SEXP s) : value(s) {}
   constexpr operator SEXP() const { return value; }
 };
 
 // R C NULL constant
-inline const sexp_t r_null = sexp_t();
+inline const r_sexp r_null = r_sexp();
 
 inline bool is_null(SEXP x){ 
   return x == R_NilValue;
@@ -87,8 +87,8 @@ struct r_int64 {
 };
 
 // Alias type for CHARSXP
-// CHARSXP must never be converted to `SEXP`/`sexp_t`
-// all templates assume that `SEXP`/`sexp_t` is reserved for objects that can safely fit into an R list vector
+// CHARSXP must never be converted to `SEXP`/`r_sexp`
+// all templates assume that `SEXP`/`r_sexp` is reserved for objects that can safely fit into an R list vector
 // Furthermore CHARSXP is a special case because it is essentially the only SEXP that already fits into a non-list vector: a character vector
 struct r_str {
   SEXP value;

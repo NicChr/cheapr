@@ -40,7 +40,7 @@ std::same_as<std::remove_cvref_t<T>, r_cplx> ||
 std::same_as<std::remove_cvref_t<T>, r_str> ||
 std::same_as<std::remove_cvref_t<T>, r_raw> ||
 std::same_as<std::remove_cvref_t<T>, r_sym> ||
-std::same_as<std::remove_cvref_t<T>, sexp_t>;
+std::same_as<std::remove_cvref_t<T>, r_sexp>;
 
 template<typename T>
 concept CppType = !RType<T>;

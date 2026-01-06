@@ -16,6 +16,7 @@ struct r_vec {
   SEXP value = R_NilValue;
   const T* const_ptr = nullptr;  // Always created
   T* ptr = nullptr;              // Only initialized if writable
+  using data_t = T;              // Type of data vec contains
 
   // Constructor that wraps new_vector<T>
   explicit r_vec(R_xlen_t size)
@@ -229,6 +230,23 @@ struct r_posixcts : public r_vec<r_dbl> {
 
 };
 
+// R data frame
+// struct r_df : public r_vec<r_sexp> {
+  
+//   // Constructors
+//   r_df() : r_vec<r_sexp>() {}
+  
+//   explicit r_df(SEXP x) : r_vec<r_sexp>(x) {
+//     if (!is_null() && !attr::inherits1(x, "Date")){ 
+//       Rf_error("`SEXP` must be a Date");
+//     }
+//   }
+  
+//   explicit r_df(R_xlen_t n) : r_vec<r_sexp>(n) {
+//     attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
+//   }
+// };
+
 template<typename T>
 struct is_r_vector : std::false_type {};
 
@@ -376,7 +394,7 @@ inline auto as_vector<SEXP>(SEXP x){
     return x;
   }
   default: {
-    return static_cast<SEXP>(new_vector<sexp_t>(1, sexp_t(x)));
+    return static_cast<SEXP>(new_vector<r_sexp>(1, r_sexp(x)));
   }
   }
 }
@@ -396,15 +414,21 @@ struct data_type<r_vec<T>> {
 
 // Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
-requires (RType<T> || RVectorType<T>)
+requires (RType<T> || RVectorType<T> || is<T, SEXP>)
 inline T as(U x) {
 if constexpr (is<U, T>){
   return x;
-} else if constexpr (RVectorType<U> && RType<T>){  
+} else if constexpr (RType<U> && is<T, SEXP>){
+  return static_cast<SEXP>(internal::as_r<r_sexp>(x));
+} else if constexpr (RVectorType<U> && is<T, SEXP>){
+  return x.value;
+} else if constexpr (RVectorType<U> && is<T, r_sexp>){
+  return r_sexp(x.value);
+} else if constexpr (RVectorType<U> && RType<T>){
   if (x.length() != 1){
     Rf_error("Vector must be length-1 to be coerced to requested type");
   }
-  return as<T>(x.get(0));
+  return internal::as_r<T>(x.get(0));
 } else if constexpr (RVectorType<T> && RType<U>){  
   using data_t = typename data_type<T>::type;
   return new_vector<data_t>(1, internal::as_r<data_t>(x));
@@ -436,20 +460,20 @@ struct arg {
 
   template<typename T>
   arg operator=(T v) const {
-    return arg(name, as<sexp_t>(v)); 
+    return arg(name, as<r_sexp>(v)); 
   }
 };
 
 // Variadic list constructor
 template<typename... Args>
-inline r_vec<sexp_t> make_list(Args... args) {
+inline r_vec<r_sexp> make_list(Args... args) {
   constexpr int n = sizeof...(args);
 
   if constexpr (n == 0){
-    return r_vec<sexp_t>(0);
+    return r_vec<r_sexp>(0);
   } else {
 
-    auto out = SHIELD(r_vec<sexp_t>(n));
+    auto out = SHIELD(r_vec<r_sexp>(n));
 
     // Are any args named?
     constexpr bool any_named = (is<Args, arg> || ...);
@@ -463,7 +487,7 @@ inline r_vec<sexp_t> make_list(Args... args) {
         out.set(i, args.value);
         nms.set(i, as<r_str>(args.name));
       } else {
-        out.set(i, as<sexp_t>(args));
+        out.set(i, as<r_sexp>(args));
       }
       ++i;
     }()), ...);
