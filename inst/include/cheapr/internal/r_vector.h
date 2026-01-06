@@ -8,6 +8,7 @@
 #include <cheapr/internal/r_attrs.h>
 #include <cheapr/internal/r_vector_utils.h>
 #include <cheapr/internal/r_coerce.h>
+#include <unordered_map> // For string vector matching
 
 namespace cheapr {
 
@@ -16,7 +17,7 @@ struct r_vec {
   SEXP value = R_NilValue;
   const T* const_ptr = nullptr;  // Always created
   T* ptr = nullptr;              // Only initialized if writable
-  using data_t = T;              // Type of data vec contains
+  using data_type = T;              // Type of data vec contains
 
   // Constructor that wraps new_vector<T>
   explicit r_vec(R_xlen_t size)
@@ -230,6 +231,71 @@ struct r_posixcts : public r_vec<r_dbl> {
 
 };
 
+
+// Match needle strings to first occurrence in haystack
+r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) {
+  
+  R_xlen_t n_needles = needles.length();
+  R_xlen_t n_haystack = haystack.length();
+  
+  // Build hash table: O(m) where m = haystack size
+  std::unordered_map<SEXP, R_xlen_t> lookup;
+  lookup.reserve(n_haystack);
+  
+  for (R_xlen_t i = 0; i < n_haystack; ++i) {
+    r_str str = haystack.get(i);
+    // Only store first occurrence
+    if (lookup.find(str) == lookup.end()) {
+      lookup[str] = i + 1;
+    }
+  }
+  
+  // Match needles: O(n) where n = needles size
+  auto out = SHIELD(r_vec<r_int>(n_needles));
+  for (R_xlen_t i = 0; i < n_needles; ++i) {
+    r_str needle = needles.get(i);
+    auto it = lookup.find(needle);
+    out.set(i, it != lookup.end() ? r_int(it->second) : na::integer);
+  }
+  
+  YIELD(1);
+  return out;
+}
+
+
+struct r_factors : public r_vec<r_int> {
+  
+  // Constructors
+  r_factors() : r_vec<r_int>() {}
+  
+  explicit r_factors(SEXP x) : r_vec<r_int>(x) {
+    if (!(is_null() || attr::inherits1(x, "factor"))){ 
+      Rf_error("`SEXP` must be a factor");
+    }
+  }
+  
+  explicit r_factors(r_vec<r_str> x, r_vec<r_str> levels){
+
+    auto fct = SHIELD(string_match(x, levels));
+    auto cls = SHIELD(internal::new_scalar_vector(internal::as_r<r_str>("factor")));
+    // Set class
+    attr::set_old_class(fct, cls);
+    // Set levels
+    attr::set_attr(fct, internal::as_r<r_sym>("levels"), levels);
+    this->value = fct.value;
+    YIELD(2);
+  }
+
+  r_vec<r_str> levels_get() const {
+    return r_vec<r_str>(attr::get_attr(this->value, internal::as_r<r_sym>("levels")));
+  }
+
+  void levels_set(r_vec<r_str> levels) {
+    attr::set_attr(this->value, internal::as_r<r_sym>("levels"), levels);
+  }
+
+};
+
 // R data frame
 // struct r_df : public r_vec<r_sexp> {
   
@@ -401,17 +467,6 @@ inline auto as_vector<SEXP>(SEXP x){
 
 }
 
-// Helper to extract vector's data type
-template<typename T>
-struct data_type {
-  using type = T;  // Default: not a vector
-};
-
-template<RType T>
-struct data_type<r_vec<T>> {
-  using type = T; 
-};
-
 // Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
 requires (RType<T> || RVectorType<T> || is<T, SEXP>)
@@ -430,12 +485,12 @@ if constexpr (is<U, T>){
   }
   return internal::as_r<T>(x.get(0));
 } else if constexpr (RVectorType<T> && RType<U>){  
-  using data_t = typename data_type<T>::type;
-  return new_vector<data_t>(1, internal::as_r<data_t>(x));
+  using data_t = typename T::data_type;
+  return vec::new_vector<data_t>(1, internal::as_r<data_t>(x));
 } else if constexpr (RVectorType<U> && RVectorType<T>){
-  using data_t = typename data_type<T>::type;
   R_xlen_t n = x.length();
   auto out = SHIELD(T(n));
+  using data_t = typename T::data_type;
   OMP_SIMD
   for (R_xlen_t i = 0; i < n; ++i){
   out.set(i, internal::as_r<data_t>(x.get(i)));
