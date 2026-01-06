@@ -11,7 +11,7 @@ namespace env {
 inline const SEXP empty_env = R_EmptyEnv;
 inline const SEXP base_env = R_BaseEnv;
 
-inline SEXP get(r_symbol_t sym, SEXP env, bool inherits = true){
+inline SEXP get(r_sym sym, SEXP env, bool inherits = true){
 
   if (TYPEOF(env) != ENVSXP){
     Rf_error("second argument to '%s' must be an environment", __func__);

@@ -48,13 +48,13 @@ inline int ncol(SEXP x){
 }
 inline SEXP new_row_names(int n){
   if (n > 0){
-    auto out = SHIELD(vec::new_vector<r_int_t>(2));
+    auto out = SHIELD(vec::new_vector<r_int>(2));
     out.set(0, na::integer);
     out.set(1, -n);
     YIELD(1);
     return out;
   } else {
-    return vec::new_vector<r_int_t>(0);
+    return vec::new_vector<r_int>(0);
   }
 }
 inline void set_row_names(SEXP x, int n){
@@ -88,7 +88,7 @@ inline R_xlen_t length(SEXP x){
       return out;
     } else {
       if (internal::BASE_LENGTH == NULL){  
-        internal::BASE_LENGTH = as<r_symbol_t>("length"); 
+        internal::BASE_LENGTH = as<r_sym>("length"); 
       }
       SEXP expr = SHIELD(make_expr(internal::BASE_LENGTH, x));
       SEXP r_len = SHIELD(eval(expr, env::base_env));
@@ -99,7 +99,7 @@ inline R_xlen_t length(SEXP x){
     // Catch-all
   } else {
     if (internal::BASE_LENGTH == NULL){
-      internal::BASE_LENGTH = as<r_symbol_t>("length");
+      internal::BASE_LENGTH = as<r_sym>("length");
     }
     SEXP expr = SHIELD(make_expr(internal::BASE_LENGTH, x));
     SEXP r_len = SHIELD(eval(expr, env::base_env));
@@ -119,7 +119,7 @@ inline SEXP compact_seq_len(R_xlen_t n){
     Rf_error("`n` must be >= 0");
   }
   if (n == 0){
-    return vec::new_vector<r_int_t>(0);
+    return vec::new_vector<r_int>(0);
   }
   SEXP colon_fn = SHIELD(fn::find_pkg_fun(":", "base", false));
   SEXP out = SHIELD(fn::eval_fn(colon_fn, env::base_env, 1, n));
@@ -127,13 +127,13 @@ inline SEXP compact_seq_len(R_xlen_t n){
   return out;
 }
 
-// r_bool_t not bool because bool can't be NA
-inline r_bool_t all_whole_numbers(SEXP x, r_double_t tol_, bool na_rm_){
+// r_lgl not bool because bool can't be NA
+inline r_lgl all_whole_numbers(SEXP x, r_dbl tol_, bool na_rm_){
 
   R_xlen_t n = Rf_xlength(x);
 
-  // Use r_bool_t instead of bool as r_bool_t can hold NA
-  r_bool_t out = r_true;
+  // Use r_lgl instead of bool as r_lgl can hold NA
+  r_lgl out = r_true;
   R_xlen_t na_count = 0;
 
   switch ( internal::CHEAPR_TYPEOF(x) ){
@@ -143,9 +143,9 @@ inline r_bool_t all_whole_numbers(SEXP x, r_double_t tol_, bool na_rm_){
     break;
   }
   case REALSXP: {
-    const r_double_t *p_x = internal::real_ptr_ro(x);
+    const r_dbl *p_x = internal::real_ptr_ro(x);
     for (R_xlen_t i = 0; i < n; ++i) {
-      out = static_cast<r_bool_t>(math::is_whole_number(p_x[i], tol_));
+      out = static_cast<r_lgl>(math::is_whole_number(p_x[i], tol_));
       na_count += is_r_na(out);
       if (out == r_false){
         break;
@@ -169,7 +169,7 @@ inline r_bool_t all_whole_numbers(SEXP x, r_double_t tol_, bool na_rm_){
 
 namespace internal {
 
-inline void add_attrs(SEXP x, r_vector_t<sexp_t> attrs) {
+inline void add_attrs(SEXP x, r_vec<sexp_t> attrs) {
 
   if (is_null(x)){
     Rf_error("Cannot add attributes to `NULL`");
@@ -181,20 +181,20 @@ inline void add_attrs(SEXP x, r_vector_t<sexp_t> attrs) {
 
   int32_t NP = 0;
 
-  auto names = SHIELD(r_vector_t<r_string_t>(attr::get_old_names(attrs))); ++NP;
+  auto names = SHIELD(r_vec<r_str>(attr::get_old_names(attrs))); ++NP;
 
   if (is_null(names)){
     YIELD(NP);
     Rf_error("attributes must be a named list");
   }
 
-  r_symbol_t attr_nm;
+  r_sym attr_nm;
 
   int n = names.length();
 
   for (int i = 0; i < n; ++i){
     if (!(names.get(i) == blank_r_string)){
-      attr_nm = as<r_symbol_t>(names.get(i));
+      attr_nm = as<r_sym>(names.get(i));
       if (address(x) == address(attrs.get(i))){
         SEXP dup_attr = SHIELD(Rf_duplicate(attrs.get(i))); ++NP;
         attr::set_attr(x, attr_nm, dup_attr);
@@ -213,18 +213,18 @@ namespace attr {
 
 inline void clear_attrs(SEXP x){
   
-  auto attrs = SHIELD(static_cast<r_vector_t<sexp_t>>(get_attrs(x)));
+  auto attrs = SHIELD(static_cast<r_vec<sexp_t>>(get_attrs(x)));
 
   if (is_null(attrs)){
     YIELD(1);
     return;
   }
-  auto names = SHIELD(static_cast<r_vector_t<r_string_t>>(attr::get_old_names(attrs)));
+  auto names = SHIELD(static_cast<r_vec<r_str>>(attr::get_old_names(attrs)));
 
   int n = attrs.length();
   
   for (R_xlen_t i = 0; i < n; ++i){
-    r_symbol_t target_sym = as<r_symbol_t>(names.get(i));
+    r_sym target_sym = as<r_sym>(names.get(i));
     set_attr(x, target_sym, r_null);
   }
   YIELD(2);
@@ -240,7 +240,7 @@ inline void modify_attrs(SEXP x, Args... args) {
 inline void set_attrs(SEXP x, SEXP attrs){
   if (!is_null(x)){
     clear_attrs(x);
-    internal::add_attrs(x, static_cast<r_vector_t<sexp_t>>(attrs));
+    internal::add_attrs(x, static_cast<r_vec<sexp_t>>(attrs));
   }
 }
 
@@ -262,14 +262,14 @@ namespace internal {
 template <class F>
 decltype(auto) visit_vector(SEXP x, F&& f) {
   switch (CHEAPR_TYPEOF(x)) {
-  case LGLSXP:          return f(r_vector_t<r_bool_t>(x));
-  case INTSXP:          return f(r_vector_t<r_int_t>(x));
-  case CHEAPR_INT64SXP: return f(r_vector_t<r_int64_t>(x));
-  case REALSXP:         return f(r_vector_t<r_double_t>(x));
-  case STRSXP:          return f(r_vector_t<r_string_t>(x));
-  case VECSXP:          return f(r_vector_t<sexp_t>(x));
-  case CPLXSXP:         return f(r_vector_t<r_complex_t>(x));
-  case RAWSXP:          return f(r_vector_t<r_byte_t>(x));
+  case LGLSXP:          return f(r_vec<r_lgl>(x));
+  case INTSXP:          return f(r_vec<r_int>(x));
+  case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
+  case REALSXP:         return f(r_vec<r_dbl>(x));
+  case STRSXP:          return f(r_vec<r_str>(x));
+  case VECSXP:          return f(r_vec<sexp_t>(x));
+  case CPLXSXP:         return f(r_vec<r_cplx>(x));
+  case RAWSXP:          return f(r_vec<r_raw>(x));
   default:              Rf_error("`x` must be a vector");
   }
 }
@@ -291,7 +291,7 @@ inline SEXP deep_copy(SEXP x){
         
         auto local_out = SHIELD(r_t(n)); ++NP;
 
-        if constexpr (is<r_t, r_vector_t<sexp_t>>){
+        if constexpr (is<r_t, r_vec<sexp_t>>){
           for (R_xlen_t i = 0; i < n; ++i){
             local_out.set(i, deep_copy(vec.get(i)));
           }
@@ -305,7 +305,7 @@ inline SEXP deep_copy(SEXP x){
       out = SHIELD(Rf_duplicate(x)); ++NP;
     }
 
-    auto attrs = SHIELD(static_cast<r_vector_t<sexp_t>>(attr::get_attrs(x))); ++NP;
+    auto attrs = SHIELD(static_cast<r_vec<sexp_t>>(attr::get_attrs(x))); ++NP;
     int n_attrs = attrs.length();
     for (R_xlen_t i = 0; i < n_attrs; ++i){
       attrs.set(i, deep_copy(attrs.get(i)));
@@ -325,7 +325,7 @@ inline void set_threads(uint16_t n){
   uint16_t max_threads = OMP_MAX_THREADS;
   uint16_t threads = std::min(n, max_threads);
   SEXP cheapr_set_threads = SHIELD(fn::find_pkg_fun("set_threads", "cheapr", true));
-  SEXP r_threads = SHIELD(vec::as_vector(as<r_int_t>(threads)));
+  SEXP r_threads = SHIELD(vec::as_vector(as<r_int>(threads)));
   SHIELD(fn::eval_fn(cheapr_set_threads, R_BaseEnv, r_threads));
   YIELD(3);
 }

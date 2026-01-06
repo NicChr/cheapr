@@ -10,13 +10,13 @@ namespace cheapr {
 // NAs
 
 namespace na {
-inline constexpr r_bool_t logical = r_na;
-inline constexpr r_int_t integer = r_int_t{std::numeric_limits<int>::min()};
-inline constexpr r_int64_t integer64 = r_int64_t(std::numeric_limits<int64_t>::min());
-inline const r_double_t real = r_double_t{NA_REAL};
-inline const r_complex_t complex = r_complex_t{real, real};
-inline constexpr r_byte_t raw = r_byte_t{0};
-inline const r_string_t string = r_string_t{NA_STRING};
+inline constexpr r_lgl logical = r_na;
+inline constexpr r_int integer = r_int{std::numeric_limits<int>::min()};
+inline constexpr r_int64 integer64 = r_int64(std::numeric_limits<int64_t>::min());
+inline const r_dbl real = r_dbl{NA_REAL};
+inline const r_cplx complex = r_cplx{real, real};
+inline constexpr r_raw raw = r_raw{0};
+inline const r_str string = r_str{NA_STRING};
 inline const sexp_t nil = r_null;
 }
 
@@ -32,17 +32,17 @@ inline constexpr T na_value_impl() {
 }
 
 template<>
-inline constexpr r_bool_t na_value_impl<r_bool_t>(){
+inline constexpr r_lgl na_value_impl<r_lgl>(){
   return na::logical;
 }
 
 template<>
-inline constexpr r_int_t na_value_impl<r_int_t>(){
+inline constexpr r_int na_value_impl<r_int>(){
   return na::integer;
 }
 
 template<>
-inline r_double_t na_value_impl<r_double_t>(){
+inline r_dbl na_value_impl<r_dbl>(){
   return na::real;
 }
 template<>
@@ -56,22 +56,22 @@ inline double na_value_impl<double>(){
 }
 
 template<>
-inline constexpr r_int64_t na_value_impl<r_int64_t>(){
+inline constexpr r_int64 na_value_impl<r_int64>(){
   return na::integer64;
 }
 
 template<>
-inline r_complex_t na_value_impl<r_complex_t>(){
+inline r_cplx na_value_impl<r_cplx>(){
   return na::complex;
 }
 
 template<>
-inline constexpr r_byte_t na_value_impl<r_byte_t>(){
-  return r_byte_t{0};
+inline constexpr r_raw na_value_impl<r_raw>(){
+  return r_raw{0};
 }
 
 template<>
-inline r_string_t na_value_impl<r_string_t>(){
+inline r_str na_value_impl<r_str>(){
   return na::string;
 }
 
@@ -105,7 +105,7 @@ inline constexpr bool is_r_na_impl(T x) {
 
 
 template<>
-inline constexpr bool is_r_na_impl<r_double_t>(r_double_t x){
+inline constexpr bool is_r_na_impl<r_dbl>(r_dbl x){
   return x.value != x.value;
 }
 template<>
@@ -114,12 +114,12 @@ inline constexpr bool is_r_na_impl<double>(double x){
 }
 
 template<>
-inline constexpr bool is_r_na_impl<r_complex_t>(r_complex_t x){
-  return is_r_na_impl<r_double_t>(x.re()) || is_r_na_impl<r_double_t>(x.im());
+inline constexpr bool is_r_na_impl<r_cplx>(r_cplx x){
+  return is_r_na_impl<r_dbl>(x.re()) || is_r_na_impl<r_dbl>(x.im());
 }
 
 template<>
-inline constexpr bool is_r_na_impl<r_byte_t>(r_byte_t x){
+inline constexpr bool is_r_na_impl<r_raw>(r_raw x){
   return false;
 }
  

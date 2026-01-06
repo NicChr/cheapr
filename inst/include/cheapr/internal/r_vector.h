@@ -12,14 +12,14 @@
 namespace cheapr {
 
 template<RType T>
-struct r_vector_t {
+struct r_vec {
   SEXP value = R_NilValue;
   const T* const_ptr = nullptr;  // Always created
   T* ptr = nullptr;              // Only initialized if writable
   using data_t = T;
 
   // Constructor that wraps new_vector<T>
-  explicit r_vector_t(R_xlen_t size)
+  explicit r_vec(R_xlen_t size)
     : value(internal::new_vector_impl<std::remove_cvref_t<T>>(size))
     , const_ptr(internal::vector_ptr<const T>(value))
     , ptr(nullptr)
@@ -30,7 +30,7 @@ struct r_vector_t {
   }
 
   // Constructor from existing SEXP
-  explicit r_vector_t(SEXP s = R_NilValue)
+  explicit r_vec(SEXP s = R_NilValue)
     : value(s)
     , const_ptr(s == R_NilValue ? nullptr : internal::vector_ptr<const T>(s))
     , ptr(nullptr)
@@ -68,13 +68,13 @@ struct r_vector_t {
     return Rf_xlength(value);
   }
 
-  const r_string_t address() const {
+  const r_str address() const {
     return internal::address(value);
   }
 
-r_vector_t<r_bool_t> is_na() const {
+r_vec<r_lgl> is_na() const {
   R_xlen_t n = length();
-  auto out = SHIELD(r_vector_t<r_bool_t>(n));
+  auto out = SHIELD(r_vec<r_lgl>(n));
   
   if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
@@ -168,18 +168,18 @@ void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
 
 
 // R Date proxy (integer-based) 
-struct r_dates_t : public r_vector_t<r_int_t> {
+struct r_dates_t : public r_vec<r_int> {
   
   // Constructors
-  r_dates_t() : r_vector_t<r_int_t>() {}
+  r_dates_t() : r_vec<r_int>() {}
   
-  explicit r_dates_t(SEXP x) : r_vector_t<r_int_t>(x) {
+  explicit r_dates_t(SEXP x) : r_vec<r_int>(x) {
     if (!attr::inherits1(x, "Date") && !is_null()){ 
       Rf_error("`SEXP` must be a Date");
     }
   }
   
-  explicit r_dates_t(R_xlen_t n) : r_vector_t<r_int_t>(n) {
+  explicit r_dates_t(R_xlen_t n) : r_vec<r_int>(n) {
     attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
   }
 };
@@ -188,7 +188,7 @@ template<typename T>
 struct is_r_vector : std::false_type {};
 
 template<typename T>
-struct is_r_vector<r_vector_t<T>> : std::true_type {};
+struct is_r_vector<r_vec<T>> : std::true_type {};
 
 template<typename T>
 inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value;
@@ -197,7 +197,7 @@ template<typename T>
 concept RVectorType = is_r_vector_v<T>;
 
 template <RType T>
-inline void r_copy_n(r_vector_t<T> &target, const T *p_source, R_xlen_t target_offset, R_xlen_t n){
+inline void r_copy_n(r_vec<T> &target, const T *p_source, R_xlen_t target_offset, R_xlen_t n){
   if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1) {
@@ -217,15 +217,15 @@ inline void r_copy_n(r_vector_t<T> &target, const T *p_source, R_xlen_t target_o
 
 namespace vec {
 
-// Templates for creating new vectors (can also be done via r_vector_t)
+// Templates for creating new vectors (can also be done via r_vec)
 template <RType T>
-inline r_vector_t<T> new_vector(R_xlen_t n){
-  return r_vector_t<T>(n);
+inline r_vec<T> new_vector(R_xlen_t n){
+  return r_vec<T>(n);
 }
 
 template <RType T, typename U>
-inline r_vector_t<T> new_vector(R_xlen_t n, const U default_value){
-  auto out = SHIELD(r_vector_t<T>(n));
+inline r_vec<T> new_vector(R_xlen_t n, const U default_value){
+  auto out = SHIELD(r_vec<T>(n));
   out.fill(0, n, default_value); 
   YIELD(1);
   return out;
@@ -290,9 +290,9 @@ inline auto as_vector(T x){
     return new_vector<T>(1, x);
   } else if constexpr (IntegerType<T>){
     if constexpr (internal::can_be_int<T>){
-      return new_vector<r_int_t>(1, r_int_t(static_cast<int>(x)));
+      return new_vector<r_int>(1, r_int(static_cast<int>(x)));
     } else {
-      return new_vector<r_double_t>(1, r_double_t(static_cast<double>(x)));
+      return new_vector<r_dbl>(1, r_dbl(static_cast<double>(x)));
     }
   } else {
     static_assert(
@@ -303,19 +303,19 @@ inline auto as_vector(T x){
 }
 template<>
 inline auto as_vector<bool>(bool x){
-  return as_vector(r_bool_t(x));
+  return as_vector(r_lgl(x));
 }
 template<>
 inline auto as_vector<int>(int x){
-  return as_vector(r_int_t(x));
+  return as_vector(r_int(x));
 }
 template<>
 inline auto as_vector<double>(double x){
-  return as_vector(r_double_t(x));
+  return as_vector(r_dbl(x));
 }
 template<>
 inline auto as_vector<const char *>(const char *x){
-  return as_vector(r_string_t(internal::make_utf8_charsxp(x))); 
+  return as_vector(r_str(internal::make_utf8_charsxp(x))); 
 }
 
 template<>
@@ -345,7 +345,7 @@ struct data_type {
 };
 
 template<RType T>
-struct data_type<r_vector_t<T>> {
+struct data_type<r_vec<T>> {
   using type = T; 
 };
 
@@ -397,26 +397,26 @@ struct arg {
 
 // Variadic list constructor
 template<typename... Args>
-inline r_vector_t<sexp_t> make_list(Args... args) {
+inline r_vec<sexp_t> make_list(Args... args) {
   constexpr int n = sizeof...(args);
 
   if constexpr (n == 0){
-    return r_vector_t<sexp_t>(0);
+    return r_vec<sexp_t>(0);
   } else {
 
-    auto out = SHIELD(r_vector_t<sexp_t>(n));
+    auto out = SHIELD(r_vec<sexp_t>(n));
 
     // Are any args named?
     constexpr bool any_named = (is<Args, arg> || ...);
 
-    auto nms = any_named ? r_vector_t<r_string_t>(n) : r_vector_t<r_string_t>();
+    auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
     SHIELD(nms);
 
     int i = 0;
     (([&]() {
       if constexpr (is<Args, arg>) { 
         out.set(i, args.value);
-        nms.set(i, as<r_string_t>(args.name));
+        nms.set(i, as<r_str>(args.name));
       } else {
         out.set(i, as<sexp_t>(args));
       }

@@ -11,44 +11,44 @@ namespace cheapr {
 
 namespace internal {
 
-inline r_int_t* integer_ptr(SEXP x){
-  return reinterpret_cast<r_int_t*>(INTEGER(x));
+inline r_int* integer_ptr(SEXP x){
+  return reinterpret_cast<r_int*>(INTEGER(x));
 }
-inline const r_int_t* integer_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_int_t*>(INTEGER_RO(x));
+inline const r_int* integer_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_int*>(INTEGER_RO(x));
 }
-inline r_bool_t* logical_ptr(SEXP x){
-  return reinterpret_cast<r_bool_t*>(integer_ptr(x));
+inline r_lgl* logical_ptr(SEXP x){
+  return reinterpret_cast<r_lgl*>(integer_ptr(x));
 }
-inline const r_bool_t* logical_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_bool_t*>(integer_ptr_ro(x));
+inline const r_lgl* logical_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_lgl*>(integer_ptr_ro(x));
 }
-inline r_double_t* real_ptr(SEXP x){
-  return reinterpret_cast<r_double_t*>(REAL(x));
+inline r_dbl* real_ptr(SEXP x){
+  return reinterpret_cast<r_dbl*>(REAL(x));
 }
-inline const r_double_t* real_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_double_t*>(REAL_RO(x));
+inline const r_dbl* real_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_dbl*>(REAL_RO(x));
 }
-inline r_int64_t* integer64_ptr(SEXP x){
-  return reinterpret_cast<r_int64_t*>(real_ptr(x));
+inline r_int64* integer64_ptr(SEXP x){
+  return reinterpret_cast<r_int64*>(real_ptr(x));
 }
-inline const r_int64_t* integer64_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_int64_t*>(real_ptr_ro(x));
+inline const r_int64* integer64_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_int64*>(real_ptr_ro(x));
 }
-inline r_complex_t* complex_ptr(SEXP x){
-  return reinterpret_cast<r_complex_t*>(COMPLEX(x));
+inline r_cplx* complex_ptr(SEXP x){
+  return reinterpret_cast<r_cplx*>(COMPLEX(x));
 }
-inline const r_complex_t* complex_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_complex_t*>(COMPLEX_RO(x));
+inline const r_cplx* complex_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_cplx*>(COMPLEX_RO(x));
 }
-inline r_byte_t* raw_ptr(SEXP x){
-  return reinterpret_cast<r_byte_t*>(RAW(x));
+inline r_raw* raw_ptr(SEXP x){
+  return reinterpret_cast<r_raw*>(RAW(x));
 }
-inline const r_byte_t* raw_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_byte_t*>(RAW_RO(x));
+inline const r_raw* raw_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_raw*>(RAW_RO(x));
 }
-inline const r_string_t* string_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_string_t*>(STRING_PTR_RO(x));
+inline const r_str* string_ptr_ro(SEXP x){
+  return reinterpret_cast<const r_str*>(STRING_PTR_RO(x));
 }
 
 template<RType T>
@@ -62,63 +62,63 @@ inline T* vector_ptr(SEXP x) {
 
 
 template<>
-inline r_bool_t* vector_ptr<r_bool_t>(SEXP x) {
-  return reinterpret_cast<r_bool_t*>(LOGICAL(x));
+inline r_lgl* vector_ptr<r_lgl>(SEXP x) {
+  return reinterpret_cast<r_lgl*>(LOGICAL(x));
 }
 
 template<>
-inline const r_bool_t* vector_ptr<const r_bool_t>(SEXP x) {
-  return reinterpret_cast<const r_bool_t*>(LOGICAL_RO(x));
+inline const r_lgl* vector_ptr<const r_lgl>(SEXP x) {
+  return reinterpret_cast<const r_lgl*>(LOGICAL_RO(x));
 }
 template<>
-inline r_int_t* vector_ptr<r_int_t>(SEXP x) {
-  return reinterpret_cast<r_int_t*>(INTEGER(x));
+inline r_int* vector_ptr<r_int>(SEXP x) {
+  return reinterpret_cast<r_int*>(INTEGER(x));
 }
 template<>
-inline const r_int_t* vector_ptr<const r_int_t>(SEXP x) {
-  return reinterpret_cast<const r_int_t*>(INTEGER_RO(x));
-}
-
-template<>
-inline r_double_t* vector_ptr<r_double_t>(SEXP x) {
-  return reinterpret_cast<r_double_t*>(REAL(x));
-}
-template<>
-inline const r_double_t* vector_ptr<const r_double_t>(SEXP x) {
-  return reinterpret_cast<const r_double_t*>(REAL_RO(x));
+inline const r_int* vector_ptr<const r_int>(SEXP x) {
+  return reinterpret_cast<const r_int*>(INTEGER_RO(x));
 }
 
 template<>
-inline r_int64_t* vector_ptr<r_int64_t>(SEXP x) {
-  return reinterpret_cast<r_int64_t*>(REAL(x));
+inline r_dbl* vector_ptr<r_dbl>(SEXP x) {
+  return reinterpret_cast<r_dbl*>(REAL(x));
 }
 template<>
-inline const r_int64_t* vector_ptr<const r_int64_t>(SEXP x) {
-  return reinterpret_cast<const r_int64_t*>(REAL_RO(x));
+inline const r_dbl* vector_ptr<const r_dbl>(SEXP x) {
+  return reinterpret_cast<const r_dbl*>(REAL_RO(x));
+}
+
+template<>
+inline r_int64* vector_ptr<r_int64>(SEXP x) {
+  return reinterpret_cast<r_int64*>(REAL(x));
+}
+template<>
+inline const r_int64* vector_ptr<const r_int64>(SEXP x) {
+  return reinterpret_cast<const r_int64*>(REAL_RO(x));
 }
 
 
 template<>
-inline r_complex_t* vector_ptr<r_complex_t>(SEXP x) {
-  return reinterpret_cast<r_complex_t*>(COMPLEX(x));
+inline r_cplx* vector_ptr<r_cplx>(SEXP x) {
+  return reinterpret_cast<r_cplx*>(COMPLEX(x));
 }
 template<>
-inline const r_complex_t* vector_ptr<const r_complex_t>(SEXP x) {
-  return reinterpret_cast<const r_complex_t*>(COMPLEX_RO(x));
-}
-
-template<>
-inline r_byte_t* vector_ptr<r_byte_t>(SEXP x) {
-  return reinterpret_cast<r_byte_t*>(RAW(x));
-}
-template<>
-inline const r_byte_t* vector_ptr<const r_byte_t>(SEXP x) {
-  return reinterpret_cast<const r_byte_t*>(RAW_RO(x));
+inline const r_cplx* vector_ptr<const r_cplx>(SEXP x) {
+  return reinterpret_cast<const r_cplx*>(COMPLEX_RO(x));
 }
 
 template<>
-inline const r_string_t* vector_ptr<const r_string_t>(SEXP x) {
-  return reinterpret_cast<const r_string_t*>(STRING_PTR_RO(x));
+inline r_raw* vector_ptr<r_raw>(SEXP x) {
+  return reinterpret_cast<r_raw*>(RAW(x));
+}
+template<>
+inline const r_raw* vector_ptr<const r_raw>(SEXP x) {
+  return reinterpret_cast<const r_raw*>(RAW_RO(x));
+}
+
+template<>
+inline const r_str* vector_ptr<const r_str>(SEXP x) {
+  return reinterpret_cast<const r_str*>(STRING_PTR_RO(x));
 }
 
 template<>
@@ -156,22 +156,22 @@ inline void set_value(SEXP x, const R_xlen_t i, T val){
   vector_ptr<T>(x)[i] = val;
 }
 template<>
-inline void set_value<r_complex_t>(r_complex_t* p_x, const R_xlen_t i, r_complex_t val){
+inline void set_value<r_cplx>(r_cplx* p_x, const R_xlen_t i, r_cplx val){
   p_x[i].re() = val.re();
   p_x[i].im() = val.im();
 }
 template<>
-inline void set_value<r_complex_t>(SEXP x, const R_xlen_t i, r_complex_t val){
-  auto *p_x = vector_ptr<r_complex_t>(x);
+inline void set_value<r_cplx>(SEXP x, const R_xlen_t i, r_cplx val){
+  auto *p_x = vector_ptr<r_cplx>(x);
   set_value(p_x, i, val);
 }
 template<>
-inline void set_value<r_string_t>(SEXP x, const R_xlen_t i, r_string_t val){
+inline void set_value<r_str>(SEXP x, const R_xlen_t i, r_str val){
   SET_STRING_ELT(x, i, static_cast<SEXP>(val));
 }
 template<>
 inline void set_value<const char *>(SEXP x, const R_xlen_t i, const char* val){
-  set_value<r_string_t>(x, i, static_cast<r_string_t>(internal::make_utf8_charsxp(val)));
+  set_value<r_str>(x, i, static_cast<r_str>(internal::make_utf8_charsxp(val)));
 }
 
 // Never use the pointer here to assign
@@ -191,19 +191,19 @@ inline SEXP new_vector_impl(R_xlen_t n) {
 }
 
 template <>
-inline SEXP new_vector_impl<r_bool_t>(R_xlen_t n) {
+inline SEXP new_vector_impl<r_lgl>(R_xlen_t n) {
   return internal::new_vec(LGLSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_int_t>(R_xlen_t n){
+inline SEXP new_vector_impl<r_int>(R_xlen_t n){
   return internal::new_vec(INTSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_double_t>(R_xlen_t n){
+inline SEXP new_vector_impl<r_dbl>(R_xlen_t n){
   return internal::new_vec(REALSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_int64_t>(R_xlen_t n){
+inline SEXP new_vector_impl<r_int64>(R_xlen_t n){
   SEXP out = Rf_protect(internal::new_vec(REALSXP, n));
   SEXP cls = Rf_protect(internal::make_utf8_strsxp("integer64"));
   Rf_setAttrib(out, R_ClassSymbol, cls);
@@ -211,15 +211,15 @@ inline SEXP new_vector_impl<r_int64_t>(R_xlen_t n){
   return out;
 }
 template <>
-inline SEXP new_vector_impl<r_string_t>(R_xlen_t n){
+inline SEXP new_vector_impl<r_str>(R_xlen_t n){
   return internal::new_vec(STRSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_complex_t>(R_xlen_t n){
+inline SEXP new_vector_impl<r_cplx>(R_xlen_t n){
   return internal::new_vec(CPLXSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_byte_t>(R_xlen_t n){
+inline SEXP new_vector_impl<r_raw>(R_xlen_t n){
   return internal::new_vec(RAWSXP, n);
 }
 template <>

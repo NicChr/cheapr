@@ -28,11 +28,11 @@ inline bool has_attrs(SEXP x){
   return !is_null(get_attrs(x));
 }
 
-inline SEXP get_attr(SEXP x, r_symbol_t sym){
+inline SEXP get_attr(SEXP x, r_sym sym){
   return Rf_getAttrib(x, static_cast<SEXP>(sym));
 }
 
-inline void set_attr(SEXP x, r_symbol_t sym, SEXP value){
+inline void set_attr(SEXP x, r_sym sym, SEXP value){
   Rf_setAttrib(x, static_cast<SEXP>(sym), value);
 }
 

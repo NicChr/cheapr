@@ -20,9 +20,9 @@ namespace internal {
 //     return x;
 //   } else if (CppMathType>){
 //     if constexpr (internal::can_be_int<T>){
-//       return r_int_t(static_cast<int>(x));
+//       return r_int(static_cast<int>(x));
 //     } else {
-//       r_double_t(static_cast<double>(x));
+//       r_dbl(static_cast<double>(x));
 //     }
 //   } else {
 //   static_assert(
@@ -76,77 +76,77 @@ inline constexpr bool can_be_int64(T x){
 
 // Coerce functions that account for NA
 template<typename T>
-inline r_bool_t as_bool(T x){
-  if constexpr (is<T, int> || is<T, r_bool_t>){
-    return static_cast<r_bool_t>(x);
+inline r_lgl as_bool(T x){
+  if constexpr (is<T, int> || is<T, r_lgl>){
+    return static_cast<r_lgl>(x);
   } else if constexpr (MathType<T>){
-    return is_r_na(x) ? na::logical : static_cast<r_bool_t>(static_cast<bool>(x));
+    return is_r_na(x) ? na::logical : static_cast<r_lgl>(static_cast<bool>(x));
   } else {
     return na::logical;
   }
 }
 template<typename T>
-inline r_int_t as_int(T x){
-  if constexpr (is<T, int> || is<T, r_int_t>){
-    return static_cast<r_int_t>(x);
+inline r_int as_int(T x){
+  if constexpr (is<T, int> || is<T, r_int>){
+    return static_cast<r_int>(x);
   } else if constexpr (MathType<T>){
-    return is_r_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<r_int_t>(x);
+    return is_r_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<r_int>(x);
   } else {
     return na::integer;
   }
 }
 template<typename T>
-inline r_int64_t as_int64(T x){
-  if constexpr (is<T, r_int64_t>){
+inline r_int64 as_int64(T x){
+  if constexpr (is<T, r_int64>){
     return x;
   } else if constexpr (MathType<T>){
-    return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<r_int64_t>(x);
+    return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<r_int64>(x);
   } else {
     return na::integer64;
   }
 }
 template<typename T>
-inline r_double_t as_double(T x){
-  if constexpr (is<T, double> || is<T, r_double_t>){
-    return static_cast<r_double_t>(x);
+inline r_dbl as_double(T x){
+  if constexpr (is<T, double> || is<T, r_dbl>){
+    return static_cast<r_dbl>(x);
   } else if constexpr (MathType<T>){
-    return is_r_na(x) ? na::real : static_cast<r_double_t>(x);
+    return is_r_na(x) ? na::real : static_cast<r_dbl>(x);
   } else {
     return na::real;
   }
 }
 template<typename T>
-inline r_complex_t as_complex(T x){
-  if constexpr (is<T, r_complex_t>){
+inline r_cplx as_complex(T x){
+  if constexpr (is<T, r_cplx>){
     return x;
   } else if constexpr (MathType<T>){
-    return r_complex_t{as_double(x), r_double_t(0.0)};
+    return r_cplx{as_double(x), r_dbl(0.0)};
   } else {
     return na::complex;
   }
 }
 template<typename T>
-inline r_byte_t as_raw(T x){
-  if constexpr (is<T, r_byte_t>){
+inline r_raw as_raw(T x){
+  if constexpr (is<T, r_raw>){
     return x;
   } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
-    return is_r_na(x) || x < 0 ? na::raw : static_cast<r_byte_t>(x);
-  } else if constexpr (std::is_convertible_v<T, r_byte_t>){
-    return is_r_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_byte_t>(x);
+    return is_r_na(x) || x < 0 ? na::raw : static_cast<r_raw>(x);
+  } else if constexpr (std::is_convertible_v<T, r_raw>){
+    return is_r_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_raw>(x);
   } else {
     return na::raw;
   }
 }
 // As CHARSXP
 template<typename T>
-inline r_string_t as_r_string(T x){
-  if constexpr (is<T, r_string_t>){
+inline r_str as_r_string(T x){
+  if constexpr (is<T, r_str>){
     return x;
   } else if constexpr (is<T, const char *>){
-    return static_cast<r_string_t>(internal::make_utf8_charsxp(x));
-  } else if constexpr (is<T, r_symbol_t>){
-    return static_cast<r_string_t>(PRINTNAME(static_cast<SEXP>(x)));
-  } else if constexpr (is<T, r_bool_t>){
+    return static_cast<r_str>(internal::make_utf8_charsxp(x));
+  } else if constexpr (is<T, r_sym>){
+    return static_cast<r_str>(PRINTNAME(static_cast<SEXP>(x)));
+  } else if constexpr (is<T, r_lgl>){
     if (is_r_na(x)){
       return na::string;
     } else if (x == r_true){
@@ -170,7 +170,7 @@ inline r_string_t as_r_string(T x){
     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x);
     *result.ptr = '\0';  // Null-terminate
     return as_r_string(static_cast<const char *>(buffer));
-  } else if constexpr (is<T, r_complex_t>){
+  } else if constexpr (is<T, r_cplx>){
     if (is_r_na(x)){
       return na::string;
     }
@@ -184,17 +184,17 @@ inline r_string_t as_r_string(T x){
       snprintf(buffer, sizeof(buffer), "%g%gi", re, im);
     }
     return as_r_string(static_cast<const char *>(buffer));
-  } else if constexpr (is<T, r_byte_t>){
+  } else if constexpr (is<T, r_raw>){
     char buffer[8];
     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
     *result.ptr = '\0';
     return as_r_string(static_cast<const char *>(buffer));
   } else if constexpr (is<T, SEXP> || is<T, sexp_t>){
     if (Rf_length(x) != 1){
-      Rf_error("`x` is a non-scalar vector and cannot be converted to an `r_string_t` in %s", __func__);
+      Rf_error("`x` is a non-scalar vector and cannot be converted to an `r_str` in %s", __func__);
     }
     SEXP str = SHIELD(Rf_coerceVector(x, STRSXP));
-    r_string_t out = r_string_t(STRING_ELT(str, 0));
+    r_str out = r_str(STRING_ELT(str, 0));
     YIELD(1);
     return out;
   } else {
@@ -204,19 +204,19 @@ inline r_string_t as_r_string(T x){
 
 // As SYMSXP
 template<typename T>
-inline r_symbol_t as_r_sym(T x){
-  if constexpr (is<T, r_symbol_t>){
+inline r_sym as_r_sym(T x){
+  if constexpr (is<T, r_sym>){
     return x;
   } else if constexpr (is<T, const char *>){
     SEXP str = SHIELD(internal::make_utf8_charsxp(x));
-    r_symbol_t out = r_symbol_t(Rf_installChar(str));
+    r_sym out = r_sym(Rf_installChar(str));
     YIELD(1);
     return out;
-  } else if constexpr (is<T, r_string_t>){
-    return r_symbol_t(Rf_installChar(x));
+  } else if constexpr (is<T, r_str>){
+    return r_sym(Rf_installChar(x));
   } else {
-    r_string_t str = SHIELD(as_r_string(x));
-    r_symbol_t out = as_r_sym(str);
+    r_str str = SHIELD(as_r_string(x));
+    r_sym out = as_r_sym(str);
     YIELD(1);
     return out;
   }
@@ -231,9 +231,9 @@ inline sexp_t as_sexp(T x){
     return sexp_t(new_scalar_vector(x));
   } else if constexpr (IntegerType<T>){
     if constexpr (internal::can_be_int<T>){
-      return sexp_t(new_scalar_vector(r_int_t(static_cast<int>(x))));
+      return sexp_t(new_scalar_vector(r_int(static_cast<int>(x))));
     } else {
-      return sexp_t(new_scalar_vector(r_double_t(static_cast<double>(x))));
+      return sexp_t(new_scalar_vector(r_dbl(static_cast<double>(x))));
     }
   } else {
     static_assert(
@@ -246,14 +246,14 @@ inline sexp_t as_sexp(T x){
 
 template<>
 inline sexp_t as_sexp<bool>(bool x){
-  return sexp_t(new_scalar_vector(r_bool_t(static_cast<int>(x))));
+  return sexp_t(new_scalar_vector(r_lgl(static_cast<int>(x))));
 }
 template<>
 inline sexp_t as_sexp<const char *>(const char *x){
   return sexp_t(internal::make_utf8_strsxp(x));
 }
 template<>
-inline sexp_t as_sexp<r_symbol_t>(r_symbol_t x){
+inline sexp_t as_sexp<r_sym>(r_sym x){
   return sexp_t(static_cast<SEXP>(x));
 }
 
@@ -272,11 +272,11 @@ inline sexp_t as_sexp<SEXP>(SEXP x){
 // }
 
 // template<>
-// inline sexp_t as_sexp<r_string_t>(const r_string_t x){
+// inline sexp_t as_sexp<r_str>(const r_str x){
 //   return sexp_t(Rf_ScalarString(x));
 // }
 // template<>
-// inline sexp_t as_sexp<r_symbol_t>(const r_symbol_t x){
+// inline sexp_t as_sexp<r_sym>(const r_sym x){
 //   return sexp_t(static_cast<SEXP>(x));
 // }
 
@@ -295,57 +295,57 @@ struct as_impl {
 // Specializations for each target type
 
 template<typename U>
-struct as_impl<r_bool_t, U> {
-  static constexpr r_bool_t cast(U x) {
+struct as_impl<r_lgl, U> {
+  static constexpr r_lgl cast(U x) {
     return as_bool(x);
   }
 };
 
 template<typename U>
-struct as_impl<r_int_t, U> {
-  static constexpr r_int_t cast(U x) {
+struct as_impl<r_int, U> {
+  static constexpr r_int cast(U x) {
     return as_int(x);
   }
 };
 
 template<typename U>
-struct as_impl<r_int64_t, U> {
-  static constexpr r_int64_t cast(U x) {
+struct as_impl<r_int64, U> {
+  static constexpr r_int64 cast(U x) {
     return as_int64(x);
   }
 };
 
 template<typename U>
-struct as_impl<r_double_t, U> {
-  static constexpr r_double_t cast(U x) {
+struct as_impl<r_dbl, U> {
+  static constexpr r_dbl cast(U x) {
     return as_double(x);
   }
 };
 
 template<typename U>
-struct as_impl<r_complex_t, U> {
-  static constexpr r_complex_t cast(U x) {
+struct as_impl<r_cplx, U> {
+  static constexpr r_cplx cast(U x) {
     return as_complex(x);
   }
 };
 
 template<typename U>
-struct as_impl<r_byte_t, U> {
-  static constexpr r_byte_t cast(U x) {
+struct as_impl<r_raw, U> {
+  static constexpr r_raw cast(U x) {
     return as_raw(x);
   }
 };
 
 template<typename U>
-struct as_impl<r_string_t, U> {
-  static r_string_t cast(U x) {
+struct as_impl<r_str, U> {
+  static r_str cast(U x) {
     return as_r_string(x);
   }
 };
 
 template<typename U>
-struct as_impl<r_symbol_t, U> {
-  static r_symbol_t cast(U x) {
+struct as_impl<r_sym, U> {
+  static r_sym cast(U x) {
     return as_r_sym(x);
   }
 };

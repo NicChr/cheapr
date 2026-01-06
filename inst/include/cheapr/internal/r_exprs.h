@@ -23,7 +23,7 @@ inline SEXP make_pairlist(Args... args) {
     (([&]() {
       if constexpr (is<Args, arg>) {
         SETCAR(current, args.value);
-        SET_TAG(current, as<r_symbol_t>(args.name));
+        SET_TAG(current, as<r_sym>(args.name));
       } else {
         SETCAR(current, as<sexp_t>(args));
       }

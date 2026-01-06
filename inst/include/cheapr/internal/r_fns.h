@@ -14,9 +14,9 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   SEXP expr = r_null;
 
   if (all_fns){
-    expr = SHIELD(Rf_lang3(symbol::triple_colon_sym, as<r_symbol_t>(pkg), as<r_symbol_t>(name)));
+    expr = SHIELD(Rf_lang3(symbol::triple_colon_sym, as<r_sym>(pkg), as<r_sym>(name)));
   } else {
-    expr = SHIELD(Rf_lang3(symbol::double_colon_sym, as<r_symbol_t>(pkg), as<r_symbol_t>(name)));
+    expr = SHIELD(Rf_lang3(symbol::double_colon_sym, as<r_sym>(pkg), as<r_sym>(name)));
   }
   SEXP out = SHIELD(eval(expr, env::base_env));
   YIELD(2);

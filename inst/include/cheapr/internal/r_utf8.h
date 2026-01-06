@@ -9,7 +9,7 @@ namespace cheapr {
 namespace internal {
 // UTF-8 helpers
 
-inline const char* utf8_char(r_string_t x){
+inline const char* utf8_char(r_str x){
   return Rf_translateCharUTF8(static_cast<SEXP>(x));
 }
 
@@ -26,10 +26,10 @@ inline const char* char_as_utf8(const char *x){
 }
 
 // Memory address
-inline r_string_t address(SEXP x) {
+inline r_str address(SEXP x) {
   char buf[1000];
   std::snprintf(buf, 1000, "%p", static_cast<void*>(x));
-  return static_cast<r_string_t>(internal::make_utf8_charsxp(buf));
+  return static_cast<r_str>(internal::make_utf8_charsxp(buf));
 }
 
 }

@@ -26,10 +26,10 @@ inline bool is_null(SEXP x){
 
 // bool type, similar to Rboolean
 // Implicit coercion to bool (not int) provided no NA
-struct r_bool_t {
+struct r_lgl {
   int value;
-  r_bool_t() : value{0} {}
-  explicit constexpr r_bool_t(int x) : value{x} {}
+  r_lgl() : value{0} {}
+  explicit constexpr r_lgl(int x) : value{x} {}
   explicit constexpr operator int() const { return value; }
 
   operator bool() const;
@@ -38,24 +38,24 @@ struct r_bool_t {
   constexpr bool is_na() const;
 };
 
-// The 3 possible values of r_bool_t
-inline constexpr r_bool_t r_true{1};
-inline constexpr r_bool_t r_false{0};
-inline constexpr r_bool_t r_na{std::numeric_limits<int>::min()};
+// The 3 possible values of r_lgl
+inline constexpr r_lgl r_true{1};
+inline constexpr r_lgl r_false{0};
+inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
 
-  inline constexpr bool r_bool_t::is_true() const {
+  inline constexpr bool r_lgl::is_true() const {
     return value == 1;
   }
 
-  inline constexpr bool r_bool_t::is_false() const {
+  inline constexpr bool r_lgl::is_false() const {
     return value == 0;
   }
 
-  inline constexpr bool r_bool_t::is_na() const {
+  inline constexpr bool r_lgl::is_na() const {
     return value == r_na.value;
   }
 
-  inline r_bool_t::operator bool() const { 
+  inline r_lgl::operator bool() const { 
     if (is_na()){
     Rf_error("Cannot convert NA to bool, please check");
   }
@@ -65,24 +65,24 @@ inline constexpr r_bool_t r_na{std::numeric_limits<int>::min()};
 // is_r_na is defined later as a template
 
 // R integer 
-struct r_int_t {
+struct r_int {
   int value;
-  r_int_t() : value{0} {}
-  explicit constexpr r_int_t(int x) : value{x} {}
+  r_int() : value{0} {}
+  explicit constexpr r_int(int x) : value{x} {}
   constexpr operator int() const { return value; }
 };
 // R double
-struct r_double_t {
+struct r_dbl {
   double value;
-  r_double_t() : value{0} {}
-  explicit constexpr r_double_t(double x) : value{x} {}
+  r_dbl() : value{0} {}
+  explicit constexpr r_dbl(double x) : value{x} {}
   constexpr operator double() const { return value; }
 };
 // R integer64 (closely mimicking how bit64 defines it)
-struct r_int64_t {
+struct r_int64 {
   int64_t value;
-  r_int64_t() : value{0} {}
-  explicit constexpr r_int64_t(int64_t x) : value{x} {}
+  r_int64() : value{0} {}
+  explicit constexpr r_int64(int64_t x) : value{x} {}
   constexpr operator int64_t() const { return value; }
 };
 
@@ -90,52 +90,52 @@ struct r_int64_t {
 // CHARSXP must never be converted to `SEXP`/`sexp_t`
 // all templates assume that `SEXP`/`sexp_t` is reserved for objects that can safely fit into an R list vector
 // Furthermore CHARSXP is a special case because it is essentially the only SEXP that already fits into a non-list vector: a character vector
-struct r_string_t {
+struct r_str {
   SEXP value;
-  r_string_t() : value{R_BlankString} {}
-  // Explicit SEXP -> r_string_t
-  explicit constexpr r_string_t(SEXP x) : value{x} {}
-  // Implicit r_string_t -> SEXP
+  r_str() : value{R_BlankString} {}
+  // Explicit SEXP -> r_str
+  explicit constexpr r_str(SEXP x) : value{x} {}
+  // Implicit r_str -> SEXP
   constexpr operator SEXP() const { return value; }
 };
 
-inline const r_string_t blank_r_string = r_string_t();
+inline const r_str blank_r_string = r_str();
 
 // Alias type for SYMSXP
-struct r_symbol_t {
+struct r_sym {
   SEXP value;
-  r_symbol_t() : value{R_MissingArg} {}
-  explicit constexpr r_symbol_t(SEXP x) : value{x} {}
+  r_sym() : value{R_MissingArg} {}
+  explicit constexpr r_sym(SEXP x) : value{x} {}
   constexpr operator SEXP() const { return value; }
 };
 
 
 // Alias type for Rcomplex
-struct r_complex_t {
+struct r_cplx {
   Rcomplex value;
 
   // Constructors
-  constexpr r_complex_t() : value{0.0, 0.0} {}
-  constexpr r_complex_t(r_double_t r, r_double_t i) : value{r, i} {}
+  constexpr r_cplx() : value{0.0, 0.0} {}
+  constexpr r_cplx(r_dbl r, r_dbl i) : value{r, i} {}
 
   // Conversion handling
-  explicit constexpr r_complex_t(Rcomplex x) : value{x} {}
+  explicit constexpr r_cplx(Rcomplex x) : value{x} {}
   constexpr operator Rcomplex() const { return value; }
 
   // Get real and imaginary parts
-  constexpr r_double_t re() const { return r_double_t{value.r}; }
-  constexpr r_double_t im() const { return r_double_t{value.i}; }
+  constexpr r_dbl re() const { return r_dbl{value.r}; }
+  constexpr r_dbl im() const { return r_dbl{value.i}; }
 };
 
-// Alias type for r_byte_t
-struct r_byte_t {
+// Alias type for r_raw
+struct r_raw {
   Rbyte value;
 
   // Constructors
-  constexpr r_byte_t() : value{static_cast<Rbyte>(0)} {}
+  constexpr r_raw() : value{static_cast<Rbyte>(0)} {}
 
   // Conversion handling
-  explicit constexpr r_byte_t(Rbyte x) : value{x} {}
+  explicit constexpr r_raw(Rbyte x) : value{x} {}
   constexpr operator Rbyte() const { return value; }
 };
 

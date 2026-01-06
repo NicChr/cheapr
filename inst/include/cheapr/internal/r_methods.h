@@ -10,203 +10,203 @@ namespace cheapr {
 
 // Methods for custom R types
 
-  // ! operator for r_bool_t
-inline constexpr r_bool_t operator!(r_bool_t x) {
+  // ! operator for r_lgl
+inline constexpr r_lgl operator!(r_lgl x) {
   if (is_r_na(x)) {
     return r_na;
   }
-  return r_bool_t{!x.value};
+  return r_lgl{!x.value};
 }
 
-// r_complex_t methods
+// r_cplx methods
 
 // Unary minus
-inline constexpr r_complex_t operator-(const r_complex_t& x) {
-  return r_complex_t{r_double_t(-x.re().value), r_double_t(-x.im().value)};
+inline constexpr r_cplx operator-(const r_cplx& x) {
+  return r_cplx{r_dbl(-x.re().value), r_dbl(-x.im().value)};
 }
 
 // Binary arithmetic operators
-inline constexpr r_complex_t operator+(const r_complex_t& lhs, const r_complex_t& rhs) {
-  return r_complex_t{r_double_t(lhs.re() + rhs.re()), r_double_t(lhs.im() + rhs.im())};
+inline constexpr r_cplx operator+(const r_cplx& lhs, const r_cplx& rhs) {
+  return r_cplx{r_dbl(lhs.re() + rhs.re()), r_dbl(lhs.im() + rhs.im())};
 }
 
-inline constexpr r_complex_t operator-(const r_complex_t& lhs, const r_complex_t& rhs) {
-  return r_complex_t{r_double_t(lhs.re() - rhs.re()), r_double_t(lhs.im() - rhs.im())};
+inline constexpr r_cplx operator-(const r_cplx& lhs, const r_cplx& rhs) {
+  return r_cplx{r_dbl(lhs.re() - rhs.re()), r_dbl(lhs.im() - rhs.im())};
 }
 
-inline constexpr r_complex_t operator*(const r_complex_t& lhs, const r_complex_t& rhs) {
+inline constexpr r_cplx operator*(const r_cplx& lhs, const r_cplx& rhs) {
   // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
   double a = lhs.re(), b = lhs.im();
   double c = rhs.re(), d = rhs.im();
-  return r_complex_t{r_double_t(a*c - b*d), r_double_t(a*d + b*c)};
+  return r_cplx{r_dbl(a*c - b*d), r_dbl(a*d + b*c)};
 }
 
-inline constexpr r_complex_t operator/(const r_complex_t& lhs, const r_complex_t& rhs) {
+inline constexpr r_cplx operator/(const r_cplx& lhs, const r_cplx& rhs) {
   // (a+bi) / (c+di) = [(ac+bd)/(c²+d²) + (bc-ad)/(c²+d²)i]
   double a = lhs.re(), b = lhs.im();
   double c = rhs.re(), d = rhs.im();
   double denom = c*c + d*d; 
-  return r_complex_t{r_double_t((a*c + b*d) / denom), r_double_t((b*c - a*d) / denom)};
+  return r_cplx{r_dbl((a*c + b*d) / denom), r_dbl((b*c - a*d) / denom)};
 }
 
 // Compound assignment operators
-inline constexpr r_complex_t& operator+=(r_complex_t& lhs, const r_complex_t& rhs) {
+inline constexpr r_cplx& operator+=(r_cplx& lhs, const r_cplx& rhs) {
   lhs.value.r += rhs.value.r;
   lhs.value.i += rhs.value.i;
   return lhs;
 }
 
-inline constexpr r_complex_t& operator-=(r_complex_t& lhs, const r_complex_t& rhs) {
+inline constexpr r_cplx& operator-=(r_cplx& lhs, const r_cplx& rhs) {
   lhs.value.r -= rhs.value.r;
   lhs.value.i -= rhs.value.i;
   return lhs;
 }
 
-inline constexpr r_complex_t& operator*=(r_complex_t& lhs, const r_complex_t& rhs) {
+inline constexpr r_cplx& operator*=(r_cplx& lhs, const r_cplx& rhs) {
   double a = lhs.re(), b = lhs.im();
   double c = rhs.re(), d = rhs.im();
-  lhs.re() = r_double_t(a*c - b*d);
-  lhs.im() = r_double_t(a*d + b*c);
+  lhs.re() = r_dbl(a*c - b*d);
+  lhs.im() = r_dbl(a*d + b*c);
   return lhs;
 }
 
-inline constexpr r_complex_t& operator/=(r_complex_t& lhs, const r_complex_t& rhs) {
+inline constexpr r_cplx& operator/=(r_cplx& lhs, const r_cplx& rhs) {
   double a = lhs.re(), b = lhs.im();
   double c = rhs.re(), d = rhs.im();
   double denom = c*c + d*d;
-  lhs.re() = r_double_t((a*c + b*d) / denom);
-  lhs.im() = r_double_t((b*c - a*d) / denom); 
+  lhs.re() = r_dbl((a*c + b*d) / denom);
+  lhs.im() = r_dbl((b*c - a*d) / denom); 
   return lhs;
 }
 
 template<RType T, RType U>
-inline constexpr r_bool_t operator==(const T lhs, const U rhs) {
+inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
   if (is_r_na(lhs) || is_r_na(rhs)) {
     return na::logical;
   }
 
-  if constexpr (is<T, r_complex_t> && is<U, r_complex_t>){
+  if constexpr (is<T, r_cplx> && is<U, r_cplx>){
     // Compare complex types by components
-    return r_bool_t{lhs.re() == rhs.re() && lhs.im() == rhs.im()};
+    return r_lgl{lhs.re() == rhs.re() && lhs.im() == rhs.im()};
   } else {
-    return r_bool_t{lhs.value == rhs.value};
+    return r_lgl{lhs.value == rhs.value};
   }
 }
 
 template<RType T, CppType U>
-inline constexpr r_bool_t operator==(const T lhs, const U rhs) {
+inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
   if (is_r_na(lhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value == rhs};
+  return r_lgl{lhs.value == rhs};
 }
 
 template<CppType T, RType U>
-inline constexpr r_bool_t operator==(const T lhs, const U rhs) {
+inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
   if (is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs == rhs.value};
+  return r_lgl{lhs == rhs.value};
 }
 
 // Other comparison operators
 template<typename T, typename U>
-inline constexpr r_bool_t operator!=(const T lhs, const U rhs) {
-  return r_bool_t{(lhs == rhs).is_false()};
+inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
+  return r_lgl{(lhs == rhs).is_false()};
 }
 
 template<RMathType T, RMathType U>
-inline constexpr r_bool_t operator<(const T lhs, const U rhs) {
+inline constexpr r_lgl operator<(const T lhs, const U rhs) {
   if (is_r_na(lhs) || is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value < rhs.value};
+  return r_lgl{lhs.value < rhs.value};
 }
 template<RMathType T, CppMathType U>
-inline constexpr r_bool_t operator<(const T lhs, const U rhs) {
+inline constexpr r_lgl operator<(const T lhs, const U rhs) {
   if (is_r_na(lhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value < rhs};
+  return r_lgl{lhs.value < rhs};
 }
 template<CppMathType T, RMathType U>
-inline constexpr r_bool_t operator<(const T lhs, const U rhs) {
+inline constexpr r_lgl operator<(const T lhs, const U rhs) {
   if (is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs < rhs.value};
+  return r_lgl{lhs < rhs.value};
 }
 
 template<RMathType T, RMathType U>
-inline constexpr r_bool_t operator<=(const T lhs, const U rhs) {
+inline constexpr r_lgl operator<=(const T lhs, const U rhs) {
   if (is_r_na(lhs) || is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value <= rhs.value};
+  return r_lgl{lhs.value <= rhs.value};
 }
 template<RMathType T, CppMathType U>
-inline constexpr r_bool_t operator<=(const T lhs, const U rhs) {
+inline constexpr r_lgl operator<=(const T lhs, const U rhs) {
   if (is_r_na(lhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value <= rhs};
+  return r_lgl{lhs.value <= rhs};
 }
 template<CppMathType T, RMathType U>
-inline constexpr r_bool_t operator<=(const T lhs, const U rhs) {
+inline constexpr r_lgl operator<=(const T lhs, const U rhs) {
   if (is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs <= rhs.value};
+  return r_lgl{lhs <= rhs.value};
 }
 
 template<RMathType T, RMathType U>
-inline constexpr r_bool_t operator>(const T lhs, const U rhs) {
+inline constexpr r_lgl operator>(const T lhs, const U rhs) {
   if (is_r_na(lhs) || is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value > rhs.value};
+  return r_lgl{lhs.value > rhs.value};
 }
 template<RMathType T, CppMathType U>
-inline constexpr r_bool_t operator>(const T lhs, const U rhs) {
+inline constexpr r_lgl operator>(const T lhs, const U rhs) {
   if (is_r_na(lhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value > rhs};
+  return r_lgl{lhs.value > rhs};
 }
 template<CppMathType T, RMathType U>
-inline constexpr r_bool_t operator>(const T lhs, const U rhs) {
+inline constexpr r_lgl operator>(const T lhs, const U rhs) {
   if (is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs > rhs.value};
+  return r_lgl{lhs > rhs.value};
 }
 
 template<RMathType T, RMathType U>
-inline constexpr r_bool_t operator>=(const T lhs, const U rhs) {
+inline constexpr r_lgl operator>=(const T lhs, const U rhs) {
   if (is_r_na(lhs) || is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value >= rhs.value};
+  return r_lgl{lhs.value >= rhs.value};
 }
 template<RMathType T, CppMathType U>
-inline constexpr r_bool_t operator>=(const T lhs, const U rhs) {
+inline constexpr r_lgl operator>=(const T lhs, const U rhs) {
   if (is_r_na(lhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs.value >= rhs};
+  return r_lgl{lhs.value >= rhs};
 }
 template<CppMathType T, RMathType U>
-inline constexpr r_bool_t operator>=(const T lhs, const U rhs) {
+inline constexpr r_lgl operator>=(const T lhs, const U rhs) {
   if (is_r_na(rhs)) {
     return na::logical;
   }
-  return r_bool_t{lhs >= rhs.value};
+  return r_lgl{lhs >= rhs.value};
 }
 
 template<RMathType T, RMathType U>
@@ -238,7 +238,7 @@ inline constexpr T operator+=(T &lhs, const U rhs) {
 }
 
 template<>
-inline constexpr r_double_t operator+=(r_double_t &lhs, const r_double_t rhs) {
+inline constexpr r_dbl operator+=(r_dbl &lhs, const r_dbl rhs) {
   lhs.value += rhs.value;
   return lhs;
 }
@@ -281,7 +281,7 @@ inline constexpr T operator-=(T &lhs, const U rhs) {
   return lhs;
 }
 template<>
-inline constexpr r_double_t operator-=(r_double_t &lhs, const r_double_t rhs) {
+inline constexpr r_dbl operator-=(r_dbl &lhs, const r_dbl rhs) {
   lhs.value -= rhs.value;
   return lhs;
 }
@@ -325,7 +325,7 @@ inline constexpr T operator*=(T &lhs, const U rhs) {
 }
 
 template<>
-inline constexpr r_double_t operator*=(r_double_t &lhs, const r_double_t rhs) {
+inline constexpr r_dbl operator*=(r_dbl &lhs, const r_dbl rhs) {
   lhs.value *= rhs.value;
   return lhs;
 }
@@ -369,7 +369,7 @@ inline constexpr T operator/=(T &lhs, const U rhs) {
 }
 
 template<>
-inline constexpr r_double_t operator/=(r_double_t &lhs, const r_double_t rhs) {
+inline constexpr r_dbl operator/=(r_dbl &lhs, const r_dbl rhs) {
   lhs.value /= rhs.value;
   return lhs;
 }
@@ -390,8 +390,8 @@ inline constexpr T operator-(const T x) {
   return T{-x.value};
 }
 template<>
-inline constexpr r_double_t operator-(const r_double_t x) {
-  return r_double_t{-x.value};
+inline constexpr r_dbl operator-(const r_dbl x) {
+  return r_dbl{-x.value};
 }
 
 }

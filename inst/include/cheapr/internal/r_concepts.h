@@ -11,9 +11,9 @@ template<typename T, typename U>
 // Concepts to enable R type templates
 
 template<typename T>
-concept RIntegerType = std::same_as<std::remove_cvref_t<T>, r_bool_t> ||
-std::same_as<std::remove_cvref_t<T>, r_int_t> ||
-std::same_as<std::remove_cvref_t<T>, r_int64_t>;
+concept RIntegerType = std::same_as<std::remove_cvref_t<T>, r_lgl> ||
+std::same_as<std::remove_cvref_t<T>, r_int> ||
+std::same_as<std::remove_cvref_t<T>, r_int64>;
 
 template<typename T>
 concept CppIntegerType = std::is_integral_v<std::remove_cvref_t<T>>;
@@ -22,7 +22,7 @@ template<typename T>
 concept IntegerType = RIntegerType<T> || CppIntegerType<T>;
 
 template<typename T>
-concept RMathType = RIntegerType<T> || std::same_as<std::remove_cvref_t<T>, r_double_t>;
+concept RMathType = RIntegerType<T> || std::same_as<std::remove_cvref_t<T>, r_dbl>;
 
 template<typename T>
 concept CppMathType = std::is_arithmetic_v<std::remove_cvref_t<T>>;
@@ -36,10 +36,10 @@ concept AtLeastOneRMathType =
 
 template<typename T>
 concept RType = RMathType<T> ||
-std::same_as<std::remove_cvref_t<T>, r_complex_t> ||
-std::same_as<std::remove_cvref_t<T>, r_string_t> ||
-std::same_as<std::remove_cvref_t<T>, r_byte_t> ||
-std::same_as<std::remove_cvref_t<T>, r_symbol_t> ||
+std::same_as<std::remove_cvref_t<T>, r_cplx> ||
+std::same_as<std::remove_cvref_t<T>, r_str> ||
+std::same_as<std::remove_cvref_t<T>, r_raw> ||
+std::same_as<std::remove_cvref_t<T>, r_sym> ||
 std::same_as<std::remove_cvref_t<T>, sexp_t>;
 
 template<typename T>
@@ -50,8 +50,8 @@ concept AtLeastOneRType = (RType<T> || RType<U>);
 
 template <typename T>
 concept RPtrWritableType = RMathType<T> ||
-is<T, r_complex_t> ||
-is<T, r_byte_t>;
+is<T, r_cplx> ||
+is<T, r_raw>;
 
 template <class... T>
 inline constexpr bool always_false = false;
