@@ -144,27 +144,30 @@ template <typename U1, typename U2>
 void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
   auto old_val2 = internal::as_r<T>(old_val);
   auto new_val2 = internal::as_r<T>(new_val);
-  if constexpr (RPtrWritableType<T>){
-    int n_threads = internal::calc_threads(n);
-    auto *p_target = data();
-    if (n_threads > 1) {
-      OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i) {
-        if (p_target[start + i] == old_val2){
-          p_target[start + i] = new_val2;
+  bool implicit_na_coercion = !is_r_na(old_val) && is_r_na(old_val2);
+  if (!implicit_na_coercion){
+    if constexpr (RPtrWritableType<T>){
+      int n_threads = internal::calc_threads(n);
+      auto *p_target = data();
+      if (n_threads > 1) {
+        OMP_PARALLEL_FOR_SIMD(n_threads)
+        for (R_xlen_t i = 0; i < n; ++i) {
+          if (p_target[start + i] == old_val2){
+            p_target[start + i] = new_val2;
+          }
         }
+      } else {
+        std::replace(data() + start, data() + start + n, old_val2, new_val2);
       }
     } else {
-      std::replace(data() + start, data() + start + n, old_val2, new_val2);
-    }
-  } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
-      R_xlen_t idx = start + i;
-      if (get(idx) == old_val2){
-        set(idx, new_val2);
+      for (R_xlen_t i = 0; i < n; ++i) {
+        R_xlen_t idx = start + i;
+        if (get(idx) == old_val2){
+          set(idx, new_val2);
+        }
       }
     }
-  }
+}
 }
 
 };
@@ -365,7 +368,7 @@ inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value
 }
 
 template<typename T>
-concept RVectorType = internal::is_r_vector_v<T>;
+concept RVectorType = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
 
 template <RType T>
 inline void r_copy_n(r_vec<T> &target, const T *p_source, R_xlen_t target_offset, R_xlen_t n){
