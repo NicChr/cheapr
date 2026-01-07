@@ -146,9 +146,9 @@ inline r_lgl all_whole_numbers(SEXP x, r_dbl tol_, bool na_rm_){
     break;
   }
   case REALSXP: {
-    const r_dbl *p_x = internal::real_ptr_ro(x);
+    auto xvec = r_vec<r_dbl>(x);
     for (R_xlen_t i = 0; i < n; ++i) {
-      out = static_cast<r_lgl>(math::is_whole_number(p_x[i], tol_));
+      out = static_cast<r_lgl>(math::is_whole_number(xvec.get(i), tol_));
       na_count += is_r_na(out);
       if (out == r_false){
         break;

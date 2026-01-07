@@ -11,46 +11,6 @@ namespace cheapr {
 
 namespace internal {
 
-inline r_int* integer_ptr(SEXP x){
-  return reinterpret_cast<r_int*>(INTEGER(x));
-}
-inline const r_int* integer_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_int*>(INTEGER_RO(x));
-}
-inline r_lgl* logical_ptr(SEXP x){
-  return reinterpret_cast<r_lgl*>(integer_ptr(x));
-}
-inline const r_lgl* logical_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_lgl*>(integer_ptr_ro(x));
-}
-inline r_dbl* real_ptr(SEXP x){
-  return reinterpret_cast<r_dbl*>(REAL(x));
-}
-inline const r_dbl* real_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_dbl*>(REAL_RO(x));
-}
-inline r_int64* integer64_ptr(SEXP x){
-  return reinterpret_cast<r_int64*>(real_ptr(x));
-}
-inline const r_int64* integer64_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_int64*>(real_ptr_ro(x));
-}
-inline r_cplx* complex_ptr(SEXP x){
-  return reinterpret_cast<r_cplx*>(COMPLEX(x));
-}
-inline const r_cplx* complex_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_cplx*>(COMPLEX_RO(x));
-}
-inline r_raw* raw_ptr(SEXP x){
-  return reinterpret_cast<r_raw*>(RAW(x));
-}
-inline const r_raw* raw_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_raw*>(RAW_RO(x));
-}
-inline const r_str* string_ptr_ro(SEXP x){
-  return reinterpret_cast<const r_str*>(STRING_PTR_RO(x));
-}
-
 template<RType T>
 inline T* vector_ptr(SEXP x) {
   static_assert(
@@ -59,7 +19,6 @@ inline T* vector_ptr(SEXP x) {
   );
   return nullptr;
 }
-
 
 template<>
 inline r_lgl* vector_ptr<r_lgl>(SEXP x) {
