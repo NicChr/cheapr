@@ -2,12 +2,13 @@
 #define CHEAPR_R_COERCE_H
 
 #include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_factor.h>
 
 namespace cheapr {
 
 // Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
-requires (RType<T> || RVectorType<T> || is<T, SEXP>)
+  requires (RType<T> || RVectorType<T> || is<T, SEXP> || is<T, r_factors>)
 inline T as(U x) {
   if constexpr (is<U, T>){
     return x;
@@ -35,6 +36,8 @@ inline T as(U x) {
     }
     YIELD(1);
     return out;
+  } else if constexpr (is<T, r_factors>){
+    return r_factors(as<r_vec<r_str>>(x));
   } else if constexpr (RType<T> && !RVectorType<U>) {
     return internal::as_r<T>(x);
   } else {

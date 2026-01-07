@@ -117,6 +117,7 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
 // Other comparison operators
 template<typename T, typename U>
+requires (AtLeastOneRType<T, U>)
 inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
   return r_lgl{(lhs == rhs).is_false()};
 }
