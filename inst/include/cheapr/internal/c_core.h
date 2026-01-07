@@ -16,9 +16,9 @@
 #include <cheapr/internal/r_attrs.h>
 #include <cheapr/internal/r_rtype_coerce.h>
 #include <cheapr/internal/r_vector.h>
-#include <cheapr/internal/r_coerce.h>
-#include <cheapr/internal/r_list.h>
 #include <cheapr/internal/r_factor.h>
+#include <cheapr/internal/r_list.h>
+#include <cheapr/internal/r_coerce.h>
 #include <cheapr/internal/r_exprs.h>
 #include <cheapr/internal/r_fns.h>
 #include <cheapr/internal/r_math.h>

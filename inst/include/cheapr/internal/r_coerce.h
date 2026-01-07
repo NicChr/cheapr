@@ -37,7 +37,10 @@ inline T as(U x) {
     YIELD(1);
     return out;
   } else if constexpr (is<T, r_factors>){
-    return r_factors(as<r_vec<r_str>>(x));
+    auto str_vec = SHIELD(as<r_vec<r_str>>(x));
+    auto out = SHIELD(r_factors(str_vec));
+    YIELD(2);
+    return out; 
   } else if constexpr (RType<T> && !RVectorType<U>) {
     return internal::as_r<T>(x);
   } else {
