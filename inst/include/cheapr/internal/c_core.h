@@ -9,16 +9,18 @@
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_symbols.h>
 #include <cheapr/internal/r_env.h>
-#include <cheapr/internal/r_exprs.h>
 #include <cheapr/internal/r_limits.h>
 #include <cheapr/internal/r_concepts.h>
 #include <cheapr/internal/r_nas.h>
 #include <cheapr/internal/r_methods.h>
-#include <cheapr/internal/r_fns.h>
-#include <cheapr/internal/r_coerce.h>
-#include <cheapr/internal/r_vector.h>
 #include <cheapr/internal/r_attrs.h>
-#include <cheapr/internal/r_math.h>
+#include <cheapr/internal/r_rtype_coerce.h>
+#include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_list.h>
+#include <cheapr/internal/r_coerce.h>
+#include <cheapr/internal/r_exprs.h>
+#include <cheapr/internal/r_fns.h>
+#include <cheapr/internal/r_math.h> 
 #include <optional>
 #include <type_traits>
 

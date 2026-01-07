@@ -7,7 +7,7 @@
 #include <cheapr/internal/r_concepts.h>
 #include <cheapr/internal/r_attrs.h>
 #include <cheapr/internal/r_vector_utils.h>
-#include <cheapr/internal/r_coerce.h>
+#include <cheapr/internal/r_rtype_coerce.h>
 #include <unordered_map> // For string vector matching
 #include <unordered_set> // For unique strings
 #include <vector> // Also for unique strings
@@ -510,92 +510,6 @@ inline auto as_vector<SEXP>(SEXP x){
   }
 }
 
-}
-
-// Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
-template<typename T, typename U>
-requires (RType<T> || RVectorType<T> || is<T, SEXP>)
-inline T as(U x) {
-if constexpr (is<U, T>){
-  return x;
-} else if constexpr (RType<U> && is<T, SEXP>){
-  return static_cast<SEXP>(internal::as_r<r_sexp>(x));
-} else if constexpr (RVectorType<U> && is<T, SEXP>){
-  return x.value;
-} else if constexpr (RVectorType<U> && is<T, r_sexp>){
-  return r_sexp(x.value);
-} else if constexpr (RVectorType<U> && RType<T>){
-  if (x.length() != 1){
-    Rf_error("Vector must be length-1 to be coerced to requested type");
-  }
-  return internal::as_r<T>(x.get(0));
-} else if constexpr (RVectorType<T> && RType<U>){  
-  using data_t = typename T::data_type;
-  return vec::new_vector<data_t>(1, internal::as_r<data_t>(x));
-} else if constexpr (RVectorType<U> && RVectorType<T>){
-  R_xlen_t n = x.length();
-  auto out = SHIELD(T(n));
-  using data_t = typename T::data_type;
-  OMP_SIMD
-  for (R_xlen_t i = 0; i < n; ++i){
-  out.set(i, internal::as_r<data_t>(x.get(i)));
-  }
-  YIELD(1);
-  return out;
-} else if constexpr (RType<T> && !RVectorType<U>) {
-  return internal::as_r<T>(x);
-} else {
-  static_assert(always_false<T>, "Unsupported type for `as`");
-}
-}
-
-// Named argument
-
-struct arg {
-  const char* name;
-  SEXP value;
-
-  explicit arg(const char* n) : name(n), value(R_NilValue) {}
-  explicit arg(const char* n, SEXP v) : name(n), value(v) {}
-
-  template<typename T>
-  arg operator=(T v) const {
-    return arg(name, as<r_sexp>(v)); 
-  }
-};
-
-// Variadic list constructor
-template<typename... Args>
-inline r_vec<r_sexp> make_list(Args... args) {
-  constexpr int n = sizeof...(args);
-
-  if constexpr (n == 0){
-    return r_vec<r_sexp>(0);
-  } else {
-
-    auto out = SHIELD(r_vec<r_sexp>(n));
-
-    // Are any args named?
-    constexpr bool any_named = (is<Args, arg> || ...);
-
-    auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
-    SHIELD(nms);
-
-    int i = 0;
-    (([&]() {
-      if constexpr (is<Args, arg>) { 
-        out.set(i, args.value);
-        nms.set(i, as<r_str>(args.name));
-      } else {
-        out.set(i, as<r_sexp>(args));
-      }
-      ++i;
-    }()), ...);
-
-    attr::set_old_names(out, nms);
-    YIELD(2);
-    return out;
-  }
 }
 
 }

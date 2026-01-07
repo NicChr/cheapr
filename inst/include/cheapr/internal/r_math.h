@@ -1,12 +1,8 @@
 #ifndef CHEAPR_R_MATH_H
 #define CHEAPR_R_MATH_H
 
-#include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_methods.h>
-#include <cheapr/internal/r_concepts.h>
 #include <cheapr/internal/r_limits.h>
-#include <cheapr/internal/r_nas.h>
 #include <cheapr/internal/r_coerce.h> 
 
 // R math fns

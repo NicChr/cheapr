@@ -1,7 +1,7 @@
 #ifndef CHEAPR_R_EXPRS_H
 #define CHEAPR_R_EXPRS_H
 
-#include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_list.h>
 
 namespace cheapr {
 

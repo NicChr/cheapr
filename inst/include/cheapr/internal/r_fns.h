@@ -4,6 +4,7 @@
 #include <cheapr/internal/r_env.h>
 #include <cheapr/internal/r_symbols.h>
 #include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_exprs.h>
 
 namespace cheapr {
 
@@ -14,9 +15,9 @@ inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   SEXP expr = r_null;
 
   if (all_fns){
-    expr = SHIELD(Rf_lang3(symbol::triple_colon_sym, as<r_sym>(pkg), as<r_sym>(name)));
+    expr = SHIELD(make_expr(symbol::triple_colon_sym, as<r_sym>(pkg), as<r_sym>(name)));
   } else {
-    expr = SHIELD(Rf_lang3(symbol::double_colon_sym, as<r_sym>(pkg), as<r_sym>(name)));
+    expr = SHIELD(make_expr(symbol::double_colon_sym, as<r_sym>(pkg), as<r_sym>(name)));
   }
   SEXP out = SHIELD(eval(expr, env::base_env));
   YIELD(2);
