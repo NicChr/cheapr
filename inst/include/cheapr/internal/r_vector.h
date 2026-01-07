@@ -164,8 +164,17 @@ void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
         }
       }
     }
+  }
 }
-}
+
+// r_vec<T> resize(R_xlen_t n){
+//   if (n == length()){
+//     return *this;
+//   } else {
+//     auto resized_vec = SHIELD(T(n));
+//     if (n 
+//   }
+// }
 
 };
 
