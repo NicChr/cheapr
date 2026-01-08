@@ -19,7 +19,7 @@ struct r_vec {
   using data_type = T;           // Type of data vec contains
 
   // Constructor that wraps new_vector<T>
-  explicit r_vec(R_xlen_t size)
+  explicit r_vec(r_size_t size)
     : value(internal::new_vector_impl<std::remove_cvref_t<T>>(size))
     , const_ptr(internal::vector_ptr<const T>(value))
     , ptr(nullptr)
@@ -65,10 +65,10 @@ struct r_vec {
   }
 
   // Get size
-  R_xlen_t size() const {
+  r_size_t size() const {
     return Rf_xlength(value);
   }
-  R_xlen_t length() const {
+  r_size_t length() const {
     return Rf_xlength(value);
   }
 
@@ -90,24 +90,24 @@ struct r_vec {
 
 
 r_vec<r_lgl> is_na() const {
-  R_xlen_t n = length();
+  r_size_t n = length();
   auto out = SHIELD(r_vec<r_lgl>(n));
   
   if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1){
       OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i){
+      for (r_size_t i = 0; i < n; ++i){
         out.set(i, is_r_na(get(i)));
       }
     } else {
       OMP_SIMD
-      for (R_xlen_t i = 0; i < n; ++i){
+      for (r_size_t i = 0; i < n; ++i){
         out.set(i, is_r_na(get(i)));
       }
     }
   } else {
-    for (R_xlen_t i = 0; i < n; ++i){
+    for (r_size_t i = 0; i < n; ++i){
       out.set(i, is_r_na(get(i)));
     }
   }
@@ -117,14 +117,14 @@ r_vec<r_lgl> is_na() const {
 }
 
     // get uses const pointer
-  T get(R_xlen_t index) const {
+  T get(r_size_t index) const {
     return const_ptr[index];
   }
 
   // Set only available if writable
   // We use flexible template to be able to coerce it to an RType
   template <typename U>
-   void set(R_xlen_t index, U val) {
+   void set(r_size_t index, U val) {
     T val2 = internal::as_r<T>(val);
     if constexpr (RPtrWritableType<T>){
       ptr[index] = val2;
@@ -134,28 +134,28 @@ r_vec<r_lgl> is_na() const {
   }
 
   template <typename U>
-  void fill(R_xlen_t start, R_xlen_t n, const U val){
+  void fill(r_size_t start, r_size_t n, const U val){
   auto val2 = internal::as_r<T>(val);
   if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     auto *p_target = data();
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i) {
+      for (r_size_t i = 0; i < n; ++i) {
         p_target[start + i] = val2;
       }
     } else {
       std::fill_n(p_target + start, n, val2);
     }
   } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
+    for (r_size_t i = 0; i < n; ++i) {
       set(start + i, val2);
     }
   }
 }
 
 template <typename U1, typename U2> 
-void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
+void replace(r_size_t start, r_size_t n, const U1 old_val, const U2 new_val){
   auto old_val2 = internal::as_r<T>(old_val);
   auto new_val2 = internal::as_r<T>(new_val);
   bool implicit_na_coercion = !is_r_na(old_val) && is_r_na(old_val2);
@@ -165,7 +165,7 @@ void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
       auto *p_target = data();
       if (n_threads > 1) {
         OMP_PARALLEL_FOR_SIMD(n_threads)
-        for (R_xlen_t i = 0; i < n; ++i) {
+        for (r_size_t i = 0; i < n; ++i) {
           if (p_target[start + i] == old_val2){
             p_target[start + i] = new_val2;
           }
@@ -174,8 +174,8 @@ void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
         std::replace(data() + start, data() + start + n, old_val2, new_val2);
       }
     } else {
-      for (R_xlen_t i = 0; i < n; ++i) {
-        R_xlen_t idx = start + i;
+      for (r_size_t i = 0; i < n; ++i) {
+        r_size_t idx = start + i;
         if (get(idx) == old_val2){
           set(idx, new_val2);
         }
@@ -184,7 +184,7 @@ void replace(R_xlen_t start, R_xlen_t n, const U1 old_val, const U2 new_val){
   }
 }
 
-// r_vec<T> resize(R_xlen_t n){
+// r_vec<T> resize(r_size_t n){
 //   if (n == length()){
 //     return *this;
 //   } else {
@@ -208,7 +208,7 @@ struct r_dates : public r_vec<r_int> {
     }
   }
   
-  explicit r_dates(R_xlen_t n) : r_vec<r_int>(n) {
+  explicit r_dates(r_size_t n) : r_vec<r_int>(n) {
     attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
   }
 };
@@ -225,7 +225,7 @@ struct r_posixcts : public r_vec<r_dbl> {
     }
   }
   
-  explicit r_posixcts(R_xlen_t n) : r_vec<r_dbl>(n) {
+  explicit r_posixcts(r_size_t n) : r_vec<r_dbl>(n) {
     auto cls = SHIELD(r_vec<r_str>(2));
     auto tz = SHIELD(internal::new_scalar_vector(blank_r_string));
     cls.set(0, "POSIXct"); cls.set(1, "POSIXt");
@@ -272,7 +272,7 @@ struct r_posixcts : public r_vec<r_dbl> {
 //     }
 //   }
   
-//   explicit r_df(R_xlen_t n) : r_vec<r_sexp>(n) {
+//   explicit r_df(r_size_t n) : r_vec<r_sexp>(n) {
 //     attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
 //   }
 // };
@@ -294,21 +294,21 @@ template<typename T>
 concept RVectorType = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
 
 template <RType T>
-inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, R_xlen_t target_offset, R_xlen_t n){
+inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset, r_size_t n){
   auto *p_source = source.data();
 
   if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (R_xlen_t i = 0; i < n; ++i) {
+      for (r_size_t i = 0; i < n; ++i) {
         target.set(target_offset + i, p_source[i]);
       }
     } else {
       std::copy_n(p_source, n, target.data() + target_offset);
     }
   } else {
-    for (R_xlen_t i = 0; i < n; ++i) {
+    for (r_size_t i = 0; i < n; ++i) {
       target.set(target_offset + i, p_source[i]);
     }
   }
@@ -318,12 +318,12 @@ namespace vec {
 
 // Templates for creating new vectors (can also be done via r_vec)
 template <RType T>
-inline r_vec<T> new_vector(R_xlen_t n){
+inline r_vec<T> new_vector(r_size_t n){
   return r_vec<T>(n);
 }
 
 template <RType T, typename U>
-inline r_vec<T> new_vector(R_xlen_t n, const U default_value){
+inline r_vec<T> new_vector(r_size_t n, const U default_value){
   auto out = SHIELD(r_vec<T>(n));
   out.fill(0, n, default_value); 
   YIELD(1);

@@ -27,11 +27,11 @@ inline T as(U x) {
     using data_t = typename T::data_type;
     return vec::new_vector<data_t>(1, internal::as_r<data_t>(x));
   } else if constexpr (RVectorType<U> && RVectorType<T>){
-    R_xlen_t n = x.length();
+    r_size_t n = x.length();
     auto out = SHIELD(T(n));
     using data_t = typename T::data_type;
     OMP_SIMD
-    for (R_xlen_t i = 0; i < n; ++i){
+    for (r_size_t i = 0; i < n; ++i){
     out.set(i, internal::as_r<data_t>(x.get(i)));
     }
     YIELD(1);
@@ -51,7 +51,7 @@ inline T as(U x) {
 // Coerce to an R type based on the C type (useful for RType templates)
 // Difficult cause if it returns `r_str`, that needs to be protected but other types don't
 namespace internal {
-  
+
 template<typename T>
 inline auto as_r_type(T x) {
   if constexpr (RType<T>){

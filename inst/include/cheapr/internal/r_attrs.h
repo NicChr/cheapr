@@ -61,8 +61,8 @@ inline void set_old_class(SEXP x, SEXP cls){
 }
 
 inline bool inherits(SEXP x, SEXP classes){
-  R_xlen_t n = Rf_xlength(classes);
-  for (R_xlen_t i = 0; i < n; ++i) {
+  r_size_t n = Rf_xlength(classes);
+  for (r_size_t i = 0; i < n; ++i) {
     if (inherits1(x, CHAR(STRING_ELT(classes, i)))){
       return true;
     }

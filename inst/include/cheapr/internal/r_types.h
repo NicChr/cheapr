@@ -7,8 +7,6 @@
 
 namespace cheapr {
 
-using r_xlen_t = R_xlen_t;
-
 // General SEXP, reserved for everything except R vectors, CHARSXP, and SYMSXP
 struct r_sexp {
   SEXP value;

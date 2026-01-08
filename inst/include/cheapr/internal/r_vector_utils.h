@@ -88,60 +88,60 @@ inline const r_sexp* vector_ptr<const r_sexp>(SEXP x) {
 // R vector getters + setters
 
 template<RType T>
-inline T get_value(SEXP x, const R_xlen_t i){
+inline T get_value(SEXP x, const r_size_t i){
   return vector_ptr<T>(x)[i];
 }
 
 template<RType T>
-inline T get_value(T *p_x, const R_xlen_t i){
+inline T get_value(T *p_x, const r_size_t i){
   return p_x[i];
 }
 
 template<RType T>
-inline const T get_value(const T *p_x, const R_xlen_t i){
+inline const T get_value(const T *p_x, const r_size_t i){
   return p_x[i];
 }
 
 
 template<typename T>
 requires (RType<T> || is<T, const char *>)
-inline void set_value(T *p_x, const R_xlen_t i, T val){
+inline void set_value(T *p_x, const r_size_t i, T val){
   p_x[i] = val;
 }
 
 template<typename T>
 requires (RType<T> || is<T, const char *>)
-inline void set_value(SEXP x, const R_xlen_t i, T val){
+inline void set_value(SEXP x, const r_size_t i, T val){
   vector_ptr<T>(x)[i] = val;
 }
 template<>
-inline void set_value<r_cplx>(r_cplx* p_x, const R_xlen_t i, r_cplx val){
+inline void set_value<r_cplx>(r_cplx* p_x, const r_size_t i, r_cplx val){
   p_x[i].re() = val.re();
   p_x[i].im() = val.im();
 }
 template<>
-inline void set_value<r_cplx>(SEXP x, const R_xlen_t i, r_cplx val){
+inline void set_value<r_cplx>(SEXP x, const r_size_t i, r_cplx val){
   auto *p_x = vector_ptr<r_cplx>(x);
   set_value(p_x, i, val);
 }
 template<>
-inline void set_value<r_str>(SEXP x, const R_xlen_t i, r_str val){
+inline void set_value<r_str>(SEXP x, const r_size_t i, r_str val){
   SET_STRING_ELT(x, i, static_cast<SEXP>(val));
 }
 template<>
-inline void set_value<const char *>(SEXP x, const R_xlen_t i, const char* val){
+inline void set_value<const char *>(SEXP x, const r_size_t i, const char* val){
   set_value<r_str>(x, i, static_cast<r_str>(internal::make_utf8_charsxp(val)));
 }
 
 // Never use the pointer here to assign
 template<>
-inline void set_value<r_sexp>(SEXP x, const R_xlen_t i, r_sexp val){
+inline void set_value<r_sexp>(SEXP x, const r_size_t i, r_sexp val){
   SET_VECTOR_ELT(x, i, val);
 }
 
 // One-parameter template version
 template <RType T>
-inline SEXP new_vector_impl(R_xlen_t n) {
+inline SEXP new_vector_impl(r_size_t n) {
   static_assert(
     always_false<T>,
     "Unimplemented `new_vector_impl` specialisation"
@@ -150,19 +150,19 @@ inline SEXP new_vector_impl(R_xlen_t n) {
 }
 
 template <>
-inline SEXP new_vector_impl<r_lgl>(R_xlen_t n) {
+inline SEXP new_vector_impl<r_lgl>(r_size_t n) {
   return internal::new_vec(LGLSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_int>(R_xlen_t n){
+inline SEXP new_vector_impl<r_int>(r_size_t n){
   return internal::new_vec(INTSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_dbl>(R_xlen_t n){
+inline SEXP new_vector_impl<r_dbl>(r_size_t n){
   return internal::new_vec(REALSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_int64>(R_xlen_t n){
+inline SEXP new_vector_impl<r_int64>(r_size_t n){
   SEXP out = Rf_protect(internal::new_vec(REALSXP, n));
   SEXP cls = Rf_protect(internal::make_utf8_strsxp("integer64"));
   Rf_setAttrib(out, R_ClassSymbol, cls);
@@ -170,19 +170,19 @@ inline SEXP new_vector_impl<r_int64>(R_xlen_t n){
   return out;
 }
 template <>
-inline SEXP new_vector_impl<r_str>(R_xlen_t n){
+inline SEXP new_vector_impl<r_str>(r_size_t n){
   return internal::new_vec(STRSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_cplx>(R_xlen_t n){
+inline SEXP new_vector_impl<r_cplx>(r_size_t n){
   return internal::new_vec(CPLXSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_raw>(R_xlen_t n){
+inline SEXP new_vector_impl<r_raw>(r_size_t n){
   return internal::new_vec(RAWSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_sexp>(R_xlen_t n){
+inline SEXP new_vector_impl<r_sexp>(r_size_t n){
   return internal::new_vec(VECSXP, n);
 }
 

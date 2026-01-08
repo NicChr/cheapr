@@ -70,7 +70,7 @@ inline void set_row_names(SEXP x, int n){
 
 namespace vec {
 
-inline R_xlen_t old_length(SEXP x){
+inline r_size_t old_length(SEXP x){
   return Rf_xlength(x);
 }
 
@@ -79,7 +79,7 @@ inline SEXP shallow_copy(SEXP x){
 }
 
 // Compact seq generator as ALTREP, same as `seq_len()`
-inline SEXP compact_seq_len(R_xlen_t n){
+inline SEXP compact_seq_len(r_size_t n){
   if (n < 0){
     Rf_error("`n` must be >= 0");
   }
@@ -95,11 +95,11 @@ inline SEXP compact_seq_len(R_xlen_t n){
 // r_lgl not bool because bool can't be NA
 inline r_lgl all_whole_numbers(SEXP x, r_dbl tol_, bool na_rm_){
 
-  R_xlen_t n = Rf_xlength(x);
+  r_size_t n = Rf_xlength(x);
 
   // Use r_lgl instead of bool as r_lgl can hold NA
   r_lgl out = r_true;
-  R_xlen_t na_count = 0;
+  r_size_t na_count = 0;
 
   switch ( internal::CHEAPR_TYPEOF(x) ){
   case LGLSXP:
@@ -109,7 +109,7 @@ inline r_lgl all_whole_numbers(SEXP x, r_dbl tol_, bool na_rm_){
   }
   case REALSXP: {
     auto xvec = r_vec<r_dbl>(x);
-    for (R_xlen_t i = 0; i < n; ++i) {
+    for (r_size_t i = 0; i < n; ++i) {
       out = static_cast<r_lgl>(math::is_whole_number(xvec.get(i), tol_));
       na_count += is_r_na(out);
       if (out == r_false){
@@ -188,7 +188,7 @@ inline void clear_attrs(SEXP x){
 
   int n = attrs.length();
   
-  for (R_xlen_t i = 0; i < n; ++i){
+  for (r_size_t i = 0; i < n; ++i){
     r_sym target_sym = as<r_sym>(names.get(i));
     set_attr(x, target_sym, r_null);
   }
@@ -245,7 +245,7 @@ namespace vec {
 inline SEXP deep_copy(SEXP x){
   int32_t NP = 0;
   SEXP out = r_null;
-  R_xlen_t n = Rf_xlength(x);
+  r_size_t n = Rf_xlength(x);
 
   if (!is_null(x)){
 
@@ -257,7 +257,7 @@ inline SEXP deep_copy(SEXP x){
         auto local_out = SHIELD(r_t(n)); ++NP;
 
         if constexpr (is<r_t, r_vec<r_sexp>>){
-          for (R_xlen_t i = 0; i < n; ++i){
+          for (r_size_t i = 0; i < n; ++i){
             local_out.set(i, deep_copy(vec.get(i)));
           }
         } else {
@@ -272,7 +272,7 @@ inline SEXP deep_copy(SEXP x){
 
     auto attrs = SHIELD(static_cast<r_vec<r_sexp>>(attr::get_attrs(x))); ++NP;
     int n_attrs = attrs.length();
-    for (R_xlen_t i = 0; i < n_attrs; ++i){
+    for (r_size_t i = 0; i < n_attrs; ++i){
       attrs.set(i, deep_copy(attrs.get(i)));
     }
     attr::set_attrs(out, attrs);

@@ -18,12 +18,12 @@ namespace cheapr {
 //     }
 //   }
   
-//   explicit r_list(R_xlen_t n) {
+//   explicit r_list(r_size_t n) {
 //     value = r_vec<r_sexp>(n);
 //   }
   
 //   // Length
-//   R_xlen_t length() const {
+//   r_size_t length() const {
 //     return Rf_xlength(value);
 //   }
   
@@ -32,24 +32,24 @@ namespace cheapr {
 //   }
   
 //   // Get element as SEXP
-//   SEXP get(R_xlen_t i) const {
+//   SEXP get(r_size_t i) const {
 //     return VECTOR_ELT(value, i);
 //   }
   
 //   // Set element from SEXP
-//   void set(R_xlen_t i, SEXP val) {
+//   void set(r_size_t i, SEXP val) {
 //     SET_VECTOR_ELT(value, i, val);
 //   }
   
 //   // Set element from r_vec<> or any wrapper with .value member
 //   template<typename T>
-//   void set(R_xlen_t i, const T& vec) {
+//   void set(r_size_t i, const T& vec) {
 //     SET_VECTOR_ELT(value, i, vec.value);
 //   }
   
 //   // Get element as specific type
 //   template<typename T>
-//   T get_as(R_xlen_t i) const {
+//   T get_as(r_size_t i) const {
 //     return T(VECTOR_ELT(value, i));
 //   }
   

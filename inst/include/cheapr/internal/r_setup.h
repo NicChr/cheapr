@@ -60,6 +60,8 @@ static_cast<std::remove_reference_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x
 
 namespace cheapr {
     
+using r_size_t = R_xlen_t;
+
 namespace internal {
 
 inline constexpr int64_t CHEAPR_OMP_THRESHOLD = 100000;
@@ -80,7 +82,7 @@ inline void *safe_memmove(void *dst, const void *src, size_t n){
   return n ? std::memmove(dst, src, n) : dst;
 }
 
-inline SEXP new_vec(SEXPTYPE type, R_xlen_t n){
+inline SEXP new_vec(SEXPTYPE type, r_size_t n){
   return Rf_allocVector(type, n);
 }
 
@@ -99,7 +101,7 @@ inline int get_threads(){
   return n_threads > 1 ? n_threads : 1;
 }
 
-inline int calc_threads(R_xlen_t data_size){
+inline int calc_threads(r_size_t data_size){
   return data_size >= CHEAPR_OMP_THRESHOLD ? get_threads() : 1;
 }
 
