@@ -16,7 +16,7 @@ struct r_vec {
   SEXP value = R_NilValue;
   const T* const_ptr = nullptr;  // Always created
   T* ptr = nullptr;              // Only initialized if writable
-  using data_type = T;              // Type of data vec contains
+  using data_type = T;           // Type of data vec contains
 
   // Constructor that wraps new_vector<T>
   explicit r_vec(R_xlen_t size)
@@ -42,6 +42,10 @@ struct r_vec {
     }
   }
 
+ // Maybe add implicit coercion to `r_sexp` in future
+  // operator r_sexp() const {
+  //   return r_sexp(value);
+  // }
   // Implicit conversion to SEXP
   operator SEXP() const {
     return value;

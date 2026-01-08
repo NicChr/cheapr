@@ -229,6 +229,8 @@ template<typename T>
 inline r_sexp as_sexp(T x){
   if constexpr (is<T, r_sexp>){
     return x;
+  } else if constexpr (std::is_convertible_v<T, SEXP>){
+    return r_sexp(static_cast<SEXP>(x));
   } else if constexpr (RType<T>){
     return r_sexp(new_scalar_vector(x));
   } else if constexpr (IntegerType<T>){
