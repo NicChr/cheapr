@@ -1,7 +1,7 @@
 #ifndef CHEAPR_R_EXPRS_H
 #define CHEAPR_R_EXPRS_H
 
-#include <cheapr/internal/r_list.h>
+#include <cheapr/internal/r_make_vec.h>
 
 namespace cheapr {
 
@@ -22,7 +22,7 @@ inline SEXP make_pairlist(Args... args) {
 
     (([&]() {
       if constexpr (is<Args, arg>) {
-        SETCAR(current, args.value);
+        SETCAR(current, as<r_sexp>(args.value));
         SET_TAG(current, as<r_sym>(args.name));
       } else {
         SETCAR(current, as<r_sexp>(args));

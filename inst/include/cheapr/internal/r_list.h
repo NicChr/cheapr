@@ -5,54 +5,94 @@
 #include <cheapr/internal/r_coerce.h>
 
 namespace cheapr {
-// Named argument
 
-struct arg {
-  const char* name;
-  SEXP value;
+// struct r_list {
+//   SEXP value;
+  
+//   // Constructors
+//   r_list() : value(R_NilValue) {}
+  
+//   explicit r_list(SEXP x) : value(x) {
+//     if (!(is_null() || (TYPEOF(x) == VECSXP && vec::is_bare(x)))){
+//       Rf_error("`SEXP` must be a plain list");
+//     }
+//   }
+  
+//   explicit r_list(R_xlen_t n) {
+//     value = r_vec<r_sexp>(n);
+//   }
+  
+//   // Length
+//   R_xlen_t length() const {
+//     return Rf_xlength(value);
+//   }
+  
+//   bool is_null() const {
+//     return value == R_NilValue;
+//   }
+  
+//   // Get element as SEXP
+//   SEXP get(R_xlen_t i) const {
+//     return VECTOR_ELT(value, i);
+//   }
+  
+//   // Set element from SEXP
+//   void set(R_xlen_t i, SEXP val) {
+//     SET_VECTOR_ELT(value, i, val);
+//   }
+  
+//   // Set element from r_vec<> or any wrapper with .value member
+//   template<typename T>
+//   void set(R_xlen_t i, const T& vec) {
+//     SET_VECTOR_ELT(value, i, vec.value);
+//   }
+  
+//   // Get element as specific type
+//   template<typename T>
+//   T get_as(R_xlen_t i) const {
+//     return T(VECTOR_ELT(value, i));
+//   }
+  
+//   // Conversion operator
+//   operator SEXP() const {
+//     return value;
+//   }
+// };
 
-  explicit arg(const char* n) : name(n), value(R_NilValue) {}
-  explicit arg(const char* n, SEXP v) : name(n), value(v) {}
-
-  template<typename T>
-  arg operator=(T v) const {
-    return arg(name, as<r_sexp>(v)); 
-  }
-};
 
 // Variadic list constructor
-template<typename... Args>
-inline r_vec<r_sexp> make_list(Args... args) {
-  constexpr int n = sizeof...(args);
+// template<typename... Args>
+// inline r_vec<r_sexp> make_list(Args... args) {
+//   constexpr int n = sizeof...(args);
 
-  if constexpr (n == 0){
-    return r_vec<r_sexp>(0);
-  } else {
+//   if constexpr (n == 0){
+//     return r_vec<r_sexp>(0);
+//   } else {
 
-    auto out = SHIELD(r_vec<r_sexp>(n));
+//     auto out = SHIELD(r_vec<r_sexp>(n));
 
-    // Are any args named?
-    constexpr bool any_named = (is<Args, arg> || ...);
+//     // Are any args named?
+//     constexpr bool any_named = (is<Args, arg> || ...);
 
-    auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
-    SHIELD(nms);
+//     auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
+//     SHIELD(nms);
 
-    int i = 0;
-    (([&]() {
-      if constexpr (is<Args, arg>) { 
-        out.set(i, args.value);
-        nms.set(i, as<r_str>(args.name));
-      } else {
-        out.set(i, as<r_sexp>(args));
-      }
-      ++i;
-    }()), ...);
+//     int i = 0;
+//     (([&]() {
+//       if constexpr (is<Args, arg>) { 
+//         out.set(i, args.value);
+//         nms.set(i, as<r_str>(args.name));
+//       } else {
+//         out.set(i, as<r_sexp>(args));
+//       }
+//       ++i;
+//     }()), ...);
 
-    attr::set_old_names(out, nms);
-    YIELD(2);
-    return out;
-  }
-}
+//     attr::set_old_names(out, nms);
+//     YIELD(2);
+//     return out;
+//   }
+// }
 
 }
 

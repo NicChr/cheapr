@@ -19,6 +19,7 @@
 #include <cheapr/internal/r_factor.h>
 #include <cheapr/internal/r_list.h>
 #include <cheapr/internal/r_coerce.h>
+#include <cheapr/internal/r_make_vec.h>
 #include <cheapr/internal/r_exprs.h>
 #include <cheapr/internal/r_fns.h>
 #include <cheapr/internal/r_math.h>
@@ -71,45 +72,6 @@ namespace vec {
 
 inline R_xlen_t old_length(SEXP x){
   return Rf_xlength(x);
-}
-
-inline R_xlen_t length(SEXP x){
-  if (!vec::is_object(x) || vec::is_atomic(x)){
-    return Rf_xlength(x);
-  } else if (attr::inherits1(x, "data.frame")){
-    return df::nrow(x);
-    // Is x a list? 
-  } else if (TYPEOF(x) == VECSXP){
-    if (attr::inherits1(x, "vctrs_rcrd")){
-      return Rf_length(x) > 0 ? vec::length(VECTOR_ELT(x, 0)) : 0;
-    } else if (attr::inherits1(x, "POSIXlt")){
-      const SEXP *p_x = VECTOR_PTR_RO(x);
-      R_xlen_t out = 0;
-      for (int i = 0; i != 10; ++i){
-        out = std::max(out, Rf_xlength(p_x[i]));
-      }
-      return out;
-    } else {
-      if (internal::BASE_LENGTH == NULL){  
-        internal::BASE_LENGTH = as<r_sym>("length"); 
-      }
-      SEXP expr = SHIELD(make_expr(internal::BASE_LENGTH, x));
-      SEXP r_len = SHIELD(eval(expr, env::base_env));
-      R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
-      YIELD(2);
-      return out;
-    }
-    // Catch-all
-  } else {
-    if (internal::BASE_LENGTH == NULL){
-      internal::BASE_LENGTH = as<r_sym>("length");
-    }
-    SEXP expr = SHIELD(make_expr(internal::BASE_LENGTH, x));
-    SEXP r_len = SHIELD(eval(expr, env::base_env));
-    R_xlen_t out = TYPEOF(r_len) == INTSXP ? INTEGER_ELT(r_len, 0) : REAL_ELT(r_len, 0);
-    YIELD(2);
-    return out;
-  }
 }
 
 inline SEXP shallow_copy(SEXP x){
@@ -287,7 +249,7 @@ inline SEXP deep_copy(SEXP x){
 
   if (!is_null(x)){
 
-    if (vec::is_vec(x)){
+    if (Rf_isVector(x)){
       out = internal::visit_vector(x, [&](auto vec) -> SEXP {
 
         using r_t = decltype(vec);
@@ -299,7 +261,7 @@ inline SEXP deep_copy(SEXP x){
             local_out.set(i, deep_copy(vec.get(i)));
           }
         } else {
-          r_copy_n(local_out, vec.data(), 0, n);
+          r_copy_n(local_out, vec, 0, n);
         }
 
         return local_out;

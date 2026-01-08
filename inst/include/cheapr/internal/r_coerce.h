@@ -48,6 +48,36 @@ inline T as(U x) {
   }
 }
 
+// Coerce to an R type based on the C type (useful for RType templates)
+// Difficult cause if it returns `r_str`, that needs to be protected but other types don't
+namespace internal {
+  
+template<typename T>
+inline auto as_r_type(T x) {
+  if constexpr (RType<T>){
+    return x;
+  } else if constexpr (MathType<T>){
+    if constexpr (internal::can_be_int<T>){
+      return r_int(static_cast<int>(x));
+    } else {
+      return r_dbl(static_cast<double>(x));
+    }
+  } else if constexpr (is<T, const char*>){
+    return as<r_str>(x);
+  } else if constexpr (is<T, SEXP> || is<T, r_sexp>){
+    return r_sexp(static_cast<SEXP>(x));
+  } else if constexpr (RVectorType<T>){
+    return r_sexp(x.value);
+  } else {    
+    static_assert(
+      always_false<T>,
+      "Unsupported type for `as_r_type`"
+    );
+  } 
+}
+
+}
+
 }
 
 #endif

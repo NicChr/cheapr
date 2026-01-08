@@ -12,26 +12,6 @@ namespace cheapr {
 
 namespace internal {
 
-// Coerce to an R type from the C type (useful for RType templates)
-// Difficult cause if it returns `r_string_`, that needs to be protected but other types don't
-// template<typename T>
-// inline auto as_r_type(T x) {
-//   if constexpr (RType<T>){
-//     return x;
-//   } else if (CppMathType>){
-//     if constexpr (internal::can_be_int<T>){
-//       return r_int(static_cast<int>(x));
-//     } else {
-//       r_dbl(static_cast<double>(x));
-//     }
-//   } else {
-//   static_assert(
-//     always_false<T>,
-//     "Unsupported type for `as_r_type`"
-//   );
-//   } 
-// }
-
 // Assumes no NAs at all
 template<typename T>
 inline constexpr bool can_be_int(T x){
@@ -131,7 +111,7 @@ inline r_raw as_raw(T x){
     return x;
   } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
     return is_r_na(x) || x < 0 ? na::raw : static_cast<r_raw>(x);
-  } else if constexpr (std::is_convertible_v<T, r_raw>){
+  } else if constexpr (IntegerType<T>){
     return is_r_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_raw>(x);
   } else {
     return na::raw;
@@ -233,7 +213,7 @@ inline r_sexp as_sexp(T x){
     return r_sexp(static_cast<SEXP>(x));
   } else if constexpr (RType<T>){
     return r_sexp(new_scalar_vector(x));
-  } else if constexpr (IntegerType<T>){
+  } else if constexpr (MathType<T>){
     if constexpr (internal::can_be_int<T>){
       return r_sexp(new_scalar_vector(r_int(static_cast<int>(x))));
     } else {

@@ -294,7 +294,9 @@ template<typename T>
 concept RVectorType = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
 
 template <RType T>
-inline void r_copy_n(r_vec<T> &target, const T *p_source, R_xlen_t target_offset, R_xlen_t n){
+inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, R_xlen_t target_offset, R_xlen_t n){
+  auto *p_source = source.data();
+
   if constexpr (RPtrWritableType<T>){
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1) {
@@ -332,50 +334,8 @@ inline bool is_object(SEXP x){
   return Rf_isObject(x);
 }
 
-inline bool is_atomic(SEXP x){
-  return Rf_isVectorAtomic(x);
-}
-
-inline bool is_vec(SEXP x){
-  return Rf_isVector(x);
-}
-
 inline bool is_bare(SEXP x){
   return !is_object(x);
-}
-
-inline bool is_logical(SEXP x){
-  return TYPEOF(x) == LGLSXP;
-}
-inline bool is_integer(SEXP x){
-  return TYPEOF(x) == INTSXP;
-}
-inline bool is_double(SEXP x){
-  return TYPEOF(x) == REALSXP;
-}
-inline bool is_integer64(SEXP x){
-  return is_double(x) && attr::inherits1(x, "integer64");
-}
-inline bool is_character(SEXP x){
-  return TYPEOF(x) == STRSXP;
-}
-inline bool is_list(SEXP x){
-  return TYPEOF(x) == VECSXP;
-}
-inline bool is_complex(SEXP x){
-  return TYPEOF(x) == CPLXSXP;
-}
-inline bool is_raw(SEXP x){
-  return TYPEOF(x) == RAWSXP;
-}
-inline bool is_date(SEXP x){
-  return attr::inherits1(x, "Date");
-}
-inline bool is_datetime(SEXP x){
-  return attr::inherits1(x, "POSIXt");
-}
-inline bool is_factor(SEXP x){
-  return is_integer(x) && attr::inherits1(x, "factor");
 }
 
 
