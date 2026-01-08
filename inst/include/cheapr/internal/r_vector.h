@@ -42,6 +42,11 @@ struct r_vec {
     }
   }
 
+  // Implicit conversion to SEXP
+  operator SEXP() const {
+    return value;
+  }
+
   bool is_null() const {
     return value == R_NilValue;
   }
@@ -55,11 +60,6 @@ struct r_vec {
     return const_ptr;
   }
 
-  // Implicit conversion to SEXP
-  operator SEXP() const {
-    return value;
-  }
-
   // Get size
   R_xlen_t size() const {
     return Rf_xlength(value);
@@ -71,6 +71,19 @@ struct r_vec {
   const r_str address() const {
     return internal::address(value);
   }
+
+  r_vec<r_str> get_names() const {
+    return r_vec<r_str>(Rf_getAttrib(value, symbol::names_sym));
+  }
+  
+  void set_names(r_vec<r_str> names){
+    if (names.is_null()){
+      attr::set_attr(value, symbol::names_sym, r_null);
+    } else {
+      Rf_namesgets(value, names);
+    }
+  }
+
 
 r_vec<r_lgl> is_na() const {
   R_xlen_t n = length();
