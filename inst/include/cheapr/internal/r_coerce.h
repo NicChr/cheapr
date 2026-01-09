@@ -8,7 +8,7 @@ namespace cheapr {
 
 // Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
-  requires (RType<T> || RVectorType<T> || is<T, SEXP> || is<T, r_factors>)
+  requires (RType<T> || RVectorType<T> || any<T, SEXP, r_factors>)
 inline T as(U x) {
   if constexpr (is<U, T>){
     return x;
@@ -18,6 +18,13 @@ inline T as(U x) {
     return x.value;
   } else if constexpr (RVectorType<U> && is<T, r_sexp>){
     return r_sexp(x.value);
+  } else if constexpr (RVectorType<T> && any<U, SEXP, r_sexp>){
+    T out = internal::visit_vector(x, [&](auto xvec) -> T {
+      // This will trigger the branch that checks that both are RVectorType
+      return SHIELD(as<T>(xvec));
+    });
+    YIELD(1);
+    return out;
   } else if constexpr (RVectorType<U> && RType<T>){
     if (x.length() != 1){
       Rf_error("Vector must be length-1 to be coerced to requested type");
