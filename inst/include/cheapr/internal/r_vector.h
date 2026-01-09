@@ -51,11 +51,7 @@ struct r_vec {
     return value;
   }
 
-  bool is_null() const {
-    return value == R_NilValue;
-  }
-
-    // Direct pointer access
+  // Direct pointer access
   T* data() requires RPtrWritableType<T>{
     return ptr;
   }
@@ -64,12 +60,33 @@ struct r_vec {
     return const_ptr;
   }
 
+  // Iterator support - begin + end
+  T* begin() requires RPtrWritableType<T> {
+      return ptr;
+  }
+
+  T* end() requires RPtrWritableType<T> {
+      return ptr + size();
+  }
+
+  const T* begin() const {
+      return const_ptr;
+  }
+
+  const T* end() const {
+      return const_ptr + size();
+  }
+
+  bool is_null() const {
+    return value == R_NilValue;
+  }
+
   // Get size
   r_size_t size() const {
     return Rf_xlength(value);
   }
   r_size_t length() const {
-    return Rf_xlength(value);
+    return size();
   }
 
   const r_str address() const {
@@ -88,33 +105,92 @@ struct r_vec {
     }
   }
 
+  r_vec<r_sexp> get_attrs() const {
+    return r_vec<r_sexp>(attr::get_attrs(value));
+  }
 
-r_vec<r_lgl> is_na() const {
-  r_size_t n = length();
-  auto out = SHIELD(r_vec<r_lgl>(n));
-  
-  if constexpr (RPtrWritableType<T>){
-    int n_threads = internal::calc_threads(n);
-    if (n_threads > 1){
-      OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (r_size_t i = 0; i < n; ++i){
-        out.set(i, is_r_na(get(i)));
+  void clear_attrs(){
+    auto attrs = SHIELD(get_attrs());
+    if (attrs.is_null()){
+      YIELD(1);
+      return;
+    }
+    
+    auto names = SHIELD(attrs.get_names());
+
+    int n = attrs.length();
+    for (int i = 0; i < n; ++i){
+      r_sym target_sym = as<r_sym>(names.get(i));
+      attr::set_attr(value, target_sym, r_null);
+    }
+    YIELD(2);
+}
+
+  void set_attrs(r_vec<r_sexp> attrs) {
+
+    if (this->is_null()){
+      Rf_error("Cannot add attributes to `NULL`");
+    }
+
+    if (attrs.is_null()){
+      return;
+    }
+
+    int32_t NP = 0;
+
+    auto names = SHIELD(attrs.get_names()); ++NP;
+
+    if (names.is_null()){
+      YIELD(NP);
+      Rf_error("attributes must be a named list");
+    }
+
+    clear_attrs();
+
+    r_sym attr_nm;
+
+    int n = names.length();
+
+    for (int i = 0; i < n; ++i){
+      if (!(names.get(i) == blank_r_string)){
+        attr_nm = internal::as_r<r_sym>(names.get(i));
+        if (this->address() == internal::address(static_cast<SEXP>(attrs.get(i)))){
+          SEXP dup_attr = SHIELD(Rf_duplicate(attrs.get(i))); ++NP;
+          attr::set_attr(value, attr_nm, dup_attr);
+        } else {
+          attr::set_attr(value, attr_nm, attrs.get(i));
+        }
+      }
+    }
+    YIELD(NP);
+  }
+
+  r_vec<r_lgl> is_na() const {
+    r_size_t n = length();
+    auto out = SHIELD(r_vec<r_lgl>(n));
+    
+    if constexpr (RPtrWritableType<T>){
+      int n_threads = internal::calc_threads(n);
+      if (n_threads > 1){
+        OMP_PARALLEL_FOR_SIMD(n_threads)
+        for (r_size_t i = 0; i < n; ++i){
+          out.set(i, is_r_na(get(i)));
+        }
+      } else {
+        OMP_SIMD
+        for (r_size_t i = 0; i < n; ++i){
+          out.set(i, is_r_na(get(i)));
+        }
       }
     } else {
-      OMP_SIMD
       for (r_size_t i = 0; i < n; ++i){
         out.set(i, is_r_na(get(i)));
       }
     }
-  } else {
-    for (r_size_t i = 0; i < n; ++i){
-      out.set(i, is_r_na(get(i)));
-    }
+    
+    YIELD(1);
+    return out;
   }
-  
-  YIELD(1);
-  return out;
-}
 
     // get uses const pointer
   T get(r_size_t index) const {
@@ -135,63 +211,67 @@ r_vec<r_lgl> is_na() const {
 
   template <typename U>
   void fill(r_size_t start, r_size_t n, const U val){
-  auto val2 = internal::as_r<T>(val);
-  if constexpr (RPtrWritableType<T>){
-    int n_threads = internal::calc_threads(n);
-    auto *p_target = data();
-    if (n_threads > 1) {
-      OMP_PARALLEL_FOR_SIMD(n_threads)
-      for (r_size_t i = 0; i < n; ++i) {
-        p_target[start + i] = val2;
-      }
-    } else {
-      std::fill_n(p_target + start, n, val2);
-    }
-  } else {
-    for (r_size_t i = 0; i < n; ++i) {
-      set(start + i, val2);
-    }
-  }
-}
-
-template <typename U1, typename U2> 
-void replace(r_size_t start, r_size_t n, const U1 old_val, const U2 new_val){
-  auto old_val2 = internal::as_r<T>(old_val);
-  auto new_val2 = internal::as_r<T>(new_val);
-  bool implicit_na_coercion = !is_r_na(old_val) && is_r_na(old_val2);
-  if (!implicit_na_coercion){
+    auto val2 = internal::as_r<T>(val);
     if constexpr (RPtrWritableType<T>){
       int n_threads = internal::calc_threads(n);
       auto *p_target = data();
       if (n_threads > 1) {
         OMP_PARALLEL_FOR_SIMD(n_threads)
         for (r_size_t i = 0; i < n; ++i) {
-          if (p_target[start + i] == old_val2){
-            p_target[start + i] = new_val2;
-          }
+          p_target[start + i] = val2;
         }
       } else {
-        std::replace(data() + start, data() + start + n, old_val2, new_val2);
+        std::fill_n(p_target + start, n, val2);
       }
     } else {
       for (r_size_t i = 0; i < n; ++i) {
-        r_size_t idx = start + i;
-        if (get(idx) == old_val2){
-          set(idx, new_val2);
+        set(start + i, val2);
+      }
+    }
+  }
+
+  template <typename U1, typename U2> 
+  void replace(r_size_t start, r_size_t n, const U1 old_val, const U2 new_val){
+    auto old_val2 = internal::as_r<T>(old_val);
+    auto new_val2 = internal::as_r<T>(new_val);
+    bool implicit_na_coercion = !is_r_na(old_val) && is_r_na(old_val2);
+    if (!implicit_na_coercion){
+      if constexpr (RPtrWritableType<T>){
+        int n_threads = internal::calc_threads(n);
+        auto *p_target = data();
+        if (n_threads > 1) {
+          OMP_PARALLEL_FOR_SIMD(n_threads)
+          for (r_size_t i = 0; i < n; ++i) {
+            if (p_target[start + i] == old_val2){
+              p_target[start + i] = new_val2;
+            }
+          }
+        } else {
+          std::replace(data() + start, data() + start + n, old_val2, new_val2);
+        }
+      } else {
+        for (r_size_t i = 0; i < n; ++i) {
+          r_size_t idx = start + i;
+          if (get(idx) == old_val2){
+            set(idx, new_val2);
+          }
         }
       }
     }
   }
-}
 
-// r_vec<T> resize(r_size_t n){
-//   if (n == length()){
-//     return *this;
-//   } else {
-//     auto resized_vec = SHIELD(T(n));
-//     if (n 
-//   }
-// }
+  r_vec<T> resize(r_size_t n){
+    r_size_t vec_size = length();
+    if (n == vec_size){
+      return *this;
+    } else {
+      auto resized_vec = SHIELD(r_vec<T>(n));
+      r_size_t n_to_copy = std::min(n, vec_size);
+      std::copy_n(this->begin(), n_to_copy, resized_vec.begin());
+      YIELD(1);
+      return resized_vec;
+    }
+  }
 
 };
 
