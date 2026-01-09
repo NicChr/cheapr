@@ -120,7 +120,7 @@ struct r_vec {
 
     int n = attrs.length();
     for (int i = 0; i < n; ++i){
-      r_sym target_sym = as<r_sym>(names.get(i));
+      r_sym target_sym = internal::as_r<r_sym>(names.get(i));
       attr::set_attr(value, target_sym, r_null);
     }
     YIELD(2);
@@ -200,13 +200,13 @@ struct r_vec {
   // Set only available if writable
   // We use flexible template to be able to coerce it to an RType
   template <typename U>
-   void set(r_size_t index, U val) {
-    T val2 = internal::as_r<T>(val);
-    if constexpr (RPtrWritableType<T>){
+  void set(r_size_t index, U val) {
+      T val2 = internal::as_r<T>(val);
+      if constexpr (RPtrWritableType<T>){
       ptr[index] = val2;
-    } else {
+      } else {
       internal::set_value<T>(value, index, val2);
-    }
+      }
   }
 
   template <typename U>
@@ -376,6 +376,36 @@ inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value
 
 template<typename T>
 concept RVectorType = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
+
+namespace internal {
+
+  // A cleaner lambda-based alternative to
+  // using the canonical switch(TYPEOF(x))
+  //
+  // Pass both the SEXP and an auto variable inside a lambda
+  // and visit_vector() will assign the auto variable to the correct vector
+  // Then simply deduce its type (via decltype) for further manipulation
+  // To be used in a lambda
+  // E.g. visit_vector(x, [&](auto x_vec) {})
+  
+  // One must account for objects like `NULL` and non-vectors outwith this method
+  
+  template <class F>
+  decltype(auto) visit_vector(SEXP x, F&& f) {
+    switch (CHEAPR_TYPEOF(x)) {
+    case LGLSXP:          return f(r_vec<r_lgl>(x));
+    case INTSXP:          return f(r_vec<r_int>(x));
+    case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
+    case REALSXP:         return f(r_vec<r_dbl>(x));
+    case STRSXP:          return f(r_vec<r_str>(x));
+    case VECSXP:          return f(r_vec<r_sexp>(x));
+    case CPLXSXP:         return f(r_vec<r_cplx>(x));
+    case RAWSXP:          return f(r_vec<r_raw>(x));
+    default:              Rf_error("`x` must be a vector");
+    }
+  }
+  
+  }
 
 template <RType T>
 inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset, r_size_t n){
