@@ -56,6 +56,8 @@ template<typename T>
 inline auto as_r_type(T x) {
   if constexpr (RType<T>){
     return x;
+  } else if constexpr (is<T, bool>){
+    return r_lgl(x);
   } else if constexpr (MathType<T>){
     if constexpr (internal::can_be_int<T>){
       return r_int(static_cast<int>(x));

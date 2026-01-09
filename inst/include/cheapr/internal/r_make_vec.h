@@ -90,6 +90,47 @@ inline r_vec<T> make_vec(Args... args) {
   }
 }
 
+template <RType T>
+template<typename... Args>
+void r_vec<T>::modify_attrs(Args... args) {
+
+  if (this->is_null()){
+    Rf_error("Cannot add attributes to `NULL`");
+  }
+
+  int32_t NP = 0;
+
+  auto attrs = SHIELD(make_vec<r_sexp>(args...)); ++NP;
+  auto names = SHIELD(attrs.get_names()); ++NP;
+
+  if (attrs.is_null()){
+    YIELD(NP);
+    return;
+  }
+
+  if (names.is_null()){
+    YIELD(NP);
+    Rf_error("attributes must be a named list");
+  }
+
+  r_sym attr_nm;
+
+  int n = names.length();
+
+  for (int i = 0; i < n; ++i){
+    if (!(names.get(i) == blank_r_string)){
+      attr_nm = internal::as_r<r_sym>(names.get(i));
+      if (this->address() == internal::address(static_cast<SEXP>(attrs.get(i)))){
+        SEXP dup_attr = SHIELD(Rf_duplicate(attrs.get(i))); ++NP;
+        attr::set_attr(value, attr_nm, dup_attr);
+      } else {
+        attr::set_attr(value, attr_nm, attrs.get(i));
+      }
+    }
+  }
+  YIELD(NP);
+}
+
 }
 
 #endif

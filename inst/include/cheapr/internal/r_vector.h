@@ -273,6 +273,10 @@ struct r_vec {
     }
   }
 
+  // Define this after make_vec<> and arg struct
+  template<typename... Args>
+  void modify_attrs(Args... args);
+
 };
 
 
