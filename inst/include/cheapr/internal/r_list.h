@@ -6,57 +6,61 @@
 
 namespace cheapr {
 
-// struct r_list {
-//   SEXP value;
+// struct r_list : public r_vec<r_sexp> {
+//   using r_vec<r_sexp>::r_vec;
   
-//   // Constructors
-//   r_list() : value(R_NilValue) {}
+//   r_list() : r_vec<r_sexp>() {}
   
-//   explicit r_list(SEXP x) : value(x) {
+//   explicit r_list(SEXP x) : r_vec<r_sexp>(x) {
 //     if (!(is_null() || (TYPEOF(x) == VECSXP && vec::is_bare(x)))){
 //       Rf_error("`SEXP` must be a plain list");
 //     }
 //   }
   
-//   explicit r_list(r_size_t n) {
-//     value = r_vec<r_sexp>(n);
+//   // Proxy for implicit conversion
+//   struct element_proxy {
+//     SEXP value;
+    
+//     // Implicit conversion to any r_vec<T>
+//     template<RType T>
+//     operator r_vec<T>() const {
+//       return r_vec<T>(value);
+//     }
+    
+//     // Also convert to r_sexp
+//     operator r_sexp() const {
+//       return r_sexp(value);
+//     }
+//   };
+  
+//   // Accept any r_vec<T> or SEXP-convertible type
+//   template<typename U>
+//   requires std::convertible_to<U, SEXP>
+//   void set(r_size_t index, const U& val) {
+//     r_vec<r_sexp>::set(index, static_cast<SEXP>(val));
 //   }
   
-//   // Length
-//   r_size_t length() const {
-//     return Rf_xlength(value);
+//   // Return proxy that converts to whatever you assign it to
+//   element_proxy get(r_size_t index) const {
+//     return element_proxy{r_vec<r_sexp>::get(index)};
+//   }
+// };
+
+
+
+// struct r_list : public r_vec<r_sexp> {
+  
+//   // Constructors
+//   r_list() : r_vec<r_sexp>() {}
+  
+//   explicit r_list(SEXP x) : r_vec<r_sexp>(x) {
+//     if (!(is_null() || (TYPEOF(x) == VECSXP && vec::is_bare(x)))){
+//       Rf_error("`SEXP` must be a plain list");
+//     }
 //   }
   
-//   bool is_null() const {
-//     return value == R_NilValue;
-//   }
+//   explicit r_list(r_size_t n) : r_vec<r_sexp>(n) {}
   
-//   // Get element as SEXP
-//   SEXP get(r_size_t i) const {
-//     return VECTOR_ELT(value, i);
-//   }
-  
-//   // Set element from SEXP
-//   void set(r_size_t i, SEXP val) {
-//     SET_VECTOR_ELT(value, i, val);
-//   }
-  
-//   // Set element from r_vec<> or any wrapper with .value member
-//   template<typename T>
-//   void set(r_size_t i, const T& vec) {
-//     SET_VECTOR_ELT(value, i, vec.value);
-//   }
-  
-//   // Get element as specific type
-//   template<typename T>
-//   T get_as(r_size_t i) const {
-//     return T(VECTOR_ELT(value, i));
-//   }
-  
-//   // Conversion operator
-//   operator SEXP() const {
-//     return value;
-//   }
 // };
 
 

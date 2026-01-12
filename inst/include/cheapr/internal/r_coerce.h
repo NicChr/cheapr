@@ -32,7 +32,7 @@ inline T as(U x) {
     return internal::as_r<T>(x.get(0));
   } else if constexpr (RVectorType<T> && RType<U>){  
     using data_t = typename T::data_type;
-    return vec::new_vector<data_t>(1, internal::as_r<data_t>(x));
+    return r_vec<data_t>(1, internal::as_r<data_t>(x));
   } else if constexpr (RVectorType<U> && RVectorType<T>){
     r_size_t n = x.length();
     auto out = SHIELD(T(n));
@@ -55,36 +55,25 @@ inline T as(U x) {
   }
 }
 
-// Coerce to an R type based on the C type (useful for RType templates)
-// Difficult cause if it returns `r_str`, that needs to be protected but other types don't
-namespace internal {
-
+// Convert any C obj to an r_vec<>
 template<typename T>
-inline auto as_r_type(T x) {
-  if constexpr (RType<T>){
+inline auto as_vector(T x){
+  if constexpr (RVectorType<T>){
     return x;
-  } else if constexpr (is<T, bool>){
-    return r_lgl(x);
-  } else if constexpr (MathType<T>){
-    if constexpr (internal::can_be_int<T>){
-      return r_int(static_cast<int>(x));
-    } else {
-      return r_dbl(static_cast<double>(x));
-    }
-  } else if constexpr (is<T, const char*>){
-    return as<r_str>(x);
-  } else if constexpr (is<T, SEXP> || is<T, r_sexp>){
-    return r_sexp(static_cast<SEXP>(x));
-  } else if constexpr (RVectorType<T>){
-    return r_sexp(x.value);
-  } else {    
-    static_assert(
-      always_false<T>,
-      "Unsupported type for `as_r_type`"
-    );
-  } 
-}
-
+  } else if constexpr (any<T, SEXP, r_sexp>){
+    auto out = internal::visit_maybe_vector(x, [&](auto xvec) -> SEXP {
+      using x_t = decltype(xvec);
+      if constexpr (is<x_t, std::nullptr_t>){
+        return r_vec<r_sexp>(1, r_sexp(static_cast<SEXP>(x)));
+      } else {
+        return xvec;
+      }
+    });
+    return r_sexp(out);
+  } else {
+    auto rt_val = internal::as_r_type(x);
+    return r_vec<decltype(rt_val)>(1, rt_val);
+  }
 }
 
 }

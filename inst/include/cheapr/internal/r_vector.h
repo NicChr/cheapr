@@ -18,7 +18,7 @@ struct r_vec {
   T* ptr = nullptr;              // Only initialized if writable
   using data_type = T;           // Type of data vec contains
 
-  // Constructor that wraps new_vector<T>
+  // Constructor that wraps new_vector_impl<T>
   explicit r_vec(r_size_t size)
     : value(internal::new_vector_impl<std::remove_cvref_t<T>>(size))
     , const_ptr(internal::vector_ptr<const T>(value))
@@ -27,6 +27,13 @@ struct r_vec {
     if constexpr (RPtrWritableType<T>) {
       ptr = internal::vector_ptr<T>(value);
     }
+  }
+
+  template<typename U>
+  explicit r_vec(r_size_t size, U default_value) 
+    : r_vec(size)
+  {
+    fill(0, size, default_value);
   }
 
   // Constructor from existing SEXP
@@ -404,6 +411,22 @@ namespace internal {
     default:              Rf_error("`x` must be a vector");
     }
   }
+
+  // Same as above but no run-time error, user must deal with non-vector input
+  template <class F>
+  decltype(auto) visit_maybe_vector(SEXP x, F&& f) { 
+    switch (CHEAPR_TYPEOF(x)) {
+    case LGLSXP:          return f(r_vec<r_lgl>(x));
+    case INTSXP:          return f(r_vec<r_int>(x));
+    case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
+    case REALSXP:         return f(r_vec<r_dbl>(x));
+    case STRSXP:          return f(r_vec<r_str>(x));
+    case VECSXP:          return f(r_vec<r_sexp>(x));
+    case CPLXSXP:         return f(r_vec<r_cplx>(x));
+    case RAWSXP:          return f(r_vec<r_raw>(x));
+    default:              return f(nullptr);
+    }
+  }
   
   }
 
@@ -428,21 +451,39 @@ inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset,
   }
 }
 
+// Coerce to an R type based on the C type (useful for RType templates)
+// Difficult cause if it returns `r_str`, that needs to be protected but other types don't
+namespace internal {
+
+template<typename T>
+inline auto as_r_type(T x) {
+  if constexpr (RType<T>){
+    return x;
+  } else if constexpr (is<T, bool>){
+    return r_lgl(x);
+  } else if constexpr (MathType<T>){
+    if constexpr (internal::can_be_int<T>){
+      return r_int(static_cast<int>(x));
+    } else {
+      return r_dbl(static_cast<double>(x));
+    }
+  } else if constexpr (is<T, const char*>){
+    return internal::as_r<r_str>(x);
+  } else if constexpr (any<T, SEXP, r_sexp>){
+    return r_sexp(static_cast<SEXP>(x));
+  } else if constexpr (RVectorType<T>){
+    return r_sexp(x.value);
+  } else {    
+    static_assert(
+      always_false<T>,
+      "Unsupported type for `as_r_type`"
+    );
+  } 
+}
+
+}
+
 namespace vec {
-
-// Templates for creating new vectors (can also be done via r_vec)
-template <RType T>
-inline r_vec<T> new_vector(r_size_t n){
-  return r_vec<T>(n);
-}
-
-template <RType T, typename U>
-inline r_vec<T> new_vector(r_size_t n, const U default_value){
-  auto out = SHIELD(r_vec<T>(n));
-  out.fill(0, n, default_value); 
-  YIELD(1);
-  return out;
-}
 
 inline bool is_object(SEXP x){
   return Rf_isObject(x);
@@ -452,62 +493,33 @@ inline bool is_bare(SEXP x){
   return !is_object(x);
 }
 
-
-template<typename T>
-inline auto as_vector(T x){
-  if constexpr (RVectorType<T>){
-    return x;
-  } else if constexpr (RType<T>){
-    return new_vector<T>(1, x);
-  } else if constexpr (IntegerType<T>){
-    if constexpr (internal::can_be_int<T>){
-      return new_vector<r_int>(1, r_int(static_cast<int>(x)));
-    } else {
-      return new_vector<r_dbl>(1, r_dbl(static_cast<double>(x)));
-    }
-  } else {
-    static_assert(
-      always_false<T>,
-      "Unimplemented `as_vector` specialisation"
-    );
-  }
-}
-template<>
-inline auto as_vector<bool>(bool x){
-  return as_vector(r_lgl(x));
-}
-template<>
-inline auto as_vector<int>(int x){
-  return as_vector(r_int(x));
-}
-template<>
-inline auto as_vector<double>(double x){
-  return as_vector(r_dbl(x));
-}
-template<>
-inline auto as_vector<const char *>(const char *x){
-  return as_vector(r_str(internal::make_utf8_charsxp(x))); 
 }
 
-template<>
-inline auto as_vector<SEXP>(SEXP x){ 
-  switch (TYPEOF(x)){
-  case LGLSXP:
-  case INTSXP:
-  case REALSXP:
-  case STRSXP:
-  case VECSXP:
-  case CPLXSXP:
-  case RAWSXP: {
-    return x;
-  }
-  default: {
-    return static_cast<SEXP>(new_vector<r_sexp>(1, r_sexp(x)));
-  }
-  }
-}
-
-}
+// template<typename T>
+// inline auto as_vector(T x){
+//   if constexpr (RVectorType<T>){
+//     return x;
+//   } else if constexpr (any<T, SEXP, r_sexp>){
+//     switch (TYPEOF(x)){
+//       case LGLSXP:
+//       case INTSXP:
+//       case REALSXP:
+//       case STRSXP:
+//       case VECSXP:
+//       case CPLXSXP:
+//       case RAWSXP: {
+//         return r_sexp(x);
+//       }
+//       default: {
+//         // New list of length 1 containing x
+//         return r_sexp(static_cast<SEXP>(r_vec<r_sexp>(1, r_sexp(static_cast<SEXP>(x)))));
+//       }
+//       }
+//   } else {
+//     auto rt_val = internal::as_r_type(x);
+//     return r_vec<decltype(rt_val)>(1, rt_val);
+//   }
+// }
 
 }
 
