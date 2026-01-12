@@ -19,12 +19,15 @@ inline T as(U x) {
   } else if constexpr (RVectorType<U> && is<T, r_sexp>){
     return r_sexp(x.value);
   } else if constexpr (RVectorType<T> && any<U, SEXP, r_sexp>){
-    T out = internal::visit_vector(x, [&](auto xvec) -> T {
+    return internal::visit_vector(x, [&](auto xvec) -> T {
       // This will trigger the branch that checks that both are RVectorType
-      return SHIELD(as<T>(xvec));
+      return as<T>(xvec);
     });
-    YIELD(1);
-    return out;
+  } else if constexpr (RType<T> && any<U, SEXP, r_sexp>){
+    return internal::visit_vector(x, [&](auto xvec) -> T {
+      // Use branch below current branch
+      return as<T>(xvec);
+    });
   } else if constexpr (RVectorType<U> && RType<T>){
     if (x.length() != 1){
       Rf_error("Vector must be length-1 to be coerced to requested type");
@@ -61,15 +64,7 @@ inline auto as_vector(T x){
   if constexpr (RVectorType<T>){
     return x;
   } else if constexpr (any<T, SEXP, r_sexp>){
-    auto out = internal::visit_maybe_vector(x, [&](auto xvec) -> SEXP {
-      using x_t = decltype(xvec);
-      if constexpr (is<x_t, std::nullptr_t>){
-        return r_vec<r_sexp>(1, r_sexp(static_cast<SEXP>(x)));
-      } else {
-        return xvec;
-      }
-    });
-    return r_sexp(out);
+    static_assert(always_false<T>, "Can't convert `SEXP/r_sexp` to `r_vec<>`, please use `as<>` to convert");
   } else {
     auto rt_val = internal::as_r_type(x);
     return r_vec<decltype(rt_val)>(1, rt_val);
