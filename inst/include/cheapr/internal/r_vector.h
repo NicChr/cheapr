@@ -24,6 +24,7 @@ struct r_vec {
     , const_ptr(internal::vector_ptr<const T>(value))
     , ptr(nullptr)
   {
+    // SHIELD(value);
     if constexpr (RPtrWritableType<T>) {
       ptr = internal::vector_ptr<T>(value);
     }
@@ -42,6 +43,7 @@ struct r_vec {
     , const_ptr(s == R_NilValue ? nullptr : internal::vector_ptr<const T>(s))
     , ptr(nullptr)
   {
+    // SHIELD(value);
     if constexpr (RPtrWritableType<T>){
       if (const_ptr != nullptr){
         ptr = internal::vector_ptr<T>(s);
@@ -49,10 +51,55 @@ struct r_vec {
     }
   }
 
- // Maybe add implicit coercion to `r_sexp` in future
-  // operator r_sexp() const {
-  //   return r_sexp(value);
+  // Destructor - automatic unprotection
+  // ~r_vec() {
+  //   YIELD(1);
   // }
+  // Copy constructor - shield the copy
+  // r_vec(const r_vec& other)
+  //   : value(other.value)
+  //   , const_ptr(other.const_ptr)
+  //   , ptr(other.ptr)
+  // {
+  //   SHIELD(value);
+  // }
+  // // Copy assignment
+  // r_vec& operator=(const r_vec& other) {
+  //   if (this != &other) {
+  //     YIELD(1);
+  //     value = other.value;
+  //     const_ptr = other.const_ptr;
+  //     ptr = other.ptr;
+  //     SHIELD(value);
+  //   }
+  //   return *this;
+  // }
+  
+  // // Move constructor - transfer ownership
+  // r_vec(r_vec&& other) noexcept
+  //   : value(other.value)
+  //   , const_ptr(other.const_ptr)
+  //   , ptr(other.ptr)
+  // {
+  //   other.value = R_NilValue;
+  //   other.const_ptr = nullptr;
+  //   other.ptr = nullptr;
+  // }
+  
+  // // Move assignment - transfer ownership
+  // r_vec& operator=(r_vec&& other) noexcept {
+  //   if (this != &other) {
+  //     YIELD(1);
+  //     value = other.value;
+  //     const_ptr = other.const_ptr;
+  //     ptr = other.ptr;
+  //     other.value = R_NilValue;
+  //     other.const_ptr = nullptr;
+  //     other.ptr = nullptr;
+  //   }
+  //   return *this;
+  // }
+
   // Implicit conversion to SEXP
   operator SEXP() const {
     return value;

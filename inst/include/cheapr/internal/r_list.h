@@ -1,10 +1,10 @@
-#ifndef CHEAPR_R_LIST_H
-#define CHEAPR_R_LIST_H
+// #ifndef CHEAPR_R_LIST_H
+// #define CHEAPR_R_LIST_H
 
-#include <cheapr/internal/r_vector.h>
-#include <cheapr/internal/r_coerce.h>
+// #include <cheapr/internal/r_vector.h>
+// #include <cheapr/internal/r_coerce.h>
 
-namespace cheapr {
+// namespace cheapr {
 
 // struct r_list : public r_vec<r_sexp> {
 //   using r_vec<r_sexp>::r_vec;
@@ -47,57 +47,56 @@ namespace cheapr {
 // };
 
 
-
-// struct r_list : public r_vec<r_sexp> {
+// // struct r_list : public r_vec<r_sexp> {
   
-//   // Constructors
-//   r_list() : r_vec<r_sexp>() {}
+// //   // Constructors
+// //   r_list() : r_vec<r_sexp>() {}
   
-//   explicit r_list(SEXP x) : r_vec<r_sexp>(x) {
-//     if (!(is_null() || (TYPEOF(x) == VECSXP && vec::is_bare(x)))){
-//       Rf_error("`SEXP` must be a plain list");
-//     }
-//   }
+// //   explicit r_list(SEXP x) : r_vec<r_sexp>(x) {
+// //     if (!(is_null() || (TYPEOF(x) == VECSXP && vec::is_bare(x)))){
+// //       Rf_error("`SEXP` must be a plain list");
+// //     }
+// //   }
   
-//   explicit r_list(r_size_t n) : r_vec<r_sexp>(n) {}
+// //   explicit r_list(r_size_t n) : r_vec<r_sexp>(n) {}
   
-// };
+// // };
 
 
-// Variadic list constructor
-// template<typename... Args>
-// inline r_vec<r_sexp> make_list(Args... args) {
-//   constexpr int n = sizeof...(args);
+// // Variadic list constructor
+// // template<typename... Args>
+// // inline r_vec<r_sexp> make_list(Args... args) {
+// //   constexpr int n = sizeof...(args);
 
-//   if constexpr (n == 0){
-//     return r_vec<r_sexp>(0);
-//   } else {
+// //   if constexpr (n == 0){
+// //     return r_vec<r_sexp>(0);
+// //   } else {
 
-//     auto out = SHIELD(r_vec<r_sexp>(n));
+// //     auto out = SHIELD(r_vec<r_sexp>(n));
 
-//     // Are any args named?
-//     constexpr bool any_named = (is<Args, arg> || ...);
+// //     // Are any args named?
+// //     constexpr bool any_named = (is<Args, arg> || ...);
 
-//     auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
-//     SHIELD(nms);
+// //     auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
+// //     SHIELD(nms);
 
-//     int i = 0;
-//     (([&]() {
-//       if constexpr (is<Args, arg>) { 
-//         out.set(i, args.value);
-//         nms.set(i, as<r_str>(args.name));
-//       } else {
-//         out.set(i, as<r_sexp>(args));
-//       }
-//       ++i;
-//     }()), ...);
+// //     int i = 0;
+// //     (([&]() {
+// //       if constexpr (is<Args, arg>) { 
+// //         out.set(i, args.value);
+// //         nms.set(i, as<r_str>(args.name));
+// //       } else {
+// //         out.set(i, as<r_sexp>(args));
+// //       }
+// //       ++i;
+// //     }()), ...);
 
-//     attr::set_old_names(out, nms);
-//     YIELD(2);
-//     return out;
-//   }
+// //     attr::set_old_names(out, nms);
+// //     YIELD(2);
+// //     return out;
+// //   }
+// // }
+
 // }
 
-}
-
-#endif
+// #endif
