@@ -7,7 +7,6 @@
 
 namespace cheapr {
 
-struct r_sexp;
 struct r_str; // Forward declaration
 
 // General SEXP, reserved for everything except CHARSXP and SYMSXP

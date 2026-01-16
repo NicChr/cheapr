@@ -71,14 +71,6 @@ inline void *safe_memmove(void *dst, const void *src, size_t n){
   return n ? std::memmove(dst, src, n) : dst;
 }
 
-inline SEXP new_vec(SEXPTYPE type, r_size_t n){
-  return Rf_allocVector(type, n);
-}
-
-inline SEXP coerce_vec(SEXP x, SEXPTYPE type){
-  return Rf_coerceVector(x, type);
-}
-
 inline SEXP CHEAPR_CORES = NULL;
 
 inline int get_threads(){

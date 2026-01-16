@@ -19,8 +19,7 @@ inline r_sexp find_pkg_fun(const char *name, const char *pkg, bool all_fns){
   } else {
     expr = make_expr(symbol::double_colon_sym, as<r_sym>(pkg), as<r_sym>(name));
   }
-  r_sexp out = eval(expr, r_sexp(env::base_env));
-  return out; 
+  return eval(expr, env::base_env);
 }
 
 template<typename... Args>

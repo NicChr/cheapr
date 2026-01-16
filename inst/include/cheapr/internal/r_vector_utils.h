@@ -11,6 +11,15 @@ namespace cheapr {
 
 namespace internal {
 
+inline r_sexp new_vec(SEXPTYPE type, r_size_t n){
+  return r_sexp(Rf_allocVector(type, n));
+}
+
+inline r_sexp coerce_vec(SEXP x, SEXPTYPE type){
+  return r_sexp(Rf_coerceVector(x, type));
+}
+
+
 template<RType T>
 inline T* vector_ptr(SEXP x) {
   static_assert(
@@ -141,7 +150,7 @@ inline void set_value<r_sexp>(SEXP x, const r_size_t i, r_sexp val){
 
 // One-parameter template version
 template <RType T>
-inline SEXP new_vector_impl(r_size_t n) {
+inline r_sexp new_vector_impl(r_size_t n) {
   static_assert(
     always_false<T>,
     "Unimplemented `new_vector_impl` specialisation"
@@ -150,44 +159,44 @@ inline SEXP new_vector_impl(r_size_t n) {
 }
 
 template <>
-inline SEXP new_vector_impl<r_lgl>(r_size_t n) {
+inline r_sexp new_vector_impl<r_lgl>(r_size_t n) {
   return internal::new_vec(LGLSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_int>(r_size_t n){
+inline r_sexp new_vector_impl<r_int>(r_size_t n){
   return internal::new_vec(INTSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_dbl>(r_size_t n){
+inline r_sexp new_vector_impl<r_dbl>(r_size_t n){
   return internal::new_vec(REALSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_int64>(r_size_t n){
+inline r_sexp new_vector_impl<r_int64>(r_size_t n){
   r_sexp out = r_sexp(internal::new_vec(REALSXP, n));
   r_sexp cls = r_sexp(Rf_ScalarString(r_str("integer64")));
   Rf_setAttrib(out, R_ClassSymbol, cls);
   return out;
 }
 template <>
-inline SEXP new_vector_impl<r_str>(r_size_t n){
+inline r_sexp new_vector_impl<r_str>(r_size_t n){
   return internal::new_vec(STRSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_cplx>(r_size_t n){
+inline r_sexp new_vector_impl<r_cplx>(r_size_t n){
   return internal::new_vec(CPLXSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_raw>(r_size_t n){
+inline r_sexp new_vector_impl<r_raw>(r_size_t n){
   return internal::new_vec(RAWSXP, n);
 }
 template <>
-inline SEXP new_vector_impl<r_sexp>(r_size_t n){
+inline r_sexp new_vector_impl<r_sexp>(r_size_t n){
   return internal::new_vec(VECSXP, n);
 }
 
 template <RType T>
-inline SEXP new_scalar_vector(T default_value) {
-    SEXP out = new_vector_impl<T>(1);
+inline r_sexp new_scalar_vector(T default_value) {
+    r_sexp out = new_vector_impl<T>(1);
     set_value<T>(out, 0, default_value);
     return out;
 }

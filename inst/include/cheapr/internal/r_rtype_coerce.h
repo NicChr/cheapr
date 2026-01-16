@@ -189,8 +189,7 @@ inline r_sym as_r_sym(T x){
   if constexpr (is<T, r_sym>){
     return x;
   } else if constexpr (is<T, const char *>){
-    SEXP str = r_str(x);
-    r_sym out = r_sym(Rf_installChar(str));
+    r_sym out = r_sym(Rf_installChar(r_str(x)));
     return out;
   } else if constexpr (is<T, r_str>){
     return r_sym(Rf_installChar(x));
