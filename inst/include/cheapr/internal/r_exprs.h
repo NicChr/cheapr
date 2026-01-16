@@ -5,18 +5,18 @@
 
 namespace cheapr {
 
-inline SEXP eval(SEXP expr, SEXP env){
-  return Rf_eval(expr, env);
+inline r_sexp eval(r_sexp expr, r_sexp env){
+  return r_sexp(Rf_eval(expr, env));
 }
 
 template<typename... Args>
-inline SEXP make_pairlist(Args... args) {
+inline r_sexp make_pairlist(Args... args) {
   constexpr int n = sizeof...(args);
 
   if constexpr (n == 0){
-    return Rf_allocList(0); 
+    return r_sexp(Rf_allocList(0));
   } else {
-    SEXP out = SHIELD(Rf_allocList(n));
+    r_sexp out = r_sexp(Rf_allocList(n));
 
     SEXP current = out;
 
@@ -30,20 +30,16 @@ inline SEXP make_pairlist(Args... args) {
       current = CDR(current);
     }()), ...);
 
-    YIELD(1);
     return out;
   }
 }
 
 
 template<typename... Args>
-inline SEXP make_expr(Args... args) { 
+inline r_sexp make_expr(Args... args) { 
 
-  SEXP pairlist = SHIELD(make_pairlist(args...));
-  SEXP out = SHIELD(Rf_lcons(r_null, pairlist)); 
-
-  YIELD(2);
-  return out;
+  r_sexp pairlist = make_pairlist(args...);
+  return r_sexp(Rf_lcons(r_null, pairlist));
 }
 
 }

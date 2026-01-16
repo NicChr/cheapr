@@ -10,28 +10,25 @@ namespace cheapr {
 
 namespace fn {
 // Return R function from a specified package
-inline SEXP find_pkg_fun(const char *name, const char *pkg, bool all_fns){
+inline r_sexp find_pkg_fun(const char *name, const char *pkg, bool all_fns){
 
-  SEXP expr = r_null;
+  r_sexp expr = r_null;
 
   if (all_fns){
-    expr = SHIELD(make_expr(symbol::triple_colon_sym, as<r_sym>(pkg), as<r_sym>(name)));
+    expr = make_expr(symbol::triple_colon_sym, as<r_sym>(pkg), as<r_sym>(name));
   } else {
-    expr = SHIELD(make_expr(symbol::double_colon_sym, as<r_sym>(pkg), as<r_sym>(name)));
+    expr = make_expr(symbol::double_colon_sym, as<r_sym>(pkg), as<r_sym>(name));
   }
-  SEXP out = SHIELD(eval(expr, env::base_env));
-  YIELD(2);
+  r_sexp out = eval(expr, r_sexp(env::base_env));
   return out; 
 }
 
 template<typename... Args>
-inline SEXP eval_fn(SEXP r_fn, SEXP envir, Args... args){
+inline r_sexp eval_fn(r_sexp r_fn, r_sexp envir, Args... args){
   // Expression
-  SEXP expr = SHIELD(make_expr(r_fn, args...));
+  r_sexp expr = make_expr(r_fn, args...);
   // Evaluate expression
-  SEXP out = SHIELD(eval(expr, envir));
-  YIELD(2);
-  return out;
+  return eval(expr, envir);
 }
 
 }

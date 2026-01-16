@@ -44,7 +44,7 @@ template <RType T>
 inline T as(const arg& a) {
   return std::visit(
     [](auto const& x) -> T {
-      using X = std::decay_t<decltype(x)>;
+      using X = std::remove_cvref_t<decltype(x)>;
       if constexpr (is<X, std::monostate>) {
         return T();
       } else {
@@ -58,24 +58,23 @@ inline T as(const arg& a) {
 
 template<RType T, typename... Args>
 inline r_vec<T> make_vec(Args... args) {
-  
+
   constexpr int n = sizeof...(args);
 
   if constexpr (n == 0){
     return r_vec<T>(0);
   } else {
 
-    auto out = SHIELD(r_vec<T>(n));
+    auto out = r_vec<T>(n);
 
     // Are any args named?
     constexpr bool any_named = (is<Args, arg> || ...);
 
     auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
-    SHIELD(nms);
 
     int i = 0;
     (([&]() {
-      if constexpr (is<Args, arg>) { 
+      if constexpr (is<Args, arg>) {
         out.set(i, as<T>(args));
         nms.set(i, as<r_str>(args.name));
       } else {
@@ -84,52 +83,47 @@ inline r_vec<T> make_vec(Args... args) {
       ++i;
     }()), ...);
 
-    attr::set_old_names(out, nms);
-    YIELD(2);
+    attr::set_old_names(out.sexp, nms);
     return out;
   }
 }
 
-template <RType T>
-template<typename... Args>
-void r_vec<T>::modify_attrs(Args... args) {
+// template <RType T>
+// template<typename... Args>
+// void r_vec<T>::modify_attrs(Args... args) {
 
-  if (this->is_null()){
-    Rf_error("Cannot add attributes to `NULL`");
-  }
+//   if (this->sexp.is_null()){
+//     Rf_error("Cannot add attributes to `NULL`");
+//   }
 
-  int32_t NP = 0;
 
-  auto attrs = SHIELD(make_vec<r_sexp>(args...)); ++NP;
-  auto names = SHIELD(attrs.get_names()); ++NP;
+//   auto attrs = make_vec<r_sexp>(args...);
+//   auto names = attrs.get_names();
 
-  if (attrs.is_null()){
-    YIELD(NP);
-    return;
-  }
+//   if (attrs.).is_null(){
+//     return;
+//   }
 
-  if (names.is_null()){
-    YIELD(NP);
-    Rf_error("attributes must be a named list");
-  }
+//   if (names.).is_null(){
+//     Rf_error("attributes must be a named list");
+//   }
 
-  r_sym attr_nm;
+//   r_sym attr_nm;
 
-  int n = names.length();
+//   int n = names.length();
 
-  for (int i = 0; i < n; ++i){
-    if (!(names.get(i) == blank_r_string)){
-      attr_nm = internal::as_r<r_sym>(names.get(i));
-      if (this->address() == internal::address(static_cast<SEXP>(attrs.get(i)))){
-        SEXP dup_attr = SHIELD(Rf_duplicate(attrs.get(i))); ++NP;
-        attr::set_attr(value, attr_nm, dup_attr);
-      } else {
-        attr::set_attr(value, attr_nm, attrs.get(i));
-      }
-    }
-  }
-  YIELD(NP);
-}
+//   for (int i = 0; i < n; ++i){
+//     if (!(names.get(i) == blank_r_string)){
+//       attr_nm = internal::as_r<r_sym>(names.get(i));
+//       if (this->address() == internal::address(attrs.get(i))){
+//         SEXP dup_attr = Rf_duplicate(attrs.get(i));
+//         attr::set_attr(sexp, attr_nm, dup_attr);
+//       } else {
+//         attr::set_attr(sexp, attr_nm, attrs.get(i));
+//       }
+//     }
+//   }
+// }
 
 }
 

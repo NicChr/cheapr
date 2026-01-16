@@ -130,7 +130,7 @@ inline void set_value<r_str>(SEXP x, const r_size_t i, r_str val){
 }
 template<>
 inline void set_value<const char *>(SEXP x, const r_size_t i, const char* val){
-  set_value<r_str>(x, i, static_cast<r_str>(internal::make_utf8_charsxp(val)));
+  set_value<r_str>(x, i, r_str(val));
 }
 
 // Never use the pointer here to assign
@@ -163,10 +163,9 @@ inline SEXP new_vector_impl<r_dbl>(r_size_t n){
 }
 template <>
 inline SEXP new_vector_impl<r_int64>(r_size_t n){
-  SEXP out = Rf_protect(internal::new_vec(REALSXP, n));
-  SEXP cls = Rf_protect(internal::make_utf8_strsxp("integer64"));
+  r_sexp out = r_sexp(internal::new_vec(REALSXP, n));
+  r_sexp cls = r_sexp(Rf_ScalarString(r_str("integer64")));
   Rf_setAttrib(out, R_ClassSymbol, cls);
-  Rf_unprotect(2);
   return out;
 }
 template <>
@@ -188,9 +187,8 @@ inline SEXP new_vector_impl<r_sexp>(r_size_t n){
 
 template <RType T>
 inline SEXP new_scalar_vector(T default_value) {
-    SEXP out = SHIELD(new_vector_impl<T>(1));
+    SEXP out = new_vector_impl<T>(1);
     set_value<T>(out, 0, default_value);
-    YIELD(1);
     return out;
 }
 

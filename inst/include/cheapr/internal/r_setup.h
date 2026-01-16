@@ -47,17 +47,6 @@
 #define VECTOR_PTR_RO(x) ((const SEXP *) DATAPTR_RO(x))
 #endif
 
-// These should be functions in cheapr namespace but
-// rchk produces errors with that method
-#ifndef SHIELD
-#define SHIELD(x)                                              \
-static_cast<std::remove_reference_t<decltype(x)>>(Rf_protect(static_cast<SEXP>(x)))
-#endif
-
-#ifndef YIELD
-#define YIELD(n) (Rf_unprotect(n))
-#endif
-
 namespace cheapr {
     
 using r_size_t = R_xlen_t;

@@ -7,22 +7,71 @@
 
 namespace cheapr {
 
-// General SEXP, reserved for everything except R vectors, CHARSXP, and SYMSXP
+struct r_sexp;
+struct r_str; // Forward declaration
+
+// General SEXP, reserved for everything except CHARSXP and SYMSXP
 struct r_sexp {
   SEXP value;
 
-  r_sexp() : value(R_NilValue) {}
-  // Implicit coercion both ways
-  explicit constexpr r_sexp(SEXP s) : value(s) {}
+  // Default constructor
+  r_sexp() : value(R_NilValue) {
+    Rf_protect(value);
+  }
+
+  // Constructor from SEXP
+  explicit r_sexp(SEXP s) : value(s) {
+    Rf_protect(value);
+  }
+
+  // Destructor
+  ~r_sexp() {
+    Rf_unprotect(1);
+  }
+
+  // Copy constructor
+  r_sexp(const r_sexp& other) : value(other.value) {
+    Rf_protect(value);
+  }
+
+  // Copy assignment
+  r_sexp& operator=(const r_sexp& other) {
+    if (this != &other) {
+      Rf_protect(other.value);
+      Rf_unprotect(1);
+      value = other.value;
+    }
+    return *this;
+  }
+
+  // Move constructor
+  r_sexp(r_sexp&& other) noexcept : value(other.value) {
+    other.value = R_NilValue;
+  }
+
+  // Move assignment
+  r_sexp& operator=(r_sexp&& other) noexcept {
+    if (this != &other) {
+      Rf_unprotect(1);
+      value = other.value;
+      other.value = R_NilValue;
+    }
+    return *this;
+  }
+
+  // Implicit conversion to SEXP
   constexpr operator SEXP() const { return value; }
+
+  bool is_null() const {
+    return value == R_NilValue;
+  }
+
+  r_str address() const;
+
 };
 
 // R C NULL constant
 inline const r_sexp r_null = r_sexp();
-
-inline bool is_null(SEXP x){ 
-  return x == R_NilValue;
-}
 
 // bool type, similar to Rboolean
 // Implicit coercion to bool (not int) provided no NA
@@ -55,7 +104,7 @@ inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
     return value == r_na.value;
   }
 
-  inline r_lgl::operator bool() const { 
+  inline r_lgl::operator bool() const {
     if (is_na()){
     Rf_error("Cannot convert NA to bool, please check");
   }
@@ -64,7 +113,7 @@ inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
 
 // is_r_na is defined later as a template
 
-// R integer 
+// R integer
 struct r_int {
   int value;
   r_int() : value{0} {}
@@ -87,16 +136,23 @@ struct r_int64 {
 };
 
 // Alias type for CHARSXP
-// CHARSXP must never be converted to `SEXP`/`r_sexp`
+// r_str must never be converted to `SEXP`/`r_sexp`
 // all templates assume that `SEXP`/`r_sexp` is reserved for objects that can safely fit into an R list vector
 // Furthermore CHARSXP is a special case because it is essentially the only SEXP that already fits into a non-list vector: a character vector
 struct r_str {
-  SEXP value;
+  r_sexp value;
   r_str() : value{R_BlankString} {}
-  // Explicit SEXP -> r_str
-  explicit constexpr r_str(SEXP x) : value{x} {}
+  // Explicit SEXP/const char* -> r_str
+  explicit r_str(SEXP x) : value{r_sexp(x)} {}
+  explicit r_str(const r_sexp &x) : value{x} {}
+  explicit r_str(const char *x) : value(r_sexp(Rf_mkCharCE(x, CE_UTF8))) {}
   // Implicit r_str -> SEXP
-  constexpr operator SEXP() const { return value; }
+  operator SEXP() const { return value; }
+
+  const char *c_str() const {
+    return CHAR(value);
+  }
+
 };
 
 inline const r_str blank_r_string = r_str();
@@ -138,6 +194,12 @@ struct r_raw {
   explicit constexpr r_raw(Rbyte x) : value{x} {}
   constexpr operator Rbyte() const { return value; }
 };
+
+r_str r_sexp::address() const {
+  char buf[1000];
+  std::snprintf(buf, 1000, "%p", static_cast<void*>(value));
+  return r_str(buf);
+}
 
 }
 

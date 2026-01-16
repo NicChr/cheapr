@@ -2,7 +2,7 @@
 #define CHEAPR_R_FACTOR_H
 
 #include <cheapr/internal/r_vector.h>
-#include <cheapr/internal/r_coerce.h>
+#include <cheapr/internal/r_attrs.h>
 #include <ankerl/unordered_dense.h> // For unique strings and matching
 
 
@@ -12,12 +12,12 @@ namespace internal {
 
 r_vec<r_str> unique_strings(r_vec<r_str> x) {
   r_size_t n = x.length();
-  
+
   // Hash set for O(n) de-duplication
   ankerl::unordered_dense::set<SEXP> seen;
   seen.reserve(n);
-  
-  auto unique_vec = SHIELD(r_vec<r_str>(n));
+
+  auto unique_vec = r_vec<r_str>(n);
   r_size_t n_unique = 0;
 
   for (r_size_t i = 0; i < n; ++i) {
@@ -28,49 +28,46 @@ r_vec<r_str> unique_strings(r_vec<r_str> x) {
   }
 
   if (n_unique == n){
-    YIELD(1);
     return unique_vec;
   }
 
-  auto out = SHIELD(r_vec<r_str>(n_unique));
+  auto out = r_vec<r_str>(n_unique);
 
   for (r_size_t i = 0; i < n_unique; ++i){
     out.set(i, unique_vec.get(i));
   }
 
-  YIELD(2);
   return out;
 }
 
 
 // Match needle strings to first occurrence in haystack
-r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) { 
-  
+r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) {
+
   r_size_t n_needles = needles.length();
   r_size_t n_haystack = haystack.length();
 
   if (n_haystack > r_limits::r_int_max){
     Rf_error("Cannot match to a long vector, please use a short character vector");
   }
-  
+
   // Build hash table
   ankerl::unordered_dense::map<SEXP, int> lookup;
   lookup.reserve(n_haystack);
-  
+
   for (r_size_t i = 0; i < n_haystack; ++i) {
     r_str str = haystack.get(i);
     lookup.try_emplace(str, static_cast<int>(i) + 1);
   }
-  
+
   // Match needles
-  auto out = SHIELD(r_vec<r_int>(n_needles));
+  auto out = r_vec<r_int>(n_needles);
   for (r_size_t i = 0; i < n_needles; ++i) {
     r_str needle = needles.get(i);
     auto it = lookup.find(needle);
     out.set(i, it != lookup.end() ? r_int(it->second) : na::integer);
   }
-  
-  YIELD(1);
+
   return out;
 }
 
@@ -78,41 +75,39 @@ r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) {
 
 
 struct r_factors : public r_vec<r_int> {
-  
+
   // Constructors
   r_factors() : r_vec<r_int>() {}
-  
+
   explicit r_factors(SEXP x) : r_vec<r_int>(x) {
-    if (!(is_null() || attr::inherits1(x, "factor"))){ 
+    if (!(is_null()) || Rf_inherits(x, "factor")){
       Rf_error("`SEXP` must be a factor");
     }
   }
-  
+
   explicit r_factors(r_vec<r_str> x, r_vec<r_str> levels){
 
-    auto fct = SHIELD(internal::string_match(x, levels));
-    auto cls = SHIELD(internal::new_scalar_vector(internal::as_r<r_str>("factor")));
+    auto fct = internal::string_match(x, levels);
+    auto cls = r_vec<r_str>(1, internal::as_r<r_str>("factor"));
     // Set class
-    attr::set_old_class(fct, cls);
+    attr::set_old_class(fct.sexp, cls);
     // Set levels
-    attr::set_attr(fct, internal::as_r<r_sym>("levels"), levels);
-    this->value = fct.value;
-    YIELD(2);
+    attr::set_attr(fct.sexp, internal::as_r<r_sym>("levels"), levels.sexp);
+    this->sexp = fct.sexp;
   }
 
   explicit r_factors(r_vec<r_str> x){
-    auto levels = SHIELD(internal::unique_strings(x));
-    auto fct = SHIELD(r_factors(x, levels));
-    this->value = fct.value;
-    YIELD(2);
+    auto levels = internal::unique_strings(x);
+    auto fct = r_factors(x, levels);
+    this->sexp = fct.sexp;
   }
 
   r_vec<r_str> levels_get() const {
-    return r_vec<r_str>(attr::get_attr(this->value, internal::as_r<r_sym>("levels")));
+    return r_vec<r_str>(attr::get_attr(this->sexp, internal::as_r<r_sym>("levels")));
   }
 
   void levels_set(r_vec<r_str> levels) {
-    attr::set_attr(this->value, internal::as_r<r_sym>("levels"), levels);
+    attr::set_attr(this->sexp, internal::as_r<r_sym>("levels"), levels.sexp);
   }
 
 };

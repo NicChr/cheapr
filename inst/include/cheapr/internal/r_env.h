@@ -8,25 +8,23 @@ namespace cheapr {
 
 namespace env {
 
-inline const SEXP empty_env = R_EmptyEnv;
-inline const SEXP base_env = R_BaseEnv;
+inline const r_sexp empty_env = r_sexp(R_EmptyEnv);
+inline const r_sexp base_env = r_sexp(R_BaseEnv);
 
-inline SEXP get(r_sym sym, SEXP env, bool inherits = true){
+inline r_sexp get(r_sym sym, r_sexp env, bool inherits = true){
 
   if (TYPEOF(env) != ENVSXP){
     Rf_error("second argument to '%s' must be an environment", __func__);
   }
 
-  SEXP val = inherits ? Rf_findVar(sym, env) : Rf_findVarInFrame(env, sym);
+  r_sexp val = r_sexp(inherits ? Rf_findVar(sym, env) : Rf_findVarInFrame(env, sym));
 
   if (val == static_cast<SEXP>(symbol::missing_arg)){
     Rf_error("arg `sym` cannot be missing");
   } else if (val == static_cast<SEXP>(symbol::unbound_value)){
     return r_null;
   } else if (TYPEOF(val) == PROMSXP){
-    SHIELD(val);
     val = eval(val, env);
-    YIELD(1);
   }
   return val;
 }

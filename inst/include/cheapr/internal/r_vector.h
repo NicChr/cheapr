@@ -5,7 +5,6 @@
 #include <cheapr/internal/r_utf8.h>
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_concepts.h>
-#include <cheapr/internal/r_attrs.h>
 #include <cheapr/internal/r_vector_utils.h>
 #include <cheapr/internal/r_rtype_coerce.h>
 
@@ -13,25 +12,25 @@ namespace cheapr {
 
 template<RType T>
 struct r_vec {
-  SEXP value = R_NilValue;
+  r_sexp sexp = r_null;
   const T* const_ptr = nullptr;  // Always created
   T* ptr = nullptr;              // Only initialized if writable
   using data_type = T;           // Type of data vec contains
 
   // Constructor that wraps new_vector_impl<T>
   explicit r_vec(r_size_t size)
-    : value(internal::new_vector_impl<std::remove_cvref_t<T>>(size))
-    , const_ptr(internal::vector_ptr<const T>(value))
+    : sexp(internal::new_vector_impl<std::remove_cvref_t<T>>(size))
+    , const_ptr(internal::vector_ptr<const T>(sexp))
     , ptr(nullptr)
   {
-    // SHIELD(value);
+    // Rf_protect(sexp);
     if constexpr (RPtrWritableType<T>) {
-      ptr = internal::vector_ptr<T>(value);
+      ptr = internal::vector_ptr<T>(sexp);
     }
   }
 
   template<typename U>
-  explicit r_vec(r_size_t size, U default_value) 
+  explicit r_vec(r_size_t size, U default_value)
     : r_vec(size)
   {
     fill(0, size, default_value);
@@ -39,11 +38,11 @@ struct r_vec {
 
   // Constructor from existing SEXP
   explicit r_vec(SEXP s = R_NilValue)
-    : value(s)
+    : sexp(s)
     , const_ptr(s == R_NilValue ? nullptr : internal::vector_ptr<const T>(s))
     , ptr(nullptr)
   {
-    // SHIELD(value);
+    // Rf_protect(sexp);
     if constexpr (RPtrWritableType<T>){
       if (const_ptr != nullptr){
         ptr = internal::vector_ptr<T>(s);
@@ -51,49 +50,49 @@ struct r_vec {
     }
   }
 
-  // Destructor - automatic unprotection
+  // // Destructor - automatic unprotection
   // ~r_vec() {
-  //   YIELD(1);
+  //   Rf_unprotect(1);
   // }
-  // Copy constructor - shield the copy
+  // // Copy constructor - shield the copy
   // r_vec(const r_vec& other)
-  //   : value(other.value)
+  //   : sexp(other.sexp)
   //   , const_ptr(other.const_ptr)
   //   , ptr(other.ptr)
   // {
-  //   SHIELD(value);
+  //   Rf_protect(sexp);
   // }
   // // Copy assignment
   // r_vec& operator=(const r_vec& other) {
   //   if (this != &other) {
-  //     YIELD(1);
-  //     value = other.value;
+  //     Rf_unprotect(1);
+  //     sexp = other.sexp;
   //     const_ptr = other.const_ptr;
   //     ptr = other.ptr;
-  //     SHIELD(value);
+  //     Rf_protect(sexp);
   //   }
   //   return *this;
   // }
-  
+
   // // Move constructor - transfer ownership
   // r_vec(r_vec&& other) noexcept
-  //   : value(other.value)
+  //   : sexp(other.sexp)
   //   , const_ptr(other.const_ptr)
   //   , ptr(other.ptr)
   // {
-  //   other.value = R_NilValue;
+  //   other.sexp = r_null;
   //   other.const_ptr = nullptr;
   //   other.ptr = nullptr;
   // }
-  
+
   // // Move assignment - transfer ownership
   // r_vec& operator=(r_vec&& other) noexcept {
   //   if (this != &other) {
-  //     YIELD(1);
-  //     value = other.value;
+  //     Rf_unprotect(1);
+  //     sexp = other.sexp;
   //     const_ptr = other.const_ptr;
   //     ptr = other.ptr;
-  //     other.value = R_NilValue;
+  //     other.sexp = r_null;
   //     other.const_ptr = nullptr;
   //     other.ptr = nullptr;
   //   }
@@ -101,8 +100,8 @@ struct r_vec {
   // }
 
   // Implicit conversion to SEXP
-  operator SEXP() const {
-    return value;
+  constexpr operator SEXP() const {
+    return sexp.value;
   }
 
   // Direct pointer access
@@ -132,97 +131,41 @@ struct r_vec {
   }
 
   bool is_null() const {
-    return value == R_NilValue;
+    return sexp.is_null();
   }
 
   // Get size
   r_size_t size() const {
-    return Rf_xlength(value);
+    return Rf_xlength(sexp);
   }
   r_size_t length() const {
     return size();
   }
 
-  const r_str address() const {
-    return internal::address(value);
+  r_str address() const {
+    return sexp.address();
   }
 
-  r_vec<r_str> get_names() const {
-    return r_vec<r_str>(Rf_getAttrib(value, symbol::names_sym));
+  bool is_bare(){
+    return !Rf_isObject(sexp);
   }
-  
+
+  r_vec<r_str> names() const {
+    return r_vec<r_str>(Rf_getAttrib(sexp, symbol::names_sym));
+  }
+
   void set_names(r_vec<r_str> names){
     if (names.is_null()){
-      attr::set_attr(value, symbol::names_sym, r_null);
+      Rf_setAttrib(sexp, symbol::names_sym, r_null);
     } else {
-      Rf_namesgets(value, names);
+      Rf_namesgets(sexp, names);
     }
-  }
-
-  r_vec<r_sexp> get_attrs() const {
-    return r_vec<r_sexp>(attr::get_attrs(value));
-  }
-
-  void clear_attrs(){
-    auto attrs = SHIELD(get_attrs());
-    if (attrs.is_null()){
-      YIELD(1);
-      return;
-    }
-    
-    auto names = SHIELD(attrs.get_names());
-
-    int n = attrs.length();
-    for (int i = 0; i < n; ++i){
-      r_sym target_sym = internal::as_r<r_sym>(names.get(i));
-      attr::set_attr(value, target_sym, r_null);
-    }
-    YIELD(2);
-}
-
-  void set_attrs(r_vec<r_sexp> attrs) {
-
-    if (this->is_null()){
-      Rf_error("Cannot add attributes to `NULL`");
-    }
-
-    if (attrs.is_null()){
-      return;
-    }
-
-    int32_t NP = 0;
-
-    auto names = SHIELD(attrs.get_names()); ++NP;
-
-    if (names.is_null()){
-      YIELD(NP);
-      Rf_error("attributes must be a named list");
-    }
-
-    clear_attrs();
-
-    r_sym attr_nm;
-
-    int n = names.length();
-
-    for (int i = 0; i < n; ++i){
-      if (!(names.get(i) == blank_r_string)){
-        attr_nm = internal::as_r<r_sym>(names.get(i));
-        if (this->address() == internal::address(static_cast<SEXP>(attrs.get(i)))){
-          SEXP dup_attr = SHIELD(Rf_duplicate(attrs.get(i))); ++NP;
-          attr::set_attr(value, attr_nm, dup_attr);
-        } else {
-          attr::set_attr(value, attr_nm, attrs.get(i));
-        }
-      }
-    }
-    YIELD(NP);
   }
 
   r_vec<r_lgl> is_na() const {
     r_size_t n = length();
-    auto out = SHIELD(r_vec<r_lgl>(n));
-    
+    auto out = r_vec<r_lgl>(n);
+
     if constexpr (RPtrWritableType<T>){
       int n_threads = internal::calc_threads(n);
       if (n_threads > 1){
@@ -241,8 +184,7 @@ struct r_vec {
         out.set(i, is_r_na(get(i)));
       }
     }
-    
-    YIELD(1);
+
     return out;
   }
 
@@ -259,7 +201,7 @@ struct r_vec {
       if constexpr (RPtrWritableType<T>){
       ptr[index] = val2;
       } else {
-      internal::set_value<T>(value, index, val2);
+      internal::set_value<T>(sexp, index, val2);
       }
   }
 
@@ -284,7 +226,7 @@ struct r_vec {
     }
   }
 
-  template <typename U1, typename U2> 
+  template <typename U1, typename U2>
   void replace(r_size_t start, r_size_t n, const U1 old_val, const U2 new_val){
     auto old_val2 = internal::as_r<T>(old_val);
     auto new_val2 = internal::as_r<T>(new_val);
@@ -319,79 +261,10 @@ struct r_vec {
     if (n == vec_size){
       return *this;
     } else {
-      auto resized_vec = SHIELD(r_vec<T>(n));
+      auto resized_vec = r_vec<T>(n);
       r_size_t n_to_copy = std::min(n, vec_size);
       std::copy_n(this->begin(), n_to_copy, resized_vec.begin());
-      YIELD(1);
       return resized_vec;
-    }
-  }
-
-  // Define this after make_vec<> and arg struct
-  template<typename... Args>
-  void modify_attrs(Args... args);
-
-};
-
-
-// R Date vector
-struct r_dates : public r_vec<r_int> {
-  
-  // Constructors
-  r_dates() : r_vec<r_int>() {}
-  
-  explicit r_dates(SEXP x) : r_vec<r_int>(x) {
-    if (!is_null() && !attr::inherits1(x, "Date")){ 
-      Rf_error("`SEXP` must be a Date");
-    }
-  }
-  
-  explicit r_dates(r_size_t n) : r_vec<r_int>(n) {
-    attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
-  }
-};
-
-// R POSIXct vector
-struct r_posixcts : public r_vec<r_dbl> {
-  
-  // Constructors
-  r_posixcts() : r_vec<r_dbl>() {}
-  
-  explicit r_posixcts(SEXP x) : r_vec<r_dbl>(x) {
-    if (!(is_null() || (attr::inherits1(x, "POSIXct") && attr::inherits1(x, "POSIXt")))){ 
-      Rf_error("`SEXP` must be a POSIXct");
-    }
-  }
-  
-  explicit r_posixcts(r_size_t n) : r_vec<r_dbl>(n) {
-    auto cls = SHIELD(r_vec<r_str>(2));
-    auto tz = SHIELD(internal::new_scalar_vector(blank_r_string));
-    cls.set(0, "POSIXct"); cls.set(1, "POSIXt");
-    // Set class
-    attr::set_old_class(this->value, cls);
-    // Set timezone
-    attr::set_attr(this->value, internal::as_r<r_sym>("tzone"), tz);
-    YIELD(2);
-  }
-
-  r_str tzone_get() const {
-    auto tz = r_vec<r_str>(attr::get_attr(this->value, internal::as_r<r_sym>("tzone")));
-    if (tz.is_null() || tz.length() == 0){
-      return blank_r_string;
-    } else {
-      return tz.get(0);
-    }
-  }
-
-    void tzone_set(r_str tzone) {
-    auto tz = SHIELD(r_vec<r_str>(attr::get_attr(this->value, internal::as_r<r_sym>("tzone"))));
-    if (tz.length() != 0){
-      tz.set(0, tzone);
-      YIELD(1);
-    } else {
-      auto new_tz = SHIELD(internal::new_scalar_vector(tzone));
-      attr::set_attr(this->value, internal::as_r<r_sym>("tzone"), new_tz);
-      YIELD(2);
     }
   }
 
@@ -400,16 +273,16 @@ struct r_posixcts : public r_vec<r_dbl> {
 
 // R data frame
 // struct r_df : public r_vec<r_sexp> {
-  
+
 //   // Constructors
 //   r_df() : r_vec<r_sexp>() {}
-  
+
 //   explicit r_df(SEXP x) : r_vec<r_sexp>(x) {
-//     if (!is_null() && !attr::inherits1(x, "Date")){ 
-//       Rf_error("`SEXP` must be a Date");
+//     if (!is_null() && !attr::inherits1(x, "Date")){
+//       Rf_error("`SEXP` must be a data frame");
 //     }
 //   }
-  
+
 //   explicit r_df(r_size_t n) : r_vec<r_sexp>(n) {
 //     attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
 //   }
@@ -426,56 +299,49 @@ struct is_r_vector<r_vec<T>> : std::true_type {};
 template<typename T>
 inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value;
 
+// A cleaner lambda-based alternative to
+// using the canonical switch(TYPEOF(x))
+//
+// Pass both the SEXP and an auto variable inside a lambda
+// and visit_vector() will assign the auto variable to the correct vector
+// Then simply deduce its type (via decltype) for further manipulation
+// To be used in a lambda
+// E.g. visit_vector(x, [&](auto x_vec) {})
+
+// One must account for objects like `NULL` and non-vectors outwith this method
+
+template <class F>
+decltype(auto) visit_vector(SEXP x, F&& f) {
+  switch (CHEAPR_TYPEOF(x)) {
+  case LGLSXP:          return f(r_vec<r_lgl>(x));
+  case INTSXP:          return f(r_vec<r_int>(x));
+  case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
+  case REALSXP:         return f(r_vec<r_dbl>(x));
+  case STRSXP:          return f(r_vec<r_str>(x));
+  case VECSXP:          return f(r_vec<r_sexp>(x));
+  case CPLXSXP:         return f(r_vec<r_cplx>(x));
+  case RAWSXP:          return f(r_vec<r_raw>(x));
+  default:              Rf_error("`x` must be a vector");
+  }
 }
 
-template<typename T>
-concept RVectorType = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
-
-namespace internal {
-
-  // A cleaner lambda-based alternative to
-  // using the canonical switch(TYPEOF(x))
-  //
-  // Pass both the SEXP and an auto variable inside a lambda
-  // and visit_vector() will assign the auto variable to the correct vector
-  // Then simply deduce its type (via decltype) for further manipulation
-  // To be used in a lambda
-  // E.g. visit_vector(x, [&](auto x_vec) {})
-  
-  // One must account for objects like `NULL` and non-vectors outwith this method
-  
-  template <class F>
-  decltype(auto) visit_vector(SEXP x, F&& f) {
-    switch (CHEAPR_TYPEOF(x)) {
-    case LGLSXP:          return f(r_vec<r_lgl>(x));
-    case INTSXP:          return f(r_vec<r_int>(x));
-    case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
-    case REALSXP:         return f(r_vec<r_dbl>(x));
-    case STRSXP:          return f(r_vec<r_str>(x));
-    case VECSXP:          return f(r_vec<r_sexp>(x));
-    case CPLXSXP:         return f(r_vec<r_cplx>(x));
-    case RAWSXP:          return f(r_vec<r_raw>(x));
-    default:              Rf_error("`x` must be a vector");
-    }
+// Same as above but no run-time error, user must deal with non-vector input
+template <class F>
+decltype(auto) visit_maybe_vector(SEXP x, F&& f) {
+  switch (CHEAPR_TYPEOF(x)) {
+  case LGLSXP:          return f(r_vec<r_lgl>(x));
+  case INTSXP:          return f(r_vec<r_int>(x));
+  case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
+  case REALSXP:         return f(r_vec<r_dbl>(x));
+  case STRSXP:          return f(r_vec<r_str>(x));
+  case VECSXP:          return f(r_vec<r_sexp>(x));
+  case CPLXSXP:         return f(r_vec<r_cplx>(x));
+  case RAWSXP:          return f(r_vec<r_raw>(x));
+  default:              return f(nullptr);
   }
+}
 
-  // Same as above but no run-time error, user must deal with non-vector input
-  template <class F>
-  decltype(auto) visit_maybe_vector(SEXP x, F&& f) { 
-    switch (CHEAPR_TYPEOF(x)) {
-    case LGLSXP:          return f(r_vec<r_lgl>(x));
-    case INTSXP:          return f(r_vec<r_int>(x));
-    case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
-    case REALSXP:         return f(r_vec<r_dbl>(x));
-    case STRSXP:          return f(r_vec<r_str>(x));
-    case VECSXP:          return f(r_vec<r_sexp>(x));
-    case CPLXSXP:         return f(r_vec<r_cplx>(x));
-    case RAWSXP:          return f(r_vec<r_raw>(x));
-    default:              return f(nullptr);
-    }
-  }
-  
-  }
+}
 
 template <RType T>
 inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset, r_size_t n){
@@ -496,50 +362,6 @@ inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset,
       target.set(target_offset + i, p_source[i]);
     }
   }
-}
-
-// Coerce to an R type based on the C type (useful for RType templates)
-// Difficult cause if it returns `r_str`, that needs to be protected but other types don't
-namespace internal {
-
-template<typename T>
-inline auto as_r_type(T x) {
-  if constexpr (RType<T>){
-    return x;
-  } else if constexpr (is<T, bool>){
-    return r_lgl(x);
-  } else if constexpr (MathType<T>){
-    if constexpr (internal::can_be_int<T>){
-      return r_int(static_cast<int>(x));
-    } else {
-      return r_dbl(static_cast<double>(x));
-    }
-  } else if constexpr (is<T, const char*>){
-    return internal::as_r<r_str>(x);
-  } else if constexpr (any<T, SEXP, r_sexp>){
-    return r_sexp(static_cast<SEXP>(x));
-  } else if constexpr (RVectorType<T>){
-    return r_sexp(x.value);
-  } else {    
-    static_assert(
-      always_false<T>,
-      "Unsupported type for `as_r_type`"
-    );
-  } 
-}
-
-}
-
-namespace vec {
-
-inline bool is_object(SEXP x){
-  return Rf_isObject(x);
-}
-
-inline bool is_bare(SEXP x){
-  return !is_object(x);
-}
-
 }
 
 // template<typename T>

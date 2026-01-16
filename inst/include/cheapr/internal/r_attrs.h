@@ -2,72 +2,135 @@
 #define CHEAPR_R_ATTRS_H
 
 #include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_symbols.h>
+#include <cheapr/internal/r_vector.h>
 
 namespace cheapr {
 
 namespace attr {
 
-inline bool inherits1(SEXP x, const char *r_cls){
+inline bool inherits1(r_sexp x, const char *r_cls){
   return Rf_inherits(x, r_cls);
 }
 
 // Attributes of x as a list
-inline SEXP get_attrs(SEXP x){
+inline r_vec<r_sexp> get_attrs(r_sexp x){
   if (internal::BASE_ATTRIBUTES == NULL){
     internal::BASE_ATTRIBUTES = Rf_install("attributes");
   }
-  SEXP expr = SHIELD(Rf_lang2(internal::BASE_ATTRIBUTES, x));
-  SEXP out = SHIELD(Rf_eval(expr, R_BaseEnv));
-  YIELD(2);
-  return out;
+  r_sexp expr = r_sexp(Rf_lang2(internal::BASE_ATTRIBUTES, x));
+  r_sexp out = r_sexp(Rf_eval(expr, R_BaseEnv));
+  return r_vec<r_sexp>(out);
 }
 
-inline bool has_attrs(SEXP x){
-  return !is_null(get_attrs(x));
+inline bool has_attrs(r_sexp x){
+  return !get_attrs(x).is_null();
 }
 
-inline SEXP get_attr(SEXP x, r_sym sym){
-  return Rf_getAttrib(x, static_cast<SEXP>(sym));
+inline r_sexp get_attr(r_sexp x, r_sym sym){
+  return r_sexp(Rf_getAttrib(x, sym));
 }
 
-inline void set_attr(SEXP x, r_sym sym, SEXP value){
-  Rf_setAttrib(x, static_cast<SEXP>(sym), value);
+inline void set_attr(r_sexp x, r_sym sym, r_sexp value){
+  Rf_setAttrib(x, sym, value);
 }
 
-inline void set_old_names(SEXP x, SEXP names){
-  if (is_null(names)){
-    attr::set_attr(x, symbol::names_sym, r_null); 
+inline void set_old_names(r_sexp x, r_vec<r_str> names){
+  if (names.is_null()){
+    attr::set_attr(x, symbol::names_sym, r_null);
   } else {
     Rf_namesgets(x, names);
   }
 }
-inline SEXP get_old_names(SEXP x){
-  return attr::get_attr(x, symbol::names_sym);
+inline r_vec<r_str> get_old_names(r_sexp x){
+  return r_vec<r_str>(get_attr(x, symbol::names_sym));
 }
-inline bool has_r_names(SEXP x){
-  SEXP names = SHIELD(get_old_names(x));
-  bool out = !is_null(names);
-  YIELD(1);
-  return out;
+inline bool has_r_names(r_sexp x){
+  auto names = get_old_names(x);
+  return !names.is_null();
 }
 
-inline SEXP get_old_class(SEXP x){
-  return get_attr(x, symbol::class_sym);
+inline r_vec<r_str> get_old_class(r_sexp x){
+  return r_vec<r_str>(get_attr(x, symbol::class_sym));
 }
-inline void set_old_class(SEXP x, SEXP cls){
-  Rf_classgets(x, cls); 
+inline void set_old_class(r_sexp x, r_vec<r_str> cls){
+  r_vec<r_str>(Rf_classgets(x, cls));
 }
 
-inline bool inherits(SEXP x, SEXP classes){
-  r_size_t n = Rf_xlength(classes);
+inline bool inherits(r_sexp x, r_vec<r_str> classes){
+  r_size_t n = classes.length();
   for (r_size_t i = 0; i < n; ++i) {
-    if (inherits1(x, CHAR(STRING_ELT(classes, i)))){
+    if (inherits1(x, classes.get(i).c_str())){
       return true;
     }
   }
   return false;
+}
+
+inline void clear_attrs(r_sexp x){
+
+  auto attrs = get_attrs(x);
+
+  if (attrs.is_null()){
+    return;
+  }
+  auto names = attr::get_old_names(attrs.sexp);
+
+  int n = attrs.length();
+
+  for (r_size_t i = 0; i < n; ++i){
+    r_sym target_sym = internal::as_r<r_sym>(names.get(i));
+    set_attr(x, target_sym, r_null);
+  }
+}
+
+}
+
+namespace internal {
+
+inline void modify_attrs_impl(r_sexp x, cheapr::r_vec<r_sexp> attrs) {
+
+  if (x.is_null()){
+    Rf_error("Cannot add attributes to `NULL`");
+  }
+
+  if (attrs.is_null()){
+    return;
+  }
+
+  auto names = attr::get_old_names(attrs.sexp);
+
+  if (names.is_null()){
+    Rf_error("attributes must be a named list");
+  }
+
+  r_sym attr_nm;
+
+  int n = names.length();
+
+  for (int i = 0; i < n; ++i){
+    if (!(names.get(i) == blank_r_string)){
+      attr_nm = internal::as_r<r_sym>(names.get(i));
+      // We can't add an object as its own attribute in-place (as this will crash R)
+      if (x.address() == attrs.get(i).address()){
+        r_sexp dup_attr = r_sexp(Rf_duplicate(attrs.get(i)));
+        attr::set_attr(x, attr_nm, dup_attr);
+      } else {
+        attr::set_attr(x, attr_nm, attrs.get(i));
+      }
+    }
+  }
+}
+
+}
+
+namespace attr {
+
+inline void set_attrs(cheapr::r_sexp x, r_vec<r_sexp> attrs){
+  if (x.is_null()){
+    clear_attrs(x);
+    internal::modify_attrs_impl(x, attrs);
+  }
 }
 
 }
@@ -75,3 +138,4 @@ inline bool inherits(SEXP x, SEXP classes){
 }
 
 #endif
+

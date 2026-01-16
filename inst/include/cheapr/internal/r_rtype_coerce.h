@@ -123,7 +123,7 @@ inline r_str as_r_string(T x){
   if constexpr (is<T, r_str>){
     return x;
   } else if constexpr (is<T, const char *>){
-    return static_cast<r_str>(internal::make_utf8_charsxp(x));
+    return static_cast<r_str>(r_str(x));
   } else if constexpr (is<T, r_sym>){
     return static_cast<r_str>(PRINTNAME(static_cast<SEXP>(x)));
   } else if constexpr (is<T, r_lgl>){
@@ -175,9 +175,8 @@ inline r_str as_r_string(T x){
     if (Rf_length(x) != 1){
       Rf_error("`x` is a non-scalar vector and cannot be converted to an `r_str` in %s", __func__);
     }
-    SEXP str = SHIELD(Rf_coerceVector(x, STRSXP));
+    r_sexp str = r_sexp(Rf_coerceVector(x, STRSXP));
     r_str out = r_str(STRING_ELT(str, 0));
-    YIELD(1);
     return out;
   } else {
     static_assert(always_false<T>, "Unsupported type for `as_r_string`");
@@ -190,16 +189,14 @@ inline r_sym as_r_sym(T x){
   if constexpr (is<T, r_sym>){
     return x;
   } else if constexpr (is<T, const char *>){
-    SEXP str = SHIELD(internal::make_utf8_charsxp(x));
+    SEXP str = r_str(x);
     r_sym out = r_sym(Rf_installChar(str));
-    YIELD(1);
     return out;
   } else if constexpr (is<T, r_str>){
     return r_sym(Rf_installChar(x));
   } else {
-    r_str str = SHIELD(as_r_string(x));
+    r_str str = as_r_string(x);
     r_sym out = as_r_sym(str);
-    YIELD(1);
     return out;
   }
 }
@@ -234,7 +231,7 @@ inline r_sexp as_sexp<bool>(bool x){
 }
 template<>
 inline r_sexp as_sexp<const char *>(const char *x){
-  return r_sexp(internal::make_utf8_strsxp(x));
+  return r_sexp(Rf_ScalarString(r_str(x)));
 }
 template<>
 inline r_sexp as_sexp<r_sym>(r_sym x){

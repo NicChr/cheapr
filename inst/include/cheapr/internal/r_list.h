@@ -12,7 +12,7 @@
 //   r_list() : r_vec<r_sexp>() {}
   
 //   explicit r_list(SEXP x) : r_vec<r_sexp>(x) {
-//     if (!(is_null() || (TYPEOF(x) == VECSXP && vec::is_bare(x)))){
+//     if (!() || (TYPEOF(x) == VECSXP && vec::is_bare(x))).is_null(){
 //       Rf_error("`SEXP` must be a plain list");
 //     }
 //   }
@@ -53,7 +53,7 @@
 // //   r_list() : r_vec<r_sexp>() {}
   
 // //   explicit r_list(SEXP x) : r_vec<r_sexp>(x) {
-// //     if (!(is_null() || (TYPEOF(x) == VECSXP && vec::is_bare(x)))){
+// //     if (!() || (TYPEOF(x) == VECSXP && vec::is_bare(x))).is_null(){
 // //       Rf_error("`SEXP` must be a plain list");
 // //     }
 // //   }
@@ -72,13 +72,13 @@
 // //     return r_vec<r_sexp>(0);
 // //   } else {
 
-// //     auto out = SHIELD(r_vec<r_sexp>(n));
+// //     auto out = r_vec<r_sexp>(n);
 
 // //     // Are any args named?
 // //     constexpr bool any_named = (is<Args, arg> || ...);
 
 // //     auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
-// //     SHIELD(nms);
+// //     nms;
 
 // //     int i = 0;
 // //     (([&]() {
@@ -92,7 +92,6 @@
 // //     }()), ...);
 
 // //     attr::set_old_names(out, nms);
-// //     YIELD(2);
 // //     return out;
 // //   }
 // // }
