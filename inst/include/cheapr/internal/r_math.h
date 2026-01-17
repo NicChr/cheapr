@@ -26,7 +26,7 @@ inline constexpr bool is_r_inf(const T x){
 
 template <>
 inline constexpr bool is_r_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits::r_pos_inf || x.value == r_limits::r_neg_inf;
+  return x.value == r_limits::r_pos_inf.value || x.value == r_limits::r_neg_inf.value;
 }
 
 template <typename T>
@@ -36,7 +36,7 @@ inline constexpr bool is_r_pos_inf(const T x){
 
 template <>
 inline constexpr bool is_r_pos_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits::r_pos_inf;
+  return x.value == r_limits::r_pos_inf.value;
 }
 
 template <typename T>
@@ -46,7 +46,7 @@ inline constexpr bool is_r_neg_inf(const T x){
 
 template <>
 inline constexpr bool is_r_neg_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits::r_neg_inf;
+  return x.value == r_limits::r_neg_inf.value;
 }
 
 template<RMathType T>
