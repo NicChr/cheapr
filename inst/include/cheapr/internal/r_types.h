@@ -56,7 +56,7 @@ public:
         return *this;
     }
 
-    // Implicit conversion to SEXP (Zero overhead, returns raw pointer)
+    // Implicit conversion to SEXP
     constexpr operator SEXP() const { return value; }
 
     r_size_t length() const noexcept {

@@ -32,7 +32,9 @@ inline r_sexp get_attr(r_sexp x, r_sym sym){
 }
 
 inline void set_attr(r_sexp x, r_sym sym, r_sexp value){
-  Rf_setAttrib(x, sym, value);
+  if (!x.is_null()){
+    Rf_setAttrib(x, sym, value);
+  }
 }
 
 inline void set_old_names(r_sexp x, r_vec<r_str> names){
