@@ -12,8 +12,6 @@ struct r_str; // Forward declaration
 // General SEXP, reserved for everything except CHARSXP and SYMSXP
 // Wrapper around cpp11::sexp to benefit from automatic protection (cpp11-managed linked list)
 // All credits go to cpp11 authors/maintainers for `cpp11::sexp`
-#include <cpp11.hpp>
-
 struct r_sexp {
 
   SEXP value;
