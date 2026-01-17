@@ -10,64 +10,81 @@ namespace cheapr {
 struct r_str; // Forward declaration
 
 // General SEXP, reserved for everything except CHARSXP and SYMSXP
+// Wrapper around cpp11::sexp to benefit from automatic protection (cpp11-managed linked list)
+// All credits go to cpp11 authors/maintainers for `cpp11::sexp`
+#include <cpp11.hpp>
+
 struct r_sexp {
+
   SEXP value;
 
-  // Default constructor
-  r_sexp() : value(R_NilValue) {
-    Rf_protect(value);
-  }
+private:
+    // 2. The manager that keeps 'value' protected
+    // We don't use this directly
+    cpp11::sexp protector_;
 
-  // Constructor from SEXP
-  explicit r_sexp(SEXP s) : value(s) {
-    Rf_protect(value);
-  }
+public:
+    // Constructor from SEXP
+    explicit r_sexp(SEXP s) : value(s), protector_(s) {}
 
-  // Destructor
-  ~r_sexp() {
-    Rf_unprotect(1);
-  }
+    // Default constructor
+    r_sexp() : value(R_NilValue), protector_(R_NilValue) {}
 
-  // Copy constructor
-  r_sexp(const r_sexp& other) : value(other.value) {
-    Rf_protect(value);
-  }
+    // Copy Constructor
+    r_sexp(const r_sexp& other) : value(other.value), protector_(other.value) {}
 
-  // Copy assignment
-  r_sexp& operator=(const r_sexp& other) {
-    if (this != &other) {
-      Rf_protect(other.value);
-      Rf_unprotect(1);
-      value = other.value;
-    }
-    return *this;
-  }
-
-  // Move constructor
-  r_sexp(r_sexp&& other) noexcept : value(other.value) {
-    other.value = R_NilValue;
-  }
-
-  // Move assignment
-  r_sexp& operator=(r_sexp&& other) noexcept {
-    if (this != &other) {
-      Rf_unprotect(1);
-      value = other.value;
+    // Move Constructor
+    r_sexp(r_sexp&& other) noexcept 
+    : value(other.value), protector_(std::move(other.protector_)) {
       other.value = R_NilValue;
     }
-    return *this;
-  }
 
-  // Implicit conversion to SEXP
-  constexpr operator SEXP() const { return value; }
+    // Copy Assignment
+    r_sexp& operator=(const r_sexp& other) {
+        if (this != &other) {
+            value = other.value;
+            protector_ = other.value;
+        }
+        return *this;
+    }
 
-  bool is_null() const {
-    return value == R_NilValue;
-  }
+    // Move Assignment
+    r_sexp& operator=(r_sexp&& other) noexcept {
+        if (this != &other) {
+            value = other.value;
+            protector_ = std::move(other.protector_);
+            other.value = R_NilValue;
+        }
+        return *this;
+    }
 
-  r_str address() const;
+    // Implicit conversion to SEXP (Zero overhead, returns raw pointer)
+    constexpr operator SEXP() const { return value; }
 
+    bool is_null() const { return value == R_NilValue; }
+    
+    r_str address() const;
 };
+
+// struct r_sexp {
+//   cpp11::sexp value;
+
+//   // Constructor from SEXP
+//   explicit r_sexp(SEXP s) : value(s) {}
+
+//   // Default constructor
+//   r_sexp() : value(R_NilValue) {}
+
+//   // Implicit conversion to SEXP
+//   operator SEXP() const { return value.data(); }
+
+//   bool is_null() const {
+//     return value.data() == R_NilValue;
+//   }
+
+//   r_str address() const;
+
+// };
 
 // R C NULL constant
 inline const r_sexp r_null = r_sexp();
