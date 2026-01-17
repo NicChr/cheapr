@@ -50,56 +50,56 @@ inline constexpr bool is_r_neg_inf<r_dbl>(const r_dbl x){
 }
 
 template<RMathType T>
-inline constexpr T r_abs(T x){
+inline constexpr T abs(T x){
   return is_r_na(x) ? x : T{std::abs(x.value)};
 }
 
 template<RMathType T>
-inline T r_floor(T x){
+inline T floor(T x){
   return is_r_na(x) ? x : T{std::floor(x.value)};
 }
 template<>
-inline r_dbl r_floor(r_dbl x){
+inline r_dbl floor(r_dbl x){
   return r_dbl(std::floor(x.value));
 }
 
 template<RMathType T>
-inline T r_ceiling(T x){
+inline T ceiling(T x){
   return is_r_na(x) ? x : T{std::ceil(x.value)};
 }
 template<>
-inline r_dbl r_ceiling(r_dbl x){
+inline r_dbl ceiling(r_dbl x){
   return r_dbl(std::ceil(x.value));
 }
 
 template<RMathType T>
-inline T r_trunc(T x){
+inline T trunc(T x){
   return is_r_na(x) ? x : T{std::trunc(x.value)};
 }
 
 template <>
-inline r_dbl r_trunc(r_dbl x){
+inline r_dbl trunc(r_dbl x){
   return r_dbl(std::trunc(x.value) + 0.0);
 }
 
 template <RMathType T>
-inline r_int r_sign(T x) {
+inline r_int sign(T x) {
   return is_r_na(x) ? na::integer : (T(0) < x) - (x < T(0));
 }
 
 template<RMathType T>
-inline T r_negate(T x){
-  return T(-x.value);
+inline T negate(T x){
+  return -x;
 }
 
 template<RMathType T>
-inline r_dbl r_sqrt(T x){
+inline r_dbl sqrt(T x){
   return r_dbl(std::sqrt(as<r_dbl>(x).value));
 }
 
 template<typename T, typename U>
   requires (AtLeastOneRMathType<T, U>)
-inline r_dbl r_pow(T x, U y){
+inline r_dbl pow(T x, U y){
   if (y == 0) return r_dbl(1.0);
   if (x == 1) return r_dbl(1.0);
   if (y == 2){
@@ -110,29 +110,29 @@ inline r_dbl r_pow(T x, U y){
 }
 
 template<RMathType T>
-inline r_dbl r_log10(T x){
+inline r_dbl log10(T x){
   return r_dbl(std::log10(as<r_dbl>(x).value));
 }
 
 template<RMathType T>
-inline r_dbl r_exp(T x){
+inline r_dbl exp(T x){
   return r_dbl(std::exp(as<r_dbl>(x).value));
 }
 
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
-inline r_dbl r_log(T x, U base){
+inline r_dbl log(T x, U base){
   return r_dbl(std::log(as<r_dbl>(x)) / std::log(as<r_dbl>(base)));
 }
 template<RMathType T>
-inline r_dbl r_log(T x){
+inline r_dbl log(T x){
   return r_dbl(std::log(as<r_dbl>(x).value));
 }
-inline r_cplx r_log(r_cplx x){
+inline r_cplx log(r_cplx x){
   if (is_r_na(x)){
     return x;
   }
-  r_dbl real = as<r_dbl>(0.5 * (r_log(r_pow(x.re(), 2.0) + r_pow(x.im(), 2.0))));
+  r_dbl real = as<r_dbl>(0.5 * (log(pow(x.re(), 2.0) + pow(x.im(), 2.0))));
   r_dbl imag = as<r_dbl>(std::atan2(as<r_dbl>(x.im()), as<r_dbl>(x.re())));
   return r_cplx{real, imag};
 }
@@ -140,7 +140,7 @@ inline r_cplx r_log(r_cplx x){
 
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
-inline r_dbl r_round(T x, const U digits){
+inline r_dbl round(T x, const U digits){
   if (is_r_na(x)){
     return as<r_dbl>(x);
   } else if (is_r_na(digits)){
@@ -158,7 +158,7 @@ inline r_dbl r_round(T x, const U digits){
 }
 
 template<RMathType T>
-inline r_dbl r_round(T x){
+inline r_dbl round(T x){
   if (is_r_na(x)){
     return as<r_dbl>(x);
   } else if (is_r_inf(x)){
@@ -170,7 +170,7 @@ inline r_dbl r_round(T x){
 
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
-inline r_dbl r_signif(T x, const U digits){
+inline r_dbl signif(T x, const U digits){
   U new_digits = std::max(U(1), digits);
   if (is_r_na(x)){
     return as<r_dbl>(x);
@@ -186,25 +186,26 @@ inline r_dbl r_signif(T x, const U digits){
 }
 
 template<MathType T, MathType U>
-inline T r_abs_diff(const T x, const U y){
-  return r_abs(x - y);
+requires (AtLeastOneRMathType<T, U>)
+inline T abs_diff(const T x, const U y){
+  return abs(x - y);
 }
 
 inline r_lgl is_whole_number(const r_dbl x, const r_dbl tolerance){
-  return is_r_na(x) || is_r_na(tolerance) ? na::logical : r_lgl(r_abs_diff(x, r_round(x)) <= tolerance);
+  return is_r_na(x) || is_r_na(tolerance) ? na::logical : r_lgl(abs_diff(x, round(x)) <= tolerance);
 }
 
 
 // Greatest common divisor
 template<MathType T>
-  inline T r_gcd(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
+  inline T gcd(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
 
     if (is_r_na(x) || is_r_na(y)){
-      if (na_rm){
+      if (na_rm){ 
         if (is_r_na(x)){
-          return r_abs(y);
+          return abs(y);
         } else {
-          return r_abs(x);
+          return abs(x);
         }
       } else {
         return na_value<decltype(x)>();
@@ -266,7 +267,7 @@ template<MathType T>
 
 // Lowest common multiple
 template<MathType T>
-  inline T r_lcm(
+  inline T lcm(
       T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
   ){
     if (is_r_na(x) || is_r_na(y)){
@@ -285,7 +286,7 @@ template<MathType T>
       if (x == 0 && y == 0){
         return 0;
       }
-      T res = std::abs(x) / r_gcd(x, y, na_rm);
+      T res = std::abs(x) / gcd(x, y, na_rm);
       if (y != 0 && (std::abs(res) > (std::numeric_limits<T>::max() / std::abs(y)))){
         return na_value<decltype(x)>();
       }
@@ -294,7 +295,7 @@ template<MathType T>
       if (std::fabs(x) <= tol && std::fabs(y) <= tol){
         return 0.0;
       }
-      return ( std::fabs(x) / r_gcd(x, y, na_rm, tol) ) * std::fabs(y);
+      return ( std::fabs(x) / gcd(x, y, na_rm, tol) ) * std::fabs(y);
     }
   }
 
