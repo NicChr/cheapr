@@ -61,30 +61,18 @@ public:
     // Implicit conversion to SEXP (Zero overhead, returns raw pointer)
     constexpr operator SEXP() const { return value; }
 
+    r_size_t length() const noexcept {
+      return Rf_xlength(value);
+    }
+
+    r_size_t size() const noexcept {
+      return length();
+    }
+
     bool is_null() const { return value == R_NilValue; }
     
     r_str address() const;
 };
-
-// struct r_sexp {
-//   cpp11::sexp value;
-
-//   // Constructor from SEXP
-//   explicit r_sexp(SEXP s) : value(s) {}
-
-//   // Default constructor
-//   r_sexp() : value(R_NilValue) {}
-
-//   // Implicit conversion to SEXP
-//   operator SEXP() const { return value.data(); }
-
-//   bool is_null() const {
-//     return value.data() == R_NilValue;
-//   }
-
-//   r_str address() const;
-
-// };
 
 // R C NULL constant
 inline const r_sexp r_null = r_sexp();
@@ -122,7 +110,7 @@ inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
 
   inline r_lgl::operator bool() const {
     if (is_na()){
-    Rf_error("Cannot convert NA to bool, please check");
+    cpp11::stop("Cannot convert NA to bool, please check");
   }
   return static_cast<bool>(value);
 }
@@ -163,7 +151,7 @@ struct r_str {
   explicit r_str(const r_sexp &x) : value{x} {}
   explicit r_str(const char *x) : value(r_sexp(Rf_mkCharCE(x, CE_UTF8))) {}
   // Implicit r_str -> SEXP
-  operator SEXP() const { return value; }
+  constexpr operator SEXP() const { return value; }
 
   const char *c_str() const {
     return CHAR(value);

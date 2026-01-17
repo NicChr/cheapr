@@ -13,7 +13,7 @@
   
 //   explicit r_list(SEXP x) : r_vec<r_sexp>(x) {
 //     if (!() || (TYPEOF(x) == VECSXP && vec::is_bare(x))).is_null(){
-//       Rf_error("`SEXP` must be a plain list");
+//       cpp11::stop("`SEXP` must be a plain list");
 //     }
 //   }
   
@@ -54,7 +54,7 @@
   
 // //   explicit r_list(SEXP x) : r_vec<r_sexp>(x) {
 // //     if (!() || (TYPEOF(x) == VECSXP && vec::is_bare(x))).is_null(){
-// //       Rf_error("`SEXP` must be a plain list");
+// //       cpp11::stop("`SEXP` must be a plain list");
 // //     }
 // //   }
   

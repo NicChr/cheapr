@@ -2,7 +2,6 @@
 #define CHEAPR_R_VECTOR_H
 
 #include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_utf8.h>
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_concepts.h>
 #include <cheapr/internal/r_vector_utils.h>
@@ -50,55 +49,6 @@ struct r_vec {
     }
   }
 
-  // // Destructor - automatic unprotection
-  // ~r_vec() {
-  //   Rf_unprotect(1);
-  // }
-  // // Copy constructor - shield the copy
-  // r_vec(const r_vec& other)
-  //   : sexp(other.sexp)
-  //   , const_ptr(other.const_ptr)
-  //   , ptr(other.ptr)
-  // {
-  //   Rf_protect(sexp);
-  // }
-  // // Copy assignment
-  // r_vec& operator=(const r_vec& other) {
-  //   if (this != &other) {
-  //     Rf_unprotect(1);
-  //     sexp = other.sexp;
-  //     const_ptr = other.const_ptr;
-  //     ptr = other.ptr;
-  //     Rf_protect(sexp);
-  //   }
-  //   return *this;
-  // }
-
-  // // Move constructor - transfer ownership
-  // r_vec(r_vec&& other) noexcept
-  //   : sexp(other.sexp)
-  //   , const_ptr(other.const_ptr)
-  //   , ptr(other.ptr)
-  // {
-  //   other.sexp = r_null;
-  //   other.const_ptr = nullptr;
-  //   other.ptr = nullptr;
-  // }
-
-  // // Move assignment - transfer ownership
-  // r_vec& operator=(r_vec&& other) noexcept {
-  //   if (this != &other) {
-  //     Rf_unprotect(1);
-  //     sexp = other.sexp;
-  //     const_ptr = other.const_ptr;
-  //     ptr = other.ptr;
-  //     other.sexp = r_null;
-  //     other.const_ptr = nullptr;
-  //     other.ptr = nullptr;
-  //   }
-  //   return *this;
-  // }
-
   // Implicit conversion to SEXP
   constexpr operator SEXP() const {
     return sexp.value;
@@ -134,12 +84,13 @@ struct r_vec {
     return sexp.is_null();
   }
 
-  // Get size
-  r_size_t size() const {
-    return Rf_xlength(sexp);
+  r_size_t length() const noexcept {
+    return sexp.length();
   }
-  r_size_t length() const {
-    return size();
+
+  // Get size
+  r_size_t size() const noexcept {
+    return length();
   }
 
   r_str address() const {
@@ -279,7 +230,7 @@ struct r_vec {
 
 //   explicit r_df(SEXP x) : r_vec<r_sexp>(x) {
 //     if (!is_null() && !attr::inherits1(x, "Date")){
-//       Rf_error("`SEXP` must be a data frame");
+//       cpp11::stop("`SEXP` must be a data frame");
 //     }
 //   }
 
@@ -321,7 +272,7 @@ decltype(auto) visit_vector(SEXP x, F&& f) {
   case VECSXP:          return f(r_vec<r_sexp>(x));
   case CPLXSXP:         return f(r_vec<r_cplx>(x));
   case RAWSXP:          return f(r_vec<r_raw>(x));
-  default:              Rf_error("`x` must be a vector");
+  default:              cpp11::stop("`x` must be a vector");
   }
 }
 

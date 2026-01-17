@@ -35,7 +35,7 @@ inline T as(U x) {
     });
   } else if constexpr (RVectorType<U> && RType<T>){
     if (x.length() != 1){
-      Rf_error("Vector must be length-1 to be coerced to requested type");
+      cpp11::stop("Vector must be length-1 to be coerced to requested type");
     }
     return internal::as_r<T>(x.get(0));
   } else if constexpr (RVectorType<T> && RType<U>){  

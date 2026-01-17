@@ -38,6 +38,8 @@ inline void set_attr(r_sexp x, r_sym sym, r_sexp value){
 inline void set_old_names(r_sexp x, r_vec<r_str> names){
   if (names.is_null()){
     attr::set_attr(x, symbol::names_sym, r_null);
+  } else if (names.length() != x.length()){
+    cpp11::stop("`length(names)` must equal `length(x)`");
   } else {
     Rf_namesgets(x, names);
   }
@@ -91,7 +93,7 @@ namespace internal {
 inline void modify_attrs_impl(r_sexp x, cheapr::r_vec<r_sexp> attrs) {
 
   if (x.is_null()){
-    Rf_error("Cannot add attributes to `NULL`");
+    cpp11::stop("Cannot add attributes to `NULL`");
   }
 
   if (attrs.is_null()){
@@ -101,7 +103,7 @@ inline void modify_attrs_impl(r_sexp x, cheapr::r_vec<r_sexp> attrs) {
   auto names = attr::get_old_names(attrs.sexp);
 
   if (names.is_null()){
-    Rf_error("attributes must be a named list");
+    cpp11::stop("attributes must be a named list");
   }
 
   r_sym attr_nm;

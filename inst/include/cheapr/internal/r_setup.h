@@ -77,7 +77,7 @@ inline int get_threads(){
   if (CHEAPR_CORES == NULL){
     CHEAPR_CORES = Rf_install("cheapr.cores");
   }
-  int n_threads = Rf_asInteger(Rf_GetOption1(CHEAPR_CORES));
+  int n_threads = cpp11::safe[Rf_asInteger](Rf_GetOption1(CHEAPR_CORES));
   n_threads = std::min(n_threads, OMP_MAX_THREADS);
   return n_threads > 1 ? n_threads : 1;
 }

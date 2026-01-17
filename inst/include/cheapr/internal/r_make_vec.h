@@ -93,7 +93,7 @@ inline r_vec<T> make_vec(Args... args) {
 // void r_vec<T>::modify_attrs(Args... args) {
 
 //   if (this->sexp.is_null()){
-//     Rf_error("Cannot add attributes to `NULL`");
+//     cpp11::stop("Cannot add attributes to `NULL`");
 //   }
 
 
@@ -105,7 +105,7 @@ inline r_vec<T> make_vec(Args... args) {
 //   }
 
 //   if (names.).is_null(){
-//     Rf_error("attributes must be a named list");
+//     cpp11::stop("attributes must be a named list");
 //   }
 
 //   r_sym attr_nm;

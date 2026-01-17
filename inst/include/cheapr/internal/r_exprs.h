@@ -6,7 +6,7 @@
 namespace cheapr {
 
 inline r_sexp eval(r_sexp expr, r_sexp env){
-  return r_sexp(Rf_eval(expr, env));
+  return r_sexp(cpp11::safe[Rf_eval](expr, env));
 }
 
 template<typename... Args>
@@ -16,7 +16,7 @@ inline r_sexp make_pairlist(Args... args) {
   if constexpr (n == 0){
     return r_sexp(Rf_allocList(0));
   } else {
-    r_sexp out = r_sexp(Rf_allocList(n));
+    r_sexp out = r_sexp(cpp11::safe[Rf_allocList](n));
 
     SEXP current = out;
 

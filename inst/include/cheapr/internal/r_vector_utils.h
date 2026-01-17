@@ -2,7 +2,6 @@
 #define CHEAPR_VECTOR_UTILS_H
 
 #include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_utf8.h>
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_concepts.h>
 
@@ -12,11 +11,11 @@ namespace cheapr {
 namespace internal {
 
 inline r_sexp new_vec(SEXPTYPE type, r_size_t n){
-  return r_sexp(Rf_allocVector(type, n));
+  return r_sexp(cpp11::safe[Rf_allocVector](type, n));
 }
 
 inline r_sexp coerce_vec(SEXP x, SEXPTYPE type){
-  return r_sexp(Rf_coerceVector(x, type));
+  return r_sexp(cpp11::safe[Rf_coerceVector](x, type));
 }
 
 
