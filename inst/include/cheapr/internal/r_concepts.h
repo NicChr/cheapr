@@ -13,8 +13,7 @@ inline constexpr bool always_true = true;
 
 // Compile-time type check `is<>`
 template<typename T, typename U>
-    inline constexpr bool is = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
-
+inline constexpr bool is = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 
 template<typename T, typename... Args>
 inline constexpr bool any = (is<T, Args> || ...);
@@ -45,9 +44,6 @@ concept AtLeastOneRMathType =
 
 template<typename T>
 concept RScalar = RMathType<T> || any<T, r_cplx, r_str, r_raw, r_sym, r_sexp>;
-
-template<typename T>
-concept CppType = !RScalar<T>;
 
 template<typename T, typename U>
 concept AtLeastOneRScalar = (RScalar<T> || RScalar<U>);
@@ -82,6 +78,9 @@ concept RVector = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixc
 
 template <typename T> 
 concept RObject = any<T, r_sexp, r_factors, r_df> || RVector<T>;
+
+template<typename T>
+concept CppObject = !RObject<T> && !RScalar<T>;
 
 }
 

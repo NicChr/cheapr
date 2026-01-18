@@ -95,7 +95,7 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
   }
 }
 
-template<RScalar T, CppType U>
+template<RScalar T, CppObject U>
 inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
@@ -105,7 +105,7 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
   return r_lgl{lhs.value == rhs};
 }
 
-template<CppType T, RScalar U>
+template<CppObject T, RScalar U>
 inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
