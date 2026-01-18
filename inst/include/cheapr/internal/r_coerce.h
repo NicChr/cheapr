@@ -1,7 +1,7 @@
 #ifndef CHEAPR_R_COERCE_H
 #define CHEAPR_R_COERCE_H
 
-#include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_vec.h>
 #include <cheapr/internal/r_dates.h>
 #include <cheapr/internal/r_posixcts.h>
 #include <cheapr/internal/r_factor.h>

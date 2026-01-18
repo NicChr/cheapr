@@ -2,7 +2,7 @@
 #define CHEAPR_R_MAKE_VEC_H
 
 
-#include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_vec.h>
 #include <cheapr/internal/r_coerce.h>
 #include <variant>
 

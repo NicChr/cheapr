@@ -1,7 +1,7 @@
 #ifndef CHEAPR_R_FACTOR_H
 #define CHEAPR_R_FACTOR_H
 
-#include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_vec.h>
 #include <cheapr/internal/r_attrs.h>
 #include <ankerl/unordered_dense.h> // For unique strings and matching
 

@@ -1,7 +1,7 @@
 #ifndef CHEAPR_R_POSIXCTS_H
 #define CHEAPR_R_POSIXCTS_H
 
-#include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_vec.h>
 #include <cheapr/internal/r_attrs.h>
 
 namespace cheapr {

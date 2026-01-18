@@ -4,7 +4,7 @@
 #include <cheapr/internal/r_setup.h>
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_concepts.h>
-#include <cheapr/internal/r_vector_utils.h>
+#include <cheapr/internal/r_vec_utils.h>
 #include <cheapr/internal/r_rtype_coerce.h>
 
 namespace cheapr {

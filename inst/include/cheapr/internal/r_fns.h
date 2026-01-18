@@ -3,7 +3,7 @@
 
 #include <cheapr/internal/r_env.h>
 #include <cheapr/internal/r_symbols.h>
-#include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_vec.h>
 #include <cheapr/internal/r_exprs.h>
 
 namespace cheapr {

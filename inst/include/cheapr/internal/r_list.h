@@ -1,7 +1,7 @@
 // #ifndef CHEAPR_R_LIST_H
 // #define CHEAPR_R_LIST_H
 
-// #include <cheapr/internal/r_vector.h>
+// #include <cheapr/internal/r_vec.h>
 // #include <cheapr/internal/r_coerce.h>
 
 // namespace cheapr {

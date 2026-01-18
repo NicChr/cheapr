@@ -5,7 +5,7 @@
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_limits.h>
 #include <cheapr/internal/r_nas.h>
-#include <cheapr/internal/r_vector_utils.h>
+#include <cheapr/internal/r_vec_utils.h>
 #include <charconv>
 
 namespace cheapr {
