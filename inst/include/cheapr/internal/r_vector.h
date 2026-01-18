@@ -36,16 +36,6 @@ struct r_vec {
       }
   }
 
-  // explicit r_vec(r_size_t size)
-  //   : sexp(internal::new_vec_impl<std::remove_cvref_t<T>>(size))
-  //   , const_ptr(internal::vector_ptr<const T>(sexp.value))
-  //   , ptr(nullptr)
-  // {
-  //   if constexpr (RPtrWritableType<T>) {
-  //     ptr = internal::vector_ptr<T>(sexp.value);
-  //   }
-  // }
-
   template<typename U>
   explicit r_vec(r_size_t size, U default_value)
     : r_vec(size)
@@ -70,18 +60,6 @@ struct r_vec {
       }
     }
 }
-  // explicit r_vec(SEXP s)
-  //   : sexp(s)
-  //   , const_ptr(s == R_NilValue ? nullptr : internal::vector_ptr<const T>(s))
-  //   , ptr(nullptr)
-  // {
-  //   // Rf_protect(sexp);
-  //   if constexpr (RPtrWritableType<T>){
-  //     if (const_ptr != nullptr){
-  //       ptr = internal::vector_ptr<T>(s);
-  //     }
-  //   }
-  // }
 
   // Implicit conversion to SEXP
   constexpr operator SEXP() const {
