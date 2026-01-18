@@ -27,7 +27,7 @@ inline auto as_r_type(T x) {
     return internal::as_r<r_str>(x);
   } else if constexpr (is<T, SEXP>){
     return r_sexp(static_cast<SEXP>(x));
-  } else if constexpr (RVectorType<T>){
+  } else if constexpr (RVector<T>){
     return x.sexp;
   } else {    
     static_assert(
@@ -41,15 +41,15 @@ inline auto as_r_type(T x) {
 
 // Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
-  requires (RType<T> || RVectorType<T> || any<T, SEXP, r_factors>)
+  requires (RType<T> || RVector<T> || any<T, SEXP, r_factors>)
 inline T as(U x) {
   if constexpr (is<U, T>){
     return x;
-  } else if constexpr (RVectorType<U> && is<T, r_sexp>){
+  } else if constexpr (RVector<U> && is<T, r_sexp>){
     return x.sexp;
-  } else if constexpr (RVectorType<T> && any<U, SEXP, r_sexp>){
+  } else if constexpr (RVector<T> && any<U, SEXP, r_sexp>){
     return internal::visit_vector(x, [&](auto xvec) -> T {
-      // This will trigger the branch that checks that both are RVectorType
+      // This will trigger the branch that checks that both are RVector
       return as<T>(xvec);
     });
   } else if constexpr (RType<T> && any<U, SEXP, r_sexp>){
@@ -57,15 +57,15 @@ inline T as(U x) {
       // Use branch below current branch
       return as<T>(xvec);
     });
-  } else if constexpr (RVectorType<U> && RType<T>){
+  } else if constexpr (RVector<U> && RType<T>){
     if (x.length() != 1){
       cpp11::stop("Vector must be length-1 to be coerced to requested type");
     }
     return internal::as_r<T>(x.get(0));
-  } else if constexpr (RVectorType<T> && RType<U>){
+  } else if constexpr (RVector<T> && RType<U>){
     using data_t = typename T::data_type;
     return r_vec<data_t>(1, internal::as_r<data_t>(x));
-  } else if constexpr (RVectorType<U> && RVectorType<T>){
+  } else if constexpr (RVector<U> && RVector<T>){
     r_size_t n = x.length();
     auto out = T(n);
     using data_t = typename T::data_type;
@@ -84,10 +84,10 @@ inline T as(U x) {
     auto str_vec = as<r_vec<r_str>>(x);
     auto out = r_factors(str_vec);
     return out; 
-  } else if constexpr (RType<T> && !RVectorType<U>) {
+  } else if constexpr (RType<T> && !RVector<U>) {
     return internal::as_r<T>(x);
     // If input is not an R type or an R vector type
-  } else if constexpr (!RType<U> && !RVectorType<U>){
+  } else if constexpr (!RType<U> && !RVector<U>){
     return as<T>(internal::as_r_type(x));
   } else {
     static_assert(always_false<T>, "Unsupported type for `as`");
@@ -97,7 +97,7 @@ inline T as(U x) {
 // Convert any C obj to an r_vec<>
 template<typename T>
 inline auto as_vector(T x){
-  if constexpr (RVectorType<T>){
+  if constexpr (RVector<T>){
     return x;
   } else if constexpr (any<T, SEXP, r_sexp>){
     static_assert(always_false<T>, "Can't convert `SEXP/r_sexp` to `r_vec<>`, please use `as<>` to convert");

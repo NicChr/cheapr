@@ -327,10 +327,10 @@ struct r_dates;
 struct r_posixcts;
 
 template<typename T>
-concept RVectorType = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
+concept RVector = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
 
 template <typename T> 
-concept RObject = any<T, r_sexp, r_factors, r_df> || RVectorType<T>;
+concept RObject = any<T, r_sexp, r_factors, r_df> || RVector<T>;
 
 
 template <RType T>
@@ -356,7 +356,7 @@ inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset,
 
 // template<typename T>
 // inline auto as_vector(T x){
-//   if constexpr (RVectorType<T>){
+//   if constexpr (RVector<T>){
 //     return x;
 //   } else if constexpr (any<T, SEXP, r_sexp>){
 //     switch (TYPEOF(x)){
