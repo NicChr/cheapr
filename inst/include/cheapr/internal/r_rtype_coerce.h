@@ -208,12 +208,12 @@ inline r_sexp as_sexp(T x){
   } else if constexpr (std::is_convertible_v<T, SEXP>){
     return r_sexp(static_cast<SEXP>(x));
   } else if constexpr (RType<T>){
-    return r_sexp(new_scalar_vector(x));
+    return r_sexp(new_scalar_vec(x));
   } else if constexpr (MathType<T>){
     if constexpr (internal::can_be_int<T>){
-      return r_sexp(new_scalar_vector(r_int(static_cast<int>(x))));
+      return r_sexp(new_scalar_vec(r_int(static_cast<int>(x))));
     } else {
-      return r_sexp(new_scalar_vector(r_dbl(static_cast<double>(x))));
+      return r_sexp(new_scalar_vec(r_dbl(static_cast<double>(x))));
     }
   } else {
     static_assert(
@@ -226,7 +226,7 @@ inline r_sexp as_sexp(T x){
 
 template<>
 inline r_sexp as_sexp<bool>(bool x){
-  return r_sexp(new_scalar_vector(r_lgl(static_cast<int>(x))));
+  return r_sexp(new_scalar_vec(r_lgl(static_cast<int>(x))));
 }
 template<>
 inline r_sexp as_sexp<const char *>(const char *x){

@@ -70,7 +70,7 @@ inline r_vec<T> make_vec(Args... args) {
     // Are any args named?
     constexpr bool any_named = (is<Args, arg> || ...);
 
-    auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>();
+    auto nms = any_named ? r_vec<r_str>(n) : r_vec<r_str>(r_null);
 
     int i = 0;
     (([&]() {

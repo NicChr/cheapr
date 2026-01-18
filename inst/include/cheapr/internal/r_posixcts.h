@@ -13,7 +13,7 @@ struct r_posixcts : public r_vec<r_dbl> {
     r_posixcts() : r_vec<r_dbl>() {}
 
     explicit r_posixcts(SEXP x) : r_vec<r_dbl>(x) {
-    if (!(is_null()) || (attr::inherits1(this->sexp, "POSIXct") && attr::inherits1(this->sexp, "POSIXt"))){
+    if (!is_null() || (attr::inherits1(this->sexp, "POSIXct") && attr::inherits1(this->sexp, "POSIXt"))){
         cpp11::stop("`SEXP` must be a POSIXct");
       }
     }

@@ -12,21 +12,39 @@ namespace cheapr {
 template<RType T>
 struct r_vec {
   r_sexp sexp = r_null;
-  const T* const_ptr = nullptr;  // Always created
   T* ptr = nullptr;              // Only initialized if writable
-  using data_type = T;           // Type of data vec contains
 
-  // Constructor that wraps new_vector_impl<T>
+  // Initialise read-only ptr to: 
+  // SEXP - If T is `r_sexp` or `r_str`
+  // T - Otherwise
+  using read_only_ptr_t = std::conditional_t<RPtrWritableType<T>, T, SEXP>;
+  const read_only_ptr_t* const_ptr = nullptr;
+
+  using data_type = T;
+
+  // Constructor that wraps new_vec_impl<T>
   explicit r_vec(r_size_t size)
-    : sexp(internal::new_vector_impl<std::remove_cvref_t<T>>(size))
-    , const_ptr(internal::vector_ptr<const T>(sexp))
-    , ptr(nullptr)
+    : sexp(internal::new_vec_impl<std::remove_cvref_t<T>>(size))
   {
-    // Rf_protect(sexp);
     if constexpr (RPtrWritableType<T>) {
-      ptr = internal::vector_ptr<T>(sexp);
-    }
+      const_ptr = internal::vector_ptr<const T>(sexp.value);
+      ptr = internal::vector_ptr<T>(sexp.value);
+    } else if constexpr (any<T, r_sexp, r_sym>) {
+      const_ptr = (const read_only_ptr_t*) VECTOR_PTR_RO(sexp.value);
+      } else if constexpr (is<T, r_str>){
+      const_ptr = (const read_only_ptr_t*) STRING_PTR_RO(sexp.value);
+      }
   }
+
+  // explicit r_vec(r_size_t size)
+  //   : sexp(internal::new_vec_impl<std::remove_cvref_t<T>>(size))
+  //   , const_ptr(internal::vector_ptr<const T>(sexp.value))
+  //   , ptr(nullptr)
+  // {
+  //   if constexpr (RPtrWritableType<T>) {
+  //     ptr = internal::vector_ptr<T>(sexp.value);
+  //   }
+  // }
 
   template<typename U>
   explicit r_vec(r_size_t size, U default_value)
@@ -34,20 +52,36 @@ struct r_vec {
   {
     fill(0, size, default_value);
   }
+  
+  r_vec(): r_vec(r_size_t(0)){}
 
   // Constructor from existing SEXP
-  explicit r_vec(SEXP s = R_NilValue)
-    : sexp(s)
-    , const_ptr(s == R_NilValue ? nullptr : internal::vector_ptr<const T>(s))
-    , ptr(nullptr)
-  {
-    // Rf_protect(sexp);
-    if constexpr (RPtrWritableType<T>){
-      if (const_ptr != nullptr){
+  explicit r_vec(SEXP s) : sexp(s) {
+    if (s != R_NilValue) {
+      // vector_ptr helper must be updated to return SEXP* for r_sexp/r_str/r_sym
+      // We cast strictly to the stored type
+      if constexpr (RPtrWritableType<T>) {
+        const_ptr = internal::vector_ptr<const T>(s);
         ptr = internal::vector_ptr<T>(s);
+      } else if constexpr (any<T, r_sexp, r_sym>) {
+        const_ptr = (const read_only_ptr_t*) VECTOR_PTR_RO(s); 
+      } else if constexpr (is<T, r_str>){
+        const_ptr = (const read_only_ptr_t*) STRING_PTR_RO(s);
       }
     }
-  }
+}
+  // explicit r_vec(SEXP s)
+  //   : sexp(s)
+  //   , const_ptr(s == R_NilValue ? nullptr : internal::vector_ptr<const T>(s))
+  //   , ptr(nullptr)
+  // {
+  //   // Rf_protect(sexp);
+  //   if constexpr (RPtrWritableType<T>){
+  //     if (const_ptr != nullptr){
+  //       ptr = internal::vector_ptr<T>(s);
+  //     }
+  //   }
+  // }
 
   // Implicit conversion to SEXP
   constexpr operator SEXP() const {
@@ -59,7 +93,7 @@ struct r_vec {
     return ptr;
   }
 
-  const T* data() const {
+  const read_only_ptr_t* data() const {
     return const_ptr;
   }
 
@@ -101,6 +135,34 @@ struct r_vec {
     return !Rf_isObject(sexp);
   }
 
+  // get uses const pointer
+  T get(r_size_t index) const {
+    if constexpr (is<T, r_sexp>){
+      return r_sexp(const_ptr[index], internal::read_only_tag{});
+    } else if constexpr (is<T, r_str>){
+      // r_sexp -> r_str is direct (no extra protection)
+      return r_str(r_sexp(const_ptr[index], internal::read_only_tag{}));
+    } else if constexpr (is<T, r_sym>){
+      return r_sym(const_ptr[index]);
+    } else {
+      return const_ptr[index];
+    }
+  }
+
+  // Set only available if writable
+  // We use flexible template to be able to coerce it to an RType
+  template <typename U>
+  void set(r_size_t index, U val) {
+      T val2 = internal::as_r<T>(val);
+      if constexpr (any<T, r_sexp, r_sym>){
+        SET_VECTOR_ELT(sexp.value, index, val2.value);
+      } else if constexpr (is<T, r_str>){
+        SET_STRING_ELT(sexp.value, index, val2.value);
+      } else {
+        ptr[index] = val2;
+      }
+  }
+
   r_vec<r_str> names() const {
     return r_vec<r_str>(Rf_getAttrib(sexp, symbol::names_sym));
   }
@@ -108,6 +170,8 @@ struct r_vec {
   void set_names(r_vec<r_str> names){
     if (names.is_null()){
       Rf_setAttrib(sexp, symbol::names_sym, r_null);
+    } else if (names.length() != sexp.length()){
+      cpp11::stop("`length(names)` must equal `length(x)`");
     } else {
       Rf_namesgets(sexp, names);
     }
@@ -137,23 +201,6 @@ struct r_vec {
     }
 
     return out;
-  }
-
-    // get uses const pointer
-  T get(r_size_t index) const {
-    return const_ptr[index];
-  }
-
-  // Set only available if writable
-  // We use flexible template to be able to coerce it to an RType
-  template <typename U>
-  void set(r_size_t index, U val) {
-      T val2 = internal::as_r<T>(val);
-      if constexpr (RPtrWritableType<T>){
-      ptr[index] = val2;
-      } else {
-      internal::set_value<T>(sexp, index, val2);
-      }
   }
 
   template <typename U>
@@ -220,24 +267,6 @@ struct r_vec {
   }
 
 };
-
-
-// R data frame
-// struct r_df : public r_vec<r_sexp> {
-
-//   // Constructors
-//   r_df() : r_vec<r_sexp>() {}
-
-//   explicit r_df(SEXP x) : r_vec<r_sexp>(x) {
-//     if (!is_null() && !attr::inherits1(x, "Date")){
-//       cpp11::stop("`SEXP` must be a data frame");
-//     }
-//   }
-
-//   explicit r_df(r_size_t n) : r_vec<r_sexp>(n) {
-//     attr::set_old_class(this->value, internal::make_utf8_strsxp("Date"));
-//   }
-// };
 
 namespace internal {
 

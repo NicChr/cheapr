@@ -7,69 +7,80 @@
 
 namespace cheapr {
 
+// Internal struct to provide a means to convert SEXP -> r_sexp directly without extra protection
+namespace internal {
+struct read_only_tag {};
+}
+
 struct r_str; // Forward declaration
 
 // General SEXP, reserved for everything except CHARSXP and SYMSXP
 // Wrapper around cpp11::sexp to benefit from automatic protection (cpp11-managed linked list)
 // All credits go to cpp11 authors/maintainers for `cpp11::sexp`
 struct r_sexp {
-
+  
+// value must be declared first (before protector_) as it is the primary data
+public:
   SEXP value;
 
-private:
-    // 2. The manager that keeps 'value' protected
-    // We don't use this directly
-    cpp11::sexp protector_;
+private: 
+  // cpp11::sexp will automatically protect underlying SEXP
+  //  We never use this directly
+  cpp11::sexp protector_;
 
 public:
-    // Constructor from SEXP
-    explicit r_sexp(SEXP s) : value(s), protector_(s) {}
+  // Constructor from SEXP
+  explicit r_sexp(SEXP s) : value(s), protector_(s) {}
 
-    // Default constructor
-    r_sexp() : value(R_NilValue), protector_(R_NilValue) {}
+  // Default constructor
+  r_sexp() : value(R_NilValue) {}
 
-    // Copy Constructor
-    r_sexp(const r_sexp& other) : value(other.value), protector_(other.value) {}
+  // Optimized constructor
+  // convert SEXP -> r_sexp directly without extra protection
+  r_sexp(SEXP s, internal::read_only_tag) : value(s) {}
 
-    // Move Constructor
-    r_sexp(r_sexp&& other) noexcept 
-    : value(other.value), protector_(std::move(other.protector_)) {
-      other.value = R_NilValue;
-    }
+  // Copy Constructor
+  r_sexp(const r_sexp& other) : value(other.value), protector_(other.value) {}
 
-    // Copy Assignment
-    r_sexp& operator=(const r_sexp& other) {
-        if (this != &other) {
-            value = other.value;
-            protector_ = other.value;
-        }
-        return *this;
-    }
+  // Move Constructor
+  r_sexp(r_sexp&& other) noexcept 
+  : value(other.value), protector_(std::move(other.protector_)) {
+    other.value = R_NilValue;
+  }
 
-    // Move Assignment
-    r_sexp& operator=(r_sexp&& other) noexcept {
-        if (this != &other) {
-            value = other.value;
-            protector_ = std::move(other.protector_);
-            other.value = R_NilValue;
-        }
-        return *this;
-    }
+  // Copy Assignment
+  r_sexp& operator=(const r_sexp& other) {
+      if (this != &other) {
+          value = other.value;
+          protector_ = other.value;
+      }
+      return *this;
+  }
 
-    // Implicit conversion to SEXP
-    constexpr operator SEXP() const { return value; }
+  // Move Assignment
+  r_sexp& operator=(r_sexp&& other) noexcept {
+      if (this != &other) {
+          value = other.value;
+          protector_ = std::move(other.protector_);
+          other.value = R_NilValue;
+      }
+      return *this;
+  }
 
-    r_size_t length() const noexcept {
-      return Rf_xlength(value);
-    }
+  // Implicit conversion to SEXP
+  constexpr operator SEXP() const { return value; }
 
-    r_size_t size() const noexcept {
-      return length();
-    }
+  r_size_t length() const noexcept {
+    return Rf_xlength(value);
+  }
 
-    bool is_null() const { return value == R_NilValue; }
-    
-    r_str address() const;
+  r_size_t size() const noexcept {
+    return length();
+  }
+
+  bool is_null() const { return value == R_NilValue; }
+  
+  r_str address() const;
 };
 
 // R C NULL constant
@@ -146,10 +157,10 @@ struct r_str {
   r_str() : value{R_BlankString} {}
   // Explicit SEXP/const char* -> r_str
   explicit r_str(SEXP x) : value{r_sexp(x)} {}
-  explicit r_str(const r_sexp &x) : value{x} {}
+  explicit r_str(r_sexp x) : value{x} {}
   explicit r_str(const char *x) : value(r_sexp(Rf_mkCharCE(x, CE_UTF8))) {}
-  // Implicit r_str -> SEXP
-  constexpr operator SEXP() const { return value; }
+  // Implicit r_str -> SEXP 
+  constexpr operator SEXP() const { return value.value; }
 
   const char *c_str() const {
     return CHAR(value);
@@ -164,6 +175,7 @@ struct r_sym {
   SEXP value;
   r_sym() : value{R_MissingArg} {}
   explicit constexpr r_sym(SEXP x) : value{x} {}
+  explicit r_sym(r_sexp x) : value{x.value} {}
   constexpr operator SEXP() const { return value; }
 };
 
