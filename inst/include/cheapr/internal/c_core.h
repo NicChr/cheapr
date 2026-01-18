@@ -5,7 +5,6 @@
 // License: MIT
 
 #include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_utf8.h>
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_symbols.h>
 #include <cheapr/internal/r_env.h>
@@ -13,13 +12,14 @@
 #include <cheapr/internal/r_concepts.h>
 #include <cheapr/internal/r_nas.h>
 #include <cheapr/internal/r_methods.h>
-#include <cheapr/internal/r_attrs.h>
 #include <cheapr/internal/r_rtype_coerce.h>
 #include <cheapr/internal/r_vector.h>
+#include <cheapr/internal/r_attrs.h>
 #include <cheapr/internal/r_factor.h>
 #include <cheapr/internal/r_list.h>
 #include <cheapr/internal/r_coerce.h>
 #include <cheapr/internal/r_make_vec.h>
+// #include <cheapr/internal/r_df.h>
 #include <cheapr/internal/r_exprs.h>
 #include <cheapr/internal/r_fns.h>
 #include <cheapr/internal/r_math.h>
@@ -33,67 +33,44 @@ namespace cheapr {
 // Functions
 
 namespace altrep {
-inline bool is_altrep(SEXP x){
+inline bool is_altrep(r_sexp x){
   return ALTREP(x);
 }
 }
 
-namespace df {
-
-inline bool is_df(SEXP x){
-  return attr::inherits1(x, "data.frame");
-}
-
-inline int nrow(SEXP x){
-  return Rf_length(attr::get_attr(x, symbol::row_names_sym));
-}
-inline int ncol(SEXP x){
-  return Rf_length(x);
-}
-inline SEXP new_row_names(int n){
-  if (n > 0){
-    auto out = SHIELD(vec::new_vector<r_int>(2));
-    out.set(0, na::integer);
-    out.set(1, -n);
-    YIELD(1);
-    return out;
-  } else {
-    return vec::new_vector<r_int>(0);
-  }
-}
-inline void set_row_names(SEXP x, int n){
-  SEXP row_names = SHIELD(new_row_names(n));
-  attr::set_attr(x, symbol::row_names_sym, row_names);
-  YIELD(1);
+namespace attr {
+template<typename... Args>
+inline void modify_attrs(r_sexp x, Args... args) {
+  auto attrs = make_vec<r_sexp>(args...);
+  internal::modify_attrs_impl(x, attrs);
 }
 }
 
 namespace vec {
 
-inline r_size_t old_length(SEXP x){
+inline r_size_t old_length(r_sexp x){
   return Rf_xlength(x);
 }
 
-inline SEXP shallow_copy(SEXP x){
-  return Rf_shallow_duplicate(x);
+inline r_sexp shallow_copy(r_sexp x){
+  return r_sexp(Rf_shallow_duplicate(x)); 
 }
 
 // Compact seq generator as ALTREP, same as `seq_len()`
-inline SEXP compact_seq_len(r_size_t n){
+inline r_vec<r_int> compact_seq_len(r_size_t n){
   if (n < 0){
-    Rf_error("`n` must be >= 0");
+    cpp11::stop("`n` must be >= 0");
   }
   if (n == 0){
-    return vec::new_vector<r_int>(0);
+    return r_vec<r_int>();
   }
-  SEXP colon_fn = SHIELD(fn::find_pkg_fun(":", "base", false));
-  SEXP out = SHIELD(fn::eval_fn(colon_fn, env::base_env, 1, n));
-  YIELD(2);
-  return out;
+  r_sexp colon_fn = fn::find_pkg_fun(":", "base", false);
+  r_sexp out = fn::eval_fn(colon_fn, env::base_env, 1, n);
+  return r_vec<r_int>(out);
 }
 
 // r_lgl not bool because bool can't be NA
-inline r_lgl all_whole_numbers(SEXP x, r_dbl tol_, bool na_rm_){
+inline r_lgl all_whole_numbers(r_sexp x, r_dbl tol_, bool na_rm_){
 
   r_size_t n = Rf_xlength(x);
 
@@ -108,7 +85,7 @@ inline r_lgl all_whole_numbers(SEXP x, r_dbl tol_, bool na_rm_){
     break;
   }
   case REALSXP: {
-    auto xvec = r_vec<r_dbl>(x);
+    auto xvec = as<r_vec<r_dbl>>(x);
     for (r_size_t i = 0; i < n; ++i) {
       out = static_cast<r_lgl>(math::is_whole_number(xvec.get(i), tol_));
       na_count += is_r_na(out);
@@ -132,129 +109,18 @@ inline r_lgl all_whole_numbers(SEXP x, r_dbl tol_, bool na_rm_){
 }
 }
 
-namespace internal {
-
-inline void add_attrs(SEXP x, r_vec<r_sexp> attrs) {
-
-  if (is_null(x)){
-    Rf_error("Cannot add attributes to `NULL`");
-  }
-
-  if (is_null(attrs)){
-    return;
-  }
-
-  int32_t NP = 0;
-
-  auto names = SHIELD(r_vec<r_str>(attr::get_old_names(attrs))); ++NP;
-
-  if (is_null(names)){
-    YIELD(NP);
-    Rf_error("attributes must be a named list");
-  }
-
-  r_sym attr_nm;
-
-  int n = names.length();
-
-  for (int i = 0; i < n; ++i){
-    if (!(names.get(i) == blank_r_string)){
-      attr_nm = as<r_sym>(names.get(i));
-      if (address(x) == address(attrs.get(i))){
-        SEXP dup_attr = SHIELD(Rf_duplicate(attrs.get(i))); ++NP;
-        attr::set_attr(x, attr_nm, dup_attr);
-      } else {
-        attr::set_attr(x, attr_nm, attrs.get(i));
-      }
-    }
-  }
-
-YIELD(NP);
-}
-
-}
-
-namespace attr {
-
-inline void clear_attrs(SEXP x){
-  
-  auto attrs = SHIELD(static_cast<r_vec<r_sexp>>(get_attrs(x)));
-
-  if (is_null(attrs)){
-    YIELD(1);
-    return;
-  }
-  auto names = SHIELD(static_cast<r_vec<r_str>>(attr::get_old_names(attrs)));
-
-  int n = attrs.length();
-  
-  for (r_size_t i = 0; i < n; ++i){
-    r_sym target_sym = as<r_sym>(names.get(i));
-    set_attr(x, target_sym, r_null);
-  }
-  YIELD(2);
-}
-
-template<typename... Args>
-inline void modify_attrs(SEXP x, Args... args) {
-  auto attrs = SHIELD(make_list(args...));
-  internal::add_attrs(x, attrs);
-  YIELD(1);
-}
-
-inline void set_attrs(SEXP x, SEXP attrs){
-  if (!is_null(x)){
-    clear_attrs(x);
-    internal::add_attrs(x, static_cast<r_vec<r_sexp>>(attrs));
-  }
-}
-
-}
-
-namespace internal {
-
-// A cleaner lambda-based alternative to
-// using the canonical switch(TYPEOF(x))
-//
-// Pass both the SEXP and an auto variable inside a lambda
-// and visit_vector() will assign the auto variable to the correct vector
-// Then simply deduce its type (via decltype) for further manipulation
-// To be used in a lambda
-// E.g. visit_vector(x, [&](auto x_vec) {})
-
-// One must account for objects like `NULL` and non-vectors outwith this method
-
-template <class F>
-decltype(auto) visit_vector(SEXP x, F&& f) {
-  switch (CHEAPR_TYPEOF(x)) {
-  case LGLSXP:          return f(r_vec<r_lgl>(x));
-  case INTSXP:          return f(r_vec<r_int>(x));
-  case CHEAPR_INT64SXP: return f(r_vec<r_int64>(x));
-  case REALSXP:         return f(r_vec<r_dbl>(x));
-  case STRSXP:          return f(r_vec<r_str>(x));
-  case VECSXP:          return f(r_vec<r_sexp>(x));
-  case CPLXSXP:         return f(r_vec<r_cplx>(x));
-  case RAWSXP:          return f(r_vec<r_raw>(x));
-  default:              Rf_error("`x` must be a vector");
-  }
-}
-
-}
-
 namespace vec {
-inline SEXP deep_copy(SEXP x){
-  int32_t NP = 0;
-  SEXP out = r_null;
+inline r_sexp deep_copy(r_sexp x){
+  r_sexp out = r_null;
   r_size_t n = Rf_xlength(x);
 
-  if (!is_null(x)){
-
+  if (!x.is_null()){
     if (Rf_isVector(x)){
-      out = internal::visit_vector(x, [&](auto vec) -> SEXP {
+      out = internal::visit_vector(x, [&](auto vec) -> r_sexp {
 
         using r_t = decltype(vec);
-        
-        auto local_out = SHIELD(r_t(n)); ++NP;
+
+        auto local_out = r_t(n);
 
         if constexpr (is<r_t, r_vec<r_sexp>>){
           for (r_size_t i = 0; i < n; ++i){
@@ -264,21 +130,20 @@ inline SEXP deep_copy(SEXP x){
           r_copy_n(local_out, vec, 0, n);
         }
 
-        return local_out;
+        return local_out.sexp;
       });
     } else {
-      out = SHIELD(Rf_duplicate(x)); ++NP;
+      out = r_sexp(Rf_duplicate(x));
     }
 
-    auto attrs = SHIELD(static_cast<r_vec<r_sexp>>(attr::get_attrs(x))); ++NP;
+    auto attrs = attr::get_attrs(x);
     int n_attrs = attrs.length();
-    for (r_size_t i = 0; i < n_attrs; ++i){
+    for (int i = 0; i < n_attrs; ++i){
       attrs.set(i, deep_copy(attrs.get(i)));
     }
     attr::set_attrs(out, attrs);
   }
 
-  YIELD(NP);
   return out;
 }
 
@@ -289,10 +154,9 @@ inline SEXP deep_copy(SEXP x){
 inline void set_threads(uint16_t n){
   uint16_t max_threads = OMP_MAX_THREADS;
   uint16_t threads = std::min(n, max_threads);
-  SEXP cheapr_set_threads = SHIELD(fn::find_pkg_fun("set_threads", "cheapr", true));
-  SEXP r_threads = SHIELD(vec::as_vector(as<r_int>(threads)));
-  SHIELD(fn::eval_fn(cheapr_set_threads, R_BaseEnv, r_threads));
-  YIELD(3);
+  r_sexp cheapr_set_threads = fn::find_pkg_fun("set_threads", "cheapr", true);
+  auto r_threads = as_vector(as<r_int>(threads));
+  fn::eval_fn(cheapr_set_threads, env::base_env, r_threads);
 }
 
 
