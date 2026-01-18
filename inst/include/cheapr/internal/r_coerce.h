@@ -12,7 +12,7 @@ namespace cheapr {
 namespace internal {
 
 template<typename T>
-inline auto as_r_type(T x) {
+inline auto as_r_scalar(T x) {
   if constexpr (RScalar<T>){
     return x;
   } else if constexpr (is<T, bool>){
@@ -32,7 +32,7 @@ inline auto as_r_type(T x) {
   } else {    
     static_assert(
       always_false<T>,
-      "Unsupported type for `as_r_type`"
+      "Unsupported type for `as_r_scalar`"
     );
   } 
 }
@@ -88,7 +88,7 @@ inline T as(U x) {
     return internal::as_r<T>(x);
     // If input is not an R type or an R vector type
   } else if constexpr (!RScalar<U> && !RVector<U>){
-    return as<T>(internal::as_r_type(x));
+    return as<T>(internal::as_r_scalar(x));
   } else {
     static_assert(always_false<T>, "Unsupported type for `as`");
   }
@@ -103,7 +103,7 @@ inline auto as_vector(T x){
     static_assert(always_false<T>, "Can't convert `SEXP/r_sexp` to `r_vec<>`, please use `as<>` to convert");
     return T();
   } else {
-    auto rt_val = internal::as_r_type(x);
+    auto rt_val = internal::as_r_scalar(x);
     return r_vec<decltype(rt_val)>(1, rt_val);
   }
 }

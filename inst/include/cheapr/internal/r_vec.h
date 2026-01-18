@@ -354,7 +354,7 @@ inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset,
 //       }
 //       }
 //   } else {
-//     auto rt_val = internal::as_r_type(x);
+//     auto rt_val = internal::as_r_scalar(x);
 //     return r_vec<decltype(rt_val)>(1, rt_val);
 //   }
 // }

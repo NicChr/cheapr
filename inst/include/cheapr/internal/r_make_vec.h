@@ -31,7 +31,7 @@ struct arg {
 
   template <typename U>
   arg(const char* n, U&& v)
-    : name(n), storage(internal::as_r_type(std::forward<U>(v))) {}
+    : name(n), storage(internal::as_r_scalar(std::forward<U>(v))) {}
 
   template <typename U>
   arg operator=(U&& v) const {
