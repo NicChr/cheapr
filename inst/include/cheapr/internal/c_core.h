@@ -19,7 +19,7 @@
 #include <cheapr/internal/r_list.h>
 #include <cheapr/internal/r_coerce.h>
 #include <cheapr/internal/r_make_vec.h>
-// #include <cheapr/internal/r_df.h>
+#include <cheapr/internal/r_df.h>
 #include <cheapr/internal/r_exprs.h>
 #include <cheapr/internal/r_fns.h>
 #include <cheapr/internal/r_math.h>
