@@ -119,7 +119,7 @@ inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
 
   inline r_lgl::operator bool() const {
     if (is_na()){
-    cpp11::stop("Cannot convert NA to bool, please check");
+    cpp11::stop("Cannot implicitly convert NA to bool, please check");
   }
   return static_cast<bool>(value);
 }
@@ -156,16 +156,15 @@ struct r_str {
   r_sexp value;
   r_str() : value{R_BlankString} {}
   // Explicit SEXP/const char* -> r_str
-  explicit r_str(SEXP x) : value{r_sexp(x)} {}
-  explicit r_str(r_sexp x) : value{x} {}
-  explicit r_str(const char *x) : value(r_sexp(Rf_mkCharCE(x, CE_UTF8))) {}
+  explicit r_str(SEXP x) : value{x} {}
+  explicit r_str(r_sexp x) : value(std::move(x)) {}
+  explicit r_str(const char *x) : value(Rf_mkCharCE(x, CE_UTF8)) {}
   // Implicit r_str -> SEXP 
   constexpr operator SEXP() const { return value.value; }
 
   const char *c_str() const {
     return CHAR(value);
   }
-
 };
 
 inline const r_str blank_r_string = r_str();
