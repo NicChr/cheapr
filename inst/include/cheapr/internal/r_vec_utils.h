@@ -82,69 +82,8 @@ inline const r_raw* vector_ptr<const r_raw>(SEXP x) {
   return reinterpret_cast<const r_raw*>(RAW_RO(x));
 }
 
-// template<>
-// inline const r_str* vector_ptr<const r_str>(SEXP x) {
-//   return reinterpret_cast<const r_str*>(STRING_PTR_RO(x));
-// }
-
-// template<>
-// inline const r_sexp* vector_ptr<const r_sexp>(SEXP x) {
-//   return reinterpret_cast<const r_sexp*>(VECTOR_PTR_RO(x));
-// }
-
-// R vector getters + setters
-
-// template<RType T>
-// inline T get_value(SEXP x, const r_size_t i){
-//   return vector_ptr<T>(x)[i];
-// }
-
-// template<RType T>
-// inline T get_value(T *p_x, const r_size_t i){
-//   return p_x[i];
-// }
-
-// template<RType T>
-// inline const T get_value(const T *p_x, const r_size_t i){
-//   return p_x[i];
-// }
-
-
-// template<RPtrWritableType T>
-// inline void set_value(T *p_x, const r_size_t i, T val){
-//   p_x[i] = val;
-// }
-
-// template<typename T>
-// requires (RType<T> || is<T, const char *>)
-// inline void set_value(SEXP x, const r_size_t i, T val){
-//   vector_ptr<T>(x)[i] = val;
-// }
-// template<>
-// inline void set_value<r_cplx>(r_cplx* p_x, const r_size_t i, r_cplx val){
-//   p_x[i].re() = val.re();
-//   p_x[i].im() = val.im();
-// }
-// template<>
-// inline void set_value<r_cplx>(SEXP x, const r_size_t i, r_cplx val){
-//   auto *p_x = vector_ptr<r_cplx>(x);
-//   set_value(p_x, i, val);
-// }
-// template<>
-// inline void set_value<r_str>(SEXP x, const r_size_t i, r_str val){
-//   SET_STRING_ELT(x, i, static_cast<SEXP>(val));
-// }
-// template<>
-// inline void set_value<const char *>(SEXP x, const r_size_t i, const char* val){
-//   set_value<r_str>(x, i, r_str(val));
-// }
-// template<>
-// inline void set_value<r_sexp>(SEXP x, const r_size_t i, r_sexp val){
-//   SET_VECTOR_ELT(x, i, val);
-// }
-
 // Internal vec constructor
-template <RType T>
+template <RScalar T>
 inline r_sexp new_vec_impl(r_size_t n) {
   static_assert(
     always_false<T>,
@@ -190,7 +129,7 @@ inline r_sexp new_vec_impl<r_sexp>(r_size_t n){
 }
 
 
-template <RType T>
+template <RScalar T>
 inline r_sexp new_scalar_vec(T default_value) {
   static_assert(
     always_false<T>,

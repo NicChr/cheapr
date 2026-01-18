@@ -9,7 +9,7 @@
 
 namespace cheapr {
 
-template<RType T>
+template<RScalar T>
 struct r_vec {
   r_sexp sexp = r_null;
   T* ptr = nullptr;              // Only initialized if writable
@@ -147,7 +147,7 @@ explicit r_vec(SEXP s) : sexp(s) {
   }
 
   // Set only available if writable
-  // We use flexible template to be able to coerce it to an RType
+  // We use flexible template to be able to coerce it to an RScalar
   template <typename U>
   void set(r_size_t index, U val) {
       T val2 = internal::as_r<T>(val);
@@ -333,7 +333,7 @@ template <typename T>
 concept RObject = any<T, r_sexp, r_factors, r_df> || RVector<T>;
 
 
-template <RType T>
+template <RScalar T>
 inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset, r_size_t n){
   auto *p_source = source.data();
 

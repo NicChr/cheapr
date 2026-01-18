@@ -44,18 +44,18 @@ concept AtLeastOneRMathType =
 (RMathType<T> || RMathType<U>) && (MathType<T> && MathType<U>);
 
 template<typename T>
-concept RType = RMathType<T> || any<T, r_cplx, r_str, r_raw, r_sym, r_sexp>;
+concept RScalar = RMathType<T> || any<T, r_cplx, r_str, r_raw, r_sym, r_sexp>;
 
 template<typename T>
-concept CppType = !RType<T>;
+concept CppType = !RScalar<T>;
 
 template<typename T, typename U>
-concept AtLeastOneRType = (RType<T> || RType<U>);
+concept AtLeastOneRScalar = (RScalar<T> || RScalar<U>);
 
 template <typename T>
 concept RPtrWritableType = RMathType<T> || any<T, r_cplx, r_raw>;
 
-// template <RType T>
+// template <RScalar T>
 // SEXPTYPE sexp_type(T x){
 // static_assert(always_false<T>, "Unsupported type for `sexp_type`");
 // }

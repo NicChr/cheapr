@@ -40,7 +40,7 @@ struct arg {
 };
 
 
-template <RType T>
+template <RScalar T>
 inline T as(const arg& a) {
   return std::visit(
     [](auto const& x) -> T {
@@ -56,7 +56,7 @@ inline T as(const arg& a) {
 }
 
 
-template<RType T, typename... Args>
+template<RScalar T, typename... Args>
 inline r_vec<T> make_vec(Args... args) {
 
   constexpr int n = sizeof...(args);
@@ -88,7 +88,7 @@ inline r_vec<T> make_vec(Args... args) {
   }
 }
 
-// template <RType T>
+// template <RScalar T>
 // template<typename... Args>
 // void r_vec<T>::modify_attrs(Args... args) {
 

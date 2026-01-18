@@ -8,12 +8,12 @@
 
 namespace cheapr {
 
-// Coerce to an R type based on the C type (useful for RType templates)
+// Coerce to an R type based on the C type (useful for RScalar templates)
 namespace internal {
 
 template<typename T>
 inline auto as_r_type(T x) {
-  if constexpr (RType<T>){
+  if constexpr (RScalar<T>){
     return x;
   } else if constexpr (is<T, bool>){
     return r_lgl(x);
@@ -41,7 +41,7 @@ inline auto as_r_type(T x) {
 
 // Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
-  requires (RType<T> || RVector<T> || any<T, SEXP, r_factors>)
+  requires (RScalar<T> || RVector<T> || any<T, SEXP, r_factors>)
 inline T as(U x) {
   if constexpr (is<U, T>){
     return x;
@@ -52,17 +52,17 @@ inline T as(U x) {
       // This will trigger the branch that checks that both are RVector
       return as<T>(xvec);
     });
-  } else if constexpr (RType<T> && any<U, SEXP, r_sexp>){
+  } else if constexpr (RScalar<T> && any<U, SEXP, r_sexp>){
     return internal::visit_vector(x, [&](auto xvec) -> T {
       // Use branch below current branch
       return as<T>(xvec);
     });
-  } else if constexpr (RVector<U> && RType<T>){
+  } else if constexpr (RVector<U> && RScalar<T>){
     if (x.length() != 1){
       cpp11::stop("Vector must be length-1 to be coerced to requested type");
     }
     return internal::as_r<T>(x.get(0));
-  } else if constexpr (RVector<T> && RType<U>){
+  } else if constexpr (RVector<T> && RScalar<U>){
     using data_t = typename T::data_type;
     return r_vec<data_t>(1, internal::as_r<data_t>(x));
   } else if constexpr (RVector<U> && RVector<T>){
@@ -84,10 +84,10 @@ inline T as(U x) {
     auto str_vec = as<r_vec<r_str>>(x);
     auto out = r_factors(str_vec);
     return out; 
-  } else if constexpr (RType<T> && !RVector<U>) {
+  } else if constexpr (RScalar<T> && !RVector<U>) {
     return internal::as_r<T>(x);
     // If input is not an R type or an R vector type
-  } else if constexpr (!RType<U> && !RVector<U>){
+  } else if constexpr (!RScalar<U> && !RVector<U>){
     return as<T>(internal::as_r_type(x));
   } else {
     static_assert(always_false<T>, "Unsupported type for `as`");

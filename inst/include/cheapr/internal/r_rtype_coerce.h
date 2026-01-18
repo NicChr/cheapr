@@ -207,7 +207,7 @@ inline r_sexp as_sexp(T x){
     return x;
   } else if constexpr (std::is_convertible_v<T, SEXP>){
     return r_sexp(static_cast<SEXP>(x));
-  } else if constexpr (RType<T>){
+  } else if constexpr (RScalar<T>){
     return r_sexp(new_scalar_vec(x));
   } else if constexpr (MathType<T>){
     if constexpr (internal::can_be_int<T>){
@@ -319,7 +319,7 @@ struct as_impl<r_sexp, U> {
   }
 };
 
-template<RType T, typename U>
+template<RScalar T, typename U>
 inline T as_r(U x) {
   if constexpr (is<U, T>){ 
     return x;
