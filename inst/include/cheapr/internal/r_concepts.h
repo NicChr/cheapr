@@ -55,10 +55,33 @@ concept AtLeastOneRScalar = (RScalar<T> || RScalar<U>);
 template <typename T>
 concept RPtrWritableType = RMathType<T> || any<T, r_cplx, r_raw>;
 
-// template <RScalar T>
-// SEXPTYPE sexp_type(T x){
-// static_assert(always_false<T>, "Unsupported type for `sexp_type`");
-// }
+// Forward declare structs to define concepts now
+template<RScalar T>
+struct r_vec;
+
+struct r_df;
+struct r_factors;
+struct r_dates;
+struct r_posixcts;
+
+namespace internal {
+
+template<typename T>
+struct is_r_vector : std::false_type {};
+
+template<typename T>
+struct is_r_vector<r_vec<T>> : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value;
+
+}
+
+template<typename T>
+concept RVector = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
+
+template <typename T> 
+concept RObject = any<T, r_sexp, r_factors, r_df> || RVector<T>;
 
 }
 

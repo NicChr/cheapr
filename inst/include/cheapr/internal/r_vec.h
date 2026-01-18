@@ -267,15 +267,6 @@ explicit r_vec(SEXP s) : sexp(s) {
 
 namespace internal {
 
-template<typename T>
-struct is_r_vector : std::false_type {};
-
-template<typename T>
-struct is_r_vector<r_vec<T>> : std::true_type {};
-
-template<typename T>
-inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value;
-
 // A cleaner lambda-based alternative to
 // using the canonical switch(TYPEOF(x))
 //
@@ -319,18 +310,6 @@ decltype(auto) visit_maybe_vector(SEXP x, F&& f) {
 }
 
 }
-
-// Forward declare structs to define concepts now
-struct r_df;
-struct r_factors;
-struct r_dates;
-struct r_posixcts;
-
-template<typename T>
-concept RVector = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
-
-template <typename T> 
-concept RObject = any<T, r_sexp, r_factors, r_df> || RVector<T>;
 
 
 template <RScalar T>
