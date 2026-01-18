@@ -9,12 +9,14 @@ namespace cheapr {
 
 namespace attr {
 
-inline bool inherits1(r_sexp x, const char *r_cls){
+template <RObject T>
+inline bool inherits1(T x, const char *r_cls){
   return Rf_inherits(x, r_cls);
 }
 
 // Attributes of x as a list
-inline r_vec<r_sexp> get_attrs(r_sexp x){
+template <RObject T>
+inline r_vec<r_sexp> get_attrs(T x){
   if (internal::BASE_ATTRIBUTES == NULL){
     internal::BASE_ATTRIBUTES = Rf_install("attributes");
   }
@@ -22,23 +24,25 @@ inline r_vec<r_sexp> get_attrs(r_sexp x){
   r_sexp out = r_sexp(Rf_eval(expr, R_BaseEnv));
   return r_vec<r_sexp>(out);
 }
-
-inline bool has_attrs(r_sexp x){
+template <RObject T>
+inline bool has_attrs(T x){
   return !get_attrs(x).is_null();
 }
-
-inline r_sexp get_attr(r_sexp x, r_sym sym){
+template <RObject T>
+inline r_sexp get_attr(T x, r_sym sym){
   return r_sexp(Rf_getAttrib(x, sym));
 }
-
-inline void set_attr(r_sexp x, r_sym sym, r_sexp value){
+template <RObject T, RObject U> 
+inline void set_attr(T x, r_sym sym, U value){
   if (!x.is_null()){
     Rf_setAttrib(x, sym, value);
   }
 }
-
-inline void set_old_names(r_sexp x, r_vec<r_str> names){
-  if (names.is_null()){
+template <RObject T>
+inline void set_old_names(T x, r_vec<r_str> names){
+  if (x.is_null()){
+    return;
+  } else if (names.is_null()){
     attr::set_attr(x, symbol::names_sym, r_null);
   } else if (names.length() != x.length()){
     cpp11::stop("`length(names)` must equal `length(x)`");
@@ -46,22 +50,24 @@ inline void set_old_names(r_sexp x, r_vec<r_str> names){
     Rf_namesgets(x, names);
   }
 }
-inline r_vec<r_str> get_old_names(r_sexp x){
+template <RObject T>
+inline r_vec<r_str> get_old_names(T x){
   return r_vec<r_str>(get_attr(x, symbol::names_sym));
 }
-inline bool has_r_names(r_sexp x){
-  auto names = get_old_names(x);
-  return !names.is_null();
+template <RObject T>
+inline bool has_r_names(T x){
+  return get_old_names(x).is_null();
 }
-
-inline r_vec<r_str> get_old_class(r_sexp x){
+template <RObject T>
+inline r_vec<r_str> get_old_class(T x){
   return r_vec<r_str>(get_attr(x, symbol::class_sym));
 }
-inline void set_old_class(r_sexp x, r_vec<r_str> cls){
-  r_vec<r_str>(Rf_classgets(x, cls));
+template <RObject T>
+inline void set_old_class(T x, r_vec<r_str> cls){
+  Rf_classgets(x, cls);
 }
-
-inline bool inherits(r_sexp x, r_vec<r_str> classes){
+template <RObject T>
+inline bool inherits(T x, r_vec<r_str> classes){
   r_size_t n = classes.length();
   for (r_size_t i = 0; i < n; ++i) {
     if (inherits1(x, classes.get(i).c_str())){
@@ -70,15 +76,15 @@ inline bool inherits(r_sexp x, r_vec<r_str> classes){
   }
   return false;
 }
-
-inline void clear_attrs(r_sexp x){
+template <RObject T>
+inline void clear_attrs(T x){
 
   auto attrs = get_attrs(x);
 
   if (attrs.is_null()){
     return;
   }
-  auto names = attr::get_old_names(attrs.sexp);
+  auto names = attr::get_old_names(attrs);
 
   int n = attrs.length();
 
@@ -92,7 +98,8 @@ inline void clear_attrs(r_sexp x){
 
 namespace internal {
 
-inline void modify_attrs_impl(r_sexp x, cheapr::r_vec<r_sexp> attrs) {
+template <RObject T>
+inline void modify_attrs_impl(T x, r_vec<r_sexp> attrs) {
 
   if (x.is_null()){
     cpp11::stop("Cannot add attributes to `NULL`");
@@ -102,7 +109,7 @@ inline void modify_attrs_impl(r_sexp x, cheapr::r_vec<r_sexp> attrs) {
     return;
   }
 
-  auto names = attr::get_old_names(attrs.sexp);
+  auto names = attr::get_old_names(attrs);
 
   if (names.is_null()){
     cpp11::stop("attributes must be a named list");
@@ -130,7 +137,8 @@ inline void modify_attrs_impl(r_sexp x, cheapr::r_vec<r_sexp> attrs) {
 
 namespace attr {
 
-inline void set_attrs(cheapr::r_sexp x, r_vec<r_sexp> attrs){
+template <RObject T>
+inline void set_attrs(T x, r_vec<r_sexp> attrs){
   if (x.is_null()){
     clear_attrs(x);
     internal::modify_attrs_impl(x, attrs);

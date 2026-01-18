@@ -320,6 +320,19 @@ decltype(auto) visit_maybe_vector(SEXP x, F&& f) {
 
 }
 
+// Forward declare structs to define concepts now
+struct r_df;
+struct r_factors;
+struct r_dates;
+struct r_posixcts;
+
+template<typename T>
+concept RVectorType = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
+
+template <typename T> 
+concept RObject = any<T, r_sexp, r_factors, r_df> || RVectorType<T>;
+
+
 template <RType T>
 inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset, r_size_t n){
   auto *p_source = source.data();

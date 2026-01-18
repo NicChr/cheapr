@@ -74,7 +74,7 @@ r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) {
 }
 
 
-struct r_factors : public r_vec<r_int> {
+struct r_factors : public r_vec<r_int> { 
 
   // Constructors
   r_factors() : r_vec<r_int>() {}

@@ -8,9 +8,6 @@
 
 namespace cheapr {
 
-template<typename T>
-concept RVectorType = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
-
 // Coerce to an R type based on the C type (useful for RType templates)
 namespace internal {
 
