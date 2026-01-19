@@ -120,9 +120,9 @@ inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
   inline r_lgl::operator bool() const {
     if (is_na()){
     cpp11::stop("Cannot implicitly convert NA to bool, please check");
+    }
+    return static_cast<bool>(value);
   }
-  return static_cast<bool>(value);
-}
 
 // is_r_na is defined later as a template
 

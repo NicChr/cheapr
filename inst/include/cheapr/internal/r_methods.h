@@ -10,12 +10,12 @@ namespace cheapr {
 
 // Methods for custom R types
 
-  // ! operator for r_lgl
+// ! operator for r_lgl
 inline constexpr r_lgl operator!(r_lgl x) {
   if (is_r_na(x)) {
     return r_na;
   }
-  return r_lgl{!x.value};
+  return r_lgl{x.value == 0};
 }
 
 // r_cplx methods
@@ -95,7 +95,7 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
   }
 }
 
-template<RScalar T, CppObject U>
+template<RScalar T, CppScalar U>
 inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
@@ -105,7 +105,7 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
   return r_lgl{lhs.value == rhs};
 }
 
-template<CppObject T, RScalar U>
+template<CppScalar T, RScalar U>
 inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
@@ -114,12 +114,30 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
   }
   return r_lgl{lhs == rhs.value};
 }
+// template<typename T, typename U>
+// requires (AtLeastOneRScalar<T, U>)
+// inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
+//   return r_lgl{(lhs == rhs).is_false()};
+// }
 
 // Other comparison operators
-template<typename T, typename U>
-requires (AtLeastOneRScalar<T, U>)
+template<RScalar T, CppScalar U>
 inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
-  return r_lgl{(lhs == rhs).is_false()};
+  r_lgl eq = (lhs == rhs);
+  if (eq.is_na()) return r_na;
+  return r_lgl(eq.is_false());
+}
+template<CppScalar T, RScalar U>
+inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
+  r_lgl eq = (lhs == rhs);
+  if (eq.is_na()) return r_na;
+  return r_lgl(eq.is_false());
+}
+template<RScalar T, RScalar U>
+inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
+  r_lgl eq = (lhs == rhs);
+  if (eq.is_na()) return r_na;
+  return r_lgl(eq.is_false());
 }
 
 template<RMathType T, RMathType U>

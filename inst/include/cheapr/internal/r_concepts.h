@@ -45,8 +45,8 @@ concept AtLeastOneRMathType =
 template<typename T>
 concept RScalar = RMathType<T> || any<T, r_cplx, r_str, r_raw, r_sym, r_sexp>;
 
-template<typename T, typename U>
-concept AtLeastOneRScalar = (RScalar<T> || RScalar<U>);
+// template<typename T, typename U>
+// concept AtLeastOneRScalar = (RScalar<T> || RScalar<U>);
 
 template <typename T>
 concept RPtrWritableType = RMathType<T> || any<T, r_cplx, r_raw>;
@@ -79,8 +79,14 @@ concept RVector = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixc
 template <typename T> 
 concept RObject = any<T, r_sexp, r_factors, r_df> || RVector<T>;
 
-template<typename T>
-concept CppObject = !RObject<T> && !RScalar<T>;
+template <typename T>
+concept CppScalar = std::is_scalar_v<T> && !RObject<T> && !RScalar<T>;
+
+template<typename T, typename U>
+concept AtLeastOneRScalar = 
+(RScalar<T> && RScalar<U>) ||
+(RScalar<T> && CppScalar<U>) ||
+(CppScalar<T> && RScalar<U>);
 
 }
 
