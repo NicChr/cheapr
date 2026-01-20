@@ -273,6 +273,39 @@ explicit r_vec(SEXP s) : sexp(s) {
     }
   }
 
+  r_vec<T> rep_len(r_size_t n){
+
+    r_size_t size = length();
+
+    if (size == n){
+      return *this;
+    }
+
+    auto out = r_vec<T>(n);
+
+    if (size == 1){
+      auto fill_val = this->get(0);
+      out.fill(0, n, fill_val);
+    } else if (n > 0 && size > 0){
+      // Copy first block
+      r_copy_n(out, *this, 0, size);
+
+      // copy result to itself, doubling each iteration
+      r_size_t copied = size;
+      while (copied < n) {
+        r_size_t to_copy = std::min(copied, n - copied);
+        r_copy_n(out, out, copied, to_copy);
+        copied += to_copy;
+      }
+      // If length > 0 but length(x) == 0 then fill with NA
+    } else if (size == 0 && n > 0){
+      auto na_val = na_value<T>();
+      out.fill(0, n, na_val);
+    }
+    return out;
+  }
+
+
 };
 
 namespace internal {
