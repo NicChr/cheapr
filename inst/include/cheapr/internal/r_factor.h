@@ -102,11 +102,11 @@ struct r_factors : public r_vec<r_int> {
     this->sexp = fct.sexp;
   }
 
-  r_vec<r_str> levels_get() const {
+  r_vec<r_str> levels() const {
     return r_vec<r_str>(attr::get_attr(this->sexp, internal::as_r<r_sym>("levels")));
   }
 
-  void levels_set(r_vec<r_str> levels) {
+  void set_levels(r_vec<r_str> levels) {
     attr::set_attr(this->sexp, internal::as_r<r_sym>("levels"), levels.sexp);
   }
 

@@ -9,7 +9,7 @@
 
 namespace cheapr {
 
-template<RScalar T>
+template<RVal T>
 struct r_vec {
   r_sexp sexp = r_null;
   T* ptr = nullptr;              // Only initialized if writable
@@ -147,7 +147,7 @@ explicit r_vec(SEXP s) : sexp(s) {
   }
 
   // Set only available if writable
-  // We use flexible template to be able to coerce it to an RScalar
+  // We use flexible template to be able to coerce it to an RVal
   template <typename U>
   void set(r_size_t index, U val) {
       T val2 = internal::as_r<T>(val);
@@ -159,6 +159,16 @@ explicit r_vec(SEXP s) : sexp(s) {
         ptr[index] = val2;
       }
   }
+
+  // T operator[](r_size_t i) const {
+  //     return get(i);
+  // }
+
+  // r_vec<T> operator[](const r_vec<r_int>& indices) const {
+  //   r_size_t n_out = indices.length();
+  //   r_vec<T> out(n_out);
+
+  // }
 
   r_vec<r_str> names() const {
     return r_vec<r_str>(Rf_getAttrib(sexp, symbol::names_sym));
@@ -312,7 +322,7 @@ decltype(auto) visit_maybe_vector(SEXP x, F&& f) {
 }
 
 
-template <RScalar T>
+template <RVal T>
 inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset, r_size_t n){
   auto *p_source = source.data();
 

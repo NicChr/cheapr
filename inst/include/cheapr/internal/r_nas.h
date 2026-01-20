@@ -96,7 +96,7 @@ namespace internal {
 
 template<typename T>
 inline constexpr bool is_r_na_impl(T x) {
-  if constexpr (RScalar<T>){
+  if constexpr (RVal<T>){
       return x.value == na_value<T>().value;
   } else {
       return false;
@@ -121,8 +121,12 @@ inline constexpr bool is_r_na_impl<r_raw>(r_raw x){
  
 // NULL is treated as NA of general R objects
 template<>
+inline bool is_r_na_impl<r_sexp>(r_sexp x){
+  return x.value == r_null.value;
+}
+template<>
 inline bool is_r_na_impl<SEXP>(SEXP x){
-  return x == R_NilValue;
+  return x == r_null.value;
 }
 
 }

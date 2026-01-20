@@ -31,7 +31,7 @@ struct arg {
 
   template <typename U>
   arg(const char* n, U&& v)
-    : name(n), storage(internal::as_r_scalar(std::forward<U>(v))) {}
+    : name(n), storage(as_r_val(std::forward<U>(v))) {}
 
   template <typename U>
   arg operator=(U&& v) const {
@@ -40,7 +40,7 @@ struct arg {
 };
 
 
-template <RScalar T>
+template <RVal T>
 inline T as(const arg& a) {
   return std::visit(
     [](auto const& x) -> T {
@@ -56,7 +56,7 @@ inline T as(const arg& a) {
 }
 
 
-template<RScalar T, typename... Args>
+template<RVal T, typename... Args>
 inline r_vec<T> make_vec(Args... args) {
 
   constexpr int n = sizeof...(args);
@@ -88,7 +88,7 @@ inline r_vec<T> make_vec(Args... args) {
   }
 }
 
-// template <RScalar T>
+// template <RVal T>
 // template<typename... Args>
 // void r_vec<T>::modify_attrs(Args... args) {
 

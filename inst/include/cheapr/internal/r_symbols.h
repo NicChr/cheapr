@@ -56,7 +56,7 @@ inline r_sym missing_arg = r_sym(R_MissingArg);
 inline r_sym unbound_value = r_sym(R_UnboundValue);
 
 inline r_sym tag(SEXP x){
-  return static_cast<r_sym>(TAG(x));
+  return r_sym(TAG(x));
 }
 
 }

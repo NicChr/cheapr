@@ -79,7 +79,7 @@ inline constexpr r_cplx& operator/=(r_cplx& lhs, const r_cplx& rhs) {
   return lhs;
 }
 
-template<RScalar T, RScalar U>
+template<RVal T, RVal U>
 inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
@@ -95,7 +95,7 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
   }
 }
 
-template<RScalar T, CppScalar U>
+template<RVal T, CppScalar U>
 inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
@@ -105,7 +105,7 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
   return r_lgl{lhs.value == rhs};
 }
 
-template<CppScalar T, RScalar U>
+template<CppScalar T, RVal U>
 inline constexpr r_lgl operator==(const T lhs, const U rhs) {
 
   // Check for NA in either operand
@@ -115,25 +115,25 @@ inline constexpr r_lgl operator==(const T lhs, const U rhs) {
   return r_lgl{lhs == rhs.value};
 }
 // template<typename T, typename U>
-// requires (AtLeastOneRScalar<T, U>)
+// requires (AtLeastOneRVal<T, U>)
 // inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
 //   return r_lgl{(lhs == rhs).is_false()};
 // }
 
 // Other comparison operators
-template<RScalar T, CppScalar U>
+template<RVal T, CppScalar U>
 inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
   r_lgl eq = (lhs == rhs);
   if (eq.is_na()) return r_na;
   return r_lgl(eq.is_false());
 }
-template<CppScalar T, RScalar U>
+template<CppScalar T, RVal U>
 inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
   r_lgl eq = (lhs == rhs);
   if (eq.is_na()) return r_na;
   return r_lgl(eq.is_false());
 }
-template<RScalar T, RScalar U>
+template<RVal T, RVal U>
 inline constexpr r_lgl operator!=(const T lhs, const U rhs) {
   r_lgl eq = (lhs == rhs);
   if (eq.is_na()) return r_na;

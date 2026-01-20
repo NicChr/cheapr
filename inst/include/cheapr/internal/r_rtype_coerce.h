@@ -54,6 +54,61 @@ inline constexpr bool can_be_int64(T x){
   }
 }
 
+}
+
+// Coerce to an R type based on the C type (useful for RVal templates)
+template<typename T>
+inline constexpr auto as_r_val(T x) {
+  if constexpr (RVal<T>){
+    return x;
+  } else if constexpr (is<T, bool>){
+    return r_lgl(x);
+  } else if constexpr (is<T, int>){
+    return r_int(x);
+  } else if constexpr (is<T, int64_t>){
+    return r_int64(x);
+  } else if constexpr (is<T, double>){
+    return r_dbl(x);
+  } else if constexpr (is<T, const char*>){
+    return r_str(x);
+  } else if constexpr (MathType<T>){
+    if constexpr (internal::can_be_int<T>){
+      return r_int(static_cast<int>(x));
+    } else {
+      return r_dbl(static_cast<double>(x));
+    }
+  } else if constexpr (RVector<T>){
+    return x.sexp;
+  }
+  else {
+    static_assert(
+      always_false<T>,
+      "Unsupported type for `as_r_val`"
+    );
+    return r_null;
+  } 
+}
+template<typename T>
+inline constexpr auto as_r_scalar(T x) {
+  if constexpr (RVector<T>){
+    if (x.length() != 1){
+      cpp11::stop("Vector must be length-1 to be coerced to a scalar");
+    }
+    auto out = x.get(0);
+    
+    // Only happens if x is a list
+    if (!RScalar<decltype(out)>){
+      cpp11::stop("`x` cannot be coereced to a scalar, first list-element is not a scalar");
+    }
+    return out;
+  }
+  else {
+    return as_r_val(x);
+  } 
+}
+
+namespace internal {
+
 // Coerce functions that account for NA
 template<typename T>
 inline r_lgl as_bool(T x){
@@ -207,20 +262,10 @@ inline r_sexp as_sexp(T x){
     return x;
   } else if constexpr (std::is_convertible_v<T, SEXP>){
     return r_sexp(static_cast<SEXP>(x));
-  } else if constexpr (RScalar<T>){
+  } else if constexpr (RVal<T>){
     return r_sexp(new_scalar_vec(x));
-  } else if constexpr (MathType<T>){
-    if constexpr (internal::can_be_int<T>){
-      return r_sexp(new_scalar_vec(r_int(static_cast<int>(x))));
-    } else {
-      return r_sexp(new_scalar_vec(r_dbl(static_cast<double>(x))));
-    }
   } else {
-    static_assert(
-      always_false<T>,
-      "Unimplemented `as_sexp` specialisation"
-    );
-    return r_null;
+    return new_scalar_vec(as_r_val(x)); 
   }
 }
 
@@ -230,7 +275,7 @@ inline r_sexp as_sexp<bool>(bool x){
 }
 template<>
 inline r_sexp as_sexp<const char *>(const char *x){
-  return r_sexp(Rf_ScalarString(r_str(x)));
+  return new_scalar_vec(r_str(x));
 }
 template<>
 inline r_sexp as_sexp<r_sym>(r_sym x){
@@ -319,7 +364,7 @@ struct as_impl<r_sexp, U> {
   }
 };
 
-template<RScalar T, typename U>
+template<RVal T, typename U>
 inline T as_r(U x) {
   if constexpr (is<U, T>){ 
     return x;

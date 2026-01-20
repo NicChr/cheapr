@@ -5,11 +5,11 @@
 // License: MIT
 
 #include <cheapr/internal/r_setup.h>
+#include <cheapr/internal/r_concepts.h>
 #include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_symbols.h>
 #include <cheapr/internal/r_env.h>
 #include <cheapr/internal/r_limits.h>
-#include <cheapr/internal/r_concepts.h>
 #include <cheapr/internal/r_nas.h>
 #include <cheapr/internal/r_methods.h>
 #include <cheapr/internal/r_rtype_coerce.h>

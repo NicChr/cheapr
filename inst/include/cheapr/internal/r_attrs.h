@@ -10,6 +10,67 @@ namespace cheapr {
 namespace attr {
 
 template <RObject T>
+inline bool can_have_attributes(T x){
+  if constexpr (any<T, r_factors, r_df> || RVector<T>){
+    return true; 
+  } else if constexpr (is_sexp<T>){
+    switch (TYPEOF(x)){
+      case LGLSXP:
+      case INTSXP: 
+      case REALSXP: 
+      case STRSXP: 
+      case CPLXSXP: 
+      case RAWSXP: 
+      case VECSXP: 
+      case LISTSXP:
+      case ENVSXP:
+      case CLOSXP:
+      case BUILTINSXP: 
+      case SPECIALSXP: 
+      case LANGSXP:
+      case EXPRSXP: 
+      case EXTPTRSXP: 
+      case OBJSXP: {
+        return true;
+      }
+      default: {
+        return false;
+      }
+    }
+  } else {
+    return false;
+  }
+}
+
+template <RObject T>
+inline bool can_have_names(T x){
+  if constexpr (any<T, r_factors, r_df> || RVector<T>){
+    return true; 
+  } else if constexpr (is_sexp<T>){
+    switch (TYPEOF(x)){
+      case LGLSXP:
+      case INTSXP: 
+      case REALSXP: 
+      case STRSXP: 
+      case CPLXSXP: 
+      case RAWSXP: 
+      case VECSXP: 
+      case LISTSXP:
+      case ENVSXP:
+      case LANGSXP:
+      case EXPRSXP: {
+        return true;
+      }
+      default: {
+        return false;
+      }
+    }
+  } else {
+    return false;
+  }
+}
+
+template <RObject T>
 inline bool inherits1(T x, const char *r_cls){
   return Rf_inherits(x, r_cls);
 }
@@ -17,12 +78,23 @@ inline bool inherits1(T x, const char *r_cls){
 // Attributes of x as a list
 template <RObject T>
 inline r_vec<r_sexp> get_attrs(T x){
-  if (internal::BASE_ATTRIBUTES == NULL){
-    internal::BASE_ATTRIBUTES = Rf_install("attributes");
+  r_sexp attrs = r_sexp(ATTRIB(x)); // Pairlist
+  r_size_t n = attrs.length();
+  if (n == 0){
+    return r_vec<r_sexp>(r_null);
   }
-  r_sexp expr = r_sexp(Rf_lang2(internal::BASE_ATTRIBUTES, x));
-  r_sexp out = r_sexp(Rf_eval(expr, R_BaseEnv));
-  return r_vec<r_sexp>(out);
+  r_vec<r_sexp> out(n);
+  r_vec<r_str> names(n);
+
+  SEXP current = attrs.value;
+
+  for (r_size_t i = 0; i < n; ++i){
+    out.set(i, r_sexp(CAR(current), internal::read_only_tag{}));
+    names.set(i, internal::as_r<r_str>(symbol::tag(current)));
+    current = CDR(current);
+  }
+  out.set_names(names);
+  return out;
 }
 template <RObject T>
 inline bool has_attrs(T x){
@@ -34,8 +106,8 @@ inline r_sexp get_attr(T x, r_sym sym){
 }
 template <RObject T, RObject U> 
 inline void set_attr(T x, r_sym sym, U value){
-  if (!x.is_null()){
-    Rf_setAttrib(x, sym, value);
+  if (can_have_attributes(x)){
+    Rf_setAttrib(x, sym, value); 
   }
 }
 template <RObject T>
@@ -46,8 +118,10 @@ inline void set_old_names(T x, r_vec<r_str> names){
     attr::set_attr(x, symbol::names_sym, r_null);
   } else if (names.length() != x.length()){
     cpp11::stop("`length(names)` must equal `length(x)`");
-  } else {
+  } else if (can_have_names(x)){
     Rf_namesgets(x, names);
+  } else {
+    cpp11::stop("Cannot add names to unsupported type");
   }
 }
 template <RObject T>
@@ -56,7 +130,7 @@ inline r_vec<r_str> get_old_names(T x){
 }
 template <RObject T>
 inline bool has_r_names(T x){
-  return get_old_names(x).is_null();
+  return !get_old_names(x).is_null();
 }
 template <RObject T>
 inline r_vec<r_str> get_old_class(T x){
@@ -64,7 +138,9 @@ inline r_vec<r_str> get_old_class(T x){
 }
 template <RObject T>
 inline void set_old_class(T x, r_vec<r_str> cls){
-  Rf_classgets(x, cls);
+  if (can_have_attributes(x)){
+    Rf_classgets(x, cls);
+  }
 }
 template <RObject T>
 inline bool inherits(T x, r_vec<r_str> classes){
@@ -139,10 +215,8 @@ namespace attr {
 
 template <RObject T>
 inline void set_attrs(T x, r_vec<r_sexp> attrs){
-  if (x.is_null()){
-    clear_attrs(x);
-    internal::modify_attrs_impl(x, attrs);
-  }
+  clear_attrs(x);
+  internal::modify_attrs_impl(x, attrs);
 }
 
 }

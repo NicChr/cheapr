@@ -2,8 +2,8 @@
 #define CHEAPR_VECTOR_UTILS_H
 
 #include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_concepts.h>
+#include <cheapr/internal/r_types.h>
 
 
 namespace cheapr {
@@ -83,7 +83,7 @@ inline const r_raw* vector_ptr<const r_raw>(SEXP x) {
 }
 
 // Internal vec constructor
-template <RScalar T>
+template <RVal T>
 inline r_sexp new_vec_impl(r_size_t n) {
   static_assert(
     always_false<T>,
@@ -129,7 +129,7 @@ inline r_sexp new_vec_impl<r_sexp>(r_size_t n){
 }
 
 
-template <RScalar T>
+template <RVal T>
 inline r_sexp new_scalar_vec(T default_value) {
   static_assert(
     always_false<T>,

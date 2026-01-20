@@ -22,7 +22,7 @@
 //     SEXP value;
     
 //     // Implicit conversion to any r_vec<T>
-//     template<RScalar T>
+//     template<RVal T>
 //     operator r_vec<T>() const {
 //       return r_vec<T>(value);
 //     }

@@ -1,9 +1,20 @@
 #ifndef CHEAPR_R_CONCEPTS_H
 #define CHEAPR_R_CONCEPTS_H
 
-#include <cheapr/internal/r_types.h>
+#include <cheapr/internal/r_setup.h>
 
 namespace cheapr {
+
+// Forward declare structs to define concepts now
+struct r_lgl;
+struct r_int;
+struct r_int64;
+struct r_dbl;
+struct r_str;
+struct r_cplx;
+struct r_raw;
+struct r_sym;
+struct r_sexp;
 
 template <class... T>
 inline constexpr bool always_false = false;
@@ -30,7 +41,7 @@ template<typename T>
 concept IntegerType = RIntegerType<T> || CppIntegerType<T>;
 
 template<typename T>
-concept RMathType = RIntegerType<T> || std::same_as<std::remove_cvref_t<T>, r_dbl>;
+concept RMathType = RIntegerType<T> || is<T, r_dbl>;
 
 template<typename T>
 concept CppMathType = std::is_arithmetic_v<std::remove_cvref_t<T>>;
@@ -43,22 +54,26 @@ concept AtLeastOneRMathType =
 (RMathType<T> || RMathType<U>) && (MathType<T> && MathType<U>);
 
 template<typename T>
-concept RScalar = RMathType<T> || any<T, r_cplx, r_str, r_raw, r_sym, r_sexp>;
+concept RScalar = RMathType<T> || any<T, r_cplx, r_str, r_raw, r_sym>;
+
+// RVal is anything that can be stored in `r_vec<>`
+template<typename T>
+concept RVal = RScalar<T> || is<T, r_sexp>;
 
 // template<typename T, typename U>
-// concept AtLeastOneRScalar = (RScalar<T> || RScalar<U>);
+// concept AtLeastOneRVal = (RVal<T> || RVal<U>);
 
 template <typename T>
 concept RPtrWritableType = RMathType<T> || any<T, r_cplx, r_raw>;
 
 // Forward declare structs to define concepts now
-template<RScalar T>
+template<RVal T>
 struct r_vec;
 
-struct r_df;
+struct r_dates; // Inherits from r_vec<r_int>
+struct r_posixcts; // Inherits from r_vec<r_dbl>
 struct r_factors;
-struct r_dates;
-struct r_posixcts;
+struct r_df;
 
 namespace internal {
 
@@ -76,17 +91,25 @@ inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value
 template<typename T>
 concept RVector = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
 
+// RObject is any object that can be represented in R - it excludes internal R types like CHARSXP
+// Also, these are all implicitly convertible to `SEXP`
 template <typename T> 
-concept RObject = any<T, r_sexp, r_factors, r_df> || RVector<T>;
+concept RObject = any<T, r_sexp, r_factors, r_df, r_sym> || RVector<T>;
 
 template <typename T>
-concept CppScalar = std::is_scalar_v<T> && !RObject<T> && !RScalar<T>;
+concept CppScalar = std::is_scalar_v<T>;
 
 template<typename T, typename U>
-concept AtLeastOneRScalar = 
-(RScalar<T> && RScalar<U>) ||
-(RScalar<T> && CppScalar<U>) ||
-(CppScalar<T> && RScalar<U>);
+concept AtLeastOneRVal = 
+(RVal<T> && RVal<U>) ||
+(RVal<T> && CppScalar<U>) ||
+(CppScalar<T> && RVal<U>);
+
+template <typename T>
+concept Scalar = CppScalar<T> || RVal<T>;
+
+template <typename T>
+inline constexpr bool is_sexp = any<T, SEXP, r_sexp>;
 
 }
 

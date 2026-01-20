@@ -2,6 +2,7 @@
 #define CHEAPR_R_TYPES_H
 
 #include <cheapr/internal/r_setup.h>
+#include <cheapr/internal/r_concepts.h>
 
 // R types
 
@@ -11,8 +12,6 @@ namespace cheapr {
 namespace internal {
 struct read_only_tag {};
 }
-
-struct r_str; // Forward declaration
 
 // General SEXP, reserved for everything except CHARSXP and SYMSXP
 // Wrapper around cpp11::sexp to benefit from automatic protection (cpp11-managed linked list)

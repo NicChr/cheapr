@@ -8,40 +8,9 @@
 
 namespace cheapr {
 
-// Coerce to an R type based on the C type (useful for RScalar templates)
-namespace internal {
-
-template<typename T>
-inline auto as_r_scalar(T x) {
-  if constexpr (RScalar<T>){
-    return x;
-  } else if constexpr (is<T, bool>){
-    return r_lgl(x);
-  } else if constexpr (MathType<T>){
-    if constexpr (internal::can_be_int<T>){
-      return r_int(static_cast<int>(x));
-    } else {
-      return r_dbl(static_cast<double>(x));
-    }
-  } else if constexpr (is<T, const char*>){
-    return internal::as_r<r_str>(x);
-  } else if constexpr (is<T, SEXP>){
-    return r_sexp(static_cast<SEXP>(x));
-  } else if constexpr (RVector<T>){
-    return x.sexp;
-  } else {    
-    static_assert(
-      always_false<T>,
-      "Unsupported type for `as_r_scalar`"
-    );
-  } 
-}
-
-}
-
 // Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
-  requires (RScalar<T> || RVector<T> || any<T, SEXP, r_factors>)
+  requires (RVal<T> || RVector<T> || any<T, SEXP, r_factors>)
 inline T as(U x) {
   if constexpr (is<U, T>){
     return x;
@@ -52,17 +21,17 @@ inline T as(U x) {
       // This will trigger the branch that checks that both are RVector
       return as<T>(xvec);
     });
-  } else if constexpr (RScalar<T> && any<U, SEXP, r_sexp>){
+  } else if constexpr (RVal<T> && any<U, SEXP, r_sexp>){
     return internal::visit_vector(x, [&](auto xvec) -> T {
       // Use branch below current branch
       return as<T>(xvec);
     });
-  } else if constexpr (RVector<U> && RScalar<T>){
+  } else if constexpr (RVector<U> && RVal<T>){
     if (x.length() != 1){
-      cpp11::stop("Vector must be length-1 to be coerced to requested type");
+      cpp11::stop("Vector must be length-1 to be coerced to requested scalar type");
     }
     return internal::as_r<T>(x.get(0));
-  } else if constexpr (RVector<T> && RScalar<U>){
+  } else if constexpr (RVector<T> && RVal<U>){
     using data_t = typename T::data_type;
     return r_vec<data_t>(1, internal::as_r<data_t>(x));
   } else if constexpr (RVector<U> && RVector<T>){
@@ -84,11 +53,11 @@ inline T as(U x) {
     auto str_vec = as<r_vec<r_str>>(x);
     auto out = r_factors(str_vec);
     return out; 
-  } else if constexpr (RScalar<T> && !RVector<U>) {
+  } else if constexpr (RVal<T> && !RVector<U>) {
     return internal::as_r<T>(x);
     // If input is not an R type or an R vector type
-  } else if constexpr (!RScalar<U> && !RVector<U>){
-    return as<T>(internal::as_r_scalar(x));
+  } else if constexpr (!RVal<U> && !RVector<U>){
+    return as<T>(as_r_val(x));
   } else {
     static_assert(always_false<T>, "Unsupported type for `as`");
   }
@@ -99,11 +68,11 @@ template<typename T>
 inline auto as_vector(T x){
   if constexpr (RVector<T>){
     return x;
-  } else if constexpr (any<T, SEXP, r_sexp>){
+  } else if constexpr (is_sexp<T>){
     static_assert(always_false<T>, "Can't convert `SEXP/r_sexp` to `r_vec<>`, please use `as<>` to convert");
     return T();
   } else {
-    auto rt_val = internal::as_r_scalar(x);
+    auto rt_val = as_r_val(x);
     return r_vec<decltype(rt_val)>(1, rt_val);
   }
 }
