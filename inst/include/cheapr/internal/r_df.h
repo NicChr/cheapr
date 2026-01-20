@@ -21,7 +21,7 @@ r_vec<r_sexp> new_df_impl(r_vec<r_sexp> cols){
 
     r_vec<r_str> names = cols.names();
     if (names.is_null()){
-        names = r_vec<r_str>(n, as<r_str>(""));
+        names = r_vec<r_str>(n, blank_r_string);
     }
 
     // Copy cols to new list
@@ -35,7 +35,7 @@ r_vec<r_sexp> new_df_impl(r_vec<r_sexp> cols){
         row_names = make_vec<r_int>(na::integer, -nrows);
     }
     out.set_names(names); 
-    attr::set_attr(out, symbol::class_sym, as<r_vec<r_str>>("data.frame"));
+    attr::set_attr(out, symbol::class_sym, r_vec<r_str>(1, r_str("data.frame")));
     attr::set_attr(out, symbol::row_names_sym, row_names);
     return out;
 }
@@ -47,8 +47,8 @@ r_vec<r_sexp> new_df_impl(int nrows){
     if (nrows != 0){
         row_names = make_vec<r_int>(na::integer, -nrows);
     }
-    out.set_names(as<r_vec<r_str>>(blank_r_string));
-    attr::set_attr(out, symbol::class_sym, as<r_vec<r_str>>("data.frame"));
+    out.set_names(r_vec<r_str>(1, blank_r_string));
+    attr::set_attr(out, symbol::class_sym, r_vec<r_str>(1, r_str("data.frame")));
     attr::set_attr(out, symbol::row_names_sym, row_names);
     return out;
 }
