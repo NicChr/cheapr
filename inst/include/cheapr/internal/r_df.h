@@ -35,8 +35,8 @@ r_vec<r_sexp> new_df_impl(r_vec<r_sexp> cols){
         row_names = make_vec<r_int>(na::integer, -nrows);
     }
     out.set_names(names); 
-    attr::set_attr(out, symbol::class_sym, as<r_vec<r_str>>("data.frame").sexp);
-    attr::set_attr(out, symbol::row_names_sym, row_names.sexp);
+    attr::set_attr(out, symbol::class_sym, as<r_vec<r_str>>("data.frame"));
+    attr::set_attr(out, symbol::row_names_sym, row_names);
     return out;
 }
 r_vec<r_sexp> new_df_impl(int nrows){
@@ -48,8 +48,8 @@ r_vec<r_sexp> new_df_impl(int nrows){
         row_names = make_vec<r_int>(na::integer, -nrows);
     }
     out.set_names(as<r_vec<r_str>>(blank_r_string));
-    attr::set_attr(out.sexp, symbol::class_sym, as<r_vec<r_str>>("data.frame").sexp);
-    attr::set_attr(out.sexp, symbol::row_names_sym, row_names.sexp);
+    attr::set_attr(out, symbol::class_sym, as<r_vec<r_str>>("data.frame"));
+    attr::set_attr(out, symbol::row_names_sym, row_names);
     return out;
 }
 }
@@ -81,7 +81,7 @@ struct r_df {
 //         : sexp(internal::new_df_impl(n_rows, n_cols)) {}
 
     // Implicit conversion to SEXP
-    constexpr operator SEXP() const { return sexp; }
+    constexpr operator SEXP() const { return sexp.value; }
 
     bool is_null() const { return sexp.is_null(); }
 

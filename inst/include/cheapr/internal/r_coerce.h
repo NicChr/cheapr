@@ -10,7 +10,7 @@ namespace cheapr {
 
 // Powerful and flexible coercion function that can handle many types and convert to R-spcific C++ types and R vectors
 template<typename T, typename U>
-  requires (RVal<T> || RVector<T> || any<T, SEXP, r_factors>)
+  requires (RVal<T> || RVector<T> || any<T, r_sexp, SEXP, r_factors>)
 inline T as(U x) {
   if constexpr (is<U, T>){
     return x;

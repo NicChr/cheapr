@@ -143,7 +143,7 @@ inline void set_old_class(T x, r_vec<r_str> cls){
   }
 }
 template <RObject T>
-inline bool inherits(T x, r_vec<r_str> classes){
+inline bool inherits_any(T x, r_vec<r_str> classes){
   r_size_t n = classes.length();
   for (r_size_t i = 0; i < n; ++i) {
     if (inherits1(x, classes.get(i).c_str())){
@@ -151,6 +151,16 @@ inline bool inherits(T x, r_vec<r_str> classes){
     }
   }
   return false;
+}
+template <RObject T>
+inline bool inherits_all(T x, r_vec<r_str> classes){
+  r_size_t n = classes.length();
+  for (r_size_t i = 0; i < n; ++i) {
+    if (!inherits1(x, classes.get(i).c_str())){
+      return false;
+    }
+  }
+  return true;
 }
 template <RObject T>
 inline void clear_attrs(T x){

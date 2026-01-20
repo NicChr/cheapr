@@ -23,8 +23,8 @@ struct r_vec {
   using data_type = T;
 
   // Constructor that wraps new_vec_impl<T>
-  explicit r_vec(r_size_t size)
-    : sexp(internal::new_vec_impl<std::remove_cvref_t<T>>(size))
+  explicit r_vec(r_size_t n)
+    : sexp(internal::new_vec_impl<std::remove_cvref_t<T>>(n))
   {
     if constexpr (RPtrWritableType<T>) {
       const_ptr = internal::vector_ptr<const T>(sexp.value);
@@ -37,10 +37,10 @@ struct r_vec {
   }
 
   template<typename U>
-  explicit r_vec(r_size_t size, U default_value)
-    : r_vec(size)
+  explicit r_vec(r_size_t n, U default_value)
+    : r_vec(n)
   {
-    fill(0, size, default_value);
+    fill(0, n, default_value);
   }
   
   r_vec(): r_vec(r_size_t(0)){}

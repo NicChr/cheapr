@@ -48,10 +48,6 @@ inline void modify_attrs(r_sexp x, Args... args) {
 
 namespace vec {
 
-inline r_size_t old_length(r_sexp x){
-  return Rf_xlength(x);
-}
-
 inline r_sexp shallow_copy(r_sexp x){
   return r_sexp(Rf_shallow_duplicate(x)); 
 }
@@ -72,7 +68,7 @@ inline r_vec<r_int> compact_seq_len(r_size_t n){
 // r_lgl not bool because bool can't be NA
 inline r_lgl all_whole_numbers(r_sexp x, r_dbl tol_, bool na_rm_){
 
-  r_size_t n = Rf_xlength(x);
+  r_size_t n = x.length();
 
   // Use r_lgl instead of bool as r_lgl can hold NA
   r_lgl out = r_true;
@@ -112,7 +108,7 @@ inline r_lgl all_whole_numbers(r_sexp x, r_dbl tol_, bool na_rm_){
 namespace vec {
 inline r_sexp deep_copy(r_sexp x){
   r_sexp out = r_null;
-  r_size_t n = Rf_xlength(x);
+  r_size_t n = x.length();
 
   if (!x.is_null()){
     if (Rf_isVector(x)){

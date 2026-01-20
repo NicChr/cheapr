@@ -80,7 +80,7 @@ struct r_factors : public r_vec<r_int> {
   r_factors() : r_vec<r_int>() {}
 
   explicit r_factors(SEXP x) : r_vec<r_int>(x) {
-    if (!is_null() || attr::inherits1(this->sexp, "factor")){
+    if (!is_null() && !attr::inherits1(*this, "factor")){
       cpp11::stop("`SEXP` must be a factor");
     }
   }
@@ -90,9 +90,9 @@ struct r_factors : public r_vec<r_int> {
     auto fct = internal::string_match(x, levels);
     auto cls = r_vec<r_str>(1, internal::as_r<r_str>("factor"));
     // Set class
-    attr::set_old_class(fct.sexp, cls);
+    attr::set_old_class(fct, cls);
     // Set levels
-    attr::set_attr(fct.sexp, internal::as_r<r_sym>("levels"), levels.sexp);
+    attr::set_attr(fct, internal::as_r<r_sym>("levels"), levels.sexp);
     this->sexp = fct.sexp;
   }
 
