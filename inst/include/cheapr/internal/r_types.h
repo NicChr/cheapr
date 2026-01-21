@@ -123,7 +123,7 @@ inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
     return static_cast<bool>(value);
   }
 
-// is_r_na is defined later as a template
+// is_na is defined later as a template
 
 // R integer
 struct r_int {

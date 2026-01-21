@@ -26,9 +26,9 @@ inline constexpr bool can_be_int(T x){
     }
     // Larger types that can safely cast to T
   } else if constexpr (CppMathType<xt>){
-    return between<xt>(x, r_limits::r_int_min, r_limits::r_int_max);
+    return between<xt>(x, r_limits<r_int>::min(), r_limits<r_int>::max());
   } else if constexpr (RMathType<xt>){
-    return between(x.value, static_cast<decltype(x.value)>(r_limits::r_int_min), static_cast<decltype(x.value)>(r_limits::r_int_max));
+    return between(x.value, static_cast<decltype(x.value)>(r_limits<r_int>::min()), static_cast<decltype(x.value)>(r_limits<r_int>::max()));
   } else {
     return false;
   }
@@ -46,9 +46,9 @@ inline constexpr bool can_be_int64(T x){
       return true;  // Small types can safely cast to int64
     }
   } else if constexpr (CppMathType<xt>){
-    return between<xt>(x, r_limits::r_int64_min, r_limits::r_int64_max);
+    return between<xt>(x, r_limits<r_int64>::min(), r_limits<r_int64>::max());
   } else if constexpr (RMathType<xt>){
-    return between(x.value, static_cast<decltype(x.value)>(r_limits::r_int64_min), static_cast<decltype(x.value)>(r_limits::r_int64_max));
+    return between(x.value, static_cast<decltype(x.value)>(r_limits<r_int64>::min()), static_cast<decltype(x.value)>(r_limits<r_int64>::max()));
   } else {
     return false;
   }
@@ -115,7 +115,7 @@ inline r_lgl as_bool(T x){
   if constexpr (is<T, int> || is<T, r_lgl>){
     return static_cast<r_lgl>(x);
   } else if constexpr (MathType<T>){
-    return is_r_na(x) ? na::logical : static_cast<r_lgl>(static_cast<bool>(x));
+    return is_na(x) ? na::logical : static_cast<r_lgl>(static_cast<bool>(x));
   } else {
     return na::logical;
   }
@@ -125,7 +125,7 @@ inline r_int as_int(T x){
   if constexpr (is<T, int> || is<T, r_int>){
     return static_cast<r_int>(x);
   } else if constexpr (MathType<T>){
-    return is_r_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<r_int>(x);
+    return is_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<r_int>(x);
   } else {
     return na::integer;
   }
@@ -135,7 +135,7 @@ inline r_int64 as_int64(T x){
   if constexpr (is<T, r_int64>){
     return x;
   } else if constexpr (MathType<T>){
-    return is_r_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<r_int64>(x);
+    return is_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<r_int64>(x);
   } else {
     return na::integer64;
   }
@@ -145,7 +145,7 @@ inline r_dbl as_double(T x){
   if constexpr (is<T, double> || is<T, r_dbl>){
     return static_cast<r_dbl>(x);
   } else if constexpr (MathType<T>){
-    return is_r_na(x) ? na::real : static_cast<r_dbl>(x);
+    return is_na(x) ? na::real : static_cast<r_dbl>(x);
   } else {
     return na::real;
   }
@@ -165,9 +165,9 @@ inline r_raw as_raw(T x){
   if constexpr (is<T, r_raw>){
     return x;
   } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
-    return is_r_na(x) || x < 0 ? na::raw : static_cast<r_raw>(x);
+    return is_na(x) || x < 0 ? na::raw : static_cast<r_raw>(x);
   } else if constexpr (IntegerType<T>){
-    return is_r_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_raw>(x);
+    return is_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_raw>(x);
   } else {
     return na::raw;
   }
@@ -182,7 +182,7 @@ inline r_str as_r_string(T x){
   } else if constexpr (is<T, r_sym>){
     return static_cast<r_str>(PRINTNAME(static_cast<SEXP>(x)));
   } else if constexpr (is<T, r_lgl>){
-    if (is_r_na(x)){
+    if (is_na(x)){
       return na::string;
     } else if (x == r_true){
       return as_r_string("TRUE");
@@ -190,7 +190,7 @@ inline r_str as_r_string(T x){
       return as_r_string("FALSE");
     }
   } else if constexpr (RMathType<T>){
-    if (is_r_na(x)){
+    if (is_na(x)){
       return na::string;
     }
     char buffer[48];
@@ -209,7 +209,7 @@ inline r_str as_r_string(T x){
     *result.ptr = '\0';  // Null-terminate
     return as_r_string(static_cast<const char *>(buffer));
   } else if constexpr (is<T, r_cplx>){
-    if (is_r_na(x)){
+    if (is_na(x)){
       return na::string;
     }
     double re = x.re();

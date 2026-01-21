@@ -17,8 +17,40 @@ inline r_dbl round_to_even(r_dbl x){
 }
 
 }
+ 
 
-namespace math {
+template<typename T, typename U>
+requires (AtLeastOneRMathType<T, U>)
+inline T min(const T &x, const U &y){
+  r_lgl out = x < y;
+  if (out.is_na()){
+    return na_value<T>();
+  } else if (out.is_true()){
+    return x;
+  } else {
+    return as<T>(y);
+  }
+}
+
+template<typename T, typename U>
+requires (AtLeastOneRMathType<T, U>)
+inline T max(const T &x, const U &y){
+  r_lgl out = x > y;
+  if (out.is_na()){
+    return na_value<T>();
+  } else if (out.is_true()){
+    return x;
+  } else {
+    return as<T>(y);
+  }
+}
+
+// template<typename T, typename U>
+// requires (AtLeastOneRMathType<T, U>)
+// inline constexpr T max(T x, U y){
+//   return is_na(x) ? x : T{std::max(x, as<T>(y))};
+// }
+
 template <typename T>
 inline constexpr bool is_r_inf(const T x){
   return false;
@@ -26,7 +58,7 @@ inline constexpr bool is_r_inf(const T x){
 
 template <>
 inline constexpr bool is_r_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits::r_pos_inf.value || x.value == r_limits::r_neg_inf.value;
+  return x.value == r_limits<r_dbl>::max().value || x.value == r_limits<r_dbl>::min().value;
 }
 
 template <typename T>
@@ -36,7 +68,7 @@ inline constexpr bool is_r_pos_inf(const T x){
 
 template <>
 inline constexpr bool is_r_pos_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits::r_pos_inf.value;
+  return x.value == r_limits<r_dbl>::max().value;
 }
 
 template <typename T>
@@ -46,17 +78,17 @@ inline constexpr bool is_r_neg_inf(const T x){
 
 template <>
 inline constexpr bool is_r_neg_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits::r_neg_inf.value;
+  return x.value == r_limits<r_dbl>::min().value;
 }
 
 template<RMathType T>
 inline constexpr T abs(T x){
-  return is_r_na(x) ? x : T{std::abs(x.value)};
+  return is_na(x) ? x : T{std::abs(x.value)};
 }
 
 template<RMathType T>
 inline T floor(T x){
-  return is_r_na(x) ? x : T{std::floor(x.value)};
+  return is_na(x) ? x : T{std::floor(x.value)};
 }
 template<>
 inline r_dbl floor(r_dbl x){
@@ -65,7 +97,7 @@ inline r_dbl floor(r_dbl x){
 
 template<RMathType T>
 inline T ceiling(T x){
-  return is_r_na(x) ? x : T{std::ceil(x.value)};
+  return is_na(x) ? x : T{std::ceil(x.value)};
 }
 template<>
 inline r_dbl ceiling(r_dbl x){
@@ -74,7 +106,7 @@ inline r_dbl ceiling(r_dbl x){
 
 template<RMathType T>
 inline T trunc(T x){
-  return is_r_na(x) ? x : T{std::trunc(x.value)};
+  return is_na(x) ? x : T{std::trunc(x.value)};
 }
 
 template <>
@@ -84,7 +116,7 @@ inline r_dbl trunc(r_dbl x){
 
 template <RMathType T>
 inline r_int sign(T x) {
-  return is_r_na(x) ? na::integer : (T(0) < x) - (x < T(0));
+  return is_na(x) ? na::integer : (T(0) < x) - (x < T(0));
 }
 
 template<RMathType T>
@@ -129,7 +161,7 @@ inline r_dbl log(T x){
   return r_dbl(std::log(as<r_dbl>(x).value));
 }
 inline r_cplx log(r_cplx x){
-  if (is_r_na(x)){
+  if (is_na(x)){
     return x;
   }
   r_dbl real = as<r_dbl>(0.5 * (log(pow(x.re(), 2.0) + pow(x.im(), 2.0))));
@@ -141,9 +173,9 @@ inline r_cplx log(r_cplx x){
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
 inline r_dbl round(T x, const U digits){
-  if (is_r_na(x)){
+  if (is_na(x)){
     return as<r_dbl>(x);
-  } else if (is_r_na(digits)){
+  } else if (is_na(digits)){
     return na::real;
   } else if (is_r_inf(x)){
     return x;
@@ -159,7 +191,7 @@ inline r_dbl round(T x, const U digits){
 
 template<RMathType T>
 inline r_dbl round(T x){
-  if (is_r_na(x)){
+  if (is_na(x)){
     return as<r_dbl>(x);
   } else if (is_r_inf(x)){
     return x;
@@ -172,9 +204,9 @@ template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
 inline r_dbl signif(T x, const U digits){
   U new_digits = std::max(U(1), digits);
-  if (is_r_na(x)){
+  if (is_na(x)){
     return as<r_dbl>(x);
-  } else if (is_r_na(new_digits)){
+  } else if (is_na(new_digits)){
     return na::real;
   } else if (is_r_pos_inf(digits)){
     return x;
@@ -192,7 +224,7 @@ inline T abs_diff(const T x, const U y){
 }
 
 inline r_lgl is_whole_number(const r_dbl x, const r_dbl tolerance){
-  return is_r_na(x) || is_r_na(tolerance) ? na::logical : r_lgl(abs_diff(x, round(x)) <= tolerance);
+  return is_na(x) || is_na(tolerance) ? na::logical : r_lgl(abs_diff(x, round(x)) <= tolerance);
 }
 
 
@@ -200,9 +232,9 @@ inline r_lgl is_whole_number(const r_dbl x, const r_dbl tolerance){
 template<MathType T>
   inline T gcd(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
 
-    if (is_r_na(x) || is_r_na(y)){
+    if (is_na(x) || is_na(y)){
       if (na_rm){ 
-        if (is_r_na(x)){
+        if (is_na(x)){
           return abs(y);
         } else {
           return abs(x);
@@ -270,9 +302,9 @@ template<MathType T>
   inline T lcm(
       T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
   ){
-    if (is_r_na(x) || is_r_na(y)){
+    if (is_na(x) || is_na(y)){
       if (na_rm){
-        if (is_r_na(x)){
+        if (is_na(x)){
           return y;
         } else {
           return x;
@@ -299,7 +331,6 @@ template<MathType T>
     }
   }
 
-}
 
 }
 

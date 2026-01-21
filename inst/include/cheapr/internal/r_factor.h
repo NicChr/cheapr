@@ -47,7 +47,7 @@ r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) {
   r_size_t n_needles = needles.length();
   r_size_t n_haystack = haystack.length();
 
-  if (n_haystack > r_limits::r_int_max){
+  if (n_haystack > r_limits<r_int>::max()){
     cpp11::stop("Cannot match to a long vector, please use a short character vector");
   }
 

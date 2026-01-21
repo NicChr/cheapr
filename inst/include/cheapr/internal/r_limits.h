@@ -7,14 +7,48 @@
 
 namespace cheapr {
     
-namespace r_limits { 
-inline constexpr r_int r_int_min = r_int{-std::numeric_limits<int>::max()};
-inline constexpr r_int r_int_max = r_int{std::numeric_limits<int>::max()};
-inline constexpr r_int64 r_int64_min = r_int64(-std::numeric_limits<int64_t>::max());
-inline constexpr r_int64 r_int64_max = r_int64(std::numeric_limits<int64_t>::max());
-inline constexpr r_dbl r_pos_inf = r_dbl(std::numeric_limits<double>::infinity());
-inline constexpr r_dbl r_neg_inf = r_dbl(-std::numeric_limits<double>::infinity());
-}
+
+template <RMathType T>
+struct r_limits;
+
+template <>
+struct r_limits<r_lgl>{
+
+    static constexpr r_lgl min() noexcept {
+        return r_false;
+    }
+    static constexpr r_lgl max() noexcept {
+        return r_true;
+    }
+};
+template <>
+struct r_limits<r_int>{
+    static constexpr r_int min() noexcept {
+        return r_int(-std::numeric_limits<int>::max());
+    }
+    static constexpr r_int max() noexcept {
+        return r_int(std::numeric_limits<int>::max());
+    }
+};
+template <>
+struct r_limits<r_int64>{
+    static constexpr r_int64 min() noexcept {
+        return r_int64(-std::numeric_limits<int64_t>::max());
+    }
+    static constexpr r_int64 max() noexcept {
+        return r_int64(std::numeric_limits<int64_t>::max());
+    }
+};
+template <>
+struct r_limits<r_dbl>{
+    static constexpr r_dbl min() noexcept {
+        return r_dbl(-std::numeric_limits<double>::infinity());
+    }
+    static constexpr r_dbl max() noexcept {
+        return r_dbl(std::numeric_limits<double>::infinity());
+    }
+
+};
 
 }
 

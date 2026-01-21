@@ -99,6 +99,11 @@ inline constexpr void recycle_index(T& v, const T size) {
   v = (++v == size) ? static_cast<T>(0) : v;
 }
 
+template <typename... Args>
+inline void stop(const char *fmt, Args... args){
+  cpp11::stop(fmt, args...);
+}
+
 }
 
 #endif

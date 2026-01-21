@@ -193,17 +193,17 @@ explicit r_vec(SEXP s) : sexp(s) {
       if (n_threads > 1){
         OMP_PARALLEL_FOR_SIMD(n_threads)
         for (r_size_t i = 0; i < n; ++i){
-          out.set(i, is_r_na(get(i)));
+          out.set(i, cheapr::is_na(get(i)));
         }
       } else {
         OMP_SIMD
         for (r_size_t i = 0; i < n; ++i){
-          out.set(i, is_r_na(get(i)));
+          out.set(i, cheapr::is_na(get(i)));
         }
       }
     } else {
       for (r_size_t i = 0; i < n; ++i){
-        out.set(i, is_r_na(get(i)));
+        out.set(i, cheapr::is_na(get(i)));
       }
     }
 
@@ -235,7 +235,7 @@ explicit r_vec(SEXP s) : sexp(s) {
   void replace(r_size_t start, r_size_t n, const U1 old_val, const U2 new_val){
     auto old_val2 = internal::as_r<T>(old_val);
     auto new_val2 = internal::as_r<T>(new_val);
-    bool implicit_na_coercion = !is_r_na(old_val) && is_r_na(old_val2);
+    bool implicit_na_coercion = !cheapr::is_na(old_val) && cheapr::is_na(old_val2);
     if (!implicit_na_coercion){
       if constexpr (RPtrWritableType<T>){
         int n_threads = internal::calc_threads(n);

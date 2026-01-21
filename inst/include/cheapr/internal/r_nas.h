@@ -95,7 +95,7 @@ inline constexpr auto na_value() {
 namespace internal {
 
 template<typename T>
-inline constexpr bool is_r_na_impl(T x) {
+inline constexpr bool is_na_impl(T x) {
   if constexpr (RVal<T>){
       return x.value == na_value<T>().value;
   } else {
@@ -105,35 +105,35 @@ inline constexpr bool is_r_na_impl(T x) {
 
 
 template<>
-inline constexpr bool is_r_na_impl<r_dbl>(r_dbl x){
+inline constexpr bool is_na_impl<r_dbl>(r_dbl x){
   return x.value != x.value;
 }
 
 template<>
-inline constexpr bool is_r_na_impl<r_cplx>(r_cplx x){
-  return is_r_na_impl<r_dbl>(x.re()) || is_r_na_impl<r_dbl>(x.im());
+inline constexpr bool is_na_impl<r_cplx>(r_cplx x){
+  return is_na_impl<r_dbl>(x.re()) || is_na_impl<r_dbl>(x.im());
 }
 
 template<>
-inline constexpr bool is_r_na_impl<r_raw>(r_raw x){
+inline constexpr bool is_na_impl<r_raw>(r_raw x){
   return false;
 }
  
 // NULL is treated as NA of general R objects
 template<>
-inline bool is_r_na_impl<r_sexp>(r_sexp x){
+inline bool is_na_impl<r_sexp>(r_sexp x){
   return x.value == r_null.value;
 }
 template<>
-inline bool is_r_na_impl<SEXP>(SEXP x){
+inline bool is_na_impl<SEXP>(SEXP x){
   return x == r_null.value;
 }
 
 }
 
 template<typename T>
-inline constexpr bool is_r_na(const T x) {
-    return internal::is_r_na_impl<std::remove_cvref_t<T>>(x);
+inline constexpr bool is_na(const T x) {
+    return internal::is_na_impl<std::remove_cvref_t<T>>(x);
 }
 
 }
