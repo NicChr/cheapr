@@ -2,14 +2,20 @@
 #define CHEAPR_CAST_H
 
 #include <cheapr/internal/c_core.h>
-#include "variadic.h"
 
 namespace cheapr {
 
 // Defining custom R types
 // for casting, initialising, combining and assigning
+// Here R type must be an object that directly interfaces with R
+// Things like `NULL`, vectors, factors, data frames, etc
+// Which is different from the lower-level RVal concept for C/C++ we have built
 
+namespace internal {
 using r_type = uint8_t;
+}
+
+using internal::r_type;
 
 struct r_unknown_t {};
 
@@ -74,6 +80,22 @@ inline constexpr r_type r_type_pairs[14][14] = {
 inline r_type common_type(const r_type a, const r_type b) {
   return r_type_pairs[a][b];
 }
+
+template <typename T>
+inline r_type get_r_type(T x) {
+  static_assert(always_false<T>, "Unsupported type for `as_r_string`");
+}
+
+
+
+template <RVal U>
+inline r_type get_r_type<r_vec<r_lgl>>(r_vec<U> x) {
+
+}
+
+
+
+
 
 // Convert single SEXP into r_* code.
 inline r_type get_r_type(SEXP x) {
@@ -159,136 +181,132 @@ inline const char *r_type_char(SEXP x){
 
 // initialise template with specialisations
 template<typename T>
-inline SEXP init(R_xlen_t n, bool with_na) {
-  Rf_error("Unimplemented initialisation");
+inline SEXP init(r_size_t n, bool with_na) {
+  cpp11::stop("Unimplemented initialisation");
   return r_null;
 }
 
 template<>
-inline SEXP init<r_null_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_null_t>(r_size_t n, bool with_na) {
   return r_null;
 }
 
 template<>
-inline SEXP init<r_logicals_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_logicals_t>(r_size_t n, bool with_na) {
   if (with_na){
-    return vec::new_vector<r_bool_t>(n, na::logical);
+    return r_vec<r_lgl>(n, na::logical);
   } else {
-    return vec::new_vector<r_bool_t>(n);
+    return r_vec<r_lgl>(n);
   }
 
 }
 
 template<>
-inline SEXP init<r_integers_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_integers_t>(r_size_t n, bool with_na) {
   if (with_na){
-    return vec::new_vector<r_int_t>(n, na::integer);
+    return r_vec<r_int>(n, na::integer);
   } else {
-    return vec::new_vector<r_int_t>(n);
+    return r_vec<r_int>(n);
   }
 }
 
 template<>
-inline SEXP init<r_integers64_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_integers64_t>(r_size_t n, bool with_na) {
   if (with_na){
-    return vec::new_vector<r_int64_t>(n, na::integer64);
+    return r_vec<r_int64>(n, na::integer64);
   } else {
-    return vec::new_vector<r_int64_t>(n);
+    return r_vec<r_int64>(n);
   }
 }
 
 template<>
-inline SEXP init<r_doubles_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_doubles_t>(r_size_t n, bool with_na) {
   if (with_na){
-    return vec::new_vector<r_double_t>(n, na::real);
+    return r_vec<r_dbl>(n, na::real);
   } else {
-    return vec::new_vector<r_double_t>(n);
+    return r_vec<r_dbl>(n);
   }
 }
 
 template<>
-inline SEXP init<r_characters_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_characters_t>(r_size_t n, bool with_na) {
   if (with_na){
-    return vec::new_vector<r_string_t>(n, na::string);
+    return r_vec<r_str>(n, na::string);
   } else {
-    return vec::new_vector<r_string_t>(n);
+    return r_vec<r_str>(n);
   }
 }
 
 template<>
-inline SEXP init<r_complexes_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_complexes_t>(r_size_t n, bool with_na) {
   if (with_na){
-    return vec::new_vector<r_complex_t>(0, na::complex);
+    return r_vec<r_cplx>(0, na::complex);
   } else {
-    return vec::new_vector<r_complex_t>(n);
+    return r_vec<r_cplx>(n);
   }
 
 }
 
 template<>
-inline SEXP init<r_raws_t>(R_xlen_t n, bool with_na) {
+inline SEXP init<r_raws_t>(r_size_t n, bool with_na) {
   if (with_na){
-    return vec::new_vector<r_byte_t>(n, r_byte_t{0});
+    return r_vec<r_raw>(n, r_raw{0});
   } else {
-    return vec::new_vector<r_byte_t>(n);
+    return r_vec<r_raw>(n);
   }
 }
 
 template<>
-inline SEXP init<r_list_t>(R_xlen_t n, bool with_na) {
-  return vec::new_vector<sexp_t>(n);
+inline SEXP init<r_list_t>(r_size_t n, bool with_na) {
+  return r_vec<r_sexp>(n);
 }
 
 template<>
-inline SEXP init<r_factors_t>(R_xlen_t n, bool with_na) {
-  SEXP out = SHIELD(init<r_integers_t>(n, with_na));
-  SEXP lvls = SHIELD(vec::new_vector<r_string_t>(0));
-  SEXP cls = SHIELD(vec::as_vector("factor"));
+inline SEXP init<r_factors_t>(r_size_t n, bool with_na) {
+  SEXP out = init<r_integers_t>(n, with_na);
+  SEXP lvls = r_vec<r_str>(0);
+  SEXP cls = as_vector("factor");
   attr::set_attr(out, symbol::levels_sym, lvls);
   attr::set_old_class(out, cls);
-  YIELD(3);
   return out;
 }
 
 template<>
-inline SEXP init<r_dates_t>(R_xlen_t n, bool with_na){
-  SEXP out = SHIELD(init<r_doubles_t>(n, with_na));
-  SEXP cls = SHIELD(vec::as_vector("Date"));
+inline SEXP init<r_dates_t>(r_size_t n, bool with_na){
+  SEXP out = init<r_doubles_t>(n, with_na);
+  SEXP cls = as_vector("Date");
   attr::set_old_class(out, cls);
-  YIELD(2);
   return out;
 }
 
 template<>
-inline SEXP init<r_posixts_t>(R_xlen_t n, bool with_na) {
-  SEXP out = SHIELD(init<r_doubles_t>(n, with_na));
-  SEXP tz = SHIELD(vec::new_vector<r_string_t>(1));
-  SEXP cls = SHIELD(vec::combine("POSIXct", "POSIXt"));
+inline SEXP init<r_posixts_t>(r_size_t n, bool with_na) {
+  SEXP out = init<r_doubles_t>(n, with_na);
+  SEXP tz = r_vec<r_str>(1);
+  SEXP cls = vec::combine("POSIXct", "POSIXt");
   attr::set_old_class(out, cls);
-  attr::set_attr(out, as<r_symbol_t>("tzone"), tz);
-  YIELD(3);
+  attr::set_attr(out, as<r_sym>("tzone"), tz);
   return out;
 }
 
 template<>
-inline SEXP init<r_data_frame_t>(R_xlen_t n, bool with_na) {
-  SEXP out = SHIELD(vec::new_vector<sexp_t>(0));
-  SHIELD(out = cpp_new_df(out, r_null, false, false));
-  SHIELD(out = cpp_na_init(out, n));
-  YIELD(3);
+inline SEXP init<r_data_frame_t>(r_size_t n, bool with_na) {
+  SEXP out = r_vec<r_sexp>(0);
+  out = cpp_new_df(out, r_null, false, false);
+  out = cpp_na_init(out, n);
   return out;
 }
 
 template<>
-inline SEXP init<r_unknown_t>(R_xlen_t n, bool with_na) {
-  Rf_error("Don't know how to initialise unknown type");
+inline SEXP init<r_unknown_t>(r_size_t n, bool with_na) {
+  cpp11::stop("Don't know how to initialise unknown type");
   return r_null;
 }
 
 inline void check_casted_length(SEXP x, SEXP out){
 
   if (vec::length(x) != vec::length(out)){
-    Rf_error(
+    cpp11::stop(
       "Bad cast from type %s to type %s. \n`vec::length(x)` %lld doesn't match returned length of %lld",
       r_type_char(x),
       r_type_char(out),
@@ -299,7 +317,7 @@ inline void check_casted_length(SEXP x, SEXP out){
 }
 
 inline void signal_bad_cast(SEXP from, SEXP to){
-  Rf_error(
+  cpp11::stop(
     "Don't know how to cast from type %s to type %s",
     r_type_char(from), r_type_char(to)
   );
@@ -308,7 +326,7 @@ inline void signal_bad_cast(SEXP from, SEXP to){
 // cast template with specialisations
 template<typename T>
 inline SEXP cast(SEXP x, SEXP y) {
-  Rf_error("Unimplemented cast specialisation");
+  cpp11::stop("Unimplemented cast specialisation");
   return r_null;
 }
 
@@ -322,11 +340,10 @@ inline SEXP cast<r_logicals_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "logical")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_lgl = r_as_lgl != NULL ? r_as_lgl : as<r_symbol_t>("as.logical");
-    SEXP expr = SHIELD(Rf_lang2(r_as_lgl, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_lgl = r_as_lgl != NULL ? r_as_lgl : as<r_sym>("as.logical");
+    SEXP expr = Rf_lang2(r_as_lgl, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   } else {
     return internal::coerce_vec(x, LGLSXP);
@@ -338,11 +355,10 @@ inline SEXP cast<r_integers_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "integer")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_int = r_as_int != NULL ? r_as_int : as<r_symbol_t>("as.integer");
-    SEXP expr = SHIELD(Rf_lang2(r_as_int, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_int = r_as_int != NULL ? r_as_int : as<r_sym>("as.integer");
+    SEXP expr = Rf_lang2(r_as_int, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   } else {
     return internal::coerce_vec(x, INTSXP);
@@ -354,11 +370,10 @@ inline SEXP cast<r_doubles_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "numeric")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_dbl = r_as_dbl != NULL  ? r_as_dbl : as<r_symbol_t>("as.double");
-    SEXP expr = SHIELD(Rf_lang2(r_as_dbl, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_dbl = r_as_dbl != NULL  ? r_as_dbl : as<r_sym>("as.double");
+    SEXP expr = Rf_lang2(r_as_dbl, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   } else {
     return internal::coerce_vec(x, REALSXP);
@@ -370,9 +385,8 @@ inline SEXP cast<r_integers64_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "integer64")){
     return x;
   } else {
-    SEXP out = SHIELD(cast<r_doubles_t>(x, r_null));
-    SHIELD(out = cpp_numeric_to_int64(x));
-    YIELD(2);
+    SEXP out = cast<r_doubles_t>(x, r_null);
+    out = cpp_numeric_to_int64(x);
     return out;
   }
 }
@@ -384,11 +398,10 @@ inline SEXP cast<r_characters_t>(SEXP x, SEXP y) {
   } else if (internal::inherits1(x, "factor")){
     return factor_as_character(x);
   } else if (vec::is_object(x)){
-    r_as_char = r_as_char != NULL  ? r_as_char : as<r_symbol_t>("as.character");
-    SEXP expr = SHIELD(Rf_lang2(r_as_char, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_char = r_as_char != NULL  ? r_as_char : as<r_sym>("as.character");
+    SEXP expr = Rf_lang2(r_as_char, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   } else {
     return internal::coerce_vec(x, STRSXP);
@@ -400,11 +413,10 @@ inline SEXP cast<r_complexes_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "complex")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_cplx = r_as_cplx != NULL  ? r_as_cplx : as<r_symbol_t>("as.complex");
-    SEXP expr = SHIELD(Rf_lang2(r_as_cplx, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_cplx = r_as_cplx != NULL  ? r_as_cplx : as<r_sym>("as.complex");
+    SEXP expr = Rf_lang2(r_as_cplx, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   } else {
     return internal::coerce_vec(x, CPLXSXP);
@@ -416,11 +428,10 @@ inline SEXP cast<r_raws_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "raw")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_raw = r_as_raw != NULL  ? r_as_raw : as<r_symbol_t>("as.raw");
-    SEXP expr = SHIELD(Rf_lang2(r_as_raw, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_raw = r_as_raw != NULL  ? r_as_raw : as<r_sym>("as.raw");
+    SEXP expr = Rf_lang2(r_as_raw, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   } else {
     return internal::coerce_vec(x, RAWSXP);
@@ -432,11 +443,10 @@ inline SEXP cast<r_list_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "list")){
     return x;
   } else if (vec::is_object(x)){
-    r_as_list = r_as_list != NULL  ? r_as_list : as<r_symbol_t>("as.list");
-    SEXP expr = SHIELD(Rf_lang2(r_as_list, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_list = r_as_list != NULL  ? r_as_list : as<r_sym>("as.list");
+    SEXP expr = Rf_lang2(r_as_list, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   } else {
     return internal::coerce_vec(x, VECSXP);
@@ -448,24 +458,21 @@ inline SEXP cast<r_factors_t>(SEXP x, SEXP y) {
   if (internal::inherits1(x, "factor") && !internal::inherits1(y, "factor")){
     return x;
   } else if (internal::inherits1(y, "factor")){
-    SEXP x_lvls = SHIELD(attr::get_attr(x, symbol::levels_sym));
-    SEXP out_lvls = SHIELD(attr::get_attr(y, symbol::levels_sym));
+    SEXP x_lvls = attr::get_attr(x, symbol::levels_sym);
+    SEXP out_lvls = attr::get_attr(y, symbol::levels_sym);
     if (R_compute_identical(x_lvls, out_lvls, 0)){
-      YIELD(2);
       return x;
     }
-    SEXP out = SHIELD(cast<r_characters_t>(x, r_null));
-    SHIELD(out = character_as_factor(out, out_lvls));
-    YIELD(4);
+    SEXP out = cast<r_characters_t>(x, r_null);
+    out = character_as_factor(out, out_lvls);
     return out;
-  } else if (is_null(x)){
+  } else if (x.is_null()){
     return init<r_factors_t>(0, true);
   } else {
-    SEXP cheapr_factor = SHIELD(fn::find_pkg_fun("factor_", "cheapr", true));
-    SEXP expr = SHIELD(Rf_lang2(cheapr_factor, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    SEXP cheapr_factor = fn::find_pkg_fun("factor_", "cheapr", true);
+    SEXP expr = Rf_lang2(cheapr_factor, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(3);
     return out;
   }
 }
@@ -480,26 +487,23 @@ inline SEXP cast<r_dates_t>(SEXP x, SEXP y) {
     } else {
       return internal::coerce_vec(x, TYPEOF(y));
     }
-  } else if (is_null(x) && is_null(y)){
+  } else if (x.is_null() && y.is_null()){
     return init<r_dates_t>(vec::length(x), true);
   } else if (vec::is_object(x)){
-    r_as_date = r_as_date != NULL  ? r_as_date : as<r_symbol_t>("as.Date");
-    SEXP expr = SHIELD(Rf_lang2(r_as_date, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_date = r_as_date != NULL  ? r_as_date : as<r_sym>("as.Date");
+    SEXP expr = Rf_lang2(r_as_date, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   } else {
 
-    int32_t NP = 0;
 
-    SEXP out = SHIELD(vec::shallow_copy(x)); ++NP;
+    SEXP out = vec::shallow_copy(x);
     if (TYPEOF(x) != INTSXP){
-      SHIELD(out = internal::coerce_vec(x, REALSXP)); ++NP;
+      out = internal::coerce_vec(x, REALSXP);
     }
-    SEXP date_cls = SHIELD(vec::as_vector("Date")); ++NP;
+    SEXP date_cls = as_vector("Date");
     attr::set_old_class(out, date_cls);
-    YIELD(NP);
     return out;
   }
 }
@@ -510,59 +514,54 @@ inline SEXP cast<r_posixts_t>(SEXP x, SEXP y) {
     return x;
     // Copy timezone information
   } else if (internal::inherits1(x, "POSIXct") && internal::inherits1(y, "POSIXct")){
-    SEXP x_tzone = SHIELD(attr::get_attr(x, as<r_symbol_t>("tzone")));
-    SEXP out_tzone = SHIELD(attr::get_attr(y, as<r_symbol_t>("tzone")));
+    SEXP x_tzone = attr::get_attr(x, as<r_sym>("tzone"));
+    SEXP out_tzone = attr::get_attr(y, as<r_sym>("tzone"));
 
     if (R_compute_identical(x_tzone, out_tzone, 0)){
-      YIELD(2);
       return x;
     }
-    SEXP out = SHIELD(vec::shallow_copy(x));
-    attr::set_attr(out, as<r_symbol_t>("tzone"), out_tzone);
-    YIELD(3);
+    SEXP out = vec::shallow_copy(x);
+    attr::set_attr(out, as<r_sym>("tzone"), out_tzone);
     return out;
-  } else if (is_null(x) && is_null(y)){
+  } else if (x.is_null() && y.is_null()){
     return init<r_posixts_t>(0, true);
     // Fast method for converting into a date into a date-time
   } else if (internal::inherits1(x, "Date") && internal::inherits1(y, "POSIXct")){
-    R_xlen_t n = Rf_xlength(x);
-    SEXP out = SHIELD(vec::new_vector<r_double_t>(n));
-    SEXP out_class = SHIELD(vec::combine("POSIXct", "POSIXt"));
-    SEXP out_tzone = SHIELD(attr::get_attr(y, as<r_symbol_t>("tzone")));
+    r_size_t n = Rf_xlength(x);
+    SEXP out = r_vec<r_dbl>(n);
+    SEXP out_class = vec::combine("POSIXct", "POSIXt");
+    SEXP out_tzone = attr::get_attr(y, as<r_sym>("tzone"));
     attr::set_old_class(out, out_class);
-    attr::set_attr(out, as<r_symbol_t>("tzone"), out_tzone);
+    attr::set_attr(out, as<r_sym>("tzone"), out_tzone);
 
     auto* RESTRICT p_out = internal::real_ptr(out);
 
     if (TYPEOF(x) == INTSXP){
-      auto *p_x = vector_ptr<const r_int_t>(x);
+      auto *p_x = vector_ptr<const r_int>(x);
       OMP_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) p_out[i] = as<r_double_t>(p_x[i]) * 86400.0;
+      for (r_size_t i = 0; i < n; ++i) p_out[i] = as<r_dbl>(p_x[i]) * 86400.0;
 
     } else {
-      auto *p_x = vector_ptr<const r_double_t>(x);
+      auto *p_x = vector_ptr<const r_dbl>(x);
       OMP_SIMD
-      for (R_xlen_t i = 0; i < n; ++i) p_out[i] = p_x[i] * 86400;
+      for (r_size_t i = 0; i < n; ++i) p_out[i] = p_x[i] * 86400;
     }
 
-    YIELD(3);
     return out;
   } else if (!vec::is_object(x)){
-    SEXP out = SHIELD(internal::coerce_vec(x, REALSXP));
-    SEXP out_class = SHIELD(vec::combine("POSIXct", "POSIXt"));
-    SEXP out_tzone = SHIELD(vec::new_vector<r_string_t>(1));
+    SEXP out = internal::coerce_vec(x, REALSXP);
+    SEXP out_class = vec::combine("POSIXct", "POSIXt");
+    SEXP out_tzone = r_vec<r_str>(1);
     attr::set_old_class(out, out_class);
-    attr::set_attr(out, as<r_symbol_t>("tzone"), out_tzone);
-    SHIELD(out = cast<r_posixts_t>(out, y)); // To set the correct attributes
-    YIELD(4);
+    attr::set_attr(out, as<r_sym>("tzone"), out_tzone);
+    out = cast<r_posixts_t>(out, y); // To set the correct attributes
     return out;
   } else {
-    r_as_posixct = r_as_posixct != NULL  ? r_as_posixct : as<r_symbol_t>("as.POSIXct");
-    SEXP expr = SHIELD(Rf_lang2(r_as_posixct, x));
-    SEXP out = SHIELD(eval(expr, env::base_env));
+    r_as_posixct = r_as_posixct != NULL  ? r_as_posixct : as<r_sym>("as.POSIXct");
+    SEXP expr = Rf_lang2(r_as_posixct, x);
+    SEXP out = eval(expr, env::base_env);
     check_casted_length(x, out);
-    SHIELD(out = cast<r_posixts_t>(out, y)); // To set the correct attributes
-    YIELD(3);
+    out = cast<r_posixts_t>(out, y); // To set the correct attributes
     return out;
   }
 }
@@ -577,13 +576,11 @@ inline SEXP cast<r_data_frame_t>(SEXP x, SEXP y) {
     }
   }
 
-  int32_t NP = 0;
-  SEXP out = SHIELD(cpp_as_df(x)); ++NP;
+  SEXP out = cpp_as_df(x);
 
   if (internal::inherits1(y, "data.frame")){
-    SHIELD(out = rebuild(out, y, static_cast<bool>(MAYBE_REFERENCED(out)))); ++NP;
+    out = rebuild(out, y, static_cast<bool>(MAYBE_REFERENCED(out)));
   }
-  YIELD(NP);
   return out;
 }
 
@@ -592,10 +589,9 @@ inline SEXP cast<r_unknown_t>(SEXP x, SEXP y) {
   if (std::strcmp(r_class1(x), r_class1(y)) == 0){
     return x;
   } else {
-    SEXP base_cast_fn = SHIELD(fn::find_pkg_fun("base_cast", "cheapr", true));
-    SEXP out = SHIELD(fn::eval_fn(base_cast_fn, env::base_env, x, y));
+    SEXP base_cast_fn = fn::find_pkg_fun("base_cast", "cheapr", true);
+    SEXP out = fn::eval_fn(base_cast_fn, env::base_env, x, y);
     check_casted_length(x, out);
-    YIELD(2);
     return out;
   }
 }
@@ -619,21 +615,21 @@ inline SEXP cast_data_frame(SEXP x, SEXP y) { return cast<r_data_frame_t>(x, y);
 inline SEXP cast_unknown(SEXP x, SEXP y) { return cast<r_unknown_t>(x, y); }
 
 // Wrapper functions for init fns
-using init_fn = SEXP(*)(R_xlen_t, bool);
-inline SEXP init_null(R_xlen_t n, bool with_na) { return init<r_null_t>(n, with_na); }
-inline SEXP init_logical(R_xlen_t n, bool with_na) { return init<r_logicals_t>(n, with_na); }
-inline SEXP init_integer(R_xlen_t n, bool with_na) { return init<r_integers_t>(n, with_na); }
-inline SEXP init_integer64(R_xlen_t n, bool with_na) { return init<r_integers64_t>(n, with_na); }
-inline SEXP init_numeric(R_xlen_t n, bool with_na) { return init<r_doubles_t>(n, with_na); }
-inline SEXP init_character(R_xlen_t n, bool with_na) { return init<r_characters_t>(n, with_na); }
-inline SEXP init_complex(R_xlen_t n, bool with_na) { return init<r_complexes_t>(n, with_na); }
-inline SEXP init_raw(R_xlen_t n, bool with_na) { return init<r_raws_t>(n, with_na); }
-inline SEXP init_list(R_xlen_t n, bool with_na) { return init<r_list_t>(n, with_na); }
-inline SEXP init_factor(R_xlen_t n, bool with_na) { return init<r_factors_t>(n, with_na); }
-inline SEXP init_date(R_xlen_t n, bool with_na) { return init<r_dates_t>(n, with_na); }
-inline SEXP init_posixt(R_xlen_t n, bool with_na) { return init<r_posixts_t>(n, with_na); }
-inline SEXP init_data_frame(R_xlen_t n, bool with_na) { return init<r_data_frame_t>(n, with_na); }
-inline SEXP init_unknown(R_xlen_t n, bool with_na) { return init<r_unknown_t>(n, with_na); }
+using init_fn = SEXP(*)(r_size_t, bool);
+inline SEXP init_null(r_size_t n, bool with_na) { return init<r_null_t>(n, with_na); }
+inline SEXP init_logical(r_size_t n, bool with_na) { return init<r_logicals_t>(n, with_na); }
+inline SEXP init_integer(r_size_t n, bool with_na) { return init<r_integers_t>(n, with_na); }
+inline SEXP init_integer64(r_size_t n, bool with_na) { return init<r_integers64_t>(n, with_na); }
+inline SEXP init_numeric(r_size_t n, bool with_na) { return init<r_doubles_t>(n, with_na); }
+inline SEXP init_character(r_size_t n, bool with_na) { return init<r_characters_t>(n, with_na); }
+inline SEXP init_complex(r_size_t n, bool with_na) { return init<r_complexes_t>(n, with_na); }
+inline SEXP init_raw(r_size_t n, bool with_na) { return init<r_raws_t>(n, with_na); }
+inline SEXP init_list(r_size_t n, bool with_na) { return init<r_list_t>(n, with_na); }
+inline SEXP init_factor(r_size_t n, bool with_na) { return init<r_factors_t>(n, with_na); }
+inline SEXP init_date(r_size_t n, bool with_na) { return init<r_dates_t>(n, with_na); }
+inline SEXP init_posixt(r_size_t n, bool with_na) { return init<r_posixts_t>(n, with_na); }
+inline SEXP init_data_frame(r_size_t n, bool with_na) { return init<r_data_frame_t>(n, with_na); }
+inline SEXP init_unknown(r_size_t n, bool with_na) { return init<r_unknown_t>(n, with_na); }
 
 // The order of functions here MUST MATCH the order of defined r types
 inline const cast_fn CAST_FNS[14] = {
@@ -654,7 +650,7 @@ inline const init_fn INIT_FNS[14] = {
 inline SEXP cast_(r_type cast_type, SEXP x, SEXP y) {
   return CAST_FNS[cast_type](x, y);
 }
-inline SEXP init_(r_type cast_type, R_xlen_t n, bool with_na) {
+inline SEXP init_(r_type cast_type, r_size_t n, bool with_na) {
   return INIT_FNS[cast_type](n, with_na);
 }
 
