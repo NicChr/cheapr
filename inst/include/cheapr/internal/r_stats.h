@@ -6,9 +6,55 @@
 namespace cheapr {
     
 template <RMathType T>
-r_dbl sum(r_vec<T> x, bool na_rm = true){
+r_dbl sum(r_vec<T> x, bool na_rm = false){
     r_size_t n = x.length();
     r_dbl out(0);
+    if (na_rm){
+        for (r_size_t i = 0; i < n; ++i){ 
+            if (is_na(x.get(i))){
+                continue;
+            } else {
+                out += x.get(i);
+            }
+        }
+    } else {
+        for (r_size_t i = 0; i < n; ++i){
+            out += x.get(i);
+        }
+    }
+    return out;
+}
+
+// Optimisation for r_dbl
+template <>
+r_dbl sum(r_vec<r_dbl> x, bool na_rm){
+    r_size_t n = x.length();
+    r_dbl out(0);
+    if (na_rm){
+        for (r_size_t i = 0; i < n; ++i){ 
+            if (is_na(x.get(i))){
+                continue;
+            } else {
+                out += x.get(i);
+            }
+        }
+    } else {
+        double out_ = out;
+        const auto* RESTRICT p_x = x.data();
+        #pragma omp simd reduction(+:out_)
+        for (r_size_t i = 0; i < n; ++i){
+            out_ += p_x[i].value;
+        }
+        out = r_dbl(out_);
+    }
+    return out;
+}
+
+// Integer specific sum (user must accept there may be overflow)
+template <RIntegerType T>
+r_int64 sum_int(r_vec<T> x, bool na_rm = false){
+    r_size_t n = x.length();
+    r_int64 out(0);
     if (na_rm){
         for (r_size_t i = 0; i < n; ++i){ 
             if (is_na(x.get(i))){

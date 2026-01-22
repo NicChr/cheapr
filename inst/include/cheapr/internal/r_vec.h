@@ -61,24 +61,7 @@ struct r_vec {
     }
 }
 
-// Same as above
-// You could write:
-// explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
-// But this my be less performant
-explicit r_vec(SEXP s) : sexp(s) {
-  if (sexp.value != R_NilValue) {
-    // vector_ptr helper must be updated to return SEXP* for r_sexp/r_str/r_sym
-    // We cast strictly to the stored type
-    if constexpr (RPtrWritableType<T>) {
-      const_ptr = internal::vector_ptr<const T>(sexp);
-      ptr = internal::vector_ptr<T>(sexp);
-    } else if constexpr (any<T, r_sexp, r_sym>) {
-      const_ptr = (const read_only_ptr_t*) VECTOR_PTR_RO(sexp); 
-    } else if constexpr (is<T, r_str>){
-      const_ptr = (const read_only_ptr_t*) STRING_PTR_RO(sexp);
-    }
-  }
-}
+explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
 
   // Implicit conversion to SEXP
   constexpr operator SEXP() const {

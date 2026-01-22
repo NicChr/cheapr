@@ -21,27 +21,36 @@ inline r_dbl round_to_even(r_dbl x){
 
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
-inline T min(const T &x, const U &y){
-  r_lgl out = x < y;
+inline auto min(const T &x, const U &y){ 
+
+  auto l = as_r_val(x);
+  auto r = as_r_val(y);
+  using out_t = decltype(l);
+
+  r_lgl out = l < r;
   if (out.is_na()){
-    return na_value<T>();
+    return na_value<out_t>();
   } else if (out.is_true()){
-    return x;
+    return l;
   } else {
-    return as<T>(y);
+    return r;
   }
 }
 
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
-inline T max(const T &x, const U &y){
-  r_lgl out = x > y;
+inline auto max(const T &x, const U &y){
+  auto l = as_r_val(x);
+  auto r = as_r_val(y);
+  using out_t = decltype(l);
+
+  r_lgl out = l > r;
   if (out.is_na()){
-    return na_value<T>();
+    return na_value<out_t>();
   } else if (out.is_true()){
-    return x;
+    return l;
   } else {
-    return as<T>(y);
+    return r;
   }
 }
 
@@ -240,7 +249,7 @@ template<MathType T>
           return abs(x);
         }
       } else {
-        return na_value<decltype(x)>();
+        return na_value<T>();
       }
     }
 
@@ -310,7 +319,7 @@ template<MathType T>
           return x;
         }
       } else {
-        return na_value<decltype(x)>();
+        return na_value<T>();
       }
     }
 
@@ -320,7 +329,7 @@ template<MathType T>
       }
       T res = std::abs(x) / gcd(x, y, na_rm);
       if (y != 0 && (std::abs(res) > (std::numeric_limits<T>::max() / std::abs(y)))){
-        return na_value<decltype(x)>();
+        return na_value<T>();
       }
       return res * std::abs(y);
     } else {

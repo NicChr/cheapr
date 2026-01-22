@@ -362,3 +362,72 @@ SEXP foo40(SEXP x, bool na_rm){
     }
   });
 } 
+
+[[cpp11::register]]
+SEXP foo41(SEXP x){
+  r_vec<r_int> y = r_vec<r_int>(x);
+  return as<r_vec<r_dbl>>(sum_int(y));
+}
+
+
+[[cpp11::register]]
+SEXP foo42(SEXP x) {
+  auto xvec = r_vec<r_dbl>(x);
+
+    r_size_t n = xvec.length();
+
+    r_dbl sum(0);
+
+    for (r_size_t i = 0; i < n; ++i){
+      sum += xvec.get(i);
+    }
+    return as_vector(sum);
+}
+
+
+[[cpp11::register]]
+SEXP foo43(SEXP x) {
+  auto xvec = r_vec<r_dbl>(x);
+
+    r_size_t n = xvec.length();
+    const auto *p_x = xvec.data();
+
+    r_dbl sum(0);
+
+    for (r_size_t i = 0; i < n; ++i){
+      sum += p_x[i];
+    }
+    return as_vector(sum);
+}
+
+
+[[cpp11::register]]
+SEXP foo44(SEXP x) {
+  auto xvec = r_vec<r_dbl>(x);
+
+    r_size_t n = xvec.length();
+    const auto* RESTRICT p_x = xvec.data();
+
+    r_dbl sum(0);
+
+    for (r_size_t i = 0; i < n; ++i){
+      sum += p_x[i];
+    }
+    return as_vector(sum);
+}
+
+
+[[cpp11::register]]
+SEXP foo45(SEXP x) {
+  auto xvec = r_vec<r_dbl>(x);
+
+    r_size_t n = xvec.length();
+    const auto* RESTRICT p_x = xvec.data();
+
+    double sum(0);
+
+    for (r_size_t i = 0; i < n; ++i){
+      sum += p_x[i].value;
+    }
+    return as_vector(r_dbl(sum));
+}
