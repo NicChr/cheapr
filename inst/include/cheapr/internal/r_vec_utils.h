@@ -140,15 +140,15 @@ inline r_sexp new_scalar_vec(T default_value) {
 
 template <>
 inline r_sexp new_scalar_vec<r_lgl>(r_lgl default_value) {
-  return r_sexp(Rf_ScalarLogical(default_value.value));
+  return r_sexp(Rf_ScalarLogical(unwrap(default_value)));
 }
 template <>
 inline r_sexp new_scalar_vec<r_int>(r_int default_value){
-  return r_sexp(Rf_ScalarInteger(default_value.value));
+  return r_sexp(Rf_ScalarInteger(unwrap(default_value)));
 }
 template <>
 inline r_sexp new_scalar_vec<r_dbl>(r_dbl default_value){
-  return r_sexp(Rf_ScalarReal(default_value.value));
+  return r_sexp(Rf_ScalarReal(unwrap(default_value)));
 }
 template <>
 inline r_sexp new_scalar_vec<r_int64>(r_int64 default_value){
@@ -158,20 +158,20 @@ inline r_sexp new_scalar_vec<r_int64>(r_int64 default_value){
 }
 template <>
 inline r_sexp new_scalar_vec<r_str>(r_str default_value){
-  return r_sexp(Rf_ScalarString(default_value.value));
+  return r_sexp(Rf_ScalarString(default_value));
 }
 template <>
 inline r_sexp new_scalar_vec<r_cplx>(r_cplx default_value){
-  return r_sexp(Rf_ScalarComplex(default_value.value));
+  return r_sexp(Rf_ScalarComplex(unwrap(default_value)));
 }
 template <>
 inline r_sexp new_scalar_vec<r_raw>(r_raw default_value){
-  return r_sexp(Rf_ScalarRaw(default_value.value));
+  return r_sexp(Rf_ScalarRaw(unwrap(default_value)));
 }
 template <>
 inline r_sexp new_scalar_vec<r_sexp>(r_sexp default_value){
   r_sexp out = new_vec_impl<r_sexp>(1);
-  SET_VECTOR_ELT(out.value, 0, default_value);
+  SET_VECTOR_ELT(out.value, 0, unwrap(default_value));
   return out;
 }
 

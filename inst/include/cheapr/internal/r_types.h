@@ -222,10 +222,7 @@ inline r_str r_sexp::address() const {
   return r_str(buf);
 }
 
-namespace internal {
-
-// Important helper to extract the underlying NON-RVal value
-
+// Important (recursive) helper to extract the underlying NON-RVal value
 template <typename T>
 inline constexpr auto unwrap(const T& x){
   if constexpr (RVal<T>){
@@ -236,6 +233,8 @@ inline constexpr auto unwrap(const T& x){
     return x;
   }
 }
+
+namespace internal {
 
 template<typename T>
 inline constexpr bool can_definitely_be_int(){

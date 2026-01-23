@@ -435,6 +435,6 @@ SEXP foo45(SEXP x) {
 [[cpp11::register]]
 SEXP foo46() {
   r_str x("hi");
-  auto y = internal::unwrap(x);
+  auto y = unwrap(x);
   return y;
 }

@@ -91,7 +91,7 @@ inline constexpr r_lgl operator==(const T &lhs, const U &rhs) {
     // Compare complex types by components
     return r_lgl{lhs.re() == rhs.re() && lhs.im() == rhs.im()};
   } else {
-    return r_lgl{lhs.value == rhs.value};
+    return r_lgl{unwrap(lhs) == unwrap(rhs)};
   }
 }
 
@@ -102,7 +102,7 @@ inline constexpr r_lgl operator==(const T &lhs, const U &rhs) {
   if (is_na(lhs)) {
     return na::logical;
   }
-  return r_lgl{lhs.value == rhs};
+  return r_lgl{unwrap(lhs) == rhs};
 }
 
 template<CppScalar T, RVal U>
@@ -112,7 +112,7 @@ inline constexpr r_lgl operator==(const T &lhs, const U &rhs) {
   if (is_na(rhs)) {
     return na::logical;
   }
-  return r_lgl{lhs == rhs.value};
+  return r_lgl{lhs == unwrap(rhs)};
 }
 
 // Other comparison operators
