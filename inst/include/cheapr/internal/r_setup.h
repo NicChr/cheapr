@@ -86,11 +86,11 @@ inline int calc_threads(r_size_t data_size){
   return data_size >= CHEAPR_OMP_THRESHOLD ? get_threads() : 1;
 }
 
+template<typename T>
+inline constexpr bool between_impl(const T x, const T lo, const T hi) {
+  return x >= lo && x <= hi;
 }
 
-template<typename T>
-inline constexpr bool between(const T x, const T lo, const T hi) {
-  return x >= lo && x <= hi;
 }
 
 // Recycle loop indices

@@ -431,3 +431,10 @@ SEXP foo45(SEXP x) {
     }
     return as_vector(r_dbl(sum));
 }
+
+[[cpp11::register]]
+SEXP foo46() {
+  r_str x("hi");
+  auto y = internal::unwrap(x);
+  return y;
+}

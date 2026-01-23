@@ -3,6 +3,8 @@
 
 #include <cheapr/internal/r_setup.h>
 #include <cheapr/internal/r_concepts.h>
+#include <limits>
+#include <string>
 
 // R types
 
@@ -51,7 +53,8 @@ public:
   r_sexp& operator=(const r_sexp& other) {
       if (this != &other) {
           value = other.value;
-          protector_ = other.value;
+          // protector_ = other.value; // Previously was this line (investigate)
+          protector_ = other.protector_;
       }
       return *this;
   }
@@ -91,8 +94,10 @@ struct r_lgl {
   int value;
   r_lgl() : value{0} {}
   explicit constexpr r_lgl(int x) : value{x} {}
+  explicit constexpr r_lgl(bool x) : value{x} {}  
   explicit constexpr operator int() const { return value; }
 
+  // TO-DO: Mark below as explicit (might still work in if-else statements)
   operator bool() const;
   constexpr bool is_true() const;
   constexpr bool is_false() const;
@@ -164,17 +169,21 @@ struct r_str {
   const char *c_str() const {
     return CHAR(value);
   }
+
+  std::string cpp_str() const {
+    return static_cast<std::string>(c_str());
+  }
 };
 
 inline const r_str blank_r_string = r_str();
 
 // Alias type for SYMSXP
 struct r_sym {
-  SEXP value;
+  r_sexp value;
   r_sym() : value{R_MissingArg} {}
-  explicit constexpr r_sym(SEXP x) : value{x} {}
-  explicit r_sym(r_sexp x) : value{x.value} {}
-  constexpr operator SEXP() const { return value; }
+  explicit r_sym(r_sexp x) : value(std::move(x)) {} 
+  explicit r_sym(SEXP x) : value{std::move(r_sexp(x, internal::read_only_tag{}))} {} // Assume symbols are already protected
+  constexpr operator SEXP() const { return value.value; }
 };
 
 
@@ -207,10 +216,152 @@ struct r_raw {
   constexpr operator Rbyte() const { return value; }
 };
 
-r_str r_sexp::address() const {
+inline r_str r_sexp::address() const {
   char buf[1000];
   std::snprintf(buf, 1000, "%p", static_cast<void*>(value));
   return r_str(buf);
+}
+
+namespace internal {
+
+// Important helper to extract the underlying NON-RVal value
+
+template <typename T>
+inline constexpr auto unwrap(const T& x){
+  if constexpr (RVal<T>){
+    // Recursively unwrap until we hit a primitive type
+    // It's cool that this works in compile-time!
+    return unwrap(x.value);
+  } else {
+    return x;
+  }
+}
+
+template<typename T>
+inline constexpr bool can_definitely_be_int(){
+
+  constexpr int max_int = std::numeric_limits<int>::max();
+
+  using xt = std::remove_cvref_t<T>;
+  if constexpr (CppIntegerType<xt> && sizeof(xt) <= sizeof(int)){
+    // Check if unsigned type's max exceeds signed int range
+    if constexpr (std::is_unsigned_v<xt> && std::numeric_limits<xt>::max() <= static_cast<xt>(max_int)){
+      return true; // Small types can safely cast to int
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+template<typename T>
+inline constexpr bool can_definitely_be_int64(){
+
+  constexpr int64_t max_int64 = std::numeric_limits<int64_t>::max();
+
+  using xt = std::remove_cvref_t<T>;
+  if constexpr (CppIntegerType<xt> && sizeof(xt) <= sizeof(int64_t)){
+    // Check if unsigned type's max exceeds signed int64 range
+    if constexpr (std::is_unsigned_v<xt> && std::numeric_limits<xt>::max() <= static_cast<xt>(max_int64)){
+      return true; // Small types can safely cast to int64
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+
+// Assumes no NAs at all
+template<typename T>
+inline constexpr bool can_be_int(T x){
+  constexpr int max_int = std::numeric_limits<int>::max();
+  constexpr int min_int = -max_int; // Doesn't include lowest int (reserved for NA)
+
+  if constexpr (can_definitely_be_int<T>()){
+    return true;
+ } else if constexpr (CppMathType<T>){
+    using data_t = decltype(x);
+    return internal::between_impl<data_t>(x, min_int, max_int);
+  } else if constexpr (RMathType<T>){
+    using data_t = decltype(x.value);
+    return internal::between_impl<data_t>(x.value, min_int, max_int);
+  } else {
+    return false;
+  }
+}
+template<typename T>
+inline constexpr bool can_be_int64(T x){
+  constexpr int64_t max_int64 = std::numeric_limits<int64_t>::max();
+  constexpr int64_t min_int64 = -max_int64; // Doesn't include lowest int (reserved for NA)
+
+  if constexpr (can_definitely_be_int64<T>()){
+    return true;
+ } else if constexpr (CppMathType<T>){
+    using data_t = decltype(x);
+    return internal::between_impl<data_t>(x, min_int64, max_int64);
+  } else if constexpr (RMathType<T>){
+    using data_t = decltype(x.value);
+    return internal::between_impl<data_t>(x.value, min_int64, max_int64);
+  } else {
+    return false;
+  }
+}
+
+}
+  
+  // Coerce to an R type based on the C type (useful for RVal templates)
+template<typename T>
+inline constexpr auto as_r_val(T x) { 
+  if constexpr (RVal<T>){
+    return x;
+  } else if constexpr (is<T, bool>){
+    return r_lgl(x);
+  } else if constexpr (is<T, int>){
+    return r_int(x);
+  } else if constexpr (is<T, int64_t>){
+    return r_int64(x);
+  } else if constexpr (is<T, double>){
+    return r_dbl(x);
+  } else if constexpr (is<T, const char*>){
+    return r_str(x);
+  } else if constexpr (MathType<T>){
+    if constexpr (internal::can_definitely_be_int<T>()){
+      return r_int(static_cast<int>(x));
+    } else {
+      return r_dbl(static_cast<double>(x));
+    }
+  } else if constexpr (RVector<T>){
+    return x.sexp;
+  } else if constexpr (is<T, SEXP>){
+    return r_sexp(x);
+  } else {
+    static_assert(
+      always_false<T>,
+      "Unsupported type for `as_r_val`"
+    );
+    return r_null;
+  } 
+}
+template<typename T>
+inline constexpr auto as_r_scalar(T x) {
+  if constexpr (RVector<T>){
+    if (x.length() != 1){
+      cpp11::stop("Vector must be length-1 to be coerced to a scalar");
+    }
+    auto out = x.get(0);
+    
+    // Only happens if x is a list
+    if (!RScalar<decltype(out)>){
+      cpp11::stop("`x` cannot be coereced to a scalar, first list-element is not a scalar");
+    }
+    return out;
+  }
+  else {
+    return as_r_val(x);
+  } 
 }
 
 }

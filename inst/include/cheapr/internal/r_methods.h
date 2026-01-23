@@ -409,10 +409,10 @@ inline constexpr r_dbl operator-(r_dbl x) {
   return r_dbl{-x.value};
 }
 
-// template <typename T, typename U>
-// inline constexpr r_lgl between(T x, U lo, U hi){
-//   return x >= lo && x <= hi;
-// }
+template <typename T, typename U>
+inline constexpr r_lgl between(T x, U lo, U hi){
+  return x >= lo && x <= hi;
+}
 
 }
 

@@ -12,103 +12,6 @@ namespace cheapr {
 
 namespace internal {
 
-// Assumes no NAs at all
-template<typename T>
-inline constexpr bool can_be_int(T x){
-  using xt = std::remove_cvref_t<T>;
-  if constexpr (CppIntegerType<xt> && sizeof(xt) <= sizeof(int)){
-    // Check if unsigned type's max exceeds signed int range
-    if constexpr (
-        std::is_unsigned_v<xt> && std::numeric_limits<xt>::max() > static_cast<xt>(std::numeric_limits<int>::max())){
-      return x <= static_cast<xt>(std::numeric_limits<int>::max());
-    } else {
-      return true;  // Small types can safely cast to int
-    }
-    // Larger types that can safely cast to T
-  } else if constexpr (CppMathType<xt>){
-    return between<xt>(x, r_limits<r_int>::min(), r_limits<r_int>::max());
-  } else if constexpr (RMathType<xt>){
-    return between(x.value, static_cast<decltype(x.value)>(r_limits<r_int>::min()), static_cast<decltype(x.value)>(r_limits<r_int>::max()));
-  } else {
-    return false;
-  }
-}
-template<typename T>
-inline constexpr bool can_be_int64(T x){
-  using xt = std::remove_cvref_t<T>;
-  if constexpr (CppIntegerType<xt> && sizeof(xt) <= sizeof(int64_t)){
-    // Check if unsigned type's max exceeds signed int64 range
-    if constexpr (
-        std::is_unsigned_v<xt> &&
-          std::numeric_limits<xt>::max() > static_cast<xt>(std::numeric_limits<int64_t>::max())){
-      return x <= static_cast<xt>(std::numeric_limits<int64_t>::max());
-    } else {
-      return true;  // Small types can safely cast to int64
-    }
-  } else if constexpr (CppMathType<xt>){
-    return between<xt>(x, r_limits<r_int64>::min(), r_limits<r_int64>::max());
-  } else if constexpr (RMathType<xt>){
-    return between(x.value, static_cast<decltype(x.value)>(r_limits<r_int64>::min()), static_cast<decltype(x.value)>(r_limits<r_int64>::max()));
-  } else {
-    return false;
-  }
-}
-
-}
-
-// Coerce to an R type based on the C type (useful for RVal templates)
-template<typename T>
-inline constexpr auto as_r_val(T x) {
-  if constexpr (RVal<T>){
-    return x;
-  } else if constexpr (is<T, bool>){
-    return r_lgl(x);
-  } else if constexpr (is<T, int>){
-    return r_int(x);
-  } else if constexpr (is<T, int64_t>){
-    return r_int64(x);
-  } else if constexpr (is<T, double>){
-    return r_dbl(x);
-  } else if constexpr (is<T, const char*>){
-    return r_str(x);
-  } else if constexpr (MathType<T>){
-    if constexpr (internal::can_be_int<T>){
-      return r_int(static_cast<int>(x));
-    } else {
-      return r_dbl(static_cast<double>(x));
-    }
-  } else if constexpr (RVector<T>){
-    return x.sexp;
-  }
-  else {
-    static_assert(
-      always_false<T>,
-      "Unsupported type for `as_r_val`"
-    );
-    return r_null;
-  } 
-}
-template<typename T>
-inline constexpr auto as_r_scalar(T x) {
-  if constexpr (RVector<T>){
-    if (x.length() != 1){
-      cpp11::stop("Vector must be length-1 to be coerced to a scalar");
-    }
-    auto out = x.get(0);
-    
-    // Only happens if x is a list
-    if (!RScalar<decltype(out)>){
-      cpp11::stop("`x` cannot be coereced to a scalar, first list-element is not a scalar");
-    }
-    return out;
-  }
-  else {
-    return as_r_val(x);
-  } 
-}
-
-namespace internal {
-
 // Coerce functions that account for NA
 template<typename T>
 inline r_lgl as_bool(T x){
@@ -167,7 +70,7 @@ inline r_raw as_raw(T x){
   } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
     return is_na(x) || x < 0 ? na::raw : static_cast<r_raw>(x);
   } else if constexpr (IntegerType<T>){
-    return is_na(x) || !between(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_raw>(x);
+    return is_na(x) || !internal::between_impl(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_raw>(x);
   } else {
     return na::raw;
   }
