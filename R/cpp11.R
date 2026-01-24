@@ -211,3 +211,11 @@ foo47 <- function(n) {
 foo48 <- function(x) {
   .Call(`_cheapr_foo48`, x)
 }
+
+foo49 <- function(x, na_rm) {
+  .Call(`_cheapr_foo49`, x, na_rm)
+}
+
+foo50 <- function(x, na_rm) {
+  .Call(`_cheapr_foo50`, x, na_rm)
+}

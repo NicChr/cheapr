@@ -8,67 +8,71 @@ namespace cheapr {
 template <RMathType T>
 r_dbl sum(r_vec<T> x, bool na_rm = false){
     r_size_t n = x.length();
-    r_dbl out(0);
+    double out_ = 0;
+    const auto* RESTRICT p_x = x.data();
+
     if (na_rm){
-        for (r_size_t i = 0; i < n; ++i){ 
-            if (is_na(x.get(i))){
-                continue;
-            } else {
-                out += x.get(i);
-            }
+        #pragma omp simd reduction(+:out_)
+        for (r_size_t i = 0; i < n; ++i){
+            out_ += (is_na(p_x[i])) ? 0 : unwrap(p_x[i]);
         }
     } else {
+        #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out += x.get(i);
+            out_ = (is_na(p_x[i]) || is_na(as_r_val(out_))) ? unwrap(na_value<r_dbl>()) : (out_ + unwrap(p_x[i]));
         }
     }
-    return out;
+    return r_dbl(out_);
 }
 
 // Optimisation for r_dbl
 template <>
 r_dbl sum(r_vec<r_dbl> x, bool na_rm){
     r_size_t n = x.length();
-    r_dbl out(0);
+    double out_ = 0;
+    const auto* RESTRICT p_x = x.data();
+
     if (na_rm){
-        for (r_size_t i = 0; i < n; ++i){ 
-            if (is_na(x.get(i))){
-                continue;
-            } else {
-                out += x.get(i);
-            }
-        }
-    } else {
-        double out_ = out;
-        const auto* RESTRICT p_x = x.data();
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += p_x[i].value;
+            out_ += (is_na(p_x[i])) ? 0 : unwrap(p_x[i]);
         }
-        out = r_dbl(out_);
+    } else {
+        #pragma omp simd reduction(+:out_)
+        for (r_size_t i = 0; i < n; ++i){
+            out_ += unwrap(p_x[i]);
+        }
+        
     }
-    return out;
+    return r_dbl(out_);
 }
 
 // Integer specific sum (user must accept there may be overflow)
 template <RIntegerType T>
-r_int64 sum_int(r_vec<T> x, bool na_rm = false){
+auto sum_int(r_vec<T> x, bool na_rm = false){
     r_size_t n = x.length();
-    r_int64 out(0);
+    int64_t out_ = 0;
+    const auto* RESTRICT p_x = x.data();
+
     if (na_rm){
-        for (r_size_t i = 0; i < n; ++i){ 
-            if (is_na(x.get(i))){
-                continue;
-            } else {
-                out += x.get(i);
-            }
+        #pragma omp simd reduction(+:out_)
+        for (r_size_t i = 0; i < n; ++i){
+            out_ += (is_na(p_x[i])) ? int64_t(0) : unwrap(p_x[i]);
         }
     } else {
+        r_int64 temp(out_);
+        #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out += x.get(i);
+            if (is_na(p_x[i]) || is_na(temp)){
+                temp = na_value<r_int64>();
+                // Move underlying value of temp into out_ directly
+                out_ = std::move(temp.value);
+            } else {
+                out_ += unwrap(p_x[i]);
+            }
         }
     }
-    return out;
+    return out_;
 }
 
 template <RMathType T>

@@ -459,3 +459,23 @@ SEXP foo48(SEXP x) {
     }
     return as_vector(min_);
 }
+
+[[cpp11::register]]
+SEXP foo49(SEXP x, bool na_rm){
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    using t = decltype(xvec);
+    if constexpr (is<t, r_vec<r_int>> || is<t, r_vec<r_dbl>> || is<t, r_vec<r_lgl>>){
+      return as_vector(sum(xvec, na_rm));
+    } else {
+      Rf_error("error");
+      return r_null;
+    }
+  });
+} 
+
+[[cpp11::register]]
+SEXP foo50(SEXP x, bool na_rm){
+  r_vec<r_int> x_ = r_vec<r_int>(x);
+
+  return as<r_vec<r_dbl>>(sum_int(x_, na_rm));
+} 
