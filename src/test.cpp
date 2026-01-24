@@ -438,3 +438,8 @@ SEXP foo46() {
   auto y = unwrap(x);
   return y;
 }
+
+[[cpp11::register]]
+SEXP foo47(int n) {
+  return r_vec<r_int>(n, 0);
+}

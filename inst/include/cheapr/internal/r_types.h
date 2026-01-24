@@ -85,9 +85,6 @@ public:
   r_str address() const;
 };
 
-// R C NULL constant
-inline const r_sexp r_null = r_sexp();
-
 // bool type, similar to Rboolean
 // Implicit coercion to bool (not int) provided no NA
 struct r_lgl {
@@ -97,8 +94,7 @@ struct r_lgl {
   explicit constexpr r_lgl(bool x) : value{x} {}  
   explicit constexpr operator int() const { return value; }
 
-  // TO-DO: Mark below as explicit (might still work in if-else statements)
-  operator bool() const;
+  explicit operator bool() const;
   constexpr bool is_true() const;
   constexpr bool is_false() const;
   constexpr bool is_na() const;
@@ -175,8 +171,6 @@ struct r_str {
   }
 };
 
-inline const r_str blank_r_string = r_str();
-
 // Alias type for SYMSXP
 struct r_sym {
   r_sexp value;
@@ -233,6 +227,13 @@ inline constexpr auto unwrap(const T& x){
     return x;
   }
 }
+
+// Constants
+
+// R C NULL constant
+inline const r_sexp r_null = r_sexp();
+// Blank string ''
+inline const r_str blank_r_string = r_str();
 
 namespace internal {
 

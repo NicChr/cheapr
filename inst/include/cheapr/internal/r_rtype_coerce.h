@@ -16,63 +16,63 @@ namespace internal {
 template<typename T>
 inline r_lgl as_bool(T x){
   if constexpr (is<T, int> || is<T, r_lgl>){
-    return static_cast<r_lgl>(x);
+    return r_lgl(unwrap(x));
   } else if constexpr (MathType<T>){
-    return is_na(x) ? na::logical : static_cast<r_lgl>(static_cast<bool>(x));
+    return is_na(x) ? na_value<r_lgl>() : r_lgl(static_cast<bool>(unwrap(x)));
   } else {
-    return na::logical;
+    return na_value<r_lgl>();
   }
 }
 template<typename T>
 inline r_int as_int(T x){
   if constexpr (is<T, int> || is<T, r_int>){
-    return static_cast<r_int>(x);
+    return r_int(unwrap(x));
   } else if constexpr (MathType<T>){
-    return is_na(x) || !internal::can_be_int(x) ? na::integer : static_cast<r_int>(x);
+    return is_na(x) || !internal::can_be_int(x) ? na_value<r_int>() : r_int(static_cast<int>(unwrap(x)));
   } else {
-    return na::integer;
+    return na_value<r_int>();
   }
 }
 template<typename T>
 inline r_int64 as_int64(T x){
-  if constexpr (is<T, r_int64>){
-    return x;
+  if constexpr (is<T, int64_t> || is<T, r_int64>){
+    return r_int64(unwrap(x));
   } else if constexpr (MathType<T>){
-    return is_na(x) || !internal::can_be_int64(x) ? na::integer64 : static_cast<r_int64>(x);
+    return is_na(x) || !internal::can_be_int64(x) ? na_value<r_int64>() : r_int64(static_cast<int64_t>(unwrap(x)));
   } else {
-    return na::integer64;
+    return na_value<r_int64>();
   }
 }
 template<typename T>
 inline r_dbl as_double(T x){
   if constexpr (is<T, double> || is<T, r_dbl>){
-    return static_cast<r_dbl>(x);
+    return r_dbl(unwrap(x));
   } else if constexpr (MathType<T>){
-    return is_na(x) ? na::real : static_cast<r_dbl>(x);
+    return is_na(x) ? na_value<r_dbl>() : r_dbl(static_cast<double>(unwrap(x)));
   } else {
-    return na::real;
+    return na_value<r_dbl>();
   }
 }
 template<typename T>
 inline r_cplx as_complex(T x){
-  if constexpr (is<T, r_cplx>){
-    return x;
+  if constexpr (is<T, Rcomplex> || is<T, r_cplx>){
+    return r_cplx(unwrap(x));
   } else if constexpr (MathType<T>){
     return r_cplx{as_double(x), r_dbl(0.0)};
   } else {
-    return na::complex;
+    return na_value<r_cplx>();
   }
 }
 template<typename T>
 inline r_raw as_raw(T x){
-  if constexpr (is<T, r_raw>){
-    return x;
+  if constexpr (is<T, Rbyte> || is<T, r_raw>){
+    return r_raw(unwrap(x));
   } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
-    return is_na(x) || x < 0 ? na::raw : static_cast<r_raw>(x);
+    return is_na(x) || x < 0 ? na_value<r_raw>() :  r_raw(static_cast<Rbyte>(unwrap(x)));
   } else if constexpr (IntegerType<T>){
-    return is_na(x) || !internal::between_impl(x, static_cast<T>(0), static_cast<T>(255)) ? na::raw : static_cast<r_raw>(x);
+    return is_na(x) || !internal::between_impl(x, static_cast<T>(0), static_cast<T>(255)) ? na_value<r_raw>() : static_cast<r_raw>(x);
   } else {
-    return na::raw;
+    return na_value<r_raw>();
   }
 }
 // As CHARSXP
@@ -81,12 +81,14 @@ inline r_str as_r_string(T x){
   if constexpr (is<T, r_str>){
     return x;
   } else if constexpr (is<T, const char *>){
-    return static_cast<r_str>(r_str(x));
+    return r_str(x);
+  } else if constexpr (is<T, std::string>){
+    return r_str(x.c_str());
   } else if constexpr (is<T, r_sym>){
-    return static_cast<r_str>(PRINTNAME(static_cast<SEXP>(x)));
+    return r_str(PRINTNAME(static_cast<SEXP>(x)));
   } else if constexpr (is<T, r_lgl>){
     if (is_na(x)){
-      return na::string;
+      return na_value<r_str>();
     } else if (x == r_true){
       return as_r_string("TRUE");
     } else {
@@ -94,7 +96,7 @@ inline r_str as_r_string(T x){
     }
   } else if constexpr (RMathType<T>){
     if (is_na(x)){
-      return na::string;
+      return na_value<r_str>();
     }
     char buffer[48];
     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
@@ -113,7 +115,7 @@ inline r_str as_r_string(T x){
     return as_r_string(static_cast<const char *>(buffer));
   } else if constexpr (is<T, r_cplx>){
     if (is_na(x)){
-      return na::string;
+      return na_value<r_str>();
     }
     double re = x.re();
     double im = x.im();
@@ -141,14 +143,79 @@ inline r_str as_r_string(T x){
   }
 }
 
+// Unprotected variant of above (only used to assign into char vec)
+// template<typename T>
+// inline r_str as_maybe_unprotected_r_str(T x){
+//   if constexpr (is<T, r_str>){
+//     return x;
+//   } else if constexpr (is<T, const char *>){
+//     return r_str(r_sexp(Rf_mkCharCE(x, CE_UTF8), internal::read_only_tag{}));
+//   } else if constexpr (is<T, r_sym>){
+//     return static_cast<r_str>(PRINTNAME(static_cast<SEXP>(x)));
+//   } else if constexpr (is<T, r_lgl>){
+//     if (is_na(x)){
+//       return na_value<r_str>();
+//     } else if (x == r_true){
+//       return as_r_string("TRUE");
+//     } else {
+//       return as_r_string("FALSE");
+//     }
+//   } else if constexpr (RMathType<T>){
+//     if (is_na(x)){
+//       return na_value<r_str>();
+//     }
+//     char buffer[48];
+//     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
+//     if (result.ec != std::errc{}) {
+//       cpp11::stop("Internal error, increase buffer size for string conversion");
+//     }
+//     *result.ptr = '\0';  // Null-terminate
+//     return as_r_string(static_cast<const char *>(buffer));
+//   } else if constexpr (CppMathType<T>){
+//     char buffer[48];
+//     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x);
+//     if (result.ec != std::errc{}) {
+//       cpp11::stop("Internal error, increase buffer size for string conversion");
+//     }
+//     *result.ptr = '\0';  // Null-terminate
+//     return as_r_string(static_cast<const char *>(buffer));
+//   } else if constexpr (is<T, r_cplx>){
+//     if (is_na(x)){
+//       return na_value<r_str>();
+//     }
+//     double re = x.re();
+//     double im = x.im();
+
+//     char buffer[96];
+//     if (im >= 0){
+//       snprintf(buffer, sizeof(buffer), "%g+%gi", re, im);
+//     } else {
+//       snprintf(buffer, sizeof(buffer), "%g%gi", re, im);
+//     }
+//     return as_r_string(static_cast<const char *>(buffer));
+//   } else if constexpr (is<T, r_raw>){
+//     char buffer[8];
+//     snprintf(buffer, sizeof(buffer), "%02x", x.value);
+//     return as_r_string(static_cast<const char *>(buffer));
+//   } else if constexpr (is<T, SEXP> || is<T, r_sexp>){
+//     if (Rf_length(x) != 1){
+//       cpp11::stop("`x` is a non-scalar vector and cannot be converted to an `r_str` in %s", __func__);
+//     }
+//     r_sexp str = r_sexp(Rf_coerceVector(x, STRSXP));
+//     r_str out = as_r_string(CHAR(STRING_ELT(str, 0)));
+//     return out;
+//   } else {
+//     static_assert(always_false<T>, "Unsupported type for `as_r_string`");
+//   }
+// }
+
 // As SYMSXP
 template<typename T>
 inline r_sym as_r_sym(T x){
   if constexpr (is<T, r_sym>){
     return x;
   } else if constexpr (is<T, const char *>){
-    r_sym out = r_sym(Rf_installChar(r_str(x)));
-    return out;
+    return r_sym(Rf_install(x));
   } else if constexpr (is<T, r_str>){
     return r_sym(Rf_installChar(x));
   } else {

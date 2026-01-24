@@ -203,3 +203,7 @@ foo45 <- function(x) {
 foo46 <- function() {
   .Call(`_cheapr_foo46`)
 }
+
+foo47 <- function(n) {
+  .Call(`_cheapr_foo47`, n)
+}
