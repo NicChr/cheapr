@@ -79,29 +79,23 @@ r_vec<T> range(r_vec<T> x, bool na_rm = false){
     T lo = r_limits<T>::max();
     T hi = r_limits<T>::min();
 
-    // Use underlying types for SIMD vectorisation
-    auto lo_ = lo.value;
-    auto hi_ = hi.value;
-    const auto* RESTRICT p_x = x.data(); 
-
-    if (na_rm){
-    #pragma omp simd reduction(std::min:lo_) reduction(std::max:hi_)
-    for (r_size_t i = 0; i < n; ++i){
-        if (is_na(p_x[i].value)){
-            continue;
-        } else {
-            lo_ = std::min(lo_, p_x[i].value); 
-            hi_ = std::max(hi_, p_x[i].value); 
-        }
-    }
-    lo = T(lo_);
-    hi = T(hi_);
-    } else {
     // Can't use SIMD, `cheapr::min/max` checks for NAs automatically
-    for (r_size_t i = 0; i < n; ++i){
-        lo = min(lo, x.get(i)); 
-        hi = max(hi, x.get(i));
-    }
+    if (na_rm){
+        for (r_size_t i = 0; i < n; ++i){
+            const auto v = x.get(i);
+            if (is_na(v)){
+                continue;
+            } else {
+                lo = min(lo, v);
+                hi = max(hi, v);
+            }
+        }
+    } else {
+        for (r_size_t i = 0; i < n; ++i){
+            const auto v = x.get(i);
+            lo = min(lo, v); 
+            hi = max(hi, v);
+        }
     }
     return make_vec<T>(lo, hi);
 }
@@ -112,31 +106,32 @@ r_vec<T> range(r_vec<T> x, bool na_rm){
     
     r_size_t n = x.length();
 
-    T lo = r_limits<T>::max();
-    T hi = r_limits<T>::min();
+    T max_val = r_limits<T>::max();
+    T min_val = r_limits<T>::min();
 
-    auto lo_ = lo.value;
-    auto hi_ = hi.value;
+    T lo = max_val;
+    T hi = min_val;
 
-    const auto* RESTRICT p_x = x.data(); 
+    auto lo_ = unwrap(lo);
+    auto hi_ = unwrap(hi);
 
-    if (na_rm){
+    const auto* RESTRICT p_x = x.data();
+
+    if (na_rm){ 
         #pragma omp simd reduction(std::min:lo_) reduction(std::max:hi_)
         for (r_size_t i = 0; i < n; ++i){
-            if (is_na(p_x[i].value)){
-                continue;
-            } else {
-                lo_ = std::min(lo_, p_x[i].value); 
-                hi_ = std::max(hi_, p_x[i].value); 
-            }
-        }
+            // Ignore NA for min()
+            lo_ = is_na(p_x[i]) ? lo_ : std::min(lo_, unwrap(p_x[i]));
+            // No need to ignore NA for max() because NA is defined as lowest representable value
+            hi_ = std::max(hi_, unwrap(p_x[i]));
+        }        
         lo = T(lo_);
         hi = T(hi_);
     } else {
         #pragma omp simd reduction(std::min:lo_) reduction(std::max:hi_)
         for (r_size_t i = 0; i < n; ++i){
-            lo_ = std::min(lo_, p_x[i].value); 
-            hi_ = std::max(hi_, p_x[i].value);
+            lo_ = std::min(lo_, unwrap(p_x[i])); 
+            hi_ = std::max(hi_, unwrap(p_x[i]));
         }
         lo = T(lo_);
         hi = T(hi_);

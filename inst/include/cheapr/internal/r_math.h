@@ -17,41 +17,28 @@ inline r_dbl round_to_even(r_dbl x){
 }
 
 }
- 
+
 
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
-inline auto min(const T &x, const U &y){ 
+inline auto min(T x, U y){ 
 
   auto l = as_r_val(x);
-  auto r = as_r_val(y);
   using out_t = decltype(l);
+  out_t r = as<out_t>(as_r_val(y));
 
-  r_lgl out = l < r;
-  if (out.is_na()){
-    return na_value<out_t>();
-  } else if (out.is_true()){
-    return l;
-  } else {
-    return r;
-  }
+  return ( is_na(l) || is_na(r) ) ? na_value<out_t>() : out_t(std::min(unwrap(l), unwrap(r)));
 }
 
 template<typename T, typename U>
 requires (AtLeastOneRMathType<T, U>)
-inline auto max(const T &x, const U &y){
-  auto l = as_r_val(x);
-  auto r = as_r_val(y);
-  using out_t = decltype(l);
+inline auto max(T x, U y){ 
 
-  r_lgl out = l > r;
-  if (out.is_na()){
-    return na_value<out_t>();
-  } else if (out.is_true()){
-    return l;
-  } else {
-    return r;
-  }
+  auto l = as_r_val(x);
+  using out_t = decltype(l);
+  out_t r = as<out_t>(as_r_val(y));
+
+  return ( is_na(l) || is_na(r) ) ? na_value<out_t>() : out_t(std::max(unwrap(l), unwrap(r)));
 }
 
 // template<typename T, typename U>

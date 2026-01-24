@@ -45,15 +45,6 @@ template<>
 inline r_dbl na_value_impl<r_dbl>(){
   return na::real;
 }
-template<>
-inline constexpr int na_value_impl<int>(){
-  return na::integer.value;
-}
-
-template<>
-inline double na_value_impl<double>(){
-  return na::real.value;
-}
 
 template<>
 inline constexpr r_int64 na_value_impl<r_int64>(){
@@ -98,8 +89,10 @@ template<typename T>
 inline constexpr bool is_na_impl(T x) {
   if constexpr (RVal<T>){
       return unwrap(x) == unwrap(na_value<T>());
+  } else if constexpr (constructible_to_rval<T>){
+    return is_na_impl(as_r_val(x));
   } else {
-      return false;
+    return false;
   }
 }
 

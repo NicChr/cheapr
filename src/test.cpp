@@ -443,3 +443,19 @@ SEXP foo46() {
 SEXP foo47(int n) {
   return r_vec<r_int>(n, 0);
 }
+
+
+
+[[cpp11::register]]
+SEXP foo48(SEXP x) {
+  auto xvec = r_vec<r_int>(x);
+
+    r_size_t n = xvec.length();
+
+    r_int min_ = r_limits<r_int>::max();
+
+    for (r_size_t i = 0; i < n; ++i){
+      min_ = min(min_, xvec.get(i)); 
+    }
+    return as_vector(min_);
+}

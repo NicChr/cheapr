@@ -15,7 +15,7 @@ inline constexpr r_lgl operator!(r_lgl x) {
   if (is_na(x)) {
     return r_na;
   }
-  return r_lgl{x.value == 0};
+  return r_lgl{unwrap(x) == 0};
 }
 
 // r_cplx methods
@@ -51,14 +51,14 @@ inline constexpr r_cplx operator/(const r_cplx& lhs, const r_cplx& rhs) {
 
 // Compound assignment operators
 inline constexpr r_cplx& operator+=(r_cplx& lhs, const r_cplx& rhs) {
-  lhs.value.r += rhs.value.r;
-  lhs.value.i += rhs.value.i;
+  lhs.value.r += unwrap(rhs).r;
+  lhs.value.i += unwrap(rhs).i;
   return lhs;
 }
 
 inline constexpr r_cplx& operator-=(r_cplx& lhs, const r_cplx& rhs) {
-  lhs.value.r -= rhs.value.r;
-  lhs.value.i -= rhs.value.i;
+  lhs.value.r -= unwrap(rhs).r;
+  lhs.value.i -= unwrap(rhs).i;
   return lhs;
 }
 
@@ -81,146 +81,91 @@ inline constexpr r_cplx& operator/=(r_cplx& lhs, const r_cplx& rhs) {
 
 template<RVal T, RVal U>
 inline constexpr r_lgl operator==(const T &lhs, const U &rhs) {
-
-  // Check for NA in either operand
-  if (is_na(lhs) || is_na(rhs)) {
-    return na::logical;
-  }
-
   if constexpr (is<T, r_cplx> && is<U, r_cplx>){
     // Compare complex types by components
-    return r_lgl{lhs.re() == rhs.re() && lhs.im() == rhs.im()};
+    return lhs.re() == rhs.re() && lhs.im() == rhs.im();
   } else {
-    return r_lgl{unwrap(lhs) == unwrap(rhs)};
+    return (is_na(lhs) || is_na(rhs)) ? r_na : r_lgl{unwrap(lhs) == unwrap(rhs)};
   }
 }
 
 template<RVal T, CppScalar U>
 inline constexpr r_lgl operator==(const T &lhs, const U &rhs) {
-
-  // Check for NA in either operand
-  if (is_na(lhs)) {
-    return na::logical;
-  }
-  return r_lgl{unwrap(lhs) == rhs};
+  return is_na(lhs) ? r_na : r_lgl{unwrap(lhs) == rhs};
 }
 
 template<CppScalar T, RVal U>
 inline constexpr r_lgl operator==(const T &lhs, const U &rhs) {
-
-  // Check for NA in either operand
-  if (is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs == unwrap(rhs)};
+  return is_na(rhs) ? r_na : r_lgl{lhs == unwrap(rhs)};
 }
 
 // Other comparison operators
 template<RVal T, CppScalar U>
 inline constexpr r_lgl operator!=(const T &lhs, const U &rhs) {
   r_lgl eq = (lhs == rhs);
-  if (eq.is_na()) return r_na;
-  return r_lgl(eq.is_false());
+  return eq.is_na() ? r_na : r_lgl(eq.is_false());
 }
 template<CppScalar T, RVal U>
 inline constexpr r_lgl operator!=(const T &lhs, const U &rhs) {
   r_lgl eq = (lhs == rhs);
-  if (eq.is_na()) return r_na;
-  return r_lgl(eq.is_false());
+  return eq.is_na() ? r_na : r_lgl(eq.is_false());
 }
 template<RVal T, RVal U>
 inline constexpr r_lgl operator!=(const T &lhs, const U &rhs) {
   r_lgl eq = (lhs == rhs);
-  if (eq.is_na()) return r_na;
-  return r_lgl(eq.is_false());
+  return eq.is_na() ? r_na : r_lgl(eq.is_false());
 }
 
 template<RMathType T, RMathType U>
 inline constexpr r_lgl operator<(T lhs, U rhs) {
-  if (is_na(lhs) || is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs.value < rhs.value};
+  return (is_na(lhs) || is_na(rhs)) ? r_na : r_lgl{lhs.value < unwrap(rhs)};
 }
 template<RMathType T, CppMathType U>
 inline constexpr r_lgl operator<(T lhs, U rhs) {
-  if (is_na(lhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs.value < rhs};
+  return is_na(lhs) ? r_na : r_lgl{lhs.value < rhs};
 }
 template<CppMathType T, RMathType U>
 inline constexpr r_lgl operator<(T lhs, U rhs) {
-  if (is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs < rhs.value};
+  return is_na(rhs) ? r_na : r_lgl{lhs < unwrap(rhs)};
 }
 
 template<RMathType T, RMathType U>
 inline constexpr r_lgl operator<=(T lhs, U rhs) {
-  if (is_na(lhs) || is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs.value <= rhs.value};
+  return (is_na(lhs) || is_na(rhs)) ? r_na : r_lgl{lhs.value <= unwrap(rhs)};
 }
 template<RMathType T, CppMathType U>
 inline constexpr r_lgl operator<=(T lhs, U rhs) {
-  if (is_na(lhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs.value <= rhs};
+  return is_na(lhs) ? r_na : r_lgl{lhs.value <= rhs};
 }
 template<CppMathType T, RMathType U>
 inline constexpr r_lgl operator<=(T lhs, U rhs) {
-  if (is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs <= rhs.value};
+  return is_na(rhs) ? r_na : r_lgl{lhs <= unwrap(rhs)};
 }
 
 template<RMathType T, RMathType U>
 inline constexpr r_lgl operator>(T lhs, U rhs) {
-  if (is_na(lhs) || is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs.value > rhs.value};
+  return (is_na(lhs) || is_na(rhs)) ? r_na : r_lgl{lhs.value > unwrap(rhs)};
 }
 template<RMathType T, CppMathType U>
 inline constexpr r_lgl operator>(T lhs, U rhs) {
-  if (is_na(lhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs.value > rhs};
+  return is_na(lhs) ? r_na : r_lgl{lhs.value > rhs};
 }
 template<CppMathType T, RMathType U>
 inline constexpr r_lgl operator>(T lhs, U rhs) {
-  if (is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs > rhs.value};
+  return is_na(rhs) ? r_na : r_lgl{lhs > unwrap(rhs)};
 }
 
 template<RMathType T, RMathType U>
 inline constexpr r_lgl operator>=(T lhs, U rhs) {
-  if (is_na(lhs) || is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs.value >= rhs.value};
+  return (is_na(lhs) || is_na(rhs)) ? r_na : r_lgl{lhs.value >= unwrap(rhs)};
 }
 template<RMathType T, CppMathType U>
 inline constexpr r_lgl operator>=(T lhs, U rhs) {
-  if (is_na(lhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs.value >= rhs};
+  return is_na(lhs) ? r_na : r_lgl{lhs.value >= rhs};
 }
 template<CppMathType T, RMathType U>
 inline constexpr r_lgl operator>=(T lhs, U rhs) {
-  if (is_na(rhs)) {
-    return na::logical;
-  }
-  return r_lgl{lhs >= rhs.value};
+  return is_na(rhs) ? r_na : r_lgl{lhs >= unwrap(rhs)};
 }
 
 template<RMathType T, RMathType U>
@@ -228,7 +173,7 @@ inline constexpr T& operator+=(T &lhs, U rhs) {
   if (is_na(lhs) || is_na(rhs)) {
     lhs = na_value<T>();
   } else {
-    lhs.value += rhs.value;
+    lhs.value += unwrap(rhs);
   }
   return lhs;
 }
@@ -246,7 +191,7 @@ inline constexpr T& operator+=(T &lhs, U rhs) {
   if (is_na(rhs)) {
     lhs = na_value<T>();
   } else {
-    lhs += rhs.value;
+    lhs += unwrap(rhs);
   }
   return lhs;
 }
@@ -254,7 +199,7 @@ inline constexpr T& operator+=(T &lhs, U rhs) {
 // Fast specialisation for r_dbl
 template<>
 inline constexpr r_dbl& operator+=(r_dbl &lhs, r_dbl rhs) {
-  lhs.value += rhs.value;
+  lhs.value += unwrap(rhs);
   return lhs;
 }
 
@@ -271,7 +216,7 @@ inline constexpr T& operator-=(T &lhs, U rhs) {
   if (is_na(lhs) || is_na(rhs)) {
     lhs = na_value<T>();
   } else {
-    lhs.value -= rhs.value;
+    lhs.value -= unwrap(rhs);
   }
   return lhs;
 }
@@ -291,13 +236,13 @@ inline constexpr T& operator-=(T &lhs, U rhs) {
   if (is_na(rhs)) {
     lhs = na_value<T>();
   } else {
-    lhs -= rhs.value;
+    lhs -= unwrap(rhs);
   }
   return lhs;
 }
 template<>
 inline constexpr r_dbl& operator-=(r_dbl &lhs, r_dbl rhs) {
-  lhs.value -= rhs.value;
+  lhs.value -= unwrap(rhs);
   return lhs;
 }
 
@@ -314,7 +259,7 @@ inline constexpr T& operator*=(T &lhs, U rhs) {
   if (is_na(lhs) || is_na(rhs)) {
     lhs = na_value<T>();
   } else {
-    lhs.value *= rhs.value;
+    lhs.value *= unwrap(rhs);
   }
   return lhs;
 }
@@ -334,14 +279,14 @@ inline constexpr T& operator*=(T &lhs, U rhs) {
   if (is_na(rhs)){
     lhs = na_value<T>();
   } else {
-    lhs *= rhs.value;
+    lhs *= unwrap(rhs);
   }
   return lhs;
 }
 
 template<>
 inline constexpr r_dbl& operator*=(r_dbl &lhs, r_dbl rhs) { 
-  lhs.value *= rhs.value;
+  lhs.value *= unwrap(rhs);
   return lhs;
 }
 
@@ -358,7 +303,7 @@ inline constexpr T& operator/=(T &lhs, U rhs) {
   if (is_na(lhs) || is_na(rhs)) {
     lhs = na_value<T>();
   } else {
-    lhs.value /= rhs.value;
+    lhs.value /= unwrap(rhs);
   }
   return lhs;
 }
@@ -378,14 +323,14 @@ inline constexpr T& operator/=(T &lhs, U rhs) {
   if (is_na(rhs)){
     lhs = na_value<T>();
   } else {
-    lhs /= rhs.value;
+    lhs /= unwrap(rhs);
   }
   return lhs;
 }
 
 template<>
 inline constexpr r_dbl& operator/=(r_dbl &lhs, r_dbl rhs) {
-  lhs.value /= rhs.value;
+  lhs.value /= unwrap(rhs);
   return lhs;
 }
 
@@ -399,14 +344,11 @@ inline constexpr T operator/(T lhs, U rhs) {
 
 template<RMathType T>
 inline constexpr T operator-(T x) {
-  if (is_na(x)){
-    return x;
-  }
-  return T{-x.value};
+  return is_na(x) ? x : T{-unwrap(x)};
 }
 template<>
 inline constexpr r_dbl operator-(r_dbl x) {
-  return r_dbl{-x.value};
+  return r_dbl{-unwrap(x)};
 }
 
 template <typename T, typename U>
