@@ -136,19 +136,30 @@ concept ConstructibleToRVal = requires {
 };
 
 // Rules for determining math type promotion in binary operators
-// Because there's only 4, we only need 6 combinations
-// It's likely more efficient to explicitly define them
-// If there were more, we could map each RMathType to an integer and take the max of each i each a number
 
-// template <RMathType T, RMathType U>
-// struct RMathCastType {
-//     if constexpr (is<T, U>){
-//         typename out_t = T;
-//     } else {
-//         typename out_t = r_int;
-//     }
-//     using type = out_t;
-// };
+namespace internal {
+
+template <RMathType T>
+consteval uint8_t r_math_rank() {
+    if constexpr (is<T, r_lgl>)   return 0;
+    if constexpr (is<T, r_int>)   return 1;
+    if constexpr (is<T, r_int64>) return 2;
+    if constexpr (is<T, r_dbl>)   return 3;
+    return std::numeric_limits<uint8_t>::max();
+}
+
+template <RMathType T, RMathType U>
+struct common_r_math_impl {
+    static constexpr uint8_t rank_t = r_math_rank<T>();
+    static constexpr uint8_t rank_u = r_math_rank<U>();
+    
+    using type = std::conditional_t<(rank_t >= rank_u), T, U>;
+};
+
+}
+
+template <typename T, typename U>
+using common_r_math_t = typename internal::common_r_math_impl<T, U>::type;
 
 }
 
