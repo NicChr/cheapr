@@ -161,6 +161,25 @@ T max(r_vec<T> x, bool na_rm = false){
     return range(x, na_rm).get(1);
 }
 
+template <RMathType T>
+r_vec<T> abs(r_vec<T> x){
+    r_size_t n = x.length();
+    r_vec<T> out(n);
+    int n_threads = internal::calc_threads(n);
+    if (n_threads > 1) {
+        OMP_PARALLEL_FOR_SIMD(n_threads)
+        for (r_size_t i = 0; i < n; ++i){
+            out.set(i, abs(x.get(i)));
+        }
+    } else {
+        OMP_SIMD
+        for (r_size_t i = 0; i < n; ++i){
+            out.set(i, abs(x.get(i)));
+        }
+    }
+    return out;
+}
+
 } 
 
 #endif
