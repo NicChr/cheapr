@@ -12,10 +12,7 @@ namespace cheapr {
 
 // ! operator for r_lgl
 inline constexpr r_lgl operator!(r_lgl x) {
-  if (is_na(x)) {
-    return r_na;
-  }
-  return r_lgl{unwrap(x) == 0};
+  return is_na(x) ? r_na : r_lgl(x.value == 0);
 }
 
 // r_cplx methods

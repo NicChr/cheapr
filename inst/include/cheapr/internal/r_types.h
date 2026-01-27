@@ -41,7 +41,8 @@ public:
   r_sexp(SEXP s, internal::read_only_tag) : value(s) {}
 
   // Copy Constructor
-  r_sexp(const r_sexp& other) : value(other.value), protector_(other.value) {}
+  r_sexp(const r_sexp& other) : value(other.value), protector_(other.protector_) {}
+  // r_sexp(const r_sexp& other) : value(other.value), protector_(other.value) {}
 
   // Move Constructor
   r_sexp(r_sexp&& other) noexcept 
@@ -234,13 +235,7 @@ inline r_str r_sexp::address() const {
 template <typename T>
 inline constexpr auto unwrap(const T& x){
   if constexpr (RVal<T>){
-    if constexpr (!RVal<decltype(x.value)>){
-      return x.value;
-    } else if constexpr (!RVal<decltype(x.value.value)>){
-      return x.value.value;
-    } else {
-      return unwrap(x.value.value);
-    }
+    return unwrap(x.value);
   } else {
     return x;
   }
