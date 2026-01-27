@@ -5,7 +5,7 @@
 
 namespace cheapr {
 
-// Forward declare structs to define concepts now
+// Forward declare structs to enable defining concepts now
 struct r_lgl;
 struct r_int;
 struct r_int64;
@@ -60,9 +60,7 @@ concept RScalar = RMathType<T> || any<T, r_cplx, r_str, r_raw, r_sym>;
 template <typename T>
 concept RVal = RScalar<T> || is<T, r_sexp>;
 
-// template <typename T, typename U>
-// concept AtLeastOneRVal = (RVal<T> || RVal<U>);
-
+// A `SEXP` which we can write data to directly via a pointer
 template <typename T>
 concept RPtrWritableType = RMathType<T> || any<T, r_cplx, r_raw>;
 
@@ -106,33 +104,50 @@ concept AtLeastOneRVal =
 (CppScalar<T> && RVal<U>);
 
 template <typename T>
-concept Scalar = CppScalar<T> || RVal<T>;
+concept Scalar = CppScalar<T> || RScalar<T>;
 
 template <typename T>
 inline constexpr bool is_sexp = any<T, SEXP, r_sexp>;
 
-template <typename From, typename... ToTypes>
-concept constructible_to_any = (std::is_constructible_v<ToTypes, From> || ...);
+namespace internal {
+
+// C/C++ -> RVal typenames
+// While these aren't the only ways of constructing RVals, they are one-to-one and non-ambiguous
+template <typename T>
+struct r_val_mapping_impl {};
+
+template<> struct r_val_mapping_impl<bool>          { using type = r_lgl; };
+template<> struct r_val_mapping_impl<int>           { using type = r_int; };
+template<> struct r_val_mapping_impl<int64_t>       { using type = r_int64; };
+template<> struct r_val_mapping_impl<double>        { using type = r_dbl; };
+template<> struct r_val_mapping_impl<const char*>   { using type = r_str; };
+template<> struct r_val_mapping_impl<Rcomplex>      { using type = r_cplx; };
+template<> struct r_val_mapping_impl<Rbyte>         { using type = r_raw; };
+template<> struct r_val_mapping_impl<SEXP>          { using type = r_sexp; };
+
+}
 
 template <typename T>
-concept constructible_to_rval = 
-    constructible_to_any<T, r_lgl, r_int, r_int64, r_dbl, r_cplx, r_str, r_raw, r_sym, r_sexp>;
+using to_r_val_t = typename internal::r_val_mapping_impl<std::decay_t<T>>::type;
 
+template <typename T>
+concept ConstructibleToRVal = requires {
+    typename to_r_val_t<T>;
+};
 
-// Helper to convert C/C++ typenamesto RVal typenames
-// template <typename T>
-// struct to_r_val {
-//     static_assert(always_false<T>, "No defined C/C++ to RVal typename mapping defined");
-// };
+// Rules for determining math type promotion in binary operators
+// Because there's only 4, we only need 6 combinations
+// It's likely more efficient to explicitly define them
+// If there were more, we could map each RMathType to an integer and take the max of each i each a number
 
-// template<>
-// struct to_r_val<int> {
-//     using type = r_int;
-// };
-
-// template<>
-// struct to_r_val<double> {
-//     using type = r_dbl;
+// template <RMathType T, RMathType U>
+// struct RMathCastType {
+//     if constexpr (is<T, U>){
+//         typename out_t = T;
+//     } else {
+//         typename out_t = r_int;
+//     }
+//     using type = out_t;
 // };
 
 }

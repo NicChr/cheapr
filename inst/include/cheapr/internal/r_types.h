@@ -216,13 +216,31 @@ inline r_str r_sexp::address() const {
   return r_str(buf);
 }
 
+
+// TO-DO: The same thing as below but returning a typename
+
+// This is the simplest way to write unwrap() but we're relying on compiler to properly optimise it
+// template <typename T>
+// inline constexpr auto unwrap(const T& x){
+//   if constexpr (RVal<T>){
+//       return unwrap(x.value);
+//   } else {
+//     return x;
+//   }
+// }
+
 // Important (recursive) helper to extract the underlying NON-RVal value
+// Recursively unwrap until we hit a primitive type
 template <typename T>
 inline constexpr auto unwrap(const T& x){
   if constexpr (RVal<T>){
-    // Recursively unwrap until we hit a primitive type
-    // It's cool that this works in compile-time!
-    return unwrap(x.value);
+    if constexpr (!RVal<decltype(x.value)>){
+      return x.value;
+    } else if constexpr (!RVal<decltype(x.value.value)>){
+      return x.value.value;
+    } else {
+      return unwrap(x.value.value);
+    }
   } else {
     return x;
   }
@@ -312,21 +330,13 @@ inline constexpr bool can_be_int64(T x){
 
 }
   
-  // Coerce to an R type based on the C type (useful for RVal templates)
+// Coerce to an R type based on the C type (useful for RVal templates)
 template<typename T>
 inline constexpr auto as_r_val(T x) { 
   if constexpr (RVal<T>){
     return x;
-  } else if constexpr (is<T, bool>){
-    return r_lgl(x);
-  } else if constexpr (is<T, int>){
-    return r_int(x);
-  } else if constexpr (is<T, int64_t>){
-    return r_int64(x);
-  } else if constexpr (is<T, double>){
-    return r_dbl(x);
-  } else if constexpr (is<T, const char*>){
-    return r_str(x);
+  } else if constexpr (ConstructibleToRVal<T>){
+    return to_r_val_t<T>(x);
   } else if constexpr (MathType<T>){
     if constexpr (internal::can_definitely_be_int<T>()){
       return r_int(static_cast<int>(x));

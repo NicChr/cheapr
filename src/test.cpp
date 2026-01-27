@@ -479,3 +479,29 @@ SEXP foo50(SEXP x, bool na_rm){
 
   return as<r_vec<r_dbl>>(sum_int(x_, na_rm));
 } 
+
+
+[[cpp11::register]]
+SEXP foo51(SEXP x){
+  r_vec<r_int> x_ = r_vec<r_int>(x);
+  return abs(x_); 
+} 
+
+
+[[cpp11::register]]
+bool foo52(){
+  if constexpr (ConstructibleToRVal<decltype("yes")>){
+    return true;
+  } else {
+   return false; 
+  }
+}
+
+[[cpp11::register]]
+bool foo53(){
+  if constexpr (ConstructibleToRVal<int16_t>){
+    return true;
+  } else {
+   return false; 
+  }
+}

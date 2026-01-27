@@ -89,7 +89,7 @@ template<typename T>
 inline constexpr bool is_na_impl(T x) {
   if constexpr (RVal<T>){
       return unwrap(x) == unwrap(na_value<T>());
-  } else if constexpr (constructible_to_rval<T>){
+  } else if constexpr (ConstructibleToRVal<T>){
     return is_na_impl(as_r_val(x));
   } else {
     return false;

@@ -13,7 +13,7 @@ namespace cheapr {
 namespace internal {
 
 inline r_dbl round_to_even(r_dbl x){
-  return x - r_dbl{std::remainder(x.value, 1.0)};
+  return x - r_dbl{std::remainder(unwrap(x), 1.0)};
 }
 
 }
@@ -54,7 +54,7 @@ inline constexpr bool is_r_inf(const T x){
 
 template <>
 inline constexpr bool is_r_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits<r_dbl>::max().value || x.value == r_limits<r_dbl>::min().value;
+  return unwrap(x) == r_limits<r_dbl>::max().value || unwrap(x) == r_limits<r_dbl>::min().value;
 }
 
 template <typename T>
@@ -64,7 +64,7 @@ inline constexpr bool is_r_pos_inf(const T x){
 
 template <>
 inline constexpr bool is_r_pos_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits<r_dbl>::max().value;
+  return unwrap(x) == r_limits<r_dbl>::max().value;
 }
 
 template <typename T>
@@ -74,40 +74,40 @@ inline constexpr bool is_r_neg_inf(const T x){
 
 template <>
 inline constexpr bool is_r_neg_inf<r_dbl>(const r_dbl x){
-  return x.value == r_limits<r_dbl>::min().value;
+  return unwrap(x) == r_limits<r_dbl>::min().value;
 }
 
 template<RMathType T>
 inline constexpr T abs(T x){
-  return is_na(x) ? x : T{std::abs(x.value)};
+  return is_na(x) ? x : T{std::abs(unwrap(x))};
 }
 
 template<RMathType T>
 inline T floor(T x){
-  return is_na(x) ? x : T{std::floor(x.value)};
+  return is_na(x) ? x : T{std::floor(unwrap(x))};
 }
 template<>
 inline r_dbl floor(r_dbl x){
-  return r_dbl(std::floor(x.value));
+  return r_dbl(std::floor(unwrap(x)));
 }
 
 template<RMathType T>
 inline T ceiling(T x){
-  return is_na(x) ? x : T{std::ceil(x.value)};
+  return is_na(x) ? x : T{std::ceil(unwrap(x))};
 }
 template<>
 inline r_dbl ceiling(r_dbl x){
-  return r_dbl(std::ceil(x.value));
+  return r_dbl(std::ceil(unwrap(x)));
 }
 
 template<RMathType T>
 inline T trunc(T x){
-  return is_na(x) ? x : T{std::trunc(x.value)};
+  return is_na(x) ? x : T{std::trunc(unwrap(x))};
 }
 
 template <>
 inline r_dbl trunc(r_dbl x){
-  return r_dbl(std::trunc(x.value) + 0.0);
+  return r_dbl(std::trunc(unwrap(x)) + 0.0);
 }
 
 template <RMathType T>

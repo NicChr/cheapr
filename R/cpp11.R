@@ -219,3 +219,15 @@ foo49 <- function(x, na_rm) {
 foo50 <- function(x, na_rm) {
   .Call(`_cheapr_foo50`, x, na_rm)
 }
+
+foo51 <- function(x) {
+  .Call(`_cheapr_foo51`, x)
+}
+
+foo52 <- function() {
+  .Call(`_cheapr_foo52`)
+}
+
+foo53 <- function() {
+  .Call(`_cheapr_foo53`)
+}
