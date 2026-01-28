@@ -81,7 +81,7 @@ struct r_df {
 //         : sexp(internal::new_df_impl(n_rows, n_cols)) {}
 
     // Implicit conversion to SEXP
-    constexpr operator SEXP() const { return sexp.value; }
+    operator SEXP() const { return sexp; }
 
     bool is_null() const { return sexp.is_null(); }
 

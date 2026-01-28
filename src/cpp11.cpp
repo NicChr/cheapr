@@ -439,6 +439,13 @@ extern "C" SEXP _cheapr_foo58(SEXP x) {
     return cpp11::as_sexp(foo58(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// test.cpp
+SEXP foo59();
+extern "C" SEXP _cheapr_foo59() {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo59());
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
@@ -495,6 +502,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo56",  (DL_FUNC) &_cheapr_foo56,  2},
     {"_cheapr_foo57",  (DL_FUNC) &_cheapr_foo57,  2},
     {"_cheapr_foo58",  (DL_FUNC) &_cheapr_foo58,  1},
+    {"_cheapr_foo59",  (DL_FUNC) &_cheapr_foo59,  0},
     {"_cheapr_foo6",   (DL_FUNC) &_cheapr_foo6,   1},
     {"_cheapr_foo7",   (DL_FUNC) &_cheapr_foo7,   1},
     {"_cheapr_foo8",   (DL_FUNC) &_cheapr_foo8,   0},

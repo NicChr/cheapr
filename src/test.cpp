@@ -574,3 +574,9 @@ SEXP foo58(SEXP x) {
     }
   });
 }
+
+
+[[cpp11::register]]
+SEXP foo59(){
+  return make_vec<r_sexp>(arg("first") = "no", arg("second") = "yes");
+}

@@ -64,8 +64,8 @@ struct r_vec {
 explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
 
   // Implicit conversion to SEXP
-  constexpr operator SEXP() const {
-    return sexp.value;
+  operator SEXP() const {
+    return sexp;
   }
 
   // Explicit conversion to r_sexp
@@ -110,16 +110,7 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
 
   // get uses const pointer
   T get(r_size_t index) const {
-    if constexpr (is<T, r_sexp>){
-      return r_sexp(m_ptr[index], internal::read_only_tag{});
-    } else if constexpr (is<T, r_str>){
-      // r_sexp -> r_str is direct (no extra protection)
-      return r_str(r_sexp(m_ptr[index], internal::read_only_tag{}));
-    } else if constexpr (is<T, r_sym>){
-      return r_sym(r_sexp(m_ptr[index], internal::read_only_tag{}));
-    } else {
-      return T(m_ptr[index]);
-    }
+    return T(m_ptr[index]);
   }
 
   // Set only available if writable
@@ -128,9 +119,9 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
   void set(r_size_t index, U val) {
       T val2 = internal::as_r<T>(val);
       if constexpr (any<T, r_sexp, r_sym>){
-        SET_VECTOR_ELT(sexp.value, index, val2.value);
+        SET_VECTOR_ELT(sexp, index, val2);
       } else if constexpr (is<T, r_str>){
-        SET_STRING_ELT(sexp.value, index, val2.value);
+        SET_STRING_ELT(sexp, index, val2);
       } else {
         m_ptr[index] = unwrap(val2);
       }

@@ -89,7 +89,7 @@ inline r_vec<r_sexp> get_attrs(T x){
   SEXP current = attrs.value;
 
   for (r_size_t i = 0; i < n; ++i){
-    out.set(i, r_sexp(CAR(current), internal::read_only_tag{}));
+    out.set(i, r_sexp(CAR(current)));
     names.set(i, internal::as_r<r_str>(symbol::tag(current)));
     current = CDR(current);
   }

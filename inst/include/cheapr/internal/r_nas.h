@@ -115,11 +115,11 @@ inline constexpr bool is_na_impl<r_raw>(r_raw x){
 // NULL is treated as NA of general R objects
 template<>
 inline bool is_na_impl<r_sexp>(r_sexp x){
-  return x.value == r_null.value;
+  return unwrap(x) == unwrap(r_null);
 }
 template<>
 inline bool is_na_impl<SEXP>(SEXP x){
-  return x == r_null.value;
+  return x == unwrap(r_null);
 }
 
 }

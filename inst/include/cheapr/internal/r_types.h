@@ -10,82 +10,138 @@
 
 namespace cheapr {
 
-// Internal struct to provide a means to convert SEXP -> r_sexp directly without extra protection
-namespace internal {
-struct read_only_tag {};
-}
-
 // General SEXP, reserved for everything except CHARSXP and SYMSXP
 // Wrapper around cpp11::sexp to benefit from automatic protection (cpp11-managed linked list)
 // All credits go to cpp11 authors/maintainers for `cpp11::sexp`
 struct r_sexp {
+  cpp11::sexp value;
+  using value_type = cpp11::sexp;
   
-// value must be declared first (before protector_) as it is the primary data
-public:
-  SEXP value;
-  using value_type = SEXP;
-
-private: 
-  // cpp11::sexp will automatically protect underlying SEXP
-  //  We never use this directly
-  cpp11::sexp protector_;
-
-public:
-  // Constructor from SEXP
-  explicit r_sexp(SEXP s) : value(s), protector_(s) {}
-
   // Default constructor
   r_sexp() : value(R_NilValue) {}
 
-  // Optimized constructor
-  // convert SEXP -> r_sexp directly without extra protection
-  r_sexp(SEXP s, internal::read_only_tag) : value(s) {}
-
-  // Copy Constructor
-  r_sexp(const r_sexp& other) : value(other.value), protector_(other.protector_) {}
-  // r_sexp(const r_sexp& other) : value(other.value), protector_(other.value) {}
-
-  // Move Constructor
-  r_sexp(r_sexp&& other) noexcept 
-  : value(other.value), protector_(std::move(other.protector_)) {
-    other.value = R_NilValue;
-  }
-
-  // Copy Assignment
-  r_sexp& operator=(const r_sexp& other) {
-      if (this != &other) {
-          value = other.value;
-          // protector_ = other.value; // Previously was this line (investigate)
-          protector_ = other.protector_;
-      }
-      return *this;
-  }
-
-  // Move Assignment
-  r_sexp& operator=(r_sexp&& other) noexcept {
-      if (this != &other) {
-          value = other.value;
-          protector_ = std::move(other.protector_);
-          other.value = R_NilValue;
-      }
-      return *this;
-  }
+  // Constructor from SEXP
+  explicit r_sexp(SEXP s) : value(s) {}
 
   // Implicit conversion to SEXP
-  constexpr operator SEXP() const { return value; }
+  operator SEXP() const { return value.data(); }
 
   r_size_t length() const noexcept {
-    return Rf_xlength(value);
+    return Rf_xlength(value.data());
   }
 
   r_size_t size() const noexcept {
     return length();
   }
 
-  bool is_null() const { return value == R_NilValue; }
+  bool is_null() const { return value.data() == R_NilValue; }
   
   r_str address() const;
 };
+
+// struct r_sexp {
+  
+// // value must be declared first (before protector_) as it is the primary data
+// public:
+//   SEXP value;
+//   using value_type = SEXP;
+
+// private: 
+//   // cpp11::sexp will automatically protect underlying SEXP
+//   //  We never use this directly
+//   cpp11::sexp protector_;
+
+// public:
+//   // Constructor from SEXP
+//   explicit r_sexp(SEXP s) : value(s), protector_(s) {}
+
+//   // Default constructor
+//   r_sexp() : value(R_NilValue) {}
+
+//   // Optimized constructor
+//   // convert SEXP -> r_sexp directly without extra protection
+//   r_sexp(SEXP s, internal::read_only_tag) : value(s), protector_(R_NilValue){}
+
+//   // Copy Constructor
+//   r_sexp(const r_sexp& other) : value(other.value) {
+//     if (other.protector_ != R_NilValue) {
+//       // Source is owner - Share protection
+//       protector_ = other.protector_;
+//     } else if (value != R_NilValue) {
+//       // Source is View - Upgrade to Owner
+//       protector_ = value; 
+//     } else {
+//       // Source is null
+//       protector_ = R_NilValue;
+//     }
+//   }
+
+//   // Move Constructor
+//   r_sexp(r_sexp&& other) noexcept : value(other.value) {
+//     if (other.protector_ != R_NilValue) {
+//       // Source is owner - Steal protection
+//       protector_ = std::move(other.protector_);
+//     } else if (value != R_NilValue) {
+//       // Source is view - upgrade to Owner
+//       protector_ = value; 
+//     } else {
+//       // source is null
+//       protector_ = R_NilValue;
+//     }
+//     // Reset source
+//     other.value = R_NilValue;
+//   }
+
+//   // Copy Assignment
+//   r_sexp& operator=(const r_sexp& other) {
+//     if (this != &other) {
+//       value = other.value;
+//       if (other.protector_ != R_NilValue) {
+//         // Share protection
+//         protector_ = other.protector_;
+//       } else if (value != R_NilValue) {
+//         // Upgrade View -> Owner
+//         protector_ = value; 
+//       } else {
+//         protector_ = R_NilValue;
+//       }
+//     }
+//     return *this;
+//   }
+
+//   // Move Assignment
+//   r_sexp& operator=(r_sexp&& other) noexcept {
+//     if (this != &other) {
+//       value = other.value;
+//       if (other.protector_ != R_NilValue) {
+//         // Steal protection
+//         protector_ = std::move(other.protector_);
+//       } else if (value != R_NilValue) {
+//         // Upgrade View -> Owner
+//         protector_ = value;
+//       } else {
+//         protector_ = R_NilValue;
+//       }
+//       other.value = R_NilValue;
+//     }
+//     return *this;
+//   }
+
+//   // Implicit conversion to SEXP
+//   constexpr operator SEXP() const { return value; }
+
+//   r_size_t length() const noexcept {
+//     return Rf_xlength(value);
+//   }
+
+//   r_size_t size() const noexcept {
+//     return length();
+//   }
+
+//   bool is_null() const { return value == R_NilValue; }
+  
+//   r_str address() const;
+// };
 
 // bool type, similar to Rboolean
 // Implicit coercion to bool (not int) provided no NA
@@ -172,7 +228,7 @@ struct r_str {
   explicit r_str(r_sexp x) : value(std::move(x)) {}
   explicit r_str(const char *x) : value(Rf_mkCharCE(x, CE_UTF8)) {}
   // Implicit r_str -> SEXP 
-  constexpr operator SEXP() const { return value.value; }
+  operator SEXP() const { return value; }
 
   const char *c_str() const {
     return CHAR(value);
@@ -188,9 +244,9 @@ struct r_sym {
   r_sexp value;
   using value_type = r_sexp;
   r_sym() : value{R_MissingArg} {}
-  explicit r_sym(r_sexp x) : value(std::move(x)) {} 
-  explicit r_sym(SEXP x) : value{std::move(r_sexp(x, internal::read_only_tag{}))} {} // Assume symbols are already protected
-  constexpr operator SEXP() const { return value.value; }
+  // explicit r_sym(r_sexp x) : value(std::move(x)) {} 
+  explicit r_sym(SEXP x) : value{x} {}
+  operator SEXP() const { return value; }
 };
 
 
@@ -238,6 +294,11 @@ struct unwrapped_type {
     using type = T;
 };
 
+template <>
+struct unwrapped_type<cpp11::sexp> {
+    using type = SEXP;
+};
+
 template <RVal T>
 struct unwrapped_type<T> {
     // Recursively call unwrapped_type on the inner type
@@ -254,8 +315,10 @@ using unwrapped_t = typename internal::unwrapped_type<T>::type;
 // Recursively unwrap until we hit a primitive type
 template <typename T>
 inline constexpr auto unwrap(const T& x){
-  if constexpr (RVal<T>){
+if constexpr (RVal<T>){
     return unwrap(x.value);
+  } else if constexpr (is<T, cpp11::sexp>){
+    return x.data();
   } else {
     return x;
   }
