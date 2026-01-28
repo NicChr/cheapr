@@ -14,7 +14,7 @@ struct r_str;
 struct r_cplx;
 struct r_raw;
 struct r_sym;
-struct r_sexp;
+struct r_sexp; 
 
 template <class... T>
 inline constexpr bool always_false = false;
@@ -152,6 +152,9 @@ inline consteval bool can_definitely_be_int64(){
 
 // C/C++ -> RVal typenames
 // While these aren't the only ways of constructing RVals, they are many-to-one and non-ambiguous
+
+// This is essentially a map of defined non-RVal to RVal conversion operators
+// Allowing any of these to be cast to an RVal via static_cast<>
 template <typename T>
 struct r_val_mapping_impl {};
 
@@ -193,7 +196,7 @@ template <typename T>
 using to_r_val_t = typename internal::r_val_mapping_impl<std::decay_t<T>>::type;
 
 template <typename T>
-concept ConstructibleToRVal = requires {
+concept CastableToRVal = requires {
     typename to_r_val_t<T>;
 };
 

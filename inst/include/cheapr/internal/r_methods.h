@@ -2,8 +2,8 @@
 #define CHEAPR_R_METHODS_H
 
 #include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_concepts.h>
+#include <cheapr/internal/r_types.h>
 #include <cheapr/internal/r_nas.h>
 
 namespace cheapr {

@@ -1,9 +1,7 @@
 #ifndef CHEAPR_R_VECTOR_H
 #define CHEAPR_R_VECTOR_H
 
-#include <cheapr/internal/r_setup.h>
-#include <cheapr/internal/r_types.h>
-#include <cheapr/internal/r_concepts.h>
+#include <cheapr/internal/r_methods.h>
 #include <cheapr/internal/r_vec_utils.h>
 #include <cheapr/internal/r_rtype_coerce.h>
 
@@ -11,14 +9,18 @@ namespace cheapr {
 
 template<RVal T>
 struct r_vec {
-  r_sexp sexp = r_null;
-  T* ptr = nullptr;              // Only initialized if writable
+
+  private:
 
   // Initialise read-only ptr to: 
   // SEXP - If T is `r_sexp` or `r_str`
   // T - Otherwise
-  using read_only_ptr_t = std::conditional_t<RPtrWritableType<T>, T, SEXP>;
-  const read_only_ptr_t* const_ptr = nullptr;
+  using ptr_t = std::conditional_t<RPtrWritableType<T>, unwrapped_t<T>*, const SEXP*>;  
+  ptr_t m_ptr = nullptr;
+
+  public: 
+
+  r_sexp sexp = r_null;
 
   using data_type = T;
 
@@ -27,12 +29,11 @@ struct r_vec {
     : sexp(internal::new_vec_impl<std::remove_cvref_t<T>>(n))
   {
     if constexpr (RPtrWritableType<T>) {
-      const_ptr = internal::vector_ptr<const T>(sexp.value);
-      ptr = internal::vector_ptr<T>(sexp.value);
+      m_ptr = internal::vector_ptr<T>(sexp.value);
     } else if constexpr (any<T, r_sexp, r_sym>) {
-      const_ptr = (const read_only_ptr_t*) VECTOR_PTR_RO(sexp.value);
+      m_ptr = (const SEXP*) VECTOR_PTR_RO(sexp.value);
       } else if constexpr (is<T, r_str>){
-      const_ptr = (const read_only_ptr_t*) STRING_PTR_RO(sexp.value);
+      m_ptr = (const SEXP*) STRING_PTR_RO(sexp.value);
       }
   }
 
@@ -51,12 +52,11 @@ struct r_vec {
       // vector_ptr helper must be updated to return SEXP* for r_sexp/r_str/r_sym
       // We cast strictly to the stored type
       if constexpr (RPtrWritableType<T>) {
-        const_ptr = internal::vector_ptr<const T>(sexp);
-        ptr = internal::vector_ptr<T>(sexp);
+        m_ptr = internal::vector_ptr<T>(sexp);
       } else if constexpr (any<T, r_sexp, r_sym>) {
-        const_ptr = (const read_only_ptr_t*) VECTOR_PTR_RO(sexp); 
+        m_ptr = (const SEXP*) VECTOR_PTR_RO(sexp); 
       } else if constexpr (is<T, r_str>){
-        const_ptr = (const read_only_ptr_t*) STRING_PTR_RO(sexp);
+        m_ptr = (const SEXP*) STRING_PTR_RO(sexp);
       }
     }
 }
@@ -74,29 +74,17 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
   }
 
   // Direct pointer access
-  T* data() requires RPtrWritableType<T>{
-    return ptr;
-  }
-
-  const read_only_ptr_t* data() const {
-    return const_ptr;
+  ptr_t data() const {
+    return m_ptr;
   }
 
   // Iterator support - begin + end
-  T* begin() requires RPtrWritableType<T> {
-      return ptr;
+  ptr_t begin() {
+      return data();
   }
 
-  T* end() requires RPtrWritableType<T> {
-      return ptr + size();
-  }
-
-  const T* begin() const {
-      return const_ptr;
-  }
-
-  const T* end() const {
-      return const_ptr + size();
+  ptr_t end() {
+      return data() + size();
   }
 
   bool is_null() const {
@@ -123,14 +111,14 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
   // get uses const pointer
   T get(r_size_t index) const {
     if constexpr (is<T, r_sexp>){
-      return r_sexp(const_ptr[index], internal::read_only_tag{});
+      return r_sexp(m_ptr[index], internal::read_only_tag{});
     } else if constexpr (is<T, r_str>){
       // r_sexp -> r_str is direct (no extra protection)
-      return r_str(r_sexp(const_ptr[index], internal::read_only_tag{}));
+      return r_str(r_sexp(m_ptr[index], internal::read_only_tag{}));
     } else if constexpr (is<T, r_sym>){
-      return r_sym(const_ptr[index]);
+      return r_sym(r_sexp(m_ptr[index], internal::read_only_tag{}));
     } else {
-      return const_ptr[index];
+      return T(m_ptr[index]);
     }
   }
 
@@ -144,7 +132,7 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
       } else if constexpr (is<T, r_str>){
         SET_STRING_ELT(sexp.value, index, val2.value);
       } else {
-        ptr[index] = val2;
+        m_ptr[index] = unwrap(val2);
       }
   }
 
@@ -200,10 +188,10 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
 
   template <typename U>
   void fill(r_size_t start, r_size_t n, const U val){
-    auto val2 = internal::as_r<T>(val);
+    auto val2 = unwrap(internal::as_r<T>(val));
     if constexpr (RPtrWritableType<T>){
       int n_threads = internal::calc_threads(n);
-      auto *p_target = data();
+      auto* RESTRICT p_target = data();
       if (n_threads > 1) {
         OMP_PARALLEL_FOR_SIMD(n_threads)
         for (r_size_t i = 0; i < n; ++i) {
@@ -231,12 +219,19 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
         if (n_threads > 1) {
           OMP_PARALLEL_FOR_SIMD(n_threads)
           for (r_size_t i = 0; i < n; ++i) {
-            if (p_target[start + i] == old_val2){
-              p_target[start + i] = new_val2;
+            r_lgl eq = p_target[start + i] == old_val2;
+            if (eq.is_true()){
+              p_target[start + i] = unwrap(new_val2);
             }
           }
         } else {
-          std::replace(data() + start, data() + start + n, old_val2, new_val2);
+          OMP_SIMD
+          for (r_size_t i = 0; i < n; ++i) {
+            r_lgl eq = p_target[start + i] == old_val2;
+            if (eq.is_true()){
+              p_target[start + i] = unwrap(new_val2);
+            }
+          }
         }
       } else {
         for (r_size_t i = 0; i < n; ++i) {
@@ -256,7 +251,14 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
     } else {
       auto resized_vec = r_vec<T>(n);
       r_size_t n_to_copy = std::min(n, vec_size);
-      std::copy_n(this->begin(), n_to_copy, resized_vec.begin());
+
+      if constexpr (RPtrWritableType<T>){
+        std::copy_n(this->begin(), n_to_copy, resized_vec.begin());
+      } else {
+        for (r_size_t i = 0; i < n_to_copy; ++i){
+          resized_vec.set(i, this->get(i)); 
+        }
+      }
       return resized_vec;
     }
   }
@@ -292,7 +294,6 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
     }
     return out;
   }
-
 
 };
 
@@ -345,21 +346,23 @@ decltype(auto) visit_maybe_vector(SEXP x, F&& f) {
 
 template <RVal T>
 inline void r_copy_n(r_vec<T> &target, r_vec<T> &source, r_size_t target_offset, r_size_t n){
-  auto *p_source = source.data();
 
   if constexpr (RPtrWritableType<T>){
+    auto *p_source = source.data();
+    auto *p_target = target.data();
+
     int n_threads = internal::calc_threads(n);
     if (n_threads > 1) {
       OMP_PARALLEL_FOR_SIMD(n_threads)
       for (r_size_t i = 0; i < n; ++i) {
-        target.set(target_offset + i, p_source[i]);
+        p_target[target_offset + i] = p_source[i];
       }
     } else {
-      std::copy_n(p_source, n, target.data() + target_offset);
+      std::copy_n(p_source, n, p_target + target_offset);
     }
   } else {
     for (r_size_t i = 0; i < n; ++i) {
-      target.set(target_offset + i, p_source[i]);
+      target.set(target_offset + i, source.get(i));
     }
   }
 }

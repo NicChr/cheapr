@@ -10,6 +10,9 @@ namespace cheapr {
 
 namespace internal {
 
+template <typename T>
+using vec_ptr_t = std::conditional_t<std::is_const_v<T>, const unwrapped_t<T>*, unwrapped_t<T>*>;
+
 inline r_sexp new_vec(SEXPTYPE type, r_size_t n){
   return r_sexp(cpp11::safe[Rf_allocVector](type, n));
 }
@@ -19,7 +22,7 @@ inline r_sexp coerce_vec(SEXP x, SEXPTYPE type){
 }
 
 template<RPtrWritableType T>
-inline T* vector_ptr(SEXP x) {
+inline vec_ptr_t<T> vector_ptr(SEXP x) {
   static_assert(
     always_false<T>,
     "Unsupported type for vector_ptr"
@@ -28,58 +31,58 @@ inline T* vector_ptr(SEXP x) {
 }
 
 template<>
-inline r_lgl* vector_ptr<r_lgl>(SEXP x) {
-  return reinterpret_cast<r_lgl*>(LOGICAL(x));
+inline int* vector_ptr<r_lgl>(SEXP x) {
+  return LOGICAL(x);
 }
 
 template<>
-inline const r_lgl* vector_ptr<const r_lgl>(SEXP x) {
-  return reinterpret_cast<const r_lgl*>(LOGICAL_RO(x));
+inline const int* vector_ptr<const r_lgl>(SEXP x) {
+  return LOGICAL_RO(x);
 }
 template<>
-inline r_int* vector_ptr<r_int>(SEXP x) {
-  return reinterpret_cast<r_int*>(INTEGER(x));
+inline int* vector_ptr<r_int>(SEXP x) {
+  return INTEGER(x);
 }
 template<>
-inline const r_int* vector_ptr<const r_int>(SEXP x) {
-  return reinterpret_cast<const r_int*>(INTEGER_RO(x));
-}
-
-template<>
-inline r_dbl* vector_ptr<r_dbl>(SEXP x) {
-  return reinterpret_cast<r_dbl*>(REAL(x));
-}
-template<>
-inline const r_dbl* vector_ptr<const r_dbl>(SEXP x) {
-  return reinterpret_cast<const r_dbl*>(REAL_RO(x));
+inline const int* vector_ptr<const r_int>(SEXP x) {
+  return INTEGER_RO(x);
 }
 
 template<>
-inline r_int64* vector_ptr<r_int64>(SEXP x) {
-  return reinterpret_cast<r_int64*>(REAL(x));
+inline double* vector_ptr<r_dbl>(SEXP x) {
+  return REAL(x);
 }
 template<>
-inline const r_int64* vector_ptr<const r_int64>(SEXP x) {
-  return reinterpret_cast<const r_int64*>(REAL_RO(x));
+inline const double* vector_ptr<const r_dbl>(SEXP x) {
+  return REAL_RO(x);
+}
+
+template<>
+inline int64_t* vector_ptr<r_int64>(SEXP x) {
+  return reinterpret_cast<int64_t*>(REAL(x));
+}
+template<>
+inline const int64_t* vector_ptr<const r_int64>(SEXP x) {
+  return reinterpret_cast<const int64_t*>(REAL_RO(x));
 }
 
 
 template<>
-inline r_cplx* vector_ptr<r_cplx>(SEXP x) {
-  return reinterpret_cast<r_cplx*>(COMPLEX(x));
+inline Rcomplex* vector_ptr<r_cplx>(SEXP x) {
+  return COMPLEX(x);
 }
 template<>
-inline const r_cplx* vector_ptr<const r_cplx>(SEXP x) {
-  return reinterpret_cast<const r_cplx*>(COMPLEX_RO(x));
+inline const Rcomplex* vector_ptr<const r_cplx>(SEXP x) {
+  return COMPLEX_RO(x);
 }
 
 template<>
-inline r_raw* vector_ptr<r_raw>(SEXP x) {
-  return reinterpret_cast<r_raw*>(RAW(x));
+inline Rbyte* vector_ptr<r_raw>(SEXP x) {
+  return RAW(x);
 }
 template<>
-inline const r_raw* vector_ptr<const r_raw>(SEXP x) {
-  return reinterpret_cast<const r_raw*>(RAW_RO(x));
+inline const Rbyte* vector_ptr<const r_raw>(SEXP x) {
+  return RAW_RO(x);
 }
 
 // Internal vec constructor
@@ -158,7 +161,7 @@ inline r_sexp new_scalar_vec<r_int64>(r_int64 default_value){
 }
 template <>
 inline r_sexp new_scalar_vec<r_str>(r_str default_value){
-  return r_sexp(Rf_ScalarString(default_value));
+  return r_sexp(Rf_ScalarString(unwrap(default_value)));
 }
 template <>
 inline r_sexp new_scalar_vec<r_cplx>(r_cplx default_value){

@@ -14,12 +14,12 @@ r_dbl sum(r_vec<T> x, bool na_rm = false){
     if (na_rm){
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += (is_na(p_x[i])) ? 0 : unwrap(p_x[i]);
+            out_ += (is_na(x.get(i))) ? 0 : unwrap(p_x[i]);
         }
     } else {
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ = (is_na(p_x[i]) || is_na(as_r_val(out_))) ? unwrap(na_value<r_dbl>()) : (out_ + unwrap(p_x[i]));
+            out_ = (is_na(x.get(i)) || is_na(as_r_val(out_))) ? unwrap(na_value<r_dbl>()) : (out_ + unwrap(p_x[i]));
         }
     }
     return r_dbl(out_);
@@ -35,7 +35,7 @@ r_dbl sum(r_vec<r_dbl> x, bool na_rm){
     if (na_rm){
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += (is_na(p_x[i])) ? 0 : unwrap(p_x[i]);
+            out_ += (is_na(x.get(i))) ? 0 : unwrap(p_x[i]);
         }
     } else {
         #pragma omp simd reduction(+:out_)
@@ -57,13 +57,13 @@ auto sum_int(r_vec<T> x, bool na_rm = false){
     if (na_rm){
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += (is_na(p_x[i])) ? int64_t(0) : unwrap(p_x[i]);
+            out_ += (is_na(x.get(i))) ? int64_t(0) : unwrap(p_x[i]);
         }
     } else {
         r_int64 temp(out_);
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            if (is_na(p_x[i]) || is_na(temp)){
+            if (is_na(x.get(i)) || is_na(temp)){
                 temp = na_value<r_int64>();
                 // Move underlying value of temp into out_ directly
                 out_ = std::move(temp.value);
@@ -125,7 +125,7 @@ r_vec<T> range(r_vec<T> x, bool na_rm){
         #pragma omp simd reduction(std::min:lo_) reduction(std::max:hi_)
         for (r_size_t i = 0; i < n; ++i){
             // Ignore NA for min()
-            lo_ = is_na(p_x[i]) ? lo_ : std::min(lo_, unwrap(p_x[i]));
+            lo_ = is_na(x.get(i)) ? lo_ : std::min(lo_, unwrap(p_x[i]));
             // No need to ignore NA for max() because NA is defined as lowest representable value
             hi_ = std::max(hi_, unwrap(p_x[i]));
         }        

@@ -256,8 +256,9 @@ SEXP foo25(SEXP cols, SEXP x){
 
 [[cpp11::register]]
 SEXP foo26(){
-  return make_vec<r_sexp>(sizeof(r_sexp), sizeof(SEXP), sizeof(cpp11::sexp), sizeof(r_str), 
-arg("dbl") = sizeof(r_dbl), arg("int") = sizeof(r_int), arg("lgl") = sizeof(r_lgl), arg("cplx") = sizeof(r_cplx));
+  return make_vec<r_sexp>(arg("r_sexp") = sizeof(r_sexp), arg ("SEXP") = sizeof(SEXP), arg("sexp") = sizeof(cpp11::sexp), arg("r_str") = sizeof(r_str), 
+arg("r_dbl") = sizeof(r_dbl), arg("r_int") = sizeof(r_int), arg("r_lgl") = sizeof(r_lgl), arg("r_cplx") = sizeof(r_cplx),
+  arg("r_sym") = sizeof(r_sym), arg("r_vec<r_int>") = sizeof(r_vec<r_int>));
 }
 
 
@@ -417,20 +418,19 @@ SEXP foo44(SEXP x) {
 }
 
 
-[[cpp11::register]]
-SEXP foo45(SEXP x) {
-  auto xvec = r_vec<r_dbl>(x);
+// SEXP foo45(SEXP x) {
+//   auto xvec = r_vec<r_dbl>(x);
 
-    r_size_t n = xvec.length();
-    const auto* RESTRICT p_x = xvec.data();
+//     r_size_t n = xvec.length();
+//     const auto* RESTRICT p_x = xvec.data();
 
-    double sum(0);
+//     double sum(0);
 
-    for (r_size_t i = 0; i < n; ++i){
-      sum += p_x[i].value;
-    }
-    return as_vector(r_dbl(sum));
-}
+//     for (r_size_t i = 0; i < n; ++i){
+//       sum += p_x[i];
+//     }
+//     return as_vector(r_dbl(sum));
+// }
 
 [[cpp11::register]]
 SEXP foo46() {
@@ -490,7 +490,7 @@ SEXP foo51(SEXP x){
 
 [[cpp11::register]]
 bool foo52(){
-  if constexpr (ConstructibleToRVal<decltype("yes")>){
+  if constexpr (CastableToRVal<decltype("yes")>){
     return true;
   } else {
    return false; 
@@ -499,7 +499,7 @@ bool foo52(){
 
 [[cpp11::register]]
 bool foo53(){
-  if constexpr (ConstructibleToRVal<int16_t>){
+  if constexpr (CastableToRVal<int16_t>){
     return true;
   } else {
    return false; 
@@ -556,7 +556,21 @@ SEXP foo57(SEXP x, SEXP y){
 
   OMP_SIMD
   for (r_size_t i = 0; i < n; ++i){
-    p_z[i].value = p_x[i].value + p_y[i].value;
+    p_z[i] = p_x[i] + p_y[i];
   }
   return z;
+}
+
+
+[[cpp11::register]]
+SEXP foo58(SEXP x) {
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    using data_t = typename decltype(xvec)::data_type;
+    if constexpr (is<data_t, r_int> || is<data_t, r_dbl>){
+      xvec.replace(0, xvec.length(), data_t(44), data_t(1234));
+      return xvec;
+    } else {
+      return r_null;
+    }
+  });
 }

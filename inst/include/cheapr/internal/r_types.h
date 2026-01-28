@@ -273,7 +273,7 @@ template<typename T>
 inline constexpr auto as_r_val(T x) { 
   if constexpr (RVal<T>){
     return x;
-  } else if constexpr (ConstructibleToRVal<T>){
+  } else if constexpr (CastableToRVal<T>){
     return static_cast<to_r_val_t<T>>(x);
   } else {
     static_assert(
