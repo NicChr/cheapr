@@ -68,6 +68,11 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
     return sexp.value;
   }
 
+  // Explicit conversion to r_sexp
+  constexpr explicit operator r_sexp() const {
+    return sexp;
+  }
+
   // Direct pointer access
   T* data() requires RPtrWritableType<T>{
     return ptr;

@@ -88,43 +88,6 @@ inline r_vec<T> make_vec(Args... args) {
   }
 }
 
-// template <RVal T>
-// template<typename... Args>
-// void r_vec<T>::modify_attrs(Args... args) {
-
-//   if (this->sexp.is_null()){
-//     cpp11::stop("Cannot add attributes to `NULL`");
-//   }
-
-
-//   auto attrs = make_vec<r_sexp>(args...);
-//   auto names = attrs.get_names();
-
-//   if (attrs.).is_null(){
-//     return;
-//   }
-
-//   if (names.).is_null(){
-//     cpp11::stop("attributes must be a named list");
-//   }
-
-//   r_sym attr_nm;
-
-//   int n = names.length();
-
-//   for (int i = 0; i < n; ++i){
-//     if (!(names.get(i) == blank_r_string)){
-//       attr_nm = internal::as_r<r_sym>(names.get(i));
-//       if (this->address() == internal::address(attrs.get(i))){
-//         SEXP dup_attr = Rf_duplicate(attrs.get(i));
-//         attr::set_attr(sexp, attr_nm, dup_attr);
-//       } else {
-//         attr::set_attr(sexp, attr_nm, attrs.get(i));
-//       }
-//     }
-//   }
-// }
-
 }
 
 #endif

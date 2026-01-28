@@ -12,6 +12,42 @@ namespace cheapr {
 
 namespace internal {
 
+// Assumes no NAs at all
+template<typename T>
+inline constexpr bool can_be_int(T x){
+  constexpr int max_int = std::numeric_limits<int>::max();
+  constexpr int min_int = -max_int; // Doesn't include lowest int (reserved for NA)
+
+  if constexpr (can_definitely_be_int<T>()){
+    return true;
+  } else if constexpr (CppMathType<T>){
+    using data_t = decltype(x);
+    return internal::between_impl<data_t>(x, min_int, max_int);
+  } else if constexpr (RMathType<T>){
+    using data_t = decltype(x.value);
+    return internal::between_impl<data_t>(x.value, min_int, max_int);
+  } else {
+    return false;
+  }
+}
+template<typename T>
+inline constexpr bool can_be_int64(T x){
+  constexpr int64_t max_int64 = std::numeric_limits<int64_t>::max();
+  constexpr int64_t min_int64 = -max_int64; // Doesn't include lowest int (reserved for NA)
+
+  if constexpr (can_definitely_be_int64<T>()){
+    return true;
+  } else if constexpr (CppMathType<T>){
+    using data_t = decltype(x);
+    return internal::between_impl<data_t>(x, min_int64, max_int64);
+  } else if constexpr (RMathType<T>){
+    using data_t = decltype(x.value);
+    return internal::between_impl<data_t>(x.value, min_int64, max_int64);
+  } else {
+    return false;
+  }
+}
+
 // Coerce functions that account for NA
 template<typename T>
 inline r_lgl as_bool(T x){

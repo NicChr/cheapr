@@ -89,6 +89,9 @@ inline constexpr bool is_r_vector_v = is_r_vector<std::remove_cvref_t<T>>::value
 template <typename T>
 concept RVector = internal::is_r_vector_v<T> || is<T, r_dates> || is<T, r_posixcts>;
 
+template <typename T>
+concept RFactor = is<T, r_factors>;
+
 // RObject is any object that can be represented in R - it excludes internal R types like CHARSXP
 // Also, these are all implicitly convertible to `SEXP`
 template <typename T> 
@@ -111,10 +114,49 @@ inline constexpr bool is_sexp = any<T, SEXP, r_sexp>;
 
 namespace internal {
 
+template<typename T>
+inline consteval bool can_definitely_be_int(){
+
+    constexpr int max_int = std::numeric_limits<int>::max();
+
+    using xt = std::remove_cvref_t<T>;
+
+    if constexpr (!CppIntegerType<xt>) return false;
+
+    if constexpr (sizeof(xt) <= sizeof(int)) {
+        if constexpr (std::is_unsigned_v<xt>) {
+             return std::cmp_less_equal(std::numeric_limits<xt>::max(), max_int);
+        }
+        return true;
+    }
+    return false;
+}
+
+template<typename T>
+inline consteval bool can_definitely_be_int64(){
+
+    constexpr int64_t max_int64 = std::numeric_limits<int64_t>::max();
+
+    using xt = std::remove_cvref_t<T>;
+
+    if constexpr (!CppIntegerType<xt>) return false;
+
+    if constexpr (sizeof(xt) <= sizeof(int64_t)) {
+        if constexpr (std::is_unsigned_v<xt>) {
+             return std::cmp_less_equal(std::numeric_limits<xt>::max(), max_int64);
+        }
+        return true; 
+    }
+    return false;
+}
+
 // C/C++ -> RVal typenames
-// While these aren't the only ways of constructing RVals, they are one-to-one and non-ambiguous
+// While these aren't the only ways of constructing RVals, they are many-to-one and non-ambiguous
 template <typename T>
 struct r_val_mapping_impl {};
+
+template <RVal T>
+struct r_val_mapping_impl<T> { using type = T; };
 
 template<> struct r_val_mapping_impl<bool>          { using type = r_lgl; };
 template<> struct r_val_mapping_impl<int>           { using type = r_int; };
@@ -124,6 +166,26 @@ template<> struct r_val_mapping_impl<const char*>   { using type = r_str; };
 template<> struct r_val_mapping_impl<Rcomplex>      { using type = r_cplx; };
 template<> struct r_val_mapping_impl<Rbyte>         { using type = r_raw; };
 template<> struct r_val_mapping_impl<SEXP>          { using type = r_sexp; };
+
+// R vectors & other containers
+template <RVector T>
+struct r_val_mapping_impl<T> { using type = r_sexp; };
+template <RFactor T>
+struct r_val_mapping_impl<T> { using type = r_sexp; };
+
+template<CppMathType T>
+struct r_val_mapping_impl<T> {
+    using type = std::conditional_t<
+    can_definitely_be_int<T>(), 
+    r_int,
+    std::conditional_t<
+        can_definitely_be_int64<T>(), 
+        r_int64,
+        r_dbl
+    >
+>;
+
+};
 
 }
 
@@ -137,29 +199,29 @@ concept ConstructibleToRVal = requires {
 
 // Rules for determining math type promotion in binary operators
 
-namespace internal {
+// namespace internal {
 
-template <RMathType T>
-consteval uint8_t r_math_rank() {
-    if constexpr (is<T, r_lgl>)   return 0;
-    if constexpr (is<T, r_int>)   return 1;
-    if constexpr (is<T, r_int64>) return 2;
-    if constexpr (is<T, r_dbl>)   return 3;
-    return std::numeric_limits<uint8_t>::max();
-}
+// template <RMathType T>
+// consteval uint8_t r_math_rank() {
+//     if constexpr (is<T, r_lgl>)   return 0;
+//     if constexpr (is<T, r_int>)   return 1;
+//     if constexpr (is<T, r_int64>) return 2;
+//     if constexpr (is<T, r_dbl>)   return 3;
+//     return std::numeric_limits<uint8_t>::max();
+// }
 
-template <RMathType T, RMathType U>
-struct common_r_math_impl {
-    static constexpr uint8_t rank_t = r_math_rank<T>();
-    static constexpr uint8_t rank_u = r_math_rank<U>();
+// template <RMathType T, RMathType U>
+// struct common_r_math_impl {
+//     static constexpr uint8_t rank_t = r_math_rank<T>();
+//     static constexpr uint8_t rank_u = r_math_rank<U>();
     
-    using type = std::conditional_t<(rank_t >= rank_u), T, U>;
-};
+//     using type = std::conditional_t<(rank_t >= rank_u), T, U>;
+// };
 
-}
+// }
 
-template <typename T, typename U>
-using common_r_math_t = typename internal::common_r_math_impl<T, U>::type;
+// template <typename T, typename U>
+// using common_r_math_t = typename internal::common_r_math_impl<T, U>::type;
 
 }
 

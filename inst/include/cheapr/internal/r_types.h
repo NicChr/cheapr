@@ -23,6 +23,7 @@ struct r_sexp {
 // value must be declared first (before protector_) as it is the primary data
 public:
   SEXP value;
+  using value_type = SEXP;
 
 private: 
   // cpp11::sexp will automatically protect underlying SEXP
@@ -90,6 +91,7 @@ public:
 // Implicit coercion to bool (not int) provided no NA
 struct r_lgl {
   int value;
+  using value_type = int;
   r_lgl() : value{0} {}
   explicit constexpr r_lgl(int x) : value{x} {}
   explicit constexpr r_lgl(bool x) : value{x} {}  
@@ -130,22 +132,30 @@ inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
 // R integer
 struct r_int {
   int value;
+  using value_type = int;
   r_int() : value{0} {}
-  explicit constexpr r_int(int x) : value{x} {}
+  template <CppMathType T>
+  requires (internal::can_definitely_be_int<T>())
+  explicit constexpr r_int(T x) : value{static_cast<int>(x)} {}
   constexpr operator int() const { return value; }
 };
 // R double
 struct r_dbl {
   double value;
+  using value_type = double;
   r_dbl() : value{0} {}
-  explicit constexpr r_dbl(double x) : value{x} {}
+  template <CppMathType T>
+  explicit constexpr r_dbl(T x) : value{static_cast<double>(x)} {}
   constexpr operator double() const { return value; }
 };
 // R integer64 (closely mimicking how bit64 defines it)
 struct r_int64 {
   int64_t value;
+  using value_type = int64_t;
   r_int64() : value{0} {}
-  explicit constexpr r_int64(int64_t x) : value{x} {}
+  template <CppMathType T>
+  requires (internal::can_definitely_be_int64<T>())
+  explicit constexpr r_int64(T x) : value{static_cast<int64_t>(x)} {}
   constexpr operator int64_t() const { return value; }
 };
 
@@ -155,6 +165,7 @@ struct r_int64 {
 // Furthermore CHARSXP is a special case because it is essentially the only SEXP that already fits into a non-list vector: a character vector
 struct r_str {
   r_sexp value;
+  using value_type = r_sexp;
   r_str() : value{R_BlankString} {}
   // Explicit SEXP/const char* -> r_str
   explicit r_str(SEXP x) : value{x} {}
@@ -175,6 +186,7 @@ struct r_str {
 // Alias type for SYMSXP
 struct r_sym {
   r_sexp value;
+  using value_type = r_sexp;
   r_sym() : value{R_MissingArg} {}
   explicit r_sym(r_sexp x) : value(std::move(x)) {} 
   explicit r_sym(SEXP x) : value{std::move(r_sexp(x, internal::read_only_tag{}))} {} // Assume symbols are already protected
@@ -185,6 +197,7 @@ struct r_sym {
 // Alias type for Rcomplex
 struct r_cplx {
   Rcomplex value;
+  using value_type = Rcomplex;
 
   // Constructors
   constexpr r_cplx() : value{0.0, 0.0} {}
@@ -202,6 +215,7 @@ struct r_cplx {
 // Alias type for r_raw
 struct r_raw {
   Rbyte value;
+  using value_type = Rbyte;
 
   // Constructors
   constexpr r_raw() : value{static_cast<Rbyte>(0)} {}
@@ -217,18 +231,24 @@ inline r_str r_sexp::address() const {
   return r_str(buf);
 }
 
+namespace internal {
 
-// TO-DO: The same thing as below but returning a typename
+template <typename T>
+struct unwrapped_type {
+    using type = T;
+};
 
-// This is the simplest way to write unwrap() but we're relying on compiler to properly optimise it
-// template <typename T>
-// inline constexpr auto unwrap(const T& x){
-//   if constexpr (RVal<T>){
-//       return unwrap(x.value);
-//   } else {
-//     return x;
-//   }
-// }
+template <RVal T>
+struct unwrapped_type<T> {
+    // Recursively call unwrapped_type on the inner type
+    using type = typename unwrapped_type<typename T::value_type>::type;
+};
+
+}
+
+template <typename T>
+using unwrapped_t = typename internal::unwrapped_type<T>::type;
+
 
 // Important (recursive) helper to extract the underlying NON-RVal value
 // Recursively unwrap until we hit a primitive type
@@ -247,83 +267,6 @@ inline constexpr auto unwrap(const T& x){
 inline const r_sexp r_null = r_sexp();
 // Blank string ''
 inline const r_str blank_r_string = r_str();
-
-namespace internal {
-
-template<typename T>
-inline constexpr bool can_definitely_be_int(){
-
-  constexpr int max_int = std::numeric_limits<int>::max();
-
-  using xt = std::remove_cvref_t<T>;
-  if constexpr (CppIntegerType<xt> && sizeof(xt) <= sizeof(int)){
-    // Check if unsigned type's max exceeds signed int range
-    if constexpr (std::is_unsigned_v<xt> && std::numeric_limits<xt>::max() <= static_cast<xt>(max_int)){
-      return true; // Small types can safely cast to int
-    } else {
-      return false;
-    }
-  } else {
-    return false;
-  }
-}
-
-template<typename T>
-inline constexpr bool can_definitely_be_int64(){
-
-  constexpr int64_t max_int64 = std::numeric_limits<int64_t>::max();
-
-  using xt = std::remove_cvref_t<T>;
-  if constexpr (CppIntegerType<xt> && sizeof(xt) <= sizeof(int64_t)){
-    // Check if unsigned type's max exceeds signed int64 range
-    if constexpr (std::is_unsigned_v<xt> && std::numeric_limits<xt>::max() <= static_cast<xt>(max_int64)){
-      return true; // Small types can safely cast to int64
-    } else {
-      return false;
-    }
-  } else {
-    return false;
-  }
-}
-
-
-// Assumes no NAs at all
-template<typename T>
-inline constexpr bool can_be_int(T x){
-  constexpr int max_int = std::numeric_limits<int>::max();
-  constexpr int min_int = -max_int; // Doesn't include lowest int (reserved for NA)
-
-  if constexpr (can_definitely_be_int<T>()){
-    return true;
- } else if constexpr (CppMathType<T>){
-    using data_t = decltype(x);
-    return internal::between_impl<data_t>(x, min_int, max_int);
-  } else if constexpr (RMathType<T>){
-    using data_t = decltype(x.value);
-    return internal::between_impl<data_t>(x.value, min_int, max_int);
-  } else {
-    return false;
-  }
-}
-template<typename T>
-inline constexpr bool can_be_int64(T x){
-  constexpr int64_t max_int64 = std::numeric_limits<int64_t>::max();
-  constexpr int64_t min_int64 = -max_int64; // Doesn't include lowest int (reserved for NA)
-
-  if constexpr (can_definitely_be_int64<T>()){
-    return true;
- } else if constexpr (CppMathType<T>){
-    using data_t = decltype(x);
-    return internal::between_impl<data_t>(x, min_int64, max_int64);
-  } else if constexpr (RMathType<T>){
-    using data_t = decltype(x.value);
-    return internal::between_impl<data_t>(x.value, min_int64, max_int64);
-  } else {
-    return false;
-  }
-}
-
-}
   
 // Coerce to an R type based on the C type (useful for RVal templates)
 template<typename T>
@@ -331,17 +274,7 @@ inline constexpr auto as_r_val(T x) {
   if constexpr (RVal<T>){
     return x;
   } else if constexpr (ConstructibleToRVal<T>){
-    return to_r_val_t<T>(x);
-  } else if constexpr (MathType<T>){
-    if constexpr (internal::can_definitely_be_int<T>()){
-      return r_int(static_cast<int>(x));
-    } else {
-      return r_dbl(static_cast<double>(x));
-    }
-  } else if constexpr (RVector<T>){
-    return x.sexp;
-  } else if constexpr (is<T, SEXP>){
-    return r_sexp(x);
+    return static_cast<to_r_val_t<T>>(x);
   } else {
     static_assert(
       always_false<T>,

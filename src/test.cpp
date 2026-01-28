@@ -505,3 +505,58 @@ bool foo53(){
    return false; 
   }
 }
+
+
+[[cpp11::register]]
+SEXP foo54(SEXP x){
+  auto y = r_vec<r_int>(x);
+  return as_r_val(y);
+}
+
+
+[[cpp11::register]]
+SEXP foo55(SEXP x, SEXP y){
+  auto x_ = r_vec<r_int>(x);
+  auto y_ = r_vec<r_int>(y);  
+  r_size_t n = x_.length();
+  auto z = r_vec<r_int>(n);
+
+  OMP_SIMD
+  for (r_size_t i = 0; i < n; ++i){
+    z.set(i, x_.get(i) + y_.get(i));
+  }
+  return z;
+}
+
+
+[[cpp11::register]]
+SEXP foo56(SEXP x, SEXP y){
+  auto x_ = r_vec<r_dbl>(x);
+  auto y_ = r_vec<r_dbl>(y);  
+  r_size_t n = x_.length();
+  auto z = r_vec<r_dbl>(n);
+
+  OMP_SIMD
+  for (r_size_t i = 0; i < n; ++i){
+    z.set(i, x_.get(i) + y_.get(i));
+  }
+  return z;
+}
+
+[[cpp11::register]]
+SEXP foo57(SEXP x, SEXP y){
+  auto x_ = r_vec<r_dbl>(x);
+  auto y_ = r_vec<r_dbl>(y);  
+  r_size_t n = x_.length();
+  auto z = r_vec<r_dbl>(n);
+
+  auto* RESTRICT p_x = x_.data();
+  auto* RESTRICT p_y = y_.data();
+  auto* RESTRICT p_z = z.data();
+
+  OMP_SIMD
+  for (r_size_t i = 0; i < n; ++i){
+    p_z[i].value = p_x[i].value + p_y[i].value;
+  }
+  return z;
+}
