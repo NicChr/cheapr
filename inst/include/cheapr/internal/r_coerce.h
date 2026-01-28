@@ -28,7 +28,7 @@ inline T as(U x) {
     });
   } else if constexpr (RVector<U> && RVal<T>){
     if (x.length() != 1){
-      cpp11::stop("Vector must be length-1 to be coerced to requested scalar type");
+      abort("Vector must be length-1 to be coerced to requested scalar type");
     }
     return internal::as_r<T>(x.get(0));
   } else if constexpr (RVector<T> && RVal<U>){

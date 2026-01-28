@@ -67,12 +67,12 @@ struct r_df {
     // Constructor from existing SEXP
     explicit r_df(SEXP s) : sexp(s) {
         if (!sexp.is_null() && !attr::inherits1(sexp, "data.frame")) {
-            cpp11::stop("Object is not a data.frame");
+            abort("Object is not a data.frame");
         }
     }
     explicit r_df(r_sexp s) : sexp(std::move(s)) {
         if (!sexp.is_null() && !attr::inherits1(sexp, "data.frame")) {
-            cpp11::stop("Object is not a data.frame");
+            abort("Object is not a data.frame");
         }
     }
 

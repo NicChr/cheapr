@@ -117,11 +117,11 @@ inline void set_old_names(T x, r_vec<r_str> names){
   } else if (names.is_null()){
     attr::set_attr(x, symbol::names_sym, r_null);
   } else if (names.length() != x.length()){
-    cpp11::stop("`length(names)` must equal `length(x)`");
+    abort("`length(names)` must equal `length(x)`");
   } else if (can_have_names(x)){
     Rf_namesgets(x, names);
   } else {
-    cpp11::stop("Cannot add names to unsupported type");
+    abort("Cannot add names to unsupported type");
   }
 }
 template <RObject T>
@@ -188,7 +188,7 @@ template <RObject T>
 inline void modify_attrs_impl(T x, r_vec<r_sexp> attrs) {
 
   if (x.is_null()){
-    cpp11::stop("Cannot add attributes to `NULL`");
+    abort("Cannot add attributes to `NULL`");
   }
 
   if (attrs.is_null()){
@@ -198,7 +198,7 @@ inline void modify_attrs_impl(T x, r_vec<r_sexp> attrs) {
   auto names = attr::get_old_names(attrs);
 
   if (names.is_null()){
-    cpp11::stop("attributes must be a named list");
+    abort("attributes must be a named list");
   }
 
   r_sym attr_nm;

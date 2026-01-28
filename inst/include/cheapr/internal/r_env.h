@@ -14,13 +14,13 @@ inline const r_sexp base_env = r_sexp(R_BaseEnv);
 inline r_sexp get(r_sym sym, r_sexp env, bool inherits = true){
 
   if (TYPEOF(env) != ENVSXP){
-    cpp11::stop("second argument to '%s' must be an environment", __func__);
+    abort("second argument to '%s' must be an environment", __func__);
   }
 
   r_sexp val = r_sexp(inherits ? Rf_findVar(sym, env) : Rf_findVarInFrame(env, sym));
 
   if (val == static_cast<SEXP>(symbol::missing_arg)){
-    cpp11::stop("arg `sym` cannot be missing");
+    abort("arg `sym` cannot be missing");
   } else if (val == static_cast<SEXP>(symbol::unbound_value)){
     return r_null;
   } else if (TYPEOF(val) == PROMSXP){

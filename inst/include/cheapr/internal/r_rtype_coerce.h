@@ -137,7 +137,7 @@ inline r_str as_r_string(T x){
     char buffer[48];
     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
     if (result.ec != std::errc{}) {
-      cpp11::stop("Internal error, increase buffer size for string conversion");
+      abort("Internal error, increase buffer size for string conversion");
     }
     *result.ptr = '\0';  // Null-terminate
     return as_r_string(static_cast<const char *>(buffer));
@@ -145,7 +145,7 @@ inline r_str as_r_string(T x){
     char buffer[48];
     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x);
     if (result.ec != std::errc{}) {
-      cpp11::stop("Internal error, increase buffer size for string conversion");
+      abort("Internal error, increase buffer size for string conversion");
     }
     *result.ptr = '\0';  // Null-terminate
     return as_r_string(static_cast<const char *>(buffer));
@@ -169,7 +169,7 @@ inline r_str as_r_string(T x){
     return as_r_string(static_cast<const char *>(buffer));
   } else if constexpr (is<T, SEXP> || is<T, r_sexp>){
     if (Rf_length(x) != 1){
-      cpp11::stop("`x` is a non-scalar vector and cannot be converted to an `r_str` in %s", __func__);
+      abort("`x` is a non-scalar vector and cannot be converted to an `r_str` in %s", __func__);
     }
     r_sexp str = r_sexp(Rf_coerceVector(x, STRSXP));
     r_str out = r_str(STRING_ELT(str, 0));
@@ -203,7 +203,7 @@ inline r_str as_r_string(T x){
 //     char buffer[48];
 //     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
 //     if (result.ec != std::errc{}) {
-//       cpp11::stop("Internal error, increase buffer size for string conversion");
+//       abort("Internal error, increase buffer size for string conversion");
 //     }
 //     *result.ptr = '\0';  // Null-terminate
 //     return as_r_string(static_cast<const char *>(buffer));
@@ -211,7 +211,7 @@ inline r_str as_r_string(T x){
 //     char buffer[48];
 //     auto result = std::to_chars(buffer, buffer + sizeof(buffer), x);
 //     if (result.ec != std::errc{}) {
-//       cpp11::stop("Internal error, increase buffer size for string conversion");
+//       abort("Internal error, increase buffer size for string conversion");
 //     }
 //     *result.ptr = '\0';  // Null-terminate
 //     return as_r_string(static_cast<const char *>(buffer));
@@ -235,7 +235,7 @@ inline r_str as_r_string(T x){
 //     return as_r_string(static_cast<const char *>(buffer));
 //   } else if constexpr (is<T, SEXP> || is<T, r_sexp>){
 //     if (Rf_length(x) != 1){
-//       cpp11::stop("`x` is a non-scalar vector and cannot be converted to an `r_str` in %s", __func__);
+//       abort("`x` is a non-scalar vector and cannot be converted to an `r_str` in %s", __func__);
 //     }
 //     r_sexp str = r_sexp(Rf_coerceVector(x, STRSXP));
 //     r_str out = as_r_string(CHAR(STRING_ELT(str, 0)));

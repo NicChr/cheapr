@@ -48,7 +48,7 @@ r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) {
   r_size_t n_haystack = haystack.length();
 
   if (n_haystack > r_limits<r_int>::max()){
-    cpp11::stop("Cannot match to a long vector, please use a short character vector");
+    abort("Cannot match to a long vector, please use a short character vector");
   }
 
   // Build hash table
@@ -81,7 +81,7 @@ struct r_factors : public r_vec<r_int> {
 
   explicit r_factors(SEXP x) : r_vec<r_int>(x) {
     if (!is_null() && !attr::inherits1(*this, "factor")){
-      cpp11::stop("`SEXP` must be a factor");
+      abort("`SEXP` must be a factor");
     }
   }
 

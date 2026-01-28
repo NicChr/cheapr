@@ -145,7 +145,7 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
     if (names.is_null()){
       Rf_setAttrib(sexp, symbol::names_sym, r_null);
     } else if (names.length() != sexp.length()){
-      cpp11::stop("`length(names)` must equal `length(x)`");
+      abort("`length(names)` must equal `length(x)`");
     } else {
       Rf_namesgets(sexp, names);
     }
@@ -312,7 +312,7 @@ decltype(auto) visit_vector(SEXP x, F&& f) {
   case VECSXP:          return f(r_vec<r_sexp>(x));
   case CPLXSXP:         return f(r_vec<r_cplx>(x));
   case RAWSXP:          return f(r_vec<r_raw>(x));
-  default:              cpp11::stop("`x` must be a vector");
+  default:              abort("`x` must be a vector");
   }
 }
 

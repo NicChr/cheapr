@@ -182,7 +182,7 @@ inline const char *r_type_char(SEXP x){
 // initialise template with specialisations
 template<typename T>
 inline SEXP init(r_size_t n, bool with_na) {
-  cpp11::stop("Unimplemented initialisation");
+  abort("Unimplemented initialisation");
   return r_null;
 }
 
@@ -299,14 +299,14 @@ inline SEXP init<r_data_frame_t>(r_size_t n, bool with_na) {
 
 template<>
 inline SEXP init<r_unknown_t>(r_size_t n, bool with_na) {
-  cpp11::stop("Don't know how to initialise unknown type");
+  abort("Don't know how to initialise unknown type");
   return r_null;
 }
 
 inline void check_casted_length(SEXP x, SEXP out){
 
   if (vec::length(x) != vec::length(out)){
-    cpp11::stop(
+    abort(
       "Bad cast from type %s to type %s. \n`vec::length(x)` %lld doesn't match returned length of %lld",
       r_type_char(x),
       r_type_char(out),
@@ -317,7 +317,7 @@ inline void check_casted_length(SEXP x, SEXP out){
 }
 
 inline void signal_bad_cast(SEXP from, SEXP to){
-  cpp11::stop(
+  abort(
     "Don't know how to cast from type %s to type %s",
     r_type_char(from), r_type_char(to)
   );
@@ -326,7 +326,7 @@ inline void signal_bad_cast(SEXP from, SEXP to){
 // cast template with specialisations
 template<typename T>
 inline SEXP cast(SEXP x, SEXP y) {
-  cpp11::stop("Unimplemented cast specialisation");
+  abort("Unimplemented cast specialisation");
   return r_null;
 }
 

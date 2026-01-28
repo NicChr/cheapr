@@ -100,7 +100,7 @@ inline constexpr void recycle_index(T& v, const T size) {
 }
 
 template <typename... Args>
-inline void stop(const char *fmt, Args... args){
+[[noreturn]] inline void abort(const char *fmt, Args... args){
   cpp11::stop(fmt, args...);
 }
 

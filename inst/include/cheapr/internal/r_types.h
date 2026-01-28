@@ -178,7 +178,7 @@ inline constexpr r_lgl r_na{std::numeric_limits<int>::min()};
 
   inline r_lgl::operator bool() const {
     if (is_na()){
-    cpp11::stop("Cannot implicitly convert NA to bool, please check");
+    abort("Cannot implicitly convert NA to bool, please check");
     }
     return static_cast<bool>(value);
   }
@@ -350,13 +350,13 @@ template<typename T>
 inline constexpr auto as_r_scalar(T x) {
   if constexpr (RVector<T>){
     if (x.length() != 1){
-      cpp11::stop("Vector must be length-1 to be coerced to a scalar");
+      abort("Vector must be length-1 to be coerced to a scalar");
     }
     auto out = x.get(0);
     
     // Only happens if x is a list
     if (!RScalar<decltype(out)>){
-      cpp11::stop("`x` cannot be coereced to a scalar, first list-element is not a scalar");
+      abort("`x` cannot be coereced to a scalar, first list-element is not a scalar");
     }
     return out;
   }

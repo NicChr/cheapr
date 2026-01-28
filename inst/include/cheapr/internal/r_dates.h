@@ -22,7 +22,7 @@ public:
 
   explicit r_dates(SEXP x) : r_vec<r_int>(x) {
     if (!is_null() && !attr::inherits1(this->sexp, "Date")){
-      cpp11::stop("`SEXP` must be a Date");
+      abort("`SEXP` must be a Date");
     }
   }
 

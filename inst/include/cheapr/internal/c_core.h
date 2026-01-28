@@ -56,7 +56,7 @@ inline r_sexp shallow_copy(r_sexp x){
 // Compact seq generator as ALTREP, same as `seq_len()`
 inline r_vec<r_int> compact_seq_len(r_size_t n){
   if (n < 0){
-    cpp11::stop("`n` must be >= 0");
+    abort("`n` must be >= 0");
   }
   if (n == 0){
     return r_vec<r_int>();
