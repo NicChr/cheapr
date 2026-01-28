@@ -86,7 +86,7 @@ inline r_vec<r_sexp> get_attrs(T x){
   r_vec<r_sexp> out(n);
   r_vec<r_str> names(n);
 
-  SEXP current = attrs.value;
+  SEXP current = unwrap(attrs);
 
   for (r_size_t i = 0; i < n; ++i){
     out.set(i, r_sexp(CAR(current)));

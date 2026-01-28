@@ -35,7 +35,7 @@ r_dbl sum(r_vec<r_dbl> x, bool na_rm){
     if (na_rm){
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += (is_na(x.get(i))) ? 0 : unwrap(p_x[i]);
+            out_ += is_na(x.get(i)) ? 0 : unwrap(p_x[i]);
         }
     } else {
         #pragma omp simd reduction(+:out_)
@@ -60,19 +60,14 @@ auto sum_int(r_vec<T> x, bool na_rm = false){
             out_ += (is_na(x.get(i))) ? int64_t(0) : unwrap(p_x[i]);
         }
     } else {
-        r_int64 temp(out_);
-        #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            if (is_na(x.get(i)) || is_na(temp)){
-                temp = na_value<r_int64>();
-                // Move underlying value of temp into out_ directly
-                out_ = std::move(temp.value);
-            } else {
-                out_ += unwrap(p_x[i]);
+            if (is_na(x.get(i))){
+                return na_value<r_int64>();
             }
+            out_ += unwrap(p_x[i]);
         }
     }
-    return out_;
+    return r_int64(out_);
 }
 
 template <RMathType T>
