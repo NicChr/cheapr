@@ -325,7 +325,7 @@ SEXP foo36(int n) {
 }
 
 [[cpp11::register]]
-SEXP foo37(SEXP x, int n) {
+SEXP foo_rep_len(SEXP x, int n) {
   return internal::visit_vector(x, [&](auto xvec) -> SEXP {
     return xvec.rep_len(n);
   });
@@ -333,9 +333,44 @@ SEXP foo37(SEXP x, int n) {
 
 
 [[cpp11::register]]
-SEXP foo38(SEXP x, bool na_rm){
-  r_vec<r_dbl> y = r_vec<r_dbl>(x);
-  return as_vector(sum(y, na_rm));
+SEXP foo_sum(SEXP x, bool na_rm) {
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    using T = typename decltype(xvec)::data_type;
+    if constexpr (any<T, r_int, r_dbl>){
+      return as_vector(sum(xvec, na_rm));
+    } else {
+      return r_null;
+    }
+  });
+}
+[[cpp11::register]]
+SEXP foo_sum_int(SEXP x, bool na_rm) {
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    using T = typename decltype(xvec)::data_type;
+    if constexpr (any<T, r_int>){
+      return as_vector(sum_int(xvec, na_rm));
+    } else {
+      return r_null;
+    }
+  });
+}
+[[cpp11::register]]
+SEXP foo_range(SEXP x, bool na_rm) {
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    using T = typename decltype(xvec)::data_type;
+    if constexpr (any<T, r_int, r_dbl>){
+      return as_vector(range(xvec, na_rm));
+    } else {
+      return r_null;
+    }
+  });
+}
+
+[[cpp11::register]]
+SEXP foo_na_count(SEXP x) {
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    return as<r_vec<r_int>>(xvec.na_count());
+  });
 }
 
 

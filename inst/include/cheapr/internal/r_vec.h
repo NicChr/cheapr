@@ -177,6 +177,42 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
     return out;
   }
 
+  r_size_t na_count() const {
+    
+    r_size_t n = length();
+    r_size_t out(0);
+
+    if constexpr (RPtrWritableType<T>){
+      int n_threads = internal::calc_threads(n);
+
+      if (n_threads > 1){
+        #pragma omp parallel for simd num_threads(n_threads) reduction(+:out)
+        for (r_size_t i = 0; i < n; ++i){
+          out += cheapr::is_na(get(i));
+        }
+      } else {
+        #pragma omp simd reduction(+:out)
+        for (r_size_t i = 0; i < n; ++i){
+          out += cheapr::is_na(get(i));
+        }
+      }
+    } else {
+      for (r_size_t i = 0; i < n; ++i){
+        out += cheapr::is_na(get(i));
+      }
+    }
+
+    return out;
+  }
+
+  bool any_na() const {
+    return na_count() > 0;
+  }
+
+  bool all_na() const {
+    return na_count() == length();
+  }
+
   template <typename U>
   void fill(r_size_t start, r_size_t n, const U val){
     auto val2 = unwrap(internal::as_r<T>(val));

@@ -164,12 +164,24 @@ foo36 <- function(n) {
   .Call(`_cheapr_foo36`, n)
 }
 
-foo37 <- function(x, n) {
-  .Call(`_cheapr_foo37`, x, n)
+foo_rep_len <- function(x, n) {
+  .Call(`_cheapr_foo_rep_len`, x, n)
 }
 
-foo38 <- function(x, na_rm) {
-  .Call(`_cheapr_foo38`, x, na_rm)
+foo_sum <- function(x, na_rm) {
+  .Call(`_cheapr_foo_sum`, x, na_rm)
+}
+
+foo_sum_int <- function(x, na_rm) {
+  .Call(`_cheapr_foo_sum_int`, x, na_rm)
+}
+
+foo_range <- function(x, na_rm) {
+  .Call(`_cheapr_foo_range`, x, na_rm)
+}
+
+foo_na_count <- function(x) {
+  .Call(`_cheapr_foo_na_count`, x)
 }
 
 foo39 <- function(x, na_rm) {

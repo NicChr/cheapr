@@ -6,7 +6,7 @@
 namespace cheapr {
     
 template <RMathType T>
-r_dbl sum(r_vec<T> x, bool na_rm = false){
+r_dbl sum(const r_vec<T> &x, bool na_rm = false){
     r_size_t n = x.length();
     double out_ = 0;
     const auto* RESTRICT p_x = x.data();
@@ -14,12 +14,14 @@ r_dbl sum(r_vec<T> x, bool na_rm = false){
     if (na_rm){
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += (is_na(x.get(i))) ? 0 : unwrap(p_x[i]);
+            out_ += (is_na(T(p_x[i]))) ? 0 : p_x[i];
         }
     } else {
-        #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ = (is_na(x.get(i)) || is_na(as_r_val(out_))) ? unwrap(na_value<r_dbl>()) : (out_ + unwrap(p_x[i]));
+            if (is_na(T(p_x[i]))){
+                return na_value<r_dbl>();
+            }
+            out_ += p_x[i];
         }
     }
     return r_dbl(out_);
@@ -27,7 +29,7 @@ r_dbl sum(r_vec<T> x, bool na_rm = false){
 
 // Optimisation for r_dbl
 template <>
-r_dbl sum(r_vec<r_dbl> x, bool na_rm){
+r_dbl sum(const r_vec<r_dbl> &x, bool na_rm){
     r_size_t n = x.length();
     double out_ = 0;
     const auto* RESTRICT p_x = x.data();
@@ -35,12 +37,12 @@ r_dbl sum(r_vec<r_dbl> x, bool na_rm){
     if (na_rm){
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += is_na(x.get(i)) ? 0 : unwrap(p_x[i]);
+            out_ += is_na(r_dbl(p_x[i])) ? 0 : p_x[i];
         }
     } else {
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += unwrap(p_x[i]);
+            out_ += p_x[i];
         }
         
     }
@@ -49,7 +51,7 @@ r_dbl sum(r_vec<r_dbl> x, bool na_rm){
 
 // Integer specific sum (user must accept there may be overflow)
 template <RIntegerType T>
-auto sum_int(r_vec<T> x, bool na_rm = false){
+auto sum_int(const r_vec<T> &x, bool na_rm = false){
     r_size_t n = x.length();
     int64_t out_ = 0;
     const auto* RESTRICT p_x = x.data();
@@ -57,21 +59,21 @@ auto sum_int(r_vec<T> x, bool na_rm = false){
     if (na_rm){
         #pragma omp simd reduction(+:out_)
         for (r_size_t i = 0; i < n; ++i){
-            out_ += (is_na(x.get(i))) ? int64_t(0) : unwrap(p_x[i]);
+            out_ += (is_na(as_r_val(p_x[i]))) ? int64_t(0) : p_x[i];
         }
     } else {
         for (r_size_t i = 0; i < n; ++i){
-            if (is_na(x.get(i))){
+            if (is_na(as_r_val(p_x[i]))){
                 return na_value<r_int64>();
             }
-            out_ += unwrap(p_x[i]);
+            out_ += p_x[i];
         }
     }
     return r_int64(out_);
 }
 
 template <RMathType T>
-r_vec<T> range(r_vec<T> x, bool na_rm = false){
+r_vec<T> range(const r_vec<T> &x, bool na_rm = false){
     
     r_size_t n = x.length();
 
@@ -101,7 +103,7 @@ r_vec<T> range(r_vec<T> x, bool na_rm = false){
 
 // SIMD optimisation for integer types
 template <RIntegerType T>
-r_vec<T> range(r_vec<T> x, bool na_rm){
+r_vec<T> range(const r_vec<T> &x, bool na_rm){
     
     r_size_t n = x.length();
 
@@ -120,17 +122,17 @@ r_vec<T> range(r_vec<T> x, bool na_rm){
         #pragma omp simd reduction(std::min:lo_) reduction(std::max:hi_)
         for (r_size_t i = 0; i < n; ++i){
             // Ignore NA for min()
-            lo_ = is_na(x.get(i)) ? lo_ : std::min(lo_, unwrap(p_x[i]));
+            lo_ = is_na(T(p_x[i])) ? lo_ : std::min(lo_, p_x[i]);
             // No need to ignore NA for max() because NA is defined as lowest representable value
-            hi_ = std::max(hi_, unwrap(p_x[i]));
+            hi_ = std::max(hi_, p_x[i]);
         }        
         lo = T(lo_);
         hi = T(hi_);
     } else {
         #pragma omp simd reduction(std::min:lo_) reduction(std::max:hi_)
         for (r_size_t i = 0; i < n; ++i){
-            lo_ = std::min(lo_, unwrap(p_x[i])); 
-            hi_ = std::max(hi_, unwrap(p_x[i]));
+            lo_ = std::min(lo_, p_x[i]); 
+            hi_ = std::max(hi_, p_x[i]);
         }
         lo = T(lo_);
         hi = T(hi_);
@@ -148,16 +150,16 @@ r_vec<T> range(r_vec<T> x, bool na_rm){
 }
 
 template <RMathType T>
-T min(r_vec<T> x, bool na_rm = false){
+T min(const r_vec<T> &x, bool na_rm = false){
     return range(x, na_rm).get(0);
 }
 template <RMathType T>
-T max(r_vec<T> x, bool na_rm = false){
+T max(const r_vec<T> &x, bool na_rm = false){
     return range(x, na_rm).get(1);
 }
 
 template <RMathType T>
-r_vec<T> abs(r_vec<T> x){
+r_vec<T> abs(const r_vec<T> &x){
     r_size_t n = x.length();
     r_vec<T> out(n);
     int n_threads = internal::calc_threads(n);

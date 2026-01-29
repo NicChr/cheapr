@@ -293,17 +293,38 @@ extern "C" SEXP _cheapr_foo36(SEXP n) {
   END_CPP11
 }
 // test.cpp
-SEXP foo37(SEXP x, int n);
-extern "C" SEXP _cheapr_foo37(SEXP x, SEXP n) {
+SEXP foo_rep_len(SEXP x, int n);
+extern "C" SEXP _cheapr_foo_rep_len(SEXP x, SEXP n) {
   BEGIN_CPP11
-    return cpp11::as_sexp(foo37(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(n)));
+    return cpp11::as_sexp(foo_rep_len(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<int>>(n)));
   END_CPP11
 }
 // test.cpp
-SEXP foo38(SEXP x, bool na_rm);
-extern "C" SEXP _cheapr_foo38(SEXP x, SEXP na_rm) {
+SEXP foo_sum(SEXP x, bool na_rm);
+extern "C" SEXP _cheapr_foo_sum(SEXP x, SEXP na_rm) {
   BEGIN_CPP11
-    return cpp11::as_sexp(foo38(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
+    return cpp11::as_sexp(foo_sum(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
+  END_CPP11
+}
+// test.cpp
+SEXP foo_sum_int(SEXP x, bool na_rm);
+extern "C" SEXP _cheapr_foo_sum_int(SEXP x, SEXP na_rm) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_sum_int(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
+  END_CPP11
+}
+// test.cpp
+SEXP foo_range(SEXP x, bool na_rm);
+extern "C" SEXP _cheapr_foo_range(SEXP x, SEXP na_rm) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_range(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<bool>>(na_rm)));
+  END_CPP11
+}
+// test.cpp
+SEXP foo_na_count(SEXP x);
+extern "C" SEXP _cheapr_foo_na_count(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_na_count(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // test.cpp
@@ -449,69 +470,72 @@ extern "C" SEXP _cheapr_foo59() {
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_cheapr_bar",    (DL_FUNC) &_cheapr_bar,    1},
-    {"_cheapr_foo",    (DL_FUNC) &_cheapr_foo,    1},
-    {"_cheapr_foo10",  (DL_FUNC) &_cheapr_foo10,  1},
-    {"_cheapr_foo11",  (DL_FUNC) &_cheapr_foo11,  1},
-    {"_cheapr_foo12",  (DL_FUNC) &_cheapr_foo12,  2},
-    {"_cheapr_foo13",  (DL_FUNC) &_cheapr_foo13,  1},
-    {"_cheapr_foo14",  (DL_FUNC) &_cheapr_foo14,  0},
-    {"_cheapr_foo15",  (DL_FUNC) &_cheapr_foo15,  0},
-    {"_cheapr_foo16",  (DL_FUNC) &_cheapr_foo16,  1},
-    {"_cheapr_foo17",  (DL_FUNC) &_cheapr_foo17,  1},
-    {"_cheapr_foo18",  (DL_FUNC) &_cheapr_foo18,  1},
-    {"_cheapr_foo2",   (DL_FUNC) &_cheapr_foo2,   0},
-    {"_cheapr_foo20",  (DL_FUNC) &_cheapr_foo20,  0},
-    {"_cheapr_foo21",  (DL_FUNC) &_cheapr_foo21,  1},
-    {"_cheapr_foo22",  (DL_FUNC) &_cheapr_foo22,  1},
-    {"_cheapr_foo23",  (DL_FUNC) &_cheapr_foo23,  0},
-    {"_cheapr_foo24",  (DL_FUNC) &_cheapr_foo24,  1},
-    {"_cheapr_foo25",  (DL_FUNC) &_cheapr_foo25,  2},
-    {"_cheapr_foo26",  (DL_FUNC) &_cheapr_foo26,  0},
-    {"_cheapr_foo27",  (DL_FUNC) &_cheapr_foo27,  1},
-    {"_cheapr_foo28",  (DL_FUNC) &_cheapr_foo28,  2},
-    {"_cheapr_foo29",  (DL_FUNC) &_cheapr_foo29,  1},
-    {"_cheapr_foo3",   (DL_FUNC) &_cheapr_foo3,   1},
-    {"_cheapr_foo30",  (DL_FUNC) &_cheapr_foo30,  0},
-    {"_cheapr_foo31",  (DL_FUNC) &_cheapr_foo31,  0},
-    {"_cheapr_foo32",  (DL_FUNC) &_cheapr_foo32,  0},
-    {"_cheapr_foo33",  (DL_FUNC) &_cheapr_foo33,  0},
-    {"_cheapr_foo34",  (DL_FUNC) &_cheapr_foo34,  0},
-    {"_cheapr_foo35",  (DL_FUNC) &_cheapr_foo35,  0},
-    {"_cheapr_foo36",  (DL_FUNC) &_cheapr_foo36,  1},
-    {"_cheapr_foo37",  (DL_FUNC) &_cheapr_foo37,  2},
-    {"_cheapr_foo38",  (DL_FUNC) &_cheapr_foo38,  2},
-    {"_cheapr_foo39",  (DL_FUNC) &_cheapr_foo39,  2},
-    {"_cheapr_foo4",   (DL_FUNC) &_cheapr_foo4,   1},
-    {"_cheapr_foo40",  (DL_FUNC) &_cheapr_foo40,  2},
-    {"_cheapr_foo41",  (DL_FUNC) &_cheapr_foo41,  1},
-    {"_cheapr_foo42",  (DL_FUNC) &_cheapr_foo42,  1},
-    {"_cheapr_foo43",  (DL_FUNC) &_cheapr_foo43,  1},
-    {"_cheapr_foo44",  (DL_FUNC) &_cheapr_foo44,  1},
-    {"_cheapr_foo46",  (DL_FUNC) &_cheapr_foo46,  0},
-    {"_cheapr_foo47",  (DL_FUNC) &_cheapr_foo47,  1},
-    {"_cheapr_foo48",  (DL_FUNC) &_cheapr_foo48,  1},
-    {"_cheapr_foo49",  (DL_FUNC) &_cheapr_foo49,  2},
-    {"_cheapr_foo5",   (DL_FUNC) &_cheapr_foo5,   1},
-    {"_cheapr_foo50",  (DL_FUNC) &_cheapr_foo50,  2},
-    {"_cheapr_foo51",  (DL_FUNC) &_cheapr_foo51,  1},
-    {"_cheapr_foo52",  (DL_FUNC) &_cheapr_foo52,  0},
-    {"_cheapr_foo53",  (DL_FUNC) &_cheapr_foo53,  0},
-    {"_cheapr_foo54",  (DL_FUNC) &_cheapr_foo54,  1},
-    {"_cheapr_foo55",  (DL_FUNC) &_cheapr_foo55,  2},
-    {"_cheapr_foo56",  (DL_FUNC) &_cheapr_foo56,  2},
-    {"_cheapr_foo57",  (DL_FUNC) &_cheapr_foo57,  2},
-    {"_cheapr_foo58",  (DL_FUNC) &_cheapr_foo58,  1},
-    {"_cheapr_foo59",  (DL_FUNC) &_cheapr_foo59,  0},
-    {"_cheapr_foo6",   (DL_FUNC) &_cheapr_foo6,   1},
-    {"_cheapr_foo7",   (DL_FUNC) &_cheapr_foo7,   1},
-    {"_cheapr_foo8",   (DL_FUNC) &_cheapr_foo8,   0},
-    {"_cheapr_foo9",   (DL_FUNC) &_cheapr_foo9,   0},
-    {"_cheapr_foobar", (DL_FUNC) &_cheapr_foobar, 1},
-    {"_cheapr_foofoo", (DL_FUNC) &_cheapr_foofoo, 0},
-    {"_cheapr_ok",     (DL_FUNC) &_cheapr_ok,     0},
-    {"_cheapr_yeah",   (DL_FUNC) &_cheapr_yeah,   1},
-    {"_cheapr_yeah2",  (DL_FUNC) &_cheapr_yeah2,  1},
+    {"_cheapr_bar",          (DL_FUNC) &_cheapr_bar,          1},
+    {"_cheapr_foo",          (DL_FUNC) &_cheapr_foo,          1},
+    {"_cheapr_foo10",        (DL_FUNC) &_cheapr_foo10,        1},
+    {"_cheapr_foo11",        (DL_FUNC) &_cheapr_foo11,        1},
+    {"_cheapr_foo12",        (DL_FUNC) &_cheapr_foo12,        2},
+    {"_cheapr_foo13",        (DL_FUNC) &_cheapr_foo13,        1},
+    {"_cheapr_foo14",        (DL_FUNC) &_cheapr_foo14,        0},
+    {"_cheapr_foo15",        (DL_FUNC) &_cheapr_foo15,        0},
+    {"_cheapr_foo16",        (DL_FUNC) &_cheapr_foo16,        1},
+    {"_cheapr_foo17",        (DL_FUNC) &_cheapr_foo17,        1},
+    {"_cheapr_foo18",        (DL_FUNC) &_cheapr_foo18,        1},
+    {"_cheapr_foo2",         (DL_FUNC) &_cheapr_foo2,         0},
+    {"_cheapr_foo20",        (DL_FUNC) &_cheapr_foo20,        0},
+    {"_cheapr_foo21",        (DL_FUNC) &_cheapr_foo21,        1},
+    {"_cheapr_foo22",        (DL_FUNC) &_cheapr_foo22,        1},
+    {"_cheapr_foo23",        (DL_FUNC) &_cheapr_foo23,        0},
+    {"_cheapr_foo24",        (DL_FUNC) &_cheapr_foo24,        1},
+    {"_cheapr_foo25",        (DL_FUNC) &_cheapr_foo25,        2},
+    {"_cheapr_foo26",        (DL_FUNC) &_cheapr_foo26,        0},
+    {"_cheapr_foo27",        (DL_FUNC) &_cheapr_foo27,        1},
+    {"_cheapr_foo28",        (DL_FUNC) &_cheapr_foo28,        2},
+    {"_cheapr_foo29",        (DL_FUNC) &_cheapr_foo29,        1},
+    {"_cheapr_foo3",         (DL_FUNC) &_cheapr_foo3,         1},
+    {"_cheapr_foo30",        (DL_FUNC) &_cheapr_foo30,        0},
+    {"_cheapr_foo31",        (DL_FUNC) &_cheapr_foo31,        0},
+    {"_cheapr_foo32",        (DL_FUNC) &_cheapr_foo32,        0},
+    {"_cheapr_foo33",        (DL_FUNC) &_cheapr_foo33,        0},
+    {"_cheapr_foo34",        (DL_FUNC) &_cheapr_foo34,        0},
+    {"_cheapr_foo35",        (DL_FUNC) &_cheapr_foo35,        0},
+    {"_cheapr_foo36",        (DL_FUNC) &_cheapr_foo36,        1},
+    {"_cheapr_foo39",        (DL_FUNC) &_cheapr_foo39,        2},
+    {"_cheapr_foo4",         (DL_FUNC) &_cheapr_foo4,         1},
+    {"_cheapr_foo40",        (DL_FUNC) &_cheapr_foo40,        2},
+    {"_cheapr_foo41",        (DL_FUNC) &_cheapr_foo41,        1},
+    {"_cheapr_foo42",        (DL_FUNC) &_cheapr_foo42,        1},
+    {"_cheapr_foo43",        (DL_FUNC) &_cheapr_foo43,        1},
+    {"_cheapr_foo44",        (DL_FUNC) &_cheapr_foo44,        1},
+    {"_cheapr_foo46",        (DL_FUNC) &_cheapr_foo46,        0},
+    {"_cheapr_foo47",        (DL_FUNC) &_cheapr_foo47,        1},
+    {"_cheapr_foo48",        (DL_FUNC) &_cheapr_foo48,        1},
+    {"_cheapr_foo49",        (DL_FUNC) &_cheapr_foo49,        2},
+    {"_cheapr_foo5",         (DL_FUNC) &_cheapr_foo5,         1},
+    {"_cheapr_foo50",        (DL_FUNC) &_cheapr_foo50,        2},
+    {"_cheapr_foo51",        (DL_FUNC) &_cheapr_foo51,        1},
+    {"_cheapr_foo52",        (DL_FUNC) &_cheapr_foo52,        0},
+    {"_cheapr_foo53",        (DL_FUNC) &_cheapr_foo53,        0},
+    {"_cheapr_foo54",        (DL_FUNC) &_cheapr_foo54,        1},
+    {"_cheapr_foo55",        (DL_FUNC) &_cheapr_foo55,        2},
+    {"_cheapr_foo56",        (DL_FUNC) &_cheapr_foo56,        2},
+    {"_cheapr_foo57",        (DL_FUNC) &_cheapr_foo57,        2},
+    {"_cheapr_foo58",        (DL_FUNC) &_cheapr_foo58,        1},
+    {"_cheapr_foo59",        (DL_FUNC) &_cheapr_foo59,        0},
+    {"_cheapr_foo6",         (DL_FUNC) &_cheapr_foo6,         1},
+    {"_cheapr_foo7",         (DL_FUNC) &_cheapr_foo7,         1},
+    {"_cheapr_foo8",         (DL_FUNC) &_cheapr_foo8,         0},
+    {"_cheapr_foo9",         (DL_FUNC) &_cheapr_foo9,         0},
+    {"_cheapr_foo_na_count", (DL_FUNC) &_cheapr_foo_na_count, 1},
+    {"_cheapr_foo_range",    (DL_FUNC) &_cheapr_foo_range,    2},
+    {"_cheapr_foo_rep_len",  (DL_FUNC) &_cheapr_foo_rep_len,  2},
+    {"_cheapr_foo_sum",      (DL_FUNC) &_cheapr_foo_sum,      2},
+    {"_cheapr_foo_sum_int",  (DL_FUNC) &_cheapr_foo_sum_int,  2},
+    {"_cheapr_foobar",       (DL_FUNC) &_cheapr_foobar,       1},
+    {"_cheapr_foofoo",       (DL_FUNC) &_cheapr_foofoo,       0},
+    {"_cheapr_ok",           (DL_FUNC) &_cheapr_ok,           0},
+    {"_cheapr_yeah",         (DL_FUNC) &_cheapr_yeah,         1},
+    {"_cheapr_yeah2",        (DL_FUNC) &_cheapr_yeah2,        1},
     {NULL, NULL, 0}
 };
 }
