@@ -260,8 +260,12 @@ foo58 <- function(x) {
   .Call(`_cheapr_foo58`, x)
 }
 
-foo59 <- function() {
-  .Call(`_cheapr_foo59`)
+foo_make_list <- function() {
+  .Call(`_cheapr_foo_make_list`)
+}
+
+foo_make_list2 <- function() {
+  .Call(`_cheapr_foo_make_list2`)
 }
 
 foo_add1 <- function(x, y) {
@@ -270,4 +274,20 @@ foo_add1 <- function(x, y) {
 
 foo_add <- function(x) {
   .Call(`_cheapr_foo_add`, x)
+}
+
+foo_vec_add <- function(x) {
+  .Call(`_cheapr_foo_vec_add`, x)
+}
+
+foo_vec_add2 <- function(x) {
+  .Call(`_cheapr_foo_vec_add2`, x)
+}
+
+foo_vec_add3 <- function(x) {
+  .Call(`_cheapr_foo_vec_add3`, x)
+}
+
+foo_vec_add4 <- function(x, y) {
+  .Call(`_cheapr_foo_vec_add4`, x, y)
 }

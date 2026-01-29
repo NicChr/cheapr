@@ -612,8 +612,13 @@ SEXP foo58(SEXP x) {
 
 
 [[cpp11::register]]
-SEXP foo59(){
-  return make_vec<r_sexp>(arg("first") = "no", arg("second") = "yes");
+SEXP foo_make_list(){
+  return make_vec<r_sexp>(arg("first") = "no", arg("second") = "yes", "maybe");
+}
+
+[[cpp11::register]]
+SEXP foo_make_list2(){
+  return make_vec<r_sexp>(arg("first") = r_str("no"), arg("second") = r_str("yes"), r_str("maybe"));
 }
 
 [[cpp11::register]]
@@ -646,4 +651,30 @@ SEXP foo_add(SEXP x){
       return r_null;
     }
   });
+}
+
+[[cpp11::register]]
+SEXP foo_vec_add(SEXP x){
+  auto xvec = as<r_vec<r_int>>(x);
+  return xvec + 2;
+}
+
+[[cpp11::register]]
+SEXP foo_vec_add2(SEXP x){
+  auto xvec = as<r_vec<r_int>>(x);
+  return 2 + xvec;
+}
+
+[[cpp11::register]]
+SEXP foo_vec_add3(SEXP x){
+  auto xvec = as<r_vec<r_int>>(x);
+  return xvec + xvec;
+}
+
+
+[[cpp11::register]]
+SEXP foo_vec_add4(SEXP x, SEXP y){
+  auto xvec = as<r_vec<r_int>>(x);
+  auto yvec = as<r_vec<r_int>>(y);
+  return xvec + yvec;
 }
