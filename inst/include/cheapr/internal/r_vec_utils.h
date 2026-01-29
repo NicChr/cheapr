@@ -11,7 +11,7 @@ namespace cheapr {
 namespace internal {
 
 template <typename T>
-using vec_ptr_t = std::conditional_t<std::is_const_v<T>, const unwrapped_t<T>*, unwrapped_t<T>*>;
+using vec_ptr_t = std::conditional_t<std::is_const_v<T>, const unwrap_t<T>*, unwrap_t<T>*>;
 
 inline r_sexp new_vec(SEXPTYPE type, r_size_t n){
   return r_sexp(cpp11::safe[Rf_allocVector](type, n));

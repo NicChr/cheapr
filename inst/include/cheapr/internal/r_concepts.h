@@ -193,11 +193,11 @@ struct r_val_mapping_impl<T> {
 }
 
 template <typename T>
-using to_r_val_t = typename internal::r_val_mapping_impl<std::decay_t<T>>::type;
+using as_r_val_t = typename internal::r_val_mapping_impl<std::decay_t<T>>::type;
 
 template <typename T>
 concept CastableToRVal = requires {
-    typename to_r_val_t<T>;
+    typename as_r_val_t<T>;
 };
 
 // Rules for determining math type promotion in binary operators
@@ -216,8 +216,8 @@ consteval uint8_t r_math_rank() {
 template <MathType T, MathType U>
 requires AtLeastOneRMathType<T, U>
 struct common_r_math_impl {
-    using lhs_math_t = to_r_val_t<T>;
-    using rhs_math_t = to_r_val_t<U>;
+    using lhs_math_t = as_r_val_t<T>;
+    using rhs_math_t = as_r_val_t<U>;
 
     static constexpr uint8_t rank_t = r_math_rank<lhs_math_t>();
     static constexpr uint8_t rank_u = r_math_rank<rhs_math_t>();

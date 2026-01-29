@@ -15,7 +15,7 @@ struct r_vec {
   // Initialise read-only ptr to: 
   // SEXP - If T is `r_sexp` or `r_str`
   // T - Otherwise
-  using ptr_t = std::conditional_t<RPtrWritableType<T>, unwrapped_t<T>*, const SEXP*>;  
+  using ptr_t = std::conditional_t<RPtrWritableType<T>, unwrap_t<T>*, const SEXP*>;  
   ptr_t m_ptr = nullptr;
 
   public: 

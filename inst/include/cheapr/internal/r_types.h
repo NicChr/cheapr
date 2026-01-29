@@ -308,7 +308,7 @@ struct unwrapped_type<T> {
 }
 
 template <typename T>
-using unwrapped_t = typename internal::unwrapped_type<T>::type;
+using unwrap_t = typename internal::unwrapped_type<T>::type;
 
 
 // Important (recursive) helper to extract the underlying NON-RVal value
@@ -337,7 +337,7 @@ inline constexpr auto as_r_val(T x) {
   if constexpr (RVal<T>){
     return x;
   } else if constexpr (CastableToRVal<T>){
-    return static_cast<to_r_val_t<T>>(x);
+    return static_cast<as_r_val_t<T>>(x);
   } else {
     static_assert(
       always_false<T>,

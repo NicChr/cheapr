@@ -22,7 +22,7 @@ inline constexpr bool can_be_int(T x){
     return true;
   } else if constexpr (MathType<T>){
     // This should be a 'practical' way to get the wider type of the 2
-    using common_t = std::common_type_t<unwrapped_t<T>, int>;
+    using common_t = std::common_type_t<unwrap_t<T>, int>;
     return internal::between_impl<common_t>(unwrap(x), min_int, max_int);
   } else {
     return false;
@@ -36,7 +36,7 @@ inline constexpr bool can_be_int64(T x){
   if constexpr (can_definitely_be_int64<T>()){
     return true;
   } else if constexpr (MathType<T>){
-    using common_t = std::common_type_t<unwrapped_t<T>, int64_t>;
+    using common_t = std::common_type_t<unwrap_t<T>, int64_t>;
     return internal::between_impl<common_t>(unwrap(x), min_int64, max_int64);
   } else {
     return false;
@@ -101,7 +101,7 @@ inline r_raw as_raw(T x){
   } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
     return is_na(x) || x < 0 ? na_value<r_raw>() : r_raw(static_cast<Rbyte>(unwrap(x)));
   } else if constexpr (MathType<T>){
-    using r_t = unwrapped_t<T>;
+    using r_t = unwrap_t<T>;
     return is_na(x) || !internal::between_impl(unwrap(x), r_t(0), r_t(255)) ? na_value<r_raw>() : r_raw(static_cast<Rbyte>(unwrap(x)));
   } else {
     return na_value<r_raw>();

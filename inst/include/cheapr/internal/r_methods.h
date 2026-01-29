@@ -211,7 +211,7 @@ inline constexpr auto operator+(T lhs, U rhs) {
   } else {
     return ( is_na(lhs) || is_na(rhs) ) ? 
     na_value<common_math_t>() : 
-    common_math_t(static_cast<unwrapped_t<common_math_t>>(unwrap(lhs)) + static_cast<unwrapped_t<common_math_t>>(unwrap(rhs)));
+    common_math_t(static_cast<unwrap_t<common_math_t>>(unwrap(lhs)) + static_cast<unwrap_t<common_math_t>>(unwrap(rhs)));
   }
 }
 
@@ -226,7 +226,7 @@ inline constexpr auto operator-(T lhs, U rhs) {
   } else {
     return ( is_na(lhs) || is_na(rhs) ) ? 
     na_value<common_math_t>() : 
-    common_math_t(static_cast<unwrapped_t<common_math_t>>(unwrap(lhs)) - static_cast<unwrapped_t<common_math_t>>(unwrap(rhs)));
+    common_math_t(static_cast<unwrap_t<common_math_t>>(unwrap(lhs)) - static_cast<unwrap_t<common_math_t>>(unwrap(rhs)));
   }
 }
 
@@ -241,7 +241,7 @@ inline constexpr auto operator*(T lhs, U rhs) {
   } else {
     return ( is_na(lhs) || is_na(rhs) ) ? 
     na_value<common_math_t>() : 
-    common_math_t(static_cast<unwrapped_t<common_math_t>>(unwrap(lhs)) * static_cast<unwrapped_t<common_math_t>>(unwrap(rhs)));
+    common_math_t(static_cast<unwrap_t<common_math_t>>(unwrap(lhs)) * static_cast<unwrap_t<common_math_t>>(unwrap(rhs)));
   }
 }
 
