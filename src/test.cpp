@@ -678,3 +678,26 @@ SEXP foo_vec_add4(SEXP x, SEXP y){
   auto yvec = as<r_vec<r_int>>(y);
   return xvec + yvec;
 }
+
+
+[[cpp11::register]]
+SEXP foo_vec_subtract(SEXP x, SEXP y){
+  auto xvec = as<r_vec<r_int>>(x);
+  auto yvec = as<r_vec<r_int>>(y);
+  return xvec - yvec; 
+}
+
+
+[[cpp11::register]]
+SEXP foo_vec_multiply(SEXP x, SEXP y){
+  auto xvec = as<r_vec<r_int>>(x);
+  auto yvec = as<r_vec<r_int>>(y);
+  return xvec * yvec; 
+}
+
+[[cpp11::register]]
+SEXP foo_vec_divide(SEXP x, SEXP y){
+  auto xvec = as<r_vec<r_int>>(x);
+  auto yvec = as<r_vec<r_int>>(y);
+  return xvec / yvec; 
+}

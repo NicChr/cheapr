@@ -291,3 +291,15 @@ foo_vec_add3 <- function(x) {
 foo_vec_add4 <- function(x, y) {
   .Call(`_cheapr_foo_vec_add4`, x, y)
 }
+
+foo_vec_subtract <- function(x, y) {
+  .Call(`_cheapr_foo_vec_subtract`, x, y)
+}
+
+foo_vec_multiply <- function(x, y) {
+  .Call(`_cheapr_foo_vec_multiply`, x, y)
+}
+
+foo_vec_divide <- function(x, y) {
+  .Call(`_cheapr_foo_vec_divide`, x, y)
+}
