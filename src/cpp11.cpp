@@ -544,6 +544,27 @@ extern "C" SEXP _cheapr_foo59(SEXP x) {
     return cpp11::as_sexp(foo59(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// test.cpp
+SEXP foo_factor(SEXP x);
+extern "C" SEXP _cheapr_foo_factor(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_factor(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// test.cpp
+SEXP foo_factor2();
+extern "C" SEXP _cheapr_foo_factor2() {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_factor2());
+  END_CPP11
+}
+// test.cpp
+SEXP foo_test();
+extern "C" SEXP _cheapr_foo_test() {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_test());
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
@@ -605,6 +626,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo9",             (DL_FUNC) &_cheapr_foo9,             0},
     {"_cheapr_foo_add",          (DL_FUNC) &_cheapr_foo_add,          1},
     {"_cheapr_foo_add1",         (DL_FUNC) &_cheapr_foo_add1,         2},
+    {"_cheapr_foo_factor",       (DL_FUNC) &_cheapr_foo_factor,       1},
+    {"_cheapr_foo_factor2",      (DL_FUNC) &_cheapr_foo_factor2,      0},
     {"_cheapr_foo_make_list",    (DL_FUNC) &_cheapr_foo_make_list,    0},
     {"_cheapr_foo_make_list2",   (DL_FUNC) &_cheapr_foo_make_list2,   0},
     {"_cheapr_foo_na_count",     (DL_FUNC) &_cheapr_foo_na_count,     1},
@@ -612,6 +635,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo_rep_len",      (DL_FUNC) &_cheapr_foo_rep_len,      2},
     {"_cheapr_foo_sum",          (DL_FUNC) &_cheapr_foo_sum,          2},
     {"_cheapr_foo_sum_int",      (DL_FUNC) &_cheapr_foo_sum_int,      2},
+    {"_cheapr_foo_test",         (DL_FUNC) &_cheapr_foo_test,         0},
     {"_cheapr_foo_vec_add",      (DL_FUNC) &_cheapr_foo_vec_add,      1},
     {"_cheapr_foo_vec_add2",     (DL_FUNC) &_cheapr_foo_vec_add2,     1},
     {"_cheapr_foo_vec_add3",     (DL_FUNC) &_cheapr_foo_vec_add3,     1},

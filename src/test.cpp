@@ -707,3 +707,21 @@ SEXP foo59(SEXP x){
   auto y = as<r_vec<r_int>>(x);
   return y.rep_len(100);
 }
+
+[[cpp11::register]]
+SEXP foo_factor(SEXP x){
+  auto x_ = as<r_vec<r_str>>(x);
+  return r_factors(x_);
+}
+[[cpp11::register]]
+SEXP foo_factor2(){
+  return r_factors();
+}
+
+
+[[cpp11::register]]
+SEXP foo_test(){
+  r_str x = r_str("hi");
+  return r_vec<r_str>(1, x);
+}
+

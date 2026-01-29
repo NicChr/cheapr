@@ -140,8 +140,9 @@ struct r_sym {
   r_sexp value;
   using value_type = r_sexp;
   r_sym() : value{R_MissingArg} {}
-  // explicit r_sym(r_sexp x) : value(std::move(x)) {} 
   explicit r_sym(SEXP x) : value{x} {}
+  explicit r_sym(r_sexp x) : value(std::move(x)) {} 
+  explicit r_sym(const char *x) : value(Rf_installChar(r_str(x))) {}
   operator SEXP() const { return value; }
 };
 

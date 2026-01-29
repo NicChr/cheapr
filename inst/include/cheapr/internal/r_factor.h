@@ -82,7 +82,13 @@ r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) {
 struct r_factors : public r_vec<r_int> { 
 
   // Constructors
-  r_factors() : r_vec<r_int>() {}
+  r_factors() : r_vec<r_int>() {
+    // Set class
+    auto cls = r_vec<r_str>(1, r_str("factor"));
+    attr::set_old_class(this->sexp, cls);
+    // Set levels
+    attr::set_attr(this->sexp, r_sym("levels"), r_vec<r_str>());
+  }
 
   explicit r_factors(SEXP x) : r_vec<r_int>(x) {
     if (!is_null() && !attr::inherits1(*this, "factor")){
@@ -93,18 +99,18 @@ struct r_factors : public r_vec<r_int> {
   explicit r_factors(r_vec<r_str> x, r_vec<r_str> levels){
 
     auto fct = internal::string_match(x, levels);
-    auto cls = r_vec<r_str>(1, internal::as_r<r_str>("factor"));
+    auto cls = r_vec<r_str>(1, r_str("factor"));
     // Set class
     attr::set_old_class(fct, cls);
     // Set levels
     attr::set_attr(fct, internal::as_r<r_sym>("levels"), levels.sexp);
-    this->sexp = fct.sexp;
+    *static_cast<r_vec<r_int>*>(this) = std::move(fct);
   }
 
   explicit r_factors(r_vec<r_str> x){
     auto levels = internal::unique_strings(x);
     auto fct = r_factors(x, levels);
-    this->sexp = fct.sexp;
+    *static_cast<r_vec<r_int>*>(this) = std::move(fct);
   }
 
   r_vec<r_str> levels() const {

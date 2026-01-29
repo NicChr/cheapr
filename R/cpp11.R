@@ -307,3 +307,15 @@ foo_vec_divide <- function(x, y) {
 foo59 <- function(x) {
   .Call(`_cheapr_foo59`, x)
 }
+
+foo_factor <- function(x) {
+  .Call(`_cheapr_foo_factor`, x)
+}
+
+foo_factor2 <- function() {
+  .Call(`_cheapr_foo_factor2`)
+}
+
+foo_test <- function() {
+  .Call(`_cheapr_foo_test`)
+}

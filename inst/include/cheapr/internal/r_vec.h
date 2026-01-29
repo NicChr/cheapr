@@ -41,7 +41,7 @@ struct r_vec {
   explicit r_vec(r_size_t n, U default_value)
     : r_vec(n)
   {
-    fill(0, n, default_value);
+    fill(r_size_t(0), n, default_value);
   }
   
   r_vec(): r_vec(r_size_t(0)){}
@@ -117,7 +117,7 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
   // We use flexible template to be able to coerce it to an RVal
   template <typename U>
   void set(r_size_t index, U val) {
-      T val2 = internal::as_r<T>(val);
+      T val2 = cheapr::internal::as_r<T>(val);
       if constexpr (any<T, r_sexp, r_sym>){
         SET_VECTOR_ELT(sexp, index, val2);
       } else if constexpr (is<T, r_str>){
@@ -215,17 +215,17 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
 
   template <typename U>
   void fill(r_size_t start, r_size_t n, const U val){
-    auto val2 = unwrap(internal::as_r<T>(val));
+    auto val2 = internal::as_r<T>(val);
     if constexpr (RPtrWritableType<T>){
       int n_threads = internal::calc_threads(n);
       auto* RESTRICT p_target = data();
       if (n_threads > 1) {
         OMP_PARALLEL_FOR_SIMD(n_threads)
         for (r_size_t i = 0; i < n; ++i) {
-          p_target[start + i] = val2;
+          p_target[start + i] = unwrap(val2);
         }
       } else {
-        std::fill_n(p_target + start, n, val2);
+        std::fill_n(p_target + start, n, unwrap(val2));
       }
     } else {
       for (r_size_t i = 0; i < n; ++i) {
