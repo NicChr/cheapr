@@ -200,53 +200,52 @@ inline constexpr r_dbl& operator+=(r_dbl &lhs, r_dbl rhs) {
   return lhs;
 }
 
-template<typename T, typename U>
+template<MathType T, MathType U>
   requires (AtLeastOneRMathType<T, U>)
 inline constexpr auto operator+(T lhs, U rhs) {
 
-  using lhs_r_t = to_r_val_t<T>;
-  using rhs_r_t = to_r_val_t<U>;
-  using common_r_t = common_r_math_t<lhs_r_t, rhs_r_t>;
-  using unwrapped_common_t = unwrapped_t<common_r_t>;
+  using common_math_t = common_r_math_t<T, U>;
 
-  if constexpr (is<common_r_t, r_dbl>){
+  if constexpr (is<common_math_t, r_dbl>){
     return r_dbl(static_cast<double>(unwrap(lhs)) + static_cast<double>(unwrap(rhs)));
   } else {
-    return ( is_na(lhs) || is_na(rhs) ) ? na_value<common_r_t>() : common_r_t(static_cast<unwrapped_common_t>(unwrap(lhs) + unwrap(rhs)));
+    return ( is_na(lhs) || is_na(rhs) ) ? 
+    na_value<common_math_t>() : 
+    common_math_t(static_cast<unwrapped_t<common_math_t>>(unwrap(lhs)) + static_cast<unwrapped_t<common_math_t>>(unwrap(rhs)));
   }
 }
 
-template<typename T, typename U>
+template<MathType T, MathType U>
   requires (AtLeastOneRMathType<T, U>)
 inline constexpr auto operator-(T lhs, U rhs) {
-  using lhs_r_t = to_r_val_t<T>;
-  using rhs_r_t = to_r_val_t<U>;
-  using common_r_t = common_r_math_t<lhs_r_t, rhs_r_t>;
-  using unwrapped_common_t = unwrapped_t<common_r_t>;
 
-  if constexpr (is<common_r_t, r_dbl>){
+  using common_math_t = common_r_math_t<T, U>;
+
+  if constexpr (is<common_math_t, r_dbl>){
     return r_dbl(static_cast<double>(unwrap(lhs)) - static_cast<double>(unwrap(rhs)));
   } else {
-    return ( is_na(lhs) || is_na(rhs) ) ? na_value<common_r_t>() : common_r_t(static_cast<unwrapped_common_t>(unwrap(lhs) - unwrap(rhs)));
+    return ( is_na(lhs) || is_na(rhs) ) ? 
+    na_value<common_math_t>() : 
+    common_math_t(static_cast<unwrapped_t<common_math_t>>(unwrap(lhs)) - static_cast<unwrapped_t<common_math_t>>(unwrap(rhs)));
   }
 }
 
-template<typename T, typename U>
+template<MathType T, MathType U>
   requires (AtLeastOneRMathType<T, U>)
 inline constexpr auto operator*(T lhs, U rhs) {
-  using lhs_r_t = to_r_val_t<T>;
-  using rhs_r_t = to_r_val_t<U>;
-  using common_r_t = common_r_math_t<lhs_r_t, rhs_r_t>;
-  using unwrapped_common_t = unwrapped_t<common_r_t>;
 
-  if constexpr (is<common_r_t, r_dbl>){
+  using common_math_t = common_r_math_t<T, U>;
+
+  if constexpr (is<common_math_t, r_dbl>){
     return r_dbl(static_cast<double>(unwrap(lhs)) * static_cast<double>(unwrap(rhs)));
   } else {
-    return ( is_na(lhs) || is_na(rhs) ) ? na_value<common_r_t>() : common_r_t(static_cast<unwrapped_common_t>(unwrap(lhs) * unwrap(rhs)));
+    return ( is_na(lhs) || is_na(rhs) ) ? 
+    na_value<common_math_t>() : 
+    common_math_t(static_cast<unwrapped_t<common_math_t>>(unwrap(lhs)) * static_cast<unwrapped_t<common_math_t>>(unwrap(rhs)));
   }
 }
 
-template<typename T, typename U>
+template<MathType T, MathType U>
   requires (AtLeastOneRMathType<T, U>)
 inline constexpr r_dbl operator/(T lhs, U rhs) {
   return ( is_na(lhs) || is_na(rhs) ) ? na_value<r_dbl>() : r_dbl(static_cast<double>(unwrap(lhs)) / static_cast<double>(unwrap(rhs)));
@@ -368,7 +367,7 @@ inline constexpr r_dbl operator-(r_dbl x) {
   return r_dbl{-unwrap(x)};
 }
 
-template <typename T, typename U>
+template <MathType T, MathType U>
 inline constexpr r_lgl between(T x, U lo, U hi){
   return x >= lo && x <= hi;
 }

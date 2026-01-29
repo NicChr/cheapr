@@ -213,31 +213,22 @@ consteval uint8_t r_math_rank() {
     return std::numeric_limits<uint8_t>::max();
 }
 
-template <RMathType T, RMathType U>
+template <MathType T, MathType U>
+requires AtLeastOneRMathType<T, U>
 struct common_r_math_impl {
-    static constexpr uint8_t rank_t = r_math_rank<T>();
-    static constexpr uint8_t rank_u = r_math_rank<U>();
-    
-    using type = std::conditional_t<(rank_t >= rank_u), T, U>;
-};
+    using lhs_math_t = to_r_val_t<T>;
+    using rhs_math_t = to_r_val_t<U>;
 
-// If we decide to always upgrade r_lgl to r_int
-// template <RMathType T, RMathType U>
-// struct common_r_math_impl {
-//     static constexpr uint8_t rank_t = r_math_rank<T>();
-//     static constexpr uint8_t rank_u = r_math_rank<U>();
+    static constexpr uint8_t rank_t = r_math_rank<lhs_math_t>();
+    static constexpr uint8_t rank_u = r_math_rank<rhs_math_t>();
     
-//     static constexpr bool both_r_lgl = is<T, r_lgl> && is<U, r_lgl>;
-//     using type = std::conditional_t<
-//         both_r_lgl, r_int, std::conditional_t<
-//             (rank_t >= rank_u), T, U
-//         >
-//     >;
-// };
+    using type = std::conditional_t<(rank_t >= rank_u), lhs_math_t, rhs_math_t>;
+};
 
 }
 
-template <RMathType T, RMathType U>
+template <MathType T, MathType U>
+requires AtLeastOneRMathType<T, U>
 using common_r_math_t = typename internal::common_r_math_impl<T, U>::type;
 
 }
