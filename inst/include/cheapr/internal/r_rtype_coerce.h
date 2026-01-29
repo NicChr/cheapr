@@ -20,12 +20,10 @@ inline constexpr bool can_be_int(T x){
 
   if constexpr (can_definitely_be_int<T>()){
     return true;
-  } else if constexpr (CppMathType<T>){
-    using data_t = decltype(x);
-    return internal::between_impl<data_t>(x, min_int, max_int);
-  } else if constexpr (RMathType<T>){
-    using data_t = decltype(x.value);
-    return internal::between_impl<data_t>(x.value, min_int, max_int);
+  } else if constexpr (MathType<T>){
+    // This should be a 'practical' way to get the wider type of the 2
+    using common_t = std::common_type_t<unwrapped_t<T>, int>;
+    return internal::between_impl<common_t>(unwrap(x), min_int, max_int);
   } else {
     return false;
   }
@@ -37,12 +35,9 @@ inline constexpr bool can_be_int64(T x){
 
   if constexpr (can_definitely_be_int64<T>()){
     return true;
-  } else if constexpr (CppMathType<T>){
-    using data_t = decltype(x);
-    return internal::between_impl<data_t>(x, min_int64, max_int64);
-  } else if constexpr (RMathType<T>){
-    using data_t = decltype(x.value);
-    return internal::between_impl<data_t>(x.value, min_int64, max_int64);
+  } else if constexpr (MathType<T>){
+    using common_t = std::common_type_t<unwrapped_t<T>, int64_t>;
+    return internal::between_impl<common_t>(unwrap(x), min_int64, max_int64);
   } else {
     return false;
   }
