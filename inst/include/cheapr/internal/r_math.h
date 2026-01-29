@@ -19,33 +19,31 @@ inline r_dbl round_to_even(r_dbl x){
 }
 
 
-template<typename T, typename U>
+template<MathType T, MathType U>
 requires (AtLeastOneRMathType<T, U>)
-inline auto min(T x, U y){ 
+inline auto min(T x, U y){
+  
+  using common_t = common_r_math_t<T, U>;
 
-  auto l = as_r_val(x);
-  using out_t = decltype(l);
-  out_t r = as<out_t>(as_r_val(y));
-
-  return ( is_na(l) || is_na(r) ) ? na_value<out_t>() : out_t(std::min(unwrap(l), unwrap(r)));
+  return ( is_na(x) || is_na(y) ) ? na_value<common_t>() : 
+  common_t(std::min(
+    static_cast<unwrap_t<common_t>>(unwrap(x)), 
+    static_cast<unwrap_t<common_t>>(unwrap(y))
+  ));
 }
 
-template<typename T, typename U>
+template<MathType T, MathType U>
 requires (AtLeastOneRMathType<T, U>)
-inline auto max(T x, U y){ 
+inline auto max(T x, U y){
+  
+  using common_t = common_r_math_t<T, U>;
 
-  auto l = as_r_val(x);
-  using out_t = decltype(l);
-  out_t r = as<out_t>(as_r_val(y));
-
-  return ( is_na(l) || is_na(r) ) ? na_value<out_t>() : out_t(std::max(unwrap(l), unwrap(r)));
+  return ( is_na(x) || is_na(y) ) ? na_value<common_t>() : 
+  common_t(std::max(
+    static_cast<unwrap_t<common_t>>(unwrap(x)), 
+    static_cast<unwrap_t<common_t>>(unwrap(y))
+  ));
 }
-
-// template<typename T, typename U>
-// requires (AtLeastOneRMathType<T, U>)
-// inline constexpr T max(T x, U y){
-//   return is_na(x) ? x : T{std::max(x, as<T>(y))};
-// }
 
 template <typename T>
 inline constexpr bool is_r_inf(const T x){
@@ -90,6 +88,10 @@ template<>
 inline r_dbl floor(r_dbl x){
   return r_dbl(std::floor(unwrap(x)));
 }
+template<RIntegerType T>
+inline T floor(T x){
+  return x;
+}
 
 template<RMathType T>
 inline T ceiling(T x){
@@ -98,6 +100,10 @@ inline T ceiling(T x){
 template<>
 inline r_dbl ceiling(r_dbl x){
   return r_dbl(std::ceil(unwrap(x)));
+}
+template<RIntegerType T>
+inline T ceiling(T x){
+  return x;
 }
 
 template<RMathType T>
@@ -109,10 +115,14 @@ template <>
 inline r_dbl trunc(r_dbl x){
   return r_dbl(std::trunc(unwrap(x)) + 0.0);
 }
+template<RIntegerType T>
+inline T trunc(T x){
+  return x;
+}
 
 template <RMathType T>
 inline r_int sign(T x) {
-  return is_na(x) ? na::integer : (T(0) < x) - (x < T(0));
+  return is_na(x) ? na_value<r_int>() : (T(0) < x) - (x < T(0));
 }
 
 template<RMathType T>
@@ -125,7 +135,7 @@ inline r_dbl sqrt(T x){
   return r_dbl(std::sqrt(as<r_dbl>(x).value));
 }
 
-template<typename T, typename U>
+template<MathType T, MathType U>
   requires (AtLeastOneRMathType<T, U>)
 inline r_dbl pow(T x, U y){
   if (y == 0) return r_dbl(1.0);
@@ -147,7 +157,7 @@ inline r_dbl exp(T x){
   return r_dbl(std::exp(as<r_dbl>(x).value));
 }
 
-template<typename T, typename U>
+template<MathType T, MathType U>
 requires (AtLeastOneRMathType<T, U>)
 inline r_dbl log(T x, U base){
   return r_dbl(std::log(as<r_dbl>(x)) / std::log(as<r_dbl>(base)));
@@ -166,7 +176,7 @@ inline r_cplx log(r_cplx x){
 }
 
 
-template<typename T, typename U>
+template<MathType T, MathType U>
 requires (AtLeastOneRMathType<T, U>)
 inline r_dbl round(T x, const U digits){
   if (is_na(x)){
@@ -186,29 +196,34 @@ inline r_dbl round(T x, const U digits){
 }
 
 template<RMathType T>
-inline r_dbl round(T x){
+inline T round(T x){
   if (is_na(x)){
-    return as<r_dbl>(x);
+    return x;
   } else if (is_r_inf(x)){
     return x;
   } else {
-    return internal::round_to_even(as<r_dbl>(x));
+    return as<T>(internal::round_to_even(as<r_dbl>(x)));
   }
 }
 
-template<typename T, typename U>
+template<RIntegerType T>
+inline T round(T x){
+  return x;
+}
+
+template<MathType T, MathType U>
 requires (AtLeastOneRMathType<T, U>)
 inline r_dbl signif(T x, const U digits){
-  U new_digits = std::max(U(1), digits);
+  auto new_digits = max(as_r_val(U(1)), as_r_val(digits));
   if (is_na(x)){
     return as<r_dbl>(x);
   } else if (is_na(new_digits)){
-    return na::real;
+    return na_value<r_dbl>();
   } else if (is_r_pos_inf(digits)){
-    return x;
+    return as<r_dbl>(x);
   } else {
-    new_digits -= std::ceil(std::log10(std::abs(x)));
-    r_dbl scale = std::pow(10, new_digits);
+    new_digits -= ceiling(log10(abs(x)));
+    r_dbl scale = pow(10, new_digits);
     return internal::round_to_even(scale * x) / scale;
   }
 }
@@ -240,8 +255,9 @@ template<MathType T>
       }
     }
 
-    T ax = std::abs(x);
-    T ay = std::abs(y);
+    auto ax = std::abs(unwrap(x));
+    auto ay = std::abs(unwrap(y));
+    using unwrapped_t = decltype(ax);
 
     if constexpr (IntegerType<T>){
 
@@ -249,46 +265,47 @@ template<MathType T>
 
       // GCD(0,0)=0
       if (ax == 0 && ay == 0){
-        return 0;
+        return T(0);
       }
       // GCD(a,0)=a
       if (ax == 0){
-        return ay;
+        return T(ay);
       }
       // GCD(a,0)=a
       if (ay == 0){
-        return ax;
+        return T(ax);
       }
 
-      T r;
+      unwrapped_t r;
+
       while(ay != 0){
         r = ax % ay;
         ax = ay;
         ay = r;
       }
-      return ax;
+      return T(ax);
     } else {
 
       // GCD(0,0)=0
       if (ax <= tol && ay <= tol){
-        return 0.0;
+        return T(0.0);
       }
       // GCD(a,0)=a
       if (ax <= tol){
-        return ay;
+        return T(ay);
       }
       // GCD(a,0)=a
       if (ay <= tol){
-        return ax;
+        return T(ax);
       }
 
-      T r;
+      unwrapped_t r;
       while(ay > tol){
         r = std::fmod(ax, ay);
         ax = ay;
         ay = r;
       }
-      return ax;
+      return T(ax);
     }
   }
 
@@ -310,20 +327,27 @@ template<MathType T>
       }
     }
 
+    
+    T ax = abs(x);
+    T ay = abs(y);
+
     if constexpr (IntegerType<T>){
-      if (x == 0 && y == 0){
-        return 0;
+      if (ax == 0 && ay == 0){
+        return T(0);
       }
-      T res = std::abs(x) / gcd(x, y, na_rm);
-      if (y != 0 && (std::abs(res) > (std::numeric_limits<T>::max() / std::abs(y)))){
+      // Because `/` for RMath types returns r_dbl and the C++ version doesn't
+      // we must use the C++ version
+      // We should always expect res to be an integer because the x is always divisible by gcd(x, y) exactly
+      T res = T(unwrap(ax) / unwrap(gcd(x, y, na_rm)));
+      if (y != 0 && (res > (r_limits<T>::max() / ay))){
         return na_value<T>();
       }
-      return res * std::abs(y);
+      return res * ay;
     } else {
-      if (std::fabs(x) <= tol && std::fabs(y) <= tol){
-        return 0.0;
+      if (ax <= tol && ay <= tol){
+        return T(0.0);
       }
-      return ( std::fabs(x) / gcd(x, y, na_rm, tol) ) * std::fabs(y);
+      return ( ax / gcd(x, y, na_rm, tol) ) * ay;
     }
   }
 
