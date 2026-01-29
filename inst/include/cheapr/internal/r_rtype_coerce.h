@@ -99,9 +99,10 @@ inline r_raw as_raw(T x){
   if constexpr (is<T, Rbyte> || is<T, r_raw>){
     return r_raw(unwrap(x));
   } else if constexpr (IntegerType<T> && sizeof(T) <= sizeof(int8_t)){
-    return is_na(x) || x < 0 ? na_value<r_raw>() :  r_raw(static_cast<Rbyte>(unwrap(x)));
-  } else if constexpr (IntegerType<T>){
-    return is_na(x) || !internal::between_impl(x, static_cast<T>(0), static_cast<T>(255)) ? na_value<r_raw>() : static_cast<r_raw>(x);
+    return is_na(x) || x < 0 ? na_value<r_raw>() : r_raw(static_cast<Rbyte>(unwrap(x)));
+  } else if constexpr (MathType<T>){
+    using r_t = unwrapped_t<T>;
+    return is_na(x) || !internal::between_impl(unwrap(x), r_t(0), r_t(255)) ? na_value<r_raw>() : r_raw(static_cast<Rbyte>(unwrap(x)));
   } else {
     return na_value<r_raw>();
   }
@@ -261,6 +262,8 @@ template<typename T>
 inline r_sexp as_sexp(T x){
   if constexpr (is<T, r_sexp>){
     return x;
+  } else if constexpr (RVector<T>){
+    return x.sexp;
   } else if constexpr (std::is_convertible_v<T, SEXP>){
     return r_sexp(static_cast<SEXP>(x));
   } else if constexpr (RVal<T>){
@@ -280,7 +283,11 @@ inline r_sexp as_sexp<const char *>(const char *x){
 }
 template<>
 inline r_sexp as_sexp<r_sym>(r_sym x){
-  return r_sexp(static_cast<SEXP>(x));
+  return x.value;
+}
+template<>
+inline r_sexp as_sexp<r_str>(r_str x){
+  return x.value;
 }
 
 template<>
