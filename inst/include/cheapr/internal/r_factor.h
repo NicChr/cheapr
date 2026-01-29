@@ -4,6 +4,7 @@
 #include <cheapr/internal/r_vec.h>
 #include <cheapr/internal/r_attrs.h>
 #include <ankerl/unordered_dense.h> // For unique strings and matching
+#include <vector>
 
 
 namespace cheapr {
@@ -12,31 +13,35 @@ namespace internal {
 
 r_vec<r_str> unique_strings(r_vec<r_str> x) {
   r_size_t n = x.length();
-
+  
   // Hash set for O(n) de-duplication
   ankerl::unordered_dense::set<SEXP> seen;
   seen.reserve(n);
-
-  auto unique_vec = r_vec<r_str>(n);
-  r_size_t n_unique = 0;
-
+  
+  // Store uniques in insertion order using raw SEXP pointers
+  std::vector<SEXP> uniques;
+  uniques.reserve(n);
+  
+  auto *p_x = x.data();
+  
   for (r_size_t i = 0; i < n; ++i) {
-    r_str str = x.get(i);
-    if (seen.insert(str).second) {
-        unique_vec.set(n_unique++, str);
-    }
+      SEXP str = p_x[i];
+      if (seen.insert(str).second) {
+          uniques.push_back(str);
+      }
   }
-
-  if (n_unique == n){
-    return unique_vec;
+  
+  r_size_t n_unique = uniques.size();
+  
+  if (n_unique == n) {
+      return x;
   }
-
+  
   auto out = r_vec<r_str>(n_unique);
-
-  for (r_size_t i = 0; i < n_unique; ++i){
-    out.set(i, unique_vec.get(i));
+  for (r_size_t i = 0; i < n_unique; ++i) {
+      SET_STRING_ELT(out, i, uniques[i]);
   }
-
+  
   return out;
 }
 

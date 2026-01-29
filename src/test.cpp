@@ -701,3 +701,9 @@ SEXP foo_vec_divide(SEXP x, SEXP y){
   auto yvec = as<r_vec<r_int>>(y);
   return xvec / yvec; 
 }
+
+[[cpp11::register]]
+SEXP foo59(SEXP x){
+  auto y = as<r_vec<r_int>>(x);
+  return y.rep_len(100);
+}

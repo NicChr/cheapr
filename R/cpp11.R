@@ -303,3 +303,7 @@ foo_vec_multiply <- function(x, y) {
 foo_vec_divide <- function(x, y) {
   .Call(`_cheapr_foo_vec_divide`, x, y)
 }
+
+foo59 <- function(x) {
+  .Call(`_cheapr_foo59`, x)
+}

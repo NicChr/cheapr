@@ -537,6 +537,13 @@ extern "C" SEXP _cheapr_foo_vec_divide(SEXP x, SEXP y) {
     return cpp11::as_sexp(foo_vec_divide(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(y)));
   END_CPP11
 }
+// test.cpp
+SEXP foo59(SEXP x);
+extern "C" SEXP _cheapr_foo59(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo59(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
@@ -591,6 +598,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo56",            (DL_FUNC) &_cheapr_foo56,            2},
     {"_cheapr_foo57",            (DL_FUNC) &_cheapr_foo57,            2},
     {"_cheapr_foo58",            (DL_FUNC) &_cheapr_foo58,            1},
+    {"_cheapr_foo59",            (DL_FUNC) &_cheapr_foo59,            1},
     {"_cheapr_foo6",             (DL_FUNC) &_cheapr_foo6,             1},
     {"_cheapr_foo7",             (DL_FUNC) &_cheapr_foo7,             1},
     {"_cheapr_foo8",             (DL_FUNC) &_cheapr_foo8,             0},
