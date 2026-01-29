@@ -615,3 +615,35 @@ SEXP foo58(SEXP x) {
 SEXP foo59(){
   return make_vec<r_sexp>(arg("first") = "no", arg("second") = "yes");
 }
+
+[[cpp11::register]]
+SEXP foo_add1(SEXP x, SEXP y) {
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    auto yvec = as<decltype(xvec)>(y);
+    using data_t = typename decltype(xvec)::data_type;
+    if constexpr (any<data_t, r_lgl, r_int, r_int64, r_dbl>){
+      return as_vector(xvec.get(0) + yvec.get(0));
+    } else {
+      return r_null;
+    }
+  });
+}
+
+
+[[cpp11::register]]
+SEXP foo_add(SEXP x){
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    using data_t = typename decltype(xvec)::data_type;
+    r_size_t n = xvec.length();
+    if constexpr (RMathType<data_t>){
+      auto out = r_vec<data_t>(n);
+      OMP_SIMD
+      for (r_size_t i = 0; i < n; ++i){
+        out.set(i, xvec.get(i) + xvec.get(i));
+      }
+      return out;
+    } else {
+      return r_null;
+    }
+  });
+}

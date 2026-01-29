@@ -202,29 +202,43 @@ concept CastableToRVal = requires {
 
 // Rules for determining math type promotion in binary operators
 
-// namespace internal {
+namespace internal {
 
-// template <RMathType T>
-// consteval uint8_t r_math_rank() {
-//     if constexpr (is<T, r_lgl>)   return 0;
-//     if constexpr (is<T, r_int>)   return 1;
-//     if constexpr (is<T, r_int64>) return 2;
-//     if constexpr (is<T, r_dbl>)   return 3;
-//     return std::numeric_limits<uint8_t>::max();
-// }
+template <RMathType T>
+consteval uint8_t r_math_rank() {
+    if constexpr (is<T, r_lgl>)   return 0;
+    if constexpr (is<T, r_int>)   return 1;
+    if constexpr (is<T, r_int64>) return 2;
+    if constexpr (is<T, r_dbl>)   return 3;
+    return std::numeric_limits<uint8_t>::max();
+}
 
+template <RMathType T, RMathType U>
+struct common_r_math_impl {
+    static constexpr uint8_t rank_t = r_math_rank<T>();
+    static constexpr uint8_t rank_u = r_math_rank<U>();
+    
+    using type = std::conditional_t<(rank_t >= rank_u), T, U>;
+};
+
+// If we decide to always upgrade r_lgl to r_int
 // template <RMathType T, RMathType U>
 // struct common_r_math_impl {
 //     static constexpr uint8_t rank_t = r_math_rank<T>();
 //     static constexpr uint8_t rank_u = r_math_rank<U>();
     
-//     using type = std::conditional_t<(rank_t >= rank_u), T, U>;
+//     static constexpr bool both_r_lgl = is<T, r_lgl> && is<U, r_lgl>;
+//     using type = std::conditional_t<
+//         both_r_lgl, r_int, std::conditional_t<
+//             (rank_t >= rank_u), T, U
+//         >
+//     >;
 // };
 
-// }
+}
 
-// template <typename T, typename U>
-// using common_r_math_t = typename internal::common_r_math_impl<T, U>::type;
+template <RMathType T, RMathType U>
+using common_r_math_t = typename internal::common_r_math_impl<T, U>::type;
 
 }
 
