@@ -301,23 +301,23 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
     auto out = r_vec<T>(n);
 
     if (size == 1){
-      auto fill_val = this->get(0);
-      out.fill(0, n, fill_val);
+      out.fill(0, n, get(0));
     } else if (n > 0 && size > 0){
       // Copy first block
-      r_copy_n(out, *this, 0, size);
+      r_copy_n(out, *this, 0, std::min(size, n));
 
-      // copy result to itself, doubling each iteration
-      r_size_t copied = size;
-      while (copied < n) {
-        r_size_t to_copy = std::min(copied, n - copied);
-        r_copy_n(out, out, copied, to_copy);
-        copied += to_copy;
-      }
+      if (n > size){
+        // copy result to itself, doubling each iteration
+        r_size_t copied = size;
+        while (copied < n) {
+          r_size_t to_copy = std::min(copied, n - copied);
+          r_copy_n(out, out, copied, to_copy);
+          copied += to_copy;
+        }
+    }
       // If length > 0 but length(x) == 0 then fill with NA
     } else if (size == 0 && n > 0){
-      auto na_val = na_value<T>();
-      out.fill(0, n, na_val);
+      out.fill(0, n, na_value<T>());
     }
     return out;
   }
