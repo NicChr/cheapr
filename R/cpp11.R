@@ -319,3 +319,15 @@ foo_factor2 <- function() {
 foo_test <- function() {
   .Call(`_cheapr_foo_test`)
 }
+
+foo_test2 <- function() {
+  .Call(`_cheapr_foo_test2`)
+}
+
+foo_test3 <- function(x) {
+  .Call(`_cheapr_foo_test3`, x)
+}
+
+foo_test4 <- function(x) {
+  .Call(`_cheapr_foo_test4`, x)
+}
