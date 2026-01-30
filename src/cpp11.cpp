@@ -6,6 +6,14 @@
 #include <R_ext/Visibility.h>
 
 // test.cpp
+void dummy();
+extern "C" SEXP _cheapr_dummy() {
+  BEGIN_CPP11
+    dummy();
+    return R_NilValue;
+  END_CPP11
+}
+// test.cpp
 SEXP foo(SEXP x);
 extern "C" SEXP _cheapr_foo(SEXP x) {
   BEGIN_CPP11
@@ -576,6 +584,7 @@ extern "C" SEXP _cheapr_foo_test2() {
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_bar",              (DL_FUNC) &_cheapr_bar,              1},
+    {"_cheapr_dummy",            (DL_FUNC) &_cheapr_dummy,            0},
     {"_cheapr_foo",              (DL_FUNC) &_cheapr_foo,              1},
     {"_cheapr_foo10",            (DL_FUNC) &_cheapr_foo10,            1},
     {"_cheapr_foo11",            (DL_FUNC) &_cheapr_foo11,            1},

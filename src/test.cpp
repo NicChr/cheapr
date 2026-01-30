@@ -5,6 +5,10 @@ using namespace cheapr;
 using namespace vec;
 
 [[cpp11::register]]
+void dummy() {
+}
+
+[[cpp11::register]]
 SEXP foo(SEXP x) {
   // auto ok = internal::as_r_string(r_true);
   // return as_vector(as<r_string_t>(r_true));
