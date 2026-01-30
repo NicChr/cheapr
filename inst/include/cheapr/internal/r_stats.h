@@ -103,7 +103,7 @@ r_vec<T> range(const r_vec<T> &x, bool na_rm = false){
 
 // SIMD optimisation for integer types
 template <RIntegerType T>
-r_vec<T> range(const r_vec<T> &x, bool na_rm){
+r_vec<T> range(const r_vec<T> &x, bool na_rm = false){
     
     r_size_t n = x.length();
 

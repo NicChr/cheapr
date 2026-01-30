@@ -7,7 +7,7 @@ namespace cheapr {
 
 template<typename T, typename U>
 requires (RVector<T> || RVector<U>)
-inline auto operator+(const T& lhs, const U& rhs) {
+inline auto operator+(const T& lhs, const U& rhs) { 
 
     if constexpr (RVector<T> && RVector<U>){
         if (lhs.length() == 1){
@@ -196,6 +196,55 @@ inline auto operator/(const T& lhs, const U& rhs) {
         }
         return out;
     }
+}
+
+
+template<RIntegerType T>
+T gcd(const r_vec<T> &x, bool na_rm = false, T tol = r_limits<T>::tolerance()){
+  if (tol < 0 || tol >= 1){
+    abort("`tol` must be >= 0 and < 1");
+  }
+  r_size_t n = x.length();
+
+  if (n == 0){
+    return na_value<T>();
+  }
+
+  auto out = x.get(0);
+  for (r_size_t i = 1; i < n; ++i) {
+      out = gcd(out, x.get(i), na_rm);
+      if (!na_rm && is_na(out)){
+          break;
+      } else if (out == 1){
+          break;
+      }
+  }
+  return out;
+}
+ 
+template<RMathType T>
+T gcd(const r_vec<T> &x, bool na_rm = false, T tol = r_limits<T>::tolerance()){
+  if (tol < 0 || tol >= 1){
+    abort("`tol` must be >= 0 and < 1");
+  }
+  r_size_t n = x.length();
+
+  if (n == 0){
+    return na_value<T>();
+  }
+
+  auto out = x.get(0);
+  for (r_size_t i = 1; i < n; ++i) {
+      out = gcd(out, x.get(i), na_rm);
+      if (!na_rm && is_na(out)){
+          break;
+      }
+      if (out > T(0.0) && out < (tol + tol)){
+        out = tol;
+        break;
+      }
+  }
+  return out;
 }
 
 }

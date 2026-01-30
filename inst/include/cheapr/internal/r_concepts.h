@@ -41,7 +41,16 @@ template <typename T>
 concept IntegerType = RIntegerType<T> || CppIntegerType<T>;
 
 template <typename T>
-concept RMathType = RIntegerType<T> || is<T, r_dbl>;
+concept RFloatType = is<T, r_dbl>;
+
+template <typename T>
+concept CppFloatType = std::is_floating_point_v<std::remove_cvref_t<T>>;
+
+template <typename T>
+concept FloatType = RFloatType<T> || CppFloatType<T>;
+
+template <typename T>
+concept RMathType = RIntegerType<T> || RFloatType<T>;
 
 template<typename T>
 concept CppMathType = std::is_arithmetic_v<std::remove_cvref_t<T>>;

@@ -240,116 +240,113 @@ inline r_lgl is_whole_number(const r_dbl x, const r_dbl tolerance){
 
 
 // Greatest common divisor
-template<MathType T>
-  inline T gcd(T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())){
-
-    if (is_na(x) || is_na(y)){
-      if (na_rm){ 
-        if (is_na(x)){
-          return abs(y);
-        } else {
-          return abs(x);
-        }
+template<RMathType T>
+inline T gcd(T x, T y, bool na_rm = false, T tol = r_limits<T>::tolerance()){
+  if (is_na(x) || is_na(y)){
+    if (na_rm){ 
+      if (is_na(x)){
+        return abs(y);
       } else {
-        return na_value<T>();
+        return abs(x);
       }
-    }
-
-    auto ax = std::abs(unwrap(x));
-    auto ay = std::abs(unwrap(y));
-    using unwrapped_t = decltype(ax);
-
-    if constexpr (IntegerType<T>){
-
-      // Taken from number theory lecture notes
-
-      // GCD(0,0)=0
-      if (ax == 0 && ay == 0){
-        return T(0);
-      }
-      // GCD(a,0)=a
-      if (ax == 0){
-        return T(ay);
-      }
-      // GCD(a,0)=a
-      if (ay == 0){
-        return T(ax);
-      }
-
-      unwrapped_t r;
-
-      while(ay != 0){
-        r = ax % ay;
-        ax = ay;
-        ay = r;
-      }
-      return T(ax);
     } else {
-
-      // GCD(0,0)=0
-      if (ax <= tol && ay <= tol){
-        return T(0.0);
-      }
-      // GCD(a,0)=a
-      if (ax <= tol){
-        return T(ay);
-      }
-      // GCD(a,0)=a
-      if (ay <= tol){
-        return T(ax);
-      }
-
-      unwrapped_t r;
-      while(ay > tol){
-        r = std::fmod(ax, ay);
-        ax = ay;
-        ay = r;
-      }
-      return T(ax);
+      return na_value<T>();
     }
   }
+
+  auto ax = std::abs(unwrap(x));
+  auto ay = std::abs(unwrap(y));
+  using unwrapped_t = decltype(ax);
+
+  if constexpr (RIntegerType<T>){
+
+    // Taken from number theory lecture notes
+
+    // GCD(0,0)=0
+    if (ax == 0 && ay == 0){
+      return T(0);
+    }
+    // GCD(a,0)=a
+    if (ax == 0){
+      return T(ay);
+    }
+    // GCD(a,0)=a
+    if (ay == 0){
+      return T(ax);
+    }
+
+    unwrapped_t r;
+
+    while(ay != 0){
+      r = ax % ay;
+      ax = ay;
+      ay = r;
+    }
+    return T(ax);
+  } else {
+
+    // GCD(0,0)=0
+    if (ax <= tol && ay <= tol){
+      return T(0.0);
+    }
+    // GCD(a,0)=a
+    if (ax <= tol){
+      return T(ay);
+    }
+    // GCD(a,0)=a
+    if (ay <= tol){
+      return T(ax);
+    }
+
+    unwrapped_t r;
+    while(ay > tol){
+      r = std::fmod(ax, ay);
+      ax = ay;
+      ay = r;
+    }
+    return T(ax);
+  }
+}
 
 
 // Lowest common multiple
-template<MathType T>
-  inline T lcm(
-      T x, T y, bool na_rm = true, T tol = std::sqrt(std::numeric_limits<T>::epsilon())
-  ){
-    if (is_na(x) || is_na(y)){
-      if (na_rm){
-        if (is_na(x)){
-          return y;
-        } else {
-          return x;
-        }
+template<RMathType T>
+inline T lcm(T x, T y, bool na_rm = false, T tol = r_limits<T>::tolerance()){
+  if (is_na(x) || is_na(y)){
+    if (na_rm){
+      if (is_na(x)){
+        return y;
       } else {
-        return na_value<T>();
+        return x;
       }
-    }
-
-    
-    T ax = abs(x);
-    T ay = abs(y);
-
-    if constexpr (IntegerType<T>){
-      if (ax == 0 && ay == 0){
-        return T(0);
-      }
-      // Because `/` for RMath types returns r_dbl and the C++ version doesn't
-      // we must use the C++ version
-      // We should always expect res to be an integer because the x is always divisible by gcd(x, y) exactly
-      T res = T(unwrap(ax) / unwrap(gcd(x, y, na_rm)));
-      if (y != 0 && (res > (r_limits<T>::max() / ay))){
-        return na_value<T>();
-      }
-      return res * ay;
     } else {
-      if (ax <= tol && ay <= tol){
-        return T(0.0);
-      }
-      return ( ax / gcd(x, y, na_rm, tol) ) * ay;
+      return na_value<T>();
     }
   }
+
+  
+  T ax = abs(x);
+  T ay = abs(y);
+
+  if constexpr (RIntegerType<T>){
+    if (ax == 0 && ay == 0){
+      return T(0);
+    }
+    // Because `/` for RMath types returns r_dbl and the C++ version doesn't
+    // we must use the C++ version
+    // We should always expect res to be an integer because the x is always divisible by gcd(x, y) exactly
+    T res = T(unwrap(ax) / unwrap(gcd(x, y, na_rm)));
+    if (y != 0 && (res > (r_limits<T>::max() / ay))){
+      return na_value<T>();
+    }
+    return res * ay;
+  } else {
+    if (ax <= tol && ay <= tol){
+      return T(0.0);
+    }
+    return ( ax / gcd(x, y, na_rm, tol) ) * ay;
+  }
+}
 
 
 }

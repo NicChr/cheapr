@@ -327,3 +327,15 @@ foo_test <- function() {
 foo_test2 <- function() {
   .Call(`_cheapr_foo_test2`)
 }
+
+foo_gcd <- function(x, na_rm) {
+  .Call(`_cheapr_foo_gcd`, x, na_rm)
+}
+
+foo_range2 <- function(x) {
+  .Call(`_cheapr_foo_range2`, x)
+}
+
+foo_range3 <- function(x) {
+  .Call(`_cheapr_foo_range3`, x)
+}
