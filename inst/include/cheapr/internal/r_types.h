@@ -244,12 +244,6 @@ inline constexpr auto as_r_val(T x) {
   } 
 }
 
-template<IsElementProxy T>
-constexpr auto as_r_val(T proxy) {
-  using data_t = typename T::value_type;
-  return as_r_val(static_cast<data_t>(proxy));
-}
-
 template<typename T>
 inline constexpr auto as_r_scalar(T x) {
   if constexpr (RVector<T>){

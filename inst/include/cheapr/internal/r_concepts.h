@@ -231,13 +231,6 @@ template <MathType T, MathType U>
 requires AtLeastOneRMathType<T, U>
 using common_r_math_t = typename internal::common_r_math_impl<T, U>::type;
 
-// Needed for `[]` access & `[]=` assignment
-template<typename T>
-concept IsElementProxy = requires {
-  typename T::is_element_proxy;
-  typename T::value_type;
-};
-
 }
 
 #endif

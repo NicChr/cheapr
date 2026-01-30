@@ -732,21 +732,6 @@ SEXP foo_test2(){
 }
 
 
-[[cpp11::register]]
-SEXP foo_test3(SEXP x){
-  auto y = as<r_vec<r_int>>(x);
-  return as_vector(y[0]);
-}
-
-[[cpp11::register]]
-SEXP foo_test4(SEXP x){
-  auto y = as<r_vec<r_int>>(x);
-  y[0] = r_int(123);
-  y[1] = y[0];
-  return y;
-}
-
-
 // SEXP foo_gcd(SEXP x) {
 //   return internal::visit_vector(x, [&](auto xvec) -> SEXP {
 //     if constexpr (RMathType<typename decltype(xvec)::data_type>){

@@ -17,43 +17,8 @@ struct r_vec {
   // T - Otherwise
   using ptr_t = std::conditional_t<RPtrWritableType<T>, unwrap_t<T>*, const SEXP*>;  
   ptr_t m_ptr = nullptr;
-
-  public: 
-  
-  // Element proxy needed for `[]` access & assignment
-  class element_proxy {
-    private:
-    r_vec& parent;
-    r_size_t index;
       
-    public:
-
-    using is_element_proxy = std::true_type; 
-    using value_type = T;
-
-    element_proxy(r_vec& vec, r_size_t idx) : parent(vec), index(idx) {}
-    
-    // Assignment operator - calls set()
-    template<typename U>
-    requires (!is<U, element_proxy>)
-    element_proxy& operator=(U&& val) {
-      parent.set(index, std::forward<U>(val));
-      return *this;
-    }
-    
-    // Self-assignment (for x[i] = x[j])
-    element_proxy& operator=(const element_proxy& other) {
-      parent.set(index, other.parent.get(other.index));
-      return *this;
-    }
-
-    operator T() const {
-      return parent.get(index);
-    }
-    T get() const {
-      return parent.get(index);
-    }
-    };
+  public:
 
   r_sexp sexp = r_null;
 
@@ -160,15 +125,6 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
       } else {
         m_ptr[index] = val2;
       }
-  }
-
-  // Non-const operator[] returns proxy
-  element_proxy operator[](r_size_t i) {
-    return element_proxy(*this, i);
-  }
-
-  T operator[](r_size_t i) const {
-      return get(i);
   }
 
   // r_vec<T> operator[](const r_vec<r_int>& indices) const {
