@@ -795,3 +795,10 @@ SEXP foo_range3(SEXP x){
     }
   });
 }
+
+[[cpp11::register]]
+SEXP foo_sset(SEXP x, SEXP i){
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    return xvec.subset(as<r_vec<r_int>>(i));
+  });
+}

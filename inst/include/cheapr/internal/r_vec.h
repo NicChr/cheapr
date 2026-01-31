@@ -4,6 +4,7 @@
 #include <cheapr/internal/r_methods.h>
 #include <cheapr/internal/r_vec_utils.h>
 #include <cheapr/internal/r_rtype_coerce.h>
+#include <vector>
 
 namespace cheapr {
 
@@ -87,7 +88,7 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
       return data() + size();
   }
 
-  bool is_null() const {
+  bool is_null() const noexcept {
     return sexp.is_null();
   }
 
@@ -104,19 +105,23 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
     return sexp.address();
   }
 
-  bool is_bare(){
+  bool is_bare() const {
     return !Rf_isObject(sexp);
   }
 
-  // get uses const pointer
-  T get(r_size_t index) const {
+  bool is_altrep() const {
+    return static_cast<bool>(ALTREP(unwrap(sexp)));
+  }
+
+  // Get element (no bounds-check)
+  template <CppIntegerType U>
+  T get(U index) const {
     return T(m_ptr[index]);
   }
 
-  // Set only available if writable
-  // We use flexible template to be able to coerce it to an RVal
-  template <typename U>
-  void set(r_size_t index, U val) {
+  // Set element (no bounds-check) - We use flexible template to be able to coerce it to an RVal
+  template <CppIntegerType U, typename V>
+  void set(U index, V val) {
       auto val2 = unwrap(cheapr::internal::as_r<T>(val));
       if constexpr (any<T, r_sexp, r_sym>){
         SET_VECTOR_ELT(sexp, index, val2);
@@ -127,11 +132,9 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
       }
   }
 
-  // r_vec<T> operator[](const r_vec<r_int>& indices) const {
-  //   r_size_t n_out = indices.length();
-  //   r_vec<T> out(n_out);
-
-  // }
+  template <typename U>
+  requires (any<U, r_int, r_int64>)
+  r_vec<T> subset(const r_vec<U>& indices) const;
 
   r_vec<r_str> names() const {
     return r_vec<r_str>(Rf_getAttrib(sexp, symbol::names_sym));
@@ -319,6 +322,76 @@ explicit r_vec(SEXP s) : r_vec(r_sexp(s)) {}
   }
 
 };
+
+template <typename U>
+requires (any<U, r_int, r_int64>)
+r_vec<U> exclude_locs(r_vec<U> exclude, unwrap_t<U> xn) {
+
+  using int_t = unwrap_t<U>;
+
+  int_t n = xn;
+  int_t m = exclude.length();
+  int_t out_size, idx;
+  int_t exclude_count = 0;
+  int_t i = 0, k = 0;
+
+  // Which elements do we keep?
+  std::vector<bool> keep(n, true);
+
+  for (int_t j = 0; j < m; ++j) {
+    if (is_na(exclude.get(j))) continue;
+    if (exclude.get(j) > 0){
+      abort("Cannot mix positive and negative subscripts");
+    }
+    idx = -exclude.get(j);
+    // Check keep array for already assigned FALSE to avoid double counting
+    if (idx > 0 && idx <= n && keep[idx - 1] == 1){
+      keep[idx - 1] = false;
+      ++exclude_count;
+    }
+  }
+  out_size = n - exclude_count;
+  auto out = r_vec<r_int>(out_size);
+
+  while(k != out_size){
+    if (keep[i++] == true){
+      out.set(k++, i);
+    }
+  }
+  return out;
+}
+
+template <RVal T>
+template <typename U>
+requires (any<U, r_int, r_int64>)
+inline r_vec<T> r_vec<T>::subset(const r_vec<U>& indices) const {
+
+  using unsigned_int_t = std::make_unsigned_t<unwrap_t<U>>;
+
+  unsigned_int_t
+  xn = length(),
+    n = indices.length(),
+    k = 0,
+    na_val = unwrap(na_value<U>()),
+    j;
+
+  auto out = r_vec<T>(n);
+
+  for (unsigned_int_t i = 0; i < n; ++i){
+    j = unwrap(indices.get(i));
+    if (internal::between_impl<unsigned_int_t>(j, 1U, xn)){
+      out.set(k++, get(--j));
+    } 
+    // If j > n_val then it is a negative signed integer
+    else if (j > na_val){
+      return subset(exclude_locs(indices, xn));
+    } 
+    else if (j != 0U){
+      out.set(k++, na_value<T>());
+    }
+  }
+  return out.resize(k);
+}
 
 namespace internal {
 

@@ -343,3 +343,7 @@ foo_range2 <- function(x) {
 foo_range3 <- function(x) {
   .Call(`_cheapr_foo_range3`, x)
 }
+
+foo_sset <- function(x, i) {
+  .Call(`_cheapr_foo_sset`, x, i)
+}
