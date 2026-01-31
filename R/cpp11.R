@@ -28,16 +28,8 @@ yeah <- function(x) {
   .Call(`_cheapr_yeah`, x)
 }
 
-yeah2 <- function(x) {
-  .Call(`_cheapr_yeah2`, x)
-}
-
 foo2 <- function() {
   .Call(`_cheapr_foo2`)
-}
-
-foo3 <- function(x) {
-  .Call(`_cheapr_foo3`, x)
 }
 
 foo4 <- function(x) {
@@ -354,4 +346,8 @@ foo_sset <- function(x, i) {
 
 foo_lgl <- function() {
   .Call(`_cheapr_foo_lgl`)
+}
+
+foo_unique <- function(x) {
+  .Call(`_cheapr_foo_unique`, x)
 }

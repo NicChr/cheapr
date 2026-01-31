@@ -71,26 +71,10 @@ SEXP yeah(SEXP x) {
   return out;
 }
 
-[[cpp11::register]]
-SEXP yeah2(SEXP x) {
-  return internal::unique_strings(r_vec<r_str>(x));
-}
-
 
 [[cpp11::register]]
 SEXP foo2() {
   return as<r_vec<r_int>>(r_int(1));
-}
-
-
-[[cpp11::register]]
-SEXP foo3(SEXP x) {
-  auto x2 = internal::visit_vector(x, [&](auto xvec) -> r_vec<r_str> {
-    return as<r_vec<r_str>>(xvec);
-  });
-  auto out = internal::unique_strings(x2);
-
-  return out;
 }
 
 
@@ -714,8 +698,13 @@ SEXP foo59(SEXP x){
 
 [[cpp11::register]]
 SEXP foo_factor(SEXP x){
-  auto x_ = as<r_vec<r_str>>(x);
-  return r_factors(x_);
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    if constexpr (RScalar<typename decltype(xvec)::data_type>){
+      return r_factors(xvec);
+    } else {
+      abort("e");
+    }
+  });
 }
 [[cpp11::register]]
 SEXP foo_factor2(SEXP x, SEXP levels){
@@ -830,4 +819,15 @@ SEXP foo_lgl(){
     c && c, // NA
     c || c // NA
   );
+}
+
+[[cpp11::register]]
+SEXP foo_unique(SEXP x) {
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    if constexpr (any<decltype(xvec), r_vec<r_sexp>, r_vec<r_cplx>>){
+      return r_null;
+    } else {
+      return unique(xvec);
+    }
+  });
 }

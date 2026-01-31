@@ -6,12 +6,75 @@
 #include <ankerl/unordered_dense.h> // For unique strings and matching
 #include <vector>
 
-
 namespace cheapr {
 
-namespace internal {
+template <RScalar T>
+r_vec<r_int> match(r_vec<T> needles, r_vec<T> haystack) {
 
-r_vec<r_str> unique_strings(r_vec<r_str> x) {
+  r_size_t n_needles = needles.length();
+  r_size_t n_haystack = haystack.length();
+
+  if (n_haystack > r_limits<r_int>::max()){
+    abort("Cannot match to a long vector, please use a short vector");
+  }
+
+  // Build hash table
+  ankerl::unordered_dense::map<unwrap_t<T>, int> lookup;
+  lookup.reserve(n_haystack);
+
+  for (r_size_t i = 0; i < n_haystack; ++i) {
+    auto elem = unwrap(haystack.get(i));
+    lookup.try_emplace(elem, static_cast<int>(i) + 1);
+  }
+
+  // Match needles
+  auto out = r_vec<r_int>(n_needles);
+  for (r_size_t i = 0; i < n_needles; ++i) {
+    auto needle = unwrap(needles.get(i));
+    auto it = lookup.find(needle);
+    out.set(i, it != lookup.end() ? r_int(it->second) : na_value<r_int>());
+  }
+
+  return out;
+}
+
+template <RScalar T>
+r_vec<T> unique(r_vec<T> x) {
+  r_size_t n = x.length();
+  
+  // Hash set for O(n) de-duplication
+  ankerl::unordered_dense::set<unwrap_t<T>> seen;
+  seen.reserve(n);
+  
+  // Store uniques in insertion order using raw SEXP pointers
+  std::vector<unwrap_t<T>> uniques;
+  uniques.reserve(n);
+  
+  auto *p_x = x.data();
+  
+  for (r_size_t i = 0; i < n; ++i) {
+      auto elem = p_x[i];
+      if (seen.insert(elem).second) {
+          uniques.push_back(elem);
+      }
+  }
+  
+  r_size_t n_unique = uniques.size();
+  
+  if (n_unique == n) {
+      return x;
+  }
+  
+  auto out = r_vec<T>(n_unique);
+  for (r_size_t i = 0; i < n_unique; ++i) {
+      out.set(i, T(uniques[i]));
+  }
+  
+  return out;
+}
+
+// Specialisation for strings
+r_vec<r_str> unique(r_vec<r_str> x) {
   r_size_t n = x.length();
   
   // Hash set for O(n) de-duplication
@@ -43,39 +106,6 @@ r_vec<r_str> unique_strings(r_vec<r_str> x) {
   }
   
   return out;
-}
-
-
-// Match needle strings to first occurrence in haystack
-r_vec<r_int> string_match(r_vec<r_str> needles, r_vec<r_str> haystack) {
-
-  r_size_t n_needles = needles.length();
-  r_size_t n_haystack = haystack.length();
-
-  if (n_haystack > r_limits<r_int>::max()){
-    abort("Cannot match to a long vector, please use a short character vector");
-  }
-
-  // Build hash table
-  ankerl::unordered_dense::map<SEXP, int> lookup;
-  lookup.reserve(n_haystack);
-
-  for (r_size_t i = 0; i < n_haystack; ++i) {
-    r_str str = haystack.get(i);
-    lookup.try_emplace(str, static_cast<int>(i) + 1);
-  }
-
-  // Match needles
-  auto out = r_vec<r_int>(n_needles);
-  for (r_size_t i = 0; i < n_needles; ++i) {
-    r_str needle = needles.get(i);
-    auto it = lookup.find(needle);
-    out.set(i, it != lookup.end() ? r_int(it->second) : na::integer);
-  }
-
-  return out;
-}
-
 }
 
 
@@ -112,14 +142,26 @@ struct r_factors : public r_vec<r_int> {
     }
   }
 
-  explicit r_factors(const r_vec<r_str>& x, const r_vec<r_str>& levels){
-    auto fct = internal::string_match(x, levels);
+  template <RScalar T>
+  explicit r_factors(const r_vec<T>& x, const r_vec<T>& levels){
+    auto fct = match(x, levels);
     r_vec<r_int>::operator=(std::move(fct));
-    // *static_cast<r_vec<r_int>*>(this) = std::move(fct);
-    init_factor_attrs(levels);
+    r_vec<r_str> str_levels;
+    if constexpr (is<T, r_str>){
+      str_levels = levels;
+    } else {
+      r_size_t n = levels.length();
+      str_levels = r_vec<r_str>(n);
+      for (r_size_t i = 0; i < n; ++i){
+        str_levels.set(i, internal::as_r<r_str>(levels.get(i)));
+      }
+    }
+    init_factor_attrs(str_levels);
   }
 
-  explicit r_factors(r_vec<r_str> x) : r_factors(x, internal::unique_strings(x)) {}
+  template <RScalar T>
+  requires (!is<T, r_cplx>)
+  explicit r_factors(r_vec<T> x) : r_factors(x, unique(x)) {}
 };
 
 }

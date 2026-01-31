@@ -56,24 +56,10 @@ extern "C" SEXP _cheapr_yeah(SEXP x) {
   END_CPP11
 }
 // test.cpp
-SEXP yeah2(SEXP x);
-extern "C" SEXP _cheapr_yeah2(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(yeah2(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
-  END_CPP11
-}
-// test.cpp
 SEXP foo2();
 extern "C" SEXP _cheapr_foo2() {
   BEGIN_CPP11
     return cpp11::as_sexp(foo2());
-  END_CPP11
-}
-// test.cpp
-SEXP foo3(SEXP x);
-extern "C" SEXP _cheapr_foo3(SEXP x) {
-  BEGIN_CPP11
-    return cpp11::as_sexp(foo3(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
 // test.cpp
@@ -629,6 +615,13 @@ extern "C" SEXP _cheapr_foo_lgl() {
     return cpp11::as_sexp(foo_lgl());
   END_CPP11
 }
+// test.cpp
+SEXP foo_unique(SEXP x);
+extern "C" SEXP _cheapr_foo_unique(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_unique(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
@@ -655,7 +648,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo27",            (DL_FUNC) &_cheapr_foo27,            1},
     {"_cheapr_foo28",            (DL_FUNC) &_cheapr_foo28,            2},
     {"_cheapr_foo29",            (DL_FUNC) &_cheapr_foo29,            1},
-    {"_cheapr_foo3",             (DL_FUNC) &_cheapr_foo3,             1},
     {"_cheapr_foo30",            (DL_FUNC) &_cheapr_foo30,            0},
     {"_cheapr_foo31",            (DL_FUNC) &_cheapr_foo31,            0},
     {"_cheapr_foo32",            (DL_FUNC) &_cheapr_foo32,            0},
@@ -709,6 +701,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo_sum_int",      (DL_FUNC) &_cheapr_foo_sum_int,      2},
     {"_cheapr_foo_test",         (DL_FUNC) &_cheapr_foo_test,         0},
     {"_cheapr_foo_test2",        (DL_FUNC) &_cheapr_foo_test2,        0},
+    {"_cheapr_foo_unique",       (DL_FUNC) &_cheapr_foo_unique,       1},
     {"_cheapr_foo_vec_add",      (DL_FUNC) &_cheapr_foo_vec_add,      1},
     {"_cheapr_foo_vec_add2",     (DL_FUNC) &_cheapr_foo_vec_add2,     1},
     {"_cheapr_foo_vec_add3",     (DL_FUNC) &_cheapr_foo_vec_add3,     1},
@@ -720,7 +713,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foofoo",           (DL_FUNC) &_cheapr_foofoo,           0},
     {"_cheapr_ok",               (DL_FUNC) &_cheapr_ok,               0},
     {"_cheapr_yeah",             (DL_FUNC) &_cheapr_yeah,             1},
-    {"_cheapr_yeah2",            (DL_FUNC) &_cheapr_yeah2,            1},
     {NULL, NULL, 0}
 };
 }
