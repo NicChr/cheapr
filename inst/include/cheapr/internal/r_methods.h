@@ -10,9 +10,34 @@ namespace cheapr {
 
 // Methods for custom R types
 
-// ! operator for r_lgl
+// operators for r_lgl
 inline constexpr r_lgl operator!(r_lgl x) {
   return is_na(x) ? r_na : r_lgl(x.value == 0);
+}
+
+// r_true = 1, r_false = 0, r_na = INT_MIN
+
+// ---------------------------------------------------------
+// OPTIMIZED OR (||) for r_lgl
+// If LSB is set (1), return 1
+// Otherwise return (a|b).
+// ---------------------------------------------------------
+inline constexpr r_lgl operator||(r_lgl lhs, r_lgl rhs) {
+    int val = lhs.value | rhs.value;
+    return (val & 1) ? r_true : r_lgl(val);
+}
+
+// ---------------------------------------------------------
+// OPTIMIZED AND (&&) for r_lgl
+// If either is 0, return 0.
+// if either is NA (negative), return NA.
+// otherwise return 1.
+// ---------------------------------------------------------
+inline constexpr r_lgl operator&&(r_lgl lhs, r_lgl rhs) {
+    if (lhs.value == 0 || rhs.value == 0) {
+        return r_false;
+    }
+    return (lhs.value | rhs.value) < 0 ? r_na : r_true;
 }
 
 // r_cplx methods

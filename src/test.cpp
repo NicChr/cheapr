@@ -802,3 +802,28 @@ SEXP foo_sset(SEXP x, SEXP i){
     return xvec.subset(as<r_vec<r_int>>(i));
   });
 }
+
+
+[[cpp11::register]]
+SEXP foo_lgl(){
+  r_lgl a = r_true;
+  r_lgl b = r_false;
+  r_lgl c = r_na;
+  return make_vec<r_sexp>(
+    a && a, // true
+    a || a, // true 
+    b && b, // false
+    b || b, // false 
+    a && b, // false 
+    a || b, // true 
+    c || a, // true 
+    c && b, // false
+    a || c, // true
+    b && c, // false
+    a && c, // NA
+    b && c, // false
+    b || c, // NA
+    c && c, // NA
+    c || c // NA
+  );
+}
