@@ -560,10 +560,17 @@ extern "C" SEXP _cheapr_foo_factor(SEXP x) {
   END_CPP11
 }
 // test.cpp
-SEXP foo_factor2();
-extern "C" SEXP _cheapr_foo_factor2() {
+SEXP foo_factor2(SEXP x, SEXP levels);
+extern "C" SEXP _cheapr_foo_factor2(SEXP x, SEXP levels) {
   BEGIN_CPP11
-    return cpp11::as_sexp(foo_factor2());
+    return cpp11::as_sexp(foo_factor2(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x), cpp11::as_cpp<cpp11::decay_t<SEXP>>(levels)));
+  END_CPP11
+}
+// test.cpp
+SEXP foo_factor3();
+extern "C" SEXP _cheapr_foo_factor3() {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_factor3());
   END_CPP11
 }
 // test.cpp
@@ -685,7 +692,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo_add",          (DL_FUNC) &_cheapr_foo_add,          1},
     {"_cheapr_foo_add1",         (DL_FUNC) &_cheapr_foo_add1,         2},
     {"_cheapr_foo_factor",       (DL_FUNC) &_cheapr_foo_factor,       1},
-    {"_cheapr_foo_factor2",      (DL_FUNC) &_cheapr_foo_factor2,      0},
+    {"_cheapr_foo_factor2",      (DL_FUNC) &_cheapr_foo_factor2,      2},
+    {"_cheapr_foo_factor3",      (DL_FUNC) &_cheapr_foo_factor3,      0},
     {"_cheapr_foo_gcd",          (DL_FUNC) &_cheapr_foo_gcd,          2},
     {"_cheapr_foo_lcm",          (DL_FUNC) &_cheapr_foo_lcm,          2},
     {"_cheapr_foo_lgl",          (DL_FUNC) &_cheapr_foo_lgl,          0},

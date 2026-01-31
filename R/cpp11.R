@@ -316,8 +316,12 @@ foo_factor <- function(x) {
   .Call(`_cheapr_foo_factor`, x)
 }
 
-foo_factor2 <- function() {
-  .Call(`_cheapr_foo_factor2`)
+foo_factor2 <- function(x, levels) {
+  .Call(`_cheapr_foo_factor2`, x, levels)
+}
+
+foo_factor3 <- function() {
+  .Call(`_cheapr_foo_factor3`)
 }
 
 foo_test <- function() {

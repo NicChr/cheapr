@@ -718,7 +718,11 @@ SEXP foo_factor(SEXP x){
   return r_factors(x_);
 }
 [[cpp11::register]]
-SEXP foo_factor2(){
+SEXP foo_factor2(SEXP x, SEXP levels){
+  return r_factors(as<r_vec<r_str>>(x), as<r_vec<r_str>>(levels));
+}
+[[cpp11::register]]
+SEXP foo_factor3(){
   return r_factors();
 }
 
