@@ -65,15 +65,13 @@ template<>
 inline const int64_t* vector_ptr<const r_int64>(SEXP x) {
   return reinterpret_cast<const int64_t*>(REAL_RO(x));
 }
-
-
 template<>
-inline Rcomplex* vector_ptr<r_cplx>(SEXP x) {
-  return COMPLEX(x);
+inline std::complex<double>* vector_ptr<r_cplx>(SEXP x) {
+  return reinterpret_cast<std::complex<double>*>(COMPLEX(x));
 }
 template<>
-inline const Rcomplex* vector_ptr<const r_cplx>(SEXP x) {
-  return COMPLEX_RO(x);
+inline const std::complex<double>* vector_ptr<const r_cplx>(SEXP x) {
+  return reinterpret_cast<const std::complex<double>*>(COMPLEX_RO(x));
 }
 
 template<>
@@ -165,7 +163,7 @@ inline r_sexp new_scalar_vec<r_str>(r_str default_value){
 }
 template <>
 inline r_sexp new_scalar_vec<r_cplx>(r_cplx default_value){
-  return r_sexp(Rf_ScalarComplex(unwrap(default_value)));
+  return r_sexp(Rf_ScalarComplex(Rcomplex{default_value.re(), default_value.im()}));
 }
 template <>
 inline r_sexp new_scalar_vec<r_raw>(r_raw default_value){

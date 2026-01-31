@@ -86,7 +86,7 @@ inline r_dbl as_double(T x){
 }
 template<typename T>
 inline r_cplx as_complex(T x){
-  if constexpr (is<T, Rcomplex> || is<T, r_cplx>){
+  if constexpr (is<T, std::complex<double>> || is<T, r_cplx>){
     return r_cplx(unwrap(x));
   } else if constexpr (MathType<T>){
     return r_cplx{as_double(x), r_dbl(0.0)};

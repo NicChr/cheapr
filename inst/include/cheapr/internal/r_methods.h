@@ -40,75 +40,9 @@ inline constexpr r_lgl operator&&(r_lgl lhs, r_lgl rhs) {
     return (lhs.value | rhs.value) < 0 ? r_na : r_true;
 }
 
-// r_cplx methods
-
-// Unary minus
-inline constexpr r_cplx operator-(const r_cplx& x) {
-  return r_cplx{r_dbl(-x.re().value), r_dbl(-x.im().value)};
-}
-
-// Binary arithmetic operators
-inline constexpr r_cplx operator+(const r_cplx& lhs, const r_cplx& rhs) {
-  return r_cplx{r_dbl(lhs.re() + rhs.re()), r_dbl(lhs.im() + rhs.im())};
-}
-
-inline constexpr r_cplx operator-(const r_cplx& lhs, const r_cplx& rhs) {
-  return r_cplx{r_dbl(lhs.re() - rhs.re()), r_dbl(lhs.im() - rhs.im())};
-}
-
-inline constexpr r_cplx operator*(const r_cplx& lhs, const r_cplx& rhs) {
-  // (a+bi) * (c+di) = (ac-bd) + (ad+bc)i
-  double a = lhs.re(), b = lhs.im();
-  double c = rhs.re(), d = rhs.im();
-  return r_cplx{r_dbl(a*c - b*d), r_dbl(a*d + b*c)};
-}
-
-inline constexpr r_cplx operator/(const r_cplx& lhs, const r_cplx& rhs) {
-  // (a+bi) / (c+di) = [(ac+bd)/(c²+d²) + (bc-ad)/(c²+d²)i]
-  double a = lhs.re(), b = lhs.im();
-  double c = rhs.re(), d = rhs.im();
-  double denom = c*c + d*d; 
-  return r_cplx{r_dbl((a*c + b*d) / denom), r_dbl((b*c - a*d) / denom)};
-}
-
-// Compound assignment operators
-inline constexpr r_cplx& operator+=(r_cplx& lhs, const r_cplx& rhs) {
-  lhs.value.r += unwrap(rhs).r;
-  lhs.value.i += unwrap(rhs).i;
-  return lhs;
-}
-
-inline constexpr r_cplx& operator-=(r_cplx& lhs, const r_cplx& rhs) {
-  lhs.value.r -= unwrap(rhs).r;
-  lhs.value.i -= unwrap(rhs).i;
-  return lhs;
-}
-
-inline constexpr r_cplx& operator*=(r_cplx& lhs, const r_cplx& rhs) {
-  double a = lhs.re(), b = lhs.im();
-  double c = rhs.re(), d = rhs.im();
-  lhs.re() = r_dbl(a*c - b*d);
-  lhs.im() = r_dbl(a*d + b*c);
-  return lhs;
-}
-
-inline constexpr r_cplx& operator/=(r_cplx& lhs, const r_cplx& rhs) {
-  double a = lhs.re(), b = lhs.im();
-  double c = rhs.re(), d = rhs.im();
-  double denom = c*c + d*d;
-  lhs.re() = r_dbl((a*c + b*d) / denom);
-  lhs.im() = r_dbl((b*c - a*d) / denom); 
-  return lhs;
-}
-
 template<RVal T, RVal U>
 inline constexpr r_lgl operator==(const T &lhs, const U &rhs) {
-  if constexpr (is<T, r_cplx> && is<U, r_cplx>){
-    // Compare complex types by components
-    return lhs.re() == rhs.re() && lhs.im() == rhs.im();
-  } else {
-    return (is_na(lhs) || is_na(rhs)) ? r_na : r_lgl{unwrap(lhs) == unwrap(rhs)};
-  }
+  return (is_na(lhs) || is_na(rhs)) ? r_na : r_lgl{unwrap(lhs) == unwrap(rhs)};
 }
 
 template<RVal T, CppScalar U>

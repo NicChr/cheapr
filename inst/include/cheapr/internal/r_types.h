@@ -147,22 +147,22 @@ struct r_sym {
 };
 
 
-// Alias type for Rcomplex
+// Uses std::complex<double> under the hood
 struct r_cplx {
-  Rcomplex value;
-  using value_type = Rcomplex;
+  std::complex<double> value;
+  using value_type = std::complex<double>;
 
   // Constructors
   constexpr r_cplx() : value{0.0, 0.0} {}
   constexpr r_cplx(r_dbl r, r_dbl i) : value{r, i} {}
-
+  
   // Conversion handling
-  explicit constexpr r_cplx(Rcomplex x) : value{x} {}
-  constexpr operator Rcomplex() const { return value; }
+  explicit constexpr r_cplx(std::complex<double> x) : value{x} {}
+  constexpr operator std::complex<double>() const { return value; }
 
   // Get real and imaginary parts
-  constexpr r_dbl re() const { return r_dbl{value.r}; }
-  constexpr r_dbl im() const { return r_dbl{value.i}; }
+  constexpr r_dbl re() const { return r_dbl{value.real()}; }
+  constexpr r_dbl im() const { return r_dbl{value.imag()}; }
 };
 
 // Alias type for r_raw

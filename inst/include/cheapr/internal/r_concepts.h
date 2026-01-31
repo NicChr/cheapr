@@ -2,6 +2,7 @@
 #define CHEAPR_R_CONCEPTS_H
 
 #include <cheapr/internal/r_setup.h>
+#include <complex> // For std::complex
 
 namespace cheapr {
 
@@ -175,7 +176,7 @@ template<> struct r_val_mapping_impl<int>           { using type = r_int; };
 template<> struct r_val_mapping_impl<int64_t>       { using type = r_int64; };
 template<> struct r_val_mapping_impl<double>        { using type = r_dbl; };
 template<> struct r_val_mapping_impl<const char*>   { using type = r_str; };
-template<> struct r_val_mapping_impl<Rcomplex>      { using type = r_cplx; };
+template<> struct r_val_mapping_impl<std::complex<double>>      { using type = r_cplx; };
 template<> struct r_val_mapping_impl<Rbyte>         { using type = r_raw; };
 template<> struct r_val_mapping_impl<SEXP>          { using type = r_sexp; };
 
