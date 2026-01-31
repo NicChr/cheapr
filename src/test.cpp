@@ -759,6 +759,18 @@ SEXP foo_gcd(SEXP x, bool na_rm){
   });
 }
 
+[[cpp11::register]]
+SEXP foo_lcm(SEXP x, bool na_rm){
+  return internal::visit_vector(x, [&](auto xvec) -> SEXP {
+    using data_t = typename decltype(xvec)::data_type;
+    if constexpr (RMathType<data_t>){
+      return as_vector(lcm(xvec, na_rm));
+    } else {
+      return r_null;
+    }
+  });
+}
+
 
 [[cpp11::register]]
 SEXP foo_range2(SEXP x){

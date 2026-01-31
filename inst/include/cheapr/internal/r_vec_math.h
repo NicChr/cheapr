@@ -247,6 +247,30 @@ T gcd(const r_vec<T> &x, bool na_rm = false, T tol = r_limits<T>::tolerance()){
   return out;
 }
 
+template<RMathType T>
+T lcm(const r_vec<T> &x, bool na_rm = false, T tol = r_limits<T>::tolerance()){
+    if (tol < 0 || tol >= 1){
+      Rf_error("tol must be >= 0 and < 1");
+    }
+    r_size_t n = x.length();
+    if (n == 0){
+        return na_value<T>();
+    }
+
+    // Initialise first value as lcm
+    T out = x.get(0);
+
+    for (R_xlen_t i = 1; i < n; ++i) {
+    if (!na_rm && is_na(out)){
+        break;
+    } else if (is_r_pos_inf(out)){
+        break;
+    }
+    out = lcm(out, x.get(i), na_rm, tol);
+    }
+    return out;
+  }
+
 }
 
 
