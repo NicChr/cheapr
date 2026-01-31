@@ -622,6 +622,20 @@ extern "C" SEXP _cheapr_foo_unique(SEXP x) {
     return cpp11::as_sexp(foo_unique(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
   END_CPP11
 }
+// test.cpp
+SEXP foo_unique_strs(SEXP x);
+extern "C" SEXP _cheapr_foo_unique_strs(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_unique_strs(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
+// test.cpp
+SEXP foo_match_unique(SEXP x);
+extern "C" SEXP _cheapr_foo_match_unique(SEXP x) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(foo_match_unique(cpp11::as_cpp<cpp11::decay_t<SEXP>>(x)));
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
@@ -691,6 +705,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo_lgl",          (DL_FUNC) &_cheapr_foo_lgl,          0},
     {"_cheapr_foo_make_list",    (DL_FUNC) &_cheapr_foo_make_list,    0},
     {"_cheapr_foo_make_list2",   (DL_FUNC) &_cheapr_foo_make_list2,   0},
+    {"_cheapr_foo_match_unique", (DL_FUNC) &_cheapr_foo_match_unique, 1},
     {"_cheapr_foo_na_count",     (DL_FUNC) &_cheapr_foo_na_count,     1},
     {"_cheapr_foo_range",        (DL_FUNC) &_cheapr_foo_range,        2},
     {"_cheapr_foo_range2",       (DL_FUNC) &_cheapr_foo_range2,       1},
@@ -702,6 +717,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cheapr_foo_test",         (DL_FUNC) &_cheapr_foo_test,         0},
     {"_cheapr_foo_test2",        (DL_FUNC) &_cheapr_foo_test2,        0},
     {"_cheapr_foo_unique",       (DL_FUNC) &_cheapr_foo_unique,       1},
+    {"_cheapr_foo_unique_strs",  (DL_FUNC) &_cheapr_foo_unique_strs,  1},
     {"_cheapr_foo_vec_add",      (DL_FUNC) &_cheapr_foo_vec_add,      1},
     {"_cheapr_foo_vec_add2",     (DL_FUNC) &_cheapr_foo_vec_add2,     1},
     {"_cheapr_foo_vec_add3",     (DL_FUNC) &_cheapr_foo_vec_add3,     1},

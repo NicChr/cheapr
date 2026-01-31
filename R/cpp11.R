@@ -351,3 +351,11 @@ foo_lgl <- function() {
 foo_unique <- function(x) {
   .Call(`_cheapr_foo_unique`, x)
 }
+
+foo_unique_strs <- function(x) {
+  .Call(`_cheapr_foo_unique_strs`, x)
+}
+
+foo_match_unique <- function(x) {
+  .Call(`_cheapr_foo_match_unique`, x)
+}

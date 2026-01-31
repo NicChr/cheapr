@@ -131,15 +131,7 @@ inline r_str as_r_string(T x){
       return na_value<r_str>();
     }
     char buffer[48];
-    auto result = std::to_chars(buffer, buffer + sizeof(buffer), x.value);
-    if (result.ec != std::errc{}) {
-      abort("Internal error, increase buffer size for string conversion");
-    }
-    *result.ptr = '\0';  // Null-terminate
-    return as_r_string(static_cast<const char *>(buffer));
-  } else if constexpr (CppMathType<T>){
-    char buffer[48];
-    auto result = std::to_chars(buffer, buffer + sizeof(buffer), x);
+    auto result = std::to_chars(buffer, buffer + sizeof(buffer), unwrap(x) + unwrap_t<T>(0));
     if (result.ec != std::errc{}) {
       abort("Internal error, increase buffer size for string conversion");
     }
