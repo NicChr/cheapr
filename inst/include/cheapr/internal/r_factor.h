@@ -5,7 +5,6 @@
 #include <cheapr/internal/r_match.h>
 #include <cheapr/internal/r_unique.h>
 #include <cheapr/internal/r_attrs.h>
-#include <ankerl/unordered_dense.h> // For unique strings and matching
 #include <vector>
 
 namespace cheapr {
@@ -61,9 +60,8 @@ struct r_factors : public r_vec<r_int> {
   }
 
   template <RScalar T>
-  requires (!is<T, r_cplx>)
-  explicit r_factors(r_vec<T> x) : r_factors(x, unique(x)) {}
-  
+  explicit r_factors(const r_vec<T>& x) : r_factors(x, unique(x)) {}
+
 };
 
 }

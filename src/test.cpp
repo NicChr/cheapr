@@ -824,7 +824,7 @@ SEXP foo_lgl(){
 [[cpp11::register]]
 SEXP foo_unique(SEXP x) {
   return internal::visit_vector(x, [&](auto xvec) -> SEXP {
-    if constexpr (any<decltype(xvec), r_vec<r_sexp>, r_vec<r_cplx>>){
+    if constexpr (any<decltype(xvec), r_vec<r_sexp>>){
       return r_null;
     } else {
       return unique(xvec);
@@ -836,7 +836,7 @@ SEXP foo_unique(SEXP x) {
 [[cpp11::register]]
 SEXP foo_unique_strs(SEXP x) {
   return internal::visit_vector(x, [&](auto xvec) -> SEXP {
-    if constexpr (any<decltype(xvec), r_vec<r_sexp>, r_vec<r_cplx>>){
+    if constexpr (any<decltype(xvec), r_vec<r_sexp>>){
       return r_null;
     } else {
       return as<r_vec<r_str>>(unique(xvec));
@@ -848,7 +848,7 @@ SEXP foo_unique_strs(SEXP x) {
 [[cpp11::register]]
 SEXP foo_match_unique(SEXP x) {
   return internal::visit_vector(x, [&](auto xvec) -> SEXP {
-    if constexpr (any<decltype(xvec), r_vec<r_sexp>, r_vec<r_cplx>>){
+    if constexpr (any<decltype(xvec), r_vec<r_sexp>>){
       return r_null;
     } else {
       return match(xvec, unique(xvec));

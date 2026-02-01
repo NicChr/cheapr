@@ -141,8 +141,8 @@ inline r_str as_r_string(T x){
     if (is_na(x)){
       return na_value<r_str>();
     }
-    double re = x.re();
-    double im = x.im();
+    double re = x.re() + 0.0;
+    double im = x.im() + 0.0;
 
     char buffer[96];
     if (im >= 0){

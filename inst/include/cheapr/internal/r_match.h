@@ -2,7 +2,6 @@
 #define CHEAPR_R_MATCH_H
 
 #include <cheapr/internal/r_vec.h>
-#include <ankerl/unordered_dense.h> // For unique strings and matching
 
 namespace cheapr {
 

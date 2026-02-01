@@ -2,8 +2,6 @@
 #define CHEAPR_R_UNIQUE_H
 
 #include <cheapr/internal/r_vec.h>
-#include <ankerl/unordered_dense.h> // For unique strings and matching
-#include <vector>
 
 namespace cheapr {
 

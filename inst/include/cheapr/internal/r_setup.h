@@ -1,6 +1,11 @@
 #ifndef CHEAPR_R_SETUP_H
 #define CHEAPR_R_SETUP_H
 
+#include <type_traits>
+#include <ankerl/unordered_dense.h> // Unique + match
+#include <complex>
+#include <limits>
+#include <vector>
 #include <cpp11.hpp>
 
 #ifdef _MSC_VER
@@ -105,5 +110,26 @@ template <typename... Args>
 }
 
 }
+
+// Making complex numbers hashable
+namespace ankerl {
+namespace unordered_dense {
+
+template <>
+struct hash<std::complex<double>> {
+    using is_avalanching = void;
+
+    [[nodiscard]] auto operator()(std::complex<double> const& x) const noexcept -> uint64_t {
+        // Use ankerl's built-in hash for doubles
+        auto h1 = hash<double>{}(x.real());
+        auto h2 = hash<double>{}(x.imag());
+        
+        // We combine them using a mixing function
+        return ankerl::unordered_dense::detail::wyhash::mix(h1, h2);
+    }
+};
+
+} // namespace unordered_dense
+} // namespace ankerl
 
 #endif

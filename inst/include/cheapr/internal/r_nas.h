@@ -3,7 +3,6 @@
 
 #include <cheapr/internal/r_setup.h>
 #include <cheapr/internal/r_types.h>
-#include <limits>
 
 namespace cheapr {
     

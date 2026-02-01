@@ -3,7 +3,6 @@
 
 #include <cheapr/internal/r_setup.h>
 #include <cheapr/internal/r_concepts.h>
-#include <limits>
 #include <string>
 
 // R types

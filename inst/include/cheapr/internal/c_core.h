@@ -25,8 +25,6 @@
 #include <cheapr/internal/r_math.h>
 #include <cheapr/internal/r_vec_math.h>
 #include <cheapr/internal/r_stats.h>
-#include <optional>
-#include <type_traits>
 
 
 namespace cheapr {
