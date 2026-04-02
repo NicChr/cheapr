@@ -100,9 +100,9 @@ struct r_string_t {
   SEXP value;
   r_string_t() : value{R_BlankString} {}
   // Explicit SEXP -> r_string_t
-  explicit constexpr r_string_t(SEXP x) : value{x} {}
+  explicit r_string_t(SEXP x) : value{x} {}
   // Implicit r_string_t -> SEXP
-  constexpr operator SEXP() const { return value; }
+  operator SEXP() const { return value; }
 };
 
 inline const r_string_t blank_r_string = r_string_t();
@@ -110,9 +110,8 @@ inline const r_string_t blank_r_string = r_string_t();
 // Alias type for SYMSXP
 struct r_symbol_t {
   SEXP value;
-  r_symbol_t() : value{R_MissingArg} {}
-  explicit constexpr r_symbol_t(SEXP x) : value{x} {}
-  constexpr operator SEXP() const { return value; }
+  explicit r_symbol_t(SEXP x) : value{x} {}
+  operator SEXP() const { return value; }
 };
 
 // Alias type for Rcomplex
@@ -190,7 +189,6 @@ inline r_symbol_t sort_list_sym = static_cast<r_symbol_t>(R_SortListSymbol);
 inline r_symbol_t eval_sym = static_cast<r_symbol_t>(R_EvalSymbol);
 inline r_symbol_t drop_sym = static_cast<r_symbol_t>(R_DropSymbol);
 inline r_symbol_t missing_arg = static_cast<r_symbol_t>(R_MissingArg);
-inline r_symbol_t unbound_value = static_cast<r_symbol_t>(R_UnboundValue);
 
 }
 
@@ -1165,7 +1163,7 @@ inline constexpr bool is_r_na<r_byte_t>(const r_byte_t x){
 }
 
 template<>
-inline constexpr bool is_r_na<r_symbol_t>(const r_symbol_t x){
+inline bool is_r_na<r_symbol_t>(const r_symbol_t x){
   return false;
 }
 
@@ -2184,11 +2182,9 @@ inline void add_attrs(SEXP x, SEXP attrs) {
     const SEXP *p_attributes = list_ptr_ro(attrs);
     const r_string_t *p_names = vector_ptr<const r_string_t>(names);
 
-    r_symbol_t attr_nm;
-
     for (int i = 0; i < Rf_length(names); ++i){
       if (p_names[i] != blank_r_string){
-        attr_nm = r_cast<r_symbol_t>(p_names[i]);
+        r_symbol_t attr_nm = r_cast<r_symbol_t>(p_names[i]);
         if (address(x) == address(p_attributes[i])){
           SEXP dup_attr = SHIELD(Rf_duplicate(p_attributes[i])); ++NP;
           attr::set_attr(x, attr_nm, dup_attr);
@@ -2269,29 +2265,6 @@ inline SEXP deep_copy(SEXP x){
   return Rf_duplicate(x);
 }
 
-}
-
-
-namespace env {
-inline SEXP get(r_symbol_t sym, SEXP env, bool inherits = true){
-
-  if (TYPEOF(env) != ENVSXP){
-    Rf_error("second argument to '%s' must be an environment", __func__);
-  }
-
-  SEXP val = inherits ? Rf_findVar(sym, env) : Rf_findVarInFrame(env, sym);
-
-  if (val == symbol::missing_arg){
-    Rf_error("arg `sym` cannot be missing");
-  } else if (val == symbol::unbound_value){
-    return r_null;
-  } else if (TYPEOF(val) == PROMSXP){
-    SHIELD(val);
-    val = eval(val, env);
-    YIELD(1);
-  }
-  return val;
-}
 }
 
 // We call R fn`cheapr::set_threads` to make sure the R option is set
