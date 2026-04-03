@@ -188,7 +188,6 @@ inline r_symbol_t previous_sym = static_cast<r_symbol_t>(R_PreviousSymbol);
 inline r_symbol_t sort_list_sym = static_cast<r_symbol_t>(R_SortListSymbol);
 inline r_symbol_t eval_sym = static_cast<r_symbol_t>(R_EvalSymbol);
 inline r_symbol_t drop_sym = static_cast<r_symbol_t>(R_DropSymbol);
-inline r_symbol_t missing_arg = static_cast<r_symbol_t>(R_MissingArg);
 
 }
 
