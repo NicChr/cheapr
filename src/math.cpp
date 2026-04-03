@@ -1,4 +1,5 @@
 #include "cheapr.h"
+#include <algorithm> // for std::copy_n
 
 // Basic math operations by reference
 // All NA and NaN values are ignored

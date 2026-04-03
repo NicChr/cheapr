@@ -5,18 +5,20 @@
 // Author: Nick Christofides
 // License: MIT
 
+#ifndef R_NO_REMAP
+#define R_NO_REMAP
+#endif
+
 #include <cpp11.hpp>
 #include <optional>
 #include <type_traits>
+#include <cstring>
+#include <cmath>
 
 #ifdef _MSC_VER
 #define RESTRICT __restrict
 #else
 #define RESTRICT __restrict__
-#endif
-
-#ifndef R_NO_REMAP
-#define R_NO_REMAP
 #endif
 
 #if !defined(OBJSXP) && defined(S4SXP)
@@ -171,23 +173,6 @@ inline r_symbol_t double_brackets_sym = static_cast<r_symbol_t>(R_Bracket2Symbol
 inline r_symbol_t brace_sym = static_cast<r_symbol_t>(R_BraceSymbol);
 inline r_symbol_t dots_sym = static_cast<r_symbol_t>(R_DotsSymbol);
 inline r_symbol_t tsp_sym = static_cast<r_symbol_t>(R_TspSymbol);
-inline r_symbol_t name_sym = static_cast<r_symbol_t>(R_NameSymbol);
-inline r_symbol_t base_sym = static_cast<r_symbol_t>(R_BaseSymbol);
-inline r_symbol_t quote_sym = static_cast<r_symbol_t>(R_QuoteSymbol);
-inline r_symbol_t function_sym = static_cast<r_symbol_t>(R_FunctionSymbol);
-inline r_symbol_t namespace_env_sym = static_cast<r_symbol_t>(R_NamespaceEnvSymbol);
-inline r_symbol_t package_sym = static_cast<r_symbol_t>(R_PackageSymbol);
-inline r_symbol_t seeds_sym = static_cast<r_symbol_t>(R_SeedsSymbol);
-inline r_symbol_t na_rm_sym = static_cast<r_symbol_t>(R_NaRmSymbol);
-inline r_symbol_t source_sym = static_cast<r_symbol_t>(R_SourceSymbol);
-inline r_symbol_t mode_sym = static_cast<r_symbol_t>(R_ModeSymbol);
-inline r_symbol_t device_sym = static_cast<r_symbol_t>(R_DeviceSymbol);
-inline r_symbol_t last_value_sym = static_cast<r_symbol_t>(R_LastvalueSymbol);
-inline r_symbol_t spec_sym = static_cast<r_symbol_t>(R_SpecSymbol);
-inline r_symbol_t previous_sym = static_cast<r_symbol_t>(R_PreviousSymbol);
-inline r_symbol_t sort_list_sym = static_cast<r_symbol_t>(R_SortListSymbol);
-inline r_symbol_t eval_sym = static_cast<r_symbol_t>(R_EvalSymbol);
-inline r_symbol_t drop_sym = static_cast<r_symbol_t>(R_DropSymbol);
 
 }
 
@@ -837,7 +822,11 @@ inline void r_replace(
         }
       }
     } else {
-      std::replace(p_target + start, p_target + start + n, old_val, new_val);
+      for (R_xlen_t i = 0; i < n; ++i) {
+        if (p_target[start + i] == old_val){
+          vec::set_value(p_target, start + i, new_val);
+        }
+      }
     }
   } else {
     for (R_xlen_t i = 0; i < n; ++i) {
@@ -2279,25 +2268,7 @@ inline void set_threads(uint16_t n){
 
 namespace internal {
 
-// A cleaner lambda-based alternative to
-// using the canonical switch(TYPEOF(x))
-//
-// Pass both the SEXP and an auto variable inside a lambda
-// and visit_vector() will assign the auto variable to the
-// correct pointer
-// Then simply deduce its type (via decltype) for further manipulation
-// To be used in a lambda
-// E.g. visit_r_ptr(x, [&](auto p_x) {})
-
-// One must account for the default case via
-// if constexpr (std::is_same_v<T, std::nullptr_t>)
-// Since `NULL` is included in the default case, if you want
-// separate logic to handle this case, just do the below inside the default case
-// if (is_null(x)){
-// ...
-// } else {
-// ...
-// }
+// Do not use
 template <class F>
 decltype(auto) visit_vector(SEXP x, F&& f) {
   switch (CHEAPR_TYPEOF(x)) {
@@ -2313,39 +2284,7 @@ decltype(auto) visit_vector(SEXP x, F&& f) {
   }
 }
 
-// Wrap any callable f, and return a new callable that:
-//   - takes (auto&&... args)
-//   - calls f(args...) inside cpp11::unwind_protect
-
-// Like cpp11::safe but works also  for variadic fns
-template <typename F>
-auto r_safe_impl(F f) {
-  return [f](auto&&... args)
-    -> decltype(f(std::forward<decltype(args)>(args)...)) {
-
-      using result_t = decltype(f(std::forward<decltype(args)>(args)...));
-
-      if constexpr (std::is_void_v<result_t>) {
-        cpp11::unwind_protect([&] {
-          f(std::forward<decltype(args)>(args)...);
-        });
-        // no return; result_t is void
-      } else {
-        return cpp11::unwind_protect([&]() -> result_t {
-          return f(std::forward<decltype(args)>(args)...);
-        });
-      }
-    };
 }
-}
-
-#define r_safe(F)                                                                      \
-internal::r_safe_impl(                                                                 \
-  [&](auto&&... args)                                                                  \
-    -> decltype(F(std::forward<decltype(args)>(args)...)) {                            \
-      return F(std::forward<decltype(args)>(args)...);                                 \
-    }                                                                                  \
-)
 
 } // End of cheapr namespace
 

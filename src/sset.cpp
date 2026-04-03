@@ -1,5 +1,6 @@
 #include "cheapr.h"
 #include <R.h> // R_Calloc
+#include <algorithm> // for std::copy_n
 
 // Subsetting vectors and data frames
 // Includes a unique optimisation on range subsetting

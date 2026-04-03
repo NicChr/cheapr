@@ -1,5 +1,6 @@
 #include "cheapr.h"
 #include "R.h"
+#include <algorithm> // for std::copy_n
 
 // static cpp11::writable::integers CHEAPR_ZERO(1);
 // void constants_init(DllInfo* dll){

@@ -7,7 +7,6 @@
 #include "declarations.h"
 #include "variadic.h"
 #include "cast.h"
-#include <vector>
 
 using namespace cheapr;
 using namespace cheapr::vec;
