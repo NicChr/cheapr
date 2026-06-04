@@ -85,7 +85,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
-        std::copy_n(p_x, size, p_out);
+        std::copy_n(p_x, std::min(size, out_size), p_out);
 
         // copy result to itself, doubling each iteration
         R_xlen_t copied = size;
@@ -109,7 +109,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
-        std::copy_n(p_x, size, p_out);
+        std::copy_n(p_x, std::min(size, out_size), p_out);
 
         // copy result to itself, doubling each iteration
         R_xlen_t copied = size;
@@ -133,7 +133,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
-        std::copy_n(p_x, size, p_out);
+        std::copy_n(p_x, std::min(size, out_size), p_out);
 
         // copy result to itself, doubling each iteration
         R_xlen_t copied = size;
@@ -157,7 +157,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
-        std::copy_n(p_x, size, p_out);
+        std::copy_n(p_x, std::min(size, out_size), p_out);
 
         // copy result to itself, doubling each iteration
         R_xlen_t copied = size;
@@ -213,7 +213,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
-        std::copy_n(p_x, size, p_out);
+        std::copy_n(p_x, std::min(size, out_size), p_out);
 
         // copy result to itself, doubling each iteration
         R_xlen_t copied = size;
@@ -237,7 +237,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         r_fill(out, p_out, 0, out_size, p_x[0]);
       } else if (out_size > 0 && size > 0){
         // Copy first block
-        std::copy_n(p_x, size, p_out);
+        std::copy_n(p_x, std::min(size, out_size), p_out);
 
         // copy result to itself, doubling each iteration
         R_xlen_t copied = size;
