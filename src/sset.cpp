@@ -1189,7 +1189,7 @@ SEXP rev(SEXP x, bool set){
     const r_string_t *p_out = string_ptr_ro(out);
     for (R_xlen_t i = 0; i < half; ++i) {
       k = n2 - i;
-      SEXP left = p_out[i];
+      r_string_t left = p_out[i];
       set_value(out, i, p_out[k]);
       set_value(out, k, left);
     }
