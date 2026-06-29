@@ -21,4 +21,9 @@ Useful links:
 \author{
 \strong{Maintainer}: Nick Christofides \email{nick.christofides.r@gmail.com} (\href{https://orcid.org/0000-0002-9743-7342}{ORCID})
 
+Authors:
+\itemize{
+  \item Nick Christofides \email{nick.christofides.r@gmail.com} (\href{https://orcid.org/0000-0002-9743-7342}{ORCID})
+}
+
 }
