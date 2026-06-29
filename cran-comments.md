@@ -1,3 +1,3 @@
-Updated to version 1.5.1
+Updated to version 1.5.2
 
-- Removed usage of non-API C entry points.
+- Fixed a bug where `rep_len_(x, n)` would crash R when `n < length(x)`
