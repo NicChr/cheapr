@@ -1,11 +1,5 @@
 #include "cheapr.h"
 #include "R.h"
-#include <algorithm> // for std::copy_n
-
-template <typename Src, typename Size, typename Dest>
-void copy_n_safe(Src src, Size n, Dest dest){
-  if (n > 0) std::copy_n(src, n, dest);
-}
 
 // static cpp11::writable::integers CHEAPR_ZERO(1);
 // void constants_init(DllInfo* dll){

@@ -550,11 +550,11 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out = SHIELD(internal::new_vec(TYPEOF(x), out_size)); ++NP;
     int* RESTRICT p_out = integer_ptr(out);
     if (double_loop){
-      std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
-      std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
+      copy_n_safe(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
+      copy_n_safe(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
     } else {
       if (by > 0){
-        std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
+        copy_n_safe(&p_x[istart - 1], in_bounds_size, &p_out[0]);
         std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::integer);
       } else {
         std::fill(p_out, p_out + n_oob, na::integer);
@@ -569,11 +569,11 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out = SHIELD(new_vector<double>(out_size)); ++NP;
     double* RESTRICT p_out = real_ptr(out);
     if (double_loop){
-      std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
-      std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
+      copy_n_safe(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
+      copy_n_safe(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
     } else {
       if (by > 0){
-        std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
+        copy_n_safe(&p_x[istart - 1], in_bounds_size, &p_out[0]);
         std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::real);
       } else {
         std::fill(p_out, p_out + n_oob, na::real);
@@ -617,11 +617,11 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out = SHIELD(new_vector<r_complex_t>(out_size)); ++NP;
     r_complex_t* RESTRICT p_out = complex_ptr(out);
     if (double_loop){
-      std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
-      std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
+      copy_n_safe(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
+      copy_n_safe(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
     } else {
       if (by > 0){
-        std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
+        copy_n_safe(&p_x[istart - 1], in_bounds_size, &p_out[0]);
         std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::complex);
       } else {
         std::fill(p_out, p_out + n_oob, na::complex);
@@ -636,11 +636,11 @@ SEXP cpp_sset_range(SEXP x, R_xlen_t from, R_xlen_t to, R_xlen_t by){
     out = SHIELD(new_vector<r_byte_t>(out_size)); ++NP;
     r_byte_t* RESTRICT p_out = raw_ptr(out);
     if (double_loop){
-      std::copy_n(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
-      std::copy_n(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
+      copy_n_safe(&p_x[istart1 - 1], iend1 - istart1 + 1, &p_out[0]);
+      copy_n_safe(&p_x[istart2 - 1], iend2 - istart2 + 1, &p_out[iend1 - istart1 + 1]);
     } else {
       if (by > 0){
-        std::copy_n(&p_x[istart - 1], in_bounds_size, &p_out[0]);
+        copy_n_safe(&p_x[istart - 1], in_bounds_size, &p_out[0]);
         std::fill(p_out + in_bounds_size, p_out + in_bounds_size + n_oob, na::raw);
       } else {
         std::fill(p_out, p_out + n_oob, na::raw);

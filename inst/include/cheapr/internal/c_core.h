@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <cstring>
 #include <cmath>
+#include <algorithm>
 
 #ifdef _MSC_VER
 #define RESTRICT __restrict
@@ -770,6 +771,11 @@ inline void set_value<SEXP>(SEXP x, const R_xlen_t i, SEXP val){
   SET_VECTOR_ELT(x, i, val);
 }
 
+}
+
+template<typename Src, typename Size, typename Dest>
+inline void copy_n_safe(Src src, Size n, Dest dest){
+  if (n > 0) std::copy_n(src, n, dest);
 }
 
 template <typename T>
