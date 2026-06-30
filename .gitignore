@@ -306,3 +306,4 @@ docs/
 *.dll
 
 .vscode/c_cpp_properties.json
+/.claude
