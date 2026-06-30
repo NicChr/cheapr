@@ -13,8 +13,9 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
-        attr::set_old_class(out, get_old_class(source));
-        YIELD(1);
+        SEXP old_class = SHIELD(get_old_class(source));
+        attr::set_old_class(out, old_class);
+        YIELD(2);
         return out;
       }
     } else if (is_bare_tbl(source)){
@@ -25,8 +26,9 @@ SEXP rebuild(SEXP x, SEXP source, bool shallow_copy){
         return x;
       } else {
         SEXP out = SHIELD(shallow_copy ? cheapr::vec::shallow_copy(x) : x);
-        attr::set_old_class(out, get_old_class(source));
-        YIELD(1);
+        SEXP old_class = SHIELD(get_old_class(source));
+        attr::set_old_class(out, old_class);
+        YIELD(2);
         return out;
       }
     } else {
@@ -72,7 +74,7 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
     switch (CHEAPR_TYPEOF(x)){
 
     case NILSXP: {
-      break;
+      return x;
     }
     case LGLSXP: {
 

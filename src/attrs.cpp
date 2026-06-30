@@ -35,7 +35,7 @@ SEXP cpp_set_add_attr(SEXP x, SEXP which, SEXP value) {
   r_symbol_t attr_char = r_cast<r_symbol_t>(get_value<r_string_t>(which, 0));
   SEXP value2 = SHIELD(address_equal(x, value) ? vec::deep_copy(value) : value);
   set_attr(x, attr_char, value2);
-  YIELD(2);
+  YIELD(1);
   return x;
 }
 
