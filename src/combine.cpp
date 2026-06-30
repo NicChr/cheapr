@@ -184,7 +184,8 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
       } else if (out_size > 0 && size > 0){
 
-        for (R_xlen_t i = 0; i < size; ++i){
+        R_xlen_t first = std::min(size, out_size);
+        for (R_xlen_t i = 0; i < first; ++i){
           SET_STRING_ELT(out, i, p_x[i]);
         }
 
@@ -264,7 +265,8 @@ SEXP cpp_rep_len(SEXP x, R_xlen_t length){
         }
       } else if (out_size > 0 && size > 0){
 
-        for (R_xlen_t i = 0; i < size; ++i){
+        R_xlen_t first = std::min(size, out_size);
+        for (R_xlen_t i = 0; i < first; ++i){
           SET_VECTOR_ELT(out, i, p_x[i]);
         }
 
