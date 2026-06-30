@@ -9,3 +9,4 @@
 ^.*\.Rproj$
 ^codecov\.yml$
 ^\.claude$
+^\.vscode$
