@@ -39,9 +39,10 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
       Rf_error("%s cannot handle an object of type %s", __func__, Rf_type2char(TYPEOF(x)));
     } else if constexpr (is_r_ptr_writable_v<data_t>){
       using writable_data_t = std::remove_const_t<data_t>;
-      SEXP res = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
+      int nprot = 0;
+      SEXP res = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++nprot;
       auto *p_res = vector_ptr<writable_data_t>(res);
-      SHIELD(fill = cast_(get_r_type(xvec), fill, r_null)); ++NP;
+      SHIELD(fill = cast_(get_r_type(xvec), fill, r_null)); ++nprot;
       auto fill_value = fill_size > 0 ? get_value<writable_data_t>(fill, 0) : na_value<data_t>();
 
       if (k >= 0){
@@ -51,18 +52,20 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
         safe_memmove(&p_res[0], &p_x[-k], sizeof(data_t) * (size + k));
         r_fill(res, p_res, size + k, -k, fill_value);
       }
+      YIELD(nprot);
       return res;
     } else {
-      SEXP res = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++NP;
+      int nprot = 0;
+      SEXP res = SHIELD(set ? xvec : cpp_semi_copy(xvec)); ++nprot;
       auto *p_res = vector_ptr<data_t>(res);
-      SHIELD(fill = cast_(get_r_type(xvec), fill, r_null)); ++NP;
+      SHIELD(fill = cast_(get_r_type(xvec), fill, r_null)); ++nprot;
       auto fill_value = fill_size > 0 ? get_value<data_t>(fill, 0) : na_value<data_t>();
 
       if (set){
         R_xlen_t tempi;
         // If k = 0 then no lag occurs
         if (std::abs(k) >= 1){
-          SEXP lag_temp = SHIELD(new_vector<std::decay_t<data_t>>(std::abs(k))); ++NP;
+          SEXP lag_temp = SHIELD(new_vector<std::decay_t<data_t>>(std::abs(k))); ++nprot;
           std::decay_t<data_t> temp_value;
           auto *p_lag = vector_ptr<data_t>(lag_temp);
           // Positive lags
@@ -102,6 +105,7 @@ SEXP lag(SEXP x, R_xlen_t k, SEXP fill, bool set) {
           }
         }
       }
+      YIELD(nprot);
       return res;
     }
   });

@@ -73,9 +73,10 @@ R_xlen_t na_count(SEXP x, bool recursive){
     using data_t = std::remove_const_t<std::remove_pointer_t<std::decay_t<decltype(p_x)>>>;
 
     auto default_scalar_count = [&] {
-      SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", env::base_env, x)); ++NP;
-      SEXP scalar_true = SHIELD(as_vector(r_true)); ++NP;
+      SEXP is_missing = SHIELD(eval_pkg_fun("is_na", "cheapr", env::base_env, x));
+      SEXP scalar_true = SHIELD(as_vector(r_true));
       count = scalar_count(is_missing, scalar_true, true);
+      YIELD(2);
     };
 
     if constexpr (std::is_same_v<data_t, std::nullptr_t>){

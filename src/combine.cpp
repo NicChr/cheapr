@@ -604,7 +604,10 @@ SEXP get_ptypes(SEXP x){
 
 // Helper to turn a factor into a character vec
 SEXP factor_as_character(SEXP x){
-  return sset_vec(get_attr(x, symbol::levels_sym), x, true);
+  SEXP levels = SHIELD(get_attr(x, symbol::levels_sym));
+  SEXP out = sset_vec(levels, x, true);
+  YIELD(1);
+  return out;
 }
 
 // Helper to turn a character vec into a factor, given levels
